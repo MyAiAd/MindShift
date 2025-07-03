@@ -244,35 +244,42 @@ export const supabase = createSupabaseClient<Database>(
 
 // Client for use in client components
 // Singleton pattern to prevent multiple client instances
-let supabaseClient: ReturnType<typeof createSupabaseClient<Database>> | null = null;
-let clientInitialized = false;
+declare global {
+  var __supabase_client__: ReturnType<typeof createSupabaseClient<Database>> | undefined;
+}
 
 export const createClient = () => {
-  if (supabaseClient) {
-    return supabaseClient;
-  }
-  
-  if (!clientInitialized) {
-    console.log('Database: Creating new Supabase client instance');
-    clientInitialized = true;
-    
-    supabaseClient = createSupabaseClient<Database>(
+  if (typeof window === 'undefined') {
+    // Server-side: create a new client each time
+    return createSupabaseClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          persistSession: true,
-          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-        },
-      }
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    
-    console.log('Database: Supabase client created successfully');
+  }
+
+  // Client-side: use global singleton
+  if (globalThis.__supabase_client__) {
+    return globalThis.__supabase_client__;
   }
   
-  return supabaseClient!;
+  console.log('Database: Creating new Supabase client instance');
+  
+  globalThis.__supabase_client__ = createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: true,
+        storage: window.localStorage,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    }
+  );
+  
+  console.log('Database: Supabase client created successfully');
+  
+  return globalThis.__supabase_client__;
 };
 
 // Server-side client for use in API routes
@@ -300,8 +307,8 @@ export const createServerClient = async () => {
 
 // Function to reset the client (useful for debugging)
 export const resetClient = () => {
-  supabaseClient = null;
   if (typeof window !== 'undefined') {
+    globalThis.__supabase_client__ = undefined;
     // Clear any cached auth state
     window.localStorage.removeItem('sb-kdxwfaynzemmdonkmttf-auth-token');
     window.localStorage.removeItem('supabase.auth.token');

@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   
   const supabase = createClient();
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const userToUse = currentUser || user;
     
     if (!userToUse) {
-      console.log('Auth: No user found, skipping profile refresh');
+      console.log('Auth: No user found, skipping profile refresh (currentUser:', !!currentUser, 'user:', !!user, ')');
       return;
     }
 
@@ -41,7 +42,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    console.log('Auth: Starting profile refresh for user:', userToUse.id);
+    // Skip if we already have a profile for this user (unless explicitly called with a user parameter)
+    if (profileLoaded && profile?.id === userToUse.id && !currentUser) {
+      console.log('Auth: Profile already loaded for this user, skipping');
+      return;
+    }
+
+    console.log('Auth: Starting profile refresh for user:', userToUse.id, 'passed user:', !!currentUser, 'state user:', !!user);
     setProfileLoading(true);
 
     try {
@@ -76,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setProfile(profileData);
         setSubscriptionTier(profileData.subscription_tier || 'trial');
+        setProfileLoaded(true);
 
         // Get tenant information (skip for super admins)
         if (profileData.tenant_id) {
@@ -145,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
     setTenant(null);
     setSubscriptionTier(null);
+    setProfileLoaded(false);
   };
 
   useEffect(() => {
@@ -183,6 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
           setTenant(null);
           setSubscriptionTier(null);
+          setProfileLoaded(false);
         }
         setLoading(false);
       }
