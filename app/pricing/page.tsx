@@ -48,7 +48,7 @@ export default function PricingPage() {
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             
             {/* Free Trial */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200 flex flex-col h-full">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
                   <Star className="h-8 w-8 text-gray-600" />
@@ -65,7 +65,7 @@ export default function PricingPage() {
                 <p className="text-sm text-gray-500 mt-1">No credit card required</p>
               </div>
               
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-gray-700">Access to core features</span>
@@ -84,13 +84,13 @@ export default function PricingPage() {
                 </li>
               </ul>
               
-              <Link href="/auth" className="block w-full bg-gray-600 text-white text-center py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors font-semibold">
+              <Link href="/auth" className="block w-full bg-gray-600 text-white text-center py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors font-semibold mt-auto">
                 Start Free Trial
               </Link>
             </div>
 
             {/* Level 1 Plan */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200 flex flex-col h-full">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
                   <Target className="h-8 w-8 text-blue-600" />
@@ -107,7 +107,7 @@ export default function PricingPage() {
                 <p className="text-sm text-gray-500 mt-1">$299/year (save $49)</p>
               </div>
               
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-gray-700">Core Problem Shifting methodology</span>
@@ -130,13 +130,13 @@ export default function PricingPage() {
                 </li>
               </ul>
               
-              <Link href="/auth" className="block w-full bg-blue-600 text-white text-center py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+              <Link href="/auth" className="block w-full bg-blue-600 text-white text-center py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold mt-auto">
                 Start Problem Shifting
               </Link>
             </div>
 
             {/* Level 2 Plan */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-indigo-500 relative">
+            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-indigo-500 relative flex flex-col h-full">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-indigo-500 text-white px-4 py-2 rounded-full text-sm font-medium">
                   Most Popular
@@ -159,7 +159,7 @@ export default function PricingPage() {
                 <p className="text-sm text-gray-500 mt-1">$799/year (save $149)</p>
               </div>
               
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-gray-700">Everything in Problem Shifting</span>
@@ -186,7 +186,7 @@ export default function PricingPage() {
                 </li>
               </ul>
               
-              <Link href="/auth" className="block w-full bg-indigo-600 text-white text-center py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors font-semibold">
+              <Link href="/auth" className="block w-full bg-indigo-600 text-white text-center py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors font-semibold mt-auto">
                 Start Complete Access
               </Link>
             </div>

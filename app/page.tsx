@@ -132,7 +132,7 @@ export default function HomePage() {
           
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Level 1 Plan */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200 flex flex-col h-full">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
                   <Target className="h-8 w-8 text-blue-600" />
@@ -149,7 +149,7 @@ export default function HomePage() {
                 <p className="text-sm text-gray-500 mt-1">$299/year (save $48)</p>
               </div>
               
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start">
                   <svg className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -176,13 +176,13 @@ export default function HomePage() {
                 </li>
               </ul>
               
-              <a href="/auth" className="block w-full bg-blue-600 text-white text-center py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+              <a href="/auth" className="block w-full bg-blue-600 text-white text-center py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold mt-auto">
                 Start Problem Shifting
               </a>
             </div>
 
             {/* Level 2 Plan */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-indigo-500 relative">
+            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-indigo-500 relative flex flex-col h-full">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-indigo-500 text-white px-4 py-2 rounded-full text-sm font-medium">
                   Most Popular
@@ -205,7 +205,7 @@ export default function HomePage() {
                 <p className="text-sm text-gray-500 mt-1">$799/year (save $149)</p>
               </div>
               
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start">
                   <svg className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -244,7 +244,7 @@ export default function HomePage() {
                 </li>
               </ul>
               
-              <a href="/auth" className="block w-full bg-indigo-600 text-white text-center py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors font-semibold">
+              <a href="/auth" className="block w-full bg-indigo-600 text-white text-center py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors font-semibold mt-auto">
                 Start Complete Access
               </a>
             </div>
