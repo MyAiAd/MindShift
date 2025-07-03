@@ -7,7 +7,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 SUPABASE_JWT_SECRET=D0yE0N/bIe9T5H6tOL6LxHyEsI2smCJ/3KmoP7FlaRLMyozRLk+Ip587a6M7pu478relDlnwGWqpV8RH1yhk+Q==
 
 # Project Information
-# SUPABASE_PROJECT_ID=kdxwfaynzemmdonkmttf
+SUPABASE_PROJECT_ID=kdxwfaynzemmdonkmttf
 
 # Database Configuration (uncomment if needed)
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.kdxwfaynzemmdonkmttf.supabase.co:5432/postgres
