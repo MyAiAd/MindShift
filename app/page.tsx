@@ -13,10 +13,10 @@ export default function HomePage() {
               <span className="text-2xl font-bold text-gray-900">MindShift</span>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="#features" className="text-gray-700 hover:text-indigo-600 transition-colors">Features</a>
-              <a href="#pricing" className="text-gray-700 hover:text-indigo-600 transition-colors">Pricing</a>
-              <a href="#about" className="text-gray-700 hover:text-indigo-600 transition-colors">About</a>
-              <a href="#contact" className="text-gray-700 hover:text-indigo-600 transition-colors">Contact</a>
+              <a href="/features" className="text-gray-700 hover:text-indigo-600 transition-colors">Features</a>
+              <a href="/pricing" className="text-gray-700 hover:text-indigo-600 transition-colors">Pricing</a>
+              <a href="/about" className="text-gray-700 hover:text-indigo-600 transition-colors">About</a>
+              <a href="/contact" className="text-gray-700 hover:text-indigo-600 transition-colors">Contact</a>
             </nav>
             <div className="flex space-x-4">
               <a href="/auth" className="text-gray-700 hover:text-indigo-600 transition-colors">Sign In</a>
