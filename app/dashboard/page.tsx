@@ -93,7 +93,7 @@ export default function DashboardPage() {
               Welcome back, {profile?.first_name}!
             </h1>
             <p className="text-gray-600 mt-1">
-              Here's what's happening with {tenant?.name} today.
+              Here's what's happening with {tenant?.name || 'MindShift'} today.
             </p>
           </div>
           <div className="flex items-center space-x-2">

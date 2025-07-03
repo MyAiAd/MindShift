@@ -43,7 +43,8 @@ export default function DashboardLayout({
     );
   }
 
-  if (!user || !profile || !tenant) {
+  // Allow super admins to access dashboard without tenant
+  if (!user || !profile || (!tenant && profile?.role !== 'super_admin')) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -117,7 +118,9 @@ function SidebarContent({
         <div className="flex items-center space-x-3">
           <Building2 className="h-8 w-8 text-white" />
           <div>
-            <h1 className="text-white font-semibold">{tenant.name}</h1>
+            <h1 className="text-white font-semibold">
+              {tenant ? tenant.name : 'MindShift Admin'}
+            </h1>
             <p className="text-indigo-200 text-sm">{profile.role}</p>
           </div>
         </div>

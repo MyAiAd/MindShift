@@ -42,15 +42,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(profileData);
         setSubscriptionTier(profileData.subscription_tier || 'trial');
 
-        // Get tenant information
-        const { data: tenantData } = await supabase
-          .from('tenants')
-          .select('*')
-          .eq('id', profileData.tenant_id)
-          .single();
+        // Get tenant information (skip for super admins)
+        if (profileData.tenant_id) {
+          const { data: tenantData } = await supabase
+            .from('tenants')
+            .select('*')
+            .eq('id', profileData.tenant_id)
+            .single();
 
-        if (tenantData) {
-          setTenant(tenantData);
+          if (tenantData) {
+            setTenant(tenantData);
+          }
+        } else if (profileData.role === 'super_admin') {
+          // Super admins don't have a tenant, set to null explicitly
+          setTenant(null);
         }
       }
     } catch (error) {
@@ -60,6 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasFeatureAccess = (featureKey: string): boolean => {
     if (!profile || !subscriptionTier) return false;
+    
+    // Super admins have access to all features
+    if (profile.role === 'super_admin') return true;
     
     // Define feature access rules
     const featureRules: Record<string, string[]> = {
