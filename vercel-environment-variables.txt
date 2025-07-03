@@ -1,0 +1,68 @@
+# Supabase Configuration for Vercel
+# Copy these to your .env file or Vercel environment variables
+
+NEXT_PUBLIC_SUPABASE_URL=https://kdxwfaynzemmdonkmttf.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkeHdmYXluemVtbWRvbmttdHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MjA1NTcsImV4cCI6MjA2NzA5NjU1N30.WuPuwyyJ-pbVVbcecJGtCTqgzrKtaQGTytPIvv46d6c
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkeHdmYXluemVtbWRvbmttdHRmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTUyMDU1NywiZXhwIjoyMDY3MDk2NTU3fQ.CD90eDXVbm_6tA4lA4XZU5Vm60V9uR5y1qLv66gX-Po
+SUPABASE_JWT_SECRET=D0yE0N/bIe9T5H6tOL6LxHyEsI2smCJ/3KmoP7FlaRLMyozRLk+Ip587a6M7pu478relDlnwGWqpV8RH1yhk+Q==
+
+# Project Information
+# SUPABASE_PROJECT_ID=kdxwfaynzemmdonkmttf
+
+# Database Configuration (uncomment if needed)
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.kdxwfaynzemmdonkmttf.supabase.co:5432/postgres
+SUPABASE_DB_PASSWORD=T3sla12e!
+
+# Authentication Configuration (uncomment if needed)
+# NEXTAUTH_URL=https://your-app-domain.vercel.app
+# NEXTAUTH_SECRET=your_nextauth_secret_key
+
+# Email Configuration (uncomment if needed)
+# SMTP_HOST=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_USER=your_email@gmail.com
+# SMTP_PASSWORD=your_app_password
+# FROM_EMAIL=your_email@gmail.com
+
+# Storage Configuration (uncomment if needed)
+SUPABASE_STORAGE_URL=https://kdxwfaynzemmdonkmttf.supabase.co/storage/v1
+SUPABASE_STORAGE_BUCKET=mindshiftstorage
+
+# Third-party API Keys (uncomment if needed)
+# OPENAI_API_KEY=your_openai_api_key
+# STRIPE_SECRET_KEY=your_stripe_secret_key
+# STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+# GOOGLE_CLIENT_ID=your_google_client_id
+# GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Environment
+# NODE_ENV=production
+
+# Analytics (uncomment if needed)
+# GOOGLE_ANALYTICS_ID=your_ga_id
+# MIXPANEL_TOKEN=your_mixpanel_token
+
+# Logging (uncomment if needed)
+# LOG_LEVEL=info
+# SENTRY_DSN=your_sentry_dsn
+
+# Feature Flags (uncomment if needed)
+# FEATURE_FLAG_NEW_UI=true
+# FEATURE_FLAG_BETA_FEATURES=false
+
+# Additional Supabase Configuration (uncomment if needed)
+# SUPABASE_SERVICE_KEY=your_service_key
+# SUPABASE_ANON_KEY=your_anon_key_alternate_name
+# SUPABASE_REF=kdxwfaynzemmdonkmttf
+
+# Webhook Configuration (uncomment if needed)
+# WEBHOOK_SECRET=your_webhook_secret
+# SUPABASE_WEBHOOK_SECRET=your_supabase_webhook_secret
+
+# Development/Testing (uncomment if needed)
+# NEXT_PUBLIC_SITE_URL=http://localhost:3000
+VERCEL_URL=your-app.vercel.app
+
+# Repository Information (uncomment if needed)
+NEXT_PUBLIC_GITHUB_REPO=https://github.com/MyAiAd/MindShift.git
+GITHUB_REPO_URL=https://github.com/MyAiAd/MindShift.git 
