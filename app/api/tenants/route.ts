@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServerClient } from '@/lib/database';
 import { TenantInsert } from '@/lib/database';
+import { createServerClient } from '@/lib/database-server';
 
 export async function POST(request: NextRequest) {
   try {
