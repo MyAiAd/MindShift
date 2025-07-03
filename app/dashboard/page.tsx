@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '@/lib/auth';
+import FeatureGuard, { FeatureBanner } from '@/components/auth/FeatureGuard';
 import { 
   Brain, 
   Users, 
@@ -86,12 +87,24 @@ export default function DashboardPage() {
     <div className="p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {profile?.first_name}!
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Here's what's happening with {tenant?.name} today.
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Welcome back, {profile?.first_name}!
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Here's what's happening with {tenant?.name} today.
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600">Current Plan:</span>
+            <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium capitalize">
+              {profile?.subscription_tier === 'level_1' ? 'Problem Shifting' : 
+               profile?.subscription_tier === 'level_2' ? 'Complete Access' : 
+               profile?.subscription_tier || 'Trial'}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -151,29 +164,75 @@ export default function DashboardPage() {
               </div>
             </button>
             
-            <button className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <Activity className="h-4 w-4 text-purple-600" />
+            <FeatureGuard 
+              featureKey="advanced_analytics"
+              fallback={
+                <div className="w-full p-3 rounded-lg border border-amber-200 bg-amber-50">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-amber-100 rounded-lg">
+                      <Activity className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-amber-900">Advanced Analytics</p>
+                      <p className="text-sm text-amber-700">Requires Level 2 subscription</p>
+                    </div>
+                    <a 
+                      href="/dashboard/subscription" 
+                      className="text-xs text-amber-600 hover:text-amber-700 font-medium"
+                    >
+                      Upgrade
+                    </a>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">View Analytics</p>
-                  <p className="text-sm text-gray-600">Check detailed progress reports</p>
+              }
+            >
+              <button className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-50 rounded-lg">
+                    <Activity className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">View Analytics</p>
+                    <p className="text-sm text-gray-600">Check detailed progress reports</p>
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
+            </FeatureGuard>
             
-            <button className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-orange-50 rounded-lg">
-                  <Users className="h-4 w-4 text-orange-600" />
+            <FeatureGuard 
+              featureKey="team_management"
+              fallback={
+                <div className="w-full p-3 rounded-lg border border-amber-200 bg-amber-50">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-amber-100 rounded-lg">
+                      <Users className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-amber-900">Team Management</p>
+                      <p className="text-sm text-amber-700">Requires Level 2 subscription</p>
+                    </div>
+                    <a 
+                      href="/dashboard/subscription" 
+                      className="text-xs text-amber-600 hover:text-amber-700 font-medium"
+                    >
+                      Upgrade
+                    </a>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">Invite Team Member</p>
-                  <p className="text-sm text-gray-600">Add a new user to your organization</p>
+              }
+            >
+              <button className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-orange-50 rounded-lg">
+                    <Users className="h-4 w-4 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Invite Team Member</p>
+                    <p className="text-sm text-gray-600">Add a new user to your organization</p>
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
+            </FeatureGuard>
           </div>
         </div>
 

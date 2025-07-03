@@ -3,6 +3,8 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 export type UserRole = 'super_admin' | 'tenant_admin' | 'manager' | 'coach' | 'user';
 export type TenantStatus = 'active' | 'suspended' | 'trial' | 'expired';
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'unpaid' | 'trialing';
+export type SubscriptionTier = 'level_1' | 'level_2' | 'trial' | 'cancelled';
+export type PlanStatus = 'active' | 'inactive' | 'archived';
 
 export interface Database {
   public: {
@@ -59,6 +61,8 @@ export interface Database {
           is_active: boolean;
           settings: Record<string, any>;
           last_login_at: string | null;
+          current_subscription_id: string | null;
+          subscription_tier: SubscriptionTier | null;
           created_at: string;
           updated_at: string;
         };
@@ -73,6 +77,8 @@ export interface Database {
           is_active?: boolean;
           settings?: Record<string, any>;
           last_login_at?: string | null;
+          current_subscription_id?: string | null;
+          subscription_tier?: SubscriptionTier | null;
         };
         Update: {
           id?: string;
@@ -85,6 +91,97 @@ export interface Database {
           is_active?: boolean;
           settings?: Record<string, any>;
           last_login_at?: string | null;
+          current_subscription_id?: string | null;
+          subscription_tier?: SubscriptionTier | null;
+        };
+      };
+      subscription_plans: {
+        Row: {
+          id: string;
+          name: string;
+          tier: SubscriptionTier;
+          description: string | null;
+          price_monthly: number;
+          price_yearly: number | null;
+          features: Record<string, any>;
+          limits: Record<string, any>;
+          status: PlanStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          tier: SubscriptionTier;
+          description?: string | null;
+          price_monthly: number;
+          price_yearly?: number | null;
+          features?: Record<string, any>;
+          limits?: Record<string, any>;
+          status?: PlanStatus;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          tier?: SubscriptionTier;
+          description?: string | null;
+          price_monthly?: number;
+          price_yearly?: number | null;
+          features?: Record<string, any>;
+          limits?: Record<string, any>;
+          status?: PlanStatus;
+        };
+      };
+      user_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          tenant_id: string;
+          plan_id: string;
+          stripe_subscription_id: string | null;
+          stripe_customer_id: string | null;
+          current_tier: SubscriptionTier;
+          status: SubscriptionStatus;
+          current_period_start: string | null;
+          current_period_end: string | null;
+          cancel_at_period_end: boolean;
+          cancelled_at: string | null;
+          trial_ends_at: string | null;
+          metadata: Record<string, any>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          tenant_id: string;
+          plan_id: string;
+          stripe_subscription_id?: string | null;
+          stripe_customer_id?: string | null;
+          current_tier: SubscriptionTier;
+          status?: SubscriptionStatus;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          cancelled_at?: string | null;
+          trial_ends_at?: string | null;
+          metadata?: Record<string, any>;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          tenant_id?: string;
+          plan_id?: string;
+          stripe_subscription_id?: string | null;
+          stripe_customer_id?: string | null;
+          current_tier?: SubscriptionTier;
+          status?: SubscriptionStatus;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          cancelled_at?: string | null;
+          trial_ends_at?: string | null;
+          metadata?: Record<string, any>;
         };
       };
     };
@@ -103,11 +200,36 @@ export interface Database {
         };
         Returns: string;
       };
+      update_user_subscription: {
+        Args: {
+          user_id_param: string;
+          new_plan_id_param: string;
+          stripe_subscription_id_param?: string;
+          change_reason_param?: string;
+        };
+        Returns: string;
+      };
+      cancel_user_subscription: {
+        Args: {
+          user_id_param: string;
+          cancel_immediately?: boolean;
+        };
+        Returns: boolean;
+      };
+      check_user_feature_access: {
+        Args: {
+          user_id_param: string;
+          feature_key_param: string;
+        };
+        Returns: boolean;
+      };
     };
     Enums: {
       user_role: UserRole;
       tenant_status: TenantStatus;
       subscription_status: SubscriptionStatus;
+      subscription_tier: SubscriptionTier;
+      plan_status: PlanStatus;
     };
   };
 }

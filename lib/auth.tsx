@@ -12,6 +12,8 @@ interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  hasFeatureAccess: (featureKey: string) => boolean;
+  subscriptionTier: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   
   const supabase = createClient();
 
@@ -37,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileData) {
         setProfile(profileData);
+        setSubscriptionTier(profileData.subscription_tier || 'trial');
 
         // Get tenant information
         const { data: tenantData } = await supabase
@@ -54,11 +58,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const hasFeatureAccess = (featureKey: string): boolean => {
+    if (!profile || !subscriptionTier) return false;
+    
+    // Define feature access rules
+    const featureRules: Record<string, string[]> = {
+      'problem_shifting': ['trial', 'level_1', 'level_2'],
+      'advanced_methods': ['level_2'],
+      'ai_insights': ['level_2'],
+      'unlimited_sessions': ['level_2'],
+      'priority_support': ['level_2'],
+      'advanced_analytics': ['level_2'],
+      'team_management': ['level_2'],
+    };
+
+    const allowedTiers = featureRules[featureKey];
+    if (!allowedTiers) return false;
+
+    return allowedTiers.includes(subscriptionTier);
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
     setTenant(null);
+    setSubscriptionTier(null);
   };
 
   useEffect(() => {
@@ -107,6 +132,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signOut,
     refreshProfile,
+    hasFeatureAccess,
+    subscriptionTier,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

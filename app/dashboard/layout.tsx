@@ -12,7 +12,8 @@ import {
   Building2,
   LogOut,
   Menu,
-  X
+  X,
+  CreditCard
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -22,6 +23,7 @@ const sidebarItems = [
   { icon: Target, label: 'Goals', href: '/dashboard/goals' },
   { icon: TrendingUp, label: 'Progress', href: '/dashboard/progress' },
   { icon: Calendar, label: 'Sessions', href: '/dashboard/sessions' },
+  { icon: CreditCard, label: 'Subscription', href: '/dashboard/subscription' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
 
