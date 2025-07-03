@@ -4,12 +4,20 @@ import { TenantInsert } from '@/lib/database';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('API: Creating server client for tenant creation');
     const supabase = await createServerClient();
     
     // Get the current user
+    console.log('API: Getting user from server client');
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
+    console.log('API: Auth result - user:', !!user, 'error:', authError?.message);
+    if (user) {
+      console.log('API: User details:', { id: user.id, email: user.email });
+    }
+    
     if (authError || !user) {
+      console.log('API: Returning 401 - no user or auth error');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

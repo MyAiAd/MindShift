@@ -30,6 +30,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   const refreshProfile = async (currentUser?: User) => {
+    console.log('Auth: refreshProfile called with currentUser:', !!currentUser, 'state user:', !!user);
+    console.log('Auth: currentUser details:', currentUser ? { id: currentUser.id, email: currentUser.email } : 'null');
+    console.log('Auth: state user details:', user ? { id: user.id, email: user.email } : 'null');
+    
     const userToUse = currentUser || user;
     
     if (!userToUse) {

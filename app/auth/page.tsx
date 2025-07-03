@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { createClient } from '@/lib/database';
+import { useAuth } from '@/lib/auth';
 import { Brain, Mail, Lock, User, Building2, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -19,7 +20,15 @@ export default function AuthPage() {
   });
   
   const router = useRouter();
+  const { user } = useAuth();
   const supabase = createClient();
+
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -80,6 +89,28 @@ export default function AuthPage() {
       if (authError) throw authError;
 
       if (authData.user) {
+        console.log('Auth: User created, checking session...');
+        
+        // Wait for session to be established
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session) {
+          console.log('Auth: No session after signup, trying to sign in...');
+          // If no session, try to sign in
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
+          
+          if (signInError) {
+            throw new Error('Failed to authenticate after account creation');
+          }
+          
+          console.log('Auth: Successfully signed in after signup');
+        }
+        
+        console.log('Auth: Session established, creating tenant...');
+        
         // Create tenant and profile
         const response = await fetch('/api/tenants', {
           method: 'POST',
@@ -100,6 +131,8 @@ export default function AuthPage() {
           throw new Error(result.error || 'Failed to create organization');
         }
 
+        console.log('Auth: Tenant created successfully, redirecting...');
+        
         // Redirect to dashboard
         router.push('/dashboard');
       }
