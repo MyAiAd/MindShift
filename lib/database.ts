@@ -1,4 +1,6 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 export type UserRole = 'super_admin' | 'tenant_admin' | 'manager' | 'coach' | 'user';
 export type TenantStatus = 'active' | 'suspended' | 'trial' | 'expired';
@@ -271,6 +273,29 @@ export const createClient = () => {
   }
   
   return supabaseClient!;
+};
+
+// Server-side client for use in API routes
+export const createServerClient = async () => {
+  const cookieStore = cookies();
+  
+  return createSupabaseServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: '', ...options });
+        },
+      },
+    }
+  );
 };
 
 // Function to reset the client (useful for debugging)

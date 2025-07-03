@@ -28,8 +28,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   const supabase = createClient();
 
-  const refreshProfile = async () => {
-    if (!user) {
+  const refreshProfile = async (currentUser?: User) => {
+    const userToUse = currentUser || user;
+    
+    if (!userToUse) {
       console.log('Auth: No user found, skipping profile refresh');
       return;
     }
@@ -39,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    console.log('Auth: Starting profile refresh for user:', user.id);
+    console.log('Auth: Starting profile refresh for user:', userToUse.id);
     setProfileLoading(true);
 
     try {
@@ -52,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profilePromise = supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', userToUse.id)
         .single();
 
       const { data: profileData, error: profileError } = await Promise.race([
@@ -158,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         console.log('Auth: Initial session found for user:', session.user.email);
         setUser(session.user);
-        await refreshProfile();
+        await refreshProfile(session.user);
       } else {
         console.log('Auth: No initial session found');
       }
@@ -175,7 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.user) {
           setUser(session.user);
-          await refreshProfile();
+          await refreshProfile(session.user);
         } else {
           setUser(null);
           setProfile(null);
