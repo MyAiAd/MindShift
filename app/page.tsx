@@ -18,10 +18,10 @@ export default function HomePage() {
               <a href="#contact" className="text-gray-700 hover:text-indigo-600 transition-colors">Contact</a>
             </nav>
             <div className="flex space-x-4">
-              <button className="text-gray-700 hover:text-indigo-600 transition-colors">Sign In</button>
-              <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+              <a href="/auth" className="text-gray-700 hover:text-indigo-600 transition-colors">Sign In</a>
+              <a href="/auth" className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
                 Get Started
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -42,13 +42,13 @@ export default function HomePage() {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-indigo-600 text-white px-8 py-4 rounded-lg hover:bg-indigo-700 transition-colors text-lg font-semibold flex items-center justify-center">
+            <a href="/auth" className="bg-indigo-600 text-white px-8 py-4 rounded-lg hover:bg-indigo-700 transition-colors text-lg font-semibold flex items-center justify-center">
               Start Your Journey
               <ArrowRight className="ml-2 h-5 w-5" />
-            </button>
-            <button className="border border-gray-300 text-gray-700 px-8 py-4 rounded-lg hover:bg-gray-50 transition-colors text-lg font-semibold">
-              Watch Demo
-            </button>
+            </a>
+            <a href="/dashboard" className="border border-gray-300 text-gray-700 px-8 py-4 rounded-lg hover:bg-gray-50 transition-colors text-lg font-semibold">
+              View Demo
+            </a>
           </div>
         </div>
       </section>
@@ -126,9 +126,9 @@ export default function HomePage() {
           <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
             Join thousands of others who have already started their journey to personal growth and success.
           </p>
-          <button className="bg-white text-indigo-600 px-8 py-4 rounded-lg hover:bg-gray-100 transition-colors text-lg font-semibold">
+          <a href="/auth" className="inline-block bg-white text-indigo-600 px-8 py-4 rounded-lg hover:bg-gray-100 transition-colors text-lg font-semibold">
             Start Your Free Trial
-          </button>
+          </a>
         </div>
       </section>
 
