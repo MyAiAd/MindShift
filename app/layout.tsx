@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   description: 'A revolutionary AI-powered platform for mindset transformation and personal growth',
   keywords: 'mindset, personal growth, AI, coaching, transformation',
   authors: [{ name: 'MyAiAd' }],
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   openGraph: {
     title: 'MindShift - AI-Powered Mindset Transformation',
     description: 'Transform your mindset with AI-powered insights and personalized coaching',

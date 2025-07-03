@@ -61,7 +61,7 @@ SUPABASE_STORAGE_BUCKET=mindshiftstorage
 
 # Development/Testing (uncomment if needed)
 # NEXT_PUBLIC_SITE_URL=http://localhost:3000
-VERCEL_URL=your-app.vercel.app
+VERCEL_URL=mind-shift-app.vercel.app
 
 # Repository Information (uncomment if needed)
 NEXT_PUBLIC_GITHUB_REPO=https://github.com/MyAiAd/MindShift.git
