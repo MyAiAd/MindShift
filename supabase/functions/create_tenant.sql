@@ -2,8 +2,8 @@
 CREATE OR REPLACE FUNCTION create_tenant(
     tenant_name VARCHAR(255),
     tenant_slug VARCHAR(100),
-    tenant_domain VARCHAR(255) DEFAULT NULL,
     admin_email VARCHAR(255),
+    tenant_domain VARCHAR(255) DEFAULT NULL,
     admin_first_name VARCHAR(100) DEFAULT NULL,
     admin_last_name VARCHAR(100) DEFAULT NULL
 )

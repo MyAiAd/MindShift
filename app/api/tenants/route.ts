@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
       .rpc('create_tenant', {
         tenant_name: name,
         tenant_slug: slug,
-        tenant_domain: domain || null,
         admin_email: adminEmail,
+        tenant_domain: domain || null,
         admin_first_name: adminFirstName || null,
         admin_last_name: adminLastName || null,
       });

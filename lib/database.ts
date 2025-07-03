@@ -96,8 +96,8 @@ export interface Database {
         Args: {
           tenant_name: string;
           tenant_slug: string;
-          tenant_domain?: string;
           admin_email: string;
+          tenant_domain?: string;
           admin_first_name?: string;
           admin_last_name?: string;
         };
