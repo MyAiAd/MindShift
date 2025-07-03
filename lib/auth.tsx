@@ -28,38 +28,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   const refreshProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('Auth: No user found, skipping profile refresh');
+      return;
+    }
+
+    console.log('Auth: Refreshing profile for user:', user.id);
 
     try {
       // Get user profile
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
+      if (profileError) {
+        console.error('Auth: Error fetching profile:', profileError);
+        return;
+      }
+
       if (profileData) {
+        console.log('Auth: Profile loaded:', { 
+          email: profileData.email, 
+          role: profileData.role, 
+          tenant_id: profileData.tenant_id 
+        });
+        
         setProfile(profileData);
         setSubscriptionTier(profileData.subscription_tier || 'trial');
 
         // Get tenant information (skip for super admins)
         if (profileData.tenant_id) {
-          const { data: tenantData } = await supabase
+          const { data: tenantData, error: tenantError } = await supabase
             .from('tenants')
             .select('*')
             .eq('id', profileData.tenant_id)
             .single();
 
-          if (tenantData) {
+          if (tenantError) {
+            console.error('Auth: Error fetching tenant:', tenantError);
+          } else if (tenantData) {
+            console.log('Auth: Tenant loaded:', tenantData.name);
             setTenant(tenantData);
           }
         } else if (profileData.role === 'super_admin') {
           // Super admins don't have a tenant, set to null explicitly
+          console.log('Auth: Super admin detected, no tenant needed');
           setTenant(null);
         }
+      } else {
+        console.log('Auth: No profile data found');
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Auth: Unexpected error fetching profile:', error);
     }
   };
 
@@ -97,11 +119,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Auth: Getting initial session...');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Auth: Error getting session:', error);
+      }
       
       if (session?.user) {
+        console.log('Auth: Initial session found for user:', session.user.email);
         setUser(session.user);
         await refreshProfile();
+      } else {
+        console.log('Auth: No initial session found');
       }
       
       setLoading(false);
@@ -112,6 +142,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth: State change event:', event, session?.user?.email || 'no user');
+        
         if (session?.user) {
           setUser(session.user);
           await refreshProfile();
@@ -119,6 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setProfile(null);
           setTenant(null);
+          setSubscriptionTier(null);
         }
         setLoading(false);
       }

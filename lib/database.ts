@@ -241,10 +241,39 @@ export const supabase = createSupabaseClient<Database>(
 );
 
 // Client for use in client components
-export const createClient = () => createSupabaseClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Singleton pattern to prevent multiple client instances
+let supabaseClient: ReturnType<typeof createSupabaseClient<Database>> | null = null;
+
+export const createClient = () => {
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+  
+  supabaseClient = createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    }
+  );
+  
+  return supabaseClient;
+};
+
+// Function to reset the client (useful for debugging)
+export const resetClient = () => {
+  supabaseClient = null;
+  if (typeof window !== 'undefined') {
+    // Clear any cached auth state
+    window.localStorage.removeItem('sb-kdxwfaynzemmdonkmttf-auth-token');
+    window.localStorage.removeItem('supabase.auth.token');
+  }
+};
 
 // Helper types
 export type Tenant = Database['public']['Tables']['tenants']['Row'];
