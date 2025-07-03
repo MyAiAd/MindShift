@@ -207,187 +207,292 @@ ALTER TABLE progress_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_insights ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies (may show warnings if they already exist, but won't fail)
+-- Create RLS policies (drop existing ones first to avoid conflicts)
 -- For a complete reset, run 000_cleanup.sql first
 
 -- Tenants policies
-CREATE POLICY IF NOT EXISTS "Users can view their own tenant" ON tenants
-    FOR SELECT USING (
-        id IN (
-            SELECT tenant_id FROM profiles WHERE id = auth.uid()
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can view their own tenant" ON tenants;
+    CREATE POLICY "Users can view their own tenant" ON tenants
+        FOR SELECT USING (
+            id IN (
+                SELECT tenant_id FROM profiles WHERE id = auth.uid()
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Tenant admins can update their tenant" ON tenants
-    FOR UPDATE USING (
-        id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Tenant admins can update their tenant" ON tenants;
+    CREATE POLICY "Tenant admins can update their tenant" ON tenants
+        FOR UPDATE USING (
+            id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Profiles policies
-CREATE POLICY IF NOT EXISTS "Users can view profiles in their tenant" ON profiles
-    FOR SELECT USING (
-        tenant_id IN (
-            SELECT tenant_id FROM profiles WHERE id = auth.uid()
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can view profiles in their tenant" ON profiles;
+    CREATE POLICY "Users can view profiles in their tenant" ON profiles
+        FOR SELECT USING (
+            tenant_id IN (
+                SELECT tenant_id FROM profiles WHERE id = auth.uid()
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users can update their own profile" ON profiles
-    FOR UPDATE USING (id = auth.uid());
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
+    CREATE POLICY "Users can update their own profile" ON profiles
+        FOR UPDATE USING (id = auth.uid());
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Tenant admins can manage profiles in their tenant" ON profiles
-    FOR ALL USING (
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Tenant admins can manage profiles in their tenant" ON profiles;
+    CREATE POLICY "Tenant admins can manage profiles in their tenant" ON profiles
+        FOR ALL USING (
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Assessments policies
-CREATE POLICY IF NOT EXISTS "Users can view assessments in their tenant" ON assessments
-    FOR SELECT USING (
-        tenant_id IN (
-            SELECT tenant_id FROM profiles WHERE id = auth.uid()
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can view assessments in their tenant" ON assessments;
+    CREATE POLICY "Users can view assessments in their tenant" ON assessments
+        FOR SELECT USING (
+            tenant_id IN (
+                SELECT tenant_id FROM profiles WHERE id = auth.uid()
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Coaches and admins can manage assessments" ON assessments
-    FOR ALL USING (
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Coaches and admins can manage assessments" ON assessments;
+    CREATE POLICY "Coaches and admins can manage assessments" ON assessments
+        FOR ALL USING (
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Assessment responses policies
-CREATE POLICY IF NOT EXISTS "Users can view their own responses" ON assessment_responses
-    FOR SELECT USING (
-        user_id = auth.uid() OR
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can view their own responses" ON assessment_responses;
+    CREATE POLICY "Users can view their own responses" ON assessment_responses
+        FOR SELECT USING (
+            user_id = auth.uid() OR
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users can create their own responses" ON assessment_responses
-    FOR INSERT WITH CHECK (
-        user_id = auth.uid() AND
-        tenant_id IN (
-            SELECT tenant_id FROM profiles WHERE id = auth.uid()
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can create their own responses" ON assessment_responses;
+    CREATE POLICY "Users can create their own responses" ON assessment_responses
+        FOR INSERT WITH CHECK (
+            user_id = auth.uid() AND
+            tenant_id IN (
+                SELECT tenant_id FROM profiles WHERE id = auth.uid()
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Coaching sessions policies
-CREATE POLICY IF NOT EXISTS "Users can view their coaching sessions" ON coaching_sessions
-    FOR SELECT USING (
-        coach_id = auth.uid() OR 
-        client_id = auth.uid() OR
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can view their coaching sessions" ON coaching_sessions;
+    CREATE POLICY "Users can view their coaching sessions" ON coaching_sessions
+        FOR SELECT USING (
+            coach_id = auth.uid() OR 
+            client_id = auth.uid() OR
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Coaches can manage their sessions" ON coaching_sessions
-    FOR ALL USING (
-        coach_id = auth.uid() OR
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Coaches can manage their sessions" ON coaching_sessions;
+    CREATE POLICY "Coaches can manage their sessions" ON coaching_sessions
+        FOR ALL USING (
+            coach_id = auth.uid() OR
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Goals policies
-CREATE POLICY IF NOT EXISTS "Users can view their own goals" ON goals
-    FOR SELECT USING (
-        user_id = auth.uid() OR
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can view their own goals" ON goals;
+    CREATE POLICY "Users can view their own goals" ON goals
+        FOR SELECT USING (
+            user_id = auth.uid() OR
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users can manage their own goals" ON goals
-    FOR ALL USING (
-        user_id = auth.uid() OR
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can manage their own goals" ON goals;
+    CREATE POLICY "Users can manage their own goals" ON goals
+        FOR ALL USING (
+            user_id = auth.uid() OR
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Goal milestones policies
-CREATE POLICY IF NOT EXISTS "Users can view milestones for their goals" ON goal_milestones
-    FOR SELECT USING (
-        goal_id IN (
-            SELECT id FROM goals WHERE user_id = auth.uid()
-        ) OR
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can view milestones for their goals" ON goal_milestones;
+    CREATE POLICY "Users can view milestones for their goals" ON goal_milestones
+        FOR SELECT USING (
+            goal_id IN (
+                SELECT id FROM goals WHERE user_id = auth.uid()
+            ) OR
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users can manage milestones for their goals" ON goal_milestones
-    FOR ALL USING (
-        goal_id IN (
-            SELECT id FROM goals WHERE user_id = auth.uid()
-        ) OR
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can manage milestones for their goals" ON goal_milestones;
+    CREATE POLICY "Users can manage milestones for their goals" ON goal_milestones
+        FOR ALL USING (
+            goal_id IN (
+                SELECT id FROM goals WHERE user_id = auth.uid()
+            ) OR
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Progress entries policies
-CREATE POLICY IF NOT EXISTS "Users can view their own progress" ON progress_entries
-    FOR SELECT USING (
-        user_id = auth.uid() OR
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can view their own progress" ON progress_entries;
+    CREATE POLICY "Users can view their own progress" ON progress_entries
+        FOR SELECT USING (
+            user_id = auth.uid() OR
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users can manage their own progress" ON progress_entries
-    FOR ALL USING (
-        user_id = auth.uid() OR
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can manage their own progress" ON progress_entries;
+    CREATE POLICY "Users can manage their own progress" ON progress_entries
+        FOR ALL USING (
+            user_id = auth.uid() OR
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- AI insights policies
-CREATE POLICY IF NOT EXISTS "Users can view their own insights" ON ai_insights
-    FOR SELECT USING (
-        user_id = auth.uid() OR
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Users can view their own insights" ON ai_insights;
+    CREATE POLICY "Users can view their own insights" ON ai_insights
+        FOR SELECT USING (
+            user_id = auth.uid() OR
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "System can create insights" ON ai_insights
-    FOR INSERT WITH CHECK (
-        tenant_id IN (
-            SELECT tenant_id FROM profiles WHERE id = auth.uid()
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "System can create insights" ON ai_insights;
+    CREATE POLICY "System can create insights" ON ai_insights
+        FOR INSERT WITH CHECK (
+            tenant_id IN (
+                SELECT tenant_id FROM profiles WHERE id = auth.uid()
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Audit logs policies
-CREATE POLICY IF NOT EXISTS "Admins can view audit logs" ON audit_logs
-    FOR SELECT USING (
-        tenant_id IN (
-            SELECT tenant_id FROM profiles 
-            WHERE id = auth.uid() AND role IN ('tenant_admin', 'super_admin')
-        )
-    );
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Admins can view audit logs" ON audit_logs;
+    CREATE POLICY "Admins can view audit logs" ON audit_logs
+        FOR SELECT USING (
+            tenant_id IN (
+                SELECT tenant_id FROM profiles 
+                WHERE id = auth.uid() AND role IN ('tenant_admin', 'super_admin')
+            )
+        );
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "System can create audit logs" ON audit_logs
-    FOR INSERT WITH CHECK (true);
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "System can create audit logs" ON audit_logs;
+    CREATE POLICY "System can create audit logs" ON audit_logs
+        FOR INSERT WITH CHECK (true);
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
