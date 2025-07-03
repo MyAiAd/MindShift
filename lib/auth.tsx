@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   
   const supabase = createClient();
@@ -33,15 +34,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    console.log('Auth: Refreshing profile for user:', user.id);
+    if (profileLoading) {
+      console.log('Auth: Profile refresh already in progress, skipping');
+      return;
+    }
+
+    console.log('Auth: Starting profile refresh for user:', user.id);
+    setProfileLoading(true);
 
     try {
-      // Get user profile
-      const { data: profileData, error: profileError } = await supabase
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+      );
+
+      // Get user profile with timeout
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
+
+      const { data: profileData, error: profileError } = await Promise.race([
+        profilePromise,
+        timeoutPromise
+      ]) as any;
 
       if (profileError) {
         console.error('Auth: Error fetching profile:', profileError);
@@ -60,11 +77,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Get tenant information (skip for super admins)
         if (profileData.tenant_id) {
-          const { data: tenantData, error: tenantError } = await supabase
+          const tenantPromise = supabase
             .from('tenants')
             .select('*')
             .eq('id', profileData.tenant_id)
             .single();
+
+          const { data: tenantData, error: tenantError } = await Promise.race([
+            tenantPromise,
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Tenant fetch timeout')), 5000)
+            )
+          ]) as any;
 
           if (tenantError) {
             console.error('Auth: Error fetching tenant:', tenantError);
@@ -77,11 +101,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('Auth: Super admin detected, no tenant needed');
           setTenant(null);
         }
+        console.log('Auth: Profile refresh completed successfully');
       } else {
         console.log('Auth: No profile data found');
       }
     } catch (error) {
       console.error('Auth: Unexpected error fetching profile:', error);
+      // Don't retry immediately to prevent loops
+    } finally {
+      setProfileLoading(false);
+      console.log('Auth: Profile refresh finished');
     }
   };
 
@@ -158,13 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (user) {
-      refreshProfile();
-    }
-  }, [user?.id]);
+  }, []);
 
   const value = {
     user,

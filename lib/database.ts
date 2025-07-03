@@ -243,26 +243,34 @@ export const supabase = createSupabaseClient<Database>(
 // Client for use in client components
 // Singleton pattern to prevent multiple client instances
 let supabaseClient: ReturnType<typeof createSupabaseClient<Database>> | null = null;
+let clientInitialized = false;
 
 export const createClient = () => {
   if (supabaseClient) {
     return supabaseClient;
   }
   
-  supabaseClient = createSupabaseClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        persistSession: true,
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-    }
-  );
+  if (!clientInitialized) {
+    console.log('Database: Creating new Supabase client instance');
+    clientInitialized = true;
+    
+    supabaseClient = createSupabaseClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          persistSession: true,
+          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      }
+    );
+    
+    console.log('Database: Supabase client created successfully');
+  }
   
-  return supabaseClient;
+  return supabaseClient!;
 };
 
 // Function to reset the client (useful for debugging)
