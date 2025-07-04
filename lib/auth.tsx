@@ -30,8 +30,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const profileLoadedRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
   
-  // Get the singleton client
-  const supabase = createClient();
+  // Get the singleton client once and store in ref to prevent recreation
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   const refreshProfile = async (currentUser?: User) => {
     const userToUse = currentUser || user;

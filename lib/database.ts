@@ -234,39 +234,28 @@ export interface Database {
   };
 }
 
-// Bulletproof singleton pattern
+// Improved singleton pattern with better persistence
 let _clientInstance: ReturnType<typeof createSupabaseClient<Database>> | null = null;
 let _isInitializing = false;
+
+// Check if we're in browser environment
+const isBrowser = typeof window !== 'undefined';
 
 export const createClient = (): ReturnType<typeof createSupabaseClient<Database>> => {
   // Return existing instance if available
   if (_clientInstance) {
+    console.log('Database: Reusing existing Supabase client instance');
     return _clientInstance;
   }
 
-  // Prevent multiple simultaneous initializations
-  if (_isInitializing) {
-    // If initialization is in progress, wait for it (this is a fallback)
-    console.warn('Supabase client initialization in progress...');
-    // Return a temporary client to prevent errors
+  // For server-side rendering, create a simple client each time
+  if (!isBrowser) {
+    console.log('Database: Creating SSR client instance');
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
-    }
-    
-    return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
-  }
-
-  // Check if required environment variables are available
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase environment variables not found - this may be during build time');
-    // Return a mock client during build time
-    if (typeof window === 'undefined') {
+      console.warn('Supabase environment variables not found - returning mock client for SSR');
       return {
         auth: { 
           getUser: async () => ({ data: { user: null }, error: null }),
@@ -284,29 +273,51 @@ export const createClient = (): ReturnType<typeof createSupabaseClient<Database>
         rpc: async () => ({ data: null, error: null })
       } as any;
     }
+
+    return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
+  }
+
+  // Prevent multiple simultaneous initializations
+  if (_isInitializing) {
+    console.warn('Supabase client initialization in progress - creating temporary client');
+    // Return a temporary client to prevent errors (this should rarely happen)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+    
+    return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
+  }
+
+  // Check environment variables
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase environment variables');
   }
 
   // Mark as initializing
   _isInitializing = true;
 
   try {
-    console.log('Database: Creating new Supabase client instance');
+    console.log('Database: Creating new Supabase client instance (singleton)');
     
-    const clientConfig = typeof window !== 'undefined' ? {
-      auth: {
-        persistSession: true,
-        storage: window.localStorage,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        // Unique storage key to prevent conflicts
-        storageKey: 'mindshift-auth-v2',
-      },
-    } : {};
-
     _clientInstance = createSupabaseClient<Database>(
-      supabaseUrl!,
-      supabaseAnonKey!,
-      clientConfig
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        auth: {
+          persistSession: true,
+          storage: window.localStorage,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          // Use a stable storage key
+          storageKey: 'mindshift-auth-v2',
+        },
+      }
     );
     
     console.log('Database: Supabase client created successfully');
@@ -317,16 +328,19 @@ export const createClient = (): ReturnType<typeof createSupabaseClient<Database>
   }
 };
 
-// Function to reset the client (useful for debugging)
+// Function to reset the client (useful for debugging or complete logout)
 export const resetClient = () => {
-  if (typeof window !== 'undefined') {
+  if (isBrowser) {
+    console.log('Database: Resetting Supabase client');
     _clientInstance = null;
     _isInitializing = false;
-    // Clear any cached auth state
-    window.localStorage.removeItem('mindshift-auth-v2');
-    window.localStorage.removeItem('mindshift-auth');
-    window.localStorage.removeItem('sb-kdxwfaynzemmdonkmttf-auth-token');
-    window.localStorage.removeItem('supabase.auth.token');
+    // Clear auth storage
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('mindshift-auth') || key.startsWith('sb-kdx')) {
+        localStorage.removeItem(key);
+      }
+    });
   }
 };
 
