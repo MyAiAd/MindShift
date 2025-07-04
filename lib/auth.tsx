@@ -34,6 +34,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
 
+  // Debug: Track AuthProvider instances
+  useEffect(() => {
+    const instanceId = Math.random().toString(36).substr(2, 9);
+    console.log(`Auth: AuthProvider instance created [${instanceId}]`);
+    
+    return () => {
+      console.log(`Auth: AuthProvider instance destroyed [${instanceId}]`);
+    };
+  }, []);
+
   const refreshProfile = async (currentUser?: User) => {
     const userToUse = currentUser || user;
     
@@ -167,26 +177,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session
+    // Get initial session with better error handling
     const getInitialSession = async () => {
       console.log('Auth: Getting initial session...');
-      const { data: { session }, error } = await supabase.auth.getSession();
       
-      if (!mounted) return;
-      
-      if (error) {
-        console.error('Auth: Error getting session:', error);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        if (error) {
+          console.error('Auth: Error getting session:', error);
+          setLoading(false);
+          return;
+        }
+        
+        if (session?.user) {
+          console.log('Auth: Initial session found for user:', session.user.email);
+          console.log('Auth: Session details:', {
+            access_token: session.access_token ? 'present' : 'missing',
+            refresh_token: session.refresh_token ? 'present' : 'missing',
+            expires_at: session.expires_at,
+            user_id: session.user.id
+          });
+          setUser(session.user);
+          await refreshProfile(session.user);
+        } else {
+          console.log('Auth: No initial session found');
+          // Check local storage for any remnants
+          const storageKeys = Object.keys(localStorage).filter(key => 
+            key.includes('mindshift-auth') || key.includes('supabase')
+          );
+          console.log('Auth: Storage keys found:', storageKeys);
+        }
+      } catch (error) {
+        console.error('Auth: Unexpected error getting initial session:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      
-      if (session?.user) {
-        console.log('Auth: Initial session found for user:', session.user.email);
-        setUser(session.user);
-        await refreshProfile(session.user);
-      } else {
-        console.log('Auth: No initial session found');
-      }
-      
-      setLoading(false);
     };
 
     getInitialSession();
@@ -206,13 +236,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         debounceTimer = setTimeout(async () => {
           console.log('Auth: State change event:', event, session?.user?.email || 'no user');
           
+          // Handle different auth events
+          if (event === 'SIGNED_OUT') {
+            setUser(null);
+            setProfile(null);
+            setTenant(null);
+            setSubscriptionTier(null);
+            profileLoadedRef.current = false;
+            currentUserIdRef.current = null;
+            setLoading(false);
+            return;
+          }
+          
           if (session?.user) {
-            // Only refresh if it's a different user
-            if (currentUserIdRef.current !== session.user.id) {
+            // Only refresh if it's a different user or if we don't have a profile yet
+            if (currentUserIdRef.current !== session.user.id || !profileLoadedRef.current) {
               setUser(session.user);
               await refreshProfile(session.user);
+            } else {
+              console.log('Auth: Same user, skipping profile refresh');
             }
-          } else {
+          } else if (event === 'INITIAL_SESSION') {
+            // For INITIAL_SESSION with no user, just update loading state
             setUser(null);
             setProfile(null);
             setTenant(null);
@@ -221,7 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             currentUserIdRef.current = null;
           }
           setLoading(false);
-        }, 100); // 100ms debounce
+        }, 50); // Reduced debounce time for faster response
       }
     );
 
