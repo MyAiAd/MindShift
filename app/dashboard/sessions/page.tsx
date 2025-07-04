@@ -180,11 +180,23 @@ export default function SessionsPage() {
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg p-6">
           <div className="flex items-center space-x-3 mb-4">
             <Video className="h-8 w-8 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">AI Coaching</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Mind Shifting Session</h3>
           </div>
-          <p className="text-gray-600 mb-4">Get instant coaching sessions with our AI coach available 24/7.</p>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-            Start AI Session
+          <p className="text-gray-600 mb-4">Start an automated Mind Shifting treatment session with 95% scripted responses for optimal performance.</p>
+          <div className="text-xs text-blue-600 mb-3 space-y-1">
+            <div>• Instant responses (&lt;200ms)</div>
+            <div>• Proven Mind Shifting protocols</div>
+            <div>• Minimal AI usage (&lt;5%)</div>
+            <div>• Cost effective (&lt;$0.05/session)</div>
+          </div>
+          <button 
+            onClick={() => {
+              const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              window.location.href = `/dashboard/sessions/treatment?sessionId=${sessionId}`;
+            }}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full"
+          >
+            Start Mind Shifting Session
           </button>
         </div>
 
