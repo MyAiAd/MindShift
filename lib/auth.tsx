@@ -177,51 +177,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session with better error handling
-    const getInitialSession = async () => {
-      console.log('Auth: Getting initial session...');
-      
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
-        if (error) {
-          console.error('Auth: Error getting session:', error);
-          setLoading(false);
-          return;
-        }
-        
-        if (session?.user) {
-          console.log('Auth: Initial session found for user:', session.user.email);
-          console.log('Auth: Session details:', {
-            access_token: session.access_token ? 'present' : 'missing',
-            refresh_token: session.refresh_token ? 'present' : 'missing',
-            expires_at: session.expires_at,
-            user_id: session.user.id
-          });
-          setUser(session.user);
-          await refreshProfile(session.user);
-        } else {
-          console.log('Auth: No initial session found');
-          // Check local storage for any remnants
-          const storageKeys = Object.keys(localStorage).filter(key => 
-            key.includes('mindshift-auth') || key.includes('supabase')
-          );
-          console.log('Auth: Storage keys found:', storageKeys);
-        }
-      } catch (error) {
-        console.error('Auth: Unexpected error getting initial session:', error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
+    console.log('Auth: Setting up auth state listener (no manual session check)');
 
-    getInitialSession();
-
-    // Listen for auth changes - but debounce rapid events
+    // Listen for auth changes - let Supabase handle session detection
     let debounceTimer: NodeJS.Timeout;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
@@ -238,6 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           // Handle different auth events
           if (event === 'SIGNED_OUT') {
+            console.log('Auth: Handling SIGNED_OUT event');
             setUser(null);
             setProfile(null);
             setTenant(null);
@@ -249,6 +208,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           
           if (session?.user) {
+            if (event === 'INITIAL_SESSION') {
+              console.log('Auth: Handling INITIAL_SESSION with user:', session.user.email);
+              console.log('Auth: Session details:', {
+                access_token: session.access_token ? 'present' : 'missing',
+                refresh_token: session.refresh_token ? 'present' : 'missing',
+                expires_at: session.expires_at,
+                user_id: session.user.id
+              });
+            } else {
+              console.log('Auth: Handling', event, 'with user:', session.user.email);
+            }
+            
             // Only refresh if it's a different user or if we don't have a profile yet
             if (currentUserIdRef.current !== session.user.id || !profileLoadedRef.current) {
               setUser(session.user);
@@ -256,14 +227,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
               console.log('Auth: Same user, skipping profile refresh');
             }
-          } else if (event === 'INITIAL_SESSION') {
-            // For INITIAL_SESSION with no user, just update loading state
-            setUser(null);
-            setProfile(null);
-            setTenant(null);
-            setSubscriptionTier(null);
-            profileLoadedRef.current = false;
-            currentUserIdRef.current = null;
+          } else {
+            console.log('Auth: No user in session for event:', event);
+            if (event === 'INITIAL_SESSION') {
+              // For INITIAL_SESSION with no user, check if we have any stored auth
+              const storageKeys = Object.keys(localStorage).filter(key => 
+                key.includes('mindshift-auth') || key.includes('supabase')
+              );
+              console.log('Auth: No initial session, storage keys found:', storageKeys);
+              
+              setUser(null);
+              setProfile(null);
+              setTenant(null);
+              setSubscriptionTier(null);
+              profileLoadedRef.current = false;
+              currentUserIdRef.current = null;
+            }
           }
           setLoading(false);
         }, 50); // Reduced debounce time for faster response
