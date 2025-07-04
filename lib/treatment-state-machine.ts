@@ -146,7 +146,30 @@ export class TreatmentStateMachine {
    */
   private validateUserInput(userInput: string, step: TreatmentStep): { isValid: boolean; error?: string } {
     const trimmed = userInput.trim();
+    const words = trimmed.split(' ').length;
+    const lowerInput = trimmed.toLowerCase();
     
+    // Special validation for discovery phase
+    if (step.id === 'discovery_start') {
+      // Check if user stated it as a goal instead of problem
+      if (lowerInput.includes('want to') || lowerInput.includes('goal') || lowerInput.includes('achieve')) {
+        return { isValid: false, error: 'How would you state that as a problem instead of a goal?' };
+      }
+      
+      // Check if user stated it as a question
+      if (trimmed.endsWith('?')) {
+        return { isValid: false, error: 'How would you state that as a problem instead of a question?' };
+      }
+      
+      // Check if user stated only an emotion
+      const emotionWords = ['stressed', 'anxious', 'sad', 'angry', 'worried', 'depressed', 'frustrated'];
+      if (words <= 2 && emotionWords.some(emotion => lowerInput.includes(emotion))) {
+        const emotion = emotionWords.find(emotion => lowerInput.includes(emotion));
+        return { isValid: false, error: `What are you ${emotion} about?` };
+      }
+    }
+    
+    // Standard validation rules
     for (const rule of step.validationRules) {
       switch (rule.type) {
         case 'minLength':
@@ -181,34 +204,58 @@ export class TreatmentStateMachine {
    */
   private checkAITriggers(userInput: string, step: TreatmentStep, context: TreatmentContext): AITrigger | null {
     const trimmed = userInput.trim();
+    const words = trimmed.split(' ').length;
+    const lowerInput = trimmed.toLowerCase();
     
     for (const trigger of step.aiTriggers) {
       switch (trigger.condition) {
         case 'userStuck':
+          // User says "I don't know", very short responses, or seems stuck
           if (trimmed.length < 3 || 
-              trimmed.toLowerCase().includes("i don't know") ||
-              trimmed.toLowerCase().includes("not sure")) {
+              lowerInput.includes("i don't know") ||
+              lowerInput.includes("not sure") ||
+              lowerInput.includes("can't think") ||
+              lowerInput.includes("don't feel") ||
+              lowerInput.includes("can't feel")) {
             return trigger;
           }
           break;
           
         case 'tooLong':
-          if (trimmed.split(' ').length > (trigger.threshold || 20)) {
+          // Response is too long (over 20 words in discovery, over 30 seconds worth)
+          if (words > 20) {
             return trigger;
           }
           break;
           
         case 'multipleProblems':
-          const problemCount = (trimmed.match(/and|also|plus|additionally/gi) || []).length;
-          if (problemCount > 1) {
+          // Multiple problems detected in discovery phase
+          const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well'];
+          const problemCount = problemConnectors.filter(connector => 
+            lowerInput.includes(connector)
+          ).length;
+          if (problemCount >= 1) {
+            return trigger;
+          }
+          break;
+          
+        case 'needsClarification':
+          // User seems confused or unclear about what's being asked
+          if (lowerInput.includes('what do you mean') ||
+              lowerInput.includes('i don\'t understand') ||
+              lowerInput.includes('confused') ||
+              lowerInput.includes('unclear') ||
+              lowerInput.includes('what should i') ||
+              (step.expectedResponseType === 'yesno' && !lowerInput.includes('yes') && !lowerInput.includes('no'))) {
             return trigger;
           }
           break;
           
         case 'offTopic':
-          // Simple keyword-based detection - can be enhanced
-          const offTopicKeywords = ['weather', 'politics', 'sports', 'food'];
-          if (offTopicKeywords.some(keyword => trimmed.toLowerCase().includes(keyword))) {
+          // User went completely off-topic
+          const offTopicKeywords = ['weather', 'politics', 'sports', 'food', 'work', 'money', 'family'];
+          if (offTopicKeywords.some(keyword => lowerInput.includes(keyword)) && 
+              context.currentStep.includes('feel') || context.currentStep.includes('problem')) {
             return trigger;
           }
           break;
@@ -222,107 +269,302 @@ export class TreatmentStateMachine {
    * Initialize all treatment phases with exact Mind Shifting protocols
    */
   private initializePhases(): void {
-    // Phase 1: Introduction
-    this.phases.set('intro', {
+    // Phase 1: Introduction (Always Scripted)
+    this.phases.set('introduction', {
       name: 'Introduction',
       maxDuration: 5,
       steps: [
         {
-          id: 'welcome',
-          scriptedResponse: "Welcome to your Mind Shifting session. I'm here to guide you through a powerful process that will help you transform limiting beliefs and problems into opportunities for growth. Are you ready to begin?",
-          expectedResponseType: 'yesno',
+          id: 'mind_shifting_explanation',
+          scriptedResponse: "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about problems you want to work on, we will be applying Mind Shifting methods to those problems in order to clear them, and to do that we will need to define each problem into a problem statement by you telling me what the problem is in a few words. So I'll be asking you to do that when needed.",
+          expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please respond with yes or no.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please acknowledge that you understand.' }
           ],
-          nextStep: 'explain_process',
-          aiTriggers: []
-        },
-        {
-          id: 'explain_process',
-          scriptedResponse: "Perfect! Here's how this works: I'll guide you through a series of questions and experiences designed to help you shift your perspective on a problem or limiting belief. Please be honest and open in your responses. What specific problem or challenge would you like to work on today?",
-          expectedResponseType: 'problem',
-          validationRules: [
-            { type: 'minLength', value: 10, errorMessage: 'Please describe your problem in more detail.' },
-            { type: 'maxLength', value: 200, errorMessage: 'Please keep your problem statement concise and focused.' }
-          ],
-          nextStep: 'confirm_problem',
-          aiTriggers: [
-            { condition: 'multipleProblems', action: 'focus' },
-            { condition: 'tooLong', action: 'simplify' }
-          ]
-        },
-        {
-          id: 'confirm_problem',
-          scriptedResponse: (userInput) => `Thank you for sharing that. So the problem you'd like to work on is: "${userInput || 'the issue you described'}". Is this correct, and are you ready to dive deeper into this?`,
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please confirm if this is the problem you want to work on.' }
-          ],
-          nextStep: 'preparation',
+          nextStep: 'discovery_start',
           aiTriggers: []
         }
       ]
     });
 
-    // Phase 2: Problem Shifting (Core methodology)
-    this.phases.set('problemShifting', {
-      name: 'Problem Shifting',
-      maxDuration: 20,
+    // Phase 2: Discovery (Mostly Scripted)
+    this.phases.set('discovery', {
+      name: 'Discovery',
+      maxDuration: 10,
       steps: [
         {
-          id: 'preparation',
-          scriptedResponse: "Excellent. Now we're going to begin the Problem Shifting process. Please find a comfortable position, close your eyes, and keep them closed throughout this exercise. Take three deep breaths and let yourself relax. When you're ready, say 'ready'.",
+          id: 'discovery_start',
+          scriptedResponse: "Tell me what you would like to work on in a few words.",
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please tell me what you would like to work on.' }
+          ],
+          nextStep: 'analyze_response',
+          aiTriggers: [
+            { condition: 'multipleProblems', action: 'focus' },
+            { condition: 'tooLong', action: 'simplify' },
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'analyze_response',
+          scriptedResponse: (userInput) => {
+            const words = userInput?.split(' ').length || 0;
+            if (words <= 20) {
+              return `OK what I heard you say is '${userInput}' - is that right?`;
+            } else {
+              return "OK I understand what you have said, but please tell me what the problem is in just a few words";
+            }
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please confirm if this is correct.' }
+          ],
+          nextStep: 'choose_method',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        }
+      ]
+    });
+
+    // Phase 3: Method Selection (Always Scripted)
+    this.phases.set('method_selection', {
+      name: 'Method Selection',
+      maxDuration: 5,
+      steps: [
+        {
+          id: 'choose_method',
+          scriptedResponse: "Would you like to use Problem Shifting, Identity Shifting, Belief Shifting or Blockage Shifting?",
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please let me know when you\'re ready to continue.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
           ],
-          nextStep: 'feel_problem',
+          nextStep: 'problem_shifting_intro',
+          aiTriggers: []
+        }
+      ]
+    });
+
+    // Phase 4: Problem Shifting Method (Script with AI Backup)
+    this.phases.set('problem_shifting', {
+      name: 'Problem Shifting',
+      maxDuration: 30,
+      steps: [
+        {
+          id: 'problem_shifting_intro',
+          scriptedResponse: "Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please acknowledge that you understand and are ready to continue.' }
+          ],
+          nextStep: 'feel_problem_step',
           aiTriggers: []
         },
         {
-          id: 'feel_problem',
+          id: 'feel_problem_step',
           scriptedResponse: (userInput, context) => {
-            const problem = context?.userResponses?.['confirm_problem'] || context?.userResponses?.['explain_process'] || 'your problem';
-            return `Good. Now, with your eyes closed, I want you to think about "${problem}". Feel this problem in your body. Where do you feel it? What does it feel like? Describe the physical sensation.`;
+            const problemStatement = context?.userResponses?.['analyze_response'] || context?.problemStatement || 'the problem';
+            return `Feel the problem '${problemStatement}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
-            { type: 'minLength', value: 5, errorMessage: 'Please describe what you feel in your body when you think about this problem.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
           ],
-          nextStep: 'feeling_deeper',
+          nextStep: 'notice_feeling_step',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
         {
-          id: 'feeling_deeper',
-          scriptedResponse: (userInput) => `Good. You feel "${userInput || 'that sensation'}". Now, go deeper. What happens in yourself when you feel "${userInput || 'that sensation'}"? What does that bring up for you?`,
+          id: 'notice_feeling_step',
+          scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what happens in yourself when you feel '${userInput || 'that feeling'}'?`,
           expectedResponseType: 'experience',
           validationRules: [
-            { type: 'minLength', value: 5, errorMessage: 'Please explore what comes up when you feel this sensation.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens when you feel that.' }
           ],
-          nextStep: 'shift_perspective',
+          nextStep: 'what_needs_to_happen_step',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
         {
-          id: 'shift_perspective',
-          scriptedResponse: (userInput) => `Interesting. You experience "${userInput || 'that feeling'}". Now I want you to consider something: What if this feeling, this experience, is not a problem but actually information? What if it's trying to tell you something important? What might that be?`,
+          id: 'what_needs_to_happen_step',
+          scriptedResponse: (userInput, context) => {
+            const problemStatement = context?.userResponses?.['analyze_response'] || context?.problemStatement || 'the problem';
+            return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
+          },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 10, errorMessage: 'Please explore what this feeling might be trying to tell you.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what needs to happen.' }
           ],
-          nextStep: 'new_perspective',
+          nextStep: 'feel_if_it_happened_step',
           aiTriggers: [
-            { condition: 'userStuck', action: 'clarify' },
-            { condition: 'offTopic', action: 'redirect' }
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'feel_if_it_happened_step',
+          scriptedResponse: (userInput) => `What would you feel like if '${userInput || 'that'}' had already happened?`,
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you would feel like.' }
+          ],
+          nextStep: 'feel_the_feeling_step',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'feel_the_feeling_step',
+          scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`,
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feeling feels like.' }
+          ],
+          nextStep: 'what_happens_step',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'what_happens_step',
+          scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what happens in yourself when you feel '${userInput || 'that feeling'}'?`,
+          expectedResponseType: 'experience',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens when you feel that.' }
+          ],
+          nextStep: 'check_if_still_problem',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'check_if_still_problem',
+          scriptedResponse: (userInput, context) => {
+            const problemStatement = context?.userResponses?.['analyze_response'] || context?.problemStatement || 'the problem';
+            return `Feel the problem '${problemStatement}'... does it still feel like a problem?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please tell me if it still feels like a problem.' }
+          ],
+          nextStep: 'digging_deeper_start',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
           ]
         }
       ]
     });
 
-    // Additional phases would be added here...
+    // Phase 5: Digging Deeper (Optional)
+    this.phases.set('digging_deeper', {
+      name: 'Digging Deeper',
+      maxDuration: 10,
+      steps: [
+        {
+          id: 'digging_deeper_start',
+          scriptedResponse: "Do you feel the problem will come back in the future?",
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'scenario_check',
+          aiTriggers: []
+        },
+        {
+          id: 'scenario_check',
+          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'anything_else_check',
+          aiTriggers: []
+        },
+        {
+          id: 'anything_else_check',
+          scriptedResponse: "Is there anything else about this that's still a problem for you?",
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'integration_start',
+          aiTriggers: []
+        }
+      ]
+    });
+
+    // Phase 6: Integration Questions (Always Required)
+    this.phases.set('integration', {
+      name: 'Integration',
+      maxDuration: 15,
+      steps: [
+        {
+          id: 'integration_start',
+          scriptedResponse: (userInput, context) => {
+            const problemStatement = context?.userResponses?.['analyze_response'] || context?.problemStatement || 'this';
+            return `How do you feel about ${problemStatement} now?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me how you feel about it now.' }
+          ],
+          nextStep: 'awareness_question',
+          aiTriggers: []
+        },
+        {
+          id: 'awareness_question',
+          scriptedResponse: "What are you more aware of now than before we did this process?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you are more aware of now.' }
+          ],
+          nextStep: 'how_helped_question',
+          aiTriggers: []
+        },
+        {
+          id: 'how_helped_question',
+          scriptedResponse: "How has it helped you to do this process?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me how this process has helped you.' }
+          ],
+          nextStep: 'intention_question',
+          aiTriggers: []
+        },
+        {
+          id: 'intention_question',
+          scriptedResponse: "What's your intention now in relation to this?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what your intention is now.' }
+          ],
+          nextStep: 'action_question',
+          aiTriggers: []
+        },
+        {
+          id: 'action_question',
+          scriptedResponse: "What needs to happen for you to realise your intention?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what needs to happen.' }
+          ],
+          nextStep: 'session_complete',
+          aiTriggers: []
+        },
+        {
+          id: 'session_complete',
+          scriptedResponse: "Thank you for doing this Mind Shifting session. The process is now complete. How do you feel overall about the work we've done today?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please share how you feel about the session.' }
+          ],
+          nextStep: undefined,
+          aiTriggers: []
+        }
+      ]
+    });
   }
 
   private getOrCreateContext(sessionId: string, context?: Partial<TreatmentContext>): TreatmentContext {
@@ -330,27 +572,112 @@ export class TreatmentStateMachine {
       this.contexts.set(sessionId, {
         userId: context?.userId || '',
         sessionId,
-        currentPhase: 'intro',
-        currentStep: 'welcome',
+        currentPhase: 'introduction',
+        currentStep: 'mind_shifting_explanation',
         userResponses: {},
         startTime: new Date(),
         lastActivity: new Date(),
-        metadata: {}
+        metadata: {
+          cycleCount: 0,
+          problemStatement: '',
+          lastResponse: ''
+        }
       });
     }
     return this.contexts.get(sessionId)!;
   }
 
   private determineNextStep(currentStep: TreatmentStep, context: TreatmentContext): string | null {
+    const lastResponse = context.userResponses[context.currentStep]?.toLowerCase() || '';
+    
+    // Handle special flow logic based on current step
+    switch (context.currentStep) {
+      case 'mind_shifting_explanation':
+        // Always move to discovery after introduction
+        context.currentPhase = 'discovery';
+        return 'discovery_start';
+        
+      case 'analyze_response':
+        // If user says "no", ask them to restate the problem
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          return 'discovery_start';
+        }
+        // If user says "yes", move to method selection
+        if (lastResponse.includes('yes') || lastResponse.includes('correct') || lastResponse.includes('right')) {
+          // Store the problem statement for later use
+          const problemResponse = context.userResponses['discovery_start'] || '';
+          context.problemStatement = problemResponse;
+          context.metadata.problemStatement = problemResponse;
+          context.currentPhase = 'method_selection';
+          return 'choose_method';
+        }
+        break;
+        
+      case 'choose_method':
+        // For now, always go to Problem Shifting (can be enhanced later for other methods)
+        context.currentPhase = 'problem_shifting';
+        return 'problem_shifting_intro';
+        
+      case 'check_if_still_problem':
+        // Core cycling logic for Problem Shifting
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // Still a problem - cycle back to step 2
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          return 'feel_problem_step';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No longer a problem - move to digging deeper
+          context.currentPhase = 'digging_deeper';
+          return 'digging_deeper_start';
+        }
+        break;
+        
+      case 'digging_deeper_start':
+      case 'scenario_check':
+      case 'anything_else_check':
+        // If any digging deeper question is "yes", go back to discovery for new problem
+        if (lastResponse.includes('yes')) {
+          context.currentPhase = 'discovery';
+          return 'discovery_start';
+        }
+        // If "no", continue to next digging deeper question or integration
+        if (lastResponse.includes('no')) {
+          if (context.currentStep === 'anything_else_check') {
+            context.currentPhase = 'integration';
+            return 'integration_start';
+          }
+          return currentStep.nextStep || null;
+        }
+        break;
+        
+      case 'session_complete':
+        // Session is finished
+        return null;
+        
+      default:
+        // Default behavior - follow the nextStep
+        return currentStep.nextStep || null;
+    }
+    
+    // Default fallback
     return currentStep.nextStep || null;
   }
 
   private handlePhaseCompletion(context: TreatmentContext): ProcessingResult {
-    // Logic to handle phase transitions or session completion
+    // Check if this is truly session completion or just a phase transition
+    if (context.currentStep === 'session_complete') {
+      return {
+        canContinue: false,
+        reason: 'Session completed successfully',
+        scriptedResponse: 'Your Mind Shifting session is now complete. Thank you for your participation.'
+      };
+    }
+    
+    // If we reach here, there might be an issue with the flow
     return {
       canContinue: false,
-      reason: 'Phase completed',
-      scriptedResponse: 'This phase of your treatment is complete. Well done!'
+      reason: 'Unexpected phase completion',
+      scriptedResponse: 'There seems to be an issue with the session flow. Please try again or contact support.'
     };
   }
 
