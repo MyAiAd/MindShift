@@ -105,7 +105,7 @@ export class TreatmentStateMachine {
       return {
         canContinue: false,
         reason: validationResult.error,
-        scriptedResponse: this.getValidationPrompt(currentStep, validationResult.error)
+        scriptedResponse: this.getValidationPrompt(currentStep, validationResult.error || 'Invalid input')
       };
     }
 
