@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { createClient } from './database';
 import { Profile, Tenant } from './database';
@@ -11,7 +11,6 @@ interface AuthContextType {
   tenant: Tenant | null;
   loading: boolean;
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
   hasFeatureAccess: (featureKey: string) => boolean;
   subscriptionTier: string | null;
 }
@@ -43,172 +42,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log(`Auth: AuthProvider instance destroyed [${instanceId}]`);
     };
   }, []);
-
-  const refreshProfile = async (currentUser?: User) => {
-    const userToUse = currentUser || user;
-    
-    if (!userToUse) {
-      console.log('Auth: No user found, skipping profile refresh');
-      return;
-    }
-
-    // Prevent duplicate calls for the same user
-    if (profileLoadingRef.current) {
-      console.log('Auth: Profile refresh already in progress, skipping');
-      return;
-    }
-
-    // Skip if we already have a profile for this user
-    if (profileLoadedRef.current && currentUserIdRef.current === userToUse.id && !currentUser) {
-      console.log('Auth: Profile already loaded for this user, skipping');
-      return;
-    }
-
-    console.log('Auth: Starting profile refresh for user:', userToUse.email);
-    profileLoadingRef.current = true;
-    currentUserIdRef.current = userToUse.id;
-
-    try {
-      // Shorter timeout to fail faster
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-      );
-
-      console.log('Auth: Fetching profile from database...');
-      
-      // Get user profile with timeout
-      const profilePromise = supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userToUse.id)
-        .single();
-
-      const { data: profileData, error: profileError } = await Promise.race([
-        profilePromise,
-        timeoutPromise
-      ]) as any;
-
-      console.log('Auth: Profile query completed', {
-        hasData: !!profileData,
-        hasError: !!profileError,
-        errorCode: profileError?.code,
-        errorMessage: profileError?.message
-      });
-
-      if (profileError) {
-        console.error('Auth: Error fetching profile:', profileError);
-        console.log('Auth: Profile error details:', {
-          code: profileError.code,
-          message: profileError.message,
-          details: profileError.details,
-          hint: profileError.hint
-        });
-        return;
-      }
-
-      if (profileData) {
-        console.log('Auth: Profile loaded:', { 
-          email: profileData.email, 
-          role: profileData.role, 
-          tenant_id: profileData.tenant_id 
-        });
-        
-        // Use functional updates to ensure state is set correctly
-        setProfile(prevProfile => {
-          console.log('Auth: Setting profile state - previous:', !!prevProfile, 'new:', !!profileData);
-          return profileData;
-        });
-        
-        setSubscriptionTier(profileData.subscription_tier || 'trial');
-        profileLoadedRef.current = true;
-
-        // Immediate verification that state update was queued
-        setTimeout(() => {
-          console.log('Auth: Immediate profile state check after setProfile:', {
-            profileSet: !!profile,
-            profileEmail: profile?.email,
-            expectedEmail: profileData.email
-          });
-        }, 1);
-
-        // Get tenant information (skip for super admins)
-        if (profileData.tenant_id) {
-          console.log('Auth: Fetching tenant data...');
-          try {
-            const { data: tenantData, error: tenantError } = await Promise.race([
-              supabase
-                .from('tenants')
-                .select('*')
-                .eq('id', profileData.tenant_id)
-                .single(),
-              new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Tenant fetch timeout')), 3000)
-              )
-            ]) as any;
-
-            console.log('Auth: Tenant query completed', {
-              hasData: !!tenantData,
-              hasError: !!tenantError
-            });
-
-            if (tenantError) {
-              console.error('Auth: Error fetching tenant:', tenantError);
-            } else if (tenantData) {
-              console.log('Auth: Tenant loaded:', tenantData.name);
-              setTenant(prevTenant => {
-                console.log('Auth: Setting tenant state - previous:', !!prevTenant, 'new:', !!tenantData);
-                return tenantData;
-              });
-            }
-          } catch (error) {
-            console.error('Auth: Tenant fetch failed:', error);
-          }
-        } else if (profileData.role === 'super_admin') {
-          console.log('Auth: Super admin detected, no tenant needed');
-          setTenant(prevTenant => {
-            console.log('Auth: Setting tenant to null - previous:', !!prevTenant);
-            return null;
-          });
-        }
-        console.log('Auth: Profile refresh completed successfully');
-      } else {
-        console.log('Auth: No profile data found');
-      }
-    } catch (error) {
-      console.error('Auth: Unexpected error fetching profile:', error);
-      console.log('Auth: Error details:', {
-        name: error instanceof Error ? error.name : 'Unknown',
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      });
-    } finally {
-      profileLoadingRef.current = false;
-      console.log('Auth: Profile refresh finished - checking auth state...');
-      
-      // Check if we're still authenticated after the profile refresh
-      // Use longer delay to allow React state updates to process
-      setTimeout(() => {
-        console.log('Auth: Post-refresh check - current user state:', {
-          hasUser: !!user,
-          hasProfile: !!profile,
-          userEmail: user?.email,
-          profileEmail: profile?.email,
-          currentUserId: currentUserIdRef.current,
-          profileLoaded: profileLoadedRef.current
-        });
-        
-        // Additional check - verify state consistency
-        if (currentUserIdRef.current && (!user || !profile)) {
-          console.warn('Auth: STATE INCONSISTENCY DETECTED!', {
-            refHasUserId: !!currentUserIdRef.current,
-            stateHasUser: !!user,
-            stateHasProfile: !!profile,
-            refProfileLoaded: profileLoadedRef.current
-          });
-        }
-      }, 500); // Longer delay to ensure state updates have processed
-    }
-  };
 
   const hasFeatureAccess = (featureKey: string): boolean => {
     if (!profile || !subscriptionTier) return false;
@@ -272,6 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setProfile(null);
             setTenant(null);
             setSubscriptionTier(null);
+            profileLoadingRef.current = false;
             profileLoadedRef.current = false;
             currentUserIdRef.current = null;
             setLoading(false);
@@ -291,22 +125,94 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               console.log(`Auth: [${timestamp}] Handling`, event, 'with user:', session.user.email);
             }
             
-            // Only refresh if it's a different user or if we don't have a profile yet
+            // Update user state immediately
+            console.log(`Auth: [${timestamp}] Setting user state directly`);
+            setUser(session.user);
+            
+            // Only refresh profile if it's a different user or if we don't have a profile yet
             if (currentUserIdRef.current !== session.user.id || !profileLoadedRef.current) {
-              console.log(`Auth: [${timestamp}] About to start profile refresh...`);
+              console.log(`Auth: [${timestamp}] Need to load profile for user`);
+              currentUserIdRef.current = session.user.id;
               
-              // Update user state immediately and synchronously
-              setUser(session.user);
-              
-              // Force a small delay to ensure state update takes effect
-              await new Promise(resolve => setTimeout(resolve, 10));
-              
-              await refreshProfile(session.user);
-              console.log(`Auth: [${timestamp}] Profile refresh completed`);
+              // Load profile directly in the event handler to avoid stale closures
+              try {
+                console.log('Auth: Fetching profile from database...');
+                
+                const { data: profileData, error: profileError } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', session.user.id)
+                  .single();
+
+                console.log('Auth: Profile query completed', {
+                  hasData: !!profileData,
+                  hasError: !!profileError,
+                  errorCode: profileError?.code,
+                  errorMessage: profileError?.message
+                });
+
+                if (profileError) {
+                  console.error('Auth: Error fetching profile:', profileError);
+                  console.log('Auth: Profile error details:', {
+                    code: profileError.code,
+                    message: profileError.message,
+                    details: profileError.details,
+                    hint: profileError.hint
+                  });
+                } else if (profileData) {
+                  console.log('Auth: Profile loaded:', { 
+                    email: profileData.email, 
+                    role: profileData.role, 
+                    tenant_id: profileData.tenant_id 
+                  });
+                  
+                  // Set profile state directly
+                  console.log(`Auth: [${timestamp}] Setting profile state directly`);
+                  setProfile(profileData);
+                  setSubscriptionTier(profileData.subscription_tier || 'trial');
+                  profileLoadedRef.current = true;
+
+                  // Handle tenant
+                  if (profileData.tenant_id) {
+                    console.log('Auth: Fetching tenant data...');
+                    try {
+                      const { data: tenantData, error: tenantError } = await supabase
+                        .from('tenants')
+                        .select('*')
+                        .eq('id', profileData.tenant_id)
+                        .single();
+
+                      if (tenantError) {
+                        console.error('Auth: Error fetching tenant:', tenantError);
+                      } else if (tenantData) {
+                        console.log('Auth: Tenant loaded:', tenantData.name);
+                        setTenant(tenantData);
+                      }
+                    } catch (error) {
+                      console.error('Auth: Tenant fetch failed:', error);
+                    }
+                  } else if (profileData.role === 'super_admin') {
+                    console.log('Auth: Super admin detected, no tenant needed');
+                    setTenant(null);
+                  }
+                  
+                  console.log(`Auth: [${timestamp}] Profile and tenant setup completed`);
+                  
+                  // Verify state immediately
+                  setTimeout(() => {
+                    console.log('Auth: Immediate state verification:', {
+                      userSet: !!user,
+                      profileSet: !!profile,
+                      userEmail: user?.email,
+                      profileEmail: profile?.email
+                    });
+                  }, 50);
+                }
+              } catch (error) {
+                console.error('Auth: Unexpected error fetching profile:', error);
+              }
             } else {
               console.log('Auth: Same user, skipping profile refresh');
-              // Ensure user state is set even if skipping profile refresh
-              setUser(session.user);
             }
           } else {
             console.log(`Auth: [${timestamp}] No user in session for event:`, event);
@@ -345,7 +251,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     tenant,
     loading,
     signOut,
-    refreshProfile,
     hasFeatureAccess,
     subscriptionTier,
   };
