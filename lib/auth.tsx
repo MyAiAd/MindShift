@@ -74,6 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
       );
 
+      console.log('Auth: Fetching profile from database...');
+      
       // Get user profile with timeout
       const profilePromise = supabase
         .from('profiles')
@@ -86,8 +88,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         timeoutPromise
       ]) as any;
 
+      console.log('Auth: Profile query completed', {
+        hasData: !!profileData,
+        hasError: !!profileError,
+        errorCode: profileError?.code,
+        errorMessage: profileError?.message
+      });
+
       if (profileError) {
         console.error('Auth: Error fetching profile:', profileError);
+        console.log('Auth: Profile error details:', {
+          code: profileError.code,
+          message: profileError.message,
+          details: profileError.details,
+          hint: profileError.hint
+        });
         return;
       }
 
@@ -104,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Get tenant information (skip for super admins)
         if (profileData.tenant_id) {
+          console.log('Auth: Fetching tenant data...');
           try {
             const { data: tenantData, error: tenantError } = await Promise.race([
               supabase
@@ -115,6 +131,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setTimeout(() => reject(new Error('Tenant fetch timeout')), 3000)
               )
             ]) as any;
+
+            console.log('Auth: Tenant query completed', {
+              hasData: !!tenantData,
+              hasError: !!tenantError
+            });
 
             if (tenantError) {
               console.error('Auth: Error fetching tenant:', tenantError);
@@ -135,9 +156,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Auth: Unexpected error fetching profile:', error);
+      console.log('Auth: Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
     } finally {
       profileLoadingRef.current = false;
-      console.log('Auth: Profile refresh finished');
+      console.log('Auth: Profile refresh finished - checking auth state...');
+      
+      // Check if we're still authenticated after the profile refresh
+      setTimeout(() => {
+        console.log('Auth: Post-refresh check - current user state:', {
+          hasUser: !!user,
+          hasProfile: !!profile,
+          currentUserId: currentUserIdRef.current
+        });
+      }, 100);
     }
   };
 
@@ -192,11 +227,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Debounce rapid auth events
         debounceTimer = setTimeout(async () => {
-          console.log('Auth: State change event:', event, session?.user?.email || 'no user');
+          const timestamp = new Date().toISOString().slice(11, 23); // HH:MM:SS.mmm
+          console.log(`Auth: [${timestamp}] State change event:`, event, session?.user?.email || 'no user');
           
           // Handle different auth events
           if (event === 'SIGNED_OUT') {
-            console.log('Auth: Handling SIGNED_OUT event');
+            console.log(`Auth: [${timestamp}] Handling SIGNED_OUT event`);
+            console.log('Auth: SIGNED_OUT triggered - checking what might have caused it');
             setUser(null);
             setProfile(null);
             setTenant(null);
@@ -209,7 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (session?.user) {
             if (event === 'INITIAL_SESSION') {
-              console.log('Auth: Handling INITIAL_SESSION with user:', session.user.email);
+              console.log(`Auth: [${timestamp}] Handling INITIAL_SESSION with user:`, session.user.email);
               console.log('Auth: Session details:', {
                 access_token: session.access_token ? 'present' : 'missing',
                 refresh_token: session.refresh_token ? 'present' : 'missing',
@@ -217,18 +254,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 user_id: session.user.id
               });
             } else {
-              console.log('Auth: Handling', event, 'with user:', session.user.email);
+              console.log(`Auth: [${timestamp}] Handling`, event, 'with user:', session.user.email);
             }
             
             // Only refresh if it's a different user or if we don't have a profile yet
             if (currentUserIdRef.current !== session.user.id || !profileLoadedRef.current) {
               setUser(session.user);
+              console.log(`Auth: [${timestamp}] About to start profile refresh...`);
               await refreshProfile(session.user);
+              console.log(`Auth: [${timestamp}] Profile refresh completed`);
             } else {
               console.log('Auth: Same user, skipping profile refresh');
             }
           } else {
-            console.log('Auth: No user in session for event:', event);
+            console.log(`Auth: [${timestamp}] No user in session for event:`, event);
             if (event === 'INITIAL_SESSION') {
               // For INITIAL_SESSION with no user, check if we have any stored auth
               const storageKeys = Object.keys(localStorage).filter(key => 
