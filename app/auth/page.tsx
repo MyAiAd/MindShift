@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useSupabase } from '@/lib/database';
+import { createClient } from '@/lib/database';
 import { useAuth } from '@/lib/auth';
 import { Brain, Mail, Lock, User, Building2, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -21,7 +21,7 @@ export default function AuthPage() {
   
   const router = useRouter();
   const { user } = useAuth();
-  const supabase = useSupabase();
+  const supabase = createClient();
 
   // Redirect if already authenticated
   React.useEffect(() => {

@@ -1,5 +1,4 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { useRef } from 'react';
 
 export type UserRole = 'super_admin' | 'tenant_admin' | 'manager' | 'coach' | 'user';
 export type TenantStatus = 'active' | 'suspended' | 'trial' | 'expired';
@@ -235,22 +234,31 @@ export interface Database {
   };
 }
 
-// Supabase client
-export const supabase = createSupabaseClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Bulletproof singleton pattern
+let _clientInstance: ReturnType<typeof createSupabaseClient<Database>> | null = null;
+let _isInitializing = false;
 
-// Enhanced singleton pattern to prevent multiple client instances
-declare global {
-  var __supabase_client__: ReturnType<typeof createSupabaseClient<Database>> | undefined;
-  var __supabase_client_initialized__: boolean | undefined;
-}
+export const createClient = (): ReturnType<typeof createSupabaseClient<Database>> => {
+  // Return existing instance if available
+  if (_clientInstance) {
+    return _clientInstance;
+  }
 
-// Single source of truth for the Supabase client
-let _singletonClient: ReturnType<typeof createSupabaseClient<Database>> | null = null;
+  // Prevent multiple simultaneous initializations
+  if (_isInitializing) {
+    // If initialization is in progress, wait for it (this is a fallback)
+    console.warn('Supabase client initialization in progress...');
+    // Return a temporary client to prevent errors
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+    
+    return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
+  }
 
-export const createClient = () => {
   // Check if required environment variables are available
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -260,85 +268,62 @@ export const createClient = () => {
     // Return a mock client during build time
     if (typeof window === 'undefined') {
       return {
-        auth: { getUser: async () => ({ data: { user: null }, error: null }) },
-        from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }) }),
+        auth: { 
+          getUser: async () => ({ data: { user: null }, error: null }),
+          signOut: async () => ({ error: null }),
+          onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+          getSession: async () => ({ data: { session: null }, error: null })
+        },
+        from: () => ({ 
+          select: () => ({ 
+            eq: () => ({ 
+              single: async () => ({ data: null, error: null }) 
+            }) 
+          }) 
+        }),
         rpc: async () => ({ data: null, error: null })
       } as any;
     }
   }
 
-  if (typeof window === 'undefined') {
-    // Server-side: create a new client each time
-    return createSupabaseClient<Database>(
-      supabaseUrl!,
-      supabaseAnonKey!
-    );
-  }
+  // Mark as initializing
+  _isInitializing = true;
 
-  // Client-side: strict singleton pattern
-  if (_singletonClient) {
-    return _singletonClient;
-  }
-
-  // Double-check with global to handle hot reloads
-  if (globalThis.__supabase_client__ && globalThis.__supabase_client_initialized__) {
-    _singletonClient = globalThis.__supabase_client__;
-    return _singletonClient;
-  }
-
-  // Prevent multiple initialization attempts during hot reloads
-  if (globalThis.__supabase_client_initialized__) {
-    return globalThis.__supabase_client__!;
-  }
-  
-  console.log('Database: Creating new Supabase client instance');
-  
-  // Mark as being initialized to prevent race conditions
-  globalThis.__supabase_client_initialized__ = true;
-  
-  const client = createSupabaseClient<Database>(
-    supabaseUrl!,
-    supabaseAnonKey!,
-    {
+  try {
+    console.log('Database: Creating new Supabase client instance');
+    
+    const clientConfig = typeof window !== 'undefined' ? {
       auth: {
         persistSession: true,
         storage: window.localStorage,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        // Add storage key to prevent conflicts
-        storageKey: 'mindshift-auth',
+        // Unique storage key to prevent conflicts
+        storageKey: 'mindshift-auth-v2',
       },
-    }
-  );
-  
-  // Store in both singleton and global
-  _singletonClient = client;
-  globalThis.__supabase_client__ = client;
-  
-  console.log('Database: Supabase client created successfully');
-  
-  return client;
-};
+    } : {};
 
-// Hook to use the singleton Supabase client in React components
-export const useSupabase = (): ReturnType<typeof createSupabaseClient<Database>> => {
-  const clientRef = useRef<ReturnType<typeof createSupabaseClient<Database>> | null>(null);
-  
-  if (!clientRef.current) {
-    clientRef.current = createClient();
+    _clientInstance = createSupabaseClient<Database>(
+      supabaseUrl!,
+      supabaseAnonKey!,
+      clientConfig
+    );
+    
+    console.log('Database: Supabase client created successfully');
+    
+    return _clientInstance;
+  } finally {
+    _isInitializing = false;
   }
-  
-  // Ensure we always return a client (createClient() handles edge cases)
-  return clientRef.current || createClient();
 };
 
 // Function to reset the client (useful for debugging)
 export const resetClient = () => {
   if (typeof window !== 'undefined') {
-    _singletonClient = null;
-    globalThis.__supabase_client__ = undefined;
-    globalThis.__supabase_client_initialized__ = undefined;
+    _clientInstance = null;
+    _isInitializing = false;
     // Clear any cached auth state
+    window.localStorage.removeItem('mindshift-auth-v2');
     window.localStorage.removeItem('mindshift-auth');
     window.localStorage.removeItem('sb-kdxwfaynzemmdonkmttf-auth-token');
     window.localStorage.removeItem('supabase.auth.token');

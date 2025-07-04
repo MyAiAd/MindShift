@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { useSupabase } from './database';
+import { createClient } from './database';
 import { Profile, Tenant } from './database';
 
 interface AuthContextType {
@@ -29,7 +29,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const profileLoadingRef = useRef(false);
   const profileLoadedRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
-  const supabase = useSupabase(); // Use the singleton client
+  
+  // Get the singleton client
+  const supabase = createClient();
 
   const refreshProfile = async (currentUser?: User) => {
     const userToUse = currentUser || user;
