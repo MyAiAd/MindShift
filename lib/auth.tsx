@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { createClient } from './database';
+import { useSupabase } from './database';
 import { Profile, Tenant } from './database';
 
 interface AuthContextType {
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const profileLoadingRef = useRef(false);
   const profileLoadedRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
-  const supabaseRef = useRef(createClient());
+  const supabase = useSupabase(); // Use the singleton client
 
   const refreshProfile = async (currentUser?: User) => {
     const userToUse = currentUser || user;
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
 
       // Get user profile with timeout
-      const profilePromise = supabaseRef.current
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userToUse.id)
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (profileData.tenant_id) {
           try {
             const { data: tenantData, error: tenantError } = await Promise.race([
-              supabaseRef.current
+              supabase
                 .from('tenants')
                 .select('*')
                 .eq('id', profileData.tenant_id)
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabaseRef.current.auth.signOut();
+    await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
     setTenant(null);
@@ -162,7 +162,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const supabase = supabaseRef.current;
     let mounted = true;
 
     // Get initial session

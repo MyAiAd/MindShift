@@ -1,4 +1,5 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { useRef } from 'react';
 
 export type UserRole = 'super_admin' | 'tenant_admin' | 'manager' | 'coach' | 'user';
 export type TenantStatus = 'active' | 'suspended' | 'trial' | 'expired';
@@ -240,12 +241,14 @@ export const supabase = createSupabaseClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Client for use in client components
 // Enhanced singleton pattern to prevent multiple client instances
 declare global {
   var __supabase_client__: ReturnType<typeof createSupabaseClient<Database>> | undefined;
   var __supabase_client_initialized__: boolean | undefined;
 }
+
+// Single source of truth for the Supabase client
+let _singletonClient: ReturnType<typeof createSupabaseClient<Database>> | null = null;
 
 export const createClient = () => {
   // Check if required environment variables are available
@@ -272,9 +275,15 @@ export const createClient = () => {
     );
   }
 
-  // Client-side: use enhanced singleton pattern
+  // Client-side: strict singleton pattern
+  if (_singletonClient) {
+    return _singletonClient;
+  }
+
+  // Double-check with global to handle hot reloads
   if (globalThis.__supabase_client__ && globalThis.__supabase_client_initialized__) {
-    return globalThis.__supabase_client__;
+    _singletonClient = globalThis.__supabase_client__;
+    return _singletonClient;
   }
 
   // Prevent multiple initialization attempts during hot reloads
@@ -287,7 +296,7 @@ export const createClient = () => {
   // Mark as being initialized to prevent race conditions
   globalThis.__supabase_client_initialized__ = true;
   
-  globalThis.__supabase_client__ = createSupabaseClient<Database>(
+  const client = createSupabaseClient<Database>(
     supabaseUrl!,
     supabaseAnonKey!,
     {
@@ -302,14 +311,31 @@ export const createClient = () => {
     }
   );
   
+  // Store in both singleton and global
+  _singletonClient = client;
+  globalThis.__supabase_client__ = client;
+  
   console.log('Database: Supabase client created successfully');
   
-  return globalThis.__supabase_client__;
+  return client;
+};
+
+// Hook to use the singleton Supabase client in React components
+export const useSupabase = (): ReturnType<typeof createSupabaseClient<Database>> => {
+  const clientRef = useRef<ReturnType<typeof createSupabaseClient<Database>> | null>(null);
+  
+  if (!clientRef.current) {
+    clientRef.current = createClient();
+  }
+  
+  // Ensure we always return a client (createClient() handles edge cases)
+  return clientRef.current || createClient();
 };
 
 // Function to reset the client (useful for debugging)
 export const resetClient = () => {
   if (typeof window !== 'undefined') {
+    _singletonClient = null;
     globalThis.__supabase_client__ = undefined;
     globalThis.__supabase_client_initialized__ = undefined;
     // Clear any cached auth state
