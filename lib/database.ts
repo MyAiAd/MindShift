@@ -247,11 +247,27 @@ declare global {
 }
 
 export const createClient = () => {
+  // Check if required environment variables are available
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Supabase environment variables not found - this may be during build time');
+    // Return a mock client during build time
+    if (typeof window === 'undefined') {
+      return {
+        auth: { getUser: async () => ({ data: { user: null }, error: null }) },
+        from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }) }),
+        rpc: async () => ({ data: null, error: null })
+      } as any;
+    }
+  }
+
   if (typeof window === 'undefined') {
     // Server-side: create a new client each time
     return createSupabaseClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      supabaseUrl!,
+      supabaseAnonKey!
     );
   }
 
@@ -263,8 +279,8 @@ export const createClient = () => {
   console.log('Database: Creating new Supabase client instance');
   
   globalThis.__supabase_client__ = createSupabaseClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl!,
+    supabaseAnonKey!,
     {
       auth: {
         persistSession: true,
@@ -279,8 +295,6 @@ export const createClient = () => {
   
   return globalThis.__supabase_client__;
 };
-
-
 
 // Function to reset the client (useful for debugging)
 export const resetClient = () => {

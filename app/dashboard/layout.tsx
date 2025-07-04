@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { 
   Brain, 
@@ -111,6 +113,8 @@ function SidebarContent({
   profile: any; 
   signOut: () => Promise<void>; 
 }) {
+  const pathname = usePathname();
+
   return (
     <div className="flex flex-col h-full">
       {/* Logo and tenant info */}
@@ -131,15 +135,24 @@ function SidebarContent({
         <nav className="flex-1 px-2 py-4 bg-white space-y-1">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
+            const isActive = pathname === item.href || 
+              (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            
             return (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
-                className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                  isActive
+                    ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
               >
-                <Icon className="mr-3 flex-shrink-0 h-6 w-6" />
+                <Icon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                  isActive ? 'text-indigo-700' : ''
+                }`} />
                 {item.label}
-              </a>
+              </Link>
             );
           })}
         </nav>

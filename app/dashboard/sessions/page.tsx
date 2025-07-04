@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle } from 'lucide-react';
 
 const sessions = [
@@ -38,6 +39,7 @@ const sessions = [
 
 export default function SessionsPage() {
   const [showBookModal, setShowBookModal] = useState(false);
+  const router = useRouter();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -192,7 +194,7 @@ export default function SessionsPage() {
           <button 
             onClick={() => {
               const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              window.location.href = `/dashboard/sessions/treatment?sessionId=${sessionId}`;
+              router.push(`/dashboard/sessions/treatment?sessionId=${sessionId}`);
             }}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full"
           >
