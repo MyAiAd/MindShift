@@ -113,9 +113,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           tenant_id: profileData.tenant_id 
         });
         
-        setProfile(profileData);
+        // Use functional updates to ensure state is set correctly
+        setProfile(prevProfile => {
+          console.log('Auth: Setting profile state - previous:', !!prevProfile, 'new:', !!profileData);
+          return profileData;
+        });
+        
         setSubscriptionTier(profileData.subscription_tier || 'trial');
         profileLoadedRef.current = true;
+
+        // Immediate verification that state update was queued
+        setTimeout(() => {
+          console.log('Auth: Immediate profile state check after setProfile:', {
+            profileSet: !!profile,
+            profileEmail: profile?.email,
+            expectedEmail: profileData.email
+          });
+        }, 1);
 
         // Get tenant information (skip for super admins)
         if (profileData.tenant_id) {
@@ -141,14 +155,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               console.error('Auth: Error fetching tenant:', tenantError);
             } else if (tenantData) {
               console.log('Auth: Tenant loaded:', tenantData.name);
-              setTenant(tenantData);
+              setTenant(prevTenant => {
+                console.log('Auth: Setting tenant state - previous:', !!prevTenant, 'new:', !!tenantData);
+                return tenantData;
+              });
             }
           } catch (error) {
             console.error('Auth: Tenant fetch failed:', error);
           }
         } else if (profileData.role === 'super_admin') {
           console.log('Auth: Super admin detected, no tenant needed');
-          setTenant(null);
+          setTenant(prevTenant => {
+            console.log('Auth: Setting tenant to null - previous:', !!prevTenant);
+            return null;
+          });
         }
         console.log('Auth: Profile refresh completed successfully');
       } else {
@@ -166,13 +186,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Auth: Profile refresh finished - checking auth state...');
       
       // Check if we're still authenticated after the profile refresh
+      // Use longer delay to allow React state updates to process
       setTimeout(() => {
         console.log('Auth: Post-refresh check - current user state:', {
           hasUser: !!user,
           hasProfile: !!profile,
-          currentUserId: currentUserIdRef.current
+          userEmail: user?.email,
+          profileEmail: profile?.email,
+          currentUserId: currentUserIdRef.current,
+          profileLoaded: profileLoadedRef.current
         });
-      }, 100);
+        
+        // Additional check - verify state consistency
+        if (currentUserIdRef.current && (!user || !profile)) {
+          console.warn('Auth: STATE INCONSISTENCY DETECTED!', {
+            refHasUserId: !!currentUserIdRef.current,
+            stateHasUser: !!user,
+            stateHasProfile: !!profile,
+            refProfileLoaded: profileLoadedRef.current
+          });
+        }
+      }, 500); // Longer delay to ensure state updates have processed
     }
   };
 
@@ -259,12 +293,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Only refresh if it's a different user or if we don't have a profile yet
             if (currentUserIdRef.current !== session.user.id || !profileLoadedRef.current) {
-              setUser(session.user);
               console.log(`Auth: [${timestamp}] About to start profile refresh...`);
+              
+              // Update user state immediately and synchronously
+              setUser(session.user);
+              
+              // Force a small delay to ensure state update takes effect
+              await new Promise(resolve => setTimeout(resolve, 10));
+              
               await refreshProfile(session.user);
               console.log(`Auth: [${timestamp}] Profile refresh completed`);
             } else {
               console.log('Auth: Same user, skipping profile refresh');
+              // Ensure user state is set even if skipping profile refresh
+              setUser(session.user);
             }
           } else {
             console.log(`Auth: [${timestamp}] No user in session for event:`, event);
