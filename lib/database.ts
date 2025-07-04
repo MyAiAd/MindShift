@@ -241,9 +241,10 @@ export const supabase = createSupabaseClient<Database>(
 );
 
 // Client for use in client components
-// Singleton pattern to prevent multiple client instances
+// Enhanced singleton pattern to prevent multiple client instances
 declare global {
   var __supabase_client__: ReturnType<typeof createSupabaseClient<Database>> | undefined;
+  var __supabase_client_initialized__: boolean | undefined;
 }
 
 export const createClient = () => {
@@ -271,12 +272,20 @@ export const createClient = () => {
     );
   }
 
-  // Client-side: use global singleton
-  if (globalThis.__supabase_client__) {
+  // Client-side: use enhanced singleton pattern
+  if (globalThis.__supabase_client__ && globalThis.__supabase_client_initialized__) {
     return globalThis.__supabase_client__;
+  }
+
+  // Prevent multiple initialization attempts during hot reloads
+  if (globalThis.__supabase_client_initialized__) {
+    return globalThis.__supabase_client__!;
   }
   
   console.log('Database: Creating new Supabase client instance');
+  
+  // Mark as being initialized to prevent race conditions
+  globalThis.__supabase_client_initialized__ = true;
   
   globalThis.__supabase_client__ = createSupabaseClient<Database>(
     supabaseUrl!,
@@ -287,6 +296,8 @@ export const createClient = () => {
         storage: window.localStorage,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        // Add storage key to prevent conflicts
+        storageKey: 'mindshift-auth',
       },
     }
   );
@@ -300,7 +311,9 @@ export const createClient = () => {
 export const resetClient = () => {
   if (typeof window !== 'undefined') {
     globalThis.__supabase_client__ = undefined;
+    globalThis.__supabase_client_initialized__ = undefined;
     // Clear any cached auth state
+    window.localStorage.removeItem('mindshift-auth');
     window.localStorage.removeItem('sb-kdxwfaynzemmdonkmttf-auth-token');
     window.localStorage.removeItem('supabase.auth.token');
   }

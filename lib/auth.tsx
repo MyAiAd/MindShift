@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { createClient } from './database';
 import { Profile, Tenant } from './database';
@@ -23,46 +23,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileLoaded, setProfileLoaded] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   
-  const supabase = createClient();
+  // Use refs to track state and prevent duplicate calls
+  const profileLoadingRef = useRef(false);
+  const profileLoadedRef = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
+  const supabaseRef = useRef(createClient());
 
   const refreshProfile = async (currentUser?: User) => {
-    console.log('Auth: refreshProfile called with currentUser:', !!currentUser, 'state user:', !!user);
-    console.log('Auth: currentUser details:', currentUser ? { id: currentUser.id, email: currentUser.email } : 'null');
-    console.log('Auth: state user details:', user ? { id: user.id, email: user.email } : 'null');
-    
     const userToUse = currentUser || user;
     
     if (!userToUse) {
-      console.log('Auth: No user found, skipping profile refresh (currentUser:', !!currentUser, 'user:', !!user, ')');
+      console.log('Auth: No user found, skipping profile refresh');
       return;
     }
 
-    if (profileLoading) {
+    // Prevent duplicate calls for the same user
+    if (profileLoadingRef.current) {
       console.log('Auth: Profile refresh already in progress, skipping');
       return;
     }
 
-    // Skip if we already have a profile for this user (unless explicitly called with a user parameter)
-    if (profileLoaded && profile?.id === userToUse.id && !currentUser) {
+    // Skip if we already have a profile for this user
+    if (profileLoadedRef.current && currentUserIdRef.current === userToUse.id && !currentUser) {
       console.log('Auth: Profile already loaded for this user, skipping');
       return;
     }
 
-    console.log('Auth: Starting profile refresh for user:', userToUse.id, 'passed user:', !!currentUser, 'state user:', !!user);
-    setProfileLoading(true);
+    console.log('Auth: Starting profile refresh for user:', userToUse.email);
+    profileLoadingRef.current = true;
+    currentUserIdRef.current = userToUse.id;
 
     try {
-      // Add timeout to prevent hanging
+      // Shorter timeout to fail faster
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
       );
 
       // Get user profile with timeout
-      const profilePromise = supabase
+      const profilePromise = supabaseRef.current
         .from('profiles')
         .select('*')
         .eq('id', userToUse.id)
@@ -87,31 +87,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setProfile(profileData);
         setSubscriptionTier(profileData.subscription_tier || 'trial');
-        setProfileLoaded(true);
+        profileLoadedRef.current = true;
 
         // Get tenant information (skip for super admins)
         if (profileData.tenant_id) {
-          const tenantPromise = supabase
-            .from('tenants')
-            .select('*')
-            .eq('id', profileData.tenant_id)
-            .single();
+          try {
+            const { data: tenantData, error: tenantError } = await Promise.race([
+              supabaseRef.current
+                .from('tenants')
+                .select('*')
+                .eq('id', profileData.tenant_id)
+                .single(),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Tenant fetch timeout')), 3000)
+              )
+            ]) as any;
 
-          const { data: tenantData, error: tenantError } = await Promise.race([
-            tenantPromise,
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Tenant fetch timeout')), 5000)
-            )
-          ]) as any;
-
-          if (tenantError) {
-            console.error('Auth: Error fetching tenant:', tenantError);
-          } else if (tenantData) {
-            console.log('Auth: Tenant loaded:', tenantData.name);
-            setTenant(tenantData);
+            if (tenantError) {
+              console.error('Auth: Error fetching tenant:', tenantError);
+            } else if (tenantData) {
+              console.log('Auth: Tenant loaded:', tenantData.name);
+              setTenant(tenantData);
+            }
+          } catch (error) {
+            console.error('Auth: Tenant fetch failed:', error);
           }
         } else if (profileData.role === 'super_admin') {
-          // Super admins don't have a tenant, set to null explicitly
           console.log('Auth: Super admin detected, no tenant needed');
           setTenant(null);
         }
@@ -121,9 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Auth: Unexpected error fetching profile:', error);
-      // Don't retry immediately to prevent loops
     } finally {
-      setProfileLoading(false);
+      profileLoadingRef.current = false;
       console.log('Auth: Profile refresh finished');
     }
   };
@@ -152,19 +152,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await supabaseRef.current.auth.signOut();
     setUser(null);
     setProfile(null);
     setTenant(null);
     setSubscriptionTier(null);
-    setProfileLoaded(false);
+    profileLoadedRef.current = false;
+    currentUserIdRef.current = null;
   };
 
   useEffect(() => {
+    const supabase = supabaseRef.current;
+    let mounted = true;
+
     // Get initial session
     const getInitialSession = async () => {
       console.log('Auth: Getting initial session...');
       const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (!mounted) return;
       
       if (error) {
         console.error('Auth: Error getting session:', error);
@@ -183,27 +189,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getInitialSession();
 
-    // Listen for auth changes
+    // Listen for auth changes - but debounce rapid events
+    let debounceTimer: NodeJS.Timeout;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
-        console.log('Auth: State change event:', event, session?.user?.email || 'no user');
+        if (!mounted) return;
         
-        if (session?.user) {
-          setUser(session.user);
-          await refreshProfile(session.user);
-        } else {
-          setUser(null);
-          setProfile(null);
-          setTenant(null);
-          setSubscriptionTier(null);
-          setProfileLoaded(false);
+        // Clear previous timer
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
         }
-        setLoading(false);
+        
+        // Debounce rapid auth events
+        debounceTimer = setTimeout(async () => {
+          console.log('Auth: State change event:', event, session?.user?.email || 'no user');
+          
+          if (session?.user) {
+            // Only refresh if it's a different user
+            if (currentUserIdRef.current !== session.user.id) {
+              setUser(session.user);
+              await refreshProfile(session.user);
+            }
+          } else {
+            setUser(null);
+            setProfile(null);
+            setTenant(null);
+            setSubscriptionTier(null);
+            profileLoadedRef.current = false;
+            currentUserIdRef.current = null;
+          }
+          setLoading(false);
+        }, 100); // 100ms debounce
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      subscription.unsubscribe();
+    };
+  }, []); // Empty dependency array - run once on mount
 
   const value = {
     user,
