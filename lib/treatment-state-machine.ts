@@ -110,6 +110,21 @@ export class TreatmentStateMachine {
     // Validate user input FIRST
     const validationResult = this.validateUserInput(userInput, currentStep);
     if (!validationResult.isValid) {
+      // Special handling for multiple problems detected
+      if (validationResult.error === 'MULTIPLE_PROBLEMS_DETECTED') {
+        // Move to multiple problems selection step
+        treatmentContext.currentStep = 'multiple_problems_selection';
+        const multipleProblemsStep = currentPhase.steps.find(s => s.id === 'multiple_problems_selection');
+        if (multipleProblemsStep) {
+          const scriptedResponse = this.getScriptedResponse(multipleProblemsStep, treatmentContext);
+          return {
+            canContinue: true,
+            nextStep: 'multiple_problems_selection',
+            scriptedResponse
+          };
+        }
+      }
+      
       // Check if we need AI assistance
       const aiTrigger = this.checkAITriggers(userInput, currentStep, treatmentContext);
       if (aiTrigger) {
@@ -184,7 +199,8 @@ export class TreatmentStateMachine {
     // Special validation for discovery phase
     if (step.id === 'discovery_start') {
       // Check if user stated it as a goal instead of problem
-      if (lowerInput.includes('want to') || lowerInput.includes('goal') || lowerInput.includes('achieve')) {
+      if (lowerInput.includes('want to') || lowerInput.includes('goal') || lowerInput.includes('achieve') || 
+          lowerInput.includes('wish to') || lowerInput.includes('hope to') || lowerInput.includes('plan to')) {
         return { isValid: false, error: 'How would you state that as a problem instead of a goal?' };
       }
       
@@ -194,10 +210,22 @@ export class TreatmentStateMachine {
       }
       
       // Check if user stated only an emotion
-      const emotionWords = ['stressed', 'anxious', 'sad', 'angry', 'worried', 'depressed', 'frustrated'];
+      const emotionWords = ['stressed', 'anxious', 'sad', 'angry', 'worried', 'depressed', 'frustrated', 'upset', 'scared', 'nervous'];
       if (words <= 2 && emotionWords.some(emotion => lowerInput.includes(emotion))) {
         const emotion = emotionWords.find(emotion => lowerInput.includes(emotion));
         return { isValid: false, error: `What are you ${emotion} about?` };
+      }
+      
+      // Check for multiple problems
+      const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well', 'along with'];
+      const hasMultipleProblems = problemConnectors.some(connector => lowerInput.includes(connector));
+      if (hasMultipleProblems) {
+        return { isValid: false, error: 'MULTIPLE_PROBLEMS_DETECTED' };
+      }
+      
+      // Check if too long (over 20 words)
+      if (words > 20) {
+        return { isValid: false, error: 'OK I understand what you have said, but please tell me what the problem is in just a few words' };
       }
     }
     
@@ -254,8 +282,8 @@ export class TreatmentStateMachine {
           break;
           
         case 'tooLong':
-          // Response is too long (over 20 words in discovery, over 30 seconds worth)
-          if (words > 20) {
+          // Response is too long - simulate 30 second interruption
+          if (words > 30) {
             return trigger;
           }
           break;
@@ -337,6 +365,34 @@ export class TreatmentStateMachine {
             { condition: 'tooLong', action: 'simplify' },
             { condition: 'needsClarification', action: 'clarify' }
           ]
+        },
+        {
+          id: 'multiple_problems_selection',
+          scriptedResponse: (userInput, context) => {
+            const problemCount = this.countProblems(userInput || '');
+            const problems = this.extractProblems(userInput || '');
+            let response = `OK so you told me ${problemCount} problems there, which one do you want to work on first?\n`;
+            problems.forEach((problem, index) => {
+              response += `${index + 1}. ${problem}\n`;
+            });
+            return response;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please select which problem you want to work on first.' }
+          ],
+          nextStep: 'restate_selected_problem',
+          aiTriggers: []
+        },
+        {
+          id: 'restate_selected_problem',
+          scriptedResponse: "OK so it is important we use your own words for the problem statement so please tell me what the problem is in a few words",
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please tell me what the problem is in a few words.' }
+          ],
+          nextStep: 'analyze_response',
+          aiTriggers: []
         },
         {
           id: 'analyze_response',
@@ -562,6 +618,16 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me how this process has helped you.' }
           ],
+          nextStep: 'narrative_question',
+          aiTriggers: []
+        },
+        {
+          id: 'narrative_question',
+          scriptedResponse: "What is your new narrative about this?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me your new narrative about this.' }
+          ],
           nextStep: 'intention_question',
           aiTriggers: []
         },
@@ -582,6 +648,46 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what needs to happen.' }
           ],
+          nextStep: 'action_followup',
+          aiTriggers: []
+        },
+        {
+          id: 'action_followup',
+          scriptedResponse: "What else needs to happen for you to realise your intention?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what else needs to happen.' }
+          ],
+          nextStep: 'one_thing_question',
+          aiTriggers: []
+        },
+        {
+          id: 'one_thing_question',
+          scriptedResponse: "What is the one thing you can do that will make everything else easier or unnecessary?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me the one thing that will make everything else easier.' }
+          ],
+          nextStep: 'first_action_question',
+          aiTriggers: []
+        },
+        {
+          id: 'first_action_question',
+          scriptedResponse: "What is the first action that you can commit to now that will help you to realise your intention?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me the first action you can commit to.' }
+          ],
+          nextStep: 'when_will_you_do_this',
+          aiTriggers: []
+        },
+        {
+          id: 'when_will_you_do_this',
+          scriptedResponse: "When will you do this?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me when you will do this.' }
+          ],
           nextStep: 'session_complete',
           aiTriggers: []
         },
@@ -599,6 +705,39 @@ export class TreatmentStateMachine {
     });
   }
 
+  // Helper methods for multiple problem detection
+  private countProblems(userInput: string): number {
+    const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well', 'along with'];
+    let count = 1; // Start with 1 problem
+    problemConnectors.forEach(connector => {
+      if (userInput.toLowerCase().includes(connector)) {
+        count++;
+      }
+    });
+    return count;
+  }
+
+  private extractProblems(userInput: string): string[] {
+    // Simple extraction - split by common connectors
+    const problems: string[] = [];
+    const connectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well', 'along with'];
+    
+    let remaining = userInput;
+    connectors.forEach(connector => {
+      if (remaining.toLowerCase().includes(connector)) {
+        const parts = remaining.split(new RegExp(`\\b${connector}\\b`, 'i'));
+        problems.push(...parts.map(p => p.trim()).filter(p => p.length > 0));
+        remaining = '';
+      }
+    });
+    
+    if (remaining && problems.length === 0) {
+      problems.push(remaining.trim());
+    }
+    
+    return problems.length > 0 ? problems : [userInput];
+  }
+
   private getOrCreateContext(sessionId: string, context?: Partial<TreatmentContext>): TreatmentContext {
     if (!this.contexts.has(sessionId)) {
       this.contexts.set(sessionId, {
@@ -612,7 +751,8 @@ export class TreatmentStateMachine {
         metadata: {
           cycleCount: 0,
           problemStatement: '',
-          lastResponse: ''
+          lastResponse: '',
+          problemType: 'problem' // default to problem type
         }
       });
     }
@@ -629,6 +769,31 @@ export class TreatmentStateMachine {
         context.currentPhase = 'discovery';
         return 'discovery_start';
         
+      case 'discovery_start':
+        // Check if multiple problems were detected
+        const userInput = context.userResponses[context.currentStep] || '';
+        const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well', 'along with'];
+        const hasMultipleProblems = problemConnectors.some(connector => userInput.toLowerCase().includes(connector));
+        
+        if (hasMultipleProblems) {
+          return 'multiple_problems_selection';
+        }
+        
+        // Check if it's a goal or negative experience
+        if (userInput.toLowerCase().includes('want to') || userInput.toLowerCase().includes('goal')) {
+          context.metadata.problemType = 'goal';
+        } else if (userInput.toLowerCase().includes('happened') || userInput.toLowerCase().includes('experience')) {
+          context.metadata.problemType = 'negative_experience';
+        }
+        
+        return 'analyze_response';
+        
+      case 'multiple_problems_selection':
+        return 'restate_selected_problem';
+        
+      case 'restate_selected_problem':
+        return 'analyze_response';
+        
       case 'analyze_response':
         // If user says "no", ask them to restate the problem
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
@@ -637,7 +802,7 @@ export class TreatmentStateMachine {
         // If user says "yes", move to method selection
         if (lastResponse.includes('yes') || lastResponse.includes('correct') || lastResponse.includes('right')) {
           // Store the problem statement for later use
-          const problemResponse = context.userResponses['discovery_start'] || '';
+          const problemResponse = context.userResponses['restate_selected_problem'] || context.userResponses['discovery_start'] || '';
           context.problemStatement = problemResponse;
           context.metadata.problemStatement = problemResponse;
           context.currentPhase = 'method_selection';

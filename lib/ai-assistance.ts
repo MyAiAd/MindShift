@@ -78,7 +78,7 @@ The user mentioned multiple problems. Help them focus on just one problem for th
       case 'simplify':
         return `${baseContext}
 
-The user's response was too long or complex. Help them simplify and focus on the core feeling or experience. Keep response under 20 words.`;
+The user's response was too long or complex. This is a 30-second interruption case. Use the exact Mind Shifting protocol: "I'm just going to stop you there because in order to apply a Mind Shifting method to this we need to define the problem, so please can you tell me what the problem is in a few words."`;
 
       case 'redirect':
         return `${baseContext}
@@ -116,8 +116,8 @@ Provide brief guidance to help the user continue with the treatment. Keep respon
     if (prompt.includes('focus')) {
       return "Let's focus on just one problem for now. Which issue feels most important to you today?";
     }
-    if (prompt.includes('simplify')) {
-      return "Can you describe that feeling in just a few words?";
+    if (prompt.includes('simplify') || prompt.includes('30-second interruption')) {
+      return "I'm just going to stop you there because in order to apply a Mind Shifting method to this we need to define the problem, so please can you tell me what the problem is in a few words.";
     }
     if (prompt.includes('redirect')) {
       return "Let's return to the current step. What are you feeling in your body?";
@@ -142,7 +142,7 @@ Provide brief guidance to help the user continue with the treatment. Keep respon
     const fallbacks = {
       'clarify': "Take your time and describe what you notice. There's no right or wrong answer.",
       'focus': "Please choose one main problem to work on for this session.",
-      'simplify': "Can you describe that in simpler terms?",
+      'simplify': "I'm just going to stop you there because in order to apply a Mind Shifting method to this we need to define the problem, so please can you tell me what the problem is in a few words.",
       'redirect': "Let's focus on the current step of the process."
     };
 
