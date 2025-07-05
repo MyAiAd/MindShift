@@ -5,7 +5,7 @@ import { createServerClient } from '@/lib/database-server';
 export async function POST(request: NextRequest) {
   try {
     console.log('API: Creating server client for tenant creation');
-    const supabase = await createServerClient();
+    const supabase = createServerClient();
     
     // Get the current user
     console.log('API: Getting user from server client');
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerClient();
+    const supabase = createServerClient();
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

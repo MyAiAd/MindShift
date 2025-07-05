@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   
   try {
     // Create server client with proper auth context
-    const supabase = await createServerClient();
+    const supabase = createServerClient();
     console.log('Subscription API: Server client created');
     
     // Get the current user
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Create server client with proper auth context
-    const supabase = await createServerClient();
+    const supabase = createServerClient();
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

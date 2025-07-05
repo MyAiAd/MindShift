@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { Database } from '@/types/database';
 
 // Server-side client for use in API routes
-export const createServerClient = async () => {
+export const createServerClient = () => {
   const cookieStore = cookies();
   
   console.log('Database: Creating server client with cookies');

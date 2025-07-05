@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Verify user authentication - more robust approach
     try {
-      const supabase = await createServerClient();
+      const supabase = createServerClient();
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError) {
@@ -257,7 +257,7 @@ async function handleAIAssistance(
  */
 async function handleGetStatus(sessionId: string, userId: string) {
   try {
-    const supabase = await createServerClient();
+    const supabase = createServerClient();
     
     // Get session data from database
     const { data: session, error } = await supabase
@@ -318,7 +318,7 @@ async function saveSessionToDatabase(
   try {
     console.log('Treatment API: Saving session to database:', { sessionId, userId });
     
-    const supabase = await createServerClient();
+    const supabase = createServerClient();
     
     // Get user's profile to determine tenant_id
     const { data: profile, error: profileError } = await supabase
@@ -376,7 +376,7 @@ async function saveInteractionToDatabase(
   response: any
 ) {
   try {
-    const supabase = await createServerClient();
+    const supabase = createServerClient();
     
     await supabase.from('treatment_interactions').insert({
       session_id: sessionId,
