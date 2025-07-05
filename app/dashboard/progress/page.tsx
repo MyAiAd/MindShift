@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
-import { Goal, ProgressEntry } from '@/types/database';
+import { Goal, ProgressEntry, GamificationData, UserAchievement, UserStreak, AchievementRarity } from '@/types/database';
 import { 
   TrendingUp, 
   Calendar, 
@@ -15,7 +15,15 @@ import {
   Heart,
   Zap,
   Shield,
-  X
+  X,
+  Star,
+  Trophy,
+  Flame,
+  Crown,
+  Medal,
+  Users,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import {
   LineChart,
@@ -73,7 +81,9 @@ export default function ProgressPage() {
   const { profile } = useAuth();
   const [stats, setStats] = useState<ProgressStats | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [gamificationData, setGamificationData] = useState<GamificationData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [gamificationLoading, setGamificationLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showNewEntryModal, setShowNewEntryModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -90,7 +100,8 @@ export default function ProgressPage() {
   useEffect(() => {
     Promise.all([
       fetchProgressStats(),
-      fetchGoals()
+      fetchGoals(),
+      fetchGamificationData()
     ]);
   }, [timeRange]);
 
@@ -124,6 +135,25 @@ export default function ProgressPage() {
       setGoals(data.goals || []);
     } catch (err) {
       console.error('Error fetching goals:', err);
+    }
+  };
+
+  const fetchGamificationData = async () => {
+    try {
+      setGamificationLoading(true);
+      
+      const response = await fetch('/api/gamification');
+      if (!response.ok) {
+        throw new Error('Failed to fetch gamification data');
+      }
+      
+      const data = await response.json();
+      setGamificationData(data.data);
+    } catch (err) {
+      console.error('Error fetching gamification data:', err);
+      // Don't set error for gamification data, just log it
+    } finally {
+      setGamificationLoading(false);
     }
   };
 
@@ -229,6 +259,55 @@ export default function ProgressPage() {
       case '365': return 'Last year';
       default: return 'Last 30 days';
     }
+  };
+
+  // Gamification helper functions
+  const getRarityColor = (rarity: AchievementRarity) => {
+    switch (rarity) {
+      case 'common': return 'text-gray-600 bg-gray-100';
+      case 'uncommon': return 'text-green-600 bg-green-100';
+      case 'rare': return 'text-blue-600 bg-blue-100';
+      case 'epic': return 'text-purple-600 bg-purple-100';
+      case 'legendary': return 'text-yellow-600 bg-yellow-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getRarityIcon = (rarity: AchievementRarity) => {
+    switch (rarity) {
+      case 'common': return Medal;
+      case 'uncommon': return Trophy;
+      case 'rare': return Star;
+      case 'epic': return Crown;
+      case 'legendary': return Flame;
+      default: return Medal;
+    }
+  };
+
+  const getStreakIcon = (streakType: string) => {
+    switch (streakType) {
+      case 'daily_progress': return Calendar;
+      case 'weekly_goal_progress': return Target;
+      case 'treatment_sessions': return Activity;
+      default: return Flame;
+    }
+  };
+
+  const formatStreakType = (streakType: string) => {
+    switch (streakType) {
+      case 'daily_progress': return 'Daily Progress';
+      case 'weekly_goal_progress': return 'Weekly Goals';
+      case 'treatment_sessions': return 'Treatment Sessions';
+      default: return streakType;
+    }
+  };
+
+  const getLevelColor = (level: number) => {
+    if (level >= 20) return 'text-yellow-600 bg-yellow-100';
+    if (level >= 15) return 'text-purple-600 bg-purple-100';
+    if (level >= 10) return 'text-blue-600 bg-blue-100';
+    if (level >= 5) return 'text-green-600 bg-green-100';
+    return 'text-gray-600 bg-gray-100';
   };
 
   if (loading) {
@@ -445,91 +524,177 @@ export default function ProgressPage() {
         </div>
       </div>
 
-      {/* Recent Achievements & Progress Breakdown */}
-      <div className="grid lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Achievements</h2>
-          <div className="space-y-4">
-            {stats?.recentAchievements.completedGoals.length === 0 && 
-             stats?.recentAchievements.completedMilestones.length === 0 ? (
+      {/* Gamification Hub */}
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Level Progress & Recent Achievements */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Level Progress */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Your Level Progress</h2>
+              {gamificationData?.levelProgress && (
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${getLevelColor(gamificationData.levelProgress.currentLevel)}`}>
+                  Level {gamificationData.levelProgress.currentLevel}
+                </div>
+              )}
+            </div>
+            
+            {gamificationLoading ? (
+              <div className="flex items-center justify-center h-24">
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              </div>
+            ) : gamificationData?.levelProgress ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">
+                    {gamificationData.levelProgress.levelProgress} / {gamificationData.levelProgress.levelProgressMax} XP
+                  </span>
+                  <span className="font-medium text-indigo-600">
+                    {gamificationData.levelProgress.pointsForNextLevel} XP to next level
+                  </span>
+                </div>
+                
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${gamificationData.levelProgress.levelProgressPercentage}%` }}
+                  ></div>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>{gamificationData.userStats.total_points} Total XP</span>
+                  <span>{gamificationData.userStats.achievements_earned} Achievements</span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Star className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">Start your journey to earn XP and level up!</p>
+              </div>
+            )}
+          </div>
+
+          {/* Recent Achievements */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Achievements</h2>
+            
+            {gamificationLoading ? (
+              <div className="flex items-center justify-center h-24">
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              </div>
+            ) : gamificationData?.recentAchievements && gamificationData.recentAchievements.length > 0 ? (
+              <div className="space-y-4">
+                {gamificationData.recentAchievements.map((achievement) => {
+                  const RarityIcon = getRarityIcon(achievement.rarity as AchievementRarity);
+                  return (
+                    <div key={achievement.id} className={`flex items-center space-x-3 p-4 rounded-lg border ${getRarityColor(achievement.rarity as AchievementRarity)}`}>
+                      <div className="flex-shrink-0">
+                        <RarityIcon className="h-8 w-8" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <p className="font-medium text-gray-900">{achievement.title}</p>
+                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-white bg-opacity-50">
+                            +{achievement.points} XP
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">{achievement.description}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {formatDate(achievement.earned_at)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
               <div className="text-center py-8">
                 <Award className="h-12 w-12 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-500">No recent achievements</p>
-                <p className="text-sm text-gray-400">Complete goals to see achievements here</p>
+                <p className="text-sm text-gray-400">Complete goals and log progress to earn achievements!</p>
               </div>
-            ) : (
-              <>
-                {stats?.recentAchievements.completedGoals.map((achievement) => (
-                  <div key={achievement.id} className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                    <Target className="h-6 w-6 text-green-600" />
-                    <div>
-                      <p className="font-medium text-gray-900">{achievement.title}</p>
-                      <p className="text-sm text-gray-600">Goal completed</p>
-                      <p className="text-xs text-gray-500">{formatDate(achievement.completedAt)}</p>
-                    </div>
-                  </div>
-                ))}
-                
-                {stats?.recentAchievements.completedMilestones.map((achievement) => (
-                  <div key={achievement.id} className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                    <Award className="h-6 w-6 text-blue-600" />
-                    <div>
-                      <p className="font-medium text-gray-900">{achievement.title}</p>
-                      <p className="text-sm text-gray-600">Milestone reached</p>
-                      <p className="text-xs text-gray-500">{formatDate(achievement.completedAt)}</p>
-                    </div>
-                  </div>
-                ))}
-              </>
             )}
           </div>
         </div>
 
-        {/* Progress by Goal Status */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Goals by Status</h2>
-          <div className="space-y-4">
-            {Object.entries(stats?.progressByGoalStatus || {}).map(([status, count]) => {
-              const statusLabels = {
-                'completed': 'Completed',
-                'in_progress': 'In Progress',
-                'not_started': 'Not Started',
-                'paused': 'Paused'
-              };
-              
-              const statusColors = {
-                'completed': 'bg-green-600',
-                'in_progress': 'bg-blue-600',
-                'not_started': 'bg-gray-600',
-                'paused': 'bg-yellow-600'
-              };
-              
-              const totalGoals = stats?.overview.totalGoals || 1;
-              const percentage = Math.round((count / totalGoals) * 100);
-              
-              return (
-                <div key={status}>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {statusLabels[status as keyof typeof statusLabels] || status}
-                    </span>
-                    <span className="text-sm text-gray-500">{count} ({percentage}%)</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full transition-all duration-300 ${statusColors[status as keyof typeof statusColors] || 'bg-gray-600'}`}
-                      style={{ width: `${percentage}%` }}
-                    ></div>
+        {/* Streaks & Quick Stats */}
+        <div className="space-y-6">
+          {/* Current Streaks */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Current Streaks</h2>
+            
+            {gamificationLoading ? (
+              <div className="flex items-center justify-center h-24">
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              </div>
+            ) : gamificationData?.streaks && gamificationData.streaks.length > 0 ? (
+              <div className="space-y-4">
+                {gamificationData.streaks.map((streak) => {
+                  const StreakIcon = getStreakIcon(streak.streak_type);
+                  return (
+                    <div key={streak.id} className="flex items-center space-x-3 p-3 bg-orange-50 rounded-lg">
+                      <StreakIcon className="h-6 w-6 text-orange-600" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-gray-900">{formatStreakType(streak.streak_type)}</p>
+                          <div className="flex items-center space-x-1">
+                            <Flame className="h-4 w-4 text-orange-500" />
+                            <span className="font-bold text-orange-600">{streak.current_count}</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600">Best: {streak.best_count} days</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Flame className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">No active streaks</p>
+                <p className="text-sm text-gray-400">Stay consistent to build streaks!</p>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Stats */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h2>
+            
+            {gamificationLoading ? (
+              <div className="flex items-center justify-center h-24">
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              </div>
+            ) : gamificationData?.userStats ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Goals Completed</span>
+                  <span className="font-semibold text-gray-900">{gamificationData.userStats.goals_completed}</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Progress Entries</span>
+                  <span className="font-semibold text-gray-900">{gamificationData.userStats.progress_entries_count}</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Treatment Sessions</span>
+                  <span className="font-semibold text-gray-900">{gamificationData.userStats.treatment_sessions_count}</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Best Streak</span>
+                  <div className="flex items-center space-x-1">
+                    <Flame className="h-4 w-4 text-orange-500" />
+                    <span className="font-semibold text-gray-900">{gamificationData.userStats.best_streak_days} days</span>
                   </div>
                 </div>
-              );
-            })}
-            
-            {Object.keys(stats?.progressByGoalStatus || {}).length === 0 && (
+              </div>
+            ) : (
               <div className="text-center py-8">
-                <Target className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">No goals yet</p>
-                <p className="text-sm text-gray-400">Create your first goal to see progress</p>
+                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">No stats yet</p>
+                <p className="text-sm text-gray-400">Start your journey to see stats!</p>
               </div>
             )}
           </div>

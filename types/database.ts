@@ -356,6 +356,200 @@ export interface Database {
           created_at?: string;
         };
       };
+      user_achievements: {
+        Row: {
+          id: string;
+          tenant_id: string | null;
+          user_id: string;
+          achievement_type: string;
+          title: string;
+          description: string | null;
+          icon: string | null;
+          points: number;
+          rarity: string;
+          metadata: Record<string, any>;
+          earned_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id: string;
+          achievement_type: string;
+          title: string;
+          description?: string | null;
+          icon?: string | null;
+          points?: number;
+          rarity?: string;
+          metadata?: Record<string, any>;
+          earned_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id?: string;
+          achievement_type?: string;
+          title?: string;
+          description?: string | null;
+          icon?: string | null;
+          points?: number;
+          rarity?: string;
+          metadata?: Record<string, any>;
+          earned_at?: string;
+          created_at?: string;
+        };
+      };
+      user_streaks: {
+        Row: {
+          id: string;
+          tenant_id: string | null;
+          user_id: string;
+          streak_type: string;
+          current_count: number;
+          best_count: number;
+          started_at: string;
+          last_activity_at: string;
+          metadata: Record<string, any>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id: string;
+          streak_type: string;
+          current_count?: number;
+          best_count?: number;
+          started_at?: string;
+          last_activity_at?: string;
+          metadata?: Record<string, any>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id?: string;
+          streak_type?: string;
+          current_count?: number;
+          best_count?: number;
+          started_at?: string;
+          last_activity_at?: string;
+          metadata?: Record<string, any>;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      user_gamification_stats: {
+        Row: {
+          id: string;
+          tenant_id: string | null;
+          user_id: string;
+          total_points: number;
+          level: number;
+          level_progress: number;
+          achievements_earned: number;
+          goals_completed: number;
+          progress_entries_count: number;
+          treatment_sessions_count: number;
+          best_streak_days: number;
+          current_streak_days: number;
+          weekly_points: number;
+          monthly_points: number;
+          last_activity_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id: string;
+          total_points?: number;
+          level?: number;
+          level_progress?: number;
+          achievements_earned?: number;
+          goals_completed?: number;
+          progress_entries_count?: number;
+          treatment_sessions_count?: number;
+          best_streak_days?: number;
+          current_streak_days?: number;
+          weekly_points?: number;
+          monthly_points?: number;
+          last_activity_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id?: string;
+          total_points?: number;
+          level?: number;
+          level_progress?: number;
+          achievements_earned?: number;
+          goals_completed?: number;
+          progress_entries_count?: number;
+          treatment_sessions_count?: number;
+          best_streak_days?: number;
+          current_streak_days?: number;
+          weekly_points?: number;
+          monthly_points?: number;
+          last_activity_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      user_challenges: {
+        Row: {
+          id: string;
+          tenant_id: string | null;
+          user_id: string;
+          challenge_type: string;
+          title: string;
+          description: string | null;
+          target_value: number;
+          current_value: number;
+          points_reward: number;
+          starts_at: string;
+          ends_at: string;
+          completed_at: string | null;
+          metadata: Record<string, any>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id: string;
+          challenge_type: string;
+          title: string;
+          description?: string | null;
+          target_value: number;
+          current_value?: number;
+          points_reward?: number;
+          starts_at: string;
+          ends_at: string;
+          completed_at?: string | null;
+          metadata?: Record<string, any>;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id?: string;
+          challenge_type?: string;
+          title?: string;
+          description?: string | null;
+          target_value?: number;
+          current_value?: number;
+          points_reward?: number;
+          starts_at?: string;
+          ends_at?: string;
+          completed_at?: string | null;
+          metadata?: Record<string, any>;
+          created_at?: string;
+        };
+      };
       ai_insights: {
         Row: {
           id: string;
@@ -497,4 +691,64 @@ export type GoalUpdate = Database['public']['Tables']['goals']['Update'];
 export type GoalMilestoneUpdate = Database['public']['Tables']['goal_milestones']['Update'];
 export type ProgressEntryUpdate = Database['public']['Tables']['progress_entries']['Update'];
 export type AIInsightUpdate = Database['public']['Tables']['ai_insights']['Update'];
-export type AuditLogUpdate = Database['public']['Tables']['audit_logs']['Update']; 
+export type AuditLogUpdate = Database['public']['Tables']['audit_logs']['Update'];
+
+// Gamification types
+export type UserAchievement = Database['public']['Tables']['user_achievements']['Row'];
+export type UserStreak = Database['public']['Tables']['user_streaks']['Row'];
+export type UserGamificationStats = Database['public']['Tables']['user_gamification_stats']['Row'];
+export type UserChallenge = Database['public']['Tables']['user_challenges']['Row'];
+
+export type UserAchievementInsert = Database['public']['Tables']['user_achievements']['Insert'];
+export type UserStreakInsert = Database['public']['Tables']['user_streaks']['Insert'];
+export type UserGamificationStatsInsert = Database['public']['Tables']['user_gamification_stats']['Insert'];
+export type UserChallengeInsert = Database['public']['Tables']['user_challenges']['Insert'];
+
+export type UserAchievementUpdate = Database['public']['Tables']['user_achievements']['Update'];
+export type UserStreakUpdate = Database['public']['Tables']['user_streaks']['Update'];
+export type UserGamificationStatsUpdate = Database['public']['Tables']['user_gamification_stats']['Update'];
+export type UserChallengeUpdate = Database['public']['Tables']['user_challenges']['Update'];
+
+// Gamification interface types
+export interface GamificationData {
+  userStats: UserGamificationStats;
+  achievements: UserAchievement[];
+  streaks: UserStreak[];
+  recentAchievements: UserAchievement[];
+  levelProgress: {
+    currentLevel: number;
+    totalPoints: number;
+    levelProgress: number;
+    levelProgressMax: number;
+    levelProgressPercentage: number;
+    pointsForNextLevel: number;
+  };
+}
+
+export type AchievementType = 
+  | 'first_goal_created'
+  | 'first_progress_entry'
+  | 'streak_7_days'
+  | 'streak_30_days'
+  | 'streak_90_days'
+  | 'monthly_goal_crusher'
+  | 'treatment_sessions_5'
+  | 'treatment_sessions_10'
+  | 'treatment_sessions_25'
+  | 'treatment_sessions_50'
+  | 'mood_improvement_3_points'
+  | 'mood_improvement_5_points'
+  | 'energy_improvement_3_points'
+  | 'energy_improvement_5_points'
+  | 'confidence_improvement_3_points'
+  | 'confidence_improvement_5_points'
+  | 'goal_completion_bronze'
+  | 'goal_completion_silver'
+  | 'goal_completion_gold'
+  | 'progress_warrior'
+  | 'consistency_champion'
+  | 'milestone_master';
+
+export type StreakType = 'daily_progress' | 'weekly_goal_progress' | 'treatment_sessions';
+
+export type AchievementRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
