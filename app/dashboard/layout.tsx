@@ -23,7 +23,7 @@ import { useState } from 'react';
 
 const sidebarItems = [
   { icon: Brain, label: 'Dashboard', href: '/dashboard' },
-  { icon: Users, label: 'Team', href: '/dashboard/team' },
+  { icon: Users, label: 'Clients', href: '/dashboard/team' },
   { icon: Target, label: 'Goals', href: '/dashboard/goals' },
   { icon: TrendingUp, label: 'Progress', href: '/dashboard/progress' },
   { icon: Calendar, label: 'Sessions', href: '/dashboard/sessions' },
