@@ -153,10 +153,10 @@ export default function PricingPage() {
               
               <div className="text-center mb-6">
                 <div className="flex items-baseline justify-center">
-                  <span className="text-4xl font-bold text-gray-900">$79</span>
+                  <span className="text-4xl font-bold text-gray-900">$49</span>
                   <span className="text-gray-500 ml-2">/month</span>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">$799/year (save $149)</p>
+                <p className="text-sm text-gray-500 mt-1">$499/year (save $89)</p>
               </div>
               
               <ul className="space-y-3 mb-8 flex-grow">

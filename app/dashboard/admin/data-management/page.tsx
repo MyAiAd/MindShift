@@ -517,8 +517,8 @@ export default function DataManagementPage() {
                 <h4 className="font-medium text-purple-900 mb-2">Default Subscription Plans:</h4>
                 <ul className="text-sm text-purple-800 space-y-1">
                   <li>• <strong>Trial Plan:</strong> Free trial with basic features</li>
-                  <li>• <strong>Essential MindShift:</strong> $29.99/month - Individual plan with core features</li>
-                  <li>• <strong>Complete MindShift:</strong> $49.99/month - Full featured plan with team management</li>
+                                  <li>• <strong>Essential MindShift:</strong> $29.00/month - Individual plan with core features</li>
+                <li>• <strong>Complete MindShift:</strong> $49.00/month - Full featured plan with team management</li>
                 </ul>
               </div>
 
