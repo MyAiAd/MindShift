@@ -305,27 +305,27 @@ export async function POST(request: NextRequest) {
             price_yearly: 0,
             features: ['Basic progress tracking', 'Limited goals', 'Community support'],
             limits: { goals: 3, sessions_per_month: 5 },
-            is_active: true
+            status: 'active'
           },
           {
             name: 'Essential MindShift',
             tier: 'level_1',
             description: 'Perfect for individuals starting their mental health journey',
-                    price_monthly: 29.00,
-        price_yearly: 299.00,
+            price_monthly: 29.00,
+            price_yearly: 299.00,
             features: ['Unlimited goals', 'Advanced analytics', 'AI insights', 'Priority support'],
             limits: { goals: -1, sessions_per_month: 20 },
-            is_active: true
+            status: 'active'
           },
           {
             name: 'Complete MindShift',
             tier: 'level_2',
             description: 'Full featured plan for serious practitioners',
-                    price_monthly: 49.00,
-        price_yearly: 499.00,
+            price_monthly: 49.00,
+            price_yearly: 499.00,
             features: ['Everything in Essential', 'Team management', 'Custom treatments', 'White-label options'],
             limits: { goals: -1, sessions_per_month: -1 },
-            is_active: true
+            status: 'active'
           }
         ];
 
