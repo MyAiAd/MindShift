@@ -136,7 +136,14 @@ export class TreatmentStateMachine {
     const nextStepId = this.determineNextStep(currentStep, treatmentContext);
     if (nextStepId) {
       treatmentContext.currentStep = nextStepId;
-      const nextStep = currentPhase.steps.find(s => s.id === nextStepId);
+      
+      // Get the correct phase after potential phase change
+      const updatedPhase = this.phases.get(treatmentContext.currentPhase);
+      if (!updatedPhase) {
+        throw new Error(`Invalid updated phase: ${treatmentContext.currentPhase}`);
+      }
+      
+      const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
       
       if (nextStep) {
         const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext);
@@ -145,6 +152,8 @@ export class TreatmentStateMachine {
           nextStep: nextStepId,
           scriptedResponse
         };
+      } else {
+        throw new Error(`Step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'`);
       }
     }
 
