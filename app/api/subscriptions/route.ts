@@ -2,16 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/database-server';
 
 export async function GET(request: NextRequest) {
+  console.log('Subscription API: Starting request');
+  
   try {
     // Create server client with proper auth context
     const supabase = await createServerClient();
+    console.log('Subscription API: Server client created');
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log('Subscription API: Auth check result', { user: !!user, error: authError?.message });
     
     if (authError || !user) {
+      console.log('Subscription API: Authentication failed', { authError, hasUser: !!user });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    console.log('Subscription API: User authenticated successfully', user.email);
 
     // Get user's subscription info
     const { data: subscription, error } = await supabase
@@ -54,6 +61,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log('Subscription API: Success - returning data', { hasSubscription: !!subscription, plansCount: plans?.length });
     return NextResponse.json({ subscription, plans });
   } catch (error) {
     console.error('Error in subscription fetch:', error);
