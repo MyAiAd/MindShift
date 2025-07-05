@@ -396,12 +396,16 @@ export class TreatmentStateMachine {
         },
         {
           id: 'analyze_response',
-          scriptedResponse: (userInput) => {
-            const words = userInput?.split(' ').length || 0;
-            if (words <= 20) {
-              return `OK what I heard you say is '${userInput}' - is that right?`;
-            } else {
+          scriptedResponse: (userInput, context) => {
+            // Get the problem statement from the previous step (discovery_start or restate_selected_problem)
+            const problemStatement = context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['discovery_start'] || '';
+            const words = problemStatement?.split(' ').length || 0;
+            if (words <= 20 && problemStatement) {
+              return `OK what I heard you say is '${problemStatement}' - is that right?`;
+            } else if (problemStatement) {
               return "OK I understand what you have said, but please tell me what the problem is in just a few words";
+            } else {
+              return "Please tell me what you would like to work on in a few words.";
             }
           },
           expectedResponseType: 'yesno',
@@ -452,7 +456,8 @@ export class TreatmentStateMachine {
         {
           id: 'feel_problem_step',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.userResponses?.['analyze_response'] || context?.problemStatement || 'the problem';
+            // Get the problem statement from the stored context or fallback to previous responses
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['discovery_start'] || 'the problem';
             return `Feel the problem '${problemStatement}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
@@ -479,7 +484,8 @@ export class TreatmentStateMachine {
         {
           id: 'what_needs_to_happen_step',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.userResponses?.['analyze_response'] || context?.problemStatement || 'the problem';
+            // Get the problem statement from the stored context or fallback to previous responses
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['discovery_start'] || 'the problem';
             return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
           },
           expectedResponseType: 'open',
@@ -530,7 +536,8 @@ export class TreatmentStateMachine {
         {
           id: 'check_if_still_problem',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.userResponses?.['analyze_response'] || context?.problemStatement || 'the problem';
+            // Get the problem statement from the stored context or fallback to previous responses
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['discovery_start'] || 'the problem';
             return `Feel the problem '${problemStatement}'... does it still feel like a problem?`;
           },
           expectedResponseType: 'yesno',
@@ -591,7 +598,8 @@ export class TreatmentStateMachine {
         {
           id: 'integration_start',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.userResponses?.['analyze_response'] || context?.problemStatement || 'this';
+            // Get the problem statement from the stored context or fallback to previous responses
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['discovery_start'] || 'this';
             return `How do you feel about ${problemStatement} now?`;
           },
           expectedResponseType: 'open',

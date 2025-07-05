@@ -308,7 +308,7 @@ export default function TreatmentSession({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -375,7 +375,7 @@ export default function TreatmentSession({
 
       {/* Input Area */}
       {isSessionActive && (
-        <div className="border-t border-gray-200 p-4">
+        <div className="border-t border-gray-200 px-4 py-3">
           <div className="flex space-x-2">
             <div className="flex-1 relative">
               <input
@@ -412,7 +412,7 @@ export default function TreatmentSession({
 
       {/* Session Complete State */}
       {!isSessionActive && messages.length > 0 && (
-        <div className="border-t border-gray-200 p-4 bg-green-50">
+        <div className="border-t border-gray-200 px-4 py-3 bg-green-50">
           <div className="text-center">
             <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
             <h3 className="text-lg font-semibold text-green-900">Session Complete!</h3>
