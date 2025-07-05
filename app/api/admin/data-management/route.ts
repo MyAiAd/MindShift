@@ -404,7 +404,12 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Maximum 200 test customers allowed' }, { status: 400 });
         }
 
-        const targetTenantId = profile.role === 'tenant_admin' ? profile.tenant_id : tenant_id;
+        let targetTenantId = profile.role === 'tenant_admin' ? profile.tenant_id : tenant_id;
+        
+        // Handle special filter options - for test data generation, we only allow specific tenants
+        if (targetTenantId && targetTenantId.startsWith('filter:')) {
+          return NextResponse.json({ error: 'Please select a specific tenant for test data generation' }, { status: 400 });
+        }
         
         if (!targetTenantId) {
           return NextResponse.json({ error: 'Tenant ID is required' }, { status: 400 });
@@ -542,18 +547,42 @@ export async function DELETE(request: NextRequest) {
       case 'cleanup_test_data': {
         const { tenant_id } = await request.json();
         
-        const targetTenantId = profile.role === 'tenant_admin' ? profile.tenant_id : tenant_id;
+        let targetTenantId = profile.role === 'tenant_admin' ? profile.tenant_id : tenant_id;
         
-        if (!targetTenantId) {
-          return NextResponse.json({ error: 'Tenant ID is required' }, { status: 400 });
-        }
-
-        // Delete test customers (those with @example.com emails)
-        const { data: testCustomers } = await supabase
+        // Handle special filter options
+        let query = supabase
           .from('profiles')
           .select('id')
-          .eq('tenant_id', targetTenantId)
-          .like('email', '%@example.com');
+          .like('email', '%@example.com')
+          .neq('role', 'super_admin');
+
+        if (targetTenantId) {
+          if (targetTenantId.startsWith('filter:')) {
+            // Handle subscription tier filters
+            const filterType = targetTenantId.replace('filter:', '');
+            switch (filterType) {
+              case 'trial':
+                query = query.eq('subscription_tier', 'trial');
+                break;
+              case 'level_1':
+                query = query.eq('subscription_tier', 'level_1');
+                break;
+              case 'level_2':
+                query = query.eq('subscription_tier', 'level_2');
+                break;
+              case 'super_admin':
+                // This should never happen as we exclude super_admin above, but just in case
+                return NextResponse.json({ error: 'Cannot delete super admin accounts' }, { status: 400 });
+              default:
+                return NextResponse.json({ error: 'Invalid filter type' }, { status: 400 });
+            }
+          } else {
+            // Regular tenant ID
+            query = query.eq('tenant_id', targetTenantId);
+          }
+        }
+
+        const { data: testCustomers } = await query;
 
         let deleted = 0;
         if (testCustomers) {

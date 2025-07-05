@@ -281,7 +281,7 @@ export default function DataManagementPage() {
       return;
     }
 
-    if (!confirm('Are you sure you want to delete all test customers? This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to delete all test customers with @example.com emails? This action cannot be undone.\n\nNOTE: This will NEVER delete super admin accounts or real customers - only test data with @example.com emails.')) {
       return;
     }
 
@@ -394,10 +394,20 @@ export default function DataManagementPage() {
                     <option value="">All Tenants</option>
                     {tenants.map((tenant) => (
                       <option key={tenant.id} value={tenant.id}>
-                        {tenant.name}
+                        {tenant.name} {tenant.subscription_tier && `(${tenant.subscription_tier})`}
                       </option>
                     ))}
+                    {/* Add subscription tier options for filtering */}
+                    <optgroup label="By Subscription Tier">
+                      <option value="filter:trial">Free Trial Users ($0)</option>
+                      <option value="filter:level_1">Essential MindShift Users ($29)</option>
+                      <option value="filter:level_2">Complete MindShift Users ($49)</option>
+                      <option value="filter:super_admin">Super Admin Accounts</option>
+                    </optgroup>
                   </select>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Select a specific tenant or filter by subscription tier
+                  </p>
                 </div>
               </div>
             )}
@@ -608,11 +618,19 @@ export default function DataManagementPage() {
               
               <div className="space-y-4">
                 <div className="bg-red-50 p-4 rounded-lg">
-                  <div className="flex items-center">
+                  <div className="flex items-center mb-3">
                     <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
                     <p className="text-red-800">
                       <strong>Warning:</strong> This will permanently delete all customers with @example.com email addresses. This action cannot be undone.
                     </p>
+                  </div>
+                  <div className="bg-green-100 p-3 rounded-md mt-2">
+                    <div className="flex items-center">
+                      <Shield className="h-4 w-4 text-green-600 mr-2" />
+                      <p className="text-green-800 text-sm">
+                        <strong>Safe:</strong> Super admin accounts (like Sage@MyAi.ad) and real customers will NEVER be deleted. Only test data with @example.com emails is affected.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
