@@ -42,7 +42,12 @@ export default function SubscriptionManager() {
 
   const fetchSubscriptionData = async () => {
     try {
-      const response = await fetch('/api/subscriptions');
+      const response = await fetch('/api/subscriptions', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setSubscription(data.subscription);
@@ -60,6 +65,7 @@ export default function SubscriptionManager() {
     try {
       const response = await fetch('/api/subscriptions', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId, action }),
       });
@@ -89,6 +95,7 @@ export default function SubscriptionManager() {
     try {
       const response = await fetch('/api/subscriptions', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'cancel', cancelImmediately: immediate }),
       });
