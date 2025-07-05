@@ -434,7 +434,98 @@ export default function ProgressPage() {
 
       {/* Progress & Gamification Hub - 3 Column Layout */}
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Column 1: Progress Chart */}
+        {/* Column 1: Level Progress & Recent Achievements */}
+        <div className="space-y-6">
+          {/* Level Progress */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Your Level Progress</h2>
+              {gamificationData?.levelProgress && (
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${getLevelColor(gamificationData.levelProgress.currentLevel)}`}>
+                  Level {gamificationData.levelProgress.currentLevel}
+                </div>
+              )}
+            </div>
+            
+            {gamificationLoading ? (
+              <div className="flex items-center justify-center h-24">
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              </div>
+            ) : gamificationData?.levelProgress ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">
+                    {gamificationData.levelProgress.levelProgress} / {gamificationData.levelProgress.levelProgressMax} XP
+                  </span>
+                  <span className="font-medium text-indigo-600">
+                    {gamificationData.levelProgress.pointsForNextLevel} XP to next level
+                  </span>
+                </div>
+                
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${gamificationData.levelProgress.levelProgressPercentage}%` }}
+                  ></div>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>{gamificationData.userStats.total_points} Total XP</span>
+                  <span>{gamificationData.userStats.achievements_earned} Achievements</span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Star className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">Start your journey to earn XP and level up!</p>
+              </div>
+            )}
+          </div>
+
+          {/* Recent Achievements */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Achievements</h2>
+            
+            {gamificationLoading ? (
+              <div className="flex items-center justify-center h-24">
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              </div>
+            ) : gamificationData?.recentAchievements && gamificationData.recentAchievements.length > 0 ? (
+              <div className="space-y-4">
+                {gamificationData.recentAchievements.map((achievement) => {
+                  const RarityIcon = getRarityIcon(achievement.rarity as AchievementRarity);
+                  return (
+                    <div key={achievement.id} className={`flex items-center space-x-3 p-4 rounded-lg border ${getRarityColor(achievement.rarity as AchievementRarity)}`}>
+                      <div className="flex-shrink-0">
+                        <RarityIcon className="h-8 w-8" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <p className="font-medium text-gray-900">{achievement.title}</p>
+                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-white bg-opacity-50">
+                            +{achievement.points} XP
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">{achievement.description}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {formatDate(achievement.earned_at)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Award className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">No recent achievements</p>
+                <p className="text-sm text-gray-400">Complete goals and log progress to earn achievements!</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Column 2: Progress Chart */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900">Progress Over Time</h2>
@@ -523,97 +614,6 @@ export default function ProgressPage() {
           
           <div className="mt-4 text-sm text-gray-500 text-center">
             Showing {stats?.progressTrends.length || 0} entries in the {getTimeRangeLabel(timeRange).toLowerCase()}
-          </div>
-        </div>
-
-        {/* Column 2: Level Progress & Recent Achievements */}
-        <div className="space-y-6">
-          {/* Level Progress */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Your Level Progress</h2>
-              {gamificationData?.levelProgress && (
-                <div className={`px-3 py-1 rounded-full text-sm font-medium ${getLevelColor(gamificationData.levelProgress.currentLevel)}`}>
-                  Level {gamificationData.levelProgress.currentLevel}
-                </div>
-              )}
-            </div>
-            
-            {gamificationLoading ? (
-              <div className="flex items-center justify-center h-24">
-                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-              </div>
-            ) : gamificationData?.levelProgress ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">
-                    {gamificationData.levelProgress.levelProgress} / {gamificationData.levelProgress.levelProgressMax} XP
-                  </span>
-                  <span className="font-medium text-indigo-600">
-                    {gamificationData.levelProgress.pointsForNextLevel} XP to next level
-                  </span>
-                </div>
-                
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${gamificationData.levelProgress.levelProgressPercentage}%` }}
-                  ></div>
-                </div>
-                
-                <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>{gamificationData.userStats.total_points} Total XP</span>
-                  <span>{gamificationData.userStats.achievements_earned} Achievements</span>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Star className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">Start your journey to earn XP and level up!</p>
-              </div>
-            )}
-          </div>
-
-          {/* Recent Achievements */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Achievements</h2>
-            
-            {gamificationLoading ? (
-              <div className="flex items-center justify-center h-24">
-                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-              </div>
-            ) : gamificationData?.recentAchievements && gamificationData.recentAchievements.length > 0 ? (
-              <div className="space-y-4">
-                {gamificationData.recentAchievements.map((achievement) => {
-                  const RarityIcon = getRarityIcon(achievement.rarity as AchievementRarity);
-                  return (
-                    <div key={achievement.id} className={`flex items-center space-x-3 p-4 rounded-lg border ${getRarityColor(achievement.rarity as AchievementRarity)}`}>
-                      <div className="flex-shrink-0">
-                        <RarityIcon className="h-8 w-8" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <p className="font-medium text-gray-900">{achievement.title}</p>
-                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-white bg-opacity-50">
-                            +{achievement.points} XP
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600">{achievement.description}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatDate(achievement.earned_at)}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Award className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">No recent achievements</p>
-                <p className="text-sm text-gray-400">Complete goals and log progress to earn achievements!</p>
-              </div>
-            )}
           </div>
         </div>
 
