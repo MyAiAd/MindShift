@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { 
   Brain, 
@@ -36,6 +36,16 @@ export default function DashboardLayout({
 }) {
   const { user, profile, tenant, signOut, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.push('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -75,14 +85,14 @@ export default function DashboardLayout({
               <X className="h-6 w-6 text-white" />
             </button>
           </div>
-          <SidebarContent tenant={tenant} profile={profile} signOut={signOut} />
+          <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} />
         </div>
       </div>
 
       {/* Desktop sidebar */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
-          <SidebarContent tenant={tenant} profile={profile} signOut={signOut} />
+          <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} />
         </div>
       </div>
 
@@ -114,6 +124,12 @@ function SidebarContent({
   signOut: () => Promise<void>; 
 }) {
   const pathname = usePathname();
+
+  const handleSignOutClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await signOut();
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -175,8 +191,10 @@ function SidebarContent({
             <p className="text-sm text-gray-500 truncate">{profile.email}</p>
           </div>
           <button
-            onClick={signOut}
-            className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-500"
+            type="button"
+            onClick={handleSignOutClick}
+            className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-500 transition-colors"
+            title="Sign out"
           >
             <LogOut className="h-5 w-5" />
           </button>

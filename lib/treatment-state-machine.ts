@@ -68,6 +68,29 @@ export class TreatmentStateMachine {
     userInput: string, 
     context?: Partial<TreatmentContext>
   ): Promise<ProcessingResult> {
+    // Special handling for session initialization
+    if (userInput === 'start') {
+      const treatmentContext = this.getOrCreateContext(sessionId, context);
+      const currentPhase = this.phases.get(treatmentContext.currentPhase);
+      
+      if (!currentPhase) {
+        throw new Error(`Invalid phase: ${treatmentContext.currentPhase}`);
+      }
+
+      const currentStep = currentPhase.steps.find(s => s.id === treatmentContext.currentStep);
+      if (!currentStep) {
+        throw new Error(`Invalid step: ${treatmentContext.currentStep}`);
+      }
+
+      // Return the initial welcome message
+      const scriptedResponse = this.getScriptedResponse(currentStep, treatmentContext);
+      return {
+        canContinue: true,
+        nextStep: treatmentContext.currentStep,
+        scriptedResponse
+      };
+    }
+
     const treatmentContext = this.getOrCreateContext(sessionId, context);
     const currentPhase = this.phases.get(treatmentContext.currentPhase);
     

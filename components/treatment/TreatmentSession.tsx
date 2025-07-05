@@ -38,6 +38,8 @@ export default function TreatmentSession({
   const [isLoading, setIsLoading] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [currentStep, setCurrentStep] = useState('');
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [sessionStats, setSessionStats] = useState<SessionStats>({
     scriptedResponses: 0,
     aiResponses: 0,
@@ -68,6 +70,9 @@ export default function TreatmentSession({
 
   const startSession = async () => {
     setIsLoading(true);
+    setHasError(false);
+    setErrorMessage('');
+    
     try {
       const response = await fetch('/api/treatment', {
         method: 'POST',
@@ -78,6 +83,10 @@ export default function TreatmentSession({
           action: 'start'
         })
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
       
@@ -97,10 +106,14 @@ export default function TreatmentSession({
         setLastResponseTime(data.responseTime);
         updateStats(data);
       } else {
-        onError?.(data.error || 'Failed to start session');
+        throw new Error(data.error || 'Failed to start session');
       }
     } catch (error) {
-      onError?.('Network error occurred');
+      console.error('Session start error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Network error occurred';
+      setErrorMessage(errorMsg);
+      setHasError(true);
+      onError?.(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -132,6 +145,10 @@ export default function TreatmentSession({
         })
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       
       if (data.success) {
@@ -160,10 +177,24 @@ export default function TreatmentSession({
           onComplete?.(data);
         }
       } else {
-        onError?.(data.error || 'Failed to process message');
+        throw new Error(data.error || 'Failed to process message');
       }
     } catch (error) {
-      onError?.('Network error occurred');
+      console.error('Message send error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Network error occurred';
+      
+      // Add an error message to the chat
+      const errorMessage: TreatmentMessage = {
+        id: (Date.now() + 2).toString(),
+        content: `Sorry, there was an error processing your message: ${errorMsg}. Please try again.`,
+        isUser: false,
+        timestamp: new Date(),
+        responseTime: 0,
+        usedAI: false
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      onError?.(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -206,6 +237,32 @@ export default function TreatmentSession({
     if (responseTime < 3000) return 'Normal';
     return 'Slow';
   };
+
+  // If there's an error starting the session, show error state
+  if (hasError && !isSessionActive && messages.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto h-screen flex flex-col bg-white">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Session Error
+            </h2>
+            <p className="text-gray-600 mb-4">
+              {errorMessage || 'There seems to be an issue with the session flow. Please try again or contact support.'}
+            </p>
+            <button
+              onClick={startSession}
+              disabled={isLoading}
+              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+            >
+              {isLoading ? 'Retrying...' : 'Retry Session'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto h-screen flex flex-col bg-white">

@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 import TreatmentSession from '@/components/treatment/TreatmentSession';
 import { Brain, ArrowLeft, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
@@ -9,8 +10,8 @@ import Link from 'next/link';
 function TreatmentSessionContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user, profile, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string>('');
-  const [userId, setUserId] = useState<string>('user-123'); // This would come from auth context
 
   useEffect(() => {
     const id = searchParams.get('sessionId');
@@ -36,6 +37,29 @@ function TreatmentSessionContent() {
     // You could show an error modal or redirect
     alert(`Session error: ${error}`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <span className="ml-2 text-gray-600">Loading...</span>
+      </div>
+    );
+  }
+
+  if (!user || !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h1>
+          <p className="text-gray-600">Please sign in to access treatment sessions.</p>
+          <Link href="/auth" className="mt-4 inline-block text-indigo-600 hover:text-indigo-700">
+            Sign In
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!sessionId) {
     return (
@@ -85,7 +109,7 @@ function TreatmentSessionContent() {
       <div className="py-8">
         <TreatmentSession
           sessionId={sessionId}
-          userId={userId}
+          userId={user.id}
           onComplete={handleSessionComplete}
           onError={handleSessionError}
         />

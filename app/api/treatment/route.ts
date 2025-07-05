@@ -19,6 +19,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify user authentication
+    const supabase = await createServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Treatment API: Authentication error:', authError);
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    if (user.id !== userId) {
+      console.error('Treatment API: User ID mismatch:', { requestUserId: userId, authUserId: user.id });
+      return NextResponse.json(
+        { error: 'User ID mismatch' },
+        { status: 403 }
+      );
+    }
+
     switch (action) {
       case 'start':
         return await handleStartSession(sessionId, userId);
@@ -44,7 +64,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Treatment API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -57,8 +77,11 @@ async function handleStartSession(sessionId: string, userId: string) {
   const startTime = performance.now();
   
   try {
+    console.log('Treatment API: Starting session:', { sessionId, userId });
+    
     // Process initial welcome step with state machine
     const result = await treatmentMachine.processUserInput(sessionId, 'start', { userId });
+    console.log('Treatment API: State machine result:', result);
     
     const endTime = performance.now();
     const responseTime = endTime - startTime;
@@ -81,7 +104,7 @@ async function handleStartSession(sessionId: string, userId: string) {
   } catch (error) {
     console.error('Start session error:', error);
     return NextResponse.json(
-      { error: 'Failed to start session' },
+      { error: 'Failed to start session', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -94,8 +117,11 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
   const startTime = performance.now();
   
   try {
+    console.log('Treatment API: Continuing session:', { sessionId, userId, userInput: userInput.substring(0, 50) + '...' });
+    
     // Process with state machine first (95% of cases)
     const result = await treatmentMachine.processUserInput(sessionId, userInput, { userId });
+    console.log('Treatment API: State machine continue result:', result);
     
     let finalResponse: any = {
       success: true,
@@ -154,7 +180,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
   } catch (error) {
     console.error('Continue session error:', error);
     return NextResponse.json(
-      { error: 'Failed to process input' },
+      { error: 'Failed to process input', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -278,11 +304,28 @@ async function saveSessionToDatabase(
   responseTime: number
 ) {
   try {
+    console.log('Treatment API: Saving session to database:', { sessionId, userId });
+    
     const supabase = await createServerClient();
     
-    await supabase.from('treatment_sessions').insert({
+    // Get user's profile to determine tenant_id
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('tenant_id, role')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError) {
+      console.error('Treatment API: Profile fetch error:', profileError);
+      // Continue without tenant_id for super admins
+    }
+    
+    console.log('Treatment API: User profile:', profile);
+    
+    const sessionData = {
       session_id: sessionId,
       user_id: userId,
+      tenant_id: profile?.tenant_id || null, // Allow null for super admins
       status: 'active',
       current_phase: 'intro',
       current_step: 'welcome',
@@ -290,10 +333,25 @@ async function saveSessionToDatabase(
       avg_response_time: responseTime,
       scripted_responses: 1,
       ai_responses: 0
-    });
+    };
+    
+    console.log('Treatment API: Inserting session data:', sessionData);
+    
+    const { data, error } = await supabase
+      .from('treatment_sessions')
+      .insert(sessionData);
+
+    if (error) {
+      console.error('Treatment API: Database insert error:', error);
+      // Don't fail the request if database save fails - the session can still work
+      console.warn('Treatment API: Continuing without database save');
+    } else {
+      console.log('Treatment API: Session saved successfully');
+    }
   } catch (error) {
     console.error('Database save error:', error);
     // Don't fail the request if database save fails
+    console.warn('Treatment API: Continuing without database save');
   }
 }
 

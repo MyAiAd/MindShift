@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { createClient } from './database';
 import { Profile, Tenant } from './database';
@@ -101,14 +102,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (event === 'SIGNED_OUT') {
             console.log(`Auth: [${timestamp}] Handling SIGNED_OUT event`);
             console.log('Auth: SIGNED_OUT triggered - checking what might have caused it');
-            setUser(null);
-            setProfile(null);
-            setTenant(null);
-            setSubscriptionTier(null);
+            
+            // Try to get current session to see if it's really gone
+            const { data: currentSession } = await supabase.auth.getSession();
+            console.log('Auth: Current session after SIGNED_OUT:', {
+              hasSession: !!currentSession.session,
+              hasUser: !!currentSession.session?.user,
+              userEmail: currentSession.session?.user?.email,
+              expiresAt: currentSession.session?.expires_at,
+              accessToken: currentSession.session?.access_token ? 'present' : 'missing'
+            });
+            
+            flushSync(() => {
+              setUser(null);
+              setProfile(null);
+              setTenant(null);
+              setSubscriptionTier(null);
+              setLoading(false);
+            });
             profileLoadingRef.current = false;
             profileLoadedRef.current = false;
             currentUserIdRef.current = null;
-            setLoading(false);
             return;
           }
           
@@ -127,7 +141,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Update user state immediately
             console.log(`Auth: [${timestamp}] Setting user state directly`);
-            setUser(session.user);
+            flushSync(() => {
+              setUser(session.user);
+            });
+            
+            // Validate session immediately after setting user
+            console.log('Auth: Validating session after setting user state:', {
+              sessionValid: !!session,
+              tokenPresent: !!session.access_token,
+              tokenExpiry: session.expires_at,
+              currentTime: Math.floor(Date.now() / 1000),
+              tokenExpired: session.expires_at ? session.expires_at < Math.floor(Date.now() / 1000) : 'unknown'
+            });
             
             // Only refresh profile if it's a different user or if we don't have a profile yet
             if (currentUserIdRef.current !== session.user.id || !profileLoadedRef.current) {
@@ -168,8 +193,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   
                   // Set profile state directly
                   console.log(`Auth: [${timestamp}] Setting profile state directly`);
-                  setProfile(profileData);
-                  setSubscriptionTier(profileData.subscription_tier || 'trial');
+                  flushSync(() => {
+                    setProfile(profileData);
+                    setSubscriptionTier(profileData.subscription_tier || 'trial');
+                  });
                   profileLoadedRef.current = true;
 
                   // Handle tenant
@@ -186,33 +213,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         console.error('Auth: Error fetching tenant:', tenantError);
                       } else if (tenantData) {
                         console.log('Auth: Tenant loaded:', tenantData.name);
-                        setTenant(tenantData);
+                        flushSync(() => {
+                          setTenant(tenantData);
+                        });
                       }
                     } catch (error) {
                       console.error('Auth: Tenant fetch failed:', error);
                     }
                   } else if (profileData.role === 'super_admin') {
                     console.log('Auth: Super admin detected, no tenant needed');
-                    setTenant(null);
+                    flushSync(() => {
+                      setTenant(null);
+                    });
                   }
                   
                   console.log(`Auth: [${timestamp}] Profile and tenant setup completed`);
                   
-                  // Verify state immediately
-                  setTimeout(() => {
-                    console.log('Auth: Immediate state verification:', {
-                      userSet: !!user,
-                      profileSet: !!profile,
-                      userEmail: user?.email,
-                      profileEmail: profile?.email
-                    });
-                  }, 50);
+                  // Set loading to false after all state is set
+                  flushSync(() => {
+                    setLoading(false);
+                  });
+                  
+                  console.log(`Auth: [${timestamp}] Authentication completed successfully!`);
                 }
               } catch (error) {
                 console.error('Auth: Unexpected error fetching profile:', error);
+                flushSync(() => {
+                  setLoading(false);
+                });
               }
             } else {
               console.log('Auth: Same user, skipping profile refresh');
+              flushSync(() => {
+                setLoading(false);
+              });
             }
           } else {
             console.log(`Auth: [${timestamp}] No user in session for event:`, event);
@@ -223,15 +257,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               );
               console.log('Auth: No initial session, storage keys found:', storageKeys);
               
-              setUser(null);
-              setProfile(null);
-              setTenant(null);
-              setSubscriptionTier(null);
+              flushSync(() => {
+                setUser(null);
+                setProfile(null);
+                setTenant(null);
+                setSubscriptionTier(null);
+                setLoading(false);
+              });
               profileLoadedRef.current = false;
               currentUserIdRef.current = null;
             }
           }
-          setLoading(false);
         }, 50); // Reduced debounce time for faster response
       }
     );
