@@ -51,7 +51,12 @@ export default function SubscriptionManager() {
       if (response.ok) {
         const data = await response.json();
         setSubscription(data.subscription);
-        setPlans(data.plans);
+        
+        // Remove duplicates by tier - keep only the first occurrence of each tier
+        const uniquePlans = data.plans.filter((plan: SubscriptionPlan, index: number, array: SubscriptionPlan[]) => 
+          array.findIndex(p => p.tier === plan.tier) === index
+        );
+        setPlans(uniquePlans);
       }
     } catch (error) {
       console.error('Error fetching subscription data:', error);
@@ -278,12 +283,13 @@ export default function SubscriptionManager() {
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className={`bg-white rounded-lg shadow-sm border-2 p-6 ${
+            className={`bg-white rounded-lg shadow-sm border-2 p-6 flex flex-col h-full ${
               subscription?.current_tier === plan.tier 
                 ? 'border-indigo-500 ring-2 ring-indigo-100' 
                 : 'border-gray-200'
             }`}
           >
+            {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 {getTierIcon(plan.tier)}
@@ -296,8 +302,10 @@ export default function SubscriptionManager() {
               )}
             </div>
 
+            {/* Description */}
             <p className="text-gray-600 mb-4">{plan.description}</p>
 
+            {/* Price */}
             <div className="mb-6">
               <div className="text-3xl font-bold">
                 ${isYearly ? plan.price_yearly : plan.price_monthly}
@@ -312,7 +320,8 @@ export default function SubscriptionManager() {
               )}
             </div>
 
-            <div className="mb-6">
+            {/* Features - This section will grow to fill available space */}
+            <div className="mb-6 flex-grow">
               <h4 className="font-medium mb-3">Features:</h4>
               <ul className="space-y-2">
                 {Object.entries(plan.features).map(([feature, enabled]) => 
@@ -341,7 +350,10 @@ export default function SubscriptionManager() {
               )}
             </div>
 
-            {getActionButton(plan)}
+            {/* Action Button - This will stick to the bottom */}
+            <div className="mt-auto">
+              {getActionButton(plan)}
+            </div>
           </div>
         ))}
       </div>
