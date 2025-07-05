@@ -15,7 +15,9 @@ import {
   LogOut,
   Menu,
   X,
-  CreditCard
+  CreditCard,
+  Database,
+  Shield
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -171,6 +173,32 @@ function SidebarContent({
               </Link>
             );
           })}
+
+          {/* Admin Navigation */}
+          {profile?.role && ['tenant_admin', 'super_admin'].includes(profile.role) && (
+            <div className="pt-6">
+              <div className="px-3 pb-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Administration
+                </p>
+              </div>
+              <div className="space-y-1">
+                <Link
+                  href="/dashboard/admin/data-management"
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname === '/dashboard/admin/data-management'
+                      ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-700'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Database className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname === '/dashboard/admin/data-management' ? 'text-indigo-700' : ''
+                  }`} />
+                  Data Management
+                </Link>
+              </div>
+            </div>
+          )}
         </nav>
       </div>
 
