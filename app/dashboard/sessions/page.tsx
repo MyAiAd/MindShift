@@ -296,13 +296,13 @@ export default function SessionsPage() {
 
       {/* Quick Actions */}
       <div className="mt-8 grid md:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg p-6">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg p-6 flex flex-col">
           <div className="flex items-center space-x-3 mb-4">
             <Video className="h-8 w-8 text-blue-600" />
             <h3 className="text-lg font-semibold text-gray-900">Mind Shifting Session</h3>
           </div>
           <p className="text-gray-600 mb-4">Start an automated Mind Shifting treatment session with 95% scripted responses for optimal performance.</p>
-          <div className="text-xs text-blue-600 mb-3 space-y-1">
+          <div className="text-xs text-blue-600 mb-6 space-y-1 flex-grow">
             <div>• Instant responses (&lt;200ms)</div>
             <div>• Proven Mind Shifting protocols</div>
             <div>• Minimal AI usage (&lt;5%)</div>
@@ -313,21 +313,21 @@ export default function SessionsPage() {
               const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
               router.push(`/dashboard/sessions/treatment?sessionId=${sessionId}`);
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full mt-auto"
           >
             Start Mind Shifting Session
           </button>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-lg p-6">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-lg p-6 flex flex-col">
           <div className="flex items-center space-x-3 mb-4">
             <User className="h-8 w-8 text-green-600" />
             <h3 className="text-lg font-semibold text-gray-900">Human Coach</h3>
           </div>
-          <p className="text-gray-600 mb-4">Book a session with one of our certified human coaches.</p>
+          <p className="text-gray-600 mb-6 flex-grow">Book a session with one of our certified human coaches.</p>
           <button 
             onClick={() => setShowBookModal(true)}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors w-full mt-auto"
           >
             Book with Coach
           </button>
