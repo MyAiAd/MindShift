@@ -2,7 +2,7 @@ import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers';
 import { Database } from '@/types/database';
 
-// Server-side client for use in API routes
+// Server-side client for use in API routes and server components
 export const createServerClient = () => {
   const cookieStore = cookies();
   
@@ -36,6 +36,9 @@ export const createServerClient = () => {
             cookieStore.set({ name, value, ...options });
           } catch (error) {
             console.error('Database: Error setting cookie', name, error);
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
           }
         },
         remove(name: string, options: any) {
@@ -44,6 +47,9 @@ export const createServerClient = () => {
             cookieStore.set({ name, value: '', ...options });
           } catch (error) {
             console.error('Database: Error removing cookie', name, error);
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
           }
         },
       },

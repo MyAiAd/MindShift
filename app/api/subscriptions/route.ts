@@ -3,8 +3,6 @@ import { createServerClient } from '@/lib/database-server';
 
 export async function GET(request: NextRequest) {
   console.log('Subscription API: Starting request');
-  console.log('Subscription API: Request URL:', request.url);
-  console.log('Subscription API: Request headers:', Object.fromEntries(request.headers.entries()));
   
   try {
     // Create server client with proper auth context
@@ -17,22 +15,19 @@ export async function GET(request: NextRequest) {
       user: !!user, 
       userId: user?.id,
       userEmail: user?.email,
-      error: authError?.message,
-      errorCode: authError?.code
+      error: authError?.message
     });
     
     if (authError || !user) {
       console.log('Subscription API: Authentication failed', { 
         authError: authError?.message, 
-        hasUser: !!user,
-        errorDetails: authError
+        hasUser: !!user
       });
       return NextResponse.json({ 
         error: 'Unauthorized',
         debug: {
           hasUser: !!user,
-          authError: authError?.message,
-          errorCode: authError?.code
+          authError: authError?.message
         }
       }, { status: 401 });
     }

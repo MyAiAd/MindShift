@@ -1,4 +1,4 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 export type UserRole = 'super_admin' | 'tenant_admin' | 'manager' | 'coach' | 'user';
 export type TenantStatus = 'active' | 'suspended' | 'trial' | 'expired';
@@ -234,21 +234,14 @@ export interface Database {
   };
 }
 
-// Improved singleton pattern with better persistence
-let _clientInstance: ReturnType<typeof createSupabaseClient<Database>> | null = null;
-let _isInitializing = false;
+// Improved singleton pattern for browser client
+let _clientInstance: ReturnType<typeof createBrowserClient<Database>> | null = null;
 
 // Check if we're in browser environment
 const isBrowser = typeof window !== 'undefined';
 
-export const createClient = (): ReturnType<typeof createSupabaseClient<Database>> => {
-  // Return existing instance if available
-  if (_clientInstance) {
-    console.log('Database: Reusing existing Supabase client instance');
-    return _clientInstance;
-  }
-
-  // For server-side rendering, create a simple client each time
+export const createClient = (): ReturnType<typeof createBrowserClient<Database>> => {
+  // For server-side rendering, return a mock client
   if (!isBrowser) {
     console.log('Database: Creating SSR client instance');
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -274,21 +267,13 @@ export const createClient = (): ReturnType<typeof createSupabaseClient<Database>
       } as any;
     }
 
-    return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
+    return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
   }
 
-  // Prevent multiple simultaneous initializations
-  if (_isInitializing) {
-    console.warn('Supabase client initialization in progress - creating temporary client');
-    // Return a temporary client to prevent errors (this should rarely happen)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
-    }
-    
-    return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
+  // Return existing instance if available
+  if (_clientInstance) {
+    console.log('Database: Reusing existing Supabase client instance');
+    return _clientInstance;
   }
 
   // Check environment variables
@@ -299,33 +284,13 @@ export const createClient = (): ReturnType<typeof createSupabaseClient<Database>
     throw new Error('Missing Supabase environment variables');
   }
 
-  // Mark as initializing
-  _isInitializing = true;
-
-  try {
-    console.log('Database: Creating new Supabase client instance (singleton)');
-    
-    _clientInstance = createSupabaseClient<Database>(
-      supabaseUrl,
-      supabaseAnonKey,
-      {
-        auth: {
-          persistSession: true,
-          storage: window.localStorage,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-          // Use a stable storage key
-          storageKey: 'mindshift-auth-v2',
-        },
-      }
-    );
-    
-    console.log('Database: Supabase client created successfully');
-    
-    return _clientInstance;
-  } finally {
-    _isInitializing = false;
-  }
+  console.log('Database: Creating new Supabase client instance (singleton)');
+  
+  _clientInstance = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+  
+  console.log('Database: Supabase client created successfully');
+  
+  return _clientInstance;
 };
 
 // Function to reset the client (useful for debugging or complete logout)
@@ -333,7 +298,6 @@ export const resetClient = () => {
   if (isBrowser) {
     console.log('Database: Resetting Supabase client');
     _clientInstance = null;
-    _isInitializing = false;
     // Clear auth storage
     const keys = Object.keys(localStorage);
     keys.forEach(key => {
