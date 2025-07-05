@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createServerClient } from "@/lib/database-server";
 
 // Types
 export interface Tenant {
@@ -45,7 +44,7 @@ async function checkAdminPermissions(supabase: any) {
 // GET /api/admin/tenants - Get all tenants (super admin only)
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient();
     const authResult = await checkAdminPermissions(supabase);
     
     if (authResult.error) {
@@ -71,7 +70,7 @@ export async function GET(request: NextRequest) {
     // If stats are requested, add additional data
     if (includeStats && tenants) {
       const tenantsWithStats = await Promise.all(
-        tenants.map(async (tenant) => {
+        tenants.map(async (tenant: any) => {
           // Get customer count
           const { count: customerCount } = await supabase
             .from('profiles')
@@ -95,7 +94,7 @@ export async function GET(request: NextRequest) {
             .eq('tenant_id', tenant.id)
             .eq('status', 'active');
 
-          const monthlyRevenue = revenueData?.reduce((sum, sub: any) => {
+          const monthlyRevenue = revenueData?.reduce((sum: number, sub: any) => {
             return sum + (sub.subscription_plans?.price_monthly || 0);
           }, 0) || 0;
 
@@ -122,7 +121,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/tenants - Create new tenant (super admin only)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient();
     const authResult = await checkAdminPermissions(supabase);
     
     if (authResult.error) {
@@ -188,7 +187,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/tenants - Update tenant (super admin only)
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient();
     const authResult = await checkAdminPermissions(supabase);
     
     if (authResult.error) {
@@ -246,7 +245,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/tenants - Delete tenant (super admin only)
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient();
     const authResult = await checkAdminPermissions(supabase);
     
     if (authResult.error) {
