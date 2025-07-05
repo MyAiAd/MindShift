@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
             customer.last_name || '',
             customer.role,
             customer.subscription_tier,
-            customer.tenants?.name || '',
+            Array.isArray(customer.tenants) ? (customer.tenants[0] as any)?.name || '' : (customer.tenants as any)?.name || '',
             customer.is_active,
             customer.created_at,
             customer.user_subscriptions?.[0]?.status || 'none'
