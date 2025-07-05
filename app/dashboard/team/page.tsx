@@ -293,16 +293,15 @@ export default function CustomerManagementPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Revenue Trends</h3>
-                <div className="flex space-x-2">
-                  <button className="px-3 py-1 text-sm bg-indigo-100 text-indigo-700 rounded-lg">30 Days</button>
-                  <button className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">90 Days</button>
+                <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg">
+                  Current Period
                 </div>
               </div>
               <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
                 <div className="text-center">
                   <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">Revenue trend chart</p>
-                  <p className="text-sm text-gray-400">Chart visualization coming soon</p>
+                  <p className="text-gray-500">Historical trend tracking coming soon</p>
+                  <p className="text-sm text-gray-400">We're building comprehensive revenue analytics</p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-4 text-center">
