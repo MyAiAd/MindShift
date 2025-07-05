@@ -267,7 +267,7 @@ export default function TreatmentSession({
   return (
     <div className="max-w-4xl mx-auto h-screen flex flex-col bg-white">
       {/* Header with Session Stats */}
-      <div className="bg-indigo-50 border-b border-indigo-200 p-4">
+      <div className="bg-indigo-50 border-b border-indigo-200 p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Brain className="h-6 w-6 text-indigo-600" />
@@ -307,8 +307,8 @@ export default function TreatmentSession({
         </div>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+      {/* Messages Area - Scrollable with bottom padding for fixed input */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-32">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -373,47 +373,49 @@ export default function TreatmentSession({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
+      {/* Fixed Input Area at Bottom */}
       {isSessionActive && (
-        <div className="border-t border-gray-200 px-4 py-3">
-          <div className="flex space-x-2">
-            <div className="flex-1 relative">
-              <input
-                ref={inputRef}
-                type="text"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your response..."
-                disabled={isLoading}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
-                maxLength={500}
-              />
-              <div className="absolute right-3 top-3 text-xs text-gray-400">
-                {userInput.length}/500
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 shadow-lg">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex space-x-2">
+              <div className="flex-1 relative">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type your response..."
+                  disabled={isLoading}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                  maxLength={500}
+                />
+                <div className="absolute right-3 top-3 text-xs text-gray-400">
+                  {userInput.length}/500
+                </div>
               </div>
+              
+              <button
+                onClick={sendMessage}
+                disabled={!userInput.trim() || isLoading}
+                className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Send</span>
+              </button>
             </div>
             
-            <button
-              onClick={sendMessage}
-              disabled={!userInput.trim() || isLoading}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span>Send</span>
-            </button>
-          </div>
-          
-          <div className="mt-2 text-xs text-gray-500 text-center">
-            Press Enter to send • This session uses 95% scripted responses for optimal performance
+            <div className="mt-2 text-xs text-gray-500 text-center">
+              Press Enter to send • This session uses 95% scripted responses for optimal performance
+            </div>
           </div>
         </div>
       )}
 
-      {/* Session Complete State */}
+      {/* Session Complete State - Fixed at Bottom */}
       {!isSessionActive && messages.length > 0 && (
-        <div className="border-t border-gray-200 px-4 py-3 bg-green-50">
-          <div className="text-center">
+        <div className="fixed bottom-0 left-0 right-0 bg-green-50 border-t border-gray-200 px-4 py-3 shadow-lg">
+          <div className="max-w-4xl mx-auto text-center">
             <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
             <h3 className="text-lg font-semibold text-green-900">Session Complete!</h3>
             <p className="text-green-700 mt-1">
