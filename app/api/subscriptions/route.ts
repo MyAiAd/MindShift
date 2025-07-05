@@ -3,6 +3,8 @@ import { createServerClient } from '@/lib/database-server';
 
 export async function GET(request: NextRequest) {
   console.log('Subscription API: Starting request');
+  console.log('Subscription API: Request URL:', request.url);
+  console.log('Subscription API: Request headers:', Object.fromEntries(request.headers.entries()));
   
   try {
     // Create server client with proper auth context
@@ -11,11 +13,28 @@ export async function GET(request: NextRequest) {
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    console.log('Subscription API: Auth check result', { user: !!user, error: authError?.message });
+    console.log('Subscription API: Auth check result', { 
+      user: !!user, 
+      userId: user?.id,
+      userEmail: user?.email,
+      error: authError?.message,
+      errorCode: authError?.code
+    });
     
     if (authError || !user) {
-      console.log('Subscription API: Authentication failed', { authError, hasUser: !!user });
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.log('Subscription API: Authentication failed', { 
+        authError: authError?.message, 
+        hasUser: !!user,
+        errorDetails: authError
+      });
+      return NextResponse.json({ 
+        error: 'Unauthorized',
+        debug: {
+          hasUser: !!user,
+          authError: authError?.message,
+          errorCode: authError?.code
+        }
+      }, { status: 401 });
     }
 
     console.log('Subscription API: User authenticated successfully', user.email);
@@ -66,7 +85,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error in subscription fetch:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

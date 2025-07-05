@@ -8,6 +8,10 @@ export const createServerClient = () => {
   
   console.log('Database: Creating server client with cookies');
   
+  // Debug: Log all cookies
+  const allCookies = cookieStore.getAll();
+  console.log('Database: All cookies:', allCookies.map(c => ({ name: c.name, hasValue: !!c.value, valueLength: c.value?.length || 0 })));
+  
   return createSupabaseServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -15,11 +19,19 @@ export const createServerClient = () => {
       cookies: {
         get(name: string) {
           const cookie = cookieStore.get(name);
-          console.log('Database: Getting cookie', name, ':', !!cookie);
+          console.log('Database: Getting cookie', name, ':', { 
+            exists: !!cookie, 
+            hasValue: !!cookie?.value, 
+            valueLength: cookie?.value?.length || 0 
+          });
           return cookie?.value;
         },
         set(name: string, value: string, options: any) {
-          console.log('Database: Setting cookie', name);
+          console.log('Database: Setting cookie', name, { 
+            hasValue: !!value, 
+            valueLength: value?.length || 0,
+            options 
+          });
           try {
             cookieStore.set({ name, value, ...options });
           } catch (error) {
@@ -27,7 +39,7 @@ export const createServerClient = () => {
           }
         },
         remove(name: string, options: any) {
-          console.log('Database: Removing cookie', name);
+          console.log('Database: Removing cookie', name, { options });
           try {
             cookieStore.set({ name, value: '', ...options });
           } catch (error) {
