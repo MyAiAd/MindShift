@@ -376,8 +376,8 @@ export default function TreatmentSession({
       {/* Fixed Input Area at Bottom */}
       {isSessionActive && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 shadow-lg">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex space-x-2">
+          <div className="max-w-4xl mx-auto flex justify-end">
+            <div className="flex space-x-2 max-w-2xl w-full">
               <div className="flex-1 relative">
                 <input
                   ref={inputRef}
@@ -404,10 +404,10 @@ export default function TreatmentSession({
                 <span>Send</span>
               </button>
             </div>
-            
-            <div className="mt-2 text-xs text-gray-500 text-center">
-              Press Enter to send • This session uses 95% scripted responses for optimal performance
-            </div>
+          </div>
+          
+          <div className="max-w-4xl mx-auto mt-2 text-xs text-gray-500 text-center">
+            Press Enter to send • This session uses 95% scripted responses for optimal performance
           </div>
         </div>
       )}
