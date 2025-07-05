@@ -17,6 +17,16 @@ import {
   Shield,
   X
 } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 interface ProgressStats {
   overview: {
@@ -67,6 +77,7 @@ export default function ProgressPage() {
   const [error, setError] = useState<string | null>(null);
   const [showNewEntryModal, setShowNewEntryModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [timeRange, setTimeRange] = useState('30');
   const [newEntry, setNewEntry] = useState<NewProgressEntry>({
     goalId: '',
     entryDate: new Date().toISOString().split('T')[0],
@@ -81,14 +92,14 @@ export default function ProgressPage() {
       fetchProgressStats(),
       fetchGoals()
     ]);
-  }, []);
+  }, [timeRange]);
 
   const fetchProgressStats = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/progress/stats');
+      const response = await fetch(`/api/progress/stats?timeRange=${timeRange}`);
       if (!response.ok) {
         throw new Error('Failed to fetch progress statistics');
       }
@@ -170,6 +181,54 @@ export default function ProgressPage() {
     if (percentage >= 60) return 'bg-yellow-50';
     if (percentage >= 40) return 'bg-orange-50';
     return 'bg-red-50';
+  };
+
+  const formatChartData = () => {
+    if (!stats?.progressTrends) return [];
+    
+    // Group entries by date and calculate averages
+    const groupedData = stats.progressTrends.reduce((acc, entry) => {
+      const date = new Date(entry.entry_date).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      
+      if (!acc[date]) {
+        acc[date] = {
+          date,
+          mood: [],
+          energy: [],
+          confidence: [],
+          count: 0
+        };
+      }
+      
+      if (entry.mood_score) acc[date].mood.push(entry.mood_score);
+      if (entry.energy_level) acc[date].energy.push(entry.energy_level);
+      if (entry.confidence_level) acc[date].confidence.push(entry.confidence_level);
+      acc[date].count++;
+      
+      return acc;
+    }, {} as Record<string, any>);
+
+    // Calculate averages and format for chart
+    return Object.values(groupedData).map((day: any) => ({
+      date: day.date,
+      mood: day.mood.length > 0 ? Math.round(day.mood.reduce((a: number, b: number) => a + b, 0) / day.mood.length) : 0,
+      energy: day.energy.length > 0 ? Math.round(day.energy.reduce((a: number, b: number) => a + b, 0) / day.energy.length) : 0,
+      confidence: day.confidence.length > 0 ? Math.round(day.confidence.reduce((a: number, b: number) => a + b, 0) / day.confidence.length) : 0,
+      entries: day.count
+    })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
+
+  const getTimeRangeLabel = (range: string) => {
+    switch (range) {
+      case '30': return 'Last 30 days';
+      case '90': return 'Last 3 months';
+      case '180': return 'Last 6 months';
+      case '365': return 'Last year';
+      default: return 'Last 30 days';
+    }
   };
 
   if (loading) {
@@ -294,25 +353,95 @@ export default function ProgressPage() {
         </div>
       </div>
 
-      {/* Progress Chart Placeholder */}
+      {/* Progress Chart */}
       <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-gray-900">Progress Over Time</h2>
-          <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-            <option>Last 30 days</option>
-            <option>Last 3 months</option>
-            <option>Last 6 months</option>
-            <option>Last year</option>
+          <select 
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 3 months</option>
+            <option value="180">Last 6 months</option>
+            <option value="365">Last year</option>
           </select>
         </div>
-        <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-          <div className="text-center">
-            <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-500">Progress chart visualization</p>
-            <p className="text-sm text-gray-400 mt-1">
-              {stats?.progressTrends.length || 0} entries in the last 30 days
-            </p>
+        
+        {formatChartData().length > 0 ? (
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={formatChartData()}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 12 }}
+                  stroke="#666"
+                />
+                <YAxis 
+                  domain={[0, 10]} 
+                  tick={{ fontSize: 12 }}
+                  stroke="#666"
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  }}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="mood" 
+                  stroke="#ef4444" 
+                  strokeWidth={2}
+                  dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                  name="Mood Score"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="energy" 
+                  stroke="#f59e0b" 
+                  strokeWidth={2}
+                  dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
+                  name="Energy Level"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="confidence" 
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                  name="Confidence Level"
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
+        ) : (
+          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+              <p className="text-gray-500">No progress data yet</p>
+              <p className="text-sm text-gray-400 mt-1">
+                Start logging progress entries to see your trends over time
+              </p>
+            </div>
+          </div>
+        )}
+        
+        <div className="mt-4 text-sm text-gray-500 text-center">
+          Showing {stats?.progressTrends.length || 0} entries in the {getTimeRangeLabel(timeRange).toLowerCase()}
         </div>
       </div>
 

@@ -23,6 +23,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
+    // Get time range parameter
+    const { searchParams } = new URL(request.url);
+    const timeRange = searchParams.get('timeRange') || '30';
+    const daysAgo = parseInt(timeRange);
+    
+    // Calculate the date threshold
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - daysAgo);
+
     // Build queries based on user role
     let goalsQuery = supabase.from('goals').select('*');
     let progressQuery = supabase.from('progress_entries').select('*');
@@ -76,19 +85,16 @@ export async function GET(request: NextRequest) {
       ? Math.round(goals.reduce((sum, goal) => sum + goal.progress, 0) / totalGoals)
       : 0;
 
-    // Recent achievements (completed goals and milestones in last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+    // Recent achievements (completed goals and milestones in selected time range)
     const recentCompletedGoals = goals?.filter(g => 
       g.status === 'completed' && 
       g.updated_at && 
-      new Date(g.updated_at) >= thirtyDaysAgo
+      new Date(g.updated_at) >= dateThreshold
     ) || [];
 
     const recentCompletedMilestones = milestones?.filter(m => 
       m.completed_at && 
-      new Date(m.completed_at) >= thirtyDaysAgo
+      new Date(m.completed_at) >= dateThreshold
     ) || [];
 
     // Calculate average scores from progress entries
@@ -114,9 +120,9 @@ export async function GET(request: NextRequest) {
     // Recent progress entries for timeline
     const recentProgressEntries = progressEntries?.slice(0, 10) || [];
 
-    // Calculate progress trends (last 30 days)
+    // Calculate progress trends (selected time range)
     const progressTrends = progressEntries?.filter(entry => 
-      new Date(entry.entry_date) >= thirtyDaysAgo
+      new Date(entry.entry_date) >= dateThreshold
     ).sort((a, b) => new Date(a.entry_date).getTime() - new Date(b.entry_date).getTime()) || [];
 
     const stats = {
