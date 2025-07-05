@@ -432,102 +432,102 @@ export default function ProgressPage() {
         </div>
       </div>
 
-      {/* Progress Chart */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Progress Over Time</h2>
-          <select 
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 3 months</option>
-            <option value="180">Last 6 months</option>
-            <option value="365">Last year</option>
-          </select>
-        </div>
-        
-        {formatChartData().length > 0 ? (
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={formatChartData()}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 12 }}
-                  stroke="#666"
-                />
-                <YAxis 
-                  domain={[0, 10]} 
-                  tick={{ fontSize: 12 }}
-                  stroke="#666"
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                  }}
-                />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="mood" 
-                  stroke="#ef4444" 
-                  strokeWidth={2}
-                  dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                  name="Mood Score"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="energy" 
-                  stroke="#f59e0b" 
-                  strokeWidth={2}
-                  dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
-                  name="Energy Level"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="confidence" 
-                  stroke="#10b981" 
-                  strokeWidth={2}
-                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                  name="Confidence Level"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-            <div className="text-center">
-              <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-500">No progress data yet</p>
-              <p className="text-sm text-gray-400 mt-1">
-                Start logging progress entries to see your trends over time
-              </p>
-            </div>
-          </div>
-        )}
-        
-        <div className="mt-4 text-sm text-gray-500 text-center">
-          Showing {stats?.progressTrends.length || 0} entries in the {getTimeRangeLabel(timeRange).toLowerCase()}
-        </div>
-      </div>
-
-      {/* Gamification Hub */}
+      {/* Progress & Gamification Hub - 3 Column Layout */}
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Level Progress & Recent Achievements */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Column 1: Progress Chart */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Progress Over Time</h2>
+            <select 
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+            >
+              <option value="30">30d</option>
+              <option value="90">3m</option>
+              <option value="180">6m</option>
+              <option value="365">1y</option>
+            </select>
+          </div>
+          
+          {formatChartData().length > 0 ? (
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={formatChartData()}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    stroke="#666"
+                  />
+                  <YAxis 
+                    domain={[0, 10]} 
+                    tick={{ fontSize: 12 }}
+                    stroke="#666"
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    }}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="mood" 
+                    stroke="#ef4444" 
+                    strokeWidth={2}
+                    dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                    name="Mood Score"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="energy" 
+                    stroke="#f59e0b" 
+                    strokeWidth={2}
+                    dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
+                    name="Energy Level"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="confidence" 
+                    stroke="#10b981" 
+                    strokeWidth={2}
+                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    name="Confidence Level"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+              <div className="text-center">
+                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">No progress data yet</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Start logging progress entries to see your trends over time
+                </p>
+              </div>
+            </div>
+          )}
+          
+          <div className="mt-4 text-sm text-gray-500 text-center">
+            Showing {stats?.progressTrends.length || 0} entries in the {getTimeRangeLabel(timeRange).toLowerCase()}
+          </div>
+        </div>
+
+        {/* Column 2: Level Progress & Recent Achievements */}
+        <div className="space-y-6">
           {/* Level Progress */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center justify-between mb-4">
@@ -617,7 +617,7 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        {/* Streaks & Quick Stats */}
+        {/* Column 3: Streaks & Quick Stats */}
         <div className="space-y-6">
           {/* Current Streaks */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
