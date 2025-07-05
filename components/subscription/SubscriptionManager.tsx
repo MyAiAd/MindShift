@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
-import { Crown, Check, Zap, Star, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { Crown, Check, Zap, Star, ArrowUp, ArrowDown, X, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
 interface SubscriptionPlan {
   id: string;
@@ -33,6 +33,8 @@ export default function SubscriptionManager() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [isYearly, setIsYearly] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -40,8 +42,14 @@ export default function SubscriptionManager() {
     }
   }, [user]);
 
+  const clearMessages = () => {
+    setError(null);
+    setSuccess(null);
+  };
+
   const fetchSubscriptionData = async () => {
     try {
+      clearMessages();
       const response = await fetch('/api/subscriptions', {
         credentials: 'include',
         headers: {
@@ -57,9 +65,13 @@ export default function SubscriptionManager() {
           array.findIndex(p => p.tier === plan.tier) === index
         );
         setPlans(uniquePlans);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to load subscription data');
       }
     } catch (error) {
       console.error('Error fetching subscription data:', error);
+      setError('Failed to load subscription data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -67,6 +79,8 @@ export default function SubscriptionManager() {
 
   const handleSubscriptionAction = async (planId: string, action: string) => {
     setActionLoading(planId);
+    clearMessages();
+    
     try {
       const response = await fetch('/api/subscriptions', {
         method: 'POST',
@@ -76,27 +90,44 @@ export default function SubscriptionManager() {
       });
 
       if (response.ok) {
+        const actionMessages = {
+          subscribe: 'Successfully subscribed to plan!',
+          upgrade: 'Successfully upgraded your subscription!',
+          downgrade: 'Successfully downgraded your subscription!'
+        };
+        
+        setSuccess(actionMessages[action as keyof typeof actionMessages] || 'Subscription updated successfully!');
+        
+        // Wait a moment to show success message before reloading
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        
         await fetchSubscriptionData();
-        // Refresh auth context to update subscription tier
-        window.location.reload();
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to update subscription');
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to update subscription. Please try again.');
       }
     } catch (error) {
       console.error('Error updating subscription:', error);
-      alert('Failed to update subscription');
+      setError('Failed to update subscription. Please check your connection and try again.');
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleCancel = async (immediate = false) => {
-    if (!confirm(immediate ? 'Cancel subscription immediately?' : 'Cancel at period end?')) {
+    const confirmMessage = immediate 
+      ? 'Are you sure you want to cancel your subscription immediately? This action cannot be undone.'
+      : 'Are you sure you want to cancel your subscription at the end of the current period?';
+    
+    if (!confirm(confirmMessage)) {
       return;
     }
 
     setActionLoading('cancel');
+    clearMessages();
+    
     try {
       const response = await fetch('/api/subscriptions', {
         method: 'POST',
@@ -106,15 +137,25 @@ export default function SubscriptionManager() {
       });
 
       if (response.ok) {
+        const message = immediate 
+          ? 'Your subscription has been cancelled immediately.'
+          : 'Your subscription will be cancelled at the end of the current period.';
+        
+        setSuccess(message);
+        
+        // Wait a moment to show success message before reloading
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        
         await fetchSubscriptionData();
-        window.location.reload();
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to cancel subscription');
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to cancel subscription. Please try again.');
       }
     } catch (error) {
       console.error('Error cancelling subscription:', error);
-      alert('Failed to cancel subscription');
+      setError('Failed to cancel subscription. Please check your connection and try again.');
     } finally {
       setActionLoading(null);
     }
@@ -209,6 +250,39 @@ export default function SubscriptionManager() {
         <p className="text-gray-600">Choose the plan that's right for your mindset transformation journey</p>
       </div>
 
+      {/* Error/Success Messages */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
+          <AlertCircle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-red-800 font-medium">Error</p>
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+          <button
+            onClick={clearMessages}
+            className="text-red-500 hover:text-red-700 ml-3"
+          >
+            <XCircle className="h-5 w-5" />
+          </button>
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center">
+          <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-green-800 font-medium">Success</p>
+            <p className="text-green-700 text-sm">{success}</p>
+          </div>
+          <button
+            onClick={clearMessages}
+            className="text-green-500 hover:text-green-700 ml-3"
+          >
+            <XCircle className="h-5 w-5" />
+          </button>
+        </div>
+      )}
+
       {/* Current Subscription Status */}
       {subscription && (
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
@@ -232,7 +306,7 @@ export default function SubscriptionManager() {
                 <button
                   onClick={() => handleCancel(false)}
                   disabled={actionLoading === 'cancel'}
-                  className="px-4 py-2 text-gray-600 hover:text-red-600 transition-colors"
+                  className="px-4 py-2 text-gray-600 hover:text-red-600 transition-colors disabled:opacity-50"
                 >
                   Cancel at Period End
                 </button>
