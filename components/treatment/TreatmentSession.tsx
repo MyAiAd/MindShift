@@ -121,10 +121,15 @@ export default function TreatmentSession({
 
   const sendMessage = async () => {
     if (!userInput.trim() || isLoading) return;
+    await sendMessageWithContent(userInput.trim());
+  };
+
+  const sendMessageWithContent = async (content: string) => {
+    if (!content || isLoading) return;
 
     const userMessage: TreatmentMessage = {
       id: Date.now().toString(),
-      content: userInput.trim(),
+      content: content,
       isUser: true,
       timestamp: new Date()
     };
@@ -198,6 +203,10 @@ export default function TreatmentSession({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleYesNoResponse = async (response: 'yes' | 'no') => {
+    await sendMessageWithContent(response);
   };
 
   const updateStats = (data: any) => {
@@ -377,37 +386,82 @@ export default function TreatmentSession({
       {isSessionActive && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 shadow-lg">
           <div className="max-w-4xl mx-auto flex justify-end">
-            <div className="flex space-x-2 max-w-2xl w-full">
-              <div className="flex-1 relative">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Type your response..."
-                  disabled={isLoading}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
-                  maxLength={500}
-                />
-                <div className="absolute right-3 top-3 text-xs text-gray-400">
-                  {userInput.length}/500
+            {currentStep === 'check_if_still_problem' ? (
+              /* Yes/No Button Interface */
+              <div className="flex flex-col space-y-3 max-w-2xl w-full">
+                <div className="flex-1 relative">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Please select Yes or No below..."
+                    disabled={true}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed"
+                    maxLength={500}
+                  />
+                  <div className="absolute right-3 top-3 text-xs text-gray-400">
+                    Disabled
+                  </div>
+                </div>
+                
+                <div className="flex space-x-4 justify-center">
+                  <button
+                    onClick={() => handleYesNoResponse('yes')}
+                    disabled={isLoading}
+                    className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+                  >
+                    <span>Yes</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleYesNoResponse('no')}
+                    disabled={isLoading}
+                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+                  >
+                    <span>No</span>
+                  </button>
                 </div>
               </div>
-              
-              <button
-                onClick={sendMessage}
-                disabled={!userInput.trim() || isLoading}
-                className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-              >
-                <MessageSquare className="h-4 w-4" />
-                <span>Send</span>
-              </button>
-            </div>
+            ) : (
+              /* Regular Text Input Interface */
+              <div className="flex space-x-2 max-w-2xl w-full">
+                <div className="flex-1 relative">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Type your response..."
+                    disabled={isLoading}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    maxLength={500}
+                  />
+                  <div className="absolute right-3 top-3 text-xs text-gray-400">
+                    {userInput.length}/500
+                  </div>
+                </div>
+                
+                <button
+                  onClick={sendMessage}
+                  disabled={!userInput.trim() || isLoading}
+                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Send</span>
+                </button>
+              </div>
+            )}
           </div>
           
           <div className="max-w-4xl mx-auto mt-2 text-xs text-gray-500 text-center">
-            Press Enter to send • This session uses 95% scripted responses for optimal performance
+            {currentStep === 'check_if_still_problem' ? (
+              'Select your answer using the buttons above'
+            ) : (
+              'Press Enter to send • This session uses 95% scripted responses for optimal performance'
+            )}
           </div>
         </div>
       )}
