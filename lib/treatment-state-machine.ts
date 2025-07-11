@@ -544,7 +544,17 @@ export class TreatmentStateMachine {
           scriptedResponse: "Do you feel the problem will come back in the future?",
           expectedResponseType: 'yesno',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes, no, or maybe.' }
+          ],
+          nextStep: 'scenario_check',
+          aiTriggers: []
+        },
+        {
+          id: 'restate_problem_future',
+          scriptedResponse: "How would you state the problem now in a few words?",
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state the problem now.' }
           ],
           nextStep: 'scenario_check',
           aiTriggers: []
@@ -817,6 +827,20 @@ export class TreatmentStateMachine {
         break;
         
       case 'digging_deeper_start':
+        // If user says "yes" or "maybe", ask them to restate the problem
+        if (lastResponse.includes('yes') || lastResponse.includes('maybe')) {
+          return 'restate_problem_future';
+        }
+        // If "no", continue to next digging deeper question
+        if (lastResponse.includes('no')) {
+          return currentStep.nextStep || null;
+        }
+        break;
+        
+      case 'restate_problem_future':
+        // After restating the problem, continue with scenario check
+        return 'scenario_check';
+        
       case 'scenario_check':
       case 'anything_else_check':
         // If any digging deeper question is "yes", go back to asking for new problem

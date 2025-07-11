@@ -209,6 +209,10 @@ export default function TreatmentSession({
     await sendMessageWithContent(response);
   };
 
+  const handleYesNoMaybeResponse = async (response: 'yes' | 'no' | 'maybe') => {
+    await sendMessageWithContent(response);
+  };
+
   const updateStats = (data: any) => {
     setSessionStats(prev => ({
       scriptedResponses: data.usedAI ? prev.scriptedResponses : prev.scriptedResponses + 1,
@@ -424,6 +428,52 @@ export default function TreatmentSession({
                   </button>
                 </div>
               </div>
+            ) : currentStep === 'digging_deeper_start' ? (
+              /* Yes/No/Maybe Button Interface */
+              <div className="flex flex-col space-y-3 max-w-2xl w-full">
+                <div className="flex-1 relative">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Please select Yes, No, or Maybe below..."
+                    disabled={true}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed"
+                    maxLength={500}
+                  />
+                  <div className="absolute right-3 top-3 text-xs text-gray-400">
+                    Disabled
+                  </div>
+                </div>
+                
+                <div className="flex space-x-3 justify-center">
+                  <button
+                    onClick={() => handleYesNoMaybeResponse('yes')}
+                    disabled={isLoading}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+                  >
+                    <span>Yes</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleYesNoMaybeResponse('maybe')}
+                    disabled={isLoading}
+                    className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+                  >
+                    <span>Maybe</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleYesNoMaybeResponse('no')}
+                    disabled={isLoading}
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+                  >
+                    <span>No</span>
+                  </button>
+                </div>
+              </div>
             ) : (
               /* Regular Text Input Interface */
               <div className="flex space-x-2 max-w-2xl w-full">
@@ -458,6 +508,8 @@ export default function TreatmentSession({
           
           <div className="max-w-4xl mx-auto mt-2 text-xs text-gray-500 text-center">
             {currentStep === 'check_if_still_problem' ? (
+              'Select your answer using the buttons above'
+            ) : currentStep === 'digging_deeper_start' ? (
               'Select your answer using the buttons above'
             ) : (
               'Press Enter to send • This session uses 95% scripted responses for optimal performance'
