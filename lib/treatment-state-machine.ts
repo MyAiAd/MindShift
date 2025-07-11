@@ -196,8 +196,8 @@ export class TreatmentStateMachine {
     const words = trimmed.split(' ').length;
     const lowerInput = trimmed.toLowerCase();
     
-    // Special validation for discovery phase
-    if (step.id === 'discovery_start') {
+    // Special validation for introduction phase
+    if (step.id === 'mind_shifting_explanation') {
       // Check if user stated it as a goal instead of problem
       if (lowerInput.includes('want to') || lowerInput.includes('goal') || lowerInput.includes('achieve') || 
           lowerInput.includes('wish to') || lowerInput.includes('hope to') || lowerInput.includes('plan to')) {
@@ -336,25 +336,7 @@ export class TreatmentStateMachine {
       steps: [
         {
           id: 'mind_shifting_explanation',
-          scriptedResponse: "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about problems you want to work on, we will be applying Mind Shifting methods to those problems in order to clear them, and to do that we will need to define each problem into a problem statement by you telling me what the problem is in a few words. So I'll be asking you to do that when needed.",
-          expectedResponseType: 'open',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please acknowledge that you understand.' }
-          ],
-          nextStep: 'discovery_start',
-          aiTriggers: []
-        }
-      ]
-    });
-
-    // Phase 2: Discovery (Mostly Scripted)
-    this.phases.set('discovery', {
-      name: 'Discovery',
-      maxDuration: 10,
-      steps: [
-        {
-          id: 'discovery_start',
-          scriptedResponse: "Tell me what you would like to work on in a few words.",
+          scriptedResponse: "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about problems you want to work on, we will be applying Mind Shifting methods to those problems in order to clear them, and to do that we will need to define each problem into a problem statement by you telling me what the problem is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, please tell me what you would like to work on in a few words.",
           expectedResponseType: 'problem',
           validationRules: [
             { type: 'minLength', value: 3, errorMessage: 'Please tell me what you would like to work on.' }
@@ -365,7 +347,16 @@ export class TreatmentStateMachine {
             { condition: 'tooLong', action: 'simplify' },
             { condition: 'needsClarification', action: 'clarify' }
           ]
-        },
+        }
+      ]
+    });
+
+    // Phase 2: Discovery (Mostly Scripted)
+    this.phases.set('discovery', {
+      name: 'Discovery',
+      maxDuration: 10,
+      steps: [
+
         {
           id: 'multiple_problems_selection',
           scriptedResponse: (userInput, context) => {
@@ -397,8 +388,8 @@ export class TreatmentStateMachine {
         {
           id: 'analyze_response',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement from the previous step (discovery_start or restate_selected_problem)
-            const problemStatement = context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['discovery_start'] || '';
+            // Get the problem statement from the previous step (mind_shifting_explanation or restate_selected_problem)
+            const problemStatement = context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || '';
             const words = problemStatement?.split(' ').length || 0;
             if (words <= 20 && problemStatement) {
               return `OK what I heard you say is '${problemStatement}' - is that right?`;
@@ -445,20 +436,10 @@ export class TreatmentStateMachine {
       steps: [
         {
           id: 'problem_shifting_intro',
-          scriptedResponse: "Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time",
-          expectedResponseType: 'open',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please acknowledge that you understand and are ready to continue.' }
-          ],
-          nextStep: 'feel_problem_step',
-          aiTriggers: []
-        },
-        {
-          id: 'feel_problem_step',
           scriptedResponse: (userInput, context) => {
             // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['discovery_start'] || 'the problem';
-            return `Feel the problem '${problemStatement}'... what does it feel like?`;
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.\n\nFeel the problem '${problemStatement}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
@@ -469,6 +450,7 @@ export class TreatmentStateMachine {
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
+
         {
           id: 'notice_feeling_step',
           scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what happens in yourself when you feel '${userInput || 'that feeling'}'?`,
@@ -485,7 +467,7 @@ export class TreatmentStateMachine {
           id: 'what_needs_to_happen_step',
           scriptedResponse: (userInput, context) => {
             // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['discovery_start'] || 'the problem';
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
             return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
           },
           expectedResponseType: 'open',
@@ -537,7 +519,7 @@ export class TreatmentStateMachine {
           id: 'check_if_still_problem',
           scriptedResponse: (userInput, context) => {
             // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['discovery_start'] || 'the problem';
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
             return `Feel the problem '${problemStatement}'... does it still feel like a problem?`;
           },
           expectedResponseType: 'yesno',
@@ -599,7 +581,7 @@ export class TreatmentStateMachine {
           id: 'integration_start',
           scriptedResponse: (userInput, context) => {
             // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['discovery_start'] || 'this';
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this';
             return `How do you feel about ${problemStatement} now?`;
           },
           expectedResponseType: 'open',
@@ -773,17 +755,13 @@ export class TreatmentStateMachine {
     // Handle special flow logic based on current step
     switch (context.currentStep) {
       case 'mind_shifting_explanation':
-        // Always move to discovery after introduction
-        context.currentPhase = 'discovery';
-        return 'discovery_start';
-        
-      case 'discovery_start':
         // Check if multiple problems were detected
         const userInput = context.userResponses[context.currentStep] || '';
         const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well', 'along with'];
         const hasMultipleProblems = problemConnectors.some(connector => userInput.toLowerCase().includes(connector));
         
         if (hasMultipleProblems) {
+          context.currentPhase = 'discovery';
           return 'multiple_problems_selection';
         }
         
@@ -794,6 +772,7 @@ export class TreatmentStateMachine {
           context.metadata.problemType = 'negative_experience';
         }
         
+        context.currentPhase = 'discovery';
         return 'analyze_response';
         
       case 'multiple_problems_selection':
@@ -805,12 +784,12 @@ export class TreatmentStateMachine {
       case 'analyze_response':
         // If user says "no", ask them to restate the problem
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          return 'discovery_start';
+          return 'restate_selected_problem';
         }
         // If user says "yes", move to method selection
         if (lastResponse.includes('yes') || lastResponse.includes('correct') || lastResponse.includes('right')) {
           // Store the problem statement for later use
-          const problemResponse = context.userResponses['restate_selected_problem'] || context.userResponses['discovery_start'] || '';
+          const problemResponse = context.userResponses['restate_selected_problem'] || context.userResponses['mind_shifting_explanation'] || '';
           context.problemStatement = problemResponse;
           context.metadata.problemStatement = problemResponse;
           context.currentPhase = 'method_selection';
@@ -828,7 +807,7 @@ export class TreatmentStateMachine {
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {
           // Still a problem - cycle back to step 2
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          return 'feel_problem_step';
+          return 'notice_feeling_step';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
           // No longer a problem - move to digging deeper
@@ -840,10 +819,10 @@ export class TreatmentStateMachine {
       case 'digging_deeper_start':
       case 'scenario_check':
       case 'anything_else_check':
-        // If any digging deeper question is "yes", go back to discovery for new problem
+        // If any digging deeper question is "yes", go back to asking for new problem
         if (lastResponse.includes('yes')) {
           context.currentPhase = 'discovery';
-          return 'discovery_start';
+          return 'restate_selected_problem';
         }
         // If "no", continue to next digging deeper question or integration
         if (lastResponse.includes('no')) {
