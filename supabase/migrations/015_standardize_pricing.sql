@@ -19,8 +19,8 @@ SET
         'Goal Setting',
         'Email Support'
     ),
-    active = true,
-    trial_days = 14
+    status = 'active',
+    updated_at = NOW()
 WHERE name = 'Essential' OR name = 'Basic' OR name = 'Starter';
 
 UPDATE subscription_plans 
