@@ -3,6 +3,13 @@
 -- ===============================================
 -- Automatically makes the first user in the system a super admin
 
+-- Ensure user_role enum type exists
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('super_admin', 'tenant_admin', 'manager', 'coach', 'user');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- Function to handle new user registration
 CREATE OR REPLACE FUNCTION handle_new_user_registration() 
 RETURNS TRIGGER AS $$

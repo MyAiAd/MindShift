@@ -34,6 +34,13 @@ Copy and paste this **complete SQL code** into your Supabase SQL Editor:
 -- ===============================================
 -- Automatically makes the first user in the system a super admin
 
+-- Ensure user_role enum type exists
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('super_admin', 'tenant_admin', 'manager', 'coach', 'user');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- Function to handle new user registration
 CREATE OR REPLACE FUNCTION handle_new_user_registration() 
 RETURNS TRIGGER AS $$
@@ -281,19 +288,26 @@ GRANT EXECUTE ON FUNCTION promote_user_to_super_admin(VARCHAR) TO authenticated;
 
 ## 🚀 **How to Implement**
 
-### **Step 1: Run the Migration**
+### **Step 1: Ensure Prerequisites**
+**⚠️ IMPORTANT**: Before running this migration, you must have run the initial schema migration (`001_initial_schema.sql`) first. This creates the required tables and enum types.
+
+If you haven't run the initial migrations yet:
+1. **Run migrations 001-022** in order from the `supabase/migrations/` folder
+2. **Or use Supabase CLI**: `supabase db reset` (if starting fresh)
+
+### **Step 2: Run the Migration**
 1. **Open Supabase Dashboard**
 2. **Go to SQL Editor**
 3. **Copy and paste** the complete SQL code above
 4. **Click "Run"** to execute the migration
 
-### **Step 2: Test the System**
+### **Step 3: Test the System**
 1. **Create a fresh database** (or clear existing users for testing)
 2. **Register the first user** via your app's signup flow
 3. **Confirm the email** (check the user gets super admin role)
 4. **Register a second user** (verify they get regular user role)
 
-### **Step 3: Verify Super Admin Access**
+### **Step 4: Verify Super Admin Access**
 1. **Log in as the first user**
 2. **Check Dashboard** → **Settings** → you should see admin features
 3. **Verify tenant access** → Super admin should see all tenants
@@ -401,6 +415,33 @@ SELECT promote_user_to_super_admin('user@example.com');
 - **Zero configuration** - Works out of the box
 - **Flexible** - Can promote additional super admins later
 - **Maintainable** - Clean trigger-based implementation
+
+---
+
+## 🔧 **Troubleshooting**
+
+### **❌ Error: `type "user_role" does not exist`**
+**Solution**: Run the initial schema migration first:
+```sql
+-- Run this first (from 001_initial_schema.sql)
+CREATE TYPE user_role AS ENUM ('super_admin', 'tenant_admin', 'manager', 'coach', 'user');
+```
+
+### **❌ Error: `relation "tenants" does not exist`**
+**Solution**: Run migrations 001-022 in order first, then run this migration.
+
+### **❌ Error: `relation "profiles" does not exist`**
+**Solution**: Ensure you have run the complete initial schema migration.
+
+### **❌ Error: `relation "audit_logs" does not exist`**
+**Solution**: Run all previous migrations first - the audit_logs table is created in the initial schema.
+
+### **✅ Quick Fix Command**
+If you're starting fresh, run this in Supabase CLI:
+```bash
+supabase db reset
+```
+This will run all migrations in order.
 
 ---
 
