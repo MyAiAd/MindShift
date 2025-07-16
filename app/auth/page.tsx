@@ -10,6 +10,7 @@ export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -32,6 +33,8 @@ export default function AuthPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setError(null);
+    setSuccess(null);
     
     // Auto-generate tenant slug from tenant name
     if (field === 'tenantName' && value) {
@@ -50,6 +53,7 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -72,9 +76,10 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
-      // First, create the user account
+      // Create the user account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -89,52 +94,77 @@ export default function AuthPage() {
       if (authError) throw authError;
 
       if (authData.user) {
-        console.log('Auth: User created, checking session...');
+        console.log('Auth: User created successfully');
         
-        // Wait for session to be established
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session) {
-          console.log('Auth: No session after signup, trying to sign in...');
-          // If no session, try to sign in
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password,
-          });
+        // Check if email confirmation is required
+        if (authData.session) {
+          console.log('Auth: User is automatically signed in');
           
-          if (signInError) {
-            throw new Error('Failed to authenticate after account creation');
+          // Check if this is the first user and handle super admin setup
+          try {
+            console.log('Auth: Checking for first user super admin setup...');
+            const { data: superAdminResult, error: superAdminError } = await supabase
+              .rpc('handle_new_user_registration', {
+                user_id: authData.user.id,
+                user_email: formData.email,
+                user_first_name: formData.firstName,
+                user_last_name: formData.lastName,
+              });
+
+            if (superAdminError) {
+              console.error('Auth: Super admin setup error:', superAdminError);
+            } else if (superAdminResult) {
+              console.log('Auth: Super admin setup result:', superAdminResult);
+              
+              // If user became super admin, skip tenant creation
+              if (superAdminResult.is_super_admin) {
+                console.log('Auth: First user became super admin, skipping tenant creation');
+                
+                // Show success message
+                setError(null);
+                setSuccess('🎉 Welcome! You are now the Super Admin of this system.');
+                
+                // Redirect to dashboard after showing success message
+                setTimeout(() => {
+                  router.push('/dashboard');
+                }, 2000);
+                return;
+              }
+            }
+          } catch (superAdminError) {
+            console.error('Auth: Super admin setup failed:', superAdminError);
+            // Continue with normal tenant creation if super admin setup fails
           }
           
-          console.log('Auth: Successfully signed in after signup');
-        }
-        
-        console.log('Auth: Session established, creating tenant...');
-        
-        // Create tenant and profile
-        const response = await fetch('/api/tenants', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: formData.tenantName,
-            slug: formData.tenantSlug,
-            adminEmail: formData.email,
-            adminFirstName: formData.firstName,
-            adminLastName: formData.lastName,
-          }),
-        });
+          // User is already signed in, create tenant and profile (for regular users)
+          const response = await fetch('/api/tenants', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: formData.tenantName,
+              slug: formData.tenantSlug,
+              adminEmail: formData.email,
+              adminFirstName: formData.firstName,
+              adminLastName: formData.lastName,
+            }),
+          });
 
-        if (!response.ok) {
-          const result = await response.json();
-          throw new Error(result.error || 'Failed to create organization');
-        }
+          if (!response.ok) {
+            const result = await response.json();
+            throw new Error(result.error || 'Failed to create organization');
+          }
 
-        console.log('Auth: Tenant created successfully, redirecting...');
-        
-        // Redirect to dashboard
-        router.push('/dashboard');
+          console.log('Auth: Tenant created successfully, redirecting...');
+          
+          // Redirect to dashboard
+          router.push('/dashboard');
+        } else {
+          // Email confirmation required
+          console.log('Auth: Email confirmation required');
+          setError('Please check your email and click the confirmation link to complete your registration.');
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -161,6 +191,12 @@ export default function AuthPage() {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
             {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+            {success}
           </div>
         )}
 
