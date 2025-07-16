@@ -1,0 +1,57 @@
+-- MyAi Database Cleanup Script
+-- Run this ONLY if you need to completely reset the database
+-- WARNING: This will delete ALL data and structure
+
+-- Drop all RLS policies first
+DROP POLICY IF EXISTS "Users can view their own tenant" ON tenants;
+DROP POLICY IF EXISTS "Tenant admins can update their tenant" ON tenants;
+DROP POLICY IF EXISTS "Users can view profiles in their tenant" ON profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
+DROP POLICY IF EXISTS "Tenant admins can manage profiles in their tenant" ON profiles;
+DROP POLICY IF EXISTS "Users can view assessments in their tenant" ON assessments;
+DROP POLICY IF EXISTS "Coaches and admins can manage assessments" ON assessments;
+DROP POLICY IF EXISTS "Users can view their own responses" ON assessment_responses;
+DROP POLICY IF EXISTS "Users can create their own responses" ON assessment_responses;
+DROP POLICY IF EXISTS "Users can view their coaching sessions" ON coaching_sessions;
+DROP POLICY IF EXISTS "Coaches can manage their sessions" ON coaching_sessions;
+DROP POLICY IF EXISTS "Users can view their own goals" ON goals;
+DROP POLICY IF EXISTS "Users can manage their own goals" ON goals;
+DROP POLICY IF EXISTS "Users can view milestones for their goals" ON goal_milestones;
+DROP POLICY IF EXISTS "Users can manage milestones for their goals" ON goal_milestones;
+DROP POLICY IF EXISTS "Users can view their own progress" ON progress_entries;
+DROP POLICY IF EXISTS "Users can manage their own progress" ON progress_entries;
+DROP POLICY IF EXISTS "Users can view their own insights" ON ai_insights;
+DROP POLICY IF EXISTS "System can create insights" ON ai_insights;
+DROP POLICY IF EXISTS "Admins can view audit logs" ON audit_logs;
+DROP POLICY IF EXISTS "System can create audit logs" ON audit_logs;
+
+-- Drop triggers
+DROP TRIGGER IF EXISTS update_tenants_updated_at ON tenants;
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
+DROP TRIGGER IF EXISTS update_assessments_updated_at ON assessments;
+DROP TRIGGER IF EXISTS update_coaching_sessions_updated_at ON coaching_sessions;
+DROP TRIGGER IF EXISTS update_goals_updated_at ON goals;
+
+-- Drop functions
+DROP FUNCTION IF EXISTS update_updated_at_column();
+DROP FUNCTION IF EXISTS create_tenant(VARCHAR(255), VARCHAR(100), VARCHAR(255), VARCHAR(255), VARCHAR(100), VARCHAR(100));
+
+-- Drop tables in dependency order
+DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS ai_insights CASCADE;
+DROP TABLE IF EXISTS progress_entries CASCADE;
+DROP TABLE IF EXISTS goal_milestones CASCADE;
+DROP TABLE IF EXISTS goals CASCADE;
+DROP TABLE IF EXISTS coaching_sessions CASCADE;
+DROP TABLE IF EXISTS assessment_responses CASCADE;
+DROP TABLE IF EXISTS assessments CASCADE;
+DROP TABLE IF EXISTS tenant_invitations CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+DROP TABLE IF EXISTS tenants CASCADE;
+
+-- Drop custom types
+DROP TYPE IF EXISTS subscription_status CASCADE;
+DROP TYPE IF EXISTS tenant_status CASCADE;
+DROP TYPE IF EXISTS user_role CASCADE;
+
+-- Note: Extensions are not dropped as they might be used by other schemas 

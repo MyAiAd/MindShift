@@ -1,0 +1,240 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local env files
+.env*.local
+.env
+.env.production
+.env.development
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Supabase
+.supabase/
+
+# Temporary files
+tmp/
+temp/
+
+# Supabase temporary files
+supabase/.temp/
+
+# ===============================================
+# ADDITIONAL SECURITY PATTERNS
+# ===============================================
+# These patterns prevent accidental commit of sensitive data
+
+# Backup and temporary directories that may contain secrets
+.yoyo/
+*.tmp/
+*.temp/
+backup/
+backups/
+snapshots/
+
+# Common secret file patterns
+*secret*
+*credential*
+*password*
+*private*
+*.pem
+*.p12
+*.pfx
+*.keystore
+*.jks
+
+# Development and testing files that may contain secrets
+test-data/
+fixtures/
+seed-data/
+demo-data/
+example-data/
+
+# IDE and editor files that may contain sensitive info
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS-specific files that may contain cached secrets
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Additional environment file patterns
+.env.*
+env.*
+environment.*
+config.local.*
+local.*
+
+# Docker files that may contain secrets
+docker-compose.override.yml
+*.secret
+*.private
+
+# Lock files (uncomment if you want to ignore them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml 
+
+# YoYo AI version control directory
+.yoyo/
+
+# ===============================================
+# SECURITY: NEVER COMMIT THESE FILES!
+# ===============================================
+
+# Environment variables with actual secrets
+vercel-environment-variables.txt
+*-environment-variables.txt
+environment-variables.txt
+env-variables.txt
+.env.secrets
+.env.keys
+
+# API keys and secrets
+api-keys.txt
+secrets.txt
+keys.txt
+credentials.txt
+tokens.txt
+
+# Database credentials
+database.env
+db.env
+database-config.txt
+
+# Service account keys
+service-account.json
+service-account-key.json
+*.serviceaccount.json
+
+# SSL certificates and keys
+*.key
+*.crt
+*.pem
+*.p12
+*.pfx
+
+# Stripe keys
+stripe-keys.txt
+stripe.env
+
+# Supabase keys
+supabase-keys.txt
+supabase.env
+
+# OpenAI keys
+openai-keys.txt
+openai.env
+
+# Any file ending in -secrets or -keys
+*-secrets.*
+*-keys.*
+*-credentials.*
+
+# Personal notes that might contain sensitive info
+personal-notes.txt
+notes.txt
+todo-secrets.txt

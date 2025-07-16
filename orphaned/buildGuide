@@ -1,0 +1,118 @@
+now that the site is fully multi-tenant i want to cover a core tenet
+
+## CRITICAL DEVELOPMENT REQUIREMENT: Automation-First Architecture
+
+### Core Principle: 95% Automation, 5% AI
+
+**The treatment flow MUST be implemented as a finite state machine with predetermined scripts, NOT as AI conversations.**
+
+### Implementation Approach:
+
+**1. State Machine Controller (Primary Logic)**
+```javascript
+// This handles ALL treatment flow - NO AI involved
+class TreatmentStateMachine {
+  phases: {
+    intro: IntroPhase,
+    discovery: DiscoveryPhase,
+    problemShifting: ProblemShiftingPhase,
+    diggingDeeper: DiggingDeeperPhase,
+    integration: IntegrationPhase
+  }
+  
+  // Every response goes through automated validation FIRST
+  processUserInput(phase, step, userInput) {
+    const result = this.validateAndProcess(phase, step, userInput);
+    
+    if (result.canContinue) {
+      return this.getNextScriptedResponse(result.nextStep);
+    } else {
+      return this.triggerAIAssistance(result.reason, userInput);
+    }
+  }
+}
+```
+
+**2. Scripted Response System (Instant Performance)**
+```javascript
+// Pre-defined responses for instant delivery
+const SCRIPTED_RESPONSES = {
+  problemShifting: {
+    step1: "Please close your eyes and keep them closed throughout...",
+    step2: (problemStatement) => `Feel the problem '${problemStatement}'... what does it feel like?`,
+    step3: (lastResponse) => `Feel '${lastResponse}'... what happens in yourself when you feel '${lastResponse}'?`
+    // ... exact scripts from documents
+  }
+};
+```
+
+**3. AI Assistance (Only When Triggered)**
+```javascript
+// AI called ONLY for specific scenarios
+const AI_TRIGGERS = {
+  userStuck: (response) => response.length < 3 || response === "I don't know",
+  needsClarification: (response, step) => !validateExpectedResponse(response, step),
+  multipleProblems: (response) => countProblems(response) > 1,
+  tooLong: (response) => response.split(' ').length > 20
+};
+
+// Minimal AI usage with strict context
+async function getAIAssistance(trigger, userInput, currentStep) {
+  const prompt = `You are assisting with Mind Shifting treatment at ${currentStep}.
+                  User said: "${userInput}"
+                  Issue: ${trigger}
+                  Provide brief clarification to help them understand, then return to exact script.
+                  DO NOT deviate from treatment protocol.`;
+  
+  // Short, focused AI response only
+  return await openai.createCompletion({
+    model: "gpt-4",
+    messages: [{ role: "system", content: prompt }],
+    max_tokens: 100 // Keep AI responses minimal
+  });
+}
+```
+
+### Performance Requirements:
+
+**Response Times:**
+- **Scripted responses: <200ms** (instant)
+- **AI-assisted responses: <3 seconds** (only when necessary)
+- **Overall session: 90%+ instant responses**
+
+**Cost Control:**
+- **Target: <10% of interactions use AI**
+- **Average tokens per AI call: <200**
+- **Session cost target: <$0.05 per 30-minute session**
+
+### Development Priorities:
+
+1. **Build the finite state machine FIRST** - Complete treatment flow with zero AI
+
+
+
+### Quality Assurance:
+
+**Testing Requirements:**
+- Verify every treatment path works without AI
+- Confirm AI triggers only activate in specific scenarios
+- Validate response times meet performance targets
+
+
+
+
+
+**Success Metrics:**
+- 95%+ responses delivered via automation
+- <5% sessions require AI assistance
+- Sub-second response times for scripted content
+- Zero deviation from Mind Shifting protocols
+
+This architecture ensures our treatment methods remain pure and effective while providing the speed and reliability needed for success.
+
+ignore this next part for now:
+2. **Add voice interface** - Web Speech API integration
+3. **Add AI assistance layer** - Only for specific trigger scenarios
+4. **Implement usage tracking** - Monitor AI usage vs scripted responses
+5. **Optimize performance** - Ensure sub-second response times
+- Test voice interface accuracy across devices

@@ -1,0 +1,78 @@
+{
+  "name": "myai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A revolutionary AI-powered platform for mindset transformation and personal growth",
+  "keywords": [
+    "mindset",
+    "personal-growth",
+    "ai",
+    "coaching",
+    "transformation"
+  ],
+  "author": "MyAiAd",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MyAi/MyAi.git"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "db:generate": "supabase gen types typescript --project-id=YOUR_PROJECT_ID > types/supabase.ts",
+    "db:reset": "supabase db reset",
+    "db:push": "supabase db push",
+    "setup": "node scripts/setup-new-site.js",
+    "setup:new": "node scripts/setup-new-site.js"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.3.2",
+    "@supabase/auth-helpers-nextjs": "^0.8.7",
+    "@supabase/auth-helpers-react": "^0.4.2",
+    "@supabase/auth-ui-react": "^0.4.6",
+    "@supabase/auth-ui-shared": "^0.1.8",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.38.0",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "@types/qrcode": "^1.5.5",
+    "@types/speakeasy": "^2.0.10",
+    "@types/web-push": "^3.6.4",
+    "autoprefixer": "^10.4.16",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "csv-parse": "^5.5.2",
+    "date-fns": "^2.30.0",
+    "framer-motion": "^10.16.16",
+    "lucide-react": "^0.294.0",
+    "next": "14.0.3",
+    "openai": "^5.9.0",
+    "postcss": "^8.4.32",
+    "qrcode": "^1.5.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.47.0",
+    "recharts": "^2.15.4",
+    "speakeasy": "^2.0.0",
+    "stripe": "^18.3.0",
+    "tailwind-merge": "^2.0.0",
+    "tailwindcss": "^3.3.6",
+    "web-push": "^3.6.7",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "eslint": "^8.53.0",
+    "eslint-config-next": "14.0.3",
+    "supabase": "^1.115.0",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
