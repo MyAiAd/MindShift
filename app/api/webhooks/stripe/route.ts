@@ -14,6 +14,24 @@ export async function GET() {
 // POST method for handling webhook events
 export async function POST(request: NextRequest) {
   try {
+    // Check if Stripe is properly configured in production
+    if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production') {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        console.error('Stripe secret key is required in production');
+        return NextResponse.json(
+          { error: 'Payment service unavailable' },
+          { status: 503 }
+        );
+      }
+      if (!process.env.STRIPE_WEBHOOK_SECRET) {
+        console.error('Stripe webhook secret is required in production');
+        return NextResponse.json(
+          { error: 'Webhook verification unavailable' },
+          { status: 503 }
+        );
+      }
+    }
+
     // Apply rate limiting to webhook endpoint
     const rateLimitResult = await rateLimit(request, {
       windowMs: 5 * 60 * 1000, // 5 minutes
