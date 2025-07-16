@@ -42,7 +42,7 @@ function TreatmentSessionContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-        <span className="ml-2 text-gray-600">Loading...</span>
+        <span className="ml-2 text-gray-600 dark:text-gray-300">Loading...</span>
       </div>
     );
   }
@@ -52,7 +52,7 @@ function TreatmentSessionContent() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h1>
-          <p className="text-gray-600">Please sign in to access treatment sessions.</p>
+          <p className="text-gray-600 dark:text-gray-300">Please sign in to access treatment sessions.</p>
           <Link href="/auth" className="mt-4 inline-block text-indigo-600 hover:text-indigo-700">
             Sign In
           </Link>
@@ -65,15 +65,15 @@ function TreatmentSessionContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-        <span className="ml-2 text-gray-600">Initializing session...</span>
+        <span className="ml-2 text-gray-600 dark:text-gray-300">Initializing session...</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -85,7 +85,7 @@ function TreatmentSessionContent() {
               </Link>
               <div className="flex items-center space-x-2">
                 <Brain className="h-6 w-6 text-indigo-600" />
-                <span className="text-lg font-semibold text-gray-900">Treatment Session</span>
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">Treatment Session</span>
               </div>
               <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
                 ID: {sessionId.slice(-8)}
@@ -118,7 +118,7 @@ function TreatmentSessionContent() {
       {/* Performance Info Footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
             <div className="flex items-center space-x-4">
               <span>Automation-First Architecture</span>
               <span>•</span>
@@ -143,7 +143,7 @@ export default function TreatmentSessionPage() {
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-        <span className="ml-2 text-gray-600">Loading...</span>
+        <span className="ml-2 text-gray-600 dark:text-gray-300">Loading...</span>
       </div>
     }>
       <TreatmentSessionContent />

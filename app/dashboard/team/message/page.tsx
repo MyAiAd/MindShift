@@ -198,7 +198,7 @@ export default function MessageClientPage() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-indigo-600" />
-          <p className="text-gray-600">Loading messaging interface...</p>
+          <p className="text-gray-600 dark:text-gray-300">Loading messaging interface...</p>
         </div>
       </div>
     );
@@ -229,10 +229,10 @@ export default function MessageClientPage() {
           </Link>
           <div className="flex items-center space-x-2">
             <MessageCircle className="h-6 w-6 text-indigo-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Message a Client</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Message a Client</h1>
           </div>
         </div>
-        <p className="text-gray-600">Send messages and check-ins to your clients.</p>
+        <p className="text-gray-600 dark:text-gray-300">Send messages and check-ins to your clients.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -261,7 +261,7 @@ export default function MessageClientPage() {
               {filteredClients.length === 0 ? (
                 <div className="text-center py-8">
                   <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">
+                  <p className="text-gray-500 dark:text-gray-400">
                     {searchTerm ? 'No clients found matching your search.' : 'No clients available.'}
                   </p>
                 </div>
@@ -290,7 +290,7 @@ export default function MessageClientPage() {
                           }`}>
                             {client.status}
                           </span>
-                          <p className="text-xs text-gray-500">{client.lastActive}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{client.lastActive}</p>
                         </div>
                       </div>
                     </div>
@@ -320,8 +320,8 @@ export default function MessageClientPage() {
                       </span>
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{selectedClient.name}</p>
-                      <p className="text-sm text-gray-600">{selectedClient.email}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{selectedClient.name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{selectedClient.email}</p>
                     </div>
                   </div>
                 </div>
@@ -383,7 +383,7 @@ export default function MessageClientPage() {
             ) : (
               <div className="text-center py-12">
                 <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Select a client to compose a message</p>
+                <p className="text-gray-500 dark:text-gray-400">Select a client to compose a message</p>
               </div>
             )}
           </div>
@@ -401,7 +401,7 @@ export default function MessageClientPage() {
           {recentMessages.length === 0 ? (
             <div className="text-center py-8">
               <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No recent messages yet.</p>
+              <p className="text-gray-500 dark:text-gray-400">No recent messages yet.</p>
               <p className="text-sm text-gray-400 mt-1">Your sent and received messages will appear here.</p>
             </div>
           ) : (
@@ -410,10 +410,10 @@ export default function MessageClientPage() {
                 message.is_sender ? 'border-indigo-500' : 'border-green-500'
               }`}>
                 <div className="flex items-center space-x-2 mb-1">
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-gray-900 dark:text-white">
                     {message.is_sender ? message.receiver_name : message.sender_name}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     {formatTime(message.created_at)}
                   </span>
                   {message.status === 'read' && (
@@ -427,7 +427,7 @@ export default function MessageClientPage() {
                     {message.is_sender ? 'Sent' : 'Received'}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">{message.message_preview}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{message.message_preview}</p>
               </div>
             ))
           )}

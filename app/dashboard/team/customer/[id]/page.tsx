@@ -588,13 +588,13 @@ export default function CustomerDetailPage() {
               {(customer.first_name?.[0] || '') + (customer.last_name?.[0] || customer.email[0].toUpperCase())}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 {customer.first_name && customer.last_name 
                   ? `${customer.first_name} ${customer.last_name}`
                   : customer.email
                 }
               </h1>
-              <p className="text-gray-600">{customer.email}</p>
+              <p className="text-gray-600 dark:text-gray-300">{customer.email}</p>
               <div className="flex items-center space-x-4 mt-2">
                 {subscription && getStatusBadge(subscription.status)}
                 {profile?.role === 'super_admin' && customer.tenants && (
@@ -636,10 +636,10 @@ export default function CustomerDetailPage() {
               <Calendar className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                 {analytics?.subscription_length_days || 0}
               </p>
-              <p className="text-gray-600">Days as Customer</p>
+              <p className="text-gray-600 dark:text-gray-300">Days as Customer</p>
             </div>
           </div>
         </div>
@@ -650,10 +650,10 @@ export default function CustomerDetailPage() {
               <DollarSign className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                 {formatCurrency(analytics?.lifetime_value_cents || 0)}
               </p>
-              <p className="text-gray-600">Lifetime Value</p>
+              <p className="text-gray-600 dark:text-gray-300">Lifetime Value</p>
             </div>
           </div>
         </div>
@@ -664,10 +664,10 @@ export default function CustomerDetailPage() {
               <TrendingUp className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                 {analytics?.total_transactions || 0}
               </p>
-              <p className="text-gray-600">Total Transactions</p>
+              <p className="text-gray-600 dark:text-gray-300">Total Transactions</p>
             </div>
           </div>
         </div>
@@ -678,10 +678,10 @@ export default function CustomerDetailPage() {
               <Clock className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                 {analytics?.days_since_last_payment || 0}
               </p>
-              <p className="text-gray-600">Days Since Last Payment</p>
+              <p className="text-gray-600 dark:text-gray-300">Days Since Last Payment</p>
             </div>
           </div>
         </div>
@@ -714,8 +714,8 @@ export default function CustomerDetailPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                  <p className="mt-1 text-sm text-gray-900">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
                     {customer.first_name && customer.last_name 
                       ? `${customer.first_name} ${customer.last_name}`
                       : 'Not provided'
@@ -723,18 +723,18 @@ export default function CustomerDetailPage() {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
-                  <p className="mt-1 text-sm text-gray-900">{customer.email}</p>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{customer.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Account Status</label>
-                  <p className="mt-1 text-sm text-gray-900">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Account Status</label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
                     {customer.is_active ? 'Active' : 'Inactive'}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Join Date</label>
-                  <p className="mt-1 text-sm text-gray-900">{formatDate(customer.created_at)}</p>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Join Date</label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{formatDate(customer.created_at)}</p>
                 </div>
               </div>
             </div>
@@ -750,11 +750,11 @@ export default function CustomerDetailPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-600">Monthly Price:</span>
+                      <span className="text-gray-600 dark:text-gray-300">Monthly Price:</span>
                       <span className="ml-2 font-medium">{formatCurrency(subscription.subscription_plans.price_monthly * 100)}</span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Current Period:</span>
+                      <span className="text-gray-600 dark:text-gray-300">Current Period:</span>
                       <span className="ml-2 font-medium">
                         {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
                       </span>
@@ -780,7 +780,7 @@ export default function CustomerDetailPage() {
                       </div>
                       {getStatusBadge(sub.status)}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-300">
                       <div>
                         <span className="font-medium">Period:</span> {formatDate(sub.current_period_start)} - {formatDate(sub.current_period_end)}
                       </div>
@@ -803,7 +803,7 @@ export default function CustomerDetailPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No subscription history found.</p>
+              <p className="text-gray-500 dark:text-gray-400">No subscription history found.</p>
             )}
           </div>
         )}
@@ -815,7 +815,7 @@ export default function CustomerDetailPage() {
               <div className="space-y-4">
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Billing Address</h4>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-300">
                     <p>{customer.billing_info.address_line1}</p>
                     {customer.billing_info.address_line2 && <p>{customer.billing_info.address_line2}</p>}
                     <p>{customer.billing_info.city}, {customer.billing_info.state} {customer.billing_info.postal_code}</p>
@@ -824,14 +824,14 @@ export default function CustomerDetailPage() {
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Payment Method</h4>
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                     <CreditCard className="h-4 w-4" />
                     <span>{customer.billing_info.payment_method_type} ending in {customer.billing_info.payment_method_last4}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-500">No billing information on file.</p>
+              <p className="text-gray-500 dark:text-gray-400">No billing information on file.</p>
             )}
           </div>
         )}
@@ -839,7 +839,7 @@ export default function CustomerDetailPage() {
         {activeTab === 'notes' && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Customer Communication</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Customer Communication</h3>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setShowNoteModal(true)}
@@ -917,8 +917,8 @@ export default function CustomerDetailPage() {
                     .map(note => (
                       <div key={note.id} className="flex items-center justify-between bg-white p-3 rounded border">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{note.content.substring(0, 100)}...</p>
-                          <p className="text-xs text-gray-500">Due: {formatDate(note.follow_up_date)}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{note.content.substring(0, 100)}...</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Due: {formatDate(note.follow_up_date)}</p>
                         </div>
                         <button
                           onClick={() => markFollowUpComplete(note.id)}
@@ -954,7 +954,7 @@ export default function CustomerDetailPage() {
                           </div>
                           <div>
                             <div className="flex items-center space-x-2 mb-1">
-                              <span className="font-medium text-gray-900">
+                              <span className="font-medium text-gray-900 dark:text-white">
                                 {getCommunicationTypeLabel(note.note_type || 'note')}
                               </span>
                               {getPriorityBadge(note.priority)}
@@ -964,7 +964,7 @@ export default function CustomerDetailPage() {
                                 </span>
                               ))}
                             </div>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
                               By {note.profiles.first_name} {note.profiles.last_name} • {formatDateTime(note.created_at)}
                             </p>
                           </div>
@@ -987,11 +987,11 @@ export default function CustomerDetailPage() {
                       </div>
 
                       <div className="mb-3">
-                        <p className="text-gray-900">{note.content}</p>
+                        <p className="text-gray-900 dark:text-white">{note.content}</p>
                       </div>
 
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                           {note.follow_up_date && !note.resolved_at && (
                             <span className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
@@ -1059,19 +1059,19 @@ export default function CustomerDetailPage() {
                         </div>
                         <div>
                           <p className="font-medium">{formatCurrency(transaction.amount_cents)}</p>
-                          <p className="text-sm text-gray-600">{transaction.description || transaction.transaction_type}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">{transaction.description || transaction.transaction_type}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-900">{formatDateTime(transaction.created_at)}</p>
-                        <p className="text-sm text-gray-500">{transaction.processor}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{formatDateTime(transaction.created_at)}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{transaction.processor}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No transactions found for this customer.</p>
+              <p className="text-gray-500 dark:text-gray-400">No transactions found for this customer.</p>
             )}
           </div>
         )}
@@ -1082,7 +1082,7 @@ export default function CustomerDetailPage() {
             {logsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <span className="ml-2 text-gray-600">Loading admin logs...</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-300">Loading admin logs...</span>
               </div>
             ) : adminLogs.length ? (
               <div className="space-y-4">
@@ -1094,25 +1094,25 @@ export default function CustomerDetailPage() {
                           <Shield className="h-5 w-5 text-indigo-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{log.action}</p>
-                          <p className="text-sm text-gray-600">{log.description}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{log.action}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">{log.description}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-900">{formatDateTime(log.created_at)}</p>
-                        <p className="text-sm text-gray-500">{log.performed_by}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{formatDateTime(log.created_at)}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{log.performed_by}</p>
                       </div>
                     </div>
                     {log.details && (
                       <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-700">{log.details}</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{log.details}</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No admin actions recorded for this customer.</p>
+              <p className="text-gray-500 dark:text-gray-400">No admin actions recorded for this customer.</p>
             )}
           </div>
         )}
@@ -1123,7 +1123,7 @@ export default function CustomerDetailPage() {
             {permissionsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <span className="ml-2 text-gray-600">Loading permissions...</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-300">Loading permissions...</span>
               </div>
             ) : (
               <div className="space-y-6">
@@ -1149,8 +1149,8 @@ export default function CustomerDetailPage() {
                       ].map((feature) => (
                         <div key={feature.key} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900">{feature.name}</p>
-                            <p className="text-sm text-gray-600">{feature.description}</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{feature.name}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">{feature.description}</p>
                           </div>
                           <button
                             onClick={() => handlePermissionToggle(feature.key, !permissions[feature.key])}
@@ -1182,8 +1182,8 @@ export default function CustomerDetailPage() {
                       ].map((feature) => (
                         <div key={feature.key} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900">{feature.name}</p>
-                            <p className="text-sm text-gray-600">{feature.description}</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{feature.name}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">{feature.description}</p>
                           </div>
                           <button
                             onClick={() => handlePermissionToggle(feature.key, !permissions[feature.key])}
@@ -1298,7 +1298,7 @@ export default function CustomerDetailPage() {
                 <button 
                   type="button" 
                   onClick={() => setShowNoteModal(false)} 
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-gray-900"
                 >
                   Cancel
                 </button>
@@ -1386,7 +1386,7 @@ export default function CustomerDetailPage() {
                 <button 
                   type="button" 
                   onClick={() => setShowEmailModal(false)} 
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-gray-900"
                 >
                   Cancel
                 </button>
@@ -1502,7 +1502,7 @@ export default function CustomerDetailPage() {
                     setSubscriptionAction('');
                     setActionMessage('');
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-gray-900"
                   disabled={actionLoading}
                 >
                   Cancel

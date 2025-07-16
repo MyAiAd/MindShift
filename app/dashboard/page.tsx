@@ -170,7 +170,7 @@ export default function DashboardPage() {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Welcome back, {profile?.first_name}!
             </h1>
             <p className="text-gray-600 mt-1">
@@ -178,7 +178,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Current Plan:</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Current Plan:</span>
             <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium capitalize">
               {profile?.subscription_tier === 'level_1' ? 'Problem Shifting' : 
                profile?.subscription_tier === 'level_2' ? 'Complete Access' : 
@@ -243,7 +243,7 @@ export default function DashboardPage() {
               <div key={stat.name} className="bg-white rounded-lg shadow-sm border p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.name}</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.name}</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
                     <p className={`text-sm mt-2 ${
                       stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
@@ -275,8 +275,8 @@ export default function DashboardPage() {
                   <Target className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">Create New Goal</p>
-                  <p className="text-sm text-gray-600">Set up a new mindset goal for users</p>
+                  <p className="font-medium text-gray-900 dark:text-white">Create New Goal</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Set up a new mindset goal for users</p>
                 </div>
               </div>
             </Link>
@@ -287,8 +287,8 @@ export default function DashboardPage() {
                   <Calendar className="h-4 w-4 text-green-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">Schedule Session</p>
-                  <p className="text-sm text-gray-600">Book a coaching session</p>
+                  <p className="font-medium text-gray-900 dark:text-white">Schedule Session</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Book a coaching session</p>
                 </div>
               </div>
             </Link>
@@ -321,8 +321,8 @@ export default function DashboardPage() {
                     <Activity className="h-4 w-4 text-purple-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">View Analytics</p>
-                    <p className="text-sm text-gray-600">Check detailed progress reports</p>
+                    <p className="font-medium text-gray-900 dark:text-white">View Analytics</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Check detailed progress reports</p>
                   </div>
                 </div>
               </Link>
@@ -356,8 +356,8 @@ export default function DashboardPage() {
                     <MessageCircle className="h-4 w-4 text-orange-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Message a Client</p>
-                    <p className="text-sm text-gray-600">Send a message to your clients</p>
+                    <p className="font-medium text-gray-900 dark:text-white">Message a Client</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Send a message to your clients</p>
                   </div>
                 </div>
               </Link>
@@ -394,12 +394,12 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-900 dark:text-white">
                       <span className="font-medium">{activity.user}</span>
                       {' '}{activity.action}{' '}
                       <span className="font-medium">{activity.target}</span>
                     </p>
-                    <p className="text-xs text-gray-500">{activity.time}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
                   </div>
                 </div>
               ))}
@@ -407,7 +407,7 @@ export default function DashboardPage() {
           ) : (
             <div className="text-center py-8">
               <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No recent activity</p>
+              <p className="text-gray-500 dark:text-gray-400">No recent activity</p>
               <p className="text-sm text-gray-400 mt-1">
                 Start using the platform to see your activities here!
               </p>
@@ -435,21 +435,21 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="text-3xl font-bold text-indigo-600 mb-2">92%</div>
-            <div className="text-sm text-gray-600">User Satisfaction</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">User Satisfaction</div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
               <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '92%' }}></div>
             </div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">78%</div>
-            <div className="text-sm text-gray-600">Goal Completion Rate</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">Goal Completion Rate</div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
               <div className="bg-green-600 h-2 rounded-full" style={{ width: '78%' }}></div>
             </div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">85%</div>
-            <div className="text-sm text-gray-600">Session Attendance</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">Session Attendance</div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
               <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
             </div>

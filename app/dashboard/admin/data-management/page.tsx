@@ -332,7 +332,7 @@ export default function DataManagementPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Data Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Data Management</h1>
         <p className="text-gray-600 mt-1">
           Import, export, and manage customer data and system configuration.
           {profile?.role === 'super_admin' ? ' (Super Admin - All Tenants)' : ' (Tenant Admin)'}
@@ -416,7 +416,7 @@ export default function DataManagementPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Upload className="h-6 w-6 text-indigo-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">Import Customer Data</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Import Customer Data</h3>
               </div>
               
               <div className="space-y-4">
@@ -431,7 +431,7 @@ export default function DataManagementPage() {
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                   />
                   {importFile && (
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                       Selected: {importFile.name} ({(importFile.size / 1024).toFixed(2)} KB)
                     </p>
                   )}
@@ -462,7 +462,7 @@ export default function DataManagementPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Download className="h-6 w-6 text-green-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">Export Data</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Export Data</h3>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -510,7 +510,7 @@ export default function DataManagementPage() {
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center mb-4">
               <Settings className="h-6 w-6 text-purple-600 mr-3" />
-              <h3 className="text-lg font-semibold text-gray-900">Subscription Plan Management</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Subscription Plan Management</h3>
             </div>
 
             {profile?.role !== 'super_admin' && (
@@ -550,7 +550,7 @@ export default function DataManagementPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Users className="h-6 w-6 text-blue-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">Generate Test Data</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Generate Test Data</h3>
               </div>
               
               <div className="space-y-4">
@@ -613,7 +613,7 @@ export default function DataManagementPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Trash2 className="h-6 w-6 text-red-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">Cleanup Test Data</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Cleanup Test Data</h3>
               </div>
               
               <div className="space-y-4">
@@ -653,7 +653,7 @@ export default function DataManagementPage() {
         <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center mb-4">
             <BarChart3 className="h-6 w-6 text-gray-600 mr-3" />
-            <h3 className="text-lg font-semibold text-gray-900">Operation Results</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Operation Results</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
