@@ -1,213 +1,133 @@
-# 🔍 Fix User ID Mismatch - Foreign Key Error
+# Fix User ID Mismatch Guide
 
-## 🎯 **Problem:**
-The user ID from the error logs doesn't exist in the `auth.users` table, causing a foreign key constraint violation.
+## Problem Description
+When users see an infinite loading screen and console errors showing:
+```
+Error: insert or update on table "profiles" violates foreign key constraint "profiles_id_fkey"
+Key (id)=(user-id) is not present in table "users"
+```
 
-## 🚀 **Solution: Find and Fix the Correct User**
+This indicates that the user session contains a user ID that doesn't exist in the `auth.users` table.
 
-**Step 1: Find Your Actual User ID**
+## Root Causes
+1. **User deleted from auth.users** but session still cached
+2. **Email confirmation issues** - user exists but not confirmed
+3. **ID mismatch** between session and database
+4. **Database inconsistency** after migrations or cleanup
 
-Run this SQL in Supabase SQL Editor:
+## Solution Applied (Migration 030)
 
+### 1. Enhanced Error Handling
+The `handle_new_user_registration` function now:
+- Checks if user exists in `auth.users` before inserting profile
+- Returns detailed error information instead of throwing exceptions
+- Provides debugging information for troubleshooting
+
+### 2. Debug Function Added
 ```sql
--- Find all users in the auth.users table
-SELECT 
-    id,
-    email,
-    email_confirmed_at,
-    created_at,
-    updated_at
+SELECT debug_auth_user_info('user@example.com');
+```
+This function returns:
+- Current session user ID
+- Auth.users record for the email
+- Whether IDs match
+- User confirmation status
+
+### 3. Graceful Failure
+Instead of throwing foreign key violations, the function now:
+- Returns `{"success": false, "error": "user_not_found"}`
+- Provides debugging information
+- Logs issues to help identify the problem
+
+## Troubleshooting Steps
+
+### Step 1: Check User Existence
+```sql
+-- Check if user exists in auth.users
+SELECT id, email, email_confirmed_at, created_at 
 FROM auth.users 
-ORDER BY created_at DESC;
+WHERE email = 'user@example.com';
 ```
 
-**Step 2: Create Profile for the Correct User**
-
-After finding your user ID, replace `YOUR_ACTUAL_USER_ID` with the ID from Step 1:
-
+### Step 2: Check Session vs Database
 ```sql
--- ===============================================
--- FIX USER PROFILE WITH CORRECT ID
--- ===============================================
-
--- First, ensure Super Admin tenant exists
-INSERT INTO tenants (
-    id,
-    name,
-    slug,
-    status,
-    subscription_status,
-    trial_ends_at,
-    created_at,
-    updated_at
-) VALUES (
-    gen_random_uuid(),
-    'Super Admin Organization',
-    'super-admin',
-    'active',
-    'active',
-    NOW() + INTERVAL '10 years',
-    NOW(),
-    NOW()
-) ON CONFLICT (slug) DO NOTHING;
-
--- Create profile for your ACTUAL user (replace the ID below)
-INSERT INTO profiles (
-    id,
-    tenant_id,
-    email,
-    first_name,
-    last_name,
-    role,
-    subscription_tier,
-    is_active,
-    settings,
-    created_at,
-    updated_at
-) VALUES (
-    'YOUR_ACTUAL_USER_ID',  -- Replace this with your real user ID
-    (SELECT id FROM tenants WHERE slug = 'super-admin'),
-    'sage@myai.ad',
-    'Sage',
-    'Admin',
-    'super_admin',
-    'premium',
-    true,
-    '{}',
-    NOW(),
-    NOW()
-) ON CONFLICT (id) DO UPDATE SET
-    role = 'super_admin',
-    tenant_id = (SELECT id FROM tenants WHERE slug = 'super-admin'),
-    subscription_tier = 'premium',
-    updated_at = NOW();
-
--- Verify the profile was created
-SELECT 
-    p.id,
-    p.email,
-    p.role,
-    p.tenant_id,
-    t.name as tenant_name
-FROM profiles p
-LEFT JOIN tenants t ON p.tenant_id = t.id
-WHERE p.id = 'YOUR_ACTUAL_USER_ID';  -- Replace this too
-
--- Success message
-SELECT 'Profile created successfully for correct user!' as message;
+-- Use the debug function
+SELECT debug_auth_user_info('user@example.com');
 ```
 
----
-
-## 🔧 **Alternative: Use the Setup Function**
-
-If you find your user ID, you can also use the automated function:
-
+### Step 3: Check Profile Existence
 ```sql
--- Find your user ID first
-SELECT id, email FROM auth.users WHERE email = 'sage@myai.ad';
-
--- Then use the setup function
-SELECT setup_first_super_admin();
+-- Check if profile exists
+SELECT id, email, role, created_at 
+FROM profiles 
+WHERE email = 'user@example.com';
 ```
 
----
-
-## 🛠️ **If No Users Found:**
-
-If the query returns no users, it means your user account was deleted. In that case:
-
-1. **Sign out** of your app
-2. **Sign up again** with the same email
-3. **The first user super admin** system will work automatically
-
----
-
-## 🎯 **Quick All-in-One Fix:**
-
-If you want to avoid manual steps, run this comprehensive fix:
-
+### Step 4: Manual Profile Creation (if needed)
 ```sql
--- ===============================================
--- COMPREHENSIVE USER FIX
--- ===============================================
-
--- Create Super Admin tenant
-INSERT INTO tenants (
-    id,
-    name,
-    slug,
-    status,
-    subscription_status,
-    trial_ends_at,
-    created_at,
-    updated_at
-) VALUES (
-    gen_random_uuid(),
-    'Super Admin Organization',
-    'super-admin',
-    'active',
-    'active',
-    NOW() + INTERVAL '10 years',
-    NOW(),
-    NOW()
-) ON CONFLICT (slug) DO NOTHING;
-
--- Create profile for the first user found (if any)
-INSERT INTO profiles (
-    id,
-    tenant_id,
-    email,
-    first_name,
-    last_name,
-    role,
-    subscription_tier,
-    is_active,
-    settings,
-    created_at,
-    updated_at
-)
-SELECT 
-    u.id,
-    (SELECT id FROM tenants WHERE slug = 'super-admin'),
-    u.email,
-    'Admin',
-    'User',
-    'super_admin',
-    'premium',
-    true,
-    '{}',
-    NOW(),
-    NOW()
-FROM auth.users u
-WHERE u.email = 'sage@myai.ad'
-ORDER BY u.created_at ASC
-LIMIT 1
-ON CONFLICT (id) DO UPDATE SET
-    role = 'super_admin',
-    tenant_id = (SELECT id FROM tenants WHERE slug = 'super-admin'),
-    subscription_tier = 'premium',
-    updated_at = NOW();
-
--- Show results
-SELECT 
-    'User found and profile created!' as message,
-    u.id as user_id,
-    u.email,
-    p.role
-FROM auth.users u
-LEFT JOIN profiles p ON u.id = p.id
-WHERE u.email = 'sage@myai.ad';
+-- If user exists in auth.users but no profile
+INSERT INTO profiles (id, email, role, is_active, created_at, updated_at)
+SELECT id, email, 'user', true, NOW(), NOW()
+FROM auth.users 
+WHERE email = 'user@example.com'
+AND id NOT IN (SELECT id FROM profiles);
 ```
 
----
+## Prevention
 
-## 📋 **What to Do:**
+### 1. Proper User Registration Flow
+- Ensure user registration completes successfully
+- Verify email confirmation works
+- Test the complete authentication flow
 
-1. **Run the first query** to find your actual user ID
-2. **Copy the correct user ID** from the results
-3. **Replace `YOUR_ACTUAL_USER_ID`** in the second query
-4. **Run the profile creation query**
-5. **Refresh your app** - dashboard should work
+### 2. Database Consistency
+- Always backup before major migrations
+- Test migrations on staging first
+- Monitor for foreign key violations
 
-**If you don't see any users, you'll need to sign up again!** 🎉 
+### 3. Session Management
+- Clear sessions when users are deleted
+- Implement proper logout on user deletion
+- Handle edge cases in authentication flow
+
+## Common Scenarios
+
+### Scenario 1: User Deleted but Session Persists
+**Solution**: Clear browser session storage and force re-authentication
+
+### Scenario 2: Email Not Confirmed
+**Solution**: Check `email_confirmed_at` in auth.users and trigger re-confirmation
+
+### Scenario 3: ID Mismatch
+**Solution**: Use debug function to identify the mismatch and fix manually
+
+### Scenario 4: Multiple Users with Same Email
+**Solution**: Clean up duplicate users and ensure unique email constraints
+
+## Migration History
+- **030**: Added auth.users existence check and debug function
+- **029**: Fixed subscription_status enum error
+- **028**: Comprehensive RLS fix
+- **Previous**: Various authentication and profile fixes
+
+## Testing
+After applying the fix:
+1. Clear browser cache and sessions
+2. Try logging in with the problematic user
+3. Check console for new error messages (should be more descriptive)
+4. Use debug function to understand the issue
+5. Take appropriate action based on the error type
+
+## When to Use Manual Intervention
+- If debug function shows user exists but with different ID
+- If multiple users exist with same email
+- If auth.users record exists but profile doesn't
+- If you need to merge or clean up user records
+
+## Prevention Checklist
+- [ ] Test complete registration flow
+- [ ] Verify email confirmation works
+- [ ] Check foreign key constraints before major changes
+- [ ] Monitor authentication errors
+- [ ] Keep auth.users and profiles in sync
+- [ ] Test edge cases (deleted users, unconfirmed emails, etc.) 
