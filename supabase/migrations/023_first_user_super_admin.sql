@@ -10,18 +10,24 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
--- Function to handle new user registration
-CREATE OR REPLACE FUNCTION handle_new_user_registration() 
-RETURNS TRIGGER AS $$
+-- Function to handle new user registration (called from application)
+CREATE OR REPLACE FUNCTION handle_new_user_registration(
+    user_id UUID,
+    user_email VARCHAR(255),
+    user_first_name VARCHAR(100) DEFAULT NULL,
+    user_last_name VARCHAR(100) DEFAULT NULL
+) 
+RETURNS JSONB AS $$
 DECLARE
     existing_user_count INTEGER;
     new_user_role user_role;
     default_tenant_id UUID;
+    result JSONB;
 BEGIN
     -- Check if this is the first user in the system
     SELECT COUNT(*) INTO existing_user_count 
     FROM auth.users 
-    WHERE id != NEW.id AND email_confirmed_at IS NOT NULL;
+    WHERE id != user_id AND email_confirmed_at IS NOT NULL;
     
     -- If this is the first user, make them super admin
     IF existing_user_count = 0 THEN
@@ -75,11 +81,11 @@ BEGIN
         created_at,
         updated_at
     ) VALUES (
-        NEW.id,
+        user_id,
         default_tenant_id,
-        NEW.email,
-        COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
-        COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
+        user_email,
+        user_first_name,
+        user_last_name,
         new_user_role,
         TRUE,
         '{}',
@@ -88,9 +94,9 @@ BEGIN
     )
     ON CONFLICT (id) DO UPDATE SET
         tenant_id = COALESCE(default_tenant_id, profiles.tenant_id),
-        email = NEW.email,
-        first_name = COALESCE(NEW.raw_user_meta_data->>'first_name', profiles.first_name),
-        last_name = COALESCE(NEW.raw_user_meta_data->>'last_name', profiles.last_name),
+        email = user_email,
+        first_name = COALESCE(user_first_name, profiles.first_name),
+        last_name = COALESCE(user_last_name, profiles.last_name),
         role = CASE 
             WHEN existing_user_count = 0 THEN 'super_admin'::user_role
             ELSE profiles.role
@@ -109,12 +115,12 @@ BEGIN
             created_at
         ) VALUES (
             default_tenant_id,
-            NEW.id,
+            user_id,
             'CREATE',
             'super_admin',
-            NEW.id,
+            user_id,
             jsonb_build_object(
-                'email', NEW.email,
+                'email', user_email,
                 'role', 'super_admin',
                 'reason', 'first_user_auto_promotion'
             ),
@@ -122,35 +128,75 @@ BEGIN
         );
     END IF;
     
-    RETURN NEW;
+    -- Return result
+    result := jsonb_build_object(
+        'success', true,
+        'user_id', user_id,
+        'role', new_user_role,
+        'tenant_id', default_tenant_id,
+        'is_super_admin', new_user_role = 'super_admin',
+        'message', CASE 
+            WHEN new_user_role = 'super_admin' THEN 'First user promoted to super admin'
+            ELSE 'Regular user profile created'
+        END
+    );
+    
+    RETURN result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create trigger for new user registration
--- This trigger fires when a new user confirms their email
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW
-    WHEN (NEW.email_confirmed_at IS NOT NULL)
-    EXECUTE FUNCTION handle_new_user_registration();
-
--- Also create a trigger for when email is confirmed later
-DROP TRIGGER IF EXISTS on_auth_user_email_confirmed ON auth.users;
-CREATE TRIGGER on_auth_user_email_confirmed
-    AFTER UPDATE ON auth.users
-    FOR EACH ROW
-    WHEN (OLD.email_confirmed_at IS NULL AND NEW.email_confirmed_at IS NOT NULL)
-    EXECUTE FUNCTION handle_new_user_registration();
-
 -- Grant necessary permissions
-GRANT EXECUTE ON FUNCTION handle_new_user_registration() TO authenticated;
-GRANT EXECUTE ON FUNCTION handle_new_user_registration() TO anon;
+GRANT EXECUTE ON FUNCTION handle_new_user_registration(UUID, VARCHAR, VARCHAR, VARCHAR) TO authenticated;
+GRANT EXECUTE ON FUNCTION handle_new_user_registration(UUID, VARCHAR, VARCHAR, VARCHAR) TO anon;
 
--- Create index for faster user count queries
-CREATE INDEX IF NOT EXISTS idx_auth_users_email_confirmed 
-ON auth.users (email_confirmed_at) 
-WHERE email_confirmed_at IS NOT NULL;
+-- Helper function to setup first super admin manually
+CREATE OR REPLACE FUNCTION setup_first_super_admin()
+RETURNS JSONB AS $$
+DECLARE
+    first_user_id UUID;
+    first_user_email VARCHAR(255);
+    result JSONB;
+BEGIN
+    -- Get the first confirmed user
+    SELECT id, email INTO first_user_id, first_user_email 
+    FROM auth.users 
+    WHERE email_confirmed_at IS NOT NULL 
+    ORDER BY created_at ASC 
+    LIMIT 1;
+    
+    -- Check if we found a user
+    IF first_user_id IS NULL THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'message', 'No confirmed users found in the system'
+        );
+    END IF;
+    
+    -- Check if user already has a profile
+    IF EXISTS (SELECT 1 FROM profiles WHERE id = first_user_id) THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'message', 'User already has a profile',
+            'user_id', first_user_id,
+            'email', first_user_email
+        );
+    END IF;
+    
+    -- Call the registration function
+    result := handle_new_user_registration(
+        first_user_id,
+        first_user_email,
+        NULL, -- first_name
+        NULL  -- last_name
+    );
+    
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant permission to use the setup function
+GRANT EXECUTE ON FUNCTION setup_first_super_admin() TO authenticated;
+GRANT EXECUTE ON FUNCTION setup_first_super_admin() TO anon;
 
 -- Update existing super admin policies to work with the new system
 DO $$ 
