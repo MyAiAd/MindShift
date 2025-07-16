@@ -27,7 +27,7 @@
 **Patterns to avoid:**
 - Real Supabase project IDs
 - JWT tokens starting with `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`
-- Live API keys (`sk_live_`, `pk_live_`)
+- Live API keys (production Stripe keys)
 - Real email addresses
 - Hardcoded passwords
 - Database connection strings with real credentials

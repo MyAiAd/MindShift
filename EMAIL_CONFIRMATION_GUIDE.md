@@ -47,17 +47,19 @@ otp_expiry = 3600
 
 ### **Step 2: Configure Production Email (Recommended)**
 
-For production, set up a real SMTP server:
+**✅ RECOMMENDED: Use Resend** (generous free tier, excellent deliverability):
+
+Your `supabase/config.toml` is already configured with Resend:
 
 ```toml
-# Use a production-ready SMTP server
+# Use Resend as SMTP server for email confirmation
 [auth.email.smtp]
-host = "smtp.sendgrid.net"
-port = 587
-user = "apikey"
-pass = "env(SENDGRID_API_KEY)"
-admin_email = "admin@yourdomain.com"
-sender_name = "Your App Name"
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "env(ADMIN_EMAIL)"
+sender_name = "env(SENDER_NAME)"
 ```
 
 ### **Step 3: Update Environment Variables**
@@ -65,8 +67,13 @@ sender_name = "Your App Name"
 Add to your `.env.local`:
 
 ```env
-SENDGRID_API_KEY=your_sendgrid_api_key_here
+# Resend Email Configuration
+RESEND_API_KEY=re_your_actual_api_key_here
+ADMIN_EMAIL=admin@yourdomain.com
+SENDER_NAME=Your App Name
 ```
+
+**💡 See `RESEND_EMAIL_SETUP.md` for complete Resend setup instructions!**
 
 ---
 
