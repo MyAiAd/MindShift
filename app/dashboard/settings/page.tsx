@@ -196,6 +196,35 @@ export default function SettingsPage() {
     }
   }, [user]);
 
+  // Re-sync accessibility settings when they change
+  useEffect(() => {
+    const syncAccessibilitySettings = () => {
+      try {
+        const settings = accessibilityService.getPreferences();
+        setAccessibilitySettings(prev => ({
+          ...prev,
+          highContrast: settings.highContrast,
+          fontSize: settings.fontSize,
+          reducedMotion: settings.reducedMotion,
+          keyboardNavigation: settings.keyboardNavigation,
+          screenReaderMode: settings.screenReaderOptimized,
+        }));
+      } catch (error) {
+        console.error('Failed to sync accessibility settings:', error);
+      }
+    };
+
+    // Listen for storage changes to sync across tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'accessibility-preferences') {
+        syncAccessibilitySettings();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   // Load GDPR settings
   useEffect(() => {
     const loadGDPRSettings = () => {
@@ -326,24 +355,27 @@ export default function SettingsPage() {
 
   // Handle accessibility setting changes
   const handleAccessibilityChange = (setting: keyof AccessibilitySettings, value: any) => {
+    const originalValue = accessibilitySettings[setting];
+    
     try {
+      // Update local state first
       setAccessibilitySettings(prev => ({ ...prev, [setting]: value }));
       
-      // Update preferences with the new setting
+      // Build new preferences object with updated value
       const newPreferences = {
-        highContrast: accessibilitySettings.highContrast,
-        fontSize: accessibilitySettings.fontSize as 'small' | 'medium' | 'large' | 'xlarge',
-        reducedMotion: accessibilitySettings.reducedMotion,
-        keyboardNavigation: accessibilitySettings.keyboardNavigation,
-        screenReaderOptimized: accessibilitySettings.screenReaderMode,
-        ...{ [setting === 'screenReaderMode' ? 'screenReaderOptimized' : setting]: value }
+        highContrast: setting === 'highContrast' ? value : accessibilitySettings.highContrast,
+        fontSize: setting === 'fontSize' ? value : accessibilitySettings.fontSize as 'small' | 'medium' | 'large' | 'xlarge',
+        reducedMotion: setting === 'reducedMotion' ? value : accessibilitySettings.reducedMotion,
+        keyboardNavigation: setting === 'keyboardNavigation' ? value : accessibilitySettings.keyboardNavigation,
+        screenReaderOptimized: setting === 'screenReaderMode' ? value : accessibilitySettings.screenReaderMode,
       };
       
+      // Update the accessibility service
       accessibilityService.updatePreferences(newPreferences);
     } catch (error) {
       console.error('Failed to update accessibility setting:', error);
-      // Revert the change
-      setAccessibilitySettings(prev => ({ ...prev, [setting]: !value }));
+      // Revert the change to original value
+      setAccessibilitySettings(prev => ({ ...prev, [setting]: originalValue }));
     }
   };
 
@@ -828,7 +860,7 @@ export default function SettingsPage() {
                     <option value="small">Small</option>
                     <option value="medium">Medium</option>
                     <option value="large">Large</option>
-                    <option value="extra-large">Extra Large</option>
+                    <option value="xlarge">Extra Large</option>
                   </select>
                 </div>
 
