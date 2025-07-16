@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUser(session.user);
             });
             
-            // Validate session immediately after setting user
+            // Validate session immediately after setting user state
             console.log('Auth: Validating session after setting user state:', {
               sessionValid: !!session,
               tokenPresent: !!session.access_token,
@@ -184,6 +184,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     details: profileError.details,
                     hint: profileError.hint
                   });
+                  
+                  // If profile doesn't exist, check if this is the first user for super admin setup
+                  if (profileError.code === 'PGRST116') { // No rows returned
+                    console.log('Auth: No profile found, checking for first user super admin setup...');
+                    try {
+                      const { data: superAdminResult, error: superAdminError } = await supabase
+                        .rpc('handle_new_user_registration', {
+                          user_id: session.user.id,
+                          user_email: session.user.email,
+                          user_first_name: session.user.user_metadata?.first_name,
+                          user_last_name: session.user.user_metadata?.last_name,
+                        });
+
+                      if (superAdminError) {
+                        console.error('Auth: Super admin setup error:', superAdminError);
+                      } else if (superAdminResult) {
+                        console.log('Auth: Super admin setup result:', superAdminResult);
+                        
+                        // Refetch profile after super admin setup
+                        const { data: newProfileData, error: newProfileError } = await supabase
+                          .from('profiles')
+                          .select('*')
+                          .eq('id', session.user.id)
+                          .single();
+                          
+                        if (newProfileData) {
+                          console.log('Auth: Profile created after super admin setup:', {
+                            email: newProfileData.email,
+                            role: newProfileData.role,
+                            is_super_admin: newProfileData.role === 'super_admin'
+                          });
+                          
+                          flushSync(() => {
+                            setProfile(newProfileData);
+                            setSubscriptionTier(newProfileData.subscription_tier || 'trial');
+                          });
+                          profileLoadedRef.current = true;
+                        }
+                      }
+                    } catch (setupError) {
+                      console.error('Auth: Super admin setup failed:', setupError);
+                    }
+                  }
                 } else if (profileData) {
                   console.log('Auth: Profile loaded:', { 
                     email: profileData.email, 
