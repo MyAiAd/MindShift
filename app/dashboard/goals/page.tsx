@@ -228,8 +228,8 @@ export default function GoalsPage() {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Goals</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Goals</h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">
               Track your personal growth journey and achieve your mindset transformation goals.
             </p>
           </div>

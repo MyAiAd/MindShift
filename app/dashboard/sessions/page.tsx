@@ -115,8 +115,8 @@ export default function SessionsPage() {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Coaching Sessions</h1>
-            <p className="text-gray-600 mt-1">Manage your coaching sessions and track your progress with AI and human coaches.</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Coaching Sessions</h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">Manage your coaching sessions and track your progress with AI and human coaches.</p>
           </div>
           <button 
             onClick={() => setShowBookModal(true)}
@@ -153,7 +153,7 @@ export default function SessionsPage() {
                   <Calendar className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900">{stats?.upcoming_sessions || 0}</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.upcoming_sessions || 0}</p>
                   <p className="text-gray-600">Upcoming</p>
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function SessionsPage() {
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900">{stats?.completed_sessions || 0}</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.completed_sessions || 0}</p>
                   <p className="text-gray-600">Completed</p>
                 </div>
               </div>
@@ -177,7 +177,7 @@ export default function SessionsPage() {
                   <Clock className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900">{stats?.total_hours_this_month || 0}</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.total_hours_this_month || 0}</p>
                   <p className="text-gray-600">Hours This Month</p>
                 </div>
               </div>
@@ -189,7 +189,7 @@ export default function SessionsPage() {
                   <Video className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900">{stats?.available_slots || 0}</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.available_slots || 0}</p>
                   <p className="text-gray-600">Available Slots</p>
                 </div>
               </div>
@@ -199,9 +199,9 @@ export default function SessionsPage() {
       </div>
 
       {/* Sessions List */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Sessions</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Sessions</h2>
         </div>
         
         {loading ? (
@@ -240,7 +240,7 @@ export default function SessionsPage() {
                       </div>
                       
                       <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-900">{session.title}</h3>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">{session.title}</h3>
                         <p className="text-sm text-gray-600">with {coachName}</p>
                         <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                           <div className="flex items-center">
@@ -299,7 +299,7 @@ export default function SessionsPage() {
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg p-6 flex flex-col">
           <div className="flex items-center space-x-3 mb-4">
             <Video className="h-8 w-8 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Mind Shifting Session</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Mind Shifting Session</h3>
           </div>
           <p className="text-gray-600 mb-4">Start an automated Mind Shifting treatment session with 95% scripted responses for optimal performance.</p>
           <div className="text-xs text-blue-600 mb-6 space-y-1 flex-grow">
@@ -322,7 +322,7 @@ export default function SessionsPage() {
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-lg p-6 flex flex-col">
           <div className="flex items-center space-x-3 mb-4">
             <User className="h-8 w-8 text-green-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Human Coach</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Human Coach</h3>
           </div>
           <p className="text-gray-600 mb-6 flex-grow">Book a session with one of our certified human coaches.</p>
           <button 
@@ -337,8 +337,8 @@ export default function SessionsPage() {
       {/* Book Session Modal */}
       {showBookModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Book a Session</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Book a Session</h3>
             <form className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Session Type</label>
