@@ -141,8 +141,8 @@ host = "smtp.resend.com"
 port = 465
 user = "resend"
 pass = "env(RESEND_API_KEY)"
-admin_email = "env(ADMIN_EMAIL)"
-sender_name = "env(SENDER_NAME)"
+admin_email = "NoReply@msgs.myai.ad"
+sender_name = "MyAi"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
