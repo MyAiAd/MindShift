@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Verify webhook signature and parse event
     let event: WebhookEvent;
     try {
-      event = await stripeClient.verifyWebhook(body, signature);
+      event = await stripeClient().verifyWebhook(body, signature);
     } catch (error) {
       console.error('Webhook signature verification failed:', error);
       

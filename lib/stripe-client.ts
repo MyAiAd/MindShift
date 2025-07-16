@@ -57,7 +57,7 @@ export class StripeClient {
   private stripe: Stripe;
 
   constructor() {
-    this.stripe = stripe;
+    this.stripe = stripe();
   }
 
   // Verify webhook signature and parse event
@@ -419,8 +419,14 @@ export class StripeClient {
   }
 }
 
-// Export singleton instance
-export const stripeClient = new StripeClient();
+// Export singleton instance with lazy initialization
+let _stripeClient: StripeClient | null = null;
+export const stripeClient = (): StripeClient => {
+  if (!_stripeClient) {
+    _stripeClient = new StripeClient();
+  }
+  return _stripeClient;
+};
 
 // Export Stripe types for convenience
 export { Stripe };

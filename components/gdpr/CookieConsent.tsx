@@ -54,7 +54,7 @@ export default function CookieConsent({
         // Initialize custom consents with defaults
         const initialConsents: Record<string, boolean> = {};
         categories.forEach(category => {
-          initialConsents[category.id] = category.essential;
+          initialConsents[category.name] = category.essential;
         });
         setCustomConsents(initialConsents);
       }
@@ -64,10 +64,10 @@ export default function CookieConsent({
   }, [isGDPREnabled, getCookieConsent, checkUserLocation]);
 
   const handleAcceptAll = async () => {
-    const allConsents: Record<string, boolean> = {};
-    categories.forEach(category => {
-      allConsents[category.id] = true;
-    });
+          const allConsents: Record<string, boolean> = {};
+      categories.forEach(category => {
+        allConsents[category.name] = true;
+      });
 
     await setCookieConsent(allConsents);
     setIsVisible(false);
@@ -75,10 +75,10 @@ export default function CookieConsent({
   };
 
   const handleRejectAll = async () => {
-    const essentialOnly: Record<string, boolean> = {};
-    categories.forEach(category => {
-      essentialOnly[category.id] = category.essential;
-    });
+          const essentialOnly: Record<string, boolean> = {};
+      categories.forEach(category => {
+        essentialOnly[category.name] = category.essential;
+      });
 
     await setCookieConsent(essentialOnly);
     setIsVisible(false);
@@ -91,13 +91,13 @@ export default function CookieConsent({
     onCustomize?.(customConsents);
   };
 
-  const handleToggleConsent = (categoryId: string, granted: boolean) => {
-    const category = categories.find(cat => cat.id === categoryId);
+  const handleToggleConsent = (categoryName: string, granted: boolean) => {
+    const category = categories.find(cat => cat.name === categoryName);
     if (category?.essential) return; // Cannot toggle essential cookies
 
     setCustomConsents(prev => ({
       ...prev,
-      [categoryId]: granted
+      [categoryName]: granted
     }));
   };
 
@@ -163,7 +163,7 @@ export default function CookieConsent({
 
           <div className="space-y-4">
             {categories.map(category => (
-              <div key={category.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div key={category.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
                     <Shield className="h-4 w-4 text-gray-500" />
@@ -178,11 +178,11 @@ export default function CookieConsent({
                   </div>
                   <button
                     role="switch"
-                    aria-checked={customConsents[category.id]}
-                    onClick={() => handleToggleConsent(category.id, !customConsents[category.id])}
+                    aria-checked={customConsents[category.name]}
+                    onClick={() => handleToggleConsent(category.name, !customConsents[category.name])}
                     disabled={category.essential}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      customConsents[category.id] ? 'bg-blue-600' : 'bg-gray-200'
+                      customConsents[category.name] ? 'bg-blue-600' : 'bg-gray-200'
                     } ${category.essential ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <span className="sr-only">
@@ -190,32 +190,30 @@ export default function CookieConsent({
                     </span>
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        customConsents[category.id] ? 'translate-x-6' : 'translate-x-1'
+                        customConsents[category.name] ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />
                   </button>
                 </div>
                 
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                  {category.description}
+                  {category.purpose}
                 </p>
 
                 {/* Cookie details */}
                 <div className="bg-gray-50 dark:bg-gray-700 rounded p-3">
                   <h5 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Cookies in this category:
+                    Cookie details:
                   </h5>
                   <div className="space-y-1">
-                    {category.cookies.map((cookie, index) => (
-                      <div key={index} className="flex justify-between items-center text-xs">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {cookie.name} ({cookie.provider})
-                        </span>
-                        <span className="text-gray-500 dark:text-gray-500">
-                          {cookie.expiry}
-                        </span>
-                      </div>
-                    ))}
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {category.name}
+                      </span>
+                      <span className="text-gray-500 dark:text-gray-500">
+                        {category.duration}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

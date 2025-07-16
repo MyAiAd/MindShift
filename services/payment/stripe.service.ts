@@ -9,7 +9,7 @@ import config from '@/lib/config';
 // Initialize Stripe with configuration
 const getStripe = () => {
   if (!config.stripe.secretKey) {
-    if (config.deployment.nodeEnv === 'production') {
+    if (config.deployment.nodeEnv === 'production' && process.env.VERCEL_ENV === 'production') {
       throw new Error('Stripe secret key is required in production');
     }
     console.warn('⚠️  Stripe secret key not configured - using placeholder for development');
@@ -38,7 +38,7 @@ export const stripe = () => {
 // Webhook secret for signature verification
 export const getWebhookSecret = () => {
   if (!config.stripe.webhookSecret) {
-    if (config.deployment.nodeEnv === 'production') {
+    if (config.deployment.nodeEnv === 'production' && process.env.VERCEL_ENV === 'production') {
       throw new Error('Stripe webhook secret is required in production');
     }
     console.warn('⚠️  Stripe webhook secret not configured - webhook verification will fail');
@@ -51,7 +51,7 @@ export const getWebhookSecret = () => {
 // Publishable key for frontend
 export const getPublishableKey = () => {
   if (!config.stripe.publishableKey) {
-    if (config.deployment.nodeEnv === 'production') {
+    if (config.deployment.nodeEnv === 'production' && process.env.VERCEL_ENV === 'production') {
       throw new Error('Stripe publishable key is required in production');
     }
     console.warn('⚠️  Stripe publishable key not configured');
