@@ -3,6 +3,7 @@
 // ===============================================
 // Comprehensive accessibility utilities for WCAG 2.1 AA compliance
 
+import { useState, useEffect } from 'react';
 import config from '@/lib/config';
 
 export interface AccessibilityPreferences {
@@ -347,9 +348,31 @@ export const accessibility = AccessibilityService.getInstance();
 // React hooks
 export const useAccessibility = () => {
   const service = AccessibilityService.getInstance();
+  const [preferences, setPreferences] = useState(service.getPreferences());
+
+  useEffect(() => {
+    // Initialize preferences
+    setPreferences(service.getPreferences());
+
+    // Listen for storage changes to sync across tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'accessibility-preferences') {
+        setPreferences(service.getPreferences());
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const updatePreferences = (newPreferences: Partial<AccessibilityPreferences>) => {
+    service.updatePreferences(newPreferences);
+    setPreferences(service.getPreferences());
+  };
+
   return {
-    preferences: service.getPreferences(),
-    updatePreferences: service.updatePreferences.bind(service),
+    preferences,
+    updatePreferences,
     announce: service.announce.bind(service),
     skipToMainContent: service.skipToMainContent.bind(service),
     generateAriaAttributes: service.generateAriaAttributes.bind(service),
