@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
 import { createClient } from '@/lib/database';
-import { useNotifications } from '@/lib/notifications';
+import { useNotifications } from '@/services/notification/notification.service';
 import { AccessibilityService } from '@/services/accessibility/accessibility.service';
 import { GDPRService } from '@/services/gdpr/gdpr.service';
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth';

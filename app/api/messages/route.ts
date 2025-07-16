@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { pushService } from '@/lib/push-service';
+import { pushService } from '@/services/push/push.service';
 
 // Message types
 export interface ClientMessage {

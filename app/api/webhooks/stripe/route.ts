@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripeClient, WebhookEvent, StripeError } from '@/lib/stripe-client';
+import { stripe } from '@/services/payment/stripe.service';
+import Stripe from 'stripe';
 import { createServerClient } from '@/lib/database-server';
 import { rateLimit, RATE_LIMITS, logSecurityEvent } from '@/lib/security-middleware';
 
@@ -69,16 +70,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify webhook signature and parse event
-    let event: WebhookEvent;
+    let event: Stripe.Event;
     try {
-      event = await stripeClient().verifyWebhook(body, signature);
+      event = stripe().webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
     } catch (error) {
       console.error('Webhook signature verification failed:', error);
       
-      if (error instanceof StripeError) {
+      if (error instanceof Error) {
         return NextResponse.json(
           { error: error.message },
-          { status: error.statusCode || 400 }
+          { status: 400 }
         );
       }
       
@@ -171,7 +172,7 @@ export async function POST(request: NextRequest) {
 
 // Handle specific Stripe event types
 async function handleStripeEvent(
-  event: WebhookEvent,
+  event: Stripe.Event,
   supabase: any,
   eventId: string
 ) {

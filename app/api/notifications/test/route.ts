@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/database-server';
-import { pushService } from '@/lib/push-service';
+import { pushService } from '@/services/push/push.service';
 
 // POST /api/notifications/test - Send a test notification
 export async function POST(request: NextRequest) {
