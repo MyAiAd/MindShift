@@ -16,19 +16,31 @@ DROP POLICY IF EXISTS "Comprehensive profile access" ON profiles;
 
 -- Create non-recursive policies for profiles table
 -- Allow users to view their own profile (no recursion)
-CREATE POLICY "Users can view their own profile" ON profiles
-    FOR SELECT TO authenticated
-    USING (id = auth.uid());
+DO $$ BEGIN
+    CREATE POLICY "Users can view their own profile" ON profiles
+        FOR SELECT TO authenticated
+        USING (id = auth.uid());
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Allow users to update their own profile (no recursion)
-CREATE POLICY "Users can update their own profile" ON profiles
-    FOR UPDATE TO authenticated
-    USING (id = auth.uid());
+DO $$ BEGIN
+    CREATE POLICY "Users can update their own profile" ON profiles
+        FOR UPDATE TO authenticated
+        USING (id = auth.uid());
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Allow users to insert their own profile (no recursion)
-CREATE POLICY "Users can insert their own profile" ON profiles
-    FOR INSERT TO authenticated
-    WITH CHECK (id = auth.uid());
+DO $$ BEGIN
+    CREATE POLICY "Users can insert their own profile" ON profiles
+        FOR INSERT TO authenticated
+        WITH CHECK (id = auth.uid());
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 -- For now, we'll use a simple approach that avoids recursion completely
 -- Super admin access will be handled by a separate mechanism
@@ -38,41 +50,53 @@ CREATE POLICY "Users can insert their own profile" ON profiles
 -- For now, users can only access their own profiles, which prevents the recursion issue
 
 -- Create tenant-based access policy
-CREATE POLICY "Tenant members can view profiles in their tenant" ON profiles
-    FOR SELECT TO authenticated
-    USING (
-        tenant_id IN (
-            SELECT p.tenant_id 
-            FROM profiles p 
-            WHERE p.id = auth.uid() 
-            AND p.tenant_id IS NOT NULL
-        )
-    );
+DO $$ BEGIN
+    CREATE POLICY "Tenant members can view profiles in their tenant" ON profiles
+        FOR SELECT TO authenticated
+        USING (
+            tenant_id IN (
+                SELECT p.tenant_id 
+                FROM profiles p 
+                WHERE p.id = auth.uid() 
+                AND p.tenant_id IS NOT NULL
+            )
+        );
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Super admin tenant access is temporarily disabled to avoid recursion
 -- This will be re-enabled once the recursion issue is fully resolved
 
 -- Create a safer tenant access policy
-CREATE POLICY "Users can view their own tenant" ON tenants
-    FOR SELECT TO authenticated
-    USING (
-        id IN (
-            SELECT p.tenant_id 
-            FROM profiles p 
-            WHERE p.id = auth.uid() 
-            AND p.tenant_id IS NOT NULL
-        )
-    );
+DO $$ BEGIN
+    CREATE POLICY "Users can view their own tenant" ON tenants
+        FOR SELECT TO authenticated
+        USING (
+            id IN (
+                SELECT p.tenant_id 
+                FROM profiles p 
+                WHERE p.id = auth.uid() 
+                AND p.tenant_id IS NOT NULL
+            )
+        );
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Update tenant admin policy
-CREATE POLICY "Tenant admins can update their tenant" ON tenants
-    FOR UPDATE TO authenticated
-    USING (
-        id IN (
-            SELECT p.tenant_id 
-            FROM profiles p 
-            WHERE p.id = auth.uid() 
-            AND p.role IN ('tenant_admin', 'super_admin')
-            AND p.tenant_id IS NOT NULL
-        )
-    ); 
+DO $$ BEGIN
+    CREATE POLICY "Tenant admins can update their tenant" ON tenants
+        FOR UPDATE TO authenticated
+        USING (
+            id IN (
+                SELECT p.tenant_id 
+                FROM profiles p 
+                WHERE p.id = auth.uid() 
+                AND p.role IN ('tenant_admin', 'super_admin')
+                AND p.tenant_id IS NOT NULL
+            )
+        );
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$; 
