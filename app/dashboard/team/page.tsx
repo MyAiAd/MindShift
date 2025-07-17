@@ -290,14 +290,14 @@ export default function CustomerManagementPage() {
           {/* Advanced Analytics Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {/* Revenue Trend Chart */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Revenue Trends</h3>
-                <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg">
+                <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-3 py-1 rounded-lg">
                   Current Period
                 </div>
               </div>
-              <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
+              <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg">
                 <div className="text-center">
                   <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-2" />
                   <p className="text-gray-500 dark:text-gray-400">Historical trend tracking coming soon</p>

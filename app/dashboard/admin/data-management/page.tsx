@@ -421,14 +421,14 @@ export default function DataManagementPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Select File (JSON or CSV)
                   </label>
                   <input
                     type="file"
                     accept=".json,.csv"
                     onChange={handleFileUpload}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                    className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                   />
                   {importFile && (
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
@@ -437,9 +437,9 @@ export default function DataManagementPage() {
                   )}
                 </div>
                 
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Import Format Requirements:</h4>
-                  <ul className="text-sm text-blue-800 space-y-1">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Import Format Requirements:</h4>
+                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                     <li>• <strong>JSON:</strong> Array of customer objects with email, first_name, last_name, subscription_tier</li>
                     <li>• <strong>CSV:</strong> Headers: Email, First Name, Last Name, Subscription Tier</li>
                     <li>• Email is required for all customers</li>
@@ -467,11 +467,11 @@ export default function DataManagementPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Export Type</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Export Type</label>
                   <select
                     value={exportType}
                     onChange={(e) => setExportType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="customers">Customer Data</option>
                     <option value="subscription_plans">Subscription Plans</option>
@@ -480,11 +480,11 @@ export default function DataManagementPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Format</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Format</label>
                   <select
                     value={exportFormat}
                     onChange={(e) => setExportFormat(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="json">JSON</option>
                     <option value="csv">CSV</option>
@@ -523,9 +523,9 @@ export default function DataManagementPage() {
             )}
 
             <div className="space-y-4">
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <h4 className="font-medium text-purple-900 mb-2">Default Subscription Plans:</h4>
-                <ul className="text-sm text-purple-800 space-y-1">
+                              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                <h4 className="font-medium text-purple-900 dark:text-purple-100 mb-2">Default Subscription Plans:</h4>
+                <ul className="text-sm text-purple-800 dark:text-purple-200 space-y-1">
                   <li>• <strong>Trial Plan:</strong> Free trial with basic features</li>
                                   <li>• <strong>Essential MyAi:</strong> $29.00/month - Individual plan with core features</li>
                 <li>• <strong>Complete MyAi:</strong> $49.00/month - Full featured plan with team management</li>
@@ -556,11 +556,11 @@ export default function DataManagementPage() {
               <div className="space-y-4">
                 {profile?.role === 'super_admin' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Target Tenant</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Target Tenant</label>
                     <select
                       value={selectedTenant}
                       onChange={(e) => setSelectedTenant(e.target.value)}
-                      className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                       required
                     >
                       <option value="">Select Tenant</option>
@@ -574,7 +574,7 @@ export default function DataManagementPage() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Number of Test Customers (Max 200)
                   </label>
                   <input
@@ -583,13 +583,13 @@ export default function DataManagementPage() {
                     max="200"
                     value={testDataCount}
                     onChange={(e) => setTestDataCount(parseInt(e.target.value))}
-                    className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Test Data Includes:</h4>
-                  <ul className="text-sm text-blue-800 space-y-1">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Test Data Includes:</h4>
+                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                     <li>• Realistic customer names and email addresses (@example.com)</li>
                     <li>• Random subscription tiers (trial, level_1, level_2)</li>
                     <li>• Active subscriptions for paid tiers (70% chance)</li>
@@ -617,17 +617,17 @@ export default function DataManagementPage() {
               </div>
               
               <div className="space-y-4">
-                <div className="bg-red-50 p-4 rounded-lg">
+                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
                   <div className="flex items-center mb-3">
                     <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-                    <p className="text-red-800">
+                    <p className="text-red-800 dark:text-red-200">
                       <strong>Warning:</strong> This will permanently delete all customers with @example.com email addresses. This action cannot be undone.
                     </p>
                   </div>
-                  <div className="bg-green-100 p-3 rounded-md mt-2">
+                  <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-md mt-2">
                     <div className="flex items-center">
                       <Shield className="h-4 w-4 text-green-600 mr-2" />
-                      <p className="text-green-800 text-sm">
+                      <p className="text-green-800 dark:text-green-200 text-sm">
                         <strong>Safe:</strong> Super admin accounts (like admin@yourdomain.com) and real customers will NEVER be deleted. Only test data with @example.com emails is affected.
                       </p>
                     </div>
@@ -650,7 +650,7 @@ export default function DataManagementPage() {
 
       {/* Results Display */}
       {results && (
-        <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
+        <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center mb-4">
             <BarChart3 className="h-6 w-6 text-gray-600 mr-3" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Operation Results</h3>
