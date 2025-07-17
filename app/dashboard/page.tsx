@@ -193,7 +193,7 @@ export default function DashboardPage() {
         {loading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm border p-6">
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
@@ -240,7 +240,7 @@ export default function DashboardPage() {
           ].map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.name} className="bg-white rounded-lg shadow-sm border p-6">
+              <div key={stat.name} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.name}</p>
@@ -263,7 +263,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <Brain className="h-5 w-5 mr-2 text-indigo-600" />
             Quick Actions
@@ -366,7 +366,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <Clock className="h-5 w-5 mr-2 text-indigo-600" />
             Recent Activity
@@ -427,7 +427,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Performance Overview */}
-      <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
+      <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
           <Award className="h-5 w-5 mr-2 text-indigo-600" />
           Performance Overview

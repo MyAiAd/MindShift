@@ -252,7 +252,7 @@ export default function GoalsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-50 rounded-lg">
               <Target className="h-6 w-6 text-blue-600" />
@@ -264,7 +264,7 @@ export default function GoalsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-50 rounded-lg">
               <CheckCircle className="h-6 w-6 text-green-600" />
@@ -276,7 +276,7 @@ export default function GoalsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-orange-50 rounded-lg">
               <Clock className="h-6 w-6 text-orange-600" />
@@ -288,7 +288,7 @@ export default function GoalsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-50 rounded-lg">
               <TrendingUp className="h-6 w-6 text-purple-600" />
@@ -302,7 +302,7 @@ export default function GoalsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="flex items-center space-x-2">
             <Filter className="h-5 w-5 text-gray-400" />
@@ -356,7 +356,7 @@ export default function GoalsPage() {
       {/* Goals Grid */}
       <div className="grid gap-6">
         {filteredGoals.map((goal) => (
-          <div key={goal.id} className="bg-white rounded-lg shadow-sm border p-6">
+          <div key={goal.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
@@ -450,7 +450,7 @@ export default function GoalsPage() {
 
       {/* Empty State */}
       {filteredGoals.length === 0 && (
-        <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-12 text-center">
           <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No goals found</h3>
           <p className="text-gray-600 mb-6">
@@ -473,7 +473,7 @@ export default function GoalsPage() {
       {/* Create Goal Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Create New Goal</h3>
               <button
@@ -554,7 +554,7 @@ export default function GoalsPage() {
       {/* Edit Goal Modal */}
       {showEditModal && editingGoal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Goal</h3>
               <button

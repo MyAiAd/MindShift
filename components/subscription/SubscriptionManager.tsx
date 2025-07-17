@@ -285,7 +285,7 @@ export default function SubscriptionManager() {
 
       {/* Current Subscription Status */}
       {subscription && (
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Current Subscription</h2>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">

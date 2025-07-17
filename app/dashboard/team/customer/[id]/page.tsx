@@ -1257,7 +1257,7 @@ export default function CustomerDetailPage() {
       {/* Add Note Modal */}
       {showNoteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Customer Note</h3>
             <form onSubmit={handleAddNote} className="space-y-4">
               <div>
@@ -1317,7 +1317,7 @@ export default function CustomerDetailPage() {
       {/* Email Log Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Log Email Communication</h3>
             <form onSubmit={(e) => {
               e.preventDefault();
@@ -1405,7 +1405,7 @@ export default function CustomerDetailPage() {
       {/* Subscription Management Modal */}
       {showSubscriptionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Manage Subscription</h3>
             
             {actionMessage && (

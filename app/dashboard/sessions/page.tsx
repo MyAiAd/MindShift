@@ -133,7 +133,7 @@ export default function SessionsPage() {
         {loading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm border p-6">
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-gray-100 rounded-lg">
                   <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
@@ -147,7 +147,7 @@ export default function SessionsPage() {
           ))
         ) : (
           <>
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <Calendar className="h-6 w-6 text-blue-600" />
@@ -159,7 +159,7 @@ export default function SessionsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-green-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600" />
@@ -171,7 +171,7 @@ export default function SessionsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-purple-50 rounded-lg">
                   <Clock className="h-6 w-6 text-purple-600" />
@@ -183,7 +183,7 @@ export default function SessionsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-yellow-50 rounded-lg">
                   <Video className="h-6 w-6 text-yellow-600" />

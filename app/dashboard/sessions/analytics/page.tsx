@@ -36,7 +36,7 @@ export default function SessionAnalyticsPage() {
 
       {/* Performance Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-50 rounded-lg">
               <Activity className="h-6 w-6 text-blue-600" />
@@ -48,7 +48,7 @@ export default function SessionAnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-50 rounded-lg">
               <Clock className="h-6 w-6 text-green-600" />
@@ -60,7 +60,7 @@ export default function SessionAnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-50 rounded-lg">
               <Target className="h-6 w-6 text-purple-600" />
@@ -72,7 +72,7 @@ export default function SessionAnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-50 rounded-lg">
               <Brain className="h-6 w-6 text-yellow-600" />
@@ -88,7 +88,7 @@ export default function SessionAnalyticsPage() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Session Performance Chart */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Session Performance</h3>
           <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
             <div className="text-center">
@@ -99,7 +99,7 @@ export default function SessionAnalyticsPage() {
         </div>
 
         {/* Treatment Outcomes */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Treatment Outcomes</h3>
           <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
             <div className="text-center">
@@ -111,7 +111,7 @@ export default function SessionAnalyticsPage() {
       </div>
 
       {/* Recent Sessions */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Treatment Sessions</h2>
         </div>

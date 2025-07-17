@@ -216,7 +216,7 @@ export default function CustomerManagementPage() {
         <>
           {/* Key Metrics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <Users className="h-6 w-6 text-blue-600" />
@@ -232,7 +232,7 @@ export default function CustomerManagementPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-green-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600" />
@@ -249,7 +249,7 @@ export default function CustomerManagementPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-purple-50 rounded-lg">
                   <DollarSign className="h-6 w-6 text-purple-600" />
@@ -269,7 +269,7 @@ export default function CustomerManagementPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-yellow-50 rounded-lg">
                   <Clock className="h-6 w-6 text-yellow-600" />
@@ -321,7 +321,7 @@ export default function CustomerManagementPage() {
             </div>
 
             {/* Customer Lifecycle Chart */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Customer Lifecycle</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -389,7 +389,7 @@ export default function CustomerManagementPage() {
           </div>
 
           {/* Subscription Tier Breakdown */}
-          <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 mb-8">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Subscription Tier Analysis</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center p-4 border rounded-lg">
@@ -442,7 +442,7 @@ export default function CustomerManagementPage() {
       )}
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 mb-6">
         <form onSubmit={handleSearch} className="flex items-center space-x-4 mb-4">
           <div className="flex-1">
             <div className="relative">
@@ -523,14 +523,14 @@ export default function CustomerManagementPage() {
       <FeatureGuard 
         featureKey="team_management"
         fallback={
-          <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Customer Management Not Available</h3>
             <p className="text-gray-600 mb-4">Upgrade your subscription to access customer management features.</p>
           </div>
         }
       >
-        <div className="bg-white rounded-lg shadow-sm border">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Customers ({pagination.total})

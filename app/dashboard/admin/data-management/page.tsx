@@ -382,8 +382,8 @@ export default function DataManagementPage() {
           <>
             {/* Tenant Selection */}
             {profile?.role === 'super_admin' && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Tenant Selection</h3>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tenant Selection</h3>
                 <div className="max-w-md">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Target Tenant</label>
                   <select
@@ -413,7 +413,7 @@ export default function DataManagementPage() {
             )}
 
             {/* Import Section */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Upload className="h-6 w-6 text-indigo-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Import Customer Data</h3>
@@ -459,7 +459,7 @@ export default function DataManagementPage() {
             </div>
 
             {/* Export Section */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Download className="h-6 w-6 text-green-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Export Data</h3>
@@ -507,7 +507,7 @@ export default function DataManagementPage() {
         )}
 
         {activeTab === 'subscription_plans' && (
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
             <div className="flex items-center mb-4">
               <Settings className="h-6 w-6 text-purple-600 mr-3" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Subscription Plan Management</h3>
@@ -547,7 +547,7 @@ export default function DataManagementPage() {
         {activeTab === 'test_data' && (
           <>
             {/* Generate Test Data */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Users className="h-6 w-6 text-blue-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Generate Test Data</h3>
@@ -610,7 +610,7 @@ export default function DataManagementPage() {
             </div>
 
             {/* Cleanup Test Data */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Trash2 className="h-6 w-6 text-red-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Cleanup Test Data</h3>

@@ -347,7 +347,7 @@ export default function ProgressPage() {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-50 rounded-lg">
               <TrendingUp className="h-6 w-6 text-green-600" />
@@ -359,7 +359,7 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-50 rounded-lg">
               <Target className="h-6 w-6 text-blue-600" />
@@ -371,7 +371,7 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-50 rounded-lg">
               <Activity className="h-6 w-6 text-purple-600" />
@@ -383,7 +383,7 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-50 rounded-lg">
               <Award className="h-6 w-6 text-yellow-600" />
@@ -397,7 +397,7 @@ export default function ProgressPage() {
       </div>
 
       {/* Wellbeing Scores */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 mb-8">
                       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Average Wellbeing Scores</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgMoodScore || 0)}`}>
@@ -437,7 +437,7 @@ export default function ProgressPage() {
         {/* Column 1: Level Progress & Recent Achievements */}
         <div className="space-y-6">
           {/* Level Progress */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Your Level Progress</h2>
               {gamificationData?.levelProgress && (
@@ -483,7 +483,7 @@ export default function ProgressPage() {
           </div>
 
           {/* Recent Achievements */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Achievements</h2>
             
             {gamificationLoading ? (
@@ -526,7 +526,7 @@ export default function ProgressPage() {
         </div>
 
         {/* Column 2: Progress Chart */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Progress Over Time</h2>
             <select 
@@ -620,7 +620,7 @@ export default function ProgressPage() {
         {/* Column 3: Streaks & Quick Stats */}
         <div className="space-y-6">
           {/* Current Streaks */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Current Streaks</h2>
             
             {gamificationLoading ? (
@@ -658,7 +658,7 @@ export default function ProgressPage() {
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Stats</h2>
             
             {gamificationLoading ? (
@@ -704,7 +704,7 @@ export default function ProgressPage() {
       {/* New Progress Entry Modal */}
       {showNewEntryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Log Progress Entry</h3>
               <button
