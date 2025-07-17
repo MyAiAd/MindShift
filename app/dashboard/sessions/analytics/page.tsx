@@ -89,7 +89,7 @@ export default function SessionAnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Session Performance Chart */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Session Performance</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Session Performance</h3>
           <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
             <div className="text-center">
               <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
@@ -100,7 +100,7 @@ export default function SessionAnalyticsPage() {
 
         {/* Treatment Outcomes */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Treatment Outcomes</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Treatment Outcomes</h3>
           <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
             <div className="text-center">
               <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-2" />

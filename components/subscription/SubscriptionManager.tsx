@@ -246,8 +246,8 @@ export default function SubscriptionManager() {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Subscription Management</h1>
-        <p className="text-gray-600">Choose the plan that's right for your mindset transformation journey</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Subscription Management</h1>
+        <p className="text-gray-600 dark:text-gray-300">Choose the plan that's right for your mindset transformation journey</p>
       </div>
 
       {/* Error/Success Messages */}
@@ -377,7 +377,7 @@ export default function SubscriptionManager() {
             </div>
 
             {/* Description */}
-            <p className="text-gray-600 mb-4">{plan.description}</p>
+                            <p className="text-gray-600 dark:text-gray-300 mb-4">{plan.description}</p>
 
             {/* Price */}
             <div className="mb-6">

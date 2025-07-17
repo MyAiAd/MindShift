@@ -203,7 +203,7 @@ export default function CustomerManagementPage() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Customer Management</h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 dark:text-gray-300 mt-1">
               Manage your customers, subscriptions, and billing. 
               {profile?.role === 'super_admin' ? ' (Super Admin - All Tenants)' : ' (Tenant Admin)'}
             </p>
@@ -322,15 +322,15 @@ export default function CustomerManagementPage() {
 
             {/* Customer Lifecycle Chart */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Customer Lifecycle</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
-                    <span className="text-gray-700 dark:text-gray-300">New Signups</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-lg font-semibold text-gray-900 mr-2">{analytics.new_signups || 0}</span>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Customer Lifecycle</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
+                  <span className="text-gray-700 dark:text-gray-300">New Signups</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-lg font-semibold text-gray-900 dark:text-white mr-2">{analytics.new_signups || 0}</span>
                     <div className="w-24 bg-gray-200 rounded-full h-2">
                       <div className="bg-blue-500 h-2 rounded-full" style={{width: '80%'}}></div>
                     </div>
@@ -342,7 +342,7 @@ export default function CustomerManagementPage() {
                     <span className="text-gray-700 dark:text-gray-300">Trial Users</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-lg font-semibold text-gray-900 mr-2">{analytics.trial_users || 0}</span>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-white mr-2">{analytics.trial_users || 0}</span>
                     <div className="w-24 bg-gray-200 rounded-full h-2">
                       <div className="bg-yellow-500 h-2 rounded-full" style={{width: '60%'}}></div>
                     </div>
@@ -354,7 +354,7 @@ export default function CustomerManagementPage() {
                     <span className="text-gray-700 dark:text-gray-300">Paid Customers</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-lg font-semibold text-gray-900 mr-2">{analytics.active_subscriptions || 0}</span>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-white mr-2">{analytics.active_subscriptions || 0}</span>
                     <div className="w-24 bg-gray-200 rounded-full h-2">
                       <div className="bg-green-500 h-2 rounded-full" style={{width: '90%'}}></div>
                     </div>
@@ -366,7 +366,7 @@ export default function CustomerManagementPage() {
                     <span className="text-gray-700 dark:text-gray-300">Churned</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-lg font-semibold text-gray-900 mr-2">{analytics.churned_customers || 0}</span>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-white mr-2">{analytics.churned_customers || 0}</span>
                     <div className="w-24 bg-gray-200 rounded-full h-2">
                       <div className="bg-red-500 h-2 rounded-full" style={{width: '20%'}}></div>
                     </div>
@@ -390,7 +390,7 @@ export default function CustomerManagementPage() {
 
           {/* Subscription Tier Breakdown */}
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Subscription Tier Analysis</h3>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Subscription Tier Analysis</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center p-4 border rounded-lg">
                 <div className="flex items-center justify-center mb-2">
@@ -525,7 +525,7 @@ export default function CustomerManagementPage() {
         fallback={
           <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Customer Management Not Available</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Customer Management Not Available</h3>
             <p className="text-gray-600 mb-4">Upgrade your subscription to access customer management features.</p>
           </div>
         }
@@ -545,7 +545,7 @@ export default function CustomerManagementPage() {
           ) : customers.length === 0 ? (
             <div className="p-8 text-center">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No customers found</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No customers found</h3>
               <p className="text-gray-600 dark:text-gray-300">Try adjusting your search or filter criteria.</p>
             </div>
           ) : (

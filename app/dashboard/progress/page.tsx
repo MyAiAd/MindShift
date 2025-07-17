@@ -326,7 +326,7 @@ export default function ProgressPage() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Progress</h1>
-            <p className="text-gray-600 mt-1">Track your mindset transformation journey and celebrate your achievements.</p>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">Track your mindset transformation journey and celebrate your achievements.</p>
           </div>
           <button 
             onClick={() => setShowNewEntryModal(true)}
@@ -398,7 +398,7 @@ export default function ProgressPage() {
 
       {/* Wellbeing Scores */}
       <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Average Wellbeing Scores</h2>
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Average Wellbeing Scores</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgMoodScore || 0)}`}>
             <div className="flex items-center">
@@ -484,7 +484,7 @@ export default function ProgressPage() {
 
           {/* Recent Achievements */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Achievements</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Achievements</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
@@ -621,7 +621,7 @@ export default function ProgressPage() {
         <div className="space-y-6">
           {/* Current Streaks */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Current Streaks</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Current Streaks</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
@@ -659,7 +659,7 @@ export default function ProgressPage() {
 
           {/* Quick Stats */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Stats</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">

@@ -711,7 +711,7 @@ export default function CustomerDetailPage() {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Information</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Customer Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
@@ -741,7 +741,7 @@ export default function CustomerDetailPage() {
 
             {subscription && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Subscription</h3>
+                                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Current Subscription</h3>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center space-x-3 mb-3">
                     {getSubscriptionIcon(subscription.subscription_plans.tier)}
@@ -768,7 +768,7 @@ export default function CustomerDetailPage() {
 
         {activeTab === 'subscription' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Subscription History</h3>
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Subscription History</h3>
             {customer.user_subscriptions?.length ? (
               <div className="space-y-4">
                 {customer.user_subscriptions.map((sub) => (
@@ -810,11 +810,11 @@ export default function CustomerDetailPage() {
 
         {activeTab === 'billing' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Billing Information</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Billing Information</h3>
             {customer.billing_info ? (
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Billing Address</h4>
+                                      <h4 className="font-medium text-gray-900 dark:text-white mb-2">Billing Address</h4>
                   <div className="text-sm text-gray-600 dark:text-gray-300">
                     <p>{customer.billing_info.address_line1}</p>
                     {customer.billing_info.address_line2 && <p>{customer.billing_info.address_line2}</p>}
@@ -823,7 +823,7 @@ export default function CustomerDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Payment Method</h4>
+                                      <h4 className="font-medium text-gray-900 dark:text-white mb-2">Payment Method</h4>
                   <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                     <CreditCard className="h-4 w-4" />
                     <span>{customer.billing_info.payment_method_type} ending in {customer.billing_info.payment_method_last4}</span>
@@ -1023,7 +1023,7 @@ export default function CustomerDetailPage() {
             ) : (
               <div className="text-center py-8">
                 <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Communication History</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Communication History</h3>
                 <p className="text-gray-600 mb-4">Start building a communication history with this customer.</p>
                 <button
                   onClick={() => setShowNoteModal(true)}
@@ -1038,7 +1038,7 @@ export default function CustomerDetailPage() {
 
         {activeTab === 'transactions' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Transaction History</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Transaction History</h3>
             {customer.transactions?.length ? (
               <div className="space-y-4">
                 {customer.transactions.map((transaction) => (
@@ -1078,7 +1078,7 @@ export default function CustomerDetailPage() {
 
         {activeTab === 'admin_logs' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Admin Action Logs</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Admin Action Logs</h3>
             {logsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -1119,7 +1119,7 @@ export default function CustomerDetailPage() {
 
         {activeTab === 'permissions' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Feature Permissions</h3>
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Feature Permissions</h3>
             {permissionsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -1139,7 +1139,7 @@ export default function CustomerDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Core Features */}
                   <div className="bg-white border rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Core Features</h4>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-3">Core Features</h4>
                     <div className="space-y-3">
                       {[
                         { key: 'goal_setting', name: 'Goal Setting', description: 'Create and manage personal goals' },
@@ -1172,7 +1172,7 @@ export default function CustomerDetailPage() {
 
                   {/* Advanced Features */}
                   <div className="bg-white border rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Advanced Features</h4>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-3">Advanced Features</h4>
                     <div className="space-y-3">
                       {[
                         { key: 'team_management', name: 'Team Management', description: 'Manage team members and collaboration' },
@@ -1206,7 +1206,7 @@ export default function CustomerDetailPage() {
 
                 {/* Role & Subscription Override */}
                 <div className="bg-white border rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-3">Role & Subscription Override</h4>
+                                      <h4 className="font-medium text-gray-900 dark:text-white mb-3">Role & Subscription Override</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Customer Role</label>
@@ -1258,7 +1258,7 @@ export default function CustomerDetailPage() {
       {showNoteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Customer Note</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Customer Note</h3>
             <form onSubmit={handleAddNote} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Note Content</label>
@@ -1318,7 +1318,7 @@ export default function CustomerDetailPage() {
       {showEmailModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Log Email Communication</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Log Email Communication</h3>
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.target as HTMLFormElement);
@@ -1406,7 +1406,7 @@ export default function CustomerDetailPage() {
       {showSubscriptionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Manage Subscription</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Manage Subscription</h3>
             
             {actionMessage && (
               <div className={`mb-4 p-3 rounded-lg ${

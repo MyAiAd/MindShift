@@ -173,7 +173,7 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Welcome back, {profile?.first_name}!
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 dark:text-gray-300 mt-1">
               Here's what's happening with {tenant?.name || 'MyAi'} today.
             </p>
           </div>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.name}</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stat.value}</p>
                     <p className={`text-sm mt-2 ${
                       stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
                     }`}>
@@ -264,7 +264,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <Brain className="h-5 w-5 mr-2 text-indigo-600" />
             Quick Actions
           </h2>
@@ -367,7 +367,7 @@ export default function DashboardPage() {
 
         {/* Recent Activity */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <Clock className="h-5 w-5 mr-2 text-indigo-600" />
             Recent Activity
           </h2>
@@ -428,7 +428,7 @@ export default function DashboardPage() {
 
       {/* Performance Overview */}
       <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
           <Award className="h-5 w-5 mr-2 text-indigo-600" />
           Performance Overview
         </h2>

@@ -154,7 +154,7 @@ export default function SessionsPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.upcoming_sessions || 0}</p>
-                  <p className="text-gray-600">Upcoming</p>
+                  <p className="text-gray-600 dark:text-gray-300">Upcoming</p>
                 </div>
               </div>
             </div>
@@ -166,7 +166,7 @@ export default function SessionsPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.completed_sessions || 0}</p>
-                  <p className="text-gray-600">Completed</p>
+                  <p className="text-gray-600 dark:text-gray-300">Completed</p>
                 </div>
               </div>
             </div>
@@ -178,7 +178,7 @@ export default function SessionsPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.total_hours_this_month || 0}</p>
-                  <p className="text-gray-600">Hours This Month</p>
+                  <p className="text-gray-600 dark:text-gray-300">Hours This Month</p>
                 </div>
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function SessionsPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.available_slots || 0}</p>
-                  <p className="text-gray-600">Available Slots</p>
+                  <p className="text-gray-600 dark:text-gray-300">Available Slots</p>
                 </div>
               </div>
             </div>

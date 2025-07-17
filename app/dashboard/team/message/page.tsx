@@ -239,7 +239,7 @@ export default function MessageClientPage() {
         {/* Client List */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
               <Users className="h-5 w-5 mr-2 text-indigo-600" />
               Select Client
             </h2>
@@ -283,7 +283,7 @@ export default function MessageClientPage() {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{client.name}</p>
+                        <p className="font-medium text-gray-900 dark:text-white truncate">{client.name}</p>
                         <div className="flex items-center space-x-2">
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                             client.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
@@ -304,7 +304,7 @@ export default function MessageClientPage() {
         {/* Message Composer */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
               <Send className="h-5 w-5 mr-2 text-indigo-600" />
               Compose Message
             </h2>
@@ -392,7 +392,7 @@ export default function MessageClientPage() {
 
       {/* Recent Messages */}
       <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
           <Clock className="h-5 w-5 mr-2 text-indigo-600" />
           Recent Messages
         </h2>

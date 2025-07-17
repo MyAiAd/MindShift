@@ -51,7 +51,7 @@ function TreatmentSessionContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h1>
+                      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Authentication Required</h1>
           <p className="text-gray-600 dark:text-gray-300">Please sign in to access treatment sessions.</p>
           <Link href="/auth" className="mt-4 inline-block text-indigo-600 hover:text-indigo-700">
             Sign In

@@ -258,8 +258,8 @@ export default function GoalsPage() {
               <Target className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
-              <p className="text-gray-600">Total Goals</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.total}</p>
+              <p className="text-gray-600 dark:text-gray-300">Total Goals</p>
             </div>
           </div>
         </div>
@@ -270,8 +270,8 @@ export default function GoalsPage() {
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900">{stats.completed}</p>
-              <p className="text-gray-600">Completed</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.completed}</p>
+              <p className="text-gray-600 dark:text-gray-300">Completed</p>
             </div>
           </div>
         </div>
@@ -282,8 +282,8 @@ export default function GoalsPage() {
               <Clock className="h-6 w-6 text-orange-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900">{stats.inProgress}</p>
-              <p className="text-gray-600">In Progress</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.inProgress}</p>
+              <p className="text-gray-600 dark:text-gray-300">In Progress</p>
             </div>
           </div>
         </div>
@@ -294,8 +294,8 @@ export default function GoalsPage() {
               <TrendingUp className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900">{stats.avgProgress}%</p>
-              <p className="text-gray-600">Avg Progress</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.avgProgress}%</p>
+              <p className="text-gray-600 dark:text-gray-300">Avg Progress</p>
             </div>
           </div>
         </div>
@@ -360,7 +360,7 @@ export default function GoalsPage() {
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900">{goal.title}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{goal.title}</h3>
                   {getStatusBadge(goal.status)}
                 </div>
                 <p className="text-gray-600 mb-3">{goal.description}</p>
@@ -452,7 +452,7 @@ export default function GoalsPage() {
       {filteredGoals.length === 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
           <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No goals found</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No goals found</h3>
           <p className="text-gray-600 mb-6">
             {filterStatus === 'all' 
               ? "You haven't created any goals yet. Start your transformation journey by setting your first goal."
@@ -475,7 +475,7 @@ export default function GoalsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Create New Goal</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Create New Goal</h3>
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -556,7 +556,7 @@ export default function GoalsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Edit Goal</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Goal</h3>
               <button
                 onClick={() => setShowEditModal(false)}
                 className="text-gray-400 hover:text-gray-600"
