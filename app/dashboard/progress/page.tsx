@@ -400,7 +400,7 @@ export default function ProgressPage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 mb-8">
                       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Average Wellbeing Scores</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgMoodScore || 0)}`}>
+          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgMoodScore || 0)} dark:bg-gray-700`}>
             <div className="flex items-center">
               <Heart className={`h-6 w-6 ${getScoreColor(stats?.overview.avgMoodScore || 0)} mr-3`} />
               <div>
@@ -410,7 +410,7 @@ export default function ProgressPage() {
             </div>
           </div>
           
-          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgEnergyLevel || 0)}`}>
+          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgEnergyLevel || 0)} dark:bg-gray-700`}>
             <div className="flex items-center">
               <Zap className={`h-6 w-6 ${getScoreColor(stats?.overview.avgEnergyLevel || 0)} mr-3`} />
               <div>
@@ -420,7 +420,7 @@ export default function ProgressPage() {
             </div>
           </div>
           
-          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgConfidenceLevel || 0)}`}>
+          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgConfidenceLevel || 0)} dark:bg-gray-700`}>
             <div className="flex items-center">
               <Shield className={`h-6 w-6 ${getScoreColor(stats?.overview.avgConfidenceLevel || 0)} mr-3`} />
               <div>
@@ -601,7 +601,7 @@ export default function ProgressPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+            <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div className="text-center">
                 <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-500 dark:text-gray-400">No progress data yet</p>

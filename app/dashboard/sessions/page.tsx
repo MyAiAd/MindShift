@@ -296,12 +296,12 @@ export default function SessionsPage() {
 
       {/* Quick Actions */}
       <div className="mt-8 grid md:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg p-6 flex flex-col">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-700 rounded-lg p-6 flex flex-col">
           <div className="flex items-center space-x-3 mb-4">
             <Video className="h-8 w-8 text-blue-600" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Mind Shifting Session</h3>
           </div>
-          <p className="text-gray-600 mb-4">Start an automated Mind Shifting treatment session with 95% scripted responses for optimal performance.</p>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">Start an automated Mind Shifting treatment session with 95% scripted responses for optimal performance.</p>
           <div className="text-xs text-blue-600 mb-6 space-y-1 flex-grow">
             <div>• Instant responses (&lt;200ms)</div>
             <div>• Proven Mind Shifting protocols</div>
@@ -319,12 +319,12 @@ export default function SessionsPage() {
           </button>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-lg p-6 flex flex-col">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-100 dark:border-green-700 rounded-lg p-6 flex flex-col">
           <div className="flex items-center space-x-3 mb-4">
             <User className="h-8 w-8 text-green-600" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Human Coach</h3>
           </div>
-          <p className="text-gray-600 mb-6 flex-grow">Book a session with one of our certified human coaches.</p>
+          <p className="text-gray-600 dark:text-gray-300 mb-6 flex-grow">Book a session with one of our certified human coaches.</p>
           <button 
             onClick={() => setShowBookModal(true)}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors w-full mt-auto"

@@ -286,13 +286,13 @@ export default function SubscriptionManager() {
       {/* Current Subscription Status */}
       {subscription && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Current Subscription</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Current Subscription</h2>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               {getTierIcon(subscription.current_tier)}
               <div>
-                <h3 className="font-medium">{subscription.subscription_plans.name}</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-medium text-gray-900 dark:text-white">{subscription.subscription_plans.name}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Status: {subscription.status} • 
                   {subscription.cancel_at_period_end 
                     ? ` Cancels on ${new Date(subscription.current_period_end).toLocaleDateString()}`
@@ -357,17 +357,17 @@ export default function SubscriptionManager() {
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className={`bg-white rounded-lg shadow-sm border-2 p-6 flex flex-col h-full ${
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 p-6 flex flex-col h-full ${
               subscription?.current_tier === plan.tier 
-                ? 'border-indigo-500 ring-2 ring-indigo-100' 
-                : 'border-gray-200'
+                ? 'border-indigo-500 ring-2 ring-indigo-100 dark:ring-indigo-900' 
+                : 'border-gray-200 dark:border-gray-700'
             }`}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 {getTierIcon(plan.tier)}
-                <h3 className="text-xl font-semibold">{plan.name}</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{plan.name}</h3>
               </div>
               {plan.tier === 'level_2' && (
                 <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
@@ -381,9 +381,9 @@ export default function SubscriptionManager() {
 
             {/* Price */}
             <div className="mb-6">
-              <div className="text-3xl font-bold">
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
                 ${isYearly ? plan.price_yearly : plan.price_monthly}
-                <span className="text-lg font-normal text-gray-600">
+                <span className="text-lg font-normal text-gray-600 dark:text-gray-400">
                   /{isYearly ? 'year' : 'month'}
                 </span>
               </div>
@@ -396,13 +396,13 @@ export default function SubscriptionManager() {
 
             {/* Features - This section will grow to fill available space */}
             <div className="mb-6 flex-grow">
-              <h4 className="font-medium mb-3">Features:</h4>
+              <h4 className="font-medium text-gray-900 dark:text-white mb-3">Features:</h4>
               <ul className="space-y-2">
                 {Object.entries(plan.features).map(([feature, enabled]) => 
                   enabled && (
                     <li key={feature} className="flex items-center space-x-2">
                       <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm capitalize">
+                      <span className="text-sm capitalize text-gray-600 dark:text-gray-300">
                         {feature.replace(/_/g, ' ')}
                       </span>
                     </li>
@@ -412,10 +412,10 @@ export default function SubscriptionManager() {
               
               {plan.limits && Object.keys(plan.limits).length > 0 && (
                 <div className="mt-3">
-                  <h5 className="font-medium text-sm mb-2">Limits:</h5>
+                  <h5 className="font-medium text-sm text-gray-900 dark:text-white mb-2">Limits:</h5>
                   <ul className="space-y-1">
                     {Object.entries(plan.limits).map(([limit, value]) => (
-                      <li key={limit} className="text-xs text-gray-600">
+                      <li key={limit} className="text-xs text-gray-600 dark:text-gray-400">
                         {limit.replace(/_/g, ' ')}: {value === -1 ? 'Unlimited' : value}
                       </li>
                     ))}
