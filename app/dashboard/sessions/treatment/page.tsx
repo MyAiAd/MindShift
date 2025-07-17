@@ -73,7 +73,7 @@ function TreatmentSessionContent() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -87,7 +87,7 @@ function TreatmentSessionContent() {
                 <Brain className="h-6 w-6 text-indigo-600" />
                 <span className="text-lg font-semibold text-gray-900 dark:text-white">Treatment Session</span>
               </div>
-              <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              <span className="text-sm text-gray-500 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                 ID: {sessionId.slice(-8)}
               </span>
             </div>
