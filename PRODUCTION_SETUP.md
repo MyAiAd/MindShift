@@ -5,7 +5,7 @@
 The production database has been successfully configured and all migrations have been applied.
 
 ### Project Details
-- **Project name**: siteMaker
+- **Project name**: MindShift
 - **Project ID**: jhuyequddikkolqxkdpn
 - **Project URL**: https://jhuyequddikkolqxkdpn.supabase.co
 - **Region**: Central EU (Frankfurt)
