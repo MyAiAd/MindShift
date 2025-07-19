@@ -8,9 +8,22 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
+  // Check if environment variables are available in middleware context
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Middleware: Supabase environment variables not available:', {
+      hasUrl: !!supabaseUrl,
+      hasAnonKey: !!supabaseAnonKey
+    });
+    // Return response without auth processing if env vars are missing
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
@@ -55,7 +68,12 @@ export async function updateSession(request: NextRequest) {
   );
 
   // This will refresh the session if expired and save it to the response
-  await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch (error) {
+    console.error('Middleware: Error in supabase.auth.getUser():', error);
+    // Continue without failing the request - auth will be handled by individual routes
+  }
 
   return response;
 } 

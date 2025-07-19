@@ -2,7 +2,13 @@ import { type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase-middleware';
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+  try {
+    return await updateSession(request);
+  } catch (error) {
+    console.error('Middleware: Unhandled error:', error);
+    // Return a basic response if middleware completely fails
+    return new Response('Internal Server Error', { status: 500 });
+  }
 }
 
 export const config = {
