@@ -1,4 +1,4 @@
-# 🚀 Reusable MyAi Template
+# 🚀 Reusable MindShifting Template
 
 A complete, production-ready multi-tenant application framework with authentication, subscriptions, notifications, AI integration, and more.
 
@@ -313,4 +313,4 @@ For professional support, custom development, or enterprise features:
 
 **Built with ❤️ by the MyAi Team**
 
-*Transform your ideas into production-ready applications with the Reusable MyAi Template.* 
+*Transform your ideas into production-ready applications with the Reusable MindShifting Template.* 

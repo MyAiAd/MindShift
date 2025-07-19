@@ -23,7 +23,7 @@
 ### **Step 2: Get Your API Key**
 1. **Go to [resend.com/api-keys](https://resend.com/api-keys)**
 2. **Click "Create API Key"**
-3. **Name**: "MyAi Email Confirmation"
+3. **Name**: "MindShifting Email Confirmation"
 4. **Permission**: "Send access"
 5. **Copy the API key** (starts with `re_`)
 

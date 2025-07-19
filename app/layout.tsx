@@ -10,26 +10,26 @@ import CookieConsent from '@/components/gdpr/CookieConsent'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'MyAi - AI-Powered Mindset Transformation',
+  title: 'MindShifting - AI-Powered Mindset Transformation',
   description: 'A revolutionary AI-powered platform for mindset transformation and personal growth',
   keywords: 'mindset, personal growth, AI, coaching, transformation',
-  authors: [{ name: 'MyAi' }],
+  authors: [{ name: 'MindShifting' }],
   icons: {
     icon: '/brain.png',
     shortcut: '/brain.png',
     apple: '/brain.png',
   },
   openGraph: {
-    title: 'MyAi - AI-Powered Mindset Transformation',
+    title: 'MindShifting - AI-Powered Mindset Transformation',
     description: 'Transform your mindset with AI-powered insights and personalized coaching',
     url: 'https://myai.vercel.app',
-    siteName: 'MyAi',
+    siteName: 'MindShifting',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'MyAi - AI-Powered Mindset Transformation',
+        alt: 'MindShifting - AI-Powered Mindset Transformation',
       },
     ],
     locale: 'en_US',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MyAi - AI-Powered Mindset Transformation',
+    title: 'MindShifting - AI-Powered Mindset Transformation',
     description: 'Transform your mindset with AI-powered insights and personalized coaching',
     images: ['/og-image.jpg'],
   },

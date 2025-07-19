@@ -56,7 +56,7 @@ DATABASE_URL=your_database_url_here
 3. **`SENDER_NAME`**:
    - Your app or company name
    - Appears in email "From" field
-   - Example: `MyAi App`
+   - Example: `MindShifting App`
 
 ### **Supabase Variables:**
 

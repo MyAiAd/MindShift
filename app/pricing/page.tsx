@@ -11,7 +11,7 @@ export default function PricingPage() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-2">
               <Brain className="h-8 w-8 text-indigo-600" />
-              <span className="text-2xl font-bold text-gray-900">MyAi</span>
+              <span className="text-2xl font-bold text-gray-900">MindShifting</span>
             </Link>
             <nav className="hidden md:flex space-x-8">
               <Link href="/features" className="text-gray-700 hover:text-indigo-600 transition-colors">Features</Link>
@@ -36,7 +36,7 @@ export default function PricingPage() {
             Choose Your <span className="text-indigo-600">Transformation</span> Level
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-                            Start with Problem Shifting or unlock the complete MyAi experience. 
+                            Start with Problem Shifting or unlock the complete MindShifting experience. 
             All plans include a 14-day free trial with no credit card required.
           </p>
         </div>
@@ -54,7 +54,7 @@ export default function PricingPage() {
                   <Star className="h-8 w-8 text-gray-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Free Trial</h3>
-                <p className="text-gray-600">Perfect for exploring MyAi</p>
+                <p className="text-gray-600">Perfect for exploring MindShifting</p>
               </div>
               
               <div className="text-center mb-6">
@@ -147,7 +147,7 @@ export default function PricingPage() {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
                   <Brain className="h-8 w-8 text-indigo-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Complete MyAi</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Complete MindShifting</h3>
                 <p className="text-gray-600">Full access to all methodologies and premium features</p>
               </div>
               
@@ -166,7 +166,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                                      <span className="text-gray-700">All 7 MyAi methodologies</span>
+                                      <span className="text-gray-700">All 7 MindShifting methodologies</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
@@ -217,7 +217,7 @@ export default function PricingPage() {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Brain className="h-6 w-6 text-indigo-400" />
-                <span className="text-xl font-bold">MyAi</span>
+                <span className="text-xl font-bold">MindShifting</span>
               </div>
               <p className="text-gray-400">
                 AI-powered mindset transformation for personal growth and success.
@@ -253,7 +253,7 @@ export default function PricingPage() {
           </div>
           
           <div className="border-t border-gray-800 pt-8 mt-8 text-center text-gray-400">
-                          <p>&copy; 2024 MyAi. All rights reserved.</p>
+                          <p>&copy; 2024 MindShifting. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -1,5 +1,5 @@
 {
-  "name": "myai",
+  "name": "mindshifting",
   "version": "0.1.0",
   "private": true,
   "description": "A revolutionary AI-powered platform for mindset transformation and personal growth",
@@ -10,11 +10,11 @@
     "coaching",
     "transformation"
   ],
-  "author": "MyAiAd",
+  "author": "MindShifting",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MyAi/MyAi.git"
+    "url": "https://github.com/MyAiAd/MindShift.git"
   },
   "scripts": {
     "dev": "next dev",

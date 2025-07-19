@@ -6,7 +6,7 @@ Copy and paste this **complete SQL script** into your Supabase SQL Editor to set
 
 ```sql
 -- ===============================================
--- MYAI DATABASE SETUP - COMPLETE SCRIPT
+-- MINDSHIFTING DATABASE SETUP - COMPLETE SCRIPT
 -- ===============================================
 -- Run this in your Supabase SQL Editor
 

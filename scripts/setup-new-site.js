@@ -2,10 +2,10 @@
 
 /**
  * ===============================================
- * REUSABLE MYAI TEMPLATE - SETUP SCRIPT
+ * REUSABLE MINDSHIFTING TEMPLATE - SETUP SCRIPT
  * ===============================================
  * 
- * This script helps you set up a new site using the MyAi template
+ * This script helps you set up a new site using the MindShifting template
  * Usage: node scripts/setup-new-site.js
  */
 
@@ -97,7 +97,7 @@ ${config.siteDescription}
 
 ## 🚀 Features
 
-This application is built on the **Reusable MyAi Template** and includes:
+This application is built on the **Reusable MindShifting Template** and includes:
 
 ### Core Features
 - 🏢 **Complete Multi-tenancy** - Full tenant isolation with RLS
@@ -245,7 +245,7 @@ For support, please contact: support@${config.siteName.toLowerCase().replace(/\s
 
 ---
 
-*Built with the Reusable MyAi Template - A complete multi-tenant application framework*
+*Built with the Reusable MindShifting Template - A complete multi-tenant application framework*
 `;
 
   fs.writeFileSync(readmePath, readmeContent);
@@ -253,7 +253,7 @@ For support, please contact: support@${config.siteName.toLowerCase().replace(/\s
 }
 
 async function main() {
-  console.log('🚀 Welcome to the MyAi Template Setup');
+  console.log('🚀 Welcome to the MindShifting Template Setup');
   console.log('==========================================');
   console.log();
   

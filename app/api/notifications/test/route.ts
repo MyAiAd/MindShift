@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     // Default test notification content
     const notificationTitle = title || 'Test Notification';
-    const notificationBody = messageBody || 'This is a test notification from MyAi. Your browser notifications are working correctly!';
+    const notificationBody = messageBody || 'This is a test notification from MindShifting. Your browser notifications are working correctly!';
 
     // Check if user can receive notifications (with fallback for super admin)
     let canReceive = true; // Default to true for super admin

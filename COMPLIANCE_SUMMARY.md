@@ -2,7 +2,7 @@
 
 ## ✅ **Implementation Summary**
 
-Your MyAi template now includes **complete accessibility and GDPR compliance** systems, making it fully compliant for German/EU markets and accessible to users with disabilities.
+Your MindShifting template now includes **complete accessibility and GDPR compliance** systems, making it fully compliant for German/EU markets and accessible to users with disabilities.
 
 ---
 
@@ -234,4 +234,4 @@ export default function RootLayout({ children }) {
 
 ---
 
-**✅ Your MyAi template is now fully compliant with accessibility and GDPR requirements for German/EU markets!** 
+**✅ Your MindShifting template is now fully compliant with accessibility and GDPR requirements for German/EU markets!** 

@@ -1,10 +1,10 @@
-# MyAi
+# MindShifting
 
 A revolutionary AI-powered platform for mindset transformation and personal growth.
 
 ## Overview
 
-MyAi is designed to help users transform their mindset, overcome limiting beliefs, and achieve personal growth through AI-powered insights and personalized coaching.
+MindShifting is designed to help users transform their mindset, overcome limiting beliefs, and achieve personal growth through AI-powered insights and personalized coaching.
 
 ## Features
 
@@ -34,8 +34,8 @@ MyAi is designed to help users transform their mindset, overcome limiting belief
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/MyAi/MyAi.git
-cd MyAi
+git clone https://github.com/MyAiAd/MindShift.git
+cd MindShift
 ```
 
 2. Install dependencies:
@@ -101,4 +101,4 @@ For support, email support@myai.com or join our Slack channel.
 
 ---
 
-Built with ❤️ by [MyAiAd](https://github.com/MyAiAd) 
+Built with ❤️ by [MyAi](https://MyAi.ad) 

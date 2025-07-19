@@ -1,4 +1,4 @@
-# 🔒 Security Guide for MyAi Template
+# 🔒 Security Guide for MindShifting Template
 
 ## 🚨 **CRITICAL: Security Incident Resolved**
 
@@ -6,7 +6,7 @@
 The file `vercel-environment-variables.txt` containing actual API keys and secrets was accidentally committed to the previous repository. This file has been:
 - ✅ **Removed** from the codebase
 - ✅ **Added to .gitignore** to prevent future commits
-- ✅ **Repository migrated** to clean location: `https://github.com/MyAiAd/templateNew.git`
+- ✅ **Repository migrated** to clean location: `https://github.com/MyAiAd/MindShift.git`
 
 ### **Actions Taken**
 1. **Deleted compromised repository** - The old repository with leaked secrets was deleted
@@ -211,7 +211,7 @@ git secrets --scan
 ## 🔄 **Migration Complete**
 
 ### **New Repository Location**
-- **URL:** `https://github.com/MyAiAd/templateNew.git`
+- **URL:** `https://github.com/MyAiAd/MindShift.git`
 - **Status:** ✅ Secure, no leaked secrets
 - **Protection:** ✅ Comprehensive .gitignore rules
 

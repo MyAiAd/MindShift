@@ -2,7 +2,7 @@
 
 ## 🚀 **Overview**
 
-This document outlines the comprehensive community platform infrastructure implemented for MyAi. All features are **dark launched** (backend-only, no frontend visibility) and ready for frontend integration.
+This document outlines the comprehensive community platform infrastructure implemented for MindShifting. All features are **dark launched** (backend-only, no frontend visibility) and ready for frontend integration.
 
 ---
 

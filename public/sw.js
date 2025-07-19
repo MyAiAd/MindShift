@@ -1,7 +1,7 @@
-// Service Worker for MyAi Push Notifications
+// Service Worker for MindShifting Push Notifications
 // Handles background notifications and user interactions
 
-const CACHE_NAME = 'myai-v1';
+const CACHE_NAME = 'mindshifting-v1';
 const API_BASE = '/api';
 
 // Install event - cache essential resources
@@ -54,11 +54,11 @@ self.addEventListener('push', (event) => {
   console.log('Push notification received:', event);
 
   let notificationData = {
-    title: 'MyAi',
+          title: 'MindShifting',
     body: 'You have a new notification',
     icon: '/brain.png',
     badge: '/brain.png',
-          tag: 'myai-notification',
+          tag: 'mindshifting-notification',
     requireInteraction: false,
     data: {
       url: '/dashboard',

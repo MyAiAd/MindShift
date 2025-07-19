@@ -10,7 +10,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-2">
               <Brain className="h-8 w-8 text-indigo-600" />
-              <span className="text-2xl font-bold text-gray-900">MyAi</span>
+              <span className="text-2xl font-bold text-gray-900">MindShifting</span>
             </div>
             <nav className="hidden md:flex space-x-8">
               <a href="/features" className="text-gray-700 hover:text-indigo-600 transition-colors">Features</a>
@@ -126,7 +126,7 @@ export default function HomePage() {
               Choose Your Transformation Level
             </h2>
             <p className="text-xl text-gray-600">
-                              Start with Problem Shifting or unlock the complete MyAi experience
+                              Start with Problem Shifting or unlock the complete MindShifting experience
             </p>
           </div>
           
@@ -193,7 +193,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
                   <Brain className="h-8 w-8 text-indigo-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Complete MyAi</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Complete MindShifting</h3>
                 <p className="text-gray-600">Full access to all methodologies and premium features</p>
               </div>
               
@@ -274,7 +274,7 @@ export default function HomePage() {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Brain className="h-6 w-6 text-indigo-400" />
-                <span className="text-xl font-bold">MyAi</span>
+                <span className="text-xl font-bold">MindShifting</span>
               </div>
               <p className="text-gray-400">
                 AI-powered mindset transformation for personal growth and success.
@@ -310,7 +310,7 @@ export default function HomePage() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                            <p>&copy; 2025 MyAi. All rights reserved. Built with ❤️ by MyAi.</p>
+                            <p>&copy; 2025 MindShifting. All rights reserved. Built with ❤️ by <a href="https://MyAi.ad" className="text-blue-600 hover:text-blue-700">MyAi</a>.</p>
           </div>
         </div>
       </footer>

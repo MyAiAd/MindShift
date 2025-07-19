@@ -1,7 +1,7 @@
 # First User Super Admin Setup Guide
 
 ## Overview
-This guide explains how the first user registration automatically becomes a super admin in the MyAi system.
+This guide explains how the first user registration automatically becomes a super admin in the MindShifting system.
 
 ## How It Works
 
