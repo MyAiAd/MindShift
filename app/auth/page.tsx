@@ -184,7 +184,7 @@ export default function AuthPage() {
             {isSignUp ? 'Create your account' : 'Sign in to your account'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-                          {isSignUp ? 'Start your mindset transformation journey' : 'Welcome back to MyAi'}
+                          {isSignUp ? 'Start your mindset transformation journey' : 'Welcome back to MindShifting'}
           </p>
         </div>
 

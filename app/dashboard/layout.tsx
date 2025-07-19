@@ -148,7 +148,7 @@ function SidebarContent({
           <Building2 className="h-8 w-8 text-white" />
           <div>
             <h1 className="text-white font-semibold">
-              {tenant ? tenant.name : 'MyAi Admin'}
+                              {tenant ? tenant.name : 'MindShifting Admin'}
             </h1>
             <p className="text-indigo-200 text-sm pl-4 pr-4 mt-1 mb-1 whitespace-nowrap">{profile.role}</p>
           </div>

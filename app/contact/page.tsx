@@ -11,7 +11,7 @@ export default function ContactPage() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-2">
               <Brain className="h-8 w-8 text-indigo-600" />
-              <span className="text-2xl font-bold text-gray-900">MyAi</span>
+              <span className="text-2xl font-bold text-gray-900">MindShifting</span>
             </Link>
             <nav className="hidden md:flex space-x-8">
               <Link href="/features" className="text-gray-700 hover:text-indigo-600 transition-colors">Features</Link>
@@ -36,7 +36,7 @@ export default function ContactPage() {
             Get in <span className="text-indigo-600">Touch</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Have questions about MyAi? Need support? Want to discuss enterprise solutions? 
+                          Have questions about MindShifting? Need support? Want to discuss enterprise solutions? 
             We're here to help and would love to hear from you.
           </p>
         </div>
@@ -250,7 +250,7 @@ export default function ContactPage() {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Brain className="h-6 w-6 text-indigo-400" />
-                <span className="text-xl font-bold">MyAi</span>
+                <span className="text-xl font-bold">MindShifting</span>
               </div>
               <p className="text-gray-400">
                 AI-powered mindset transformation for personal growth and success.
@@ -286,7 +286,7 @@ export default function ContactPage() {
           </div>
           
           <div className="border-t border-gray-800 pt-8 mt-8 text-center text-gray-400">
-                          <p>&copy; 2024 MyAi. All rights reserved.</p>
+                          <p>&copy; 2024 MindShifting. All rights reserved.</p>
           </div>
         </div>
       </footer>

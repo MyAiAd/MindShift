@@ -174,7 +174,7 @@ export default function DashboardPage() {
               Welcome back, {profile?.first_name}!
             </h1>
             <p className="text-gray-600 dark:text-gray-300 mt-1">
-              Here's what's happening with {tenant?.name || 'MyAi'} today.
+                              Here's what's happening with {tenant?.name || 'MindShifting'} today.
             </p>
           </div>
           <div className="flex items-center space-x-2">

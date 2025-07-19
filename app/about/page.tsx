@@ -11,7 +11,7 @@ export default function AboutPage() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-2">
               <Brain className="h-8 w-8 text-indigo-600" />
-              <span className="text-2xl font-bold text-gray-900">MyAi</span>
+              <span className="text-2xl font-bold text-gray-900">MindShifting</span>
             </Link>
             <nav className="hidden md:flex space-x-8">
               <Link href="/features" className="text-gray-700 hover:text-indigo-600 transition-colors">Features</Link>
@@ -164,13 +164,13 @@ export default function AboutPage() {
               Our Story
             </h2>
             <p className="text-xl text-gray-600">
-              How MyAi came to be
+              How MindShifting came to be
             </p>
           </div>
 
           <div className="prose prose-lg mx-auto text-gray-600">
             <p>
-              MyAi was born from a simple observation: while the science of human behavior 
+              MindShifting was born from a simple observation: while the science of human behavior 
               and mindset transformation has advanced tremendously, access to these insights 
               remained limited to those who could afford expensive coaching or therapy.
             </p>
@@ -190,7 +190,7 @@ export default function AboutPage() {
             </p>
             
             <p>
-              Today, MyAi serves thousands of users worldwide, helping them overcome 
+              Today, MindShifting serves thousands of users worldwide, helping them overcome 
               limiting beliefs, achieve their goals, and create lasting positive change in 
               their lives. But we're just getting started.
             </p>
@@ -226,7 +226,7 @@ export default function AboutPage() {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Brain className="h-6 w-6 text-indigo-400" />
-                <span className="text-xl font-bold">MyAi</span>
+                <span className="text-xl font-bold">MindShifting</span>
               </div>
               <p className="text-gray-400">
                 AI-powered mindset transformation for personal growth and success.
@@ -262,7 +262,7 @@ export default function AboutPage() {
           </div>
           
           <div className="border-t border-gray-800 pt-8 mt-8 text-center text-gray-400">
-                          <p>&copy; 2024 MyAi. All rights reserved.</p>
+                          <p>&copy; 2024 MindShifting. All rights reserved.</p>
           </div>
         </div>
       </footer>

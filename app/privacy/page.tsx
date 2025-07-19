@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-2">
               <Brain className="h-8 w-8 text-indigo-600" />
-              <span className="text-2xl font-bold text-gray-900">MyAi</span>
+              <span className="text-2xl font-bold text-gray-900">MindShifting</span>
             </Link>
             <nav className="hidden md:flex space-x-8">
               <Link href="/" className="text-gray-700 hover:text-indigo-600 transition-colors">
@@ -75,7 +75,7 @@ export default function PrivacyPolicyPage() {
             </h2>
             <div className="prose prose-gray max-w-none">
               <p>
-                MyAi ("we", "our", or "us") is committed to protecting and respecting your privacy. 
+                MindShifting ("we", "our", or "us") is committed to protecting and respecting your privacy. 
                 This privacy policy explains how we collect, use, disclose, and safeguard your 
                 information when you use our website and services.
               </p>
@@ -95,11 +95,11 @@ export default function PrivacyPolicyPage() {
             </h2>
             <div className="prose prose-gray max-w-none">
               <p>
-                For the purposes of GDPR, MyAi is the data controller of your personal information. 
+                For the purposes of GDPR, MindShifting is the data controller of your personal information. 
                 You can contact us at:
               </p>
               <div className="bg-gray-100 p-4 rounded-lg">
-                <p className="mb-2"><strong>MyAi</strong></p>
+                <p className="mb-2"><strong>MindShifting</strong></p>
                 <p className="mb-2">Email: <a href="mailto:privacy@myai.com" className="text-indigo-600 hover:text-indigo-700">privacy@myai.com</a></p>
                 <p className="mb-2">Data Protection Officer: <a href="mailto:dpo@myai.com" className="text-indigo-600 hover:text-indigo-700">dpo@myai.com</a></p>
               </div>
@@ -350,7 +350,7 @@ export default function PrivacyPolicyPage() {
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <Brain className="h-6 w-6 text-indigo-600" />
-              <span className="text-xl font-bold text-gray-900">MyAi</span>
+              <span className="text-xl font-bold text-gray-900">MindShifting</span>
             </div>
             <p className="text-gray-600 mb-4">
               Committed to protecting your privacy and ensuring GDPR compliance.
@@ -361,7 +361,7 @@ export default function PrivacyPolicyPage() {
               <Link href="/privacy" className="text-gray-500 hover:text-indigo-600">Privacy</Link>
             </div>
             <p className="text-gray-500 text-sm mt-4">
-              © 2024 MyAi. All rights reserved.
+              © 2024 MindShifting. All rights reserved.
             </p>
           </div>
         </footer>
