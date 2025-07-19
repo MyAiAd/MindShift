@@ -51,17 +51,33 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
       setLoading(true);
       setError(null);
       
+      console.log('Client: Making MFA status request...');
       const response = await fetch('/api/auth/mfa');
+      
+      console.log('Client: MFA API response status:', response.status);
+      console.log('Client: MFA API response headers:', Object.fromEntries(response.headers.entries()));
+      
       const data = await response.json();
+      console.log('Client: MFA API response data:', data);
 
       if (response.ok) {
+        console.log('Client: MFA status loaded successfully');
         setMFAStatus(data);
         onStatusChange?.(data.isEnabled);
       } else {
-        setError(data.error || 'Failed to load 2FA status');
+        console.error('Client: MFA API error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          data
+        });
+        setError(data.error || `Failed to load 2FA status (${response.status})`);
       }
     } catch (error) {
-      console.error('Error loading MFA status:', error);
+      console.error('Client: Error loading MFA status:', error);
+      console.error('Client: Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'No stack'
+      });
       setError('Failed to load 2FA status');
     } finally {
       setLoading(false);
