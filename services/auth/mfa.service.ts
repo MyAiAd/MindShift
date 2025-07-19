@@ -50,15 +50,36 @@ export class MFAService {
   private supabase: any;
 
   private constructor() {
-    // Use server client for API routes, browser client for frontend
-    const isServerSide = typeof window === 'undefined';
-    this.supabase = isServerSide ? createServerClient() : createClient();
-    console.log(`MFA Service: Using ${isServerSide ? 'server' : 'browser'} client`);
+    try {
+      // Use server client for API routes, browser client for frontend
+      const isServerSide = typeof window === 'undefined';
+      console.log(`MFA Service: Detected ${isServerSide ? 'server' : 'browser'} environment`);
+      
+      if (isServerSide) {
+        console.log('MFA Service: Creating server client...');
+        this.supabase = createServerClient();
+      } else {
+        console.log('MFA Service: Creating browser client...');
+        this.supabase = createClient();
+      }
+      
+      console.log(`MFA Service: Using ${isServerSide ? 'server' : 'browser'} client created successfully`);
+    } catch (error) {
+      console.error('MFA Service: Error in constructor:', error);
+      throw error;
+    }
   }
 
   public static getInstance(): MFAService {
     if (!MFAService.instance) {
-      MFAService.instance = new MFAService();
+      try {
+        console.log('MFA Service: Creating new instance...');
+        MFAService.instance = new MFAService();
+        console.log('MFA Service: Instance created successfully');
+      } catch (error) {
+        console.error('MFA Service: Error creating instance:', error);
+        throw error;
+      }
     }
     return MFAService.instance;
   }

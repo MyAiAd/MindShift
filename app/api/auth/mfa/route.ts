@@ -7,18 +7,35 @@ import crypto from 'crypto';
 // GET /api/auth/mfa - Get MFA status
 export async function GET(request: NextRequest) {
   try {
+    console.log('MFA API: GET request received');
+    
+    console.log('MFA API: Validating session...');
     const sessionValidation = await validateSession(request);
     if (!sessionValidation.valid) {
+      console.log('MFA API: Session validation failed:', sessionValidation.error);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    console.log('MFA API: Session validated successfully for user:', sessionValidation.user?.email);
 
+    console.log('MFA API: Getting MFA service instance...');
     const mfaService = MFAService.getInstance();
+    
+    console.log('MFA API: Calling getMFAStatus...');
     const status = await mfaService.getMFAStatus();
-
+    
+    console.log('MFA API: MFA status retrieved successfully:', status);
     return NextResponse.json(status);
   } catch (error) {
-    console.error('Error getting MFA status:', error);
-    return NextResponse.json({ error: 'Failed to get MFA status' }, { status: 500 });
+    console.error('MFA API: Error getting MFA status:', error);
+    console.error('MFA API: Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('MFA API: Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown'
+    });
+    return NextResponse.json({ 
+      error: 'Failed to get MFA status',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
 
