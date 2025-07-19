@@ -4,6 +4,7 @@
 // Complete Two-Factor Authentication service using Supabase MFA
 
 import { createClient } from '@/lib/database';
+import { createServerClient } from '@/lib/database-server';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 
@@ -49,7 +50,10 @@ export class MFAService {
   private supabase: any;
 
   private constructor() {
-    this.supabase = createClient();
+    // Use server client for API routes, browser client for frontend
+    const isServerSide = typeof window === 'undefined';
+    this.supabase = isServerSide ? createServerClient() : createClient();
+    console.log(`MFA Service: Using ${isServerSide ? 'server' : 'browser'} client`);
   }
 
   public static getInstance(): MFAService {
@@ -64,10 +68,24 @@ export class MFAService {
    */
   public async getMFAStatus(): Promise<MFAStatus> {
     try {
+      console.log('MFA Service: Getting MFA status...');
+      
+      // First verify user is authenticated
+      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+      if (userError || !user) {
+        console.error('MFA Service: User not authenticated:', userError?.message);
+        throw new Error('User not authenticated for MFA operations');
+      }
+      
+      console.log('MFA Service: User authenticated, listing factors...');
       const { data: factors, error } = await this.supabase.auth.mfa.listFactors();
       
-      if (error) throw error;
+      if (error) {
+        console.error('MFA Service: Error listing factors:', error);
+        throw error;
+      }
 
+      console.log('MFA Service: Factors retrieved:', factors);
       const hasBackupCodes = await this.hasBackupCodes();
       
       return {
@@ -84,7 +102,7 @@ export class MFAService {
         lastUsed: factors.totp.length > 0 ? new Date(factors.totp[0].last_used) : undefined
       };
     } catch (error) {
-      console.error('Error getting MFA status:', error);
+      console.error('MFA Service: Error getting MFA status:', error);
       return {
         isEnabled: false,
         factors: [],
@@ -304,24 +322,35 @@ export class MFAService {
   }
 
   /**
-   * Check if user has backup codes via API
+   * Check if user has backup codes directly from database
    */
   private async hasBackupCodes(): Promise<boolean> {
     try {
-      const response = await fetch('/api/auth/mfa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'check_backup_codes' })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.hasBackupCodes || false;
+      console.log('MFA Service: Checking for backup codes...');
+      
+      // Get current user
+      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+      if (userError || !user) {
+        console.error('MFA Service: User not authenticated for backup codes check:', userError?.message);
+        return false;
       }
 
-      return false;
+      // Check backup codes directly in database
+      const { count, error } = await this.supabase
+        .from('mfa_backup_codes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('used', false);
+
+      if (error) {
+        console.error('MFA Service: Error checking backup codes:', error);
+        return false;
+      }
+
+      console.log('MFA Service: Found', count, 'unused backup codes');
+      return (count || 0) > 0;
     } catch (error) {
-      console.error('Error checking backup codes:', error);
+      console.error('MFA Service: Error checking backup codes:', error);
       return false;
     }
   }
