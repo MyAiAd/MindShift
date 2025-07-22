@@ -568,6 +568,19 @@ export default function TreatmentSession({
             ) : (
               /* Regular Text Input Interface */
               <div className="flex space-x-2 max-w-2xl w-full">
+                {/* Voice Controls - Optional Enhancement - Moved to left for better visual balance */}
+                <div className="relative">
+                  <VoiceControls
+                    onTranscript={(transcript) => {
+                      // Voice input feeds into existing function - no core logic changes
+                      setUserInput(transcript);
+                    }}
+                    disabled={isLoading}
+                    showSettings={false}
+                    className=""
+                  />
+                </div>
+
                 <div className="flex-1 relative">
                   <input
                     ref={inputRef}
@@ -585,19 +598,6 @@ export default function TreatmentSession({
                   </div>
                 </div>
                 
-                {/* Voice Controls - Optional Enhancement */}
-                <div className="relative">
-                  <VoiceControls
-                    onTranscript={(transcript) => {
-                      // Voice input feeds into existing function - no core logic changes
-                      setUserInput(transcript);
-                    }}
-                    disabled={isLoading}
-                    showSettings={false}
-                    className="mr-2"
-                  />
-                </div>
-
                 <button
                   onClick={sendMessage}
                   disabled={!userInput.trim() || isLoading}

@@ -83,7 +83,10 @@ export class VoiceService {
       // Ensure voices are loaded - some browsers need this
       if (this.synthesis.getVoices().length === 0) {
         this.synthesis.addEventListener('voiceschanged', () => {
-          console.log('Voices loaded:', this.synthesis?.getVoices().length);
+          // Only log in development mode
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Voices loaded:', this.synthesis?.getVoices().length);
+          }
         }, { once: true });
       }
       
@@ -232,7 +235,10 @@ export class VoiceService {
 
         this.speakWithRetry(text, resolve, 0);
       } catch (error) {
-        console.warn('Speech synthesis setup failed:', error);
+        // Only log in development mode
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Speech synthesis setup failed:', error);
+        }
         resolve(); // Always resolve gracefully
       }
     });
@@ -288,7 +294,10 @@ export class VoiceService {
       };
 
       utterance.onerror = (event) => {
-        console.warn(`Speech synthesis attempt ${attempt + 1} failed:`, event.error);
+        // Only log warnings in development mode or on final failure
+        if (process.env.NODE_ENV === 'development' || attempt >= 2) {
+          console.warn(`Speech synthesis attempt ${attempt + 1} failed:`, event.error);
+        }
         
         if (!hasEnded) {
           hasEnded = true;
@@ -304,7 +313,7 @@ export class VoiceService {
             this.notifyStatusChange({
               isListening: false,
               isSpeaking: false,
-              error: attempt >= 2 ? 'Speech unavailable' : null
+              error: null // Don't show error in UI, just fail silently
             });
             resolve();
           }
@@ -331,13 +340,19 @@ export class VoiceService {
       // Double-check if it started after a brief delay
       setTimeout(() => {
         if (!hasStarted && !hasEnded) {
-          console.warn('Speech synthesis did not start, retrying...');
+          // Only log in development mode
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Speech synthesis did not start, retrying...');
+          }
           utterance.onerror?.({ error: 'synthesis-failed' } as any);
         }
       }, 1000);
 
     } catch (error) {
-      console.warn(`Speech synthesis error on attempt ${attempt + 1}:`, error);
+      // Only log in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`Speech synthesis error on attempt ${attempt + 1}:`, error);
+      }
       resolve(); // Always resolve gracefully
     }
   }
