@@ -7,7 +7,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAccessibility } from '@/services/accessibility/accessibility.service';
-import { Settings, Eye, Type, Keyboard, Volume2 } from 'lucide-react';
+import { useVoiceService } from '@/services/voice/voice.service';
+import { Settings, Eye, Type, Keyboard, Volume2, Mic } from 'lucide-react';
 
 interface AccessibilityWidgetProps {
   position?: 'fixed' | 'relative';
@@ -21,6 +22,7 @@ export default function AccessibilityWidget({
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const { preferences, updatePreferences, isEnabled } = useAccessibility();
+  const { preferences: voicePrefs, updatePreferences: updateVoicePrefs, getCapabilities } = useVoiceService();
 
   useEffect(() => {
     // Hide widget if accessibility features are disabled
@@ -203,6 +205,62 @@ export default function AccessibilityWidget({
                 />
               </button>
             </div>
+
+            {/* Voice Input */}
+            {getCapabilities().speechRecognition && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Mic className="h-4 w-4 text-gray-500" />
+                  <label htmlFor="voice-input" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Voice Input
+                  </label>
+                </div>
+                <button
+                  id="voice-input"
+                  role="switch"
+                  aria-checked={voicePrefs.listeningEnabled}
+                  onClick={() => updateVoicePrefs({ listeningEnabled: !voicePrefs.listeningEnabled })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    voicePrefs.listeningEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <span className="sr-only">Toggle voice input</span>
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      voicePrefs.listeningEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
+
+            {/* Voice Output */}
+            {getCapabilities().speechSynthesis && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Volume2 className="h-4 w-4 text-gray-500" />
+                  <label htmlFor="voice-output" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Voice Output
+                  </label>
+                </div>
+                <button
+                  id="voice-output"
+                  role="switch"
+                  aria-checked={voicePrefs.speechEnabled}
+                  onClick={() => updateVoicePrefs({ speechEnabled: !voicePrefs.speechEnabled })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    voicePrefs.speechEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <span className="sr-only">Toggle voice output</span>
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      voicePrefs.speechEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Quick Actions */}

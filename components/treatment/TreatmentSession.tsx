@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare } from 'lucide-react';
+// Voice enhancement imports (optional, non-breaking)
+import VoiceControls from '@/components/voice/VoiceControls';
+import { useTreatmentVoice } from '@/components/voice/useTreatmentVoice';
 
 interface TreatmentMessage {
   id: string;
@@ -105,6 +108,11 @@ export default function TreatmentSession({
         setIsSessionActive(true);
         setLastResponseTime(data.responseTime);
         updateStats(data);
+
+        // Voice enhancement: Auto-speak welcome message (optional, non-breaking)  
+        if (voice.autoSpeakEnabled) {
+          voice.speakMessage(welcomeMessage.content);
+        }
       } else {
         throw new Error(data.error || 'Failed to start session');
       }
@@ -176,6 +184,11 @@ export default function TreatmentSession({
         setLastResponseTime(data.responseTime);
         updateStats(data);
 
+        // Voice enhancement: Auto-speak bot response (optional, non-breaking)
+        if (voice.autoSpeakEnabled) {
+          voice.speakMessage(botMessage.content);
+        }
+
         // Check if session is complete
         if (data.sessionComplete) {
           setIsSessionActive(false);
@@ -204,6 +217,14 @@ export default function TreatmentSession({
       setIsLoading(false);
     }
   };
+
+  // Voice enhancement (optional, non-breaking) - integrates with existing functions
+  const voice = useTreatmentVoice({
+    onVoiceTranscript: sendMessageWithContent, // Uses existing function - no modification needed
+    enableAutoSpeak: true,
+    disabled: !isSessionActive || isLoading,
+    currentStep
+  });
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
     await sendMessageWithContent(response);
@@ -318,6 +339,18 @@ export default function TreatmentSession({
               <div className="flex items-center space-x-1 bg-green-100 dark:bg-green-900/20 px-2 py-1 rounded-full">
                 <CheckCircle className="h-3 w-3 text-green-600" />
                 <span className="text-xs text-green-700 dark:text-green-200 font-medium">Optimal</span>
+              </div>
+            )}
+
+            {/* Voice Status - Optional Enhancement */}
+            {(voice.isListening || voice.isSpeaking) && (
+              <div className="flex items-center space-x-1">
+                {voice.isListening && (
+                  <span className="text-xs text-red-600 animate-pulse">🎤 Listening</span>
+                )}
+                {voice.isSpeaking && (
+                  <span className="text-xs text-green-600 animate-pulse">🔊 Speaking</span>
+                )}
               </div>
             )}
           </div>
@@ -552,6 +585,19 @@ export default function TreatmentSession({
                   </div>
                 </div>
                 
+                {/* Voice Controls - Optional Enhancement */}
+                <div className="relative">
+                  <VoiceControls
+                    onTranscript={(transcript) => {
+                      // Voice input feeds into existing function - no core logic changes
+                      setUserInput(transcript);
+                    }}
+                    disabled={isLoading}
+                    showSettings={false}
+                    className="mr-2"
+                  />
+                </div>
+
                 <button
                   onClick={sendMessage}
                   disabled={!userInput.trim() || isLoading}
@@ -572,7 +618,7 @@ export default function TreatmentSession({
             ) : currentStep === 'choose_method' ? (
               'Select your preferred method using the buttons above'
             ) : (
-              'Press Enter to send • This session uses 95% scripted responses for optimal performance'
+              'Press Enter to send • Voice input available • This session uses 95% scripted responses for optimal performance'
             )}
           </div>
         </div>
