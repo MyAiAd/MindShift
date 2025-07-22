@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
-import { useGlobalVoice, VoiceIndicator } from '@/components/voice/useGlobalVoice';
+import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 
 interface TreatmentMessage {
   id: string;
@@ -329,11 +329,6 @@ export default function TreatmentSession({
 
   return (
     <div className="max-w-4xl mx-auto h-screen flex flex-col bg-white dark:bg-gray-900">
-      {/* Global Voice Indicator - Small, unobtrusive */}
-      <VoiceIndicator 
-        isListening={voice.isListening} 
-        isSpeaking={voice.isSpeaking} 
-      />
       {/* Header with Session Stats */}
       <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-400 p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -588,6 +583,26 @@ export default function TreatmentSession({
             ) : (
               /* Regular Text Input Interface */
               <div className="flex space-x-2 max-w-2xl w-full">
+                {/* Voice Indicator - Positioned immediately to the left of input */}
+                {(voice.isListening || voice.isSpeaking) && (
+                  <div className="flex items-center">
+                    <div className="flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
+                      {voice.isListening && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          <span>Listening</span>
+                        </div>
+                      )}
+                      {voice.isSpeaking && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span>Speaking</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex-1 relative">
                   <input
                     ref={inputRef}
