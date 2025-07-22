@@ -109,18 +109,42 @@ export class MFAService {
       console.log('MFA Service: Factors retrieved:', factors);
       const hasBackupCodes = await this.hasBackupCodes();
       
+      // Helper function to safely parse dates
+      const safeParseDate = (dateString: string | null | undefined): Date | undefined => {
+        if (!dateString) return undefined;
+        try {
+          const date = new Date(dateString);
+          return isNaN(date.getTime()) ? undefined : date;
+        } catch {
+          return undefined;
+        }
+      };
+      
       return {
         isEnabled: factors.totp.length > 0,
-        factors: factors.totp.map((factor: any) => ({
-          id: factor.id,
-          type: 'totp',
-          friendlyName: factor.friendly_name || 'Authenticator App',
-          status: factor.status,
-          createdAt: new Date(factor.created_at),
-          lastUsed: factor.last_used ? new Date(factor.last_used) : undefined
-        })),
+        factors: factors.totp.map((factor: any) => {
+          const createdAt = safeParseDate(factor.created_at);
+          const lastUsed = safeParseDate(factor.last_used);
+          
+          console.log('MFA Service: Processing factor:', {
+            id: factor.id,
+            created_at: factor.created_at,
+            createdAtParsed: createdAt,
+            last_used: factor.last_used,
+            lastUsedParsed: lastUsed
+          });
+          
+          return {
+            id: factor.id,
+            type: 'totp',
+            friendlyName: factor.friendly_name || 'Authenticator App',
+            status: factor.status,
+            createdAt: createdAt || new Date(), // Fallback to current date if parsing fails
+            lastUsed: lastUsed
+          };
+        }),
         hasBackupCodes,
-        lastUsed: factors.totp.length > 0 ? new Date(factors.totp[0].last_used) : undefined
+        lastUsed: factors.totp.length > 0 ? safeParseDate(factors.totp[0].last_used) : undefined
       };
     } catch (error) {
       console.error('MFA Service: Error getting MFA status:', error);

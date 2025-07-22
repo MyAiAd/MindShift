@@ -41,6 +41,17 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Helper function to safely format dates
+  const safeFormatDate = (date: Date | undefined | null): string => {
+    if (!date) return 'Unknown';
+    try {
+      if (!(date instanceof Date) || isNaN(date.getTime())) return 'Unknown';
+      return date.toLocaleDateString();
+    } catch {
+      return 'Unknown';
+    }
+  };
+
   // Load MFA status on mount
   useEffect(() => {
     loadMFAStatus();
@@ -347,8 +358,8 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white">{factor.friendlyName}</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Added {factor.createdAt.toLocaleDateString()}
-                            {factor.lastUsed && ` • Last used ${factor.lastUsed.toLocaleDateString()}`}
+                            Added {safeFormatDate(factor.createdAt)}
+                            {factor.lastUsed && ` • Last used ${safeFormatDate(factor.lastUsed)}`}
                           </p>
                         </div>
                       </div>
