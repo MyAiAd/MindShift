@@ -157,10 +157,10 @@ export class MFAService {
       
       console.log('MFA Service: User authenticated, enrolling MFA factor...');
 
-      // Enroll a new TOTP factor
+      // Enroll a new TOTP factor with QR-friendly parameters
       const { data: factor, error: enrollError } = await this.supabase.auth.mfa.enroll({
         factorType: 'totp',
-        friendlyName
+        friendlyName: 'MyAi' // Keep it short for QR code compatibility
       });
 
       if (enrollError) {
@@ -180,35 +180,73 @@ export class MFAService {
 
       console.log('MFA Service: MFA factor enrolled successfully, generating QR code...');
 
-      // Generate QR code
-      const qrCodeData = factor.totp.qr_code;
+      // Get QR code data - try Supabase's first, then custom if needed
+      let qrCodeData = factor.totp.qr_code;
+      
       if (!qrCodeData) {
         throw new Error('No QR code data received from Supabase');
       }
       
+      // If Supabase QR data is too long, generate a shorter custom URI
+      if (qrCodeData.length > 500) { // Threshold for QR code issues
+        console.log('MFA Service: Supabase QR data too long, generating custom URI...');
+        
+        // Extract just the secret from Supabase's URI or use the secret directly
+        const secret = factor.totp.secret;
+        const { data: { user } } = await this.supabase.auth.getUser();
+        const email = user?.email || 'user';
+        
+        // Generate a shorter TOTP URI
+        qrCodeData = `otpauth://totp/MyAi:${email}?secret=${secret}&issuer=MyAi`;
+        console.log('MFA Service: Custom URI generated, length:', qrCodeData.length);
+      }
+
       console.log('MFA Service: QR code data length:', qrCodeData.length);
       
       // Generate QR code with error handling for large data
       let qrCodeDataUrl: string | null = null;
       try {
-        // Try with minimal settings first to handle large data
-        qrCodeDataUrl = await QRCode.toDataURL(qrCodeData, {
-          width: 256,
-          margin: 1
-        });
-      } catch (qrError) {
-        console.error('MFA Service: QR code generation failed, trying alternative approach:', qrError);
+        console.log('MFA Service: Attempting QR code generation...');
         
-        // Fallback: try with even smaller size and minimal options
+        // Strategy 1: Try with low error correction for maximum data capacity
+        qrCodeDataUrl = await QRCode.toDataURL(qrCodeData, {
+          errorCorrectionLevel: 'L', // Low = ~7% error correction, max data
+          width: 300,
+          margin: 2,
+          scale: 1
+        });
+        console.log('MFA Service: QR code generated successfully with strategy 1');
+        
+      } catch (qrError1) {
+        console.log('MFA Service: Strategy 1 failed, trying strategy 2...', qrError1);
+        
         try {
+          // Strategy 2: Minimal settings with tiny margin
           qrCodeDataUrl = await QRCode.toDataURL(qrCodeData, {
-            width: 200,
-            margin: 0
+            width: 256,
+            margin: 1,
+            scale: 1,
+            type: 'image/png'
           });
-        } catch (fallbackError) {
-          console.error('MFA Service: QR code generation failed completely:', fallbackError);
-          console.log('MFA Service: Continuing with manual secret key method...');
-          // Don't throw error, continue with null QR code - user can enter secret manually
+          console.log('MFA Service: QR code generated successfully with strategy 2');
+          
+        } catch (qrError2) {
+          console.log('MFA Service: Strategy 2 failed, trying strategy 3...', qrError2);
+          
+          try {
+            // Strategy 3: Ultra-compact settings
+            qrCodeDataUrl = await QRCode.toDataURL(qrCodeData, {
+              width: 200,
+              margin: 0
+            });
+            console.log('MFA Service: QR code generated successfully with strategy 3');
+            
+          } catch (qrError3) {
+            console.log('MFA Service: All QR generation strategies failed, using manual entry fallback');
+            console.log('MFA Service: QR errors:', { qrError1, qrError2, qrError3 });
+            
+            // Don't throw error, continue with null QR code - user can enter secret manually
+          }
         }
       }
 
