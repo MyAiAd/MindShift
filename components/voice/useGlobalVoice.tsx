@@ -88,7 +88,7 @@ export const useGlobalVoice = ({
       }
       stopListening();
     };
-  }, [isVoiceInputEnabled, disabled, currentStep]);
+  }, [isVoiceInputEnabled, disabled]); // Removed currentStep to prevent unnecessary restarts
 
   // Global voice output - auto-speak when enabled
   const speakGlobally = async (text: string, force = false) => {
