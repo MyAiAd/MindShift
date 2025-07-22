@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare } from 'lucide-react';
-// Voice enhancement imports (optional, non-breaking)
-import VoiceControls from '@/components/voice/VoiceControls';
-import { useTreatmentVoice } from '@/components/voice/useTreatmentVoice';
+// Global voice system integration (accessibility-driven)
+import { useGlobalVoice, VoiceIndicator } from '@/components/voice/useGlobalVoice';
 
 interface TreatmentMessage {
   id: string;
@@ -109,9 +108,9 @@ export default function TreatmentSession({
         setLastResponseTime(data.responseTime);
         updateStats(data);
 
-        // Voice enhancement: Auto-speak welcome message (optional, non-breaking)  
-        if (voice.autoSpeakEnabled) {
-          voice.speakMessage(welcomeMessage.content);
+        // Global voice: Auto-speak welcome message when enabled in accessibility settings
+        if (voice.isVoiceOutputEnabled) {
+          voice.speakGlobally(welcomeMessage.content);
         }
       } else {
         throw new Error(data.error || 'Failed to start session');
@@ -184,9 +183,9 @@ export default function TreatmentSession({
         setLastResponseTime(data.responseTime);
         updateStats(data);
 
-        // Voice enhancement: Auto-speak bot response (optional, non-breaking)
-        if (voice.autoSpeakEnabled) {
-          voice.speakMessage(botMessage.content);
+        // Global voice: Auto-speak bot response when enabled in accessibility settings
+        if (voice.isVoiceOutputEnabled) {
+          voice.speakGlobally(botMessage.content);
         }
 
         // Check if session is complete
@@ -218,12 +217,38 @@ export default function TreatmentSession({
     }
   };
 
-  // Voice enhancement (optional, non-breaking) - integrates with existing functions
-  const voice = useTreatmentVoice({
-    onVoiceTranscript: sendMessageWithContent, // Uses existing function - no modification needed
-    enableAutoSpeak: true,
-    disabled: !isSessionActive || isLoading,
-    currentStep
+  // Global voice system - integrates with accessibility settings
+  const voice = useGlobalVoice({
+    onVoiceTranscript: (transcript) => {
+      // Smart routing based on current UI context
+      if (currentStep === 'check_if_still_problem') {
+        if (transcript === 'yes' || transcript === 'no') {
+          handleYesNoResponse(transcript as 'yes' | 'no');
+          return;
+        }
+      }
+      
+      if (currentStep === 'digging_deeper_start') {
+        if (['yes', 'no', 'maybe'].includes(transcript)) {
+          handleYesNoMaybeResponse(transcript as 'yes' | 'no' | 'maybe');
+          return;
+        }
+      }
+      
+      if (currentStep === 'choose_method') {
+        if (['Problem Shifting', 'Identity Shifting', 'Belief Shifting', 'Blockage Shifting'].includes(transcript)) {
+          handleMethodSelection(transcript);
+          return;
+        }
+      }
+      
+      // For text input contexts, fill the input field
+      if (transcript && transcript !== 'yes' && transcript !== 'no' && transcript !== 'maybe') {
+        setUserInput(transcript);
+      }
+    },
+    currentStep,
+    disabled: !isSessionActive || isLoading
   });
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
@@ -304,6 +329,11 @@ export default function TreatmentSession({
 
   return (
     <div className="max-w-4xl mx-auto h-screen flex flex-col bg-white dark:bg-gray-900">
+      {/* Global Voice Indicator - Small, unobtrusive */}
+      <VoiceIndicator 
+        isListening={voice.isListening} 
+        isSpeaking={voice.isSpeaking} 
+      />
       {/* Header with Session Stats */}
       <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-400 p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -342,17 +372,7 @@ export default function TreatmentSession({
               </div>
             )}
 
-            {/* Voice Status - Optional Enhancement */}
-            {(voice.isListening || voice.isSpeaking) && (
-              <div className="flex items-center space-x-1">
-                {voice.isListening && (
-                  <span className="text-xs text-red-600 animate-pulse">🎤 Listening</span>
-                )}
-                {voice.isSpeaking && (
-                  <span className="text-xs text-green-600 animate-pulse">🔊 Speaking</span>
-                )}
-              </div>
-            )}
+
           </div>
         </div>
       </div>
@@ -568,19 +588,6 @@ export default function TreatmentSession({
             ) : (
               /* Regular Text Input Interface */
               <div className="flex space-x-2 max-w-2xl w-full">
-                {/* Voice Controls - Optional Enhancement - Moved to left for better visual balance */}
-                <div className="relative">
-                  <VoiceControls
-                    onTranscript={(transcript) => {
-                      // Voice input feeds into existing function - no core logic changes
-                      setUserInput(transcript);
-                    }}
-                    disabled={isLoading}
-                    showSettings={false}
-                    className=""
-                  />
-                </div>
-
                 <div className="flex-1 relative">
                   <input
                     ref={inputRef}
@@ -618,7 +625,7 @@ export default function TreatmentSession({
             ) : currentStep === 'choose_method' ? (
               'Select your preferred method using the buttons above'
             ) : (
-              'Press Enter to send • Voice input available • This session uses 95% scripted responses for optimal performance'
+              'Press Enter to send • Voice controls in accessibility settings • This session uses 95% scripted responses for optimal performance'
             )}
           </div>
         </div>
