@@ -111,7 +111,6 @@ export class VoiceService {
     this.recognition.lang = 'en-US';
 
     this.recognition.onstart = () => {
-      console.log('🎙️ Recognition started');
       this.isListening = true;
       this.notifyStatusChange({
         isListening: true,
@@ -122,7 +121,6 @@ export class VoiceService {
 
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
-      console.log('🎙️ Recognition result:', transcript);
       this.isListening = false;
       
       this.notifyStatusChange({
@@ -132,15 +130,11 @@ export class VoiceService {
       });
 
       if (this.onTranscriptCallback) {
-        console.log('🎙️ Calling transcript callback');
         this.onTranscriptCallback(transcript);
-      } else {
-        console.log('🎙️ No transcript callback available!');
       }
     };
 
     this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.log('🎙️ Recognition error:', event.error);
       this.isListening = false;
       this.notifyStatusChange({
         isListening: false,
@@ -150,7 +144,6 @@ export class VoiceService {
     };
 
     this.recognition.onend = () => {
-      console.log('🎙️ Recognition ended, isListening was:', this.isListening);
       this.isListening = false;
       this.notifyStatusChange({
         isListening: false,
@@ -407,37 +400,26 @@ export class VoiceService {
 
   public startListening(): Promise<string> {
     return new Promise((resolve, reject) => {
-      console.log('🎙️ VoiceService.startListening called, current state:', {
-        hasRecognition: !!this.recognition,
-        isListening: this.isListening,
-        listeningEnabled: this.preferences.listeningEnabled
-      });
-
       if (!this.recognition || !this.preferences.listeningEnabled) {
-        console.log('🎙️ Recognition not available or disabled');
         reject(new Error('Speech recognition not available'));
         return;
       }
 
       if (this.isListening) {
-        console.log('🎙️ Already listening, rejecting');
         reject(new Error('Already listening'));
         return;
       }
 
       // Set up one-time callback
       this.onTranscriptCallback = (transcript: string) => {
-        console.log('🎙️ Transcript callback triggered:', transcript);
         this.onTranscriptCallback = null;
         resolve(transcript);
       };
 
       // Start recognition
       try {
-        console.log('🎙️ Starting speech recognition...');
         this.recognition.start();
       } catch (error) {
-        console.log('🎙️ Error starting recognition:', error);
         reject(error);
       }
     });

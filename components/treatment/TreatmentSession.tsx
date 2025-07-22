@@ -35,14 +35,11 @@ export default function TreatmentSession({
   onComplete, 
   onError 
 }: TreatmentSessionProps) {
-  // Simple test to verify console logging is working
-  console.log('🚀 TreatmentSession component loaded - Console logging works!');
-  
   const [messages, setMessages] = useState<TreatmentMessage[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
-  const [currentStep, setCurrentStep] = useState('');
+  const [currentStep, setCurrentStep] = useState<string>('');
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [sessionStats, setSessionStats] = useState<SessionStats>({
