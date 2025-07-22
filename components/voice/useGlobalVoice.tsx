@@ -34,27 +34,34 @@ export const useGlobalVoice = ({
   // Global voice input - always listening when enabled
   useEffect(() => {
     if (!isVoiceInputEnabled || disabled) {
+      console.log('Voice disabled:', { isVoiceInputEnabled, disabled });
       return;
     }
 
     const startGlobalListening = async () => {
       try {
+        console.log('🎤 Starting global listening...');
         setIsGlobalListening(true);
         const transcript = await startListening();
+        console.log('🎤 Voice transcript received:', transcript);
         
         if (transcript.trim() && onVoiceTranscript) {
           const processedTranscript = processTranscriptForContext(transcript.trim(), currentStep);
+          console.log('🎤 Processed transcript:', processedTranscript, 'for step:', currentStep);
           onVoiceTranscript(processedTranscript);
         }
         
         // Restart listening after a brief pause (always listening mode)
+        console.log('🎤 Scheduling restart in 1 second...');
         listeningTimeoutRef.current = setTimeout(() => {
+          console.log('🎤 Attempting restart - enabled:', isVoiceInputEnabled, 'disabled:', disabled);
           if (isVoiceInputEnabled && !disabled) {
             startGlobalListening();
           }
         }, 1000);
         
       } catch (error) {
+        console.warn('🎤 Voice listening error:', error);
         // Restart listening after longer pause on error
         listeningTimeoutRef.current = setTimeout(() => {
           if (isVoiceInputEnabled && !disabled) {
@@ -67,9 +74,11 @@ export const useGlobalVoice = ({
     };
 
     // Start listening with a small delay to avoid conflicts
+    console.log('🎤 Initializing voice listening...');
     const initTimeout = setTimeout(startGlobalListening, 500);
     
     return () => {
+      console.log('🎤 Cleaning up voice listening...');
       clearTimeout(initTimeout);
       if (listeningTimeoutRef.current) {
         clearTimeout(listeningTimeoutRef.current);
