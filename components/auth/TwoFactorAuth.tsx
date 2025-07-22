@@ -89,23 +89,29 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
       setActionLoading(true);
       setError(null);
       
+      console.log('TwoFactorAuth: Initiating 2FA setup...');
+      
       const response = await fetch('/api/auth/mfa', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'setup' })
       });
       
+      console.log('TwoFactorAuth: Setup response status:', response.status);
+      
       const data = await response.json();
+      console.log('TwoFactorAuth: Setup response data:', data);
 
       if (response.ok) {
         setSetupData(data.data);
         setIsSetupMode(true);
         setSuccess('2FA setup initiated. Please scan the QR code with your authenticator app.');
       } else {
+        console.error('TwoFactorAuth: Setup failed:', data);
         setError(data.error || 'Failed to setup 2FA');
       }
     } catch (error) {
-      console.error('Error setting up 2FA:', error);
+      console.error('TwoFactorAuth: Error setting up 2FA:', error);
       setError('Failed to setup 2FA');
     } finally {
       setActionLoading(false);
@@ -377,7 +383,30 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
                 1. Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
               </p>
               <div className="flex justify-center p-4 bg-white rounded-lg border-2 border-gray-200 dark:border-gray-600">
-                <img src={setupData.qrCodeDataUrl} alt="QR Code for 2FA setup" className="w-48 h-48" />
+                {setupData.qrCodeDataUrl && setupData.qrCodeDataUrl.length > 0 ? (
+                  <img src={setupData.qrCodeDataUrl} alt="QR Code for 2FA setup" className="w-48 h-48" />
+                ) : (
+                  <div className="text-center py-8">
+                    <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400 mb-2">
+                      Could not generate QR code. Please manually enter the secret key:
+                    </p>
+                    <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-3 mb-4">
+                      <Key className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
+                      <code className="font-mono text-sm text-gray-900 dark:text-white flex-1">{setupData.secret}</code>
+                      <button
+                        onClick={() => copyToClipboard(setupData.secret)}
+                        className="ml-2 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                        title="Copy secret key"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Enter this secret key manually in your authenticator app
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

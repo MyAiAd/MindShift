@@ -180,7 +180,31 @@ export class MFAService {
         throw new Error('No QR code data received from Supabase');
       }
       
-      const qrCodeDataUrl = await QRCode.toDataURL(qrCodeData);
+      console.log('MFA Service: QR code data length:', qrCodeData.length);
+      
+      // Generate QR code with error handling for large data
+      let qrCodeDataUrl: string | null = null;
+      try {
+        // Try with minimal settings first to handle large data
+        qrCodeDataUrl = await QRCode.toDataURL(qrCodeData, {
+          width: 256,
+          margin: 1
+        });
+      } catch (qrError) {
+        console.error('MFA Service: QR code generation failed, trying alternative approach:', qrError);
+        
+        // Fallback: try with even smaller size and minimal options
+        try {
+          qrCodeDataUrl = await QRCode.toDataURL(qrCodeData, {
+            width: 200,
+            margin: 0
+          });
+        } catch (fallbackError) {
+          console.error('MFA Service: QR code generation failed completely:', fallbackError);
+          console.log('MFA Service: Continuing with manual secret key method...');
+          // Don't throw error, continue with null QR code - user can enter secret manually
+        }
+      }
 
       console.log('MFA Service: Requesting backup codes...');
       
@@ -191,7 +215,7 @@ export class MFAService {
 
       return {
         secret: factor.totp.secret,
-        qrCodeDataUrl,
+        qrCodeDataUrl: qrCodeDataUrl || '', // Provide empty string if QR generation failed
         backupCodes,
         factorId: factor.id
       };
