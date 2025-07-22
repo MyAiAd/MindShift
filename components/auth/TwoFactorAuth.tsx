@@ -52,6 +52,17 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
     }
   };
 
+  // Helper function to reset to main interface
+  const resetToMainInterface = () => {
+    setIsSetupMode(false);
+    setShowBackupCodes(false);
+    setSetupData(null);
+    setBackupCodes([]);
+    setVerificationCode('');
+    setError(null);
+    console.log('TwoFactorAuth: Reset to main interface');
+  };
+
   // Load MFA status on mount
   useEffect(() => {
     loadMFAStatus();
@@ -62,21 +73,25 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
       setLoading(true);
       setError(null);
       
-      console.log('Client: Making MFA status request...');
+      console.log('TwoFactorAuth: Making MFA status request...');
       const response = await fetch('/api/auth/mfa');
       
-      console.log('Client: MFA API response status:', response.status);
-      console.log('Client: MFA API response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('TwoFactorAuth: MFA API response status:', response.status);
       
       const data = await response.json();
-      console.log('Client: MFA API response data:', data);
+      console.log('TwoFactorAuth: MFA API response data:', data);
 
       if (response.ok) {
-        console.log('Client: MFA status loaded successfully');
+        console.log('TwoFactorAuth: MFA status loaded successfully:', {
+          isEnabled: data.isEnabled,
+          factorsCount: data.factors?.length || 0,
+          factors: data.factors,
+          hasBackupCodes: data.hasBackupCodes
+        });
         setMFAStatus(data);
         onStatusChange?.(data.isEnabled);
       } else {
-        console.error('Client: MFA API error response:', {
+        console.error('TwoFactorAuth: MFA API error response:', {
           status: response.status,
           statusText: response.statusText,
           data
@@ -84,11 +99,7 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
         setError(data.error || `Failed to load 2FA status (${response.status})`);
       }
     } catch (error) {
-      console.error('Client: Error loading MFA status:', error);
-      console.error('Client: Error details:', {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : 'No stack'
-      });
+      console.error('TwoFactorAuth: Error loading MFA status:', error);
       setError('Failed to load 2FA status');
     } finally {
       setLoading(false);
@@ -187,8 +198,8 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
         
         // Auto-hide backup codes after 30 seconds to return to main interface
         setTimeout(() => {
-          setShowBackupCodes(false);
-          setBackupCodes([]);
+          resetToMainInterface();
+          setSuccess('2FA is now fully configured and ready to use!');
         }, 30000);
       } else {
         setError(data.error || 'Failed to verify 2FA setup');
@@ -298,6 +309,14 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
 
   return (
     <div className="space-y-6">
+      {/* Debug state info - remove after fixing */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+          Debug: isSetupMode={String(isSetupMode)}, showBackupCodes={String(showBackupCodes)}, 
+          mfaEnabled={String(mfaStatus?.isEnabled)}, loading={String(loading)}
+        </div>
+      )}
+      
       {/* Status Messages */}
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 flex items-center justify-between">
@@ -394,6 +413,30 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
                   </button>
                 </div>
               </div>
+
+              {/* Disable 2FA Section */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white">Disable Two-Factor Authentication</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      This will remove all authenticators and disable 2FA for your account
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (mfaStatus?.factors && mfaStatus.factors.length > 0) {
+                        handleDisable2FA(mfaStatus.factors[0].id);
+                      }
+                    }}
+                    disabled={actionLoading || !mfaStatus?.factors || mfaStatus.factors.length === 0}
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <X className="h-4 w-4" />
+                    <span>Disable 2FA</span>
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-center">
@@ -478,11 +521,7 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
 
             <div className="flex justify-between">
               <button
-                onClick={() => {
-                  setIsSetupMode(false);
-                  setSetupData(null);
-                  setVerificationCode('');
-                }}
+                onClick={resetToMainInterface}
                 className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 Cancel
@@ -550,8 +589,7 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
             </button>
             <button
               onClick={() => {
-                setShowBackupCodes(false);
-                setBackupCodes([]);
+                resetToMainInterface();
                 setSuccess('2FA is now active and ready to use!');
               }}
               className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
