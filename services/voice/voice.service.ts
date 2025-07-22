@@ -60,6 +60,7 @@ export class VoiceService {
   private isSpeaking: boolean = false;
   private onTranscriptCallback: ((transcript: string) => void) | null = null;
   private onStatusChangeCallback: ((status: VoiceStatus) => void) | null = null;
+  private onPreferencesChangeCallback: ((preferences: VoicePreferences) => void) | null = null;
 
   private constructor() {
     this.preferences = this.getStoredPreferences();
@@ -187,6 +188,11 @@ export class VoiceService {
   public updatePreferences(preferences: Partial<VoicePreferences>) {
     this.preferences = { ...this.preferences, ...preferences };
     localStorage.setItem('voice-preferences', JSON.stringify(this.preferences));
+    
+    // Notify listeners of preference changes
+    if (this.onPreferencesChangeCallback) {
+      this.onPreferencesChangeCallback(this.preferences);
+    }
   }
 
   public disableAutoSpeak() {
@@ -441,6 +447,10 @@ export class VoiceService {
     this.onStatusChangeCallback = callback;
   }
 
+  public onPreferencesChange(callback: (preferences: VoicePreferences) => void) {
+    this.onPreferencesChangeCallback = callback;
+  }
+
   private notifyStatusChange(status: VoiceStatus) {
     if (this.onStatusChangeCallback) {
       this.onStatusChangeCallback(status);
@@ -481,6 +491,7 @@ export const useVoiceService = () => {
 
   useEffect(() => {
     service.onStatusChange(setStatus);
+    service.onPreferencesChange(setPreferences);
     setPreferences(service.getPreferences());
   }, []);
 

@@ -76,7 +76,7 @@ export const useGlobalVoice = ({
       }
       stopListening();
     };
-  }, [isVoiceInputEnabled, disabled]); // Removed currentStep to prevent unnecessary restarts
+  }, [isVoiceInputEnabled, disabled, voicePrefs.listeningEnabled]); // React to preference changes in real-time
 
   // Global voice output - auto-speak when enabled
   const speakGlobally = async (text: string, force = false) => {
