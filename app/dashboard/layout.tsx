@@ -79,7 +79,7 @@ export default function DashboardLayout({
       <div className="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900">
         {/* Mobile sidebar */}
         <div
-          className={`fixed inset-0 flex z-40 md:hidden ${
+          className={`fixed inset-0 flex z-50 md:hidden ${
             sidebarOpen ? 'block' : 'hidden'
           }`}
         >
@@ -98,7 +98,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Desktop sidebar */}
-        <div className="hidden md:flex md:flex-shrink-0">
+        <div className="hidden md:flex md:flex-shrink-0 z-40">
           <div className="flex flex-col w-64">
             <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} />
           </div>

@@ -325,7 +325,7 @@ export default function TreatmentSession({
       </div>
 
       {/* Messages Area - Scrollable with bottom padding for fixed input */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-32">
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-40">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -392,7 +392,7 @@ export default function TreatmentSession({
 
       {/* Fixed Input Area at Bottom */}
       {isSessionActive && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 px-4 py-3 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 px-4 py-3 shadow-lg z-30">
           <div className="max-w-4xl mx-auto flex justify-end">
             {currentStep === 'check_if_still_problem' ? (
               /* Yes/No Button Interface */
@@ -580,7 +580,7 @@ export default function TreatmentSession({
 
       {/* Session Complete State - Fixed at Bottom */}
       {!isSessionActive && messages.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-green-50 dark:bg-green-900/20 border-t border-gray-200 dark:border-gray-600 px-4 py-3 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-green-50 dark:bg-green-900/20 border-t border-gray-200 dark:border-gray-600 px-4 py-3 shadow-lg z-30">
           <div className="max-w-4xl mx-auto text-center">
             <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
             <h3 className="text-lg font-semibold text-green-900 dark:text-green-200">Session Complete!</h3>
