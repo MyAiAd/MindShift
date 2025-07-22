@@ -33,27 +33,17 @@ export const useGlobalVoice = ({
 
   // Global voice input - always listening when enabled
   useEffect(() => {
-    console.log('Voice status check:', { 
-      isVoiceInputEnabled, 
-      disabled, 
-      isListening: status.isListening,
-      voicePrefs 
-    });
-    
     if (!isVoiceInputEnabled || disabled) {
       return;
     }
 
     const startGlobalListening = async () => {
       try {
-        console.log('Starting global listening...');
         setIsGlobalListening(true);
         const transcript = await startListening();
-        console.log('Voice transcript received:', transcript);
         
         if (transcript.trim() && onVoiceTranscript) {
           const processedTranscript = processTranscriptForContext(transcript.trim(), currentStep);
-          console.log('Processed transcript:', processedTranscript);
           onVoiceTranscript(processedTranscript);
         }
         
@@ -65,7 +55,6 @@ export const useGlobalVoice = ({
         }, 1000);
         
       } catch (error) {
-        console.warn('Voice listening error:', error);
         // Restart listening after longer pause on error
         listeningTimeoutRef.current = setTimeout(() => {
           if (isVoiceInputEnabled && !disabled) {
@@ -173,20 +162,6 @@ export const useGlobalVoice = ({
     };
   }, []);
 
-  // Test function for manual voice testing
-  const testVoiceInput = async () => {
-    try {
-      console.log('Testing voice input manually...');
-      const transcript = await startListening();
-      console.log('Manual test transcript:', transcript);
-      if (transcript.trim() && onVoiceTranscript) {
-        onVoiceTranscript(transcript.trim());
-      }
-    } catch (error) {
-      console.error('Manual voice test failed:', error);
-    }
-  };
-
   return {
     // Voice status
     isListening: status.isListening || isGlobalListening,
@@ -200,18 +175,10 @@ export const useGlobalVoice = ({
     // Functions
     speakGlobally,
     processTranscriptForContext,
-    testVoiceInput, // For debugging
     
     // Manual controls (for specific use cases)
     startManualListening: startListening,
     stopManualListening: stopListening,
-    
-    // Debug info
-    debugInfo: {
-      voicePrefs,
-      isGlobalListening,
-      status
-    }
   };
 };
 
