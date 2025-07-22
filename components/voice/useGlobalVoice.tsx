@@ -17,6 +17,9 @@ export const useGlobalVoice = ({
   currentStep,
   disabled = false
 }: GlobalVoiceOptions) => {
+  // Simple test to verify this hook is being called
+  console.log('🎯 useGlobalVoice hook initialized - Voice system loading!');
+  
   const { preferences: accessibilityPrefs } = useAccessibility();
   const { preferences: voicePrefs, speak, startListening, stopListening, status } = useVoiceService();
   
