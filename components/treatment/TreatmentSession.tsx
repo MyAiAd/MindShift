@@ -577,16 +577,17 @@ export default function TreatmentSession({
               /* Regular Text Input Interface */
               <div className="flex space-x-2 max-w-4xl w-full">
                 {/* Voice Indicator - Positioned immediately to the left of input */}
-                {(voice.isListening || voice.isSpeaking) && (
+                {/* Only show indicators when voice features are enabled in accessibility settings */}
+                {((voice.isListening && voice.isVoiceInputEnabled) || (voice.isSpeaking && voice.isVoiceOutputEnabled)) && (
                   <div className="flex items-center">
                     <div className="flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
-                      {voice.isListening && (
+                      {voice.isListening && voice.isVoiceInputEnabled && (
                         <div className="flex items-center space-x-1">
                           <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                           <span>Listening</span>
                         </div>
                       )}
-                      {voice.isSpeaking && (
+                      {voice.isSpeaking && voice.isVoiceOutputEnabled && (
                         <div className="flex items-center space-x-1">
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                           <span>Speaking</span>
