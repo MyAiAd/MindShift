@@ -582,10 +582,10 @@ export default function TreatmentSession({
               </div>
             ) : (
               /* Regular Text Input Interface */
-              <div className="flex space-x-2 max-w-2xl w-full">
+              <div className="flex space-x-2 max-w-4xl w-full">
                 {/* Voice Indicator - Positioned immediately to the left of input */}
-                {(voice.isListening || voice.isSpeaking) && (
-                  <div className="flex items-center">
+                <div className="flex items-center space-x-2">
+                  {(voice.isListening || voice.isSpeaking) && (
                     <div className="flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
                       {voice.isListening && (
                         <div className="flex items-center space-x-1">
@@ -600,8 +600,20 @@ export default function TreatmentSession({
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
+                  )}
+                  
+                  {/* Temporary debug button - will remove later */}
+                  <button
+                    onClick={() => {
+                      console.log('Voice debug info:', voice.debugInfo);
+                      voice.testVoiceInput();
+                    }}
+                    className="px-2 py-1 bg-blue-500 text-white text-xs rounded"
+                    type="button"
+                  >
+                    Test Voice
+                  </button>
+                </div>
 
                 <div className="flex-1 relative">
                   <input

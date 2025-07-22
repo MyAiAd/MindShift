@@ -26,24 +26,34 @@ export const useGlobalVoice = ({
   const lastSpokenMessageRef = useRef<string>('');
 
   // Check if voice input is enabled globally via accessibility settings
-  const isVoiceInputEnabled = voicePrefs.listeningEnabled && voicePrefs.speechEnabled;
+  const isVoiceInputEnabled = voicePrefs.listeningEnabled;
   
   // Check if voice output is enabled globally via accessibility settings  
   const isVoiceOutputEnabled = voicePrefs.speechEnabled && voicePrefs.autoSpeak;
 
   // Global voice input - always listening when enabled
   useEffect(() => {
-    if (!isVoiceInputEnabled || disabled || status.isListening) {
+    console.log('Voice status check:', { 
+      isVoiceInputEnabled, 
+      disabled, 
+      isListening: status.isListening,
+      voicePrefs 
+    });
+    
+    if (!isVoiceInputEnabled || disabled) {
       return;
     }
 
     const startGlobalListening = async () => {
       try {
+        console.log('Starting global listening...');
         setIsGlobalListening(true);
         const transcript = await startListening();
+        console.log('Voice transcript received:', transcript);
         
         if (transcript.trim() && onVoiceTranscript) {
           const processedTranscript = processTranscriptForContext(transcript.trim(), currentStep);
+          console.log('Processed transcript:', processedTranscript);
           onVoiceTranscript(processedTranscript);
         }
         
@@ -55,7 +65,8 @@ export const useGlobalVoice = ({
         }, 1000);
         
       } catch (error) {
-        // Silent error handling - restart listening after longer pause
+        console.warn('Voice listening error:', error);
+        // Restart listening after longer pause on error
         listeningTimeoutRef.current = setTimeout(() => {
           if (isVoiceInputEnabled && !disabled) {
             startGlobalListening();
@@ -162,6 +173,20 @@ export const useGlobalVoice = ({
     };
   }, []);
 
+  // Test function for manual voice testing
+  const testVoiceInput = async () => {
+    try {
+      console.log('Testing voice input manually...');
+      const transcript = await startListening();
+      console.log('Manual test transcript:', transcript);
+      if (transcript.trim() && onVoiceTranscript) {
+        onVoiceTranscript(transcript.trim());
+      }
+    } catch (error) {
+      console.error('Manual voice test failed:', error);
+    }
+  };
+
   return {
     // Voice status
     isListening: status.isListening || isGlobalListening,
@@ -175,10 +200,18 @@ export const useGlobalVoice = ({
     // Functions
     speakGlobally,
     processTranscriptForContext,
+    testVoiceInput, // For debugging
     
     // Manual controls (for specific use cases)
     startManualListening: startListening,
     stopManualListening: stopListening,
+    
+    // Debug info
+    debugInfo: {
+      voicePrefs,
+      isGlobalListening,
+      status
+    }
   };
 };
 
