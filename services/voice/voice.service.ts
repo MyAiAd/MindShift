@@ -79,6 +79,18 @@ export class VoiceService {
     // Initialize Speech Synthesis (Text-to-Speech)
     if ('speechSynthesis' in window) {
       this.synthesis = window.speechSynthesis;
+      
+      // Ensure voices are loaded - some browsers need this
+      if (this.synthesis.getVoices().length === 0) {
+        this.synthesis.addEventListener('voiceschanged', () => {
+          console.log('Voices loaded:', this.synthesis?.getVoices().length);
+        }, { once: true });
+      }
+      
+      // Wake up speech synthesis (Chrome workaround)
+      if (this.synthesis.pending || this.synthesis.speaking) {
+        this.synthesis.cancel();
+      }
     }
 
     // Initialize Speech Recognition (Speech-to-Text)
@@ -192,30 +204,68 @@ export class VoiceService {
   }
 
   public speak(text: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!this.synthesis || !this.preferences.speechEnabled) {
+    return new Promise((resolve) => {
+      // Always resolve, never reject - graceful degradation
+      if (!this.synthesis || !this.preferences.speechEnabled || !text.trim()) {
         resolve();
         return;
       }
 
-      // Stop any current speech
-      this.synthesis.cancel();
+      try {
+        // Stop any current speech
+        this.synthesis.cancel();
 
+        // Ensure voices are loaded
+        let voices = this.synthesis.getVoices();
+        if (voices.length === 0) {
+          // Voices might not be loaded yet, try to trigger loading
+          this.synthesis.addEventListener('voiceschanged', () => {
+            this.speakWithRetry(text, resolve, 1);
+          }, { once: true });
+          
+          // Fallback timeout
+          setTimeout(() => {
+            this.speakWithRetry(text, resolve, 1);
+          }, 100);
+          return;
+        }
+
+        this.speakWithRetry(text, resolve, 0);
+      } catch (error) {
+        console.warn('Speech synthesis setup failed:', error);
+        resolve(); // Always resolve gracefully
+      }
+    });
+  }
+
+  private speakWithRetry(text: string, resolve: () => void, attempt: number = 0): void {
+    if (!this.synthesis || attempt >= 3) {
+      resolve();
+      return;
+    }
+
+    try {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = this.preferences.voiceRate;
-      utterance.pitch = this.preferences.voicePitch;
-      utterance.volume = this.preferences.voiceVolume;
+      
+      // Use conservative settings for better compatibility
+      utterance.rate = Math.max(0.5, Math.min(2.0, this.preferences.voiceRate));
+      utterance.pitch = Math.max(0, Math.min(2, this.preferences.voicePitch));
+      utterance.volume = Math.max(0, Math.min(1, this.preferences.voiceVolume));
 
-      // Set selected voice if available
+      // Set selected voice if available and valid
       if (this.preferences.selectedVoice) {
         const voices = this.synthesis.getVoices();
         const selectedVoice = voices.find(voice => voice.name === this.preferences.selectedVoice);
-        if (selectedVoice) {
+        if (selectedVoice && !selectedVoice.localService === false) {
           utterance.voice = selectedVoice;
         }
       }
 
+      let hasStarted = false;
+      let hasEnded = false;
+
       utterance.onstart = () => {
+        hasStarted = true;
         this.isSpeaking = true;
         this.notifyStatusChange({
           isListening: false,
@@ -225,27 +275,79 @@ export class VoiceService {
       };
 
       utterance.onend = () => {
-        this.isSpeaking = false;
-        this.notifyStatusChange({
-          isListening: false,
-          isSpeaking: false,
-          error: null
-        });
-        resolve();
+        if (!hasEnded) {
+          hasEnded = true;
+          this.isSpeaking = false;
+          this.notifyStatusChange({
+            isListening: false,
+            isSpeaking: false,
+            error: null
+          });
+          resolve();
+        }
       };
 
       utterance.onerror = (event) => {
-        this.isSpeaking = false;
-        this.notifyStatusChange({
-          isListening: false,
-          isSpeaking: false,
-          error: `Speech synthesis error: ${event.error}`
-        });
-        reject(new Error(`Speech synthesis error: ${event.error}`));
+        console.warn(`Speech synthesis attempt ${attempt + 1} failed:`, event.error);
+        
+        if (!hasEnded) {
+          hasEnded = true;
+          this.isSpeaking = false;
+          
+          // Try again with simpler settings
+          if (attempt < 2 && event.error !== 'synthesis-unavailable') {
+            setTimeout(() => {
+              this.speakWithRetry(this.simplifyTextForSpeech(text), resolve, attempt + 1);
+            }, 200 * (attempt + 1)); // Progressive delay
+          } else {
+            // Final fallback - just resolve silently
+            this.notifyStatusChange({
+              isListening: false,
+              isSpeaking: false,
+              error: attempt >= 2 ? 'Speech unavailable' : null
+            });
+            resolve();
+          }
+        }
       };
 
+      // Safety timeout - ensure we always resolve
+      setTimeout(() => {
+        if (!hasEnded) {
+          hasEnded = true;
+          this.isSpeaking = false;
+          this.notifyStatusChange({
+            isListening: false,
+            isSpeaking: false,
+            error: null
+          });
+          resolve();
+        }
+      }, Math.max(5000, text.length * 100)); // Reasonable timeout based on text length
+
+      // Attempt to speak
       this.synthesis.speak(utterance);
-    });
+
+      // Double-check if it started after a brief delay
+      setTimeout(() => {
+        if (!hasStarted && !hasEnded) {
+          console.warn('Speech synthesis did not start, retrying...');
+          utterance.onerror?.({ error: 'synthesis-failed' } as any);
+        }
+      }, 1000);
+
+    } catch (error) {
+      console.warn(`Speech synthesis error on attempt ${attempt + 1}:`, error);
+      resolve(); // Always resolve gracefully
+    }
+  }
+
+  private simplifyTextForSpeech(text: string): string {
+    return text
+      .replace(/[^\w\s.,!?]/g, '') // Remove special characters
+      .replace(/\s+/g, ' ') // Normalize spaces
+      .trim()
+      .substring(0, 200); // Limit length for problematic texts
   }
 
   public startListening(): Promise<string> {

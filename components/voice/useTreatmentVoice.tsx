@@ -38,7 +38,9 @@ export const useTreatmentVoice = ({
       await speak(cleanText);
       lastSpokenMessage.current = text;
     } catch (error) {
-      console.error('Error speaking message:', error);
+      // Gracefully handle speech errors - don't log as errors, just warnings
+      console.warn('Speech not available:', error instanceof Error ? error.message : 'Unknown error');
+      // Don't throw the error - let the treatment session continue normally
     }
   };
 
