@@ -223,21 +223,20 @@ export class MFAService {
       // Many authenticator apps resolve logos based on issuer name or email domain
       const accountName = email.split('@')[0]; // Just username part, not domain
       
-      // Option 1: Very generic issuer name
-      qrCodeData = `otpauth://totp/App:${accountName}?secret=${secret}&issuer=App`;
-      
-      // Option 2: If still getting wrong logos, uncomment this to force a generic icon
+      // Option 2: Force a generic icon to completely override any logo resolution
       // Simple shield SVG as data URI to override any logo resolution
-      /*
-      const genericIconSvg = encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
-        </svg>
-      `);
-      qrCodeData = `otpauth://totp/App:${accountName}?secret=${secret}&issuer=App&image=data:image/svg+xml,${genericIconSvg}`;
-      */
+      const genericIconSvg = encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>`);
       
-      console.log('MFA Service: Generic URI generated to avoid logo conflicts:', qrCodeData);
+      try {
+        // Try with explicit image first
+        qrCodeData = `otpauth://totp/MindShift:${accountName}?secret=${secret}&issuer=MindShift&image=data:image/svg+xml,${genericIconSvg}`;
+        console.log('MFA Service: URI with explicit generic icon:', qrCodeData.substring(0, 100) + '...');
+      } catch (error) {
+        // Fallback: use a more obscure issuer name that won't resolve to known companies
+        console.log('MFA Service: Image parameter failed, using obscure issuer name...');
+        qrCodeData = `otpauth://totp/Auth2FA:${accountName}?secret=${secret}&issuer=Auth2FA`;
+      }
+      
       console.log('MFA Service: Custom URI length:', qrCodeData.length);
 
       console.log('MFA Service: QR code data length:', qrCodeData.length);
