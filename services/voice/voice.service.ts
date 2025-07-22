@@ -83,10 +83,7 @@ export class VoiceService {
       // Ensure voices are loaded - some browsers need this
       if (this.synthesis.getVoices().length === 0) {
         this.synthesis.addEventListener('voiceschanged', () => {
-          // Only log in development mode
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Voices loaded:', this.synthesis?.getVoices().length);
-          }
+          // Silent voice loading - no console logging
         }, { once: true });
       }
       
@@ -192,6 +189,50 @@ export class VoiceService {
     localStorage.setItem('voice-preferences', JSON.stringify(this.preferences));
   }
 
+  public disableAutoSpeak() {
+    this.updatePreferences({ autoSpeak: false });
+  }
+
+  public isSpeechSynthesisWorking(): boolean {
+    if (!this.synthesis) return false;
+    
+    // Check if we've had repeated failures
+    const failures = localStorage.getItem('speech-synthesis-failures');
+    if (failures && parseInt(failures) >= 3) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  public getSpeechFailureCount(): number {
+    return parseInt(localStorage.getItem('speech-synthesis-failures') || '0');
+  }
+
+  public resetSpeechFailures() {
+    localStorage.removeItem('speech-synthesis-failures');
+  }
+
+  private recordSpeechFailure() {
+    const currentFailures = parseInt(localStorage.getItem('speech-synthesis-failures') || '0');
+    const newFailures = currentFailures + 1;
+    localStorage.setItem('speech-synthesis-failures', newFailures.toString());
+    
+    // Auto-disable auto-speak after 3 failures to stop bothering the user
+    if (newFailures >= 3 && this.preferences.autoSpeak) {
+      this.updatePreferences({ autoSpeak: false });
+      this.notifyStatusChange({
+        isListening: false,
+        isSpeaking: false,
+        error: null // Still no UI error, just disable silently
+      });
+    }
+  }
+
+  private recordSpeechSuccess() {
+    localStorage.removeItem('speech-synthesis-failures');
+  }
+
   public getCapabilities(): VoiceCapabilities {
     const capabilities: VoiceCapabilities = {
       speechRecognition: !!this.recognition,
@@ -209,7 +250,7 @@ export class VoiceService {
   public speak(text: string): Promise<void> {
     return new Promise((resolve) => {
       // Always resolve, never reject - graceful degradation
-      if (!this.synthesis || !this.preferences.speechEnabled || !text.trim()) {
+      if (!this.synthesis || !this.preferences.speechEnabled || !text.trim() || !this.isSpeechSynthesisWorking()) {
         resolve();
         return;
       }
@@ -235,10 +276,8 @@ export class VoiceService {
 
         this.speakWithRetry(text, resolve, 0);
       } catch (error) {
-        // Only log in development mode
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Speech synthesis setup failed:', error);
-        }
+        // Always silent - no console logging
+        this.recordSpeechFailure();
         resolve(); // Always resolve gracefully
       }
     });
@@ -273,6 +312,7 @@ export class VoiceService {
       utterance.onstart = () => {
         hasStarted = true;
         this.isSpeaking = true;
+        this.recordSpeechSuccess(); // Track that speech is working
         this.notifyStatusChange({
           isListening: false,
           isSpeaking: true,
@@ -294,10 +334,7 @@ export class VoiceService {
       };
 
       utterance.onerror = (event) => {
-        // Only log warnings in development mode or on final failure
-        if (process.env.NODE_ENV === 'development' || attempt >= 2) {
-          console.warn(`Speech synthesis attempt ${attempt + 1} failed:`, event.error);
-        }
+        // Completely silent - no console logging at all
         
         if (!hasEnded) {
           hasEnded = true;
@@ -309,7 +346,8 @@ export class VoiceService {
               this.speakWithRetry(this.simplifyTextForSpeech(text), resolve, attempt + 1);
             }, 200 * (attempt + 1)); // Progressive delay
           } else {
-            // Final fallback - just resolve silently
+            // Final fallback - record failure and resolve silently
+            this.recordSpeechFailure();
             this.notifyStatusChange({
               isListening: false,
               isSpeaking: false,
@@ -340,19 +378,14 @@ export class VoiceService {
       // Double-check if it started after a brief delay
       setTimeout(() => {
         if (!hasStarted && !hasEnded) {
-          // Only log in development mode
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('Speech synthesis did not start, retrying...');
-          }
+          // Completely silent - no console logging
           utterance.onerror?.({ error: 'synthesis-failed' } as any);
         }
       }, 1000);
 
     } catch (error) {
-      // Only log in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.warn(`Speech synthesis error on attempt ${attempt + 1}:`, error);
-      }
+      // Completely silent - no console logging
+      this.recordSpeechFailure();
       resolve(); // Always resolve gracefully
     }
   }

@@ -38,10 +38,7 @@ export const useTreatmentVoice = ({
       await speak(cleanText);
       lastSpokenMessage.current = text;
     } catch (error) {
-      // Gracefully handle speech errors - only log in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Speech not available:', error instanceof Error ? error.message : 'Unknown error');
-      }
+      // Gracefully handle speech errors - completely silent
       // Don't throw the error - let the treatment session continue normally
     }
   };

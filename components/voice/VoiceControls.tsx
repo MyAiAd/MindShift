@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, Volume2, VolumeX, Settings } from 'lucide-react';
-import { useVoiceService, type VoiceStatus } from '@/services/voice/voice.service';
+import { useVoiceService, type VoiceStatus, VoiceService } from '@/services/voice/voice.service';
 
 interface VoiceControlsProps {
   onTranscript?: (transcript: string) => void;
@@ -31,13 +31,23 @@ export default function VoiceControls({
     updatePreferences,
     status
   } = useVoiceService();
-
+  
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [capabilities, setCapabilities] = useState(getCapabilities());
+  const [speechFailures, setSpeechFailures] = useState(0);
+
+  const voiceServiceInstance = VoiceService.getInstance();
 
   useEffect(() => {
     setCapabilities(getCapabilities());
+    setSpeechFailures(voiceServiceInstance.getSpeechFailureCount());
   }, []);
+
+  const handleResetSpeech = () => {
+    voiceServiceInstance.resetSpeechFailures();
+    setSpeechFailures(0);
+    updatePreferences({ autoSpeak: true });
+  };
 
   // Auto-speak when autoSpeak is enabled and onSpeak is provided
   useEffect(() => {
@@ -159,22 +169,43 @@ export default function VoiceControls({
           </h3>
 
           {/* Auto-speak toggle */}
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs text-gray-700 dark:text-gray-300">
-              Auto-speak responses
-            </label>
-            <button
-              onClick={() => updatePreferences({ autoSpeak: !preferences.autoSpeak })}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                preferences.autoSpeak ? 'bg-blue-600' : 'bg-gray-200'
-              }`}
-            >
-              <span
-                className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                  preferences.autoSpeak ? 'translate-x-5' : 'translate-x-1'
-                }`}
-              />
-            </button>
+          <div className="mb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-xs text-gray-700 dark:text-gray-300 block">
+                  Auto-speak responses
+                </label>
+                {!capabilities.speechSynthesis && (
+                  <span className="text-xs text-red-500">Voice output unavailable</span>
+                )}
+                {speechFailures >= 3 && capabilities.speechSynthesis && (
+                  <span className="text-xs text-orange-500">Auto-disabled due to issues</span>
+                )}
+              </div>
+              <button
+                onClick={() => updatePreferences({ autoSpeak: !preferences.autoSpeak })}
+                disabled={!capabilities.speechSynthesis}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  preferences.autoSpeak && capabilities.speechSynthesis ? 'bg-blue-600' : 'bg-gray-200'
+                } ${!capabilities.speechSynthesis ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <span
+                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                    preferences.autoSpeak && capabilities.speechSynthesis ? 'translate-x-5' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            
+            {/* Reset button when auto-disabled */}
+            {speechFailures >= 3 && capabilities.speechSynthesis && !preferences.autoSpeak && (
+              <button
+                onClick={handleResetSpeech}
+                className="text-xs text-blue-600 hover:text-blue-700 mt-1 underline"
+              >
+                Reset and try again
+              </button>
+            )}
           </div>
 
           {/* Speech rate */}
