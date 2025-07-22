@@ -172,6 +172,12 @@ export class MFAService {
         throw new Error('Invalid MFA factor response from Supabase');
       }
 
+      console.log('MFA Service: MFA factor enrolled successfully:', {
+        factorId: factor.id,
+        hasSecret: !!factor.totp.secret,
+        hasQrCode: !!factor.totp.qr_code
+      });
+
       console.log('MFA Service: MFA factor enrolled successfully, generating QR code...');
 
       // Generate QR code
@@ -243,18 +249,42 @@ export class MFAService {
    */
   public async verifyMFASetup(factorId: string, code: string): Promise<MFAVerificationResult> {
     try {
+      console.log('MFA Service: Verifying setup with:', {
+        factorId,
+        hasCode: !!code,
+        codeLength: code.length
+      });
+      
+      // For setup verification, we need to create a challenge first
+      const { data: challengeData, error: challengeError } = await this.supabase.auth.mfa.challenge({
+        factorId
+      });
+
+      if (challengeError) {
+        console.error('MFA Service: Challenge creation failed:', challengeError);
+        return {
+          success: false,
+          error: challengeError.message || 'Failed to create MFA challenge'
+        };
+      }
+
+      console.log('MFA Service: Challenge created, verifying code...');
+
       const { data, error } = await this.supabase.auth.mfa.verify({
         factorId,
-        challengeId: '', // Will be provided by Supabase
+        challengeId: challengeData.id,
         code
       });
 
       if (error) {
+        console.error('MFA Service: Verification failed:', error);
         return {
           success: false,
           error: error.message || 'Invalid verification code'
         };
       }
+
+      console.log('MFA Service: Verification successful');
 
       return {
         success: true,
@@ -262,7 +292,7 @@ export class MFAService {
         token: data.access_token
       };
     } catch (error) {
-      console.error('Error verifying MFA setup:', error);
+      console.error('MFA Service: Error verifying MFA setup:', error);
       return {
         success: false,
         error: 'Failed to verify setup code'

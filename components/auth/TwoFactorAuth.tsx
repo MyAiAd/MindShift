@@ -103,6 +103,15 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
       console.log('TwoFactorAuth: Setup response data:', data);
 
       if (response.ok) {
+        console.log('TwoFactorAuth: Setup successful, received data:', {
+          hasData: !!data.data,
+          hasFactorId: !!data.data?.factorId,
+          factorId: data.data?.factorId,
+          hasSecret: !!data.data?.secret,
+          hasQrCode: !!data.data?.qrCodeDataUrl,
+          hasBackupCodes: !!data.data?.backupCodes
+        });
+        
         setSetupData(data.data);
         setIsSetupMode(true);
         setSuccess('2FA setup initiated. Please scan the QR code with your authenticator app.');
@@ -124,9 +133,21 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
       setError(null);
 
       if (!setupData?.factorId || !verificationCode) {
+        console.error('TwoFactorAuth: Missing verification data:', {
+          hasSetupData: !!setupData,
+          hasFactorId: !!setupData?.factorId,
+          factorId: setupData?.factorId,
+          hasVerificationCode: !!verificationCode,
+          verificationCodeLength: verificationCode?.length
+        });
         setError('Missing setup data or verification code');
         return;
       }
+
+      console.log('TwoFactorAuth: Sending verification request:', {
+        factorId: setupData.factorId,
+        code: verificationCode
+      });
 
       const response = await fetch('/api/auth/mfa', {
         method: 'POST',

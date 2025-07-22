@@ -151,6 +151,16 @@ async function handleSetupMFA(params: any, mfaService: MFAService) {
 // Handle MFA setup verification
 async function handleVerifySetup(params: any, mfaService: MFAService) {
   try {
+    console.log('MFA API: Verify setup called with params:', {
+      hasParams: !!params,
+      hasFactorId: !!params?.factorId,
+      factorId: params?.factorId,
+      factorIdType: typeof params?.factorId,
+      factorIdLength: params?.factorId?.length,
+      hasCode: !!params?.code,
+      code: params?.code
+    });
+    
     const { factorId, code } = params;
     
     if (!factorId || !code) {
