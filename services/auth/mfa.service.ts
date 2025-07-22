@@ -219,9 +219,25 @@ export class MFAService {
       const { data: { user: currentUser } } = await this.supabase.auth.getUser();
       const email = currentUser?.email || 'user';
       
-      // Generate a clean, branded TOTP URI
-      qrCodeData = `otpauth://totp/MyAi:${email}?secret=${secret}&issuer=MyAi`;
-      console.log('MFA Service: Custom branded URI generated:', qrCodeData);
+      // Use a generic account identifier to avoid logo resolution conflicts
+      // Many authenticator apps resolve logos based on issuer name or email domain
+      const accountName = email.split('@')[0]; // Just username part, not domain
+      
+      // Option 1: Very generic issuer name
+      qrCodeData = `otpauth://totp/App:${accountName}?secret=${secret}&issuer=App`;
+      
+      // Option 2: If still getting wrong logos, uncomment this to force a generic icon
+      // Simple shield SVG as data URI to override any logo resolution
+      /*
+      const genericIconSvg = encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+        </svg>
+      `);
+      qrCodeData = `otpauth://totp/App:${accountName}?secret=${secret}&issuer=App&image=data:image/svg+xml,${genericIconSvg}`;
+      */
+      
+      console.log('MFA Service: Generic URI generated to avoid logo conflicts:', qrCodeData);
       console.log('MFA Service: Custom URI length:', qrCodeData.length);
 
       console.log('MFA Service: QR code data length:', qrCodeData.length);
