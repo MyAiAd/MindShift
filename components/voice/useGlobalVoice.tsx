@@ -182,12 +182,12 @@ export const useGlobalVoice = ({
   };
 };
 
-// Small listening indicator component
+// Small listening indicator component - positioned at bottom-left of text input area
 export const VoiceIndicator = ({ isListening, isSpeaking }: { isListening: boolean; isSpeaking: boolean }) => {
   if (!isListening && !isSpeaking) return null;
   
   return (
-    <div className="fixed top-4 right-4 z-50 flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
+    <div className="fixed bottom-20 left-4 z-50 flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
       {isListening && (
         <div className="flex items-center space-x-1">
           <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
