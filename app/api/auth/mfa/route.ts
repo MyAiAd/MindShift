@@ -92,20 +92,59 @@ export async function POST(request: NextRequest) {
 // Handle MFA setup
 async function handleSetupMFA(params: any, mfaService: MFAService) {
   try {
+    console.log('MFA API: Starting 2FA setup...');
+    
+    // Validate environment configuration first
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey || 
+        supabaseAnonKey.includes('your_') || supabaseUrl.includes('your_')) {
+      console.error('MFA API: Invalid Supabase configuration detected');
+      return NextResponse.json({ 
+        error: 'Server configuration error: Invalid Supabase credentials. Please contact support.',
+        details: 'Supabase environment variables contain placeholder values'
+      }, { status: 500 });
+    }
+    
     const { friendlyName = 'Authenticator App' } = params;
     
+    console.log('MFA API: Calling MFA service setup...');
     const setupData = await mfaService.setupMFA(friendlyName);
+    
+    console.log('MFA API: 2FA setup completed successfully');
     
     return NextResponse.json({
       success: true,
       data: setupData
     });
   } catch (error) {
-    console.error('Error setting up MFA:', error);
+    console.error('MFA API: Error setting up MFA:', error);
+    console.error('MFA API: Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    // Provide more specific error messages based on the error
+    let errorMessage = 'Failed to setup 2FA';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      if (error.message.includes('not enabled for this project')) {
+        errorMessage = 'MFA is not enabled for this project. Please enable it in your Supabase dashboard under Authentication → Settings → Multi-Factor Authentication.';
+        statusCode = 501; // Not implemented
+      } else if (error.message.includes('Authentication failed') || error.message.includes('JWT')) {
+        errorMessage = 'Authentication session expired. Please refresh the page and try again.';
+        statusCode = 401;
+      } else if (error.message.includes('configuration')) {
+        errorMessage = 'Server configuration error. Please contact support.';
+        statusCode = 500;
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     return NextResponse.json({ 
-      error: 'Failed to setup 2FA',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+      error: errorMessage,
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: statusCode });
   }
 }
 

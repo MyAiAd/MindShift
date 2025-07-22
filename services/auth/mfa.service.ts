@@ -137,8 +137,25 @@ export class MFAService {
    */
   public async setupMFA(friendlyName: string = 'Authenticator App'): Promise<MFASetupData> {
     try {
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      console.log('MFA Service: Starting 2FA setup...');
+      
+      // Validate Supabase client
+      if (!this.supabase) {
+        throw new Error('Supabase client not initialized');
+      }
+      
+      // Check authentication
+      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+      if (userError) {
+        console.error('MFA Service: User authentication error:', userError);
+        throw new Error(`Authentication failed: ${userError.message}`);
+      }
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      console.log('MFA Service: User authenticated, enrolling MFA factor...');
 
       // Enroll a new TOTP factor
       const { data: factor, error: enrollError } = await this.supabase.auth.mfa.enroll({
@@ -146,14 +163,31 @@ export class MFAService {
         friendlyName
       });
 
-      if (enrollError) throw enrollError;
+      if (enrollError) {
+        console.error('MFA Service: MFA enrollment error:', enrollError);
+        throw new Error(`MFA enrollment failed: ${enrollError.message}`);
+      }
+      
+      if (!factor || !factor.totp) {
+        throw new Error('Invalid MFA factor response from Supabase');
+      }
+
+      console.log('MFA Service: MFA factor enrolled successfully, generating QR code...');
 
       // Generate QR code
       const qrCodeData = factor.totp.qr_code;
+      if (!qrCodeData) {
+        throw new Error('No QR code data received from Supabase');
+      }
+      
       const qrCodeDataUrl = await QRCode.toDataURL(qrCodeData);
 
+      console.log('MFA Service: Requesting backup codes...');
+      
       // Request backup codes from API
       const backupCodes = await this.requestBackupCodes();
+
+      console.log('MFA Service: 2FA setup completed successfully');
 
       return {
         secret: factor.totp.secret,
@@ -162,8 +196,21 @@ export class MFAService {
         factorId: factor.id
       };
     } catch (error) {
-      console.error('Error setting up MFA:', error);
-      throw new Error('Failed to setup 2FA');
+      console.error('MFA Service: Error setting up MFA:', error);
+      
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('JWT')) {
+          throw new Error('Authentication token invalid. Please sign out and sign back in.');
+        } else if (error.message.includes('project')) {
+          throw new Error('MFA not enabled for this project. Please contact support.');
+        } else if (error.message.includes('network')) {
+          throw new Error('Network error. Please check your connection and try again.');
+        }
+        throw error;
+      }
+      
+      throw new Error('Failed to setup 2FA. Please try again or contact support.');
     }
   }
 
