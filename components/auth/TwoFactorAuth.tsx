@@ -167,7 +167,18 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
         setShowBackupCodes(true);
         setIsSetupMode(false);
         setVerificationCode('');
+        
+        // Clear setup data after successful verification
+        setSetupData(null);
+        
+        // Reload MFA status to show the enabled state and management options
         await loadMFAStatus();
+        
+        // Auto-hide backup codes after 30 seconds to return to main interface
+        setTimeout(() => {
+          setShowBackupCodes(false);
+          setBackupCodes([]);
+        }, 30000);
       } else {
         setError(data.error || 'Failed to verify 2FA setup');
       }
@@ -511,7 +522,7 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
             ))}
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex flex-wrap gap-3 justify-between">
             <button
               onClick={downloadBackupCodes}
               className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -525,6 +536,17 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
             >
               <Copy className="h-4 w-4" />
               <span>Copy All</span>
+            </button>
+            <button
+              onClick={() => {
+                setShowBackupCodes(false);
+                setBackupCodes([]);
+                setSuccess('2FA is now active and ready to use!');
+              }}
+              className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <CheckCircle className="h-4 w-4" />
+              <span>Done</span>
             </button>
           </div>
         </div>

@@ -187,19 +187,18 @@ export class MFAService {
         throw new Error('No QR code data received from Supabase');
       }
       
-      // If Supabase QR data is too long, generate a shorter custom URI
-      if (qrCodeData.length > 500) { // Threshold for QR code issues
-        console.log('MFA Service: Supabase QR data too long, generating custom URI...');
-        
-        // Extract just the secret from Supabase's URI or use the secret directly
-        const secret = factor.totp.secret;
-        const { data: { user } } = await this.supabase.auth.getUser();
-        const email = user?.email || 'user';
-        
-        // Generate a shorter TOTP URI
-        qrCodeData = `otpauth://totp/MyAi:${email}?secret=${secret}&issuer=MyAi`;
-        console.log('MFA Service: Custom URI generated, length:', qrCodeData.length);
-      }
+      console.log('MFA Service: Original Supabase QR data:', qrCodeData.substring(0, 100) + '...');
+      
+      // Always generate a custom URI to ensure correct branding
+      // Extract just the secret from Supabase's data
+      const secret = factor.totp.secret;
+      const { data: { user: currentUser } } = await this.supabase.auth.getUser();
+      const email = currentUser?.email || 'user';
+      
+      // Generate a clean, branded TOTP URI
+      qrCodeData = `otpauth://totp/MyAi:${email}?secret=${secret}&issuer=MyAi`;
+      console.log('MFA Service: Custom branded URI generated:', qrCodeData);
+      console.log('MFA Service: Custom URI length:', qrCodeData.length);
 
       console.log('MFA Service: QR code data length:', qrCodeData.length);
       
