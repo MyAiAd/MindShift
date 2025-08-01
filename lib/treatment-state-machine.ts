@@ -439,6 +439,68 @@ export class TreatmentStateMachine {
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
+        },
+        {
+          id: 'restate_identity_problem',
+          scriptedResponse: () => {
+            return `How would you describe the problem now?`;
+          },
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please describe the problem in a few words.' }
+          ],
+          nextStep: 'confirm_identity_problem',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'confirm_identity_problem',
+          scriptedResponse: (userInput, context) => {
+            // Store the new problem statement
+            const newProblem = userInput || 'the problem';
+            context.problemStatement = newProblem;
+            return `So the problem is now '${newProblem}'. Is this correct?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please confirm if this is correct.' }
+          ],
+          nextStep: 'identity_shifting_intro',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'restate_belief_problem',
+          scriptedResponse: () => {
+            return `How would you state the problem now in a few words?`;
+          },
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please describe the problem in a few words.' }
+          ],
+          nextStep: 'confirm_belief_problem',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'confirm_belief_problem',
+          scriptedResponse: (userInput, context) => {
+            // Store the new problem statement
+            const newProblem = userInput || 'the problem';
+            context.problemStatement = newProblem;
+            return `So the problem is now '${newProblem}'. Is this correct?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please confirm if this is correct.' }
+          ],
+          nextStep: 'belief_shifting_intro',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
         }
       ]
     });
@@ -450,7 +512,7 @@ export class TreatmentStateMachine {
       steps: [
         {
           id: 'choose_method',
-          scriptedResponse: "Would you like to use Problem Shifting, Identity Shifting, Belief Shifting or Blockage Shifting?",
+          scriptedResponse: "Would you like to use Problem Shifting, Blockage Shifting, Identity Shifting, Reality Shifting, Trauma Shifting, or Belief Shifting?",
           expectedResponseType: 'open',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
@@ -556,6 +618,864 @@ export class TreatmentStateMachine {
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please tell me if it still feels like a problem.' }
+          ],
+          nextStep: 'digging_deeper_start',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        }
+      ]
+    });
+
+    // Phase 4b: Blockage Shifting Method (Script with AI Backup)
+    this.phases.set('blockage_shifting', {
+      name: 'Blockage Shifting',
+      maxDuration: 30,
+      steps: [
+        {
+          id: 'blockage_shifting_intro',
+          scriptedResponse: (userInput, context) => {
+            // Get the problem statement - use updated problem from cycling if available
+            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            
+            // On first iteration, include full instructions
+            const cycleCount = context?.metadata?.cycleCount || 0;
+            if (cycleCount === 0) {
+              return `Please close your eyes and keep them closed throughout the process. Please give brief answers to my questions and allow the problem to keep changing...we're going to keep going until there is no problem left.\n\nFeel '${problemStatement}'... what does it feel like?`;
+            } else {
+              // On subsequent cycles, just ask the question
+              return `Feel '${problemStatement}'... what does it feel like?`;
+            }
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
+          ],
+          nextStep: 'blockage_step_b',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'blockage_step_b',
+          scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`,
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
+          ],
+          nextStep: 'blockage_step_c',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'blockage_step_c',
+          scriptedResponse: (userInput, context) => {
+            // Check if previous response was "I don't know" or "I can't feel it"
+            const previousResponse = context?.userResponses?.[context.currentStep] || '';
+            const unknownIndicators = ['don\'t know', 'can\'t feel', 'no idea', 'not sure'];
+            const isUnknownResponse = unknownIndicators.some(indicator => previousResponse.toLowerCase().includes(indicator));
+            
+            if (isUnknownResponse && !context?.metadata?.hasAskedToGuess) {
+              context.metadata.hasAskedToGuess = true;
+              return `That's okay. Can you guess what it would feel like to not have this problem?`;
+            } else if (isUnknownResponse && context?.metadata?.hasAskedToGuess) {
+              context.metadata.hasAskedToGuess = false;
+              return `Feel that you don't know... what does that feel like?`;
+            }
+            
+            return `Feel the problem that you have right now... what would it feel like to not have this problem?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it would feel like to not have this problem.' }
+          ],
+          nextStep: 'blockage_step_d',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'blockage_step_d',
+          scriptedResponse: (userInput, context) => {
+            // Check if current response is "I don't know" or "I can't feel it"
+            const unknownIndicators = ['don\'t know', 'can\'t feel', 'no idea', 'not sure'];
+            const isUnknownResponse = unknownIndicators.some(indicator => (userInput || '').toLowerCase().includes(indicator));
+            
+            if (isUnknownResponse && !context?.metadata?.hasAskedToGuessD) {
+              context.metadata.hasAskedToGuessD = true;
+              return `That's okay. Can you guess what '${userInput || 'that feeling'}' feels like?`;
+            } else if (isUnknownResponse && context?.metadata?.hasAskedToGuessD) {
+              context.metadata.hasAskedToGuessD = false;
+              return `Feel that you can't feel it... what does that feel like?`;
+            }
+            
+            return `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
+          ],
+          nextStep: 'blockage_step_e',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'blockage_step_e',
+          scriptedResponse: () => `What's the problem now?`,
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please tell me what the problem is now.' }
+          ],
+          nextStep: 'blockage_check_if_still_problem',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'blockage_check_if_still_problem',
+          scriptedResponse: (userInput) => {
+            // Check if they said "no problem", "nothing", "gone", etc.
+            const noProblemIndicators = ['no problem', 'nothing', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
+            const response = (userInput || '').toLowerCase();
+            const seemsResolved = noProblemIndicators.some(indicator => response.includes(indicator));
+            
+            if (seemsResolved) {
+              return 'Great! It sounds like the problem has shifted. Let me check - do you feel the problem will come back in the future?';
+            }
+            
+            return `I can see there's still something there. Let's continue the process. Feel '${userInput || 'that problem'}'... what does it feel like?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please tell me how you feel or if there is still a problem.' }
+          ],
+          nextStep: 'digging_deeper_start', // This will be handled by the state machine logic
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        }
+      ]
+    });
+
+    // Phase 4c: Identity Shifting Method (Script with AI Backup)
+    this.phases.set('identity_shifting', {
+      name: 'Identity Shifting',
+      maxDuration: 30,
+      steps: [
+        {
+          id: 'identity_shifting_intro',
+          scriptedResponse: (userInput, context) => {
+            // Get the problem statement
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            return `Please close your eyes and keep them closed throughout the rest of the process.\n\nFeel the problem of '${problemStatement}'... what kind of person are you being when you're experiencing this problem?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what kind of person you are being.' }
+          ],
+          nextStep: 'identity_dissolve_step_a',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_dissolve_step_a',
+          scriptedResponse: (userInput, context) => {
+            // Store the identity for use throughout the process
+            context.metadata.currentIdentity = userInput || context.metadata.currentIdentity || 'that identity';
+            const identity = context.metadata.currentIdentity;
+            return `Feel yourself being '${identity}'... as '${identity}', what do you want?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you want as that identity.' }
+          ],
+          nextStep: 'identity_dissolve_step_b',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_dissolve_step_b',
+          scriptedResponse: (userInput, context) => {
+            // Store the goal for later use
+            context.metadata.currentGoal = userInput || context.metadata.currentGoal || 'that goal';
+            const identity = context.metadata.currentIdentity || 'that identity';
+            return `Feel yourself being '${identity}'... exaggerate the feeling of it and tell me the first thing that you notice about it.`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about exaggerating that feeling.' }
+          ],
+          nextStep: 'identity_dissolve_step_c',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_dissolve_step_c',
+          scriptedResponse: (userInput, context) => {
+            const goal = context.metadata.currentGoal || 'that goal';
+            return `Now feel yourself achieving your goal of '${goal}', imagine whatever you need to imagine in order to achieve that goal in your mind and tell me when you've done it.`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me when you have achieved that goal.' }
+          ],
+          nextStep: 'identity_dissolve_step_d',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_dissolve_step_d',
+          scriptedResponse: () => {
+            return `What's the first thing you notice about it?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about it.' }
+          ],
+          nextStep: 'identity_dissolve_step_e',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_dissolve_step_e',
+          scriptedResponse: (userInput, context) => {
+            const goal = context.metadata.currentGoal || 'that goal';
+            return `Have you fully achieved your goal of '${goal}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'identity_check',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_check',
+          scriptedResponse: (userInput, context) => {
+            const identity = context.metadata.currentIdentity || 'that identity';
+            return `Can you still feel yourself being '${identity}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'identity_problem_check',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_problem_check',
+          scriptedResponse: (userInput, context) => {
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            return `Feel the initial problem of '${problemStatement}'... does it still feel like a problem?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'digging_deeper_start',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        }
+      ]
+    });
+
+    // Phase 4d: Reality Shifting Method (Script with AI Backup)
+    this.phases.set('reality_shifting', {
+      name: 'Reality Shifting',
+      maxDuration: 30,
+      steps: [
+        {
+          id: 'reality_shifting_intro',
+          scriptedResponse: (userInput, context) => {
+            // Get the goal statement - Reality Shifting is goal-oriented
+            const goalStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'your goal';
+            return `Close your eyes and keep them closed throughout the process. We're going to work with your goal of '${goalStatement}'.\n\nFeel that '${goalStatement}' is coming to you... what does it feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
+          ],
+          nextStep: 'reality_step_a2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_step_a2',
+          scriptedResponse: (userInput) => `Feel that '${userInput || 'feeling'}'... what can you feel now?`,
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you can feel now.' }
+          ],
+          nextStep: 'reality_step_a3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+        
+        {
+          id: 'reality_step_a3',
+          scriptedResponse: (userInput) => `Feel that '${userInput || 'feeling'}'... what's the first thing you notice about it?`,
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about it.' }
+          ],
+          nextStep: 'reality_step_b',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_step_b',
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'your goal';
+            return `Is it possible that '${goalStatement}' will not come to you?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'reality_checking_questions',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_why_not_possible',
+          scriptedResponse: () => {
+            return `Why is it possible that it will not come to you?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me why you think it might not come to you.' }
+          ],
+          nextStep: 'reality_feel_reason',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_feel_reason',
+          scriptedResponse: (userInput, context) => {
+            // Store the reason for use in subsequent steps
+            context.metadata.currentReason = userInput || 'that reason';
+            return `Feel '${userInput || 'that reason'}'... what does it feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
+          ],
+          nextStep: 'reality_feel_reason_2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_feel_reason_2',
+          scriptedResponse: (userInput) => `Feel that '${userInput || 'feeling'}'... what can you feel now?`,
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you can feel now.' }
+          ],
+          nextStep: 'reality_feel_reason_3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_feel_reason_3',
+          scriptedResponse: (userInput) => `Feel that '${userInput || 'feeling'}'... what's the first thing you notice about it?`,
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about it.' }
+          ],
+          nextStep: 'reality_step_b',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_checking_questions',
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'your goal';
+            return `Does it feel like '${goalStatement}' has already come to you?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'reality_certainty_check',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_certainty_check',
+          scriptedResponse: () => {
+            return `How certain are you between 0% and 100% that you will achieve your goal?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please tell me your certainty percentage.' }
+          ],
+          nextStep: 'reality_doubts_check',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_doubts_check',
+          scriptedResponse: () => {
+            return `Are there any doubts left in your mind that you will achieve your goal?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'reality_integration_start',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_integration_start',
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'your goal';
+            return `You can open your eyes now. How do you feel about '${goalStatement}' now?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me how you feel about your goal now.' }
+          ],
+          nextStep: 'reality_integration_helped',
+          aiTriggers: []
+        },
+
+        {
+          id: 'reality_integration_helped',
+          scriptedResponse: () => {
+            return `How has it helped you to do this Mind Shifting method?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me how this method has helped you.' }
+          ],
+          nextStep: 'reality_integration_awareness',
+          aiTriggers: []
+        },
+
+        {
+          id: 'reality_integration_awareness',
+          scriptedResponse: () => {
+            return `What are you more aware of now than before you did this Mind Shifting method?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you are more aware of now.' }
+          ],
+          nextStep: 'reality_integration_action',
+          aiTriggers: []
+        },
+
+        {
+          id: 'reality_integration_action',
+          scriptedResponse: () => {
+            return `What if anything do you need to do to enable your goal to be achieved?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you need to do to achieve your goal.' }
+          ],
+          nextStep: 'reality_session_complete',
+          aiTriggers: []
+        },
+
+        {
+          id: 'reality_session_complete',
+          scriptedResponse: () => {
+            return `Thank you for doing this Reality Shifting session. The process is now complete. How do you feel overall about the work we've done today?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please share how you feel about the session.' }
+          ],
+          nextStep: undefined,
+          aiTriggers: []
+        }
+      ]
+    });
+
+    // Phase 4e: Trauma Shifting Method (Script with AI Backup)
+    this.phases.set('trauma_shifting', {
+      name: 'Trauma Shifting',
+      maxDuration: 30,
+      steps: [
+        {
+          id: 'trauma_shifting_intro',
+          scriptedResponse: (userInput, context) => {
+            // Get the negative experience statement
+            const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
+            return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what kind of person you are being in this moment.' }
+          ],
+          nextStep: 'trauma_dissolve_step_a',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_dissolve_step_a',
+          scriptedResponse: (userInput, context) => {
+            // Store the trauma identity for use throughout the process
+            context.metadata.currentTraumaIdentity = userInput || context.metadata.currentTraumaIdentity || 'that identity';
+            const identity = context.metadata.currentTraumaIdentity;
+            return `Feel yourself being '${identity}'... as '${identity}', what do you want?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you want as that identity.' }
+          ],
+          nextStep: 'trauma_dissolve_step_b',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_dissolve_step_b',
+          scriptedResponse: (userInput, context) => {
+            // Store the goal for later use
+            context.metadata.currentTraumaGoal = userInput || context.metadata.currentTraumaGoal || 'that goal';
+            const identity = context.metadata.currentTraumaIdentity || 'that identity';
+            return `Feel yourself being '${identity}'... exaggerate the feeling of it and tell me the first thing that you notice about it.`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about exaggerating that feeling.' }
+          ],
+          nextStep: 'trauma_dissolve_step_c',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_dissolve_step_c',
+          scriptedResponse: (userInput, context) => {
+            const goal = context.metadata.currentTraumaGoal || 'that goal';
+            return `Now feel yourself achieving your goal of '${goal}', imagine whatever you need to imagine in order to achieve that goal in your mind and tell me when you've done it.`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me when you have achieved that goal.' }
+          ],
+          nextStep: 'trauma_dissolve_step_d',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_dissolve_step_d',
+          scriptedResponse: () => {
+            return `What's the first thing you notice about it?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about it.' }
+          ],
+          nextStep: 'trauma_dissolve_step_e',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_dissolve_step_e',
+          scriptedResponse: (userInput, context) => {
+            const goal = context.metadata.currentTraumaGoal || 'that goal';
+            return `Have you fully achieved your goal of '${goal}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'trauma_identity_check',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_identity_check',
+          scriptedResponse: (userInput, context) => {
+            const identity = context.metadata.currentTraumaIdentity || 'that identity';
+            return `Can you still feel yourself being '${identity}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'trauma_experience_check',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_experience_check',
+          scriptedResponse: () => {
+            return `Take your mind back to the frozen moment which was the worst part of the negative experience. Does it still feel like a problem to you?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'trauma_dig_deeper',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_dig_deeper',
+          scriptedResponse: () => {
+            return `Is there anything else about this that is still a problem for you?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'integration_start',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        }
+      ]
+    });
+
+    // Phase 4f: Belief Shifting Method (Script with AI Backup)
+    this.phases.set('belief_shifting', {
+      name: 'Belief Shifting',
+      maxDuration: 30,
+      steps: [
+        {
+          id: 'belief_shifting_intro',
+          scriptedResponse: (userInput, context) => {
+            // Get the problem statement
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            return `Please close your eyes and keep them closed throughout the process.\n\nFeel the problem that '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem that '${problemStatement}'?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you believe about yourself.' }
+          ],
+          nextStep: 'belief_step_a',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_step_a',
+          scriptedResponse: (userInput, context) => {
+            // Store the belief for use throughout the process
+            context.metadata.currentBelief = userInput || context.metadata.currentBelief || 'that belief';
+            const belief = context.metadata.currentBelief;
+            return `Feel yourself believing '${belief}'... what does it feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like to believe that.' }
+          ],
+          nextStep: 'belief_step_b',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_step_b',
+          scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`,
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
+          ],
+          nextStep: 'belief_step_c',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_step_c',
+          scriptedResponse: () => `What would you rather feel?`,
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you would rather feel.' }
+          ],
+          nextStep: 'belief_step_d',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_step_d',
+          scriptedResponse: (userInput, context) => {
+            // Store the desired feeling for reference
+            context.metadata.desiredFeeling = userInput || context.metadata.desiredFeeling || 'that feeling';
+            const desiredFeeling = context.metadata.desiredFeeling;
+            return `What would '${desiredFeeling}' feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that would feel like.' }
+          ],
+          nextStep: 'belief_step_e',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_step_e',
+          scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`,
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
+          ],
+          nextStep: 'belief_step_f',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_step_f',
+          scriptedResponse: (userInput, context) => {
+            const belief = context.metadata.currentBelief || 'that belief';
+            return `Do you still believe '${belief}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'belief_check_1',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_check_1',
+          scriptedResponse: (userInput, context) => {
+            const belief = context.metadata.currentBelief || 'that belief';
+            return `Does any part of you still believe '${belief}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'belief_check_2',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_check_2',
+          scriptedResponse: (userInput, context) => {
+            const belief = context.metadata.currentBelief || 'that belief';
+            return `Do you feel you may believe '${belief}' again in the future?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'belief_check_3',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_check_3',
+          scriptedResponse: (userInput, context) => {
+            const belief = context.metadata.currentBelief || 'that belief';
+            return `Is there any scenario in which you would still believe '${belief}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'belief_check_4',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_check_4',
+          scriptedResponse: (userInput, context) => {
+            const belief = context.metadata.currentBelief || 'that belief';
+            // Create opposite belief (simplified approach)
+            const oppositeBelief = belief.toLowerCase().includes('not') ? belief.replace(/not\s+/gi, '') : `not ${belief}`;
+            return `Do you now believe '${oppositeBelief}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'belief_problem_check',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_problem_check',
+          scriptedResponse: (userInput, context) => {
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            return `Feel '${problemStatement}'... does it still feel like a problem?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
           nextStep: 'digging_deeper_start',
           aiTriggers: [
@@ -853,9 +1773,39 @@ export class TreatmentStateMachine {
         break;
         
       case 'choose_method':
-        // For now, always go to Problem Shifting (can be enhanced later for other methods)
-        context.currentPhase = 'problem_shifting';
-        return 'problem_shifting_intro';
+        // Route to different methods based on user choice
+        const methodChoice = context.userResponses[context.currentStep]?.toLowerCase() || '';
+        
+        if (methodChoice.includes('problem shifting')) {
+          context.currentPhase = 'problem_shifting';
+          context.metadata.selectedMethod = 'problem_shifting';
+          return 'problem_shifting_intro';
+        } else if (methodChoice.includes('blockage shifting')) {
+          context.currentPhase = 'blockage_shifting';
+          context.metadata.selectedMethod = 'blockage_shifting';
+          return 'blockage_shifting_intro';
+        } else if (methodChoice.includes('identity shifting')) {
+          context.currentPhase = 'identity_shifting';
+          context.metadata.selectedMethod = 'identity_shifting';
+          return 'identity_shifting_intro';
+        } else if (methodChoice.includes('reality shifting')) {
+          context.currentPhase = 'reality_shifting';
+          context.metadata.selectedMethod = 'reality_shifting';
+          return 'reality_shifting_intro';
+        } else if (methodChoice.includes('trauma shifting')) {
+          context.currentPhase = 'trauma_shifting';
+          context.metadata.selectedMethod = 'trauma_shifting';
+          return 'trauma_shifting_intro';
+        } else if (methodChoice.includes('belief shifting')) {
+          context.currentPhase = 'belief_shifting';
+          context.metadata.selectedMethod = 'belief_shifting';
+          return 'belief_shifting_intro';
+        } else {
+          // Fallback to Problem Shifting (all methods now implemented)
+          context.currentPhase = 'problem_shifting';
+          context.metadata.selectedMethod = 'problem_shifting';
+          return 'problem_shifting_intro';
+        }
         
       case 'check_if_still_problem':
         // Core cycling logic for Problem Shifting
@@ -868,6 +1818,206 @@ export class TreatmentStateMachine {
           // No longer a problem - move to digging deeper
           context.currentPhase = 'digging_deeper';
           return 'digging_deeper_start';
+        }
+        break;
+        
+      case 'blockage_check_if_still_problem':
+        // Core cycling logic for Blockage Shifting
+        // Check if the response indicates no problem left
+        const noProblemIndicators = ['no problem', 'nothing', 'gone', 'resolved', 'fine', 'good', 'better', 'clear', 'no', 'not'];
+        const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator));
+        
+        if (seemsResolved) {
+          // Problem seems resolved - move to digging deeper
+          context.currentPhase = 'digging_deeper';
+          return 'digging_deeper_start';
+        } else {
+          // Still a problem - cycle back to step A (blockage_shifting_intro)
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          // Update the problem statement with the current response for the next cycle
+          context.metadata.problemStatement = lastResponse;
+          return 'blockage_shifting_intro';
+        }
+        break;
+        
+      case 'identity_dissolve_step_e':
+        // Identity Shifting: Check if goal is fully achieved
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // Goal not achieved - repeat steps B-E (go back to step B)
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          return 'identity_dissolve_step_b';
+        }
+        if (lastResponse.includes('yes')) {
+          // Goal achieved - proceed to identity check
+          return 'identity_check';
+        }
+        break;
+        
+      case 'identity_check':
+        // Identity Shifting: Check if still feeling the identity
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // Still feeling identity - repeat step 3 (go back to step A)
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          return 'identity_dissolve_step_a';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No longer feeling identity - proceed to problem check
+          return 'identity_problem_check';
+        }
+        break;
+        
+      case 'identity_problem_check':
+        // Identity Shifting: Check if problem still exists
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // Still a problem - start new process
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          context.currentPhase = 'discovery';
+          return 'restate_identity_problem';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No longer a problem - move to digging deeper
+          context.currentPhase = 'digging_deeper';
+          return 'digging_deeper_start';
+        }
+        break;
+        
+      case 'confirm_identity_problem':
+        // If confirmed, go back to identity shifting
+        if (lastResponse.includes('yes')) {
+          context.currentPhase = 'identity_shifting';
+          return 'identity_shifting_intro';
+        }
+        // If not confirmed, ask them to restate the problem
+        if (lastResponse.includes('no')) {
+          return 'restate_identity_problem';
+        }
+        break;
+        
+      case 'reality_step_b':
+        // Reality Shifting: Check if goal might not come
+        if (lastResponse.includes('yes')) {
+          // Yes, it's possible it won't come - ask why
+          return 'reality_why_not_possible';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No, it's not possible it won't come - proceed to checking questions
+          return 'reality_checking_questions';
+        }
+        break;
+        
+      case 'reality_checking_questions':
+        // For Reality Shifting, checking questions don't cycle based on yes/no
+        // They just proceed to the next question
+        return 'reality_certainty_check';
+        
+      case 'reality_doubts_check':
+        // Reality Shifting: Check if doubts remain
+        if (lastResponse.includes('yes')) {
+          // Yes, doubts remain - repeat Step 2 starting with B
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          return 'reality_step_b';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No doubts - proceed to integration
+          return 'reality_integration_start';
+        }
+        break;
+        
+      case 'reality_session_complete':
+        // Reality Shifting session is complete - let the API layer handle completion
+        return null;
+        
+      case 'trauma_dissolve_step_e':
+        // Trauma Shifting: Check if goal is fully achieved
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // Goal not achieved - repeat steps B-E (go back to step B)
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          return 'trauma_dissolve_step_b';
+        }
+        if (lastResponse.includes('yes')) {
+          // Goal achieved - proceed to identity check
+          return 'trauma_identity_check';
+        }
+        break;
+        
+      case 'trauma_identity_check':
+        // Trauma Shifting: Check if still feeling the identity
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // Still feeling identity - repeat step 3 (go back to step A)
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          return 'trauma_dissolve_step_a';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No longer feeling identity - proceed to experience check
+          return 'trauma_experience_check';
+        }
+        break;
+        
+      case 'trauma_experience_check':
+        // Trauma Shifting: Check if negative experience still feels like problem
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // Still a problem - repeat Steps 2-5 (go back to intro)
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          return 'trauma_shifting_intro';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No longer a problem - proceed to dig deeper
+          return 'trauma_dig_deeper';
+        }
+        break;
+        
+      case 'trauma_dig_deeper':
+        // Trauma Shifting: Check if anything else is a problem
+        if (lastResponse.includes('yes')) {
+          // Yes, something else is a problem - need to route appropriately
+          // For now, go to digging deeper phase
+          context.currentPhase = 'digging_deeper';
+          return 'digging_deeper_start';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No other problems - proceed to integration
+          context.currentPhase = 'integration';
+          return 'integration_start';
+        }
+        break;
+        
+      case 'belief_step_f':
+        // Belief Shifting: Check if still believes the belief
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // Still believes - cycle back to step A
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          return 'belief_step_a';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No longer believes - proceed to belief checking questions
+          return 'belief_check_1';
+        }
+        break;
+        
+      case 'belief_problem_check':
+        // Belief Shifting: Check if problem still exists
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // Still a problem - start new process
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          context.currentPhase = 'discovery';
+          return 'restate_belief_problem';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No longer a problem - move to digging deeper
+          context.currentPhase = 'digging_deeper';
+          return 'digging_deeper_start';
+        }
+        break;
+        
+      case 'confirm_belief_problem':
+        // If confirmed, go back to belief shifting
+        if (lastResponse.includes('yes')) {
+          context.currentPhase = 'belief_shifting';
+          return 'belief_shifting_intro';
+        }
+        // If not confirmed, ask them to restate the problem
+        if (lastResponse.includes('no')) {
+          return 'restate_belief_problem';
         }
         break;
         

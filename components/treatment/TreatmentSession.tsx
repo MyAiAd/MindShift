@@ -221,7 +221,7 @@ export default function TreatmentSession({
   const voice = useGlobalVoice({
     onVoiceTranscript: (transcript) => {
       // Smart routing based on current UI context
-      if (currentStep === 'check_if_still_problem') {
+      if (currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_checking_questions' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') {
         if (transcript === 'yes' || transcript === 'no') {
           handleYesNoResponse(transcript as 'yes' | 'no');
           return;
@@ -236,7 +236,7 @@ export default function TreatmentSession({
       }
       
       if (currentStep === 'choose_method') {
-        if (['Problem Shifting', 'Identity Shifting', 'Belief Shifting', 'Blockage Shifting'].includes(transcript)) {
+        if (['Problem Shifting', 'Blockage Shifting', 'Identity Shifting', 'Reality Shifting', 'Trauma Shifting', 'Belief Shifting'].includes(transcript)) {
           handleMethodSelection(transcript);
           return;
         }
@@ -432,7 +432,7 @@ export default function TreatmentSession({
       {isSessionActive && (
         <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 px-4 py-3 shadow-lg z-30">
           <div className="max-w-4xl mx-auto flex justify-end">
-            {currentStep === 'check_if_still_problem' ? (
+            {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_checking_questions' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') ? (
               /* Yes/No Button Interface */
               <div className="flex flex-col space-y-3 max-w-2xl w-full">
                 <div className="flex-1 relative">
@@ -546,6 +546,14 @@ export default function TreatmentSession({
                   </button>
                   
                   <button
+                    onClick={() => handleMethodSelection('Blockage Shifting')}
+                    disabled={isLoading}
+                    className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  >
+                    <span>Blockage Shifting</span>
+                  </button>
+                  
+                  <button
                     onClick={() => handleMethodSelection('Identity Shifting')}
                     disabled={isLoading}
                     className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
@@ -554,19 +562,27 @@ export default function TreatmentSession({
                   </button>
                   
                   <button
+                    onClick={() => handleMethodSelection('Reality Shifting')}
+                    disabled={isLoading}
+                    className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  >
+                    <span>Reality Shifting</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleMethodSelection('Trauma Shifting')}
+                    disabled={isLoading}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  >
+                    <span>Trauma Shifting</span>
+                  </button>
+                  
+                  <button
                     onClick={() => handleMethodSelection('Belief Shifting')}
                     disabled={isLoading}
                     className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <span>Belief Shifting</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleMethodSelection('Blockage Shifting')}
-                    disabled={isLoading}
-                    className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    <span>Blockage Shifting</span>
                   </button>
                 </div>
               </div>
@@ -624,7 +640,7 @@ export default function TreatmentSession({
           </div>
           
           <div className="max-w-4xl mx-auto mt-2 text-xs text-gray-500 text-center">
-            {currentStep === 'check_if_still_problem' ? (
+            {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_checking_questions' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') ? (
               'Select your answer using the buttons above'
             ) : currentStep === 'digging_deeper_start' ? (
               'Select your answer using the buttons above'
