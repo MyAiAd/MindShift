@@ -248,7 +248,7 @@ export default function TreatmentSession({
       }
     },
     currentStep,
-    disabled: !isSessionActive || isLoading
+    disabled: hasError || isLoading
   });
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
@@ -536,54 +536,60 @@ export default function TreatmentSession({
                   </div>
                 </div>
                 
-                <div className="flex space-x-3 justify-center flex-wrap gap-y-3">
-                  <button
-                    onClick={() => handleMethodSelection('Problem Shifting')}
-                    disabled={isLoading}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    <span>Problem Shifting</span>
-                  </button>
+                <div className="flex flex-col space-y-3 items-center">
+                  {/* First row: Problem, Blockage, Identity */}
+                  <div className="flex space-x-3 justify-center">
+                    <button
+                      onClick={() => handleMethodSelection('Problem Shifting')}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span>Problem Shifting</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleMethodSelection('Blockage Shifting')}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span>Blockage Shifting</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleMethodSelection('Identity Shifting')}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span>Identity Shifting</span>
+                    </button>
+                  </div>
                   
-                  <button
-                    onClick={() => handleMethodSelection('Blockage Shifting')}
-                    disabled={isLoading}
-                    className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    <span>Blockage Shifting</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleMethodSelection('Identity Shifting')}
-                    disabled={isLoading}
-                    className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    <span>Identity Shifting</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleMethodSelection('Reality Shifting')}
-                    disabled={isLoading}
-                    className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    <span>Reality Shifting</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleMethodSelection('Trauma Shifting')}
-                    disabled={isLoading}
-                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    <span>Trauma Shifting</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleMethodSelection('Belief Shifting')}
-                    disabled={isLoading}
-                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    <span>Belief Shifting</span>
-                  </button>
+                  {/* Second row: Reality, Trauma, Belief */}
+                  <div className="flex space-x-3 justify-center">
+                    <button
+                      onClick={() => handleMethodSelection('Reality Shifting')}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span>Reality Shifting</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleMethodSelection('Trauma Shifting')}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span>Trauma Shifting</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleMethodSelection('Belief Shifting')}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span>Belief Shifting</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
