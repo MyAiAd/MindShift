@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, RotateCcw } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 
@@ -261,6 +261,30 @@ export default function TreatmentSession({
 
   const handleMethodSelection = async (method: string) => {
     await sendMessageWithContent(method);
+  };
+
+  const handleReset = async () => {
+    // Confirm with user before resetting
+    if (confirm('Are you sure you want to restart this session? All progress will be lost.')) {
+      // Reset all state
+      setMessages([]);
+      setUserInput('');
+      setIsLoading(false);
+      setIsSessionActive(false);
+      setCurrentStep('');
+      setHasError(false);
+      setErrorMessage('');
+      setSessionStats({
+        scriptedResponses: 0,
+        aiResponses: 0,
+        avgResponseTime: 0,
+        aiUsagePercent: 0
+      });
+      setLastResponseTime(0);
+      
+      // Start a new session
+      await startSession();
+    }
   };
 
   const updateStats = (data: any) => {
@@ -595,6 +619,18 @@ export default function TreatmentSession({
             ) : (
               /* Regular Text Input Interface */
               <div className="flex space-x-2 max-w-4xl w-full">
+                {/* Reset Button - Positioned to the left of voice indicator */}
+                <div className="flex items-center">
+                  <button
+                    onClick={handleReset}
+                    disabled={isLoading}
+                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    title="Restart session"
+                  >
+                    <RotateCcw className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+
                 {/* Voice Indicator - Positioned immediately to the left of input */}
                 {/* Only show indicators when voice features are enabled in accessibility settings */}
                 {((voice.isListening && voice.isVoiceInputEnabled) || (voice.isSpeaking && voice.isVoiceOutputEnabled)) && (
