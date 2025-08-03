@@ -386,20 +386,31 @@ export default function TreatmentSession({
       }
 
       const data = await response.json();
+      console.log('📤 Undo API Response data:', data);
+      
       if (!data.success) {
         throw new Error(data.error || 'Undo failed');
       }
       
+      // CRITICAL FIX: Use backend's currentStep, not step history
+      // Backend may have updated the step during undo processing
+      const backendCurrentStep = data.currentStep || previousState.currentStep;
+      console.log('🔄 Step synchronization:', {
+        frontendHistoryStep: previousState.currentStep,
+        backendUpdatedStep: data.currentStep,
+        usingStep: backendCurrentStep
+      });
+      
       // Only restore UI state if backend undo succeeded
       setMessages([...previousState.messages]);
-      setCurrentStep(previousState.currentStep);
+      setCurrentStep(backendCurrentStep); // Use backend's step, not history step
       setUserInput(previousState.userInput);
       setSessionStats({ ...previousState.sessionStats });
       setLastResponseTime(previousState.lastResponseTime);
       
       // Remove the last history entry
       setStepHistory(prev => prev.slice(0, -1));
-      console.log('Undo complete - both UI and backend synchronized');
+      console.log('Undo complete - both UI and backend synchronized with step:', backendCurrentStep);
       
     } catch (error) {
       console.error('Undo failed:', error);
