@@ -73,15 +73,24 @@ export const useGlobalVoice = ({
         const voiceService = (await import('@/services/voice/voice.service')).VoiceService.getInstance();
         voiceService['restartCallback'] = () => {
           console.log('🔄 Voice service requesting restart');
-          if (isVoiceInputEnabled && !disabled) {
+          if (isVoiceInputEnabled && !disabled && !isStartingListening.current) {
+            // Force reset voice service state to prevent race conditions
+            voiceService.forceResetState();
+            
             // Reset the overlap prevention flag to allow restart
             isStartingListening.current = false;
-            // Add a small delay to ensure proper cleanup
+            
+            // Add a delay to ensure complete cleanup
             setTimeout(() => {
-              if (isVoiceInputEnabled && !disabled) {
+              if (isVoiceInputEnabled && !disabled && !isStartingListening.current) {
+                console.log('🔄 Attempting restart after cleanup...');
                 startGlobalListening();
+              } else {
+                console.log('🚫 Restart cancelled - conditions changed during delay');
               }
-            }, 100);
+            }, 300); // Longer delay for better cleanup
+          } else {
+            console.log('🚫 Restart blocked - invalid conditions or already starting');
           }
         };
         

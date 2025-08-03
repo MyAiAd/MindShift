@@ -66,6 +66,9 @@ export class VoiceService {
   private restartCallback: (() => void) | null = null; // Callback to restart recognition after timeout
   private noSpeechRetryCount: number = 0; // Track consecutive no-speech errors
   private readonly MAX_NO_SPEECH_RETRIES = 3; // Maximum retries for no-speech errors
+  private immediateEndCount: number = 0; // Track immediate start/end cycles
+  private readonly MAX_IMMEDIATE_ENDS = 5; // Maximum immediate end cycles before backing off
+  private recognitionStartTime: number = 0; // Track when recognition started
 
   private constructor() {
     this.preferences = this.getStoredPreferences();
@@ -148,6 +151,7 @@ export class VoiceService {
     this.recognition.onstart = () => {
       console.log('🎙️ Speech recognition STARTED');
       this.isListening = true;
+      this.recognitionStartTime = Date.now(); // Track start time for immediate end detection
       this.notifyStatusChange({
         isListening: true,
         isSpeaking: false,
@@ -288,26 +292,71 @@ export class VoiceService {
 
     this.recognition.onend = () => {
       console.log('🏁 Speech recognition ENDED');
+      
+      // CRITICAL: Immediately reset listening state to prevent race conditions
       this.isListening = false;
+      
+      // Check if recognition ended immediately (within 2 seconds of starting)
+      const recognitionDuration = Date.now() - this.recognitionStartTime;
+      const wasImmediateEnd = recognitionDuration < 2000; // Less than 2 seconds
+      
+      if (wasImmediateEnd && !this.gotResult && !this.wasManualStop) {
+        this.immediateEndCount++;
+        console.log(`⚡ Immediate recognition end detected (${recognitionDuration}ms duration)`);
+        console.log(`🔢 Immediate end count: ${this.immediateEndCount}/${this.MAX_IMMEDIATE_ENDS}`);
+      }
       
       // Check if this was a silence timeout (no result and no manual stop)
       const wasSilenceTimeout = !this.gotResult && !this.wasManualStop;
       
       if (wasSilenceTimeout) {
-        console.log('🔄 Recognition ended due to silence timeout, will restart...');
-        // Restart after a brief delay if we have a restart callback
-        if (this.restartCallback) {
+        // Check if we've had too many immediate ends - implement backoff
+        if (this.immediateEndCount >= this.MAX_IMMEDIATE_ENDS) {
+          console.error(`❌ Too many immediate recognition ends (${this.immediateEndCount}). Microphone access may be blocked.`);
+          console.error('🔧 Troubleshooting: Check browser permissions, microphone hardware, and try refreshing the page.');
+          console.log('⏸️ Pausing auto-restart for 30 seconds to prevent infinite loops...');
+          
+          // Long pause before allowing restarts again
           setTimeout(() => {
-            if (this.restartCallback) {
-              console.log('🔄 Restarting recognition after silence timeout');
-              this.restartCallback();
-            }
-          }, 500);
+            console.log('🔄 Resetting immediate end counter, will try again...');
+            this.immediateEndCount = 0;
+          }, 30000); // 30 second pause
+          
+        } else if (wasImmediateEnd) {
+          console.log('🔄 Will restart after immediate end (likely microphone access issue)');
+          // Longer delay for immediate ends
+          if (this.restartCallback) {
+            setTimeout(() => {
+              if (this.restartCallback) {
+                console.log('🔄 Restarting recognition after immediate end');
+                // Force reset listening state before restart
+                this.isListening = false;
+                this.restartCallback();
+              }
+            }, 2000); // Longer delay for immediate ends
+          }
+        } else {
+          console.log('🔄 Recognition ended due to silence timeout, will restart...');
+          // Normal restart for actual silence timeouts
+          if (this.restartCallback) {
+            setTimeout(() => {
+              if (this.restartCallback) {
+                console.log('🔄 Restarting recognition after silence timeout');
+                // Force reset listening state before restart
+                this.isListening = false;
+                this.restartCallback();
+              }
+            }, 1000); // Normal delay for silence timeouts
+          }
         }
       } else if (this.gotResult) {
         console.log('✅ Recognition ended after successful result');
+        // Reset immediate end count on successful recognition
+        this.immediateEndCount = 0;
       } else if (this.wasManualStop) {
         console.log('🛑 Recognition ended due to manual stop');
+        // Reset immediate end count on manual stop (fresh start)
+        this.immediateEndCount = 0;
       }
       
       this.notifyStatusChange({
@@ -631,7 +680,26 @@ export class VoiceService {
       this.wasManualStop = true;
       this.restartCallback = null; // Clear any restart callback
       this.noSpeechRetryCount = 0; // Reset retry counter on manual stop
+      this.immediateEndCount = 0; // Reset immediate end counter on manual stop
       this.recognition.stop();
+    }
+  }
+
+  // Force reset recognition state - used before restart attempts to prevent race conditions
+  public forceResetState() {
+    console.log('🔧 Force resetting recognition state');
+    this.isListening = false;
+    this.gotResult = false;
+    this.wasManualStop = false;
+    this.recognitionStartTime = 0;
+    
+    // Stop any ongoing recognition
+    if (this.recognition) {
+      try {
+        this.recognition.stop();
+      } catch (e) {
+        // Ignore errors - recognition might not be running
+      }
     }
   }
 
