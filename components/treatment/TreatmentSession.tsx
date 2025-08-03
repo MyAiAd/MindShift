@@ -308,30 +308,21 @@ export default function TreatmentSession({
   };
 
   const handleUndo = () => {
-    if (stepHistory.length === 0) {
-      alert('No previous steps to undo.');
-      return;
+    if (stepHistory.length === 0 || isLoading) {
+      return; // Button should be disabled, but double-check
     }
 
-    if (isLoading) {
-      alert('Please wait for the current operation to complete.');
-      return;
-    }
-
-    // Confirm with user
-    if (confirm('Are you sure you want to undo the last step?')) {
-      const previousState = stepHistory[stepHistory.length - 1];
-      
-      // Restore previous state (SAFE - only touches React state, not state machine)
-      setMessages([...previousState.messages]);
-      setCurrentStep(previousState.currentStep);
-      setUserInput(previousState.userInput);
-      setSessionStats({ ...previousState.sessionStats });
-      setLastResponseTime(previousState.lastResponseTime);
-      
-      // Remove the last history entry
-      setStepHistory(prev => prev.slice(0, -1));
-    }
+    const previousState = stepHistory[stepHistory.length - 1];
+    
+    // Restore previous state (SAFE - only touches React state, not state machine)
+    setMessages([...previousState.messages]);
+    setCurrentStep(previousState.currentStep);
+    setUserInput(previousState.userInput);
+    setSessionStats({ ...previousState.sessionStats });
+    setLastResponseTime(previousState.lastResponseTime);
+    
+    // Remove the last history entry
+    setStepHistory(prev => prev.slice(0, -1));
   };
 
   const updateStats = (data: any) => {
