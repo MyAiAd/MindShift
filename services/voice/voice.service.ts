@@ -108,8 +108,16 @@ export class VoiceService {
     if (!this.recognition) return;
 
     this.recognition.continuous = false;
-    this.recognition.interimResults = false;
+    this.recognition.interimResults = true; // Enable interim results for better short word capture
     this.recognition.lang = 'en-US';
+    
+    // Set additional properties if available (Chrome-specific)
+    if ('maxAlternatives' in this.recognition) {
+      (this.recognition as any).maxAlternatives = 5; // Get multiple alternatives
+    }
+    if ('serviceURI' in this.recognition) {
+      // Use more sensitive recognition if available
+    }
 
     this.recognition.onstart = () => {
       this.isListening = true;
@@ -121,7 +129,54 @@ export class VoiceService {
     };
 
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0][0].transcript;
+      // Log all results for debugging
+      console.log('🎙️ Speech recognition results:', event.results);
+      for (let i = 0; i < event.results.length; i++) {
+        for (let j = 0; j < event.results[i].length; j++) {
+          console.log(`Result [${i}][${j}]: "${event.results[i][j].transcript}" (confidence: ${event.results[i][j].confidence})`);
+        }
+      }
+      
+      // Get the best transcript, prioritizing known keywords even with lower confidence
+      let bestTranscript = event.results[0][0].transcript;
+      let bestConfidence = event.results[0][0].confidence || 0;
+      
+      // Check all results for our target keywords
+      const keywords = ['yes', 'no', 'one', 'two', 'three', 'four', 'five', 'six', '1', '2', '3', '4', '5', '6'];
+      
+      for (let i = 0; i < event.results.length; i++) {
+        // Check if this is a final result (more reliable) or interim (less reliable but faster)
+        const isFinal = event.results[i].isFinal;
+        console.log(`Checking result [${i}] - isFinal: ${isFinal}`);
+        
+        for (let j = 0; j < event.results[i].length; j++) {
+          const transcript = event.results[i][j].transcript.toLowerCase().trim();
+          const confidence = event.results[i][j].confidence || 0;
+          
+          // If this result contains one of our keywords, prioritize it
+          if (keywords.some(keyword => transcript.includes(keyword))) {
+            console.log(`🎯 Found keyword in result [${i}][${j}]: "${transcript}" (confidence: ${confidence}, final: ${isFinal})`);
+            bestTranscript = event.results[i][j].transcript;
+            bestConfidence = confidence;
+            
+            // If we found a keyword in a final result, we're done
+            if (isFinal) break;
+          }
+          
+          // For interim results, lower the confidence threshold for keywords
+          const isKeywordMatch = keywords.some(keyword => transcript.includes(keyword));
+          const confidenceThreshold = isKeywordMatch ? 0.3 : 0.7; // Lower threshold for keywords
+          
+          // Use highest confidence result above threshold
+          if (confidence > bestConfidence && confidence >= confidenceThreshold) {
+            bestTranscript = event.results[i][j].transcript;
+            bestConfidence = confidence;
+          }
+        }
+      }
+      
+      console.log(`🎤 Final selected transcript: "${bestTranscript}" (confidence: ${bestConfidence})`);
+      
       this.isListening = false;
       
       this.notifyStatusChange({
@@ -130,8 +185,8 @@ export class VoiceService {
         error: null
       });
 
-      if (this.onTranscriptCallback) {
-        this.onTranscriptCallback(transcript);
+      if (this.onTranscriptCallback && bestTranscript.trim()) {
+        this.onTranscriptCallback(bestTranscript);
       }
     };
 

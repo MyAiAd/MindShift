@@ -241,6 +241,7 @@ export default function TreatmentSession({
   // Global voice system - integrates with accessibility settings
   const voice = useGlobalVoice({
     onVoiceTranscript: (transcript) => {
+      console.log('🎤 TreatmentSession received transcript:', transcript, 'for step:', currentStep);
       // Smart routing based on current UI context
       if (currentStep === 'analyze_response' || currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_checking_questions' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') {
         if (transcript === 'yes' || transcript === 'no') {
