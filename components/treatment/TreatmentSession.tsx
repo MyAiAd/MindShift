@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, RotateCcw } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2 } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 
@@ -29,6 +29,15 @@ interface SessionStats {
   aiUsagePercent: number;
 }
 
+interface StepHistoryEntry {
+  messages: TreatmentMessage[];
+  currentStep: string;
+  userInput: string;
+  sessionStats: SessionStats;
+  lastResponseTime: number;
+  timestamp: Date;
+}
+
 export default function TreatmentSession({ 
   sessionId, 
   userId, 
@@ -49,6 +58,7 @@ export default function TreatmentSession({
     aiUsagePercent: 0
   });
   const [lastResponseTime, setLastResponseTime] = useState<number>(0);
+  const [stepHistory, setStepHistory] = useState<StepHistoryEntry[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -112,6 +122,11 @@ export default function TreatmentSession({
         if (voice.isVoiceOutputEnabled) {
           voice.speakGlobally(welcomeMessage.content);
         }
+
+        // SAFE: Save initial state to history (after successful session start)
+        setTimeout(() => {
+          saveToHistory();
+        }, 100);
       } else {
         throw new Error(data.error || 'Failed to start session');
       }
@@ -188,6 +203,12 @@ export default function TreatmentSession({
           voice.speakGlobally(botMessage.content);
         }
 
+        // SAFE: Save to history AFTER successful state update (doesn't interfere with state machine)
+        // Small delay to ensure all state updates are complete
+        setTimeout(() => {
+          saveToHistory();
+        }, 100);
+
         // Check if session is complete
         if (data.sessionComplete) {
           setIsSessionActive(false);
@@ -263,27 +284,53 @@ export default function TreatmentSession({
     await sendMessageWithContent(method);
   };
 
-  const handleReset = async () => {
-    // Confirm with user before resetting
-    if (confirm('Are you sure you want to restart this session? All progress will be lost.')) {
-      // Reset all state
-      setMessages([]);
-      setUserInput('');
-      setIsLoading(false);
-      setIsSessionActive(false);
-      setCurrentStep('');
-      setHasError(false);
-      setErrorMessage('');
-      setSessionStats({
-        scriptedResponses: 0,
-        aiResponses: 0,
-        avgResponseTime: 0,
-        aiUsagePercent: 0
-      });
-      setLastResponseTime(0);
+  // Save current state to history (called AFTER successful operations)
+  const saveToHistory = () => {
+    // Only save if we have a valid current step and messages
+    if (!currentStep || messages.length === 0) {
+      return;
+    }
+
+    const historyEntry: StepHistoryEntry = {
+      messages: [...messages], // Deep copy
+      currentStep,
+      userInput,
+      sessionStats: { ...sessionStats }, // Deep copy
+      lastResponseTime,
+      timestamp: new Date()
+    };
+
+    setStepHistory(prev => {
+      const newHistory = [...prev, historyEntry];
+      // Keep only last 10 steps to prevent memory issues
+      return newHistory.slice(-10);
+    });
+  };
+
+  const handleUndo = () => {
+    if (stepHistory.length === 0) {
+      alert('No previous steps to undo.');
+      return;
+    }
+
+    if (isLoading) {
+      alert('Please wait for the current operation to complete.');
+      return;
+    }
+
+    // Confirm with user
+    if (confirm('Are you sure you want to undo the last step?')) {
+      const previousState = stepHistory[stepHistory.length - 1];
       
-      // Start a new session
-      await startSession();
+      // Restore previous state (SAFE - only touches React state, not state machine)
+      setMessages([...previousState.messages]);
+      setCurrentStep(previousState.currentStep);
+      setUserInput(previousState.userInput);
+      setSessionStats({ ...previousState.sessionStats });
+      setLastResponseTime(previousState.lastResponseTime);
+      
+      // Remove the last history entry
+      setStepHistory(prev => prev.slice(0, -1));
     }
   };
 
@@ -619,15 +666,15 @@ export default function TreatmentSession({
             ) : (
               /* Regular Text Input Interface */
               <div className="flex space-x-2 max-w-4xl w-full">
-                {/* Reset Button - Positioned to the left of voice indicator */}
+                {/* Undo Button - Positioned to the left of voice indicator */}
                 <div className="flex items-center">
                   <button
-                    onClick={handleReset}
-                    disabled={isLoading}
+                    onClick={handleUndo}
+                    disabled={isLoading || stepHistory.length === 0}
                     className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
-                    title="Restart session"
+                    title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
                   >
-                    <RotateCcw className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                   </button>
                 </div>
 
