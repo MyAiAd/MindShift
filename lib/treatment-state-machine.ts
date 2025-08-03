@@ -207,7 +207,17 @@ export class TreatmentStateMachine {
       'belief_step_e'           // "Feel 'that feeling'... what does 'that feeling' feel like?"
     ];
     
-    return problemShiftingSteps.includes(stepId) || realityShiftingSteps.includes(stepId) || blockageShiftingSteps.includes(stepId) || beliefShiftingSteps.includes(stepId);
+    // All modality intro steps that need linguistic processing for user input contextualisation
+    const introSteps = [
+      'problem_shifting_intro',  // Ensure problem is stated as a problem
+      'reality_shifting_intro',  // Ensure goal is stated as a goal  
+      'blockage_shifting_intro', // Ensure problem is stated as a problem
+      'identity_shifting_intro', // Ensure problem is stated as a problem
+      'trauma_shifting_intro',   // Ensure input is stated as a negative experience
+      'belief_shifting_intro'    // Ensure problem is stated as a problem
+    ];
+    
+    return problemShiftingSteps.includes(stepId) || realityShiftingSteps.includes(stepId) || blockageShiftingSteps.includes(stepId) || beliefShiftingSteps.includes(stepId) || introSteps.includes(stepId);
   }
 
   /**

@@ -173,9 +173,22 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       if (result.needsLinguisticProcessing) {
         console.log('Treatment API: Applying linguistic processing for natural language');
         
+        // For intro steps, use the problem statement from context, not the current user input
+        let textToProcess = userInput;
+        if (['problem_shifting_intro', 'reality_shifting_intro', 'blockage_shifting_intro', 
+             'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
+          // Get the stored problem statement that the intro step will use
+          const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+          textToProcess = treatmentContext?.problemStatement || 
+                        treatmentContext?.userResponses?.['restate_selected_problem'] || 
+                        treatmentContext?.userResponses?.['mind_shifting_explanation'] || 
+                        userInput;
+          console.log('Treatment API: Using problem statement for intro step processing:', textToProcess);
+        }
+        
         const linguisticResult = await aiAssistance.processLinguisticInterpretation(
           result.scriptedResponse,
-          userInput,
+          textToProcess,
           result.nextStep || 'unknown',
           sessionId
         );
@@ -184,6 +197,13 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
           // For feel_solution_state, integrate the AI result back into the template
           if (result.nextStep === 'feel_solution_state') {
             finalMessage = `What would you feel like if '${linguisticResult.improvedResponse}'?`;
+          } 
+          // For intro steps, replace the problem statement in the original scripted response
+          else if (['problem_shifting_intro', 'reality_shifting_intro', 'blockage_shifting_intro', 
+                   'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
+            // Replace the original problem statement in the scripted response with the AI-processed version
+            finalMessage = result.scriptedResponse.replace(new RegExp(`'${textToProcess.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`, 'g'), `'${linguisticResult.improvedResponse}'`);
+            console.log('Treatment API: Replaced problem statement in intro step with AI-processed version');
           } else {
             // For other steps (like body_sensation_check), use the full AI response
             finalMessage = linguisticResult.improvedResponse;

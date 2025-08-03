@@ -43,7 +43,14 @@ export class AIAssistanceManager {
     'blockage_step_b',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'blockage_step_d',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'belief_step_b',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
-    'belief_step_e'            // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+    'belief_step_e',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+    // Intro steps that need user input contextualisation
+    'problem_shifting_intro',  // Problem Shifting: Ensure input is stated as a problem
+    'reality_shifting_intro',  // Reality Shifting: Ensure input is stated as a goal
+    'blockage_shifting_intro', // Blockage Shifting: Ensure input is stated as a problem  
+    'identity_shifting_intro', // Identity Shifting: Ensure input is stated as a problem
+    'trauma_shifting_intro',   // Trauma Shifting: Ensure input is stated as a negative experience
+    'belief_shifting_intro'    // Belief Shifting: Ensure input is stated as a problem
   ];
 
   /**
@@ -351,6 +358,73 @@ Examples:
 - User: "hopeful and light" → "Feel hopeful... what does hopeful feel like?"
 
 Extract the core emotion and apply the template now:`;
+    } else if (stepId === 'problem_shifting_intro' || stepId === 'blockage_shifting_intro' || stepId === 'identity_shifting_intro' || stepId === 'belief_shifting_intro') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to rephrase the user's input as a clear problem statement.
+
+User's input: "${userInput}"
+
+Task: Rephrase the user's input as a problem statement that makes sense in the therapeutic context.
+
+Rules:
+1. Keep the user's core meaning intact
+2. Phrase it as something the user is experiencing as a problem
+3. Make it sound natural and grammatically correct
+4. Return ONLY the rephrased problem statement, nothing else
+5. Do not change the therapeutic script - only rephrase the user's input
+
+Examples:
+- User: "work life balance" → "struggling with work life balance"
+- User: "money" → "having money problems"  
+- User: "relationship" → "relationship difficulties"
+- User: "career" → "career challenges"
+- User: "anxiety" → "feeling anxious"
+- User: "I want to be confident" → "lack of confidence"
+
+Rephrase the user's input as a problem statement now:`;
+    } else if (stepId === 'reality_shifting_intro') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to rephrase the user's input as a clear goal statement.
+
+User's input: "${userInput}"
+
+Task: Rephrase the user's input as a positive goal statement that makes sense in the Reality Shifting context.
+
+Rules:
+1. Keep the user's core meaning intact
+2. Phrase it as something the user wants to achieve or experience
+3. Make it sound natural and grammatically correct
+4. Return ONLY the rephrased goal statement, nothing else
+5. Do not change the therapeutic script - only rephrase the user's input
+
+Examples:
+- User: "work life balance problems" → "better work life balance"
+- User: "I struggle with money" → "financial stability"
+- User: "relationship issues" → "a healthy relationship"
+- User: "lack of confidence" → "being confident"
+- User: "feeling anxious" → "feeling calm and peaceful"
+
+Rephrase the user's input as a goal statement now:`;
+    } else if (stepId === 'trauma_shifting_intro') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to rephrase the user's input as a negative experience statement.
+
+User's input: "${userInput}"
+
+Task: Rephrase the user's input as a negative experience that makes sense in the Trauma Shifting context.
+
+Rules:
+1. Keep the user's core meaning intact
+2. Phrase it as a negative experience or traumatic situation the user went through
+3. Make it sound natural and grammatically correct
+4. Return ONLY the rephrased negative experience statement, nothing else
+5. Do not change the therapeutic script - only rephrase the user's input
+
+Examples:
+- User: "work life balance" → "being overwhelmed by work demands"
+- User: "money problems" → "financial stress and hardship"
+- User: "relationship" → "painful relationship experiences"
+- User: "confidence issues" → "experiences that damaged my confidence"
+- User: "anxiety" → "traumatic experiences that caused anxiety"
+
+Rephrase the user's input as a negative experience statement now:`;
     }
     
     // Fallback for any other steps
