@@ -423,6 +423,120 @@ async function saveSessionToDatabase(
 }
 
 /**
+ * Get the correct phase for a given step ID
+ */
+function getPhaseForStep(stepId: string): string {
+  // Map steps to their correct phases based on state machine definition
+  const stepToPhaseMap: Record<string, string> = {
+    // Introduction phase
+    'mind_shifting_explanation': 'introduction',
+    
+    // Discovery phase  
+    'multiple_problems_selection': 'discovery',
+    'restate_selected_problem': 'discovery',
+    'analyze_response': 'discovery',
+    'restate_identity_problem': 'discovery',
+    'confirm_identity_problem': 'discovery',
+    'restate_belief_problem': 'discovery',
+    'confirm_belief_problem': 'discovery',
+    
+    // Method selection phase
+    'choose_method': 'method_selection',
+    
+    // Problem shifting phase
+    'problem_shifting_intro': 'problem_shifting',
+    'body_sensation_check': 'problem_shifting',
+    'what_needs_to_happen_step': 'problem_shifting',
+    'feel_solution_state': 'problem_shifting',
+    'feel_good_state': 'problem_shifting',
+    'what_happens_step': 'problem_shifting',
+    'check_if_still_problem': 'problem_shifting',
+    
+    // Blockage shifting phase
+    'blockage_shifting_intro': 'blockage_shifting',
+    'blockage_step_b': 'blockage_shifting',
+    'blockage_step_c': 'blockage_shifting',
+    'blockage_step_d': 'blockage_shifting',
+    'blockage_step_e': 'blockage_shifting',
+    'blockage_check_if_still_problem': 'blockage_shifting',
+    
+    // Identity shifting phase
+    'identity_shifting_intro': 'identity_shifting',
+    'identity_dissolve_step_a': 'identity_shifting',
+    'identity_dissolve_step_b': 'identity_shifting',
+    'identity_dissolve_step_c': 'identity_shifting',
+    'identity_dissolve_step_d': 'identity_shifting',
+    'identity_dissolve_step_e': 'identity_shifting',
+    'identity_check': 'identity_shifting',
+    'identity_problem_check': 'identity_shifting',
+    
+    // Reality shifting phase
+    'reality_shifting_intro': 'reality_shifting',
+    'reality_step_a2': 'reality_shifting',
+    'reality_step_a3': 'reality_shifting',
+    'reality_step_b': 'reality_shifting',
+    'reality_why_not_possible': 'reality_shifting',
+    'reality_feel_reason': 'reality_shifting',
+    'reality_feel_reason_2': 'reality_shifting',
+    'reality_feel_reason_3': 'reality_shifting',
+    'reality_checking_questions': 'reality_shifting',
+    'reality_certainty_check': 'reality_shifting',
+    'reality_doubts_check': 'reality_shifting',
+    'reality_integration_start': 'reality_shifting',
+    'reality_integration_helped': 'reality_shifting',
+    'reality_integration_awareness': 'reality_shifting',
+    'reality_integration_action': 'reality_shifting',
+    'reality_session_complete': 'reality_shifting',
+    
+    // Trauma shifting phase
+    'trauma_shifting_intro': 'trauma_shifting',
+    'trauma_dissolve_step_a': 'trauma_shifting',
+    'trauma_dissolve_step_b': 'trauma_shifting',
+    'trauma_dissolve_step_c': 'trauma_shifting',
+    'trauma_dissolve_step_d': 'trauma_shifting',
+    'trauma_dissolve_step_e': 'trauma_shifting',
+    'trauma_identity_check': 'trauma_shifting',
+    'trauma_experience_check': 'trauma_shifting',
+    'trauma_dig_deeper': 'trauma_shifting',
+    
+    // Belief shifting phase
+    'belief_shifting_intro': 'belief_shifting',
+    'belief_step_a': 'belief_shifting',
+    'belief_step_b': 'belief_shifting',
+    'belief_step_c': 'belief_shifting',
+    'belief_step_d': 'belief_shifting',
+    'belief_step_e': 'belief_shifting',
+    'belief_step_f': 'belief_shifting',
+    'belief_check_1': 'belief_shifting',
+    'belief_check_2': 'belief_shifting',
+    'belief_check_3': 'belief_shifting',
+    'belief_check_4': 'belief_shifting',
+    'belief_problem_check': 'belief_shifting',
+    
+    // Digging deeper phase
+    'digging_deeper_start': 'digging_deeper',
+    'restate_problem_future': 'digging_deeper',
+    'scenario_check': 'digging_deeper',
+    'anything_else_check': 'digging_deeper',
+    
+    // Integration phase
+    'integration_start': 'integration',
+    'awareness_question': 'integration',
+    'how_helped_question': 'integration',
+    'narrative_question': 'integration',
+    'intention_question': 'integration',
+    'action_question': 'integration',
+    'action_followup': 'integration',
+    'one_thing_question': 'integration',
+    'first_action_question': 'integration',
+    'when_will_you_do_this': 'integration',
+    'session_complete': 'integration'
+  };
+  
+  return stepToPhaseMap[stepId] || 'introduction'; // Default fallback
+}
+
+/**
  * Handle undo action - synchronize backend state with UI rollback
  */
 async function handleUndo(sessionId: string, undoToStep: string, userId: string) {
@@ -512,17 +626,22 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       }
     }
     
-    // Update context to the target step
-    try {
-      treatmentMachine.updateContextForUndo(sessionId, {
-        currentStep: undoToStep,
-        lastActivity: new Date()
-      });
-      console.log('Treatment API: Context updated successfully');
-    } catch (updateError) {
-      console.error('Treatment API: Error updating context:', updateError);
-      throw new Error(`Failed to update context: ${updateError instanceof Error ? updateError.message : 'Unknown update error'}`);
-    }
+      // Determine the correct phase for the target step
+  const targetPhase = getPhaseForStep(undoToStep);
+  console.log('Treatment API: Target step belongs to phase:', targetPhase);
+  
+  // Update context to the target step with correct phase
+  try {
+    treatmentMachine.updateContextForUndo(sessionId, {
+      currentStep: undoToStep,
+      currentPhase: targetPhase,
+      lastActivity: new Date()
+    });
+    console.log('Treatment API: Context updated successfully');
+  } catch (updateError) {
+    console.error('Treatment API: Error updating context:', updateError);
+    throw new Error(`Failed to update context: ${updateError instanceof Error ? updateError.message : 'Unknown update error'}`);
+  }
     
     // Get updated context for logging
     let updatedContext;
