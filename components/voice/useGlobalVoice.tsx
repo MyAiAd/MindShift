@@ -105,32 +105,94 @@ export const useGlobalVoice = ({
   const processTranscriptForContext = (transcript: string, step?: string): string => {
     const lowerTranscript = transcript.toLowerCase().trim();
 
-    // Handle yes/no button contexts
-    if (step === 'check_if_still_problem' || step?.includes('digging_deeper')) {
+    // Handle yes/no button contexts (buttons 1 and 2)
+    if (step === 'check_if_still_problem' || step === 'blockage_check_if_still_problem' || 
+        step === 'identity_dissolve_step_e' || step === 'identity_check' || step === 'identity_problem_check' || 
+        step === 'confirm_identity_problem' || step === 'reality_step_b' || step === 'reality_checking_questions' || 
+        step === 'reality_doubts_check' || step === 'trauma_dissolve_step_e' || step === 'trauma_identity_check' || 
+        step === 'trauma_experience_check' || step === 'trauma_dig_deeper' || step === 'belief_step_f' || 
+        step === 'belief_check_1' || step === 'belief_check_2' || step === 'belief_check_3' || 
+        step === 'belief_check_4' || step === 'belief_problem_check' || step === 'confirm_belief_problem' ||
+        (step?.includes('digging_deeper') && !step?.includes('start'))) {
+      // Number recognition for Yes/No
+      if (lowerTranscript.includes('1') || lowerTranscript.includes('one')) {
+        return 'yes';
+      }
+      if (lowerTranscript.includes('2') || lowerTranscript.includes('two')) {
+        return 'no';
+      }
+      // Text recognition (fallback)
       if (lowerTranscript.includes('yes') && !lowerTranscript.includes('no')) {
         return 'yes';
       }
       if (lowerTranscript.includes('no') && !lowerTranscript.includes('yes')) {
         return 'no';
       }
-      if (step?.includes('digging_deeper') && lowerTranscript.includes('maybe')) {
+    }
+
+    // Handle yes/no/maybe button contexts (buttons 1, 2, and 3)
+    if (step?.includes('digging_deeper_start')) {
+      // Number recognition for Yes/Maybe/No
+      if (lowerTranscript.includes('1') || lowerTranscript.includes('one')) {
+        return 'yes';
+      }
+      if (lowerTranscript.includes('2') || lowerTranscript.includes('two')) {
         return 'maybe';
+      }
+      if (lowerTranscript.includes('3') || lowerTranscript.includes('three')) {
+        return 'no';
+      }
+      // Text recognition (fallback)
+      if (lowerTranscript.includes('yes') && !lowerTranscript.includes('no')) {
+        return 'yes';
+      }
+      if (lowerTranscript.includes('maybe')) {
+        return 'maybe';
+      }
+      if (lowerTranscript.includes('no') && !lowerTranscript.includes('yes')) {
+        return 'no';
       }
     }
 
-    // Handle method selection context
+    // Handle method selection context (buttons 1-6)
     if (step === 'choose_method') {
+      // Number recognition for method selection
+      if (lowerTranscript.includes('1') || lowerTranscript.includes('one')) {
+        return 'Problem Shifting';
+      }
+      if (lowerTranscript.includes('2') || lowerTranscript.includes('two')) {
+        return 'Blockage Shifting';
+      }
+      if (lowerTranscript.includes('3') || lowerTranscript.includes('three')) {
+        return 'Identity Shifting';
+      }
+      if (lowerTranscript.includes('4') || lowerTranscript.includes('four')) {
+        return 'Reality Shifting';
+      }
+      if (lowerTranscript.includes('5') || lowerTranscript.includes('five')) {
+        return 'Trauma Shifting';
+      }
+      if (lowerTranscript.includes('6') || lowerTranscript.includes('six')) {
+        return 'Belief Shifting';
+      }
+      // Text recognition (fallback)
       if (lowerTranscript.includes('problem shifting') || lowerTranscript.includes('problem')) {
         return 'Problem Shifting';
+      }
+      if (lowerTranscript.includes('blockage shifting') || lowerTranscript.includes('blockage')) {
+        return 'Blockage Shifting';
       }
       if (lowerTranscript.includes('identity shifting') || lowerTranscript.includes('identity')) {
         return 'Identity Shifting';
       }
+      if (lowerTranscript.includes('reality shifting') || lowerTranscript.includes('reality')) {
+        return 'Reality Shifting';
+      }
+      if (lowerTranscript.includes('trauma shifting') || lowerTranscript.includes('trauma')) {
+        return 'Trauma Shifting';
+      }
       if (lowerTranscript.includes('belief shifting') || lowerTranscript.includes('belief')) {
         return 'Belief Shifting';
-      }
-      if (lowerTranscript.includes('blockage shifting') || lowerTranscript.includes('blockage')) {
-        return 'Blockage Shifting';
       }
     }
 
