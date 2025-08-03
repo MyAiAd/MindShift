@@ -33,17 +33,23 @@ export const useGlobalVoice = ({
 
   // Global voice input - always listening when enabled
   useEffect(() => {
+    console.log('Voice effect running:', { isVoiceInputEnabled, disabled, currentStep });
+    
     if (!isVoiceInputEnabled || disabled) {
+      console.log('Voice disabled:', { isVoiceInputEnabled, disabled });
       return;
     }
 
     const startGlobalListening = async () => {
       try {
+        console.log('Starting global listening...');
         setIsGlobalListening(true);
         const transcript = await startListening();
+        console.log('Received transcript:', transcript);
         
         if (transcript.trim() && onVoiceTranscript) {
           const processedTranscript = processTranscriptForContext(transcript.trim(), currentStep);
+          console.log('Processed transcript:', processedTranscript);
           onVoiceTranscript(processedTranscript);
         }
         
@@ -55,6 +61,7 @@ export const useGlobalVoice = ({
         }, 1000);
         
       } catch (error) {
+        console.error('Voice listening error:', error);
         // Restart listening after longer pause on error
         listeningTimeoutRef.current = setTimeout(() => {
           if (isVoiceInputEnabled && !disabled) {

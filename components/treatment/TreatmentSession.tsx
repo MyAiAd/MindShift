@@ -312,12 +312,19 @@ export default function TreatmentSession({
     });
   };
 
-  const handleUndo = () => {
+  const handleUndo = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    
+    console.log('Undo button clicked, history length:', stepHistory.length);
+    
     if (stepHistory.length === 0 || isLoading) {
+      console.log('Undo blocked:', { historyLength: stepHistory.length, isLoading });
       return; // Button should be disabled, but double-check
     }
 
     const previousState = stepHistory[stepHistory.length - 1];
+    console.log('Restoring previous state:', previousState);
     
     // Restore previous state (SAFE - only touches React state, not state machine)
     setMessages([...previousState.messages]);
@@ -328,6 +335,7 @@ export default function TreatmentSession({
     
     // Remove the last history entry
     setStepHistory(prev => prev.slice(0, -1));
+    console.log('Undo complete');
   };
 
   const updateStats = (data: any) => {
