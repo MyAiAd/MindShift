@@ -241,29 +241,38 @@ export default function TreatmentSession({
   // Global voice system - integrates with accessibility settings
   const voice = useGlobalVoice({
     onVoiceTranscript: (transcript) => {
+      console.log('Voice transcript received:', transcript, 'for step:', currentStep);
+      
       // Smart routing based on current UI context
       if (currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_checking_questions' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') {
+        console.log('Processing Yes/No button context:', transcript);
         if (transcript === 'yes' || transcript === 'no') {
+          console.log('Triggering Yes/No response:', transcript);
           handleYesNoResponse(transcript as 'yes' | 'no');
           return;
         }
       }
       
       if (currentStep === 'digging_deeper_start') {
+        console.log('Processing Yes/No/Maybe button context:', transcript);
         if (['yes', 'no', 'maybe'].includes(transcript)) {
+          console.log('Triggering Yes/No/Maybe response:', transcript);
           handleYesNoMaybeResponse(transcript as 'yes' | 'no' | 'maybe');
           return;
         }
       }
       
       if (currentStep === 'choose_method') {
+        console.log('Processing method selection context:', transcript);
         if (['Problem Shifting', 'Blockage Shifting', 'Identity Shifting', 'Reality Shifting', 'Trauma Shifting', 'Belief Shifting'].includes(transcript)) {
+          console.log('Triggering method selection:', transcript);
           handleMethodSelection(transcript);
           return;
         }
       }
       
       // For text input contexts, fill the input field
+      console.log('Filling text input with:', transcript);
       if (transcript && transcript !== 'yes' && transcript !== 'no' && transcript !== 'maybe') {
         setUserInput(transcript);
       }
@@ -514,6 +523,26 @@ export default function TreatmentSession({
                   </button>
                 </div>
 
+                {/* Voice Indicator for Button Interface */}
+                {((voice.isListening && voice.isVoiceInputEnabled) || (voice.isSpeaking && voice.isVoiceOutputEnabled)) && (
+                  <div className="flex items-center">
+                    <div className="flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
+                      {voice.isListening && voice.isVoiceInputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          <span>Listening</span>
+                        </div>
+                      )}
+                      {voice.isSpeaking && voice.isVoiceOutputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span>Speaking</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex flex-col space-y-3 flex-1">
                 <div className="flex-1 relative">
                   <input
@@ -567,6 +596,26 @@ export default function TreatmentSession({
                     <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                   </button>
                 </div>
+
+                {/* Voice Indicator for Maybe Interface */}
+                {((voice.isListening && voice.isVoiceInputEnabled) || (voice.isSpeaking && voice.isVoiceOutputEnabled)) && (
+                  <div className="flex items-center">
+                    <div className="flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
+                      {voice.isListening && voice.isVoiceInputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          <span>Listening</span>
+                        </div>
+                      )}
+                      {voice.isSpeaking && voice.isVoiceOutputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span>Speaking</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex flex-col space-y-3 flex-1">
                 <div className="flex-1 relative">
@@ -630,6 +679,26 @@ export default function TreatmentSession({
                     <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                   </button>
                 </div>
+
+                {/* Voice Indicator for Method Selection */}
+                {((voice.isListening && voice.isVoiceInputEnabled) || (voice.isSpeaking && voice.isVoiceOutputEnabled)) && (
+                  <div className="flex items-center">
+                    <div className="flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
+                      {voice.isListening && voice.isVoiceInputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          <span>Listening</span>
+                        </div>
+                      )}
+                      {voice.isSpeaking && voice.isVoiceOutputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span>Speaking</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex flex-col space-y-3 flex-1">
                 <div className="flex-1 relative">
