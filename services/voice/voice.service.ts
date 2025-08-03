@@ -70,6 +70,7 @@ export class VoiceService {
   private readonly MAX_IMMEDIATE_ENDS = 5; // Maximum immediate end cycles before backing off
   private recognitionStartTime: number = 0; // Track when recognition started
   private errorHandlerScheduledRestart: boolean = false; // Track if error handler already scheduled a restart
+  private errorHandlerGaveUp: boolean = false; // Track if error handler exhausted retries and gave up
 
   private constructor() {
     this.preferences = this.getStoredPreferences();
@@ -167,6 +168,8 @@ export class VoiceService {
       this.noSpeechRetryCount = 0;
       // Reset error restart flag on successful recognition
       this.errorHandlerScheduledRestart = false;
+      // Reset gave up flag on successful recognition - user proved microphone works
+      this.errorHandlerGaveUp = false;
       
       // Log all results for debugging
       console.log('🎙️ Speech recognition results:', event.results);
@@ -251,6 +254,7 @@ export class VoiceService {
           } else {
             console.error(`❌ Max no-speech retries reached (${this.MAX_NO_SPEECH_RETRIES}). Stopping auto-restart.`);
             console.error('🎤 Please check microphone setup and manually re-enable voice if needed.');
+            this.errorHandlerGaveUp = true; // Flag that error handler gave up - prevents onend from restarting
             shouldRestart = false;
           }
           break;
@@ -318,6 +322,13 @@ export class VoiceService {
         console.log('🔄 Error handler already scheduled restart, onend will not restart');
         this.errorHandlerScheduledRestart = false; // Reset flag
         return; // Don't schedule another restart
+      }
+      
+      // Check if error handler gave up due to max retries (don't restart if so)
+      if (this.errorHandlerGaveUp) {
+        console.log('🛑 Error handler gave up due to max retries - onend will not restart');
+        console.log('🎤 Voice recognition stopped. User must manually re-enable or check microphone.');
+        return; // Don't restart if error handler exhausted retries
       }
       
       if (wasSilenceTimeout) {
@@ -663,6 +674,7 @@ export class VoiceService {
       this.gotResult = false;
       this.wasManualStop = false;
       this.errorHandlerScheduledRestart = false; // Reset error restart flag for new session
+      this.errorHandlerGaveUp = false; // Reset gave up flag for new session - user gets fresh start
       // Note: Don't reset noSpeechRetryCount here - let it persist across retry attempts
       // It will be reset on successful recognition or manual stop
       
@@ -694,6 +706,7 @@ export class VoiceService {
       this.noSpeechRetryCount = 0; // Reset retry counter on manual stop
       this.immediateEndCount = 0; // Reset immediate end counter on manual stop
       this.errorHandlerScheduledRestart = false; // Reset error restart flag on manual stop
+      this.errorHandlerGaveUp = false; // Reset gave up flag on manual stop - fresh start for user
       this.recognition.stop();
     }
   }
@@ -706,6 +719,7 @@ export class VoiceService {
     this.wasManualStop = false;
     this.recognitionStartTime = 0;
     this.errorHandlerScheduledRestart = false;
+    this.errorHandlerGaveUp = false;
     
     // Stop any ongoing recognition
     if (this.recognition) {
