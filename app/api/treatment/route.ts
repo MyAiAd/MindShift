@@ -9,7 +9,7 @@ const aiAssistance = new AIAssistanceManager();
 
 export async function POST(request: NextRequest) {
   try {
-    const { sessionId, userInput, userId, action } = await request.json();
+    const { sessionId, userInput, userId, action, undoToStep } = await request.json();
 
     // Validate required fields
     if (!sessionId || !userId) {
@@ -67,9 +67,18 @@ export async function POST(request: NextRequest) {
       case 'status':
         return await handleGetStatus(sessionId, userId);
       
+      case 'undo':
+        if (!undoToStep) {
+          return NextResponse.json(
+            { error: 'undoToStep is required for undo action' },
+            { status: 400 }
+          );
+        }
+        return await handleUndo(sessionId, undoToStep, userId);
+      
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Use: start, continue, or status' },
+          { error: 'Invalid action. Use: start, continue, status, or undo' },
           { status: 400 }
         );
     }
@@ -398,6 +407,78 @@ async function saveSessionToDatabase(
     console.error('Database save error:', error);
     // Don't fail the request if database save fails
     console.warn('Treatment API: Continuing without database save');
+  }
+}
+
+/**
+ * Handle undo action - synchronize backend state with UI rollback
+ */
+async function handleUndo(sessionId: string, undoToStep: string, userId: string) {
+  try {
+    console.log('Treatment API: Handling undo to step:', undoToStep);
+    
+    // Get the current treatment context
+    const context = treatmentMachine.getContextForUndo(sessionId);
+    console.log('Current context before undo:', { 
+      currentStep: context.currentStep, 
+      currentPhase: context.currentPhase,
+      userResponses: Object.keys(context.userResponses) 
+    });
+    
+    // Clear any user responses that were made AFTER the step we're undoing to
+    // This prevents the state machine from using stale responses
+    const stepsToKeep = new Set<string>();
+    
+    // Add all steps from the target phase up to and including the undoToStep
+    const phaseSteps = treatmentMachine.getPhaseSteps(context.currentPhase);
+    if (phaseSteps) {
+      let foundTargetStep = false;
+      for (const step of phaseSteps) {
+        stepsToKeep.add(step.id);
+        if (step.id === undoToStep) {
+          foundTargetStep = true;
+          break;
+        }
+      }
+      
+      if (foundTargetStep) {
+        // Clear responses for steps after our target
+        treatmentMachine.clearUserResponsesForUndo(sessionId, stepsToKeep);
+        console.log('Cleared user responses after target step');
+      } else {
+        // If not found in current phase, clear all responses to be safe
+        treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
+        console.log('Cleared all user responses - undoing to different phase');
+      }
+    }
+    
+    // Update context to the target step
+    treatmentMachine.updateContextForUndo(sessionId, {
+      currentStep: undoToStep,
+      lastActivity: new Date()
+    });
+    
+    // Get updated context for logging
+    const updatedContext = treatmentMachine.getContextForUndo(sessionId);
+    console.log('Context after undo:', { 
+      currentStep: updatedContext.currentStep, 
+      currentPhase: updatedContext.currentPhase,
+      userResponses: Object.keys(updatedContext.userResponses) 
+    });
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Undo successful',
+      currentStep: undoToStep,
+      clearedResponses: Object.keys(updatedContext.userResponses).length
+    });
+    
+  } catch (error) {
+    console.error('Treatment API: Undo error:', error);
+    return NextResponse.json(
+      { error: 'Undo failed', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
 

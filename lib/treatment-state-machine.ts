@@ -2099,4 +2099,39 @@ export class TreatmentStateMachine {
   private buildAIContext(context: TreatmentContext, step: TreatmentStep): string {
     return `Phase: ${context.currentPhase}, Step: ${step.id}, Problem: ${context.problemStatement || 'Not set'}`;
   }
+
+  /**
+   * Public method to access treatment context for undo functionality
+   */
+  public getContextForUndo(sessionId: string): TreatmentContext {
+    return this.getOrCreateContext(sessionId);
+  }
+
+  /**
+   * Public method to update context for undo functionality
+   */
+  public updateContextForUndo(sessionId: string, updates: Partial<TreatmentContext>): void {
+    const context = this.getOrCreateContext(sessionId);
+    Object.assign(context, updates);
+  }
+
+  /**
+   * Public method to clear user responses for undo functionality
+   */
+  public clearUserResponsesForUndo(sessionId: string, stepsToKeep: Set<string>): void {
+    const context = this.getOrCreateContext(sessionId);
+    Object.keys(context.userResponses).forEach(stepId => {
+      if (!stepsToKeep.has(stepId)) {
+        delete context.userResponses[stepId];
+      }
+    });
+  }
+
+  /**
+   * Public method to get phase information for undo functionality
+   */
+  public getPhaseSteps(phaseName: string): TreatmentStep[] | null {
+    const phase = this.phases.get(phaseName);
+    return phase ? phase.steps : null;
+  }
 } 

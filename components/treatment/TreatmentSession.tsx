@@ -320,7 +320,7 @@ export default function TreatmentSession({
     });
   };
 
-  const handleUndo = (e?: React.MouseEvent) => {
+  const handleUndo = async (e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
     
@@ -334,16 +334,48 @@ export default function TreatmentSession({
     const previousState = stepHistory[stepHistory.length - 1];
     console.log('Restoring previous state:', previousState);
     
-    // Restore previous state (SAFE - only touches React state, not state machine)
-    setMessages([...previousState.messages]);
-    setCurrentStep(previousState.currentStep);
-    setUserInput(previousState.userInput);
-    setSessionStats({ ...previousState.sessionStats });
-    setLastResponseTime(previousState.lastResponseTime);
+    setIsLoading(true); // Prevent double-clicks during undo
     
-    // Remove the last history entry
-    setStepHistory(prev => prev.slice(0, -1));
-    console.log('Undo complete');
+    try {
+      // Sync with backend state machine - clear user response for the step we're undoing FROM
+      const response = await fetch('/api/treatment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          userId,
+          action: 'undo',
+          undoToStep: previousState.currentStep // Tell backend which step we're undoing TO
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Undo failed');
+      }
+      
+      // Only restore UI state if backend undo succeeded
+      setMessages([...previousState.messages]);
+      setCurrentStep(previousState.currentStep);
+      setUserInput(previousState.userInput);
+      setSessionStats({ ...previousState.sessionStats });
+      setLastResponseTime(previousState.lastResponseTime);
+      
+      // Remove the last history entry
+      setStepHistory(prev => prev.slice(0, -1));
+      console.log('Undo complete - both UI and backend synchronized');
+      
+    } catch (error) {
+      console.error('Undo failed:', error);
+      // Don't restore UI state if backend sync failed
+      // This prevents UI/backend desynchronization
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updateStats = (data: any) => {
