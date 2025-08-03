@@ -7,6 +7,7 @@ import { useVoiceService } from '@/services/voice/voice.service';
 interface GlobalVoiceOptions {
   onVoiceTranscript?: (transcript: string) => void;
   onAutoSpeak?: (text: string) => void;
+  onError?: (error: string) => void;
   currentStep?: string;
   disabled?: boolean;
 }
@@ -14,6 +15,7 @@ interface GlobalVoiceOptions {
 export const useGlobalVoice = ({
   onVoiceTranscript,
   onAutoSpeak,
+  onError,
   currentStep,
   disabled = false
 }: GlobalVoiceOptions) => {
@@ -95,6 +97,14 @@ export const useGlobalVoice = ({
             }, 500); // Even longer delay for complete cleanup
           } else {
             console.log('🚫 Restart blocked - voice disabled or invalid conditions:', { isVoiceInputEnabled, disabled });
+          }
+        };
+        
+        // Set up error callback for critical voice failures (like max retries reached)
+        voiceService['errorCallback'] = (errorMessage: string) => {
+          console.log('🚨 Voice service error:', errorMessage);
+          if (onError) {
+            onError(errorMessage);
           }
         };
         

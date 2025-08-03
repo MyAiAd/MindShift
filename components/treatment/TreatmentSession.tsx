@@ -59,6 +59,7 @@ export default function TreatmentSession({
   });
   const [lastResponseTime, setLastResponseTime] = useState<number>(0);
   const [stepHistory, setStepHistory] = useState<StepHistoryEntry[]>([]);
+  const [voiceError, setVoiceError] = useState<string>('');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -269,6 +270,12 @@ export default function TreatmentSession({
         setUserInput(transcript);
       }
     },
+    onError: (error) => {
+      console.log('🚨 Voice error received in TreatmentSession:', error);
+      setVoiceError(error);
+      // Auto-clear the error after 10 seconds
+      setTimeout(() => setVoiceError(''), 10000);
+    },
     currentStep,
     disabled: hasError || isLoading
   });
@@ -447,6 +454,27 @@ export default function TreatmentSession({
           </div>
         </div>
       </div>
+
+      {/* Voice Error Banner */}
+      {voiceError && (
+        <div className="bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-400 p-4 mx-4 rounded-r-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0" />
+              <p className="text-sm text-orange-700 dark:text-orange-200">
+                {voiceError}
+              </p>
+            </div>
+            <button
+              onClick={() => setVoiceError('')}
+              className="text-orange-400 hover:text-orange-600 ml-4"
+              title="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Messages Area - Scrollable with bottom padding for fixed input */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-40">

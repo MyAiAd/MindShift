@@ -64,6 +64,7 @@ export class VoiceService {
   private gotResult: boolean = false; // Track if we got a result before recognition ended
   private wasManualStop: boolean = false; // Track if recognition was manually stopped
   private restartCallback: (() => void) | null = null; // Callback to restart recognition after timeout
+  private errorCallback: ((error: string) => void) | null = null; // Callback for critical voice errors
   private noSpeechRetryCount: number = 0; // Track consecutive no-speech errors
   private readonly MAX_NO_SPEECH_RETRIES = 3; // Maximum retries for no-speech errors
   private immediateEndCount: number = 0; // Track immediate start/end cycles
@@ -252,8 +253,17 @@ export class VoiceService {
             console.log('   - Check system audio input levels');
             shouldRestart = true;
           } else {
-            console.error(`❌ Max no-speech retries reached (${this.MAX_NO_SPEECH_RETRIES}). Stopping auto-restart.`);
-            console.error('🎤 Please check microphone setup and manually re-enable voice if needed.');
+            const errorMessage = `❌ Max no-speech retries reached (${this.MAX_NO_SPEECH_RETRIES}). Stopping auto-restart.`;
+            const userMessage = '🎤 Microphone issue detected. Please check your microphone setup and click the voice button to try again.';
+            
+            console.error(errorMessage);
+            console.error(userMessage);
+            
+            // Notify UI of critical voice error
+            if (this.errorCallback) {
+              this.errorCallback(userMessage);
+            }
+            
             this.errorHandlerGaveUp = true; // Flag that error handler gave up - prevents onend from restarting
             shouldRestart = false;
           }
@@ -703,6 +713,7 @@ export class VoiceService {
       console.log('🛑 Manually stopping speech recognition');
       this.wasManualStop = true;
       this.restartCallback = null; // Clear any restart callback
+      this.errorCallback = null; // Clear any error callback
       this.noSpeechRetryCount = 0; // Reset retry counter on manual stop
       this.immediateEndCount = 0; // Reset immediate end counter on manual stop
       this.errorHandlerScheduledRestart = false; // Reset error restart flag on manual stop
