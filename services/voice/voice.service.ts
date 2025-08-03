@@ -64,6 +64,8 @@ export class VoiceService {
   private gotResult: boolean = false; // Track if we got a result before recognition ended
   private wasManualStop: boolean = false; // Track if recognition was manually stopped
   private restartCallback: (() => void) | null = null; // Callback to restart recognition after timeout
+  private noSpeechRetryCount: number = 0; // Track consecutive no-speech errors
+  private readonly MAX_NO_SPEECH_RETRIES = 3; // Maximum retries for no-speech errors
 
   private constructor() {
     this.preferences = this.getStoredPreferences();
@@ -156,6 +158,8 @@ export class VoiceService {
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
       // Mark that we got a result (prevents automatic restart on timeout)
       this.gotResult = true;
+      // Reset no-speech retry counter on successful recognition
+      this.noSpeechRetryCount = 0;
       
       // Log all results for debugging
       console.log('🎙️ Speech recognition results:', event.results);
@@ -221,6 +225,60 @@ export class VoiceService {
     this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('❌ Speech recognition ERROR:', event.error, event);
       this.isListening = false;
+      
+      // Handle different types of errors
+      let shouldRestart = false;
+      switch (event.error) {
+        case 'no-speech':
+          this.noSpeechRetryCount++;
+          console.log(`🔇 No speech detected (attempt ${this.noSpeechRetryCount}/${this.MAX_NO_SPEECH_RETRIES})`);
+          
+          if (this.noSpeechRetryCount < this.MAX_NO_SPEECH_RETRIES) {
+            console.log('🔄 Will retry - likely microphone issue or very quiet');
+            console.log('💡 Troubleshooting tips:');
+            console.log('   - Check if microphone is unmuted');
+            console.log('   - Ensure microphone permission is granted');
+            console.log('   - Try speaking closer to microphone');
+            console.log('   - Check system audio input levels');
+            shouldRestart = true;
+          } else {
+            console.error(`❌ Max no-speech retries reached (${this.MAX_NO_SPEECH_RETRIES}). Stopping auto-restart.`);
+            console.error('🎤 Please check microphone setup and manually re-enable voice if needed.');
+            shouldRestart = false;
+          }
+          break;
+        case 'aborted':
+          console.log('🛑 Recognition aborted - manual stop or system interrupt');
+          shouldRestart = false;
+          break;
+        case 'audio-capture':
+          console.error('🎤 Audio capture failed - microphone permission or hardware issue');
+          shouldRestart = false; // Don't restart on hardware issues
+          break;
+        case 'not-allowed':
+          console.error('🚫 Microphone permission denied');
+          shouldRestart = false;
+          break;
+        case 'network':
+          console.error('🌐 Network error during recognition');
+          shouldRestart = true; // Try restarting for network issues
+          break;
+        default:
+          console.error('❓ Unknown recognition error:', event.error);
+          shouldRestart = false;
+      }
+      
+      // Mark for potential restart if appropriate
+      if (shouldRestart && this.restartCallback) {
+        console.log(`🔄 Will attempt restart after ${event.error} error`);
+        setTimeout(() => {
+          if (this.restartCallback) {
+            console.log(`🔄 Restarting recognition after ${event.error} error`);
+            this.restartCallback();
+          }
+        }, 1000); // Longer delay for error recovery
+      }
+      
       this.notifyStatusChange({
         isListening: false,
         isSpeaking: false,
@@ -544,6 +602,8 @@ export class VoiceService {
       // Reset tracking flags
       this.gotResult = false;
       this.wasManualStop = false;
+      // Note: Don't reset noSpeechRetryCount here - let it persist across retry attempts
+      // It will be reset on successful recognition or manual stop
       
       // Set up one-time callback
       this.onTranscriptCallback = (transcript: string) => {
@@ -570,6 +630,7 @@ export class VoiceService {
       console.log('🛑 Manually stopping speech recognition');
       this.wasManualStop = true;
       this.restartCallback = null; // Clear any restart callback
+      this.noSpeechRetryCount = 0; // Reset retry counter on manual stop
       this.recognition.stop();
     }
   }

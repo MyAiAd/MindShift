@@ -69,12 +69,19 @@ export const useGlobalVoice = ({
         console.log('Starting global listening...');
         setIsGlobalListening(true);
         
-        // Set up restart callback for silence timeouts
+        // Set up restart callback for silence timeouts and recoverable errors
         const voiceService = (await import('@/services/voice/voice.service')).VoiceService.getInstance();
         voiceService['restartCallback'] = () => {
-          console.log('🔄 Voice service requesting restart after silence timeout');
+          console.log('🔄 Voice service requesting restart');
           if (isVoiceInputEnabled && !disabled) {
-            startGlobalListening();
+            // Reset the overlap prevention flag to allow restart
+            isStartingListening.current = false;
+            // Add a small delay to ensure proper cleanup
+            setTimeout(() => {
+              if (isVoiceInputEnabled && !disabled) {
+                startGlobalListening();
+              }
+            }, 100);
           }
         };
         
