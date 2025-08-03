@@ -24,6 +24,8 @@ export const useGlobalVoice = ({
   const [isAutoSpeaking, setIsAutoSpeaking] = useState(false);
   const listeningTimeoutRef = useRef<NodeJS.Timeout>();
   const lastSpokenMessageRef = useRef<string>('');
+  const isStartingListening = useRef(false); // Prevent overlapping sessions
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Check if voice input is enabled globally via accessibility settings
   const isVoiceInputEnabled = voicePrefs.listeningEnabled;
@@ -35,13 +37,28 @@ export const useGlobalVoice = ({
   useEffect(() => {
     console.log('Voice effect running:', { isVoiceInputEnabled, disabled, currentStep });
     
+    // Clear any existing debounce timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
     if (!isVoiceInputEnabled || disabled) {
       console.log('Voice disabled:', { isVoiceInputEnabled, disabled });
+      // Stop any ongoing listening
+      isStartingListening.current = false;
+      stopListening();
       return;
     }
 
     const startGlobalListening = async () => {
+      // Prevent overlapping sessions
+      if (isStartingListening.current) {
+        console.log('⚠️ Already starting listening, skipping...');
+        return;
+      }
+      
       try {
+        isStartingListening.current = true;
         console.log('Starting global listening...');
         setIsGlobalListening(true);
         const transcript = await startListening();
@@ -55,7 +72,7 @@ export const useGlobalVoice = ({
         
         // Restart listening after a brief pause (always listening mode)
         listeningTimeoutRef.current = setTimeout(() => {
-          if (isVoiceInputEnabled && !disabled) {
+          if (isVoiceInputEnabled && !disabled && !isStartingListening.current) {
             startGlobalListening();
           }
         }, 1000);
@@ -64,23 +81,32 @@ export const useGlobalVoice = ({
         console.error('Voice listening error:', error);
         // Restart listening after longer pause on error
         listeningTimeoutRef.current = setTimeout(() => {
-          if (isVoiceInputEnabled && !disabled) {
+          if (isVoiceInputEnabled && !disabled && !isStartingListening.current) {
             startGlobalListening();
           }
         }, 3000);
       } finally {
         setIsGlobalListening(false);
+        isStartingListening.current = false;
       }
     };
 
-    // Start listening with a small delay to avoid conflicts
-    const initTimeout = setTimeout(startGlobalListening, 500);
+    // Debounce the start to prevent rapid toggling
+    debounceTimeoutRef.current = setTimeout(() => {
+      if (isVoiceInputEnabled && !disabled) {
+        startGlobalListening();
+      }
+    }, 500);
     
     return () => {
-      clearTimeout(initTimeout);
+      console.log('🧹 Voice effect cleanup');
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
       if (listeningTimeoutRef.current) {
         clearTimeout(listeningTimeoutRef.current);
       }
+      isStartingListening.current = false;
       stopListening();
     };
   }, [isVoiceInputEnabled, disabled, voicePrefs.listeningEnabled]); // React to preference changes in real-time

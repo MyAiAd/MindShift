@@ -484,7 +484,7 @@ export class VoiceService {
   }
 
   public startListening(): Promise<string> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       console.log('🎤 startListening called');
       console.log('Recognition available:', !!this.recognition);
       console.log('Listening enabled:', this.preferences.listeningEnabled);
@@ -503,6 +503,15 @@ export class VoiceService {
         console.warn('⚠️ Already listening, rejecting new request');
         reject(new Error('Already listening'));
         return;
+      }
+
+      // Additional safety check - if recognition is still running from previous session
+      try {
+        this.recognition.stop();
+        // Give a small delay for cleanup
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (e) {
+        // Ignore errors - recognition might not be running
       }
 
       // Set up one-time callback
