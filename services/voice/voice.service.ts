@@ -152,7 +152,6 @@ export class VoiceService {
     this.checkMicrophonePermissions();
 
     this.recognition.onstart = () => {
-      console.log('🎙️ Speech recognition STARTED');
       this.isListening = true;
       this.recognitionStartTime = Date.now(); // Track start time for immediate end detection
       this.notifyStatusChange({
@@ -172,12 +171,10 @@ export class VoiceService {
       // Reset gave up flag on successful recognition - user proved microphone works
       this.errorHandlerGaveUp = false;
       
-      // Log all results for debugging
-      console.log('🎙️ Speech recognition results:', event.results);
-      for (let i = 0; i < event.results.length; i++) {
-        for (let j = 0; j < event.results[i].length; j++) {
-          console.log(`Result [${i}][${j}]: "${event.results[i][j].transcript}" (confidence: ${event.results[i][j].confidence})`);
-        }
+      // Minimal result logging for debugging when needed
+      if (event.results.length === 0) {
+        console.log('No speech results received');
+        return;
       }
       
       // Get the best transcript, prioritizing known keywords even with lower confidence
@@ -190,7 +187,6 @@ export class VoiceService {
       for (let i = 0; i < event.results.length; i++) {
         // Check if this is a final result (more reliable) or interim (less reliable but faster)
         const isFinal = event.results[i].isFinal;
-        console.log(`Checking result [${i}] - isFinal: ${isFinal}`);
         
         for (let j = 0; j < event.results[i].length; j++) {
           const transcript = event.results[i][j].transcript.toLowerCase().trim();
@@ -198,7 +194,6 @@ export class VoiceService {
           
           // If this result contains one of our keywords, prioritize it
           if (keywords.some(keyword => transcript.includes(keyword))) {
-            console.log(`🎯 Found keyword in result [${i}][${j}]: "${transcript}" (confidence: ${confidence}, final: ${isFinal})`);
             bestTranscript = event.results[i][j].transcript;
             bestConfidence = confidence;
             
@@ -217,8 +212,6 @@ export class VoiceService {
           }
         }
       }
-      
-      console.log(`🎤 Final selected transcript: "${bestTranscript}" (confidence: ${bestConfidence})`);
       
       this.isListening = false;
       
@@ -309,8 +302,6 @@ export class VoiceService {
     };
 
     this.recognition.onend = () => {
-      console.log('🏁 Speech recognition ENDED');
-      
       // CRITICAL: Immediately reset all recognition states to prevent race conditions
       this.isListening = false;
       this.startingRecognition = false;
@@ -321,8 +312,6 @@ export class VoiceService {
       
       if (wasImmediateEnd && !this.gotResult && !this.wasManualStop) {
         this.immediateEndCount++;
-        console.log(`⚡ Immediate recognition end detected (${recognitionDuration}ms duration)`);
-        console.log(`🔢 Immediate end count: ${this.immediateEndCount}/${this.MAX_IMMEDIATE_ENDS}`);
       }
       
       // Check if this was a silence timeout (no result and no manual stop)
@@ -330,15 +319,12 @@ export class VoiceService {
       
       // Check if error handler already scheduled a restart (avoid duplicate restarts)
       if (this.errorHandlerScheduledRestart) {
-        console.log('🔄 Error handler already scheduled restart, onend will not restart');
         this.errorHandlerScheduledRestart = false; // Reset flag
         return; // Don't schedule another restart
       }
       
       // Check if error handler gave up due to max retries (don't restart if so)
       if (this.errorHandlerGaveUp) {
-        console.log('🛑 Error handler gave up due to max retries - onend will not restart');
-        console.log('🎤 Voice recognition stopped. User must manually re-enable or check microphone.');
         return; // Don't restart if error handler exhausted retries
       }
       
@@ -404,7 +390,7 @@ export class VoiceService {
     if (typeof window === 'undefined') {
       return {
         speechEnabled: true,
-        listeningEnabled: true,
+        listeningEnabled: false, // 🎯 OFF by default for performance
         voiceRate: 1.0,
         voicePitch: 1.0,
         voiceVolume: 0.8,
@@ -421,7 +407,7 @@ export class VoiceService {
 
     return {
       speechEnabled: true,
-      listeningEnabled: true,
+      listeningEnabled: false, // 🎯 OFF by default for performance 
       voiceRate: 1.0,
       voicePitch: 1.0,
       voiceVolume: 0.8,
@@ -654,24 +640,18 @@ export class VoiceService {
 
   public startListening(): Promise<string> {
     return new Promise(async (resolve, reject) => {
-      console.log('🎤 startListening called');
-      console.log('Recognition available:', !!this.recognition);
-      console.log('Listening enabled:', this.preferences.listeningEnabled);
-      console.log('Currently listening:', this.isListening);
-      console.log('Starting recognition:', this.startingRecognition);
+      // Minimal logging for performance
+      if (!this.preferences.listeningEnabled) {
+        console.log('🎤 Voice listening disabled');
+      }
       
       if (!this.recognition || !this.preferences.listeningEnabled) {
-        console.error('❌ Speech recognition not available:', { 
-          recognition: !!this.recognition, 
-          listeningEnabled: this.preferences.listeningEnabled 
-        });
         reject(new Error('Speech recognition not available'));
         return;
       }
 
       // DOUBLE LOCK: Check both isListening and startingRecognition
       if (this.isListening || this.startingRecognition) {
-        console.warn('⚠️ Already listening or starting, rejecting new request');
         reject(new Error('Already listening or starting'));
         return;
       }
@@ -707,13 +687,11 @@ export class VoiceService {
 
       // Start recognition
       try {
-        console.log('🚀 Attempting to start speech recognition...');
         this.recognition.start();
-        console.log('✅ Speech recognition.start() called successfully');
         // Clear startingRecognition flag after successful start
         this.startingRecognition = false;
       } catch (error) {
-        console.error('❌ Error starting speech recognition:', error);
+        console.error('Voice recognition start error:', error);
         // Reset both flags on error
         this.isListening = false;
         this.startingRecognition = false;

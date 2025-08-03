@@ -148,11 +148,7 @@ export default function TreatmentSession({
   };
 
   const sendMessageWithContent = async (content: string) => {
-    console.log('📤 Sending message:', content);
-    console.log('📤 Current step when sending:', currentStep);
-    
     if (!content || isLoading) {
-      console.log('📤 Message blocked:', { content: !!content, isLoading });
       return;
     }
 
@@ -310,9 +306,6 @@ export default function TreatmentSession({
   };
 
   const handleMethodSelection = async (method: string) => {
-    console.log('🎯 Method selected:', method);
-    console.log('🎯 Current step before method selection:', currentStep);
-    console.log('🎯 Session state:', { sessionId, userId, isLoading, currentStep });
     await sendMessageWithContent(method);
   };
 
@@ -395,11 +388,9 @@ export default function TreatmentSession({
       // CRITICAL FIX: Use backend's currentStep, not step history
       // Backend may have updated the step during undo processing
       const backendCurrentStep = data.currentStep || previousState.currentStep;
-      console.log('🔄 Step synchronization:', {
-        frontendHistoryStep: previousState.currentStep,
-        backendUpdatedStep: data.currentStep,
-        usingStep: backendCurrentStep
-      });
+      
+      // Force a small delay to ensure state synchronization
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Only restore UI state if backend undo succeeded
       setMessages([...previousState.messages]);

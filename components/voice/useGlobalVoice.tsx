@@ -35,17 +35,14 @@ export const useGlobalVoice = ({
   // Check if voice output is enabled globally via accessibility settings  
   const isVoiceOutputEnabled = voicePrefs.speechEnabled && voicePrefs.autoSpeak;
 
-  // Global voice input - always listening when enabled
+  // Global voice input - only when explicitly enabled  
   useEffect(() => {
-    console.log('Voice effect running:', { isVoiceInputEnabled, disabled, currentStep });
-    
     // Clear any existing debounce timeout
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
     
     if (!isVoiceInputEnabled || disabled) {
-      console.log('Voice disabled:', { isVoiceInputEnabled, disabled });
       // Stop any ongoing listening
       isStartingListening.current = false;
       stopListening();
@@ -68,7 +65,6 @@ export const useGlobalVoice = ({
       
       try {
         isStartingListening.current = true;
-        console.log('Starting global listening...');
         setIsGlobalListening(true);
         
         // Set up restart callback for silence timeouts and recoverable errors
