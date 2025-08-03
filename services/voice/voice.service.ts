@@ -61,6 +61,9 @@ export class VoiceService {
   private onTranscriptCallback: ((transcript: string) => void) | null = null;
   private onStatusChangeCallback: ((status: VoiceStatus) => void) | null = null;
   private onPreferencesChangeCallback: ((preferences: VoicePreferences) => void) | null = null;
+  private gotResult: boolean = false; // Track if we got a result before recognition ended
+  private wasManualStop: boolean = false; // Track if recognition was manually stopped
+  private restartCallback: (() => void) | null = null; // Callback to restart recognition after timeout
 
   private constructor() {
     this.preferences = this.getStoredPreferences();
@@ -151,6 +154,9 @@ export class VoiceService {
     };
 
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
+      // Mark that we got a result (prevents automatic restart on timeout)
+      this.gotResult = true;
+      
       // Log all results for debugging
       console.log('🎙️ Speech recognition results:', event.results);
       for (let i = 0; i < event.results.length; i++) {
@@ -225,6 +231,27 @@ export class VoiceService {
     this.recognition.onend = () => {
       console.log('🏁 Speech recognition ENDED');
       this.isListening = false;
+      
+      // Check if this was a silence timeout (no result and no manual stop)
+      const wasSilenceTimeout = !this.gotResult && !this.wasManualStop;
+      
+      if (wasSilenceTimeout) {
+        console.log('🔄 Recognition ended due to silence timeout, will restart...');
+        // Restart after a brief delay if we have a restart callback
+        if (this.restartCallback) {
+          setTimeout(() => {
+            if (this.restartCallback) {
+              console.log('🔄 Restarting recognition after silence timeout');
+              this.restartCallback();
+            }
+          }, 500);
+        }
+      } else if (this.gotResult) {
+        console.log('✅ Recognition ended after successful result');
+      } else if (this.wasManualStop) {
+        console.log('🛑 Recognition ended due to manual stop');
+      }
+      
       this.notifyStatusChange({
         isListening: false,
         isSpeaking: false,
@@ -514,10 +541,15 @@ export class VoiceService {
         // Ignore errors - recognition might not be running
       }
 
+      // Reset tracking flags
+      this.gotResult = false;
+      this.wasManualStop = false;
+      
       // Set up one-time callback
       this.onTranscriptCallback = (transcript: string) => {
         console.log('📝 Transcript callback fired:', transcript);
         this.onTranscriptCallback = null;
+        this.restartCallback = null; // Clear restart callback on successful result
         resolve(transcript);
       };
 
@@ -535,6 +567,9 @@ export class VoiceService {
 
   public stopListening() {
     if (this.recognition && this.isListening) {
+      console.log('🛑 Manually stopping speech recognition');
+      this.wasManualStop = true;
+      this.restartCallback = null; // Clear any restart callback
       this.recognition.stop();
     }
   }

@@ -47,6 +47,13 @@ export const useGlobalVoice = ({
       // Stop any ongoing listening
       isStartingListening.current = false;
       stopListening();
+      
+      // Clear restart callback to prevent unwanted restarts
+      import('@/services/voice/voice.service').then(({ VoiceService }) => {
+        const voiceService = VoiceService.getInstance();
+        voiceService['restartCallback'] = null;
+      });
+      
       return;
     }
 
@@ -61,6 +68,16 @@ export const useGlobalVoice = ({
         isStartingListening.current = true;
         console.log('Starting global listening...');
         setIsGlobalListening(true);
+        
+        // Set up restart callback for silence timeouts
+        const voiceService = (await import('@/services/voice/voice.service')).VoiceService.getInstance();
+        voiceService['restartCallback'] = () => {
+          console.log('🔄 Voice service requesting restart after silence timeout');
+          if (isVoiceInputEnabled && !disabled) {
+            startGlobalListening();
+          }
+        };
+        
         const transcript = await startListening();
         console.log('Received transcript:', transcript);
         
@@ -108,6 +125,12 @@ export const useGlobalVoice = ({
       }
       isStartingListening.current = false;
       stopListening();
+      
+      // Clear restart callback on cleanup
+      import('@/services/voice/voice.service').then(({ VoiceService }) => {
+        const voiceService = VoiceService.getInstance();
+        voiceService['restartCallback'] = null;
+      });
     };
   }, [isVoiceInputEnabled, disabled, voicePrefs.listeningEnabled]); // React to preference changes in real-time
 
