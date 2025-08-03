@@ -95,18 +95,28 @@ export class VoiceService {
     }
 
     // Initialize Speech Recognition (Speech-to-Text)
+    console.log('🔍 Checking speech recognition support...');
+    console.log('webkitSpeechRecognition available:', 'webkitSpeechRecognition' in window);
+    console.log('SpeechRecognition available:', 'SpeechRecognition' in window);
+    
     if ('webkitSpeechRecognition' in window) {
+      console.log('✅ Using webkitSpeechRecognition');
       this.recognition = new (window as any).webkitSpeechRecognition();
       this.setupSpeechRecognition();
     } else if ('SpeechRecognition' in window) {
+      console.log('✅ Using SpeechRecognition');
       this.recognition = new (window as any).SpeechRecognition();
       this.setupSpeechRecognition();
+    } else {
+      console.error('❌ No speech recognition API available in this browser');
     }
   }
 
   private setupSpeechRecognition() {
     if (!this.recognition) return;
 
+    console.log('⚙️ Setting up speech recognition...');
+    
     this.recognition.continuous = false;
     this.recognition.interimResults = true; // Enable interim results for better short word capture
     this.recognition.lang = 'en-US';
@@ -114,12 +124,24 @@ export class VoiceService {
     // Set additional properties if available (Chrome-specific)
     if ('maxAlternatives' in this.recognition) {
       (this.recognition as any).maxAlternatives = 5; // Get multiple alternatives
+      console.log('✅ Set maxAlternatives = 5');
     }
     if ('serviceURI' in this.recognition) {
       // Use more sensitive recognition if available
+      console.log('✅ ServiceURI available');
     }
+    
+    console.log('✅ Speech recognition configured:', {
+      continuous: this.recognition.continuous,
+      interimResults: this.recognition.interimResults,
+      lang: this.recognition.lang
+    });
+    
+    // Check microphone permissions
+    this.checkMicrophonePermissions();
 
     this.recognition.onstart = () => {
+      console.log('🎙️ Speech recognition STARTED');
       this.isListening = true;
       this.notifyStatusChange({
         isListening: true,
@@ -191,6 +213,7 @@ export class VoiceService {
     };
 
     this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error('❌ Speech recognition ERROR:', event.error, event);
       this.isListening = false;
       this.notifyStatusChange({
         isListening: false,
@@ -200,6 +223,7 @@ export class VoiceService {
     };
 
     this.recognition.onend = () => {
+      console.log('🏁 Speech recognition ENDED');
       this.isListening = false;
       this.notifyStatusChange({
         isListening: false,
@@ -461,26 +485,40 @@ export class VoiceService {
 
   public startListening(): Promise<string> {
     return new Promise((resolve, reject) => {
+      console.log('🎤 startListening called');
+      console.log('Recognition available:', !!this.recognition);
+      console.log('Listening enabled:', this.preferences.listeningEnabled);
+      console.log('Currently listening:', this.isListening);
+      
       if (!this.recognition || !this.preferences.listeningEnabled) {
+        console.error('❌ Speech recognition not available:', { 
+          recognition: !!this.recognition, 
+          listeningEnabled: this.preferences.listeningEnabled 
+        });
         reject(new Error('Speech recognition not available'));
         return;
       }
 
       if (this.isListening) {
+        console.warn('⚠️ Already listening, rejecting new request');
         reject(new Error('Already listening'));
         return;
       }
 
       // Set up one-time callback
       this.onTranscriptCallback = (transcript: string) => {
+        console.log('📝 Transcript callback fired:', transcript);
         this.onTranscriptCallback = null;
         resolve(transcript);
       };
 
       // Start recognition
       try {
+        console.log('🚀 Attempting to start speech recognition...');
         this.recognition.start();
+        console.log('✅ Speech recognition.start() called successfully');
       } catch (error) {
+        console.error('❌ Error starting speech recognition:', error);
         reject(error);
       }
     });
@@ -509,6 +547,40 @@ export class VoiceService {
   private notifyStatusChange(status: VoiceStatus) {
     if (this.onStatusChangeCallback) {
       this.onStatusChangeCallback(status);
+    }
+  }
+
+  private async checkMicrophonePermissions() {
+    try {
+      console.log('🎤 Checking microphone permissions...');
+      
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('❌ getUserMedia not supported in this browser');
+        return;
+      }
+
+      // Check if we already have permission
+      if (navigator.permissions) {
+        const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        console.log('🔐 Microphone permission status:', permission.state);
+        
+        if (permission.state === 'denied') {
+          console.error('❌ Microphone permission denied');
+          return;
+        }
+      }
+
+      // Try to get microphone access to test
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log('✅ Microphone access granted and working');
+        // Stop the stream immediately
+        stream.getTracks().forEach(track => track.stop());
+      } catch (error) {
+        console.error('❌ Failed to get microphone access:', error);
+      }
+    } catch (error) {
+      console.error('❌ Error checking microphone permissions:', error);
     }
   }
 
