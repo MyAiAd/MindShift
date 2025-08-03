@@ -415,14 +415,26 @@ async function saveSessionToDatabase(
  */
 async function handleUndo(sessionId: string, undoToStep: string, userId: string) {
   try {
-    console.log('Treatment API: Handling undo to step:', undoToStep);
+    console.log('Treatment API: Handling undo to step:', undoToStep, 'for session:', sessionId);
     
-    // Get the current treatment context
-    const context = treatmentMachine.getContextForUndo(sessionId);
+    // Get the current treatment context with safety check
+    let context;
+    try {
+      context = treatmentMachine.getContextForUndo(sessionId);
+      console.log('Treatment API: Context retrieved successfully');
+    } catch (contextError) {
+      console.error('Treatment API: Failed to get context:', contextError);
+      throw new Error(`Failed to get treatment context: ${contextError instanceof Error ? contextError.message : 'Unknown context error'}`);
+    }
+    
+    if (!context) {
+      throw new Error('Treatment context is null or undefined');
+    }
+    
     console.log('Current context before undo:', { 
       currentStep: context.currentStep, 
       currentPhase: context.currentPhase,
-      userResponses: Object.keys(context.userResponses) 
+      userResponses: context.userResponses ? Object.keys(context.userResponses) : []
     });
     
     // Clear any user responses that were made AFTER the step we're undoing to
@@ -430,47 +442,85 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
     const stepsToKeep = new Set<string>();
     
     // Add all steps from the target phase up to and including the undoToStep
-    const phaseSteps = treatmentMachine.getPhaseSteps(context.currentPhase);
-    if (phaseSteps) {
+    let phaseSteps;
+    try {
+      phaseSteps = treatmentMachine.getPhaseSteps(context.currentPhase);
+      console.log('Treatment API: Phase steps retrieved for phase:', context.currentPhase);
+    } catch (phaseError) {
+      console.error('Treatment API: Failed to get phase steps:', phaseError);
+      // Clear all responses as a safe fallback
+      treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
+      console.log('Treatment API: Cleared all responses due to phase error');
+    }
+    
+    if (phaseSteps && Array.isArray(phaseSteps)) {
       let foundTargetStep = false;
       for (const step of phaseSteps) {
-        stepsToKeep.add(step.id);
-        if (step.id === undoToStep) {
-          foundTargetStep = true;
-          break;
+        if (step && step.id) {
+          stepsToKeep.add(step.id);
+          if (step.id === undoToStep) {
+            foundTargetStep = true;
+            break;
+          }
         }
       }
       
-      if (foundTargetStep) {
-        // Clear responses for steps after our target
-        treatmentMachine.clearUserResponsesForUndo(sessionId, stepsToKeep);
-        console.log('Cleared user responses after target step');
-      } else {
-        // If not found in current phase, clear all responses to be safe
+      try {
+        if (foundTargetStep) {
+          // Clear responses for steps after our target
+          treatmentMachine.clearUserResponsesForUndo(sessionId, stepsToKeep);
+          console.log('Treatment API: Cleared user responses after target step');
+        } else {
+          // If not found in current phase, clear all responses to be safe
+          treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
+          console.log('Treatment API: Cleared all user responses - undoing to different phase');
+        }
+      } catch (clearError) {
+        console.error('Treatment API: Error clearing user responses:', clearError);
+        // Continue - this isn't critical for the undo operation
+      }
+    } else {
+      console.log('Treatment API: No phase steps found, clearing all responses');
+      try {
         treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
-        console.log('Cleared all user responses - undoing to different phase');
+      } catch (clearError) {
+        console.error('Treatment API: Error clearing all responses:', clearError);
+        // Continue - this isn't critical for the undo operation
       }
     }
     
     // Update context to the target step
-    treatmentMachine.updateContextForUndo(sessionId, {
-      currentStep: undoToStep,
-      lastActivity: new Date()
-    });
+    try {
+      treatmentMachine.updateContextForUndo(sessionId, {
+        currentStep: undoToStep,
+        lastActivity: new Date()
+      });
+      console.log('Treatment API: Context updated successfully');
+    } catch (updateError) {
+      console.error('Treatment API: Error updating context:', updateError);
+      throw new Error(`Failed to update context: ${updateError instanceof Error ? updateError.message : 'Unknown update error'}`);
+    }
     
     // Get updated context for logging
-    const updatedContext = treatmentMachine.getContextForUndo(sessionId);
-    console.log('Context after undo:', { 
-      currentStep: updatedContext.currentStep, 
-      currentPhase: updatedContext.currentPhase,
-      userResponses: Object.keys(updatedContext.userResponses) 
-    });
+    let updatedContext;
+    try {
+      updatedContext = treatmentMachine.getContextForUndo(sessionId);
+      console.log('Context after undo:', { 
+        currentStep: updatedContext.currentStep, 
+        currentPhase: updatedContext.currentPhase,
+        userResponses: updatedContext.userResponses ? Object.keys(updatedContext.userResponses) : []
+      });
+    } catch (contextError) {
+      console.error('Treatment API: Error getting updated context:', contextError);
+      // Still try to return success since the main operation may have worked
+      updatedContext = { userResponses: {} };
+    }
     
     return NextResponse.json({
       success: true,
       message: 'Undo successful',
       currentStep: undoToStep,
-      clearedResponses: Object.keys(updatedContext.userResponses).length
+      clearedResponses: updatedContext.userResponses ? Object.keys(updatedContext.userResponses).length : 0
     });
     
   } catch (error) {
