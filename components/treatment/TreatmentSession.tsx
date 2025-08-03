@@ -148,7 +148,13 @@ export default function TreatmentSession({
   };
 
   const sendMessageWithContent = async (content: string) => {
-    if (!content || isLoading) return;
+    console.log('📤 Sending message:', content);
+    console.log('📤 Current step when sending:', currentStep);
+    
+    if (!content || isLoading) {
+      console.log('📤 Message blocked:', { content: !!content, isLoading });
+      return;
+    }
 
     const userMessage: TreatmentMessage = {
       id: Date.now().toString(),
@@ -162,22 +168,37 @@ export default function TreatmentSession({
     setIsLoading(true);
 
     try {
+      const requestBody = {
+        sessionId,
+        userId,
+        userInput: userMessage.content,
+        action: 'continue'
+      };
+      
+      console.log('📤 API Request body:', requestBody);
+      
       const response = await fetch('/api/treatment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          userId,
-          userInput: userMessage.content,
-          action: 'continue'
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
+        console.error('📤 API Response not OK:', response.status, response.statusText);
+        
+        // Try to get error details from response
+        try {
+          const errorData = await response.json();
+          console.error('📤 API Error details:', errorData);
+        } catch (parseError) {
+          console.error('📤 Could not parse error response:', parseError);
+        }
+        
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('📤 API Response data:', data);
       
       if (data.success) {
         const botMessage: TreatmentMessage = {
@@ -289,6 +310,9 @@ export default function TreatmentSession({
   };
 
   const handleMethodSelection = async (method: string) => {
+    console.log('🎯 Method selected:', method);
+    console.log('🎯 Current step before method selection:', currentStep);
+    console.log('🎯 Session state:', { sessionId, userId, isLoading, currentStep });
     await sendMessageWithContent(method);
   };
 

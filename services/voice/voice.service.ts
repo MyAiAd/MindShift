@@ -311,8 +311,9 @@ export class VoiceService {
     this.recognition.onend = () => {
       console.log('🏁 Speech recognition ENDED');
       
-      // CRITICAL: Immediately reset listening state to prevent race conditions
+      // CRITICAL: Immediately reset all recognition states to prevent race conditions
       this.isListening = false;
+      this.startingRecognition = false;
       
       // Check if recognition ended immediately (within 2 seconds of starting)
       const recognitionDuration = Date.now() - this.recognitionStartTime;
@@ -649,12 +650,15 @@ export class VoiceService {
       .substring(0, 200); // Limit length for problematic texts
   }
 
+  private startingRecognition = false; // Additional race condition prevention
+
   public startListening(): Promise<string> {
     return new Promise(async (resolve, reject) => {
       console.log('🎤 startListening called');
       console.log('Recognition available:', !!this.recognition);
       console.log('Listening enabled:', this.preferences.listeningEnabled);
       console.log('Currently listening:', this.isListening);
+      console.log('Starting recognition:', this.startingRecognition);
       
       if (!this.recognition || !this.preferences.listeningEnabled) {
         console.error('❌ Speech recognition not available:', { 
@@ -665,11 +669,16 @@ export class VoiceService {
         return;
       }
 
-      if (this.isListening) {
-        console.warn('⚠️ Already listening, rejecting new request');
-        reject(new Error('Already listening'));
+      // DOUBLE LOCK: Check both isListening and startingRecognition
+      if (this.isListening || this.startingRecognition) {
+        console.warn('⚠️ Already listening or starting, rejecting new request');
+        reject(new Error('Already listening or starting'));
         return;
       }
+
+      // Set both flags immediately to prevent any race conditions
+      this.startingRecognition = true;
+      this.isListening = true;
 
       // Additional safety check - if recognition is still running from previous session
       try {
@@ -679,9 +688,6 @@ export class VoiceService {
       } catch (e) {
         // Ignore errors - recognition might not be running
       }
-
-      // CRITICAL: Set isListening BEFORE starting recognition to prevent race conditions
-      this.isListening = true;
       
       // Reset tracking flags
       this.gotResult = false;
@@ -704,17 +710,20 @@ export class VoiceService {
         console.log('🚀 Attempting to start speech recognition...');
         this.recognition.start();
         console.log('✅ Speech recognition.start() called successfully');
+        // Clear startingRecognition flag after successful start
+        this.startingRecognition = false;
       } catch (error) {
         console.error('❌ Error starting speech recognition:', error);
-        // Reset isListening on error
+        // Reset both flags on error
         this.isListening = false;
+        this.startingRecognition = false;
         reject(error);
       }
     });
   }
 
   public stopListening() {
-    if (this.recognition && this.isListening) {
+    if (this.recognition && (this.isListening || this.startingRecognition)) {
       console.log('🛑 Manually stopping speech recognition');
       this.wasManualStop = true;
       this.restartCallback = null; // Clear any restart callback
@@ -723,6 +732,7 @@ export class VoiceService {
       this.immediateEndCount = 0; // Reset immediate end counter on manual stop
       this.errorHandlerScheduledRestart = false; // Reset error restart flag on manual stop
       this.errorHandlerGaveUp = false; // Reset gave up flag on manual stop - fresh start for user
+      this.startingRecognition = false; // Reset starting flag
       this.recognition.stop();
     }
   }
@@ -731,6 +741,7 @@ export class VoiceService {
   public forceResetState() {
     console.log('🔧 Force resetting recognition state');
     this.isListening = false;
+    this.startingRecognition = false;
     this.gotResult = false;
     this.wasManualStop = false;
     this.recognitionStartTime = 0;
