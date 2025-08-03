@@ -241,38 +241,29 @@ export default function TreatmentSession({
   // Global voice system - integrates with accessibility settings
   const voice = useGlobalVoice({
     onVoiceTranscript: (transcript) => {
-      console.log('Voice transcript received:', transcript, 'for step:', currentStep);
-      
       // Smart routing based on current UI context
-      if (currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_checking_questions' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') {
-        console.log('Processing Yes/No button context:', transcript);
+      if (currentStep === 'analyze_response' || currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_checking_questions' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') {
         if (transcript === 'yes' || transcript === 'no') {
-          console.log('Triggering Yes/No response:', transcript);
           handleYesNoResponse(transcript as 'yes' | 'no');
           return;
         }
       }
       
       if (currentStep === 'digging_deeper_start') {
-        console.log('Processing Yes/No/Maybe button context:', transcript);
         if (['yes', 'no', 'maybe'].includes(transcript)) {
-          console.log('Triggering Yes/No/Maybe response:', transcript);
           handleYesNoMaybeResponse(transcript as 'yes' | 'no' | 'maybe');
           return;
         }
       }
       
       if (currentStep === 'choose_method') {
-        console.log('Processing method selection context:', transcript);
         if (['Problem Shifting', 'Blockage Shifting', 'Identity Shifting', 'Reality Shifting', 'Trauma Shifting', 'Belief Shifting'].includes(transcript)) {
-          console.log('Triggering method selection:', transcript);
           handleMethodSelection(transcript);
           return;
         }
       }
       
       // For text input contexts, fill the input field
-      console.log('Filling text input with:', transcript);
       if (transcript && transcript !== 'yes' && transcript !== 'no' && transcript !== 'maybe') {
         setUserInput(transcript);
       }
@@ -508,7 +499,7 @@ export default function TreatmentSession({
       {isSessionActive && (
         <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 px-4 py-3 shadow-lg z-30">
           <div className="max-w-4xl mx-auto flex justify-end">
-            {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_checking_questions' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') ? (
+            {(currentStep === 'analyze_response' || currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_checking_questions' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') ? (
               /* Yes/No Button Interface */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Button Interface */}
