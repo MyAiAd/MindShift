@@ -7,7 +7,7 @@ export interface TreatmentPhase {
 export interface TreatmentStep {
   id: string;
   scriptedResponse: string | ((userInput?: string | undefined, context?: any) => string);
-  expectedResponseType: 'feeling' | 'problem' | 'experience' | 'yesno' | 'open';
+  expectedResponseType: 'feeling' | 'problem' | 'experience' | 'yesno' | 'open' | 'goal';
   validationRules: ValidationRule[];
   nextStep?: string;
   aiTriggers: AITrigger[];
@@ -181,11 +181,33 @@ export class TreatmentStateMachine {
   }
 
   /**
-   * Check if current step requires linguistic processing (only the specific body sensation check)
+   * Check if current step requires linguistic processing (for natural language flow)
    */
   private isLinguisticProcessingStep(stepId: string): boolean {
-    // The 5th speaking opportunity (body sensation check) and 7th speaking opportunity (feel solution state)
-    return stepId === 'body_sensation_check' || stepId === 'feel_solution_state';
+    // Problem Shifting steps
+    const problemShiftingSteps = ['body_sensation_check', 'feel_solution_state'];
+    
+    // Reality Shifting steps that need linguistic processing
+    const realityShiftingSteps = [
+      'reality_step_a2',        // "Feel that 'feeling'... what can you feel now?"
+      'reality_feel_reason',    // "Feel 'that reason'... what does it feel like?"
+      'reality_feel_reason_2',  // "Feel that 'feeling'... what can you feel now?"
+      'reality_feel_reason_3'   // "Feel that 'feeling'... what's the first thing you notice about it?"
+    ];
+    
+    // Blockage Shifting steps that need linguistic processing
+    const blockageShiftingSteps = [
+      'blockage_step_b',        // "Feel 'that feeling'... what does 'that feeling' feel like?"
+      'blockage_step_d'         // "Feel 'that feeling'... what does 'that feeling' feel like?"
+    ];
+    
+    // Belief Shifting steps that need linguistic processing
+    const beliefShiftingSteps = [
+      'belief_step_b',          // "Feel 'that feeling'... what does 'that feeling' feel like?"
+      'belief_step_e'           // "Feel 'that feeling'... what does 'that feeling' feel like?"
+    ];
+    
+    return problemShiftingSteps.includes(stepId) || realityShiftingSteps.includes(stepId) || blockageShiftingSteps.includes(stepId) || beliefShiftingSteps.includes(stepId);
   }
 
   /**
@@ -905,10 +927,28 @@ export class TreatmentStateMachine {
       maxDuration: 30,
       steps: [
         {
+          id: 'reality_goal_capture',
+          scriptedResponse: (userInput, context) => {
+            // Get the problem statement first
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this problem';
+            return `Instead of having '${problemStatement}', what do you want?`;
+          },
+          expectedResponseType: 'goal',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please tell me what you want instead.' }
+          ],
+          nextStep: 'reality_shifting_intro',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
           id: 'reality_shifting_intro',
           scriptedResponse: (userInput, context) => {
-            // Get the goal statement - Reality Shifting is goal-oriented
-            const goalStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'your goal';
+            // Store the goal from the previous step
+            const goalStatement = userInput || context?.metadata?.currentGoal || 'your goal';
+            context.metadata.currentGoal = goalStatement;
             return `Close your eyes and keep them closed throughout the process. We're going to work with your goal of '${goalStatement}'.\n\nFeel that '${goalStatement}' is coming to you... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
@@ -950,7 +990,7 @@ export class TreatmentStateMachine {
         {
           id: 'reality_step_b',
           scriptedResponse: (userInput, context) => {
-            const goalStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'your goal';
+            const goalStatement = context?.metadata?.currentGoal || 'your goal';
             return `Is it possible that '${goalStatement}' will not come to you?`;
           },
           expectedResponseType: 'yesno',
@@ -1024,7 +1064,7 @@ export class TreatmentStateMachine {
         {
           id: 'reality_checking_questions',
           scriptedResponse: (userInput, context) => {
-            const goalStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'your goal';
+            const goalStatement = context?.metadata?.currentGoal || 'your goal';
             return `Does it feel like '${goalStatement}' has already come to you?`;
           },
           expectedResponseType: 'yesno',
@@ -1070,7 +1110,7 @@ export class TreatmentStateMachine {
         {
           id: 'reality_integration_start',
           scriptedResponse: (userInput, context) => {
-            const goalStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'your goal';
+            const goalStatement = context?.metadata?.currentGoal || 'your goal';
             return `You can open your eyes now. How do you feel about '${goalStatement}' now?`;
           },
           expectedResponseType: 'open',
@@ -1791,7 +1831,7 @@ export class TreatmentStateMachine {
         } else if (methodChoice.includes('reality shifting')) {
           context.currentPhase = 'reality_shifting';
           context.metadata.selectedMethod = 'reality_shifting';
-          return 'reality_shifting_intro';
+          return 'reality_goal_capture';
         } else if (methodChoice.includes('trauma shifting')) {
           context.currentPhase = 'trauma_shifting';
           context.metadata.selectedMethod = 'trauma_shifting';

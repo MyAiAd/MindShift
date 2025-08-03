@@ -32,10 +32,18 @@ export class AIAssistanceManager {
   private readonly TARGET_COST_PER_SESSION = 0.05; // $0.05 per session target
   private usageStats: Map<string, SessionUsage> = new Map();
 
-  // Define specific steps that need linguistic interpretation (body sensation check and solution state)
+  // Define specific steps that need linguistic interpretation
   private readonly AI_LINGUISTIC_STEPS = [
-    'body_sensation_check',    // "Feel [contextualized emotion]... what happens in yourself when you feel [contextualized emotion]?"
-    'feel_solution_state'      // "What would you feel like if '[contextualized user response]' had already happened?"
+    'body_sensation_check',    // Problem Shifting: "Feel [contextualized emotion]... what happens in yourself when you feel [contextualized emotion]?"
+    'feel_solution_state',     // Problem Shifting: "What would you feel like if '[contextualized user response]' had already happened?"
+    'reality_step_a2',         // Reality Shifting: "Feel [contextualized emotion]... what can you feel now?"
+    'reality_feel_reason',     // Reality Shifting: "Feel [contextualized reason]... what does it feel like?"
+    'reality_feel_reason_2',   // Reality Shifting: "Feel [contextualized emotion]... what can you feel now?"
+    'reality_feel_reason_3',   // Reality Shifting: "Feel [contextualized emotion]... what's the first thing you notice about it?"
+    'blockage_step_b',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+    'blockage_step_d',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+    'belief_step_b',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+    'belief_step_e'            // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
   ];
 
   /**
@@ -198,7 +206,7 @@ Examples:
 
 Extract the core emotion and apply the template now:`;
     } else if (stepId === 'feel_solution_state') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's response into a natural past-tense phrase.
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's response into a natural, past-tense phrase.
 
 User's response: "${userInput}"
 Current scripted response: "${scriptedResponse}"
@@ -221,6 +229,128 @@ Examples:
 - User: "be happy" → "you were happy"
 
 Transform the user's response into a past-tense phrase now:`;
+    } else if (stepId === 'reality_step_a2' || stepId === 'reality_feel_reason_2') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
+
+User's response: "${userInput}"
+Current scripted response: "${scriptedResponse}"
+
+Task: Extract the core emotion/feeling from the user's response and use it in the template.
+
+Template: "Feel [contextualized emotion]... what can you feel now?"
+
+Rules:
+1. Extract the core emotional word from the user's response
+2. Remove unnecessary words like "like I am", "I feel", "it's", etc.
+3. Use only the core emotion in the template
+4. Keep the exact template structure
+5. Return only the rephrased response, nothing else
+
+Examples:
+- User: "like I am excited" → "Feel excited... what can you feel now?"
+- User: "I feel hopeful" → "Feel hopeful... what can you feel now?"
+- User: "it's overwhelming" → "Feel overwhelmed... what can you feel now?"
+- User: "nervous" → "Feel nervous... what can you feel now?"
+
+Extract the core emotion and apply the template now:`;
+    } else if (stepId === 'reality_feel_reason') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's reason response.
+
+User's response: "${userInput}"
+Current scripted response: "${scriptedResponse}"
+
+Task: Extract the core reason/concern from the user's response and use it in the template.
+
+Template: "Feel [contextualized reason]... what does it feel like?"
+
+Rules:
+1. Extract the core reason or concern from the user's response
+2. Remove unnecessary words and make it concise
+3. Use the core reason in the template
+4. Keep the exact template structure
+5. Return only the rephrased response, nothing else
+
+Examples:
+- User: "I might not be good enough for it" → "Feel not being good enough... what does it feel like?"
+- User: "there's too much competition" → "Feel the competition... what does it feel like?"
+- User: "I don't have the skills" → "Feel lacking the skills... what does it feel like?"
+- User: "failure" → "Feel failure... what does it feel like?"
+
+Extract the core reason and apply the template now:`;
+    } else if (stepId === 'reality_feel_reason_3') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
+
+User's response: "${userInput}"
+Current scripted response: "${scriptedResponse}"
+
+Task: Extract the core emotion/feeling from the user's response and use it in the template.
+
+Template: "Feel [contextualized emotion]... what's the first thing you notice about it?"
+
+Rules:
+1. Extract the core emotional word from the user's response
+2. Remove unnecessary words like "like I am", "I feel", "it's", etc.
+3. Use only the core emotion in the template
+4. Keep the exact template structure
+5. Return only the rephrased response, nothing else
+
+Examples:
+- User: "like I am defeated" → "Feel defeated... what's the first thing you notice about it?"
+- User: "I feel scared" → "Feel scared... what's the first thing you notice about it?"
+- User: "it's frustrating" → "Feel frustrated... what's the first thing you notice about it?"
+- User: "stuck" → "Feel stuck... what's the first thing you notice about it?"
+
+Extract the core emotion and apply the template now:`;
+    } else if (stepId === 'blockage_step_b' || stepId === 'blockage_step_d') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
+
+User's response: "${userInput}"
+Current scripted response: "${scriptedResponse}"
+
+Task: Extract the core emotion/feeling from the user's response and use it in the template.
+
+Template: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+
+Rules:
+1. Extract the core emotional word from the user's response
+2. Remove unnecessary words like "like I am", "I feel", "it's", etc.
+3. Use only the core emotion in both places in the template
+4. Keep the exact template structure
+5. Return only the rephrased response, nothing else
+
+Examples:
+- User: "like I am anxious" → "Feel anxious... what does anxious feel like?"
+- User: "I feel overwhelmed" → "Feel overwhelmed... what does overwhelmed feel like?"
+- User: "it's heavy and dark" → "Feel heavy... what does heavy feel like?"
+- User: "stuck" → "Feel stuck... what does stuck feel like?"
+- User: "frustrated and angry" → "Feel frustrated... what does frustrated feel like?"
+
+Extract the core emotion and apply the template now:`;
+    } else if (stepId === 'belief_step_b' || stepId === 'belief_step_e') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
+
+User's response: "${userInput}"
+Current scripted response: "${scriptedResponse}"
+
+Task: Extract the core emotion/feeling from the user's response and use it in the template.
+
+Template: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+
+Rules:
+1. Extract the core emotional word from the user's response
+2. Remove unnecessary words like "like I am", "I feel", "it's", etc.
+3. Use only the core emotion in both places in the template
+4. Keep the exact template structure
+5. Return only the rephrased response, nothing else
+
+Examples:
+- User: "like I am worthless" → "Feel worthless... what does worthless feel like?"
+- User: "I feel ashamed" → "Feel ashamed... what does ashamed feel like?"
+- User: "it's painful and heavy" → "Feel painful... what does painful feel like?"
+- User: "confident" → "Feel confident... what does confident feel like?"
+- User: "hopeful and light" → "Feel hopeful... what does hopeful feel like?"
+
+Extract the core emotion and apply the template now:`;
     }
     
     // Fallback for any other steps
