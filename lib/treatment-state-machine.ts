@@ -2104,6 +2104,10 @@ export class TreatmentStateMachine {
    * Public method to access treatment context for undo functionality
    */
   public getContextForUndo(sessionId: string): TreatmentContext {
+    if (!sessionId) {
+      throw new Error('SessionId is required for getContextForUndo');
+    }
+    console.log('TreatmentStateMachine: Getting context for sessionId:', sessionId);
     return this.getOrCreateContext(sessionId);
   }
 
@@ -2111,6 +2115,13 @@ export class TreatmentStateMachine {
    * Public method to update context for undo functionality
    */
   public updateContextForUndo(sessionId: string, updates: Partial<TreatmentContext>): void {
+    if (!sessionId) {
+      throw new Error('SessionId is required for updateContextForUndo');
+    }
+    if (!updates) {
+      throw new Error('Updates object is required for updateContextForUndo');
+    }
+    console.log('TreatmentStateMachine: Updating context for sessionId:', sessionId, 'with updates:', updates);
     const context = this.getOrCreateContext(sessionId);
     Object.assign(context, updates);
   }
@@ -2119,9 +2130,20 @@ export class TreatmentStateMachine {
    * Public method to clear user responses for undo functionality
    */
   public clearUserResponsesForUndo(sessionId: string, stepsToKeep: Set<string>): void {
+    if (!sessionId) {
+      throw new Error('SessionId is required for clearUserResponsesForUndo');
+    }
+    console.log('TreatmentStateMachine: Clearing user responses for sessionId:', sessionId);
     const context = this.getOrCreateContext(sessionId);
+    
+    if (!context.userResponses) {
+      console.log('TreatmentStateMachine: No user responses to clear');
+      return;
+    }
+    
     Object.keys(context.userResponses).forEach(stepId => {
       if (!stepsToKeep.has(stepId)) {
+        console.log('TreatmentStateMachine: Clearing response for step:', stepId);
         delete context.userResponses[stepId];
       }
     });
@@ -2131,7 +2153,17 @@ export class TreatmentStateMachine {
    * Public method to get phase information for undo functionality
    */
   public getPhaseSteps(phaseName: string): TreatmentStep[] | null {
+    if (!phaseName) {
+      console.error('TreatmentStateMachine: Phase name is required for getPhaseSteps');
+      return null;
+    }
+    console.log('TreatmentStateMachine: Getting steps for phase:', phaseName);
     const phase = this.phases.get(phaseName);
-    return phase ? phase.steps : null;
+    if (!phase) {
+      console.error('TreatmentStateMachine: Phase not found:', phaseName);
+      return null;
+    }
+    console.log('TreatmentStateMachine: Found', phase.steps.length, 'steps for phase:', phaseName);
+    return phase.steps;
   }
 } 

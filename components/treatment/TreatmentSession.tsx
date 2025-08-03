@@ -337,6 +337,14 @@ export default function TreatmentSession({
     setIsLoading(true); // Prevent double-clicks during undo
     
     try {
+      // Debug: Log the parameters being sent
+      console.log('Frontend: Sending undo request with parameters:', {
+        sessionId,
+        userId,
+        action: 'undo',
+        undoToStep: previousState.currentStep
+      });
+      
       // Sync with backend state machine - clear user response for the step we're undoing FROM
       const response = await fetch('/api/treatment', {
         method: 'POST',

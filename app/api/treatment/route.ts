@@ -417,6 +417,17 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
   try {
     console.log('Treatment API: Handling undo to step:', undoToStep, 'for session:', sessionId);
     
+    // Validate required parameters
+    if (!sessionId || typeof sessionId !== 'string') {
+      throw new Error(`Invalid sessionId: ${sessionId}`);
+    }
+    if (!undoToStep || typeof undoToStep !== 'string') {
+      throw new Error(`Invalid undoToStep: ${undoToStep}`);
+    }
+    if (!userId || typeof userId !== 'string') {
+      throw new Error(`Invalid userId: ${userId}`);
+    }
+    
     // Get the current treatment context with safety check
     let context;
     try {
