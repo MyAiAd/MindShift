@@ -9,7 +9,10 @@ const aiAssistance = new AIAssistanceManager();
 
 export async function POST(request: NextRequest) {
   try {
-    const { sessionId, userInput, userId, action, undoToStep } = await request.json();
+    console.log('Treatment API: POST request received');
+    const requestBody = await request.json();
+    console.log('Treatment API: Request body parsed:', requestBody);
+    const { sessionId, userInput, userId, action, undoToStep } = requestBody;
 
     // Validate required fields
     if (!sessionId || !userId) {
@@ -51,6 +54,7 @@ export async function POST(request: NextRequest) {
       // Continue execution - this handles cases where server-side auth isn't working
     }
 
+    console.log('Treatment API: Processing action:', action);
     switch (action) {
       case 'start':
         return await handleStartSession(sessionId, userId);
@@ -84,8 +88,16 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Treatment API error:', error);
+    console.error('Treatment API error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Treatment API error type:', typeof error);
+    console.error('Treatment API error constructor:', error?.constructor?.name);
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Internal server error', 
+        details: error instanceof Error ? error.message : 'Unknown error',
+        type: error?.constructor?.name || 'Unknown',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      },
       { status: 500 }
     );
   }

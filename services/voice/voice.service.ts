@@ -680,6 +680,9 @@ export class VoiceService {
         // Ignore errors - recognition might not be running
       }
 
+      // CRITICAL: Set isListening BEFORE starting recognition to prevent race conditions
+      this.isListening = true;
+      
       // Reset tracking flags
       this.gotResult = false;
       this.wasManualStop = false;
@@ -703,6 +706,8 @@ export class VoiceService {
         console.log('✅ Speech recognition.start() called successfully');
       } catch (error) {
         console.error('❌ Error starting speech recognition:', error);
+        // Reset isListening on error
+        this.isListening = false;
         reject(error);
       }
     });
