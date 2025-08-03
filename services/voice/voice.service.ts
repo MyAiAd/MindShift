@@ -69,6 +69,7 @@ export class VoiceService {
   private immediateEndCount: number = 0; // Track immediate start/end cycles
   private readonly MAX_IMMEDIATE_ENDS = 5; // Maximum immediate end cycles before backing off
   private recognitionStartTime: number = 0; // Track when recognition started
+  private errorHandlerScheduledRestart: boolean = false; // Track if error handler already scheduled a restart
 
   private constructor() {
     this.preferences = this.getStoredPreferences();
@@ -164,6 +165,8 @@ export class VoiceService {
       this.gotResult = true;
       // Reset no-speech retry counter on successful recognition
       this.noSpeechRetryCount = 0;
+      // Reset error restart flag on successful recognition
+      this.errorHandlerScheduledRestart = false;
       
       // Log all results for debugging
       console.log('🎙️ Speech recognition results:', event.results);
@@ -272,16 +275,17 @@ export class VoiceService {
           shouldRestart = false;
       }
       
-      // Mark for potential restart if appropriate
-      if (shouldRestart && this.restartCallback) {
-        console.log(`🔄 Will attempt restart after ${event.error} error`);
-        setTimeout(() => {
-          if (this.restartCallback) {
-            console.log(`🔄 Restarting recognition after ${event.error} error`);
-            this.restartCallback();
-          }
-        }, 1000); // Longer delay for error recovery
-      }
+              // Mark for potential restart if appropriate
+        if (shouldRestart && this.restartCallback) {
+          console.log(`🔄 Will attempt restart after ${event.error} error`);
+          this.errorHandlerScheduledRestart = true; // Flag that error handler is handling the restart
+          setTimeout(() => {
+            if (this.restartCallback) {
+              console.log(`🔄 Restarting recognition after ${event.error} error`);
+              this.restartCallback();
+            }
+          }, 1000); // Longer delay for error recovery
+        }
       
       this.notifyStatusChange({
         isListening: false,
@@ -308,6 +312,13 @@ export class VoiceService {
       
       // Check if this was a silence timeout (no result and no manual stop)
       const wasSilenceTimeout = !this.gotResult && !this.wasManualStop;
+      
+      // Check if error handler already scheduled a restart (avoid duplicate restarts)
+      if (this.errorHandlerScheduledRestart) {
+        console.log('🔄 Error handler already scheduled restart, onend will not restart');
+        this.errorHandlerScheduledRestart = false; // Reset flag
+        return; // Don't schedule another restart
+      }
       
       if (wasSilenceTimeout) {
         // Check if we've had too many immediate ends - implement backoff
@@ -651,6 +662,7 @@ export class VoiceService {
       // Reset tracking flags
       this.gotResult = false;
       this.wasManualStop = false;
+      this.errorHandlerScheduledRestart = false; // Reset error restart flag for new session
       // Note: Don't reset noSpeechRetryCount here - let it persist across retry attempts
       // It will be reset on successful recognition or manual stop
       
@@ -681,6 +693,7 @@ export class VoiceService {
       this.restartCallback = null; // Clear any restart callback
       this.noSpeechRetryCount = 0; // Reset retry counter on manual stop
       this.immediateEndCount = 0; // Reset immediate end counter on manual stop
+      this.errorHandlerScheduledRestart = false; // Reset error restart flag on manual stop
       this.recognition.stop();
     }
   }
@@ -692,6 +705,7 @@ export class VoiceService {
     this.gotResult = false;
     this.wasManualStop = false;
     this.recognitionStartTime = 0;
+    this.errorHandlerScheduledRestart = false;
     
     // Stop any ongoing recognition
     if (this.recognition) {

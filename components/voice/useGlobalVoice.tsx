@@ -73,24 +73,28 @@ export const useGlobalVoice = ({
         const voiceService = (await import('@/services/voice/voice.service')).VoiceService.getInstance();
         voiceService['restartCallback'] = () => {
           console.log('🔄 Voice service requesting restart');
-          if (isVoiceInputEnabled && !disabled && !isStartingListening.current) {
-            // Force reset voice service state to prevent race conditions
-            voiceService.forceResetState();
-            
-            // Reset the overlap prevention flag to allow restart
-            isStartingListening.current = false;
-            
+          console.log('Current state:', { isVoiceInputEnabled, disabled, isStartingListening: isStartingListening.current });
+          
+          // Force reset all states first
+          voiceService.forceResetState();
+          isStartingListening.current = false;
+          
+          if (isVoiceInputEnabled && !disabled) {
             // Add a delay to ensure complete cleanup
             setTimeout(() => {
-              if (isVoiceInputEnabled && !disabled && !isStartingListening.current) {
+              if (isVoiceInputEnabled && !disabled) {
                 console.log('🔄 Attempting restart after cleanup...');
+                console.log('Pre-restart state:', { isVoiceInputEnabled, disabled, isStartingListening: isStartingListening.current });
+                
+                // Double-check and reset the flag right before starting
+                isStartingListening.current = false;
                 startGlobalListening();
               } else {
-                console.log('🚫 Restart cancelled - conditions changed during delay');
+                console.log('🚫 Restart cancelled - voice disabled during delay');
               }
-            }, 300); // Longer delay for better cleanup
+            }, 500); // Even longer delay for complete cleanup
           } else {
-            console.log('🚫 Restart blocked - invalid conditions or already starting');
+            console.log('🚫 Restart blocked - voice disabled or invalid conditions:', { isVoiceInputEnabled, disabled });
           }
         };
         
