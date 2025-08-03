@@ -123,10 +123,10 @@ export default function TreatmentSession({
           voice.speakGlobally(welcomeMessage.content);
         }
 
-        // SAFE: Save initial state to history (after successful session start)
+        // SAFE: Save initial state to history (after successful session start and voice initialization)
         setTimeout(() => {
           saveToHistory();
-        }, 100);
+        }, 1000); // Longer delay to ensure voice system is fully initialized
       } else {
         throw new Error(data.error || 'Failed to start session');
       }
@@ -204,10 +204,10 @@ export default function TreatmentSession({
         }
 
         // SAFE: Save to history AFTER successful state update (doesn't interfere with state machine)
-        // Small delay to ensure all state updates are complete
+        // Delay to ensure all state updates are complete and voice system is stable
         setTimeout(() => {
           saveToHistory();
-        }, 100);
+        }, 500);
 
         // Check if session is complete
         if (data.sessionComplete) {
@@ -286,8 +286,13 @@ export default function TreatmentSession({
 
   // Save current state to history (called AFTER successful operations)
   const saveToHistory = () => {
-    // Only save if we have a valid current step and messages
-    if (!currentStep || messages.length === 0) {
+    // Only save if we have a valid current step, messages, and session is active
+    if (!currentStep || messages.length === 0 || !isSessionActive) {
+      return;
+    }
+
+    // Don't save if currently loading to avoid interfering with voice system
+    if (isLoading) {
       return;
     }
 
@@ -496,7 +501,20 @@ export default function TreatmentSession({
           <div className="max-w-4xl mx-auto flex justify-end">
             {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_checking_questions' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') ? (
               /* Yes/No Button Interface */
-              <div className="flex flex-col space-y-3 max-w-2xl w-full">
+              <div className="flex space-x-3 max-w-4xl w-full">
+                {/* Undo Button for Button Interface */}
+                <div className="flex items-center">
+                  <button
+                    onClick={handleUndo}
+                    disabled={isLoading || stepHistory.length === 0}
+                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
+                  >
+                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+
+                <div className="flex flex-col space-y-3 flex-1">
                 <div className="flex-1 relative">
                   <input
                     ref={inputRef}
@@ -531,10 +549,24 @@ export default function TreatmentSession({
                     <span>No</span>
                   </button>
                 </div>
+                </div>
               </div>
             ) : currentStep === 'digging_deeper_start' ? (
               /* Yes/No/Maybe Button Interface */
-              <div className="flex flex-col space-y-3 max-w-2xl w-full">
+              <div className="flex space-x-3 max-w-4xl w-full">
+                {/* Undo Button for Maybe Interface */}
+                <div className="flex items-center">
+                  <button
+                    onClick={handleUndo}
+                    disabled={isLoading || stepHistory.length === 0}
+                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
+                  >
+                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+
+                <div className="flex flex-col space-y-3 flex-1">
                 <div className="flex-1 relative">
                   <input
                     ref={inputRef}
@@ -577,10 +609,24 @@ export default function TreatmentSession({
                     <span>No</span>
                   </button>
                 </div>
+                </div>
               </div>
             ) : currentStep === 'choose_method' ? (
               /* Method Selection Button Interface */
-              <div className="flex flex-col space-y-3 max-w-4xl w-full">
+              <div className="flex space-x-3 max-w-4xl w-full">
+                {/* Undo Button for Method Selection */}
+                <div className="flex items-center">
+                  <button
+                    onClick={handleUndo}
+                    disabled={isLoading || stepHistory.length === 0}
+                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
+                  >
+                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+
+                <div className="flex flex-col space-y-3 flex-1">
                 <div className="flex-1 relative">
                   <input
                     ref={inputRef}
@@ -652,6 +698,7 @@ export default function TreatmentSession({
                       <span>Belief Shifting</span>
                     </button>
                   </div>
+                </div>
                 </div>
               </div>
             ) : (
