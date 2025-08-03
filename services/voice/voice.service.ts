@@ -105,21 +105,18 @@ export class VoiceService {
       }
     }
 
-    // Initialize Speech Recognition (Speech-to-Text)
-    console.log('🔍 Checking speech recognition support...');
-    console.log('webkitSpeechRecognition available:', 'webkitSpeechRecognition' in window);
-    console.log('SpeechRecognition available:', 'SpeechRecognition' in window);
-    
+    // 🎯 ONLY initialize Speech Recognition if listening is enabled
+    if (!this.preferences.listeningEnabled) {
+      return; // Skip speech recognition setup completely when disabled
+    }
+
+    // Initialize Speech Recognition (Speech-to-Text) - only when enabled
     if ('webkitSpeechRecognition' in window) {
-      console.log('✅ Using webkitSpeechRecognition');
       this.recognition = new (window as any).webkitSpeechRecognition();
       this.setupSpeechRecognition();
     } else if ('SpeechRecognition' in window) {
-      console.log('✅ Using SpeechRecognition');
       this.recognition = new (window as any).SpeechRecognition();
       this.setupSpeechRecognition();
-    } else {
-      console.error('❌ No speech recognition API available in this browser');
     }
   }
 
@@ -135,19 +132,7 @@ export class VoiceService {
     // Set additional properties if available (Chrome-specific)
     if ('maxAlternatives' in this.recognition) {
       (this.recognition as any).maxAlternatives = 5; // Get multiple alternatives
-      console.log('✅ Set maxAlternatives = 5');
     }
-    if ('serviceURI' in this.recognition) {
-      // Use more sensitive recognition if available
-      console.log('✅ ServiceURI available');
-    }
-    
-    console.log('✅ Speech recognition configured:', {
-      continuous: this.recognition.continuous,
-      interimResults: this.recognition.interimResults,
-      lang: this.recognition.lang
-    });
-    
     // Check microphone permissions
     this.checkMicrophonePermissions();
 
@@ -227,7 +212,6 @@ export class VoiceService {
     };
 
     this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error('❌ Speech recognition ERROR:', event.error, event);
       this.isListening = false;
       
       // Handle different types of errors
@@ -235,22 +219,11 @@ export class VoiceService {
       switch (event.error) {
         case 'no-speech':
           this.noSpeechRetryCount++;
-          console.log(`🔇 No speech detected (attempt ${this.noSpeechRetryCount}/${this.MAX_NO_SPEECH_RETRIES})`);
           
           if (this.noSpeechRetryCount < this.MAX_NO_SPEECH_RETRIES) {
-            console.log('🔄 Will retry - likely microphone issue or very quiet');
-            console.log('💡 Troubleshooting tips:');
-            console.log('   - Check if microphone is unmuted');
-            console.log('   - Ensure microphone permission is granted');
-            console.log('   - Try speaking closer to microphone');
-            console.log('   - Check system audio input levels');
             shouldRestart = true;
           } else {
-            const errorMessage = `❌ Max no-speech retries reached (${this.MAX_NO_SPEECH_RETRIES}). Stopping auto-restart.`;
             const userMessage = '🎤 Microphone issue detected. Please check your microphone setup and click the voice button to try again.';
-            
-            console.error(errorMessage);
-            console.error(userMessage);
             
             // Notify UI of critical voice error
             if (this.errorCallback) {
@@ -262,33 +235,24 @@ export class VoiceService {
           }
           break;
         case 'aborted':
-          console.log('🛑 Recognition aborted - manual stop or system interrupt');
           shouldRestart = false;
           break;
         case 'audio-capture':
-          console.error('🎤 Audio capture failed - microphone permission or hardware issue');
-          shouldRestart = false; // Don't restart on hardware issues
-          break;
         case 'not-allowed':
-          console.error('🚫 Microphone permission denied');
-          shouldRestart = false;
+          shouldRestart = false; // Don't restart on hardware/permission issues
           break;
         case 'network':
-          console.error('🌐 Network error during recognition');
           shouldRestart = true; // Try restarting for network issues
           break;
         default:
-          console.error('❓ Unknown recognition error:', event.error);
           shouldRestart = false;
       }
       
               // Mark for potential restart if appropriate
         if (shouldRestart && this.restartCallback) {
-          console.log(`🔄 Will attempt restart after ${event.error} error`);
           this.errorHandlerScheduledRestart = true; // Flag that error handler is handling the restart
           setTimeout(() => {
             if (this.restartCallback) {
-              console.log(`🔄 Restarting recognition after ${event.error} error`);
               this.restartCallback();
             }
           }, 1000); // Longer delay for error recovery
@@ -640,12 +604,17 @@ export class VoiceService {
 
   public startListening(): Promise<string> {
     return new Promise(async (resolve, reject) => {
-      // Minimal logging for performance
       if (!this.preferences.listeningEnabled) {
-        console.log('🎤 Voice listening disabled');
+        reject(new Error('Speech recognition disabled'));
+        return;
+      }
+
+      // 🎯 Lazy initialize speech recognition when first needed
+      if (!this.recognition) {
+        this.initializeSpeechRecognition();
       }
       
-      if (!this.recognition || !this.preferences.listeningEnabled) {
+      if (!this.recognition) {
         reject(new Error('Speech recognition not available'));
         return;
       }
@@ -717,7 +686,6 @@ export class VoiceService {
 
   // Force reset recognition state - used before restart attempts to prevent race conditions
   public forceResetState() {
-    console.log('🔧 Force resetting recognition state');
     this.isListening = false;
     this.startingRecognition = false;
     this.gotResult = false;
@@ -733,6 +701,21 @@ export class VoiceService {
       } catch (e) {
         // Ignore errors - recognition might not be running
       }
+    }
+  }
+
+  // 🎯 Initialize speech recognition when user enables it (lazy initialization)
+  public initializeSpeechRecognition(): void {
+    if (typeof window === 'undefined' || this.recognition) {
+      return; // Already initialized or not in browser
+    }
+
+    if ('webkitSpeechRecognition' in window) {
+      this.recognition = new (window as any).webkitSpeechRecognition();
+      this.setupSpeechRecognition();
+    } else if ('SpeechRecognition' in window) {
+      this.recognition = new (window as any).SpeechRecognition();
+      this.setupSpeechRecognition();
     }
   }
 
