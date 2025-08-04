@@ -451,6 +451,12 @@ function getPhaseForStep(stepId: string): string {
     // Introduction phase
     'mind_shifting_explanation': 'introduction',
     
+    // Work type selection phase
+    'work_type_selection': 'work_type_selection',
+    'confirm_statement': 'work_type_selection',
+    'route_to_method': 'work_type_selection',
+    'method_selected': 'work_type_selection',
+    
     // Discovery phase  
     'multiple_problems_selection': 'discovery',
     'restate_selected_problem': 'discovery',
