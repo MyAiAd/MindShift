@@ -420,13 +420,13 @@ export class TreatmentStateMachine {
             // Store the work type selection
             if (input.includes('1') || input.includes('problem')) {
               context.metadata.workType = 'problem';
-              return "Great! You've chosen to work on a Problem. Please tell me what the problem is in a few words.";
+              return "Ok sure. Tell me what the problem is in a few words.";
             } else if (input.includes('2') || input.includes('goal')) {
               context.metadata.workType = 'goal';
-              return "Great! You've chosen to work on a Goal. Please tell me what the goal is in a few words.";
+              return "Ok sure. Tell me what the goal is in a few words.";
             } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
               context.metadata.workType = 'negative_experience';
-              return "Great! You've chosen to work on a Negative Experience. Please tell me what the negative experience is in a few words.";
+              return "Ok sure. Tell me what the negative experience was in a few words.";
             } else {
               return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
             }
