@@ -14,8 +14,11 @@ export async function POST(request: NextRequest) {
     console.log('Treatment API: Request body parsed:', requestBody);
     const { sessionId, userInput, userId, action, undoToStep } = requestBody;
 
+    console.log('Treatment API: Extracted parameters:', { sessionId, userInput, userId, action, undoToStep });
+
     // Validate required fields
     if (!sessionId || !userId) {
+      console.log('Treatment API: Missing required fields');
       return NextResponse.json(
         { error: 'SessionId and userId are required' },
         { status: 400 }
@@ -152,10 +155,12 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
   try {
     console.log('Treatment API: Continuing session:', { sessionId, userId, userInput: userInput.substring(0, 50) + '...' });
     
+    console.log('Treatment API: About to call processUserInput...');
     // Process with state machine first (95% of cases)
     const result = await treatmentMachine.processUserInput(sessionId, userInput, { userId });
     console.log('Treatment API: State machine continue result:', result);
     
+    console.log('Treatment API: Creating final response object...');
     let finalResponse: any = {
       success: true,
       sessionId,
@@ -163,7 +168,9 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       usedAI: false
     };
 
+    console.log('Treatment API: Checking if can continue...', { canContinue: result.canContinue, hasScriptedResponse: !!result.scriptedResponse });
     if (result.canContinue && result.scriptedResponse) {
+      console.log('Treatment API: Processing successful result...');
       let finalMessage = result.scriptedResponse;
       let usedAI = false;
       let aiCost = 0;
