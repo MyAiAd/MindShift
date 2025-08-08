@@ -275,6 +275,20 @@ export default function TreatmentSession({
         }
       }
       
+      if (currentStep === 'mind_shifting_explanation') {
+        if (['1', '2', '3', 'problem', 'goal', 'negative experience', 'negative', 'experience'].includes(transcript.toLowerCase())) {
+          handleWorkTypeSelection(transcript);
+          return;
+        }
+      }
+      
+      if (currentStep === 'method_selected') {
+        if (['1', '2', '3', '4', 'problem shifting', 'identity shifting', 'belief shifting', 'blockage shifting'].includes(transcript.toLowerCase())) {
+          handleProblemMethodSelection(transcript);
+          return;
+        }
+      }
+      
       if (currentStep === 'choose_method') {
         if (['Problem Shifting', 'Blockage Shifting', 'Identity Shifting', 'Reality Shifting', 'Trauma Shifting', 'Belief Shifting'].includes(transcript)) {
           handleMethodSelection(transcript);
@@ -306,6 +320,18 @@ export default function TreatmentSession({
   };
 
   const handleMethodSelection = async (method: string) => {
+    await sendMessageWithContent(method);
+  };
+
+  const handleWorkTypeSelection = async (selection: string) => {
+    // Only accept valid selections
+    if (!['1', '2', '3', 'PROBLEM', 'GOAL', 'NEGATIVE EXPERIENCE'].includes(selection.toUpperCase())) {
+      return;
+    }
+    await sendMessageWithContent(selection);
+  };
+
+  const handleProblemMethodSelection = async (method: string) => {
     await sendMessageWithContent(method);
   };
 
@@ -756,6 +782,170 @@ export default function TreatmentSession({
                     <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">3</span>
                     <span>No</span>
                   </button>
+                </div>
+                </div>
+              </div>
+            ) : currentStep === 'mind_shifting_explanation' ? (
+              /* Work Type Selection Button Interface */
+              <div className="flex space-x-3 max-w-4xl w-full">
+                {/* Undo Button for Work Type Selection */}
+                <div className="flex items-center">
+                  <button
+                    onClick={handleUndo}
+                    disabled={isLoading || stepHistory.length === 0}
+                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
+                  >
+                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+
+                {/* Voice Indicator for Work Type Selection */}
+                {((voice.isListening && voice.isVoiceInputEnabled) || (voice.isSpeaking && voice.isVoiceOutputEnabled)) && (
+                  <div className="flex items-center">
+                    <div className="flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
+                      {voice.isListening && voice.isVoiceInputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          <span>Listening</span>
+                        </div>
+                      )}
+                      {voice.isSpeaking && voice.isVoiceOutputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span>Speaking</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col space-y-3 flex-1">
+                  {/* Remove the input field entirely for this step */}
+                  <div className="flex space-x-4 justify-center">
+                    <button
+                      onClick={() => handleWorkTypeSelection('1')}
+                      disabled={isLoading}
+                      className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
+                      <span>PROBLEM</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleWorkTypeSelection('2')}
+                      disabled={isLoading}
+                      className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
+                      <span>GOAL</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleWorkTypeSelection('3')}
+                      disabled={isLoading}
+                      className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">3</span>
+                      <span>NEGATIVE EXPERIENCE</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : currentStep === 'method_selected' ? (
+              /* Problem Method Selection Button Interface */
+              <div className="flex space-x-3 max-w-4xl w-full">
+                {/* Undo Button for Problem Method Selection */}
+                <div className="flex items-center">
+                  <button
+                    onClick={handleUndo}
+                    disabled={isLoading || stepHistory.length === 0}
+                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
+                  >
+                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+
+                {/* Voice Indicator for Problem Method Selection */}
+                {((voice.isListening && voice.isVoiceInputEnabled) || (voice.isSpeaking && voice.isVoiceOutputEnabled)) && (
+                  <div className="flex items-center">
+                    <div className="flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
+                      {voice.isListening && voice.isVoiceInputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          <span>Listening</span>
+                        </div>
+                      )}
+                      {voice.isSpeaking && voice.isVoiceOutputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span>Speaking</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col space-y-3 flex-1">
+                <div className="flex-1 relative">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Please select a method for your problem below..."
+                    disabled={true}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    maxLength={500}
+                  />
+                  <div className="absolute right-3 top-3 text-xs text-gray-400">
+                    Disabled
+                  </div>
+                </div>
+                
+                <div className="flex flex-col space-y-3 items-center">
+                  {/* Problem methods in 2x2 layout */}
+                  <div className="flex space-x-4 justify-center">
+                    <button
+                      onClick={() => handleProblemMethodSelection('1')}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
+                      <span>PROBLEM SHIFTING</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleProblemMethodSelection('2')}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">2</span>
+                      <span>IDENTITY SHIFTING</span>
+                    </button>
+                  </div>
+                  
+                  <div className="flex space-x-4 justify-center">
+                    <button
+                      onClick={() => handleProblemMethodSelection('3')}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">3</span>
+                      <span>BELIEF SHIFTING</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleProblemMethodSelection('4')}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <span className="bg-orange-700 px-2 py-1 rounded text-sm font-bold">4</span>
+                      <span>BLOCKAGE SHIFTING</span>
+                    </button>
+                  </div>
                 </div>
                 </div>
               </div>
