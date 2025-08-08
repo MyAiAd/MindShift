@@ -275,7 +275,7 @@ export default function TreatmentSession({
         }
       }
       
-      if (currentStep === 'mind_shifting_explanation') {
+      if (currentStep === 'work_type_selection') {
         if (['1', '2', '3', 'problem', 'goal', 'negative experience', 'negative', 'experience'].includes(transcript.toLowerCase())) {
           handleWorkTypeSelection(transcript);
           return;
@@ -323,21 +323,21 @@ export default function TreatmentSession({
     await sendMessageWithContent(method);
   };
 
-  const handleWorkTypeSelection = async (selection: string) => {
+  const handleWorkTypeSelection = async (method: string) => {
     // Prevent multiple clicks while processing
     if (isLoading) {
       return;
     }
 
     // Only accept valid selections
-    if (!['1', '2', '3', 'PROBLEM', 'GOAL', 'NEGATIVE EXPERIENCE'].includes(selection.toUpperCase())) {
+    if (!['1', '2', '3', 'PROBLEM', 'GOAL', 'NEGATIVE EXPERIENCE'].includes(method.toUpperCase())) {
       return;
     }
 
     // Set loading state immediately
     setIsLoading(true);
     try {
-      await sendMessageWithContent(selection);
+      await sendMessageWithContent(method);
     } catch (error) {
       console.error('Error in work type selection:', error);
     }
@@ -797,7 +797,7 @@ export default function TreatmentSession({
                 </div>
                 </div>
               </div>
-            ) : currentStep === 'mind_shifting_explanation' ? (
+            ) : currentStep === 'work_type_selection' ? (
               /* Work Type Selection Button Interface */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Work Type Selection */}
@@ -1147,6 +1147,8 @@ export default function TreatmentSession({
               'Select your answer using the buttons above'
             ) : currentStep === 'digging_deeper_start' ? (
               'Select your answer using the buttons above'
+            ) : currentStep === 'work_type_selection' ? (
+              'Select what you want to work on using the buttons above'
             ) : currentStep === 'choose_method' ? (
               'Select your preferred method using the buttons above'
             ) : (
