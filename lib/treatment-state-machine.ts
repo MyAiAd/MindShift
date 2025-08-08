@@ -554,21 +554,35 @@ export class TreatmentStateMachine {
             }
             
             const workType = context.metadata.workType || 'item';
-            const statement = userInput || '';
-            const words = statement.split(' ').length || 0;
+            const input = (userInput || '').toLowerCase();
             
-            // Store the user's description
-            context.metadata.problemStatement = statement;
-            
-            // Provide confirmation based on work type
-            if (workType === 'problem') {
-              return `So you want to work on '${statement}'. Is that correct?`;
-            } else if (workType === 'goal') {
-              return `So you want to work on the goal of '${statement}'. Is that correct?`;
-            } else if (workType === 'negative_experience') {
-              return `So you want to work on the negative experience of '${statement}'. Is that correct?`;
+            // Check if this is the initial transition from selection (input will be "1", "2", "3", etc.)
+            if (input === '1' || input === '2' || input === '3' || 
+                input.includes('problem') || input.includes('goal') || input.includes('negative') || input.includes('experience')) {
+              // First time here - ask for description
+              if (workType === 'problem') {
+                return "Tell me what the problem is in a few words.";
+              } else if (workType === 'goal') {
+                return "Tell me what the goal is in a few words.";
+              } else if (workType === 'negative_experience') {
+                return "Tell me what the negative experience was in a few words.";
+              } else {
+                return "Tell me what you want to work on in a few words.";
+              }
             } else {
-              return `So you want to work on '${statement}'. Is that correct?`;
+              // Second time here - user provided actual description, store and confirm
+              const statement = userInput || '';
+              context.metadata.problemStatement = statement;
+              
+              if (workType === 'problem') {
+                return `So you want to work on '${statement}'. Is that correct?`;
+              } else if (workType === 'goal') {
+                return `So you want to work on the goal of '${statement}'. Is that correct?`;
+              } else if (workType === 'negative_experience') {
+                return `So you want to work on the negative experience of '${statement}'. Is that correct?`;
+              } else {
+                return `So you want to work on '${statement}'. Is that correct?`;
+              }
             }
           },
           expectedResponseType: 'description',
@@ -585,22 +599,25 @@ export class TreatmentStateMachine {
         {
           id: 'confirm_statement',
           scriptedResponse: (userInput, context) => {
-            const workType = context.metadata.workType || 'item';
-            const statement = userInput || '';
-            const words = statement.split(' ').length || 0;
+            const input = (userInput || '').toLowerCase();
             
-            if (words <= 20 && statement) {
-              // Store the statement
-              context.problemStatement = statement; // Keep using problemStatement for compatibility
-              context.metadata.problemStatement = statement;
-              
-              const typeLabel = workType === 'problem' ? 'problem' : 
-                               workType === 'goal' ? 'goal' : 'negative experience';
-              return `OK what I heard you say is '${statement}' - is that right for the ${typeLabel} you want to work on?`;
-            } else if (statement) {
-              return `OK I understand what you have said, but please tell me what the ${workType === 'problem' ? 'problem' : workType === 'goal' ? 'goal' : 'negative experience'} is in just a few words`;
+            // Handle yes/no confirmation
+            if (input.includes('yes') || input.includes('y') || input.includes('correct') || input.includes('right')) {
+              return "Great! Let's continue with the process.";
+            } else if (input.includes('no') || input.includes('n') || input.includes('wrong') || input.includes('incorrect')) {
+              // Go back to ask for description again
+              const workType = context.metadata.workType || 'item';
+              if (workType === 'problem') {
+                return "Tell me what the problem is in a few words.";
+              } else if (workType === 'goal') {
+                return "Tell me what the goal is in a few words.";
+              } else if (workType === 'negative_experience') {
+                return "Tell me what the negative experience was in a few words.";
+              } else {
+                return "Tell me what you want to work on in a few words.";
+              }
             } else {
-              return `Please tell me what you would like to work on in a few words.`;
+              return "Please confirm if this is correct by saying 'yes' or 'no'.";
             }
           },
           expectedResponseType: 'yesno',
@@ -2053,8 +2070,16 @@ export class TreatmentStateMachine {
         }
         
       case 'work_type_description':
-        // User provided description, go to confirm_statement
-        return 'confirm_statement';
+        // Check if user provided selection or actual description
+        const input = (lastResponse || '').toLowerCase();
+        if (input === '1' || input === '2' || input === '3' || 
+            input.includes('problem') || input.includes('goal') || input.includes('negative') || input.includes('experience')) {
+          // User provided selection, stay on work_type_description to ask for description
+          return 'work_type_description';
+        } else {
+          // User provided actual description, go to confirm_statement
+          return 'confirm_statement';
+        }
         
       case 'work_type_selection':
         // Already handled in the scriptedResponse, continue to next step
