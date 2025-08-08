@@ -394,12 +394,34 @@ export class TreatmentStateMachine {
       steps: [
         {
           id: 'mind_shifting_explanation',
-          scriptedResponse: "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE",
+          scriptedResponse: (userInput, context) => {
+            // If no user input, show the initial explanation and options
+            if (!userInput) {
+              return "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
+            }
+            
+            // Handle user selection
+            const input = (userInput || '').toLowerCase();
+            
+            // Store the work type selection and ask for description
+            if (input.includes('1') || input.includes('problem')) {
+              context.metadata.workType = 'problem';
+              return "Ok sure. Tell me what the problem is in a few words.";
+            } else if (input.includes('2') || input.includes('goal')) {
+              context.metadata.workType = 'goal';
+              return "Ok sure. Tell me what the goal is in a few words.";
+            } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
+              context.metadata.workType = 'negative_experience';
+              return "Ok sure. Tell me what the negative experience was in a few words.";
+            } else {
+              return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
+            }
+          },
           expectedResponseType: 'selection',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose 1, 2, or 3.' }
           ],
-          nextStep: 'work_type_selection',
+          nextStep: 'confirm_statement',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
@@ -1899,9 +1921,17 @@ export class TreatmentStateMachine {
     // Handle special flow logic based on current step
     switch (context.currentStep) {
       case 'mind_shifting_explanation':
-        // New flow - route to work type selection
-        context.currentPhase = 'work_type_selection';
-        return 'work_type_selection';
+        // Check if this was a valid selection that was processed
+        if (lastResponse.includes('1') || lastResponse.includes('2') || lastResponse.includes('3') || 
+            lastResponse.includes('problem') || lastResponse.includes('goal') || 
+            lastResponse.includes('negative') || lastResponse.includes('experience')) {
+          // Valid selection made, skip work_type_selection and go to confirm_statement
+          context.currentPhase = 'work_type_selection';
+          return 'confirm_statement';
+        } else {
+          // Invalid selection, stay on current step
+          return 'mind_shifting_explanation';
+        }
         
       case 'work_type_selection':
         // Already handled in the scriptedResponse, continue to next step
