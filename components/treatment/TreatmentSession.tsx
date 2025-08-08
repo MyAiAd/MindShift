@@ -797,7 +797,7 @@ export default function TreatmentSession({
                 </div>
                 </div>
               </div>
-            ) : currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection' ? (
+            ) : (currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection') ? (
               /* Work Type Selection Button Interface */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Work Type Selection */}

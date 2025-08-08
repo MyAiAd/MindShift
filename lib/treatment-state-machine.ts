@@ -421,36 +421,30 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose 1, 2, or 3.' }
           ],
-          nextStep: 'confirm_statement',
+          nextStep: 'work_type_description',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
-        }
-      ]
-    });
-
-    // Phase 2: Work Type Selection (Always Scripted)
-    this.phases.set('work_type_selection', {
-      name: 'Work Type Selection',
-      maxDuration: 5,
-      steps: [
+        },
         {
-          id: 'work_type_selection',
+          id: 'work_type_description',
           scriptedResponse: (userInput, context) => {
-            const input = (userInput || '').toLowerCase();
+            const workType = context.metadata.workType || 'item';
+            const statement = userInput || '';
+            const words = statement.split(' ').length || 0;
             
-            // Store the work type selection
-            if (input.includes('1') || input.includes('problem')) {
-              context.metadata.workType = 'problem';
-              return "Ok sure. Tell me what the problem is in a few words.";
-            } else if (input.includes('2') || input.includes('goal')) {
-              context.metadata.workType = 'goal';
-              return "Ok sure. Tell me what the goal is in a few words.";
-            } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
-              context.metadata.workType = 'negative_experience';
-              return "Ok sure. Tell me what the negative experience was in a few words.";
+            // Store the user's description
+            context.metadata.problemStatement = statement;
+            
+            // Provide confirmation based on work type
+            if (workType === 'problem') {
+              return `So you want to work on '${statement}'. Is that correct?`;
+            } else if (workType === 'goal') {
+              return `So you want to work on the goal of '${statement}'. Is that correct?`;
+            } else if (workType === 'negative_experience') {
+              return `So you want to work on the negative experience of '${statement}'. Is that correct?`;
             } else {
-              return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
+              return `So you want to work on '${statement}'. Is that correct?`;
             }
           },
           expectedResponseType: 'description',
@@ -718,7 +712,7 @@ export class TreatmentStateMachine {
           scriptedResponse: (userInput, context) => {
             // Get the problem statement from the stored context or fallback to previous responses
             const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.\n\nFeel the problem '${problemStatement}'... what does it feel like?`;
+            return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.\n\nFeel the problem '${problemStatement}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
@@ -1925,13 +1919,17 @@ export class TreatmentStateMachine {
         if (lastResponse.includes('1') || lastResponse.includes('2') || lastResponse.includes('3') || 
             lastResponse.includes('problem') || lastResponse.includes('goal') || 
             lastResponse.includes('negative') || lastResponse.includes('experience')) {
-          // Valid selection made, skip work_type_selection and go to confirm_statement
+          // Valid selection made, go to work_type_description
           context.currentPhase = 'work_type_selection';
-          return 'confirm_statement';
+          return 'work_type_description';
         } else {
           // Invalid selection, stay on current step
           return 'mind_shifting_explanation';
         }
+        
+      case 'work_type_description':
+        // User provided description, go to confirm_statement
+        return 'confirm_statement';
         
       case 'work_type_selection':
         // Already handled in the scriptedResponse, continue to next step
