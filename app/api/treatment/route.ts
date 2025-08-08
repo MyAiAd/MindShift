@@ -10,10 +10,21 @@ const aiAssistance = new AIAssistanceManager();
 export async function POST(request: NextRequest) {
   try {
     console.log('Treatment API: POST request received');
-    const requestBody = await request.json();
-    console.log('Treatment API: Request body parsed:', requestBody);
+    
+    let requestBody;
+    try {
+      requestBody = await request.json();
+      console.log('Treatment API: Request body parsed:', requestBody);
+    } catch (parseError) {
+      console.error('Treatment API: JSON parsing error:', parseError);
+      return NextResponse.json({
+        error: 'Invalid JSON in request body',
+        details: parseError instanceof Error ? parseError.message : 'Unknown parsing error',
+        location: 'request.json()'
+      }, { status: 400 });
+    }
+    
     const { sessionId, userInput, userId, action, undoToStep } = requestBody;
-
     console.log('Treatment API: Extracted parameters:', { sessionId, userInput, userId, action, undoToStep });
 
     // Validate required fields
@@ -157,8 +168,19 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
     
     console.log('Treatment API: About to call processUserInput...');
     // Process with state machine first (95% of cases)
-    const result = await treatmentMachine.processUserInput(sessionId, userInput, { userId });
-    console.log('Treatment API: State machine continue result:', result);
+    let result;
+    try {
+      result = await treatmentMachine.processUserInput(sessionId, userInput, { userId });
+      console.log('Treatment API: State machine continue result:', result);
+    } catch (stateMachineError) {
+      console.error('Treatment API: State machine error:', stateMachineError);
+      return NextResponse.json({
+        error: 'State machine processing failed',
+        details: stateMachineError instanceof Error ? stateMachineError.message : 'Unknown state machine error',
+        stack: stateMachineError instanceof Error ? stateMachineError.stack : 'No stack trace',
+        location: 'processUserInput'
+      }, { status: 500 });
+    }
     
     console.log('Treatment API: Creating final response object...');
     let finalResponse: any = {
