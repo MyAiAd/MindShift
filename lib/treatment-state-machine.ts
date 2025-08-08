@@ -162,7 +162,7 @@ export class TreatmentStateMachine {
       const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
       
       if (nextStep) {
-        const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext);
+        const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id);
         
         return {
@@ -223,11 +223,14 @@ export class TreatmentStateMachine {
   /**
    * Get instant scripted response - <200ms performance target
    */
-  private getScriptedResponse(step: TreatmentStep, context: TreatmentContext): string {
+  private getScriptedResponse(step: TreatmentStep, context: TreatmentContext, currentUserInput?: string): string {
     if (typeof step.scriptedResponse === 'function') {
-      const previousStepId = this.getPreviousStep(step.id, context.currentPhase);
-      const lastResponse = previousStepId ? context.userResponses[previousStepId] : undefined;
-      return step.scriptedResponse(lastResponse, context);
+      // Use current user input if provided, otherwise fall back to previous step response
+      const userInput = currentUserInput || (() => {
+        const previousStepId = this.getPreviousStep(step.id, context.currentPhase);
+        return previousStepId ? context.userResponses[previousStepId] : undefined;
+      })();
+      return step.scriptedResponse(userInput, context);
     }
     return step.scriptedResponse;
   }
