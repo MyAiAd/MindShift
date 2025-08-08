@@ -324,11 +324,23 @@ export default function TreatmentSession({
   };
 
   const handleWorkTypeSelection = async (selection: string) => {
+    // Prevent multiple clicks while processing
+    if (isLoading) {
+      return;
+    }
+
     // Only accept valid selections
     if (!['1', '2', '3', 'PROBLEM', 'GOAL', 'NEGATIVE EXPERIENCE'].includes(selection.toUpperCase())) {
       return;
     }
-    await sendMessageWithContent(selection);
+
+    // Set loading state immediately
+    setIsLoading(true);
+    try {
+      await sendMessageWithContent(selection);
+    } catch (error) {
+      console.error('Error in work type selection:', error);
+    }
   };
 
   const handleProblemMethodSelection = async (method: string) => {
@@ -826,28 +838,28 @@ export default function TreatmentSession({
                     <button
                       onClick={() => handleWorkTypeSelection('1')}
                       disabled={isLoading}
-                      className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      className={`px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white ${isLoading ? 'opacity-50' : ''}`}
                     >
                       <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
-                      <span>PROBLEM</span>
+                      <span>{isLoading ? 'Processing...' : 'PROBLEM'}</span>
                     </button>
                     
                     <button
                       onClick={() => handleWorkTypeSelection('2')}
                       disabled={isLoading}
-                      className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      className={`px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white ${isLoading ? 'opacity-50' : ''}`}
                     >
                       <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
-                      <span>GOAL</span>
+                      <span>{isLoading ? 'Processing...' : 'GOAL'}</span>
                     </button>
                     
                     <button
                       onClick={() => handleWorkTypeSelection('3')}
                       disabled={isLoading}
-                      className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      className={`px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white ${isLoading ? 'opacity-50' : ''}`}
                     >
                       <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">3</span>
-                      <span>NEGATIVE EXPERIENCE</span>
+                      <span>{isLoading ? 'Processing...' : 'NEGATIVE EXPERIENCE'}</span>
                     </button>
                   </div>
                 </div>
