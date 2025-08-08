@@ -453,6 +453,7 @@ function getPhaseForStep(stepId: string): string {
     
     // Work type selection phase
     'work_type_selection': 'work_type_selection',
+    'work_type_description': 'work_type_selection',
     'confirm_statement': 'work_type_selection',
     'route_to_method': 'work_type_selection',
     'method_selected': 'work_type_selection',
