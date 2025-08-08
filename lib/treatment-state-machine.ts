@@ -438,6 +438,111 @@ export class TreatmentStateMachine {
           ]
         },
         {
+          id: 'confirm_statement',
+          scriptedResponse: (userInput, context) => {
+            const workType = context.metadata.workType || 'item';
+            const statement = userInput || '';
+            const words = statement.split(' ').length || 0;
+            
+            if (words <= 20 && statement) {
+              // Store the statement
+              context.problemStatement = statement; // Keep using problemStatement for compatibility
+              context.metadata.problemStatement = statement;
+              
+              const typeLabel = workType === 'problem' ? 'problem' : 
+                               workType === 'goal' ? 'goal' : 'negative experience';
+              return `OK what I heard you say is '${statement}' - is that right for the ${typeLabel} you want to work on?`;
+            } else if (statement) {
+              return `OK I understand what you have said, but please tell me what the ${workType === 'problem' ? 'problem' : workType === 'goal' ? 'goal' : 'negative experience'} is in just a few words`;
+            } else {
+              return `Please tell me what you would like to work on in a few words.`;
+            }
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please confirm if this is correct.' }
+          ],
+          nextStep: 'route_to_method',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'route_to_method',
+          scriptedResponse: (userInput, context) => {
+            const workType = context.metadata.workType;
+            
+            if (workType === 'problem') {
+              return "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting";
+            } else if (workType === 'goal') {
+              // Goals automatically use Reality Shifting
+              context.currentPhase = 'reality_shifting';
+              context.metadata.selectedMethod = 'reality_shifting';
+              return "For goals, we'll use Reality Shifting. Let's begin the process.";
+            } else if (workType === 'negative_experience') {
+              // Negative experiences automatically use Trauma Shifting
+              context.currentPhase = 'trauma_shifting';
+              context.metadata.selectedMethod = 'trauma_shifting';
+              return "For negative experiences, we'll use Trauma Shifting. Let's begin the process.";
+            }
+            
+            return "Please let me know what you'd like to work on.";
+          },
+          expectedResponseType: 'selection',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
+          ],
+          nextStep: 'method_selected',
+          aiTriggers: []
+        },
+        {
+          id: 'method_selected',
+          scriptedResponse: (userInput, context) => {
+            const workType = context.metadata.workType;
+            
+            if (workType === 'problem') {
+              const input = (userInput || '').toLowerCase();
+              
+              if (input.includes('1') || input.includes('problem shifting')) {
+                context.currentPhase = 'problem_shifting';
+                context.metadata.selectedMethod = 'problem_shifting';
+                return "Great! We'll use Problem Shifting. Let's begin the process.";
+              } else if (input.includes('2') || input.includes('identity shifting')) {
+                context.currentPhase = 'identity_shifting';
+                context.metadata.selectedMethod = 'identity_shifting';
+                return "Great! We'll use Identity Shifting. Let's begin the process.";
+              } else if (input.includes('3') || input.includes('belief shifting')) {
+                context.currentPhase = 'belief_shifting';
+                context.metadata.selectedMethod = 'belief_shifting';
+                return "Great! We'll use Belief Shifting. Let's begin the process.";
+              } else if (input.includes('4') || input.includes('blockage shifting')) {
+                context.currentPhase = 'blockage_shifting';
+                context.metadata.selectedMethod = 'blockage_shifting';
+                return "Great! We'll use Blockage Shifting. Let's begin the process.";
+              } else {
+                return "Please choose 1 for Problem Shifting, 2 for Identity Shifting, 3 for Belief Shifting, or 4 for Blockage Shifting.";
+              }
+            }
+            
+            // For goals and negative experiences, this step shouldn't be reached as they auto-route
+            return "Let's continue with the selected method.";
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please confirm your selection.' }
+          ],
+          nextStep: undefined, // Will be handled by routing logic
+          aiTriggers: []
+        }
+      ]
+    });
+
+    // Phase 2: Work Type Selection (Always Scripted)
+    this.phases.set('work_type_selection', {
+      name: 'Work Type Selection',
+      maxDuration: 5,
+      steps: [
+        {
           id: 'work_type_description',
           scriptedResponse: (userInput, context) => {
             // Safety check for context
@@ -512,18 +617,19 @@ export class TreatmentStateMachine {
           scriptedResponse: (userInput, context) => {
             const workType = context.metadata.workType;
             
-            if (workType === 'problem') {
-              return "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting";
-            } else if (workType === 'goal') {
-              // Goals automatically use Reality Shifting
+            if (workType === 'goal') {
+              // Goals go directly to Reality Shifting
               context.currentPhase = 'reality_shifting';
               context.metadata.selectedMethod = 'reality_shifting';
-              return "For goals, we'll use Reality Shifting. Let's begin the process.";
+              return 'reality_shifting_intro';
             } else if (workType === 'negative_experience') {
-              // Negative experiences automatically use Trauma Shifting
+              // Negative experiences go directly to Trauma Shifting
               context.currentPhase = 'trauma_shifting';
               context.metadata.selectedMethod = 'trauma_shifting';
-              return "For negative experiences, we'll use Trauma Shifting. Let's begin the process.";
+              return 'trauma_shifting_intro';
+            } else if (workType === 'problem') {
+              // Problems need method selection
+              return 'method_selected';
             }
             
             return "Please let me know what you'd like to work on.";
