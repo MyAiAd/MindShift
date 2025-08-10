@@ -71,9 +71,13 @@ export class TreatmentStateMachine {
     userInput: string, 
     context?: Partial<TreatmentContext>
   ): Promise<ProcessingResult> {
+    console.log(`🔍 PROCESSING: sessionId=${sessionId}, userInput="${userInput}"`);
+    
     // Special handling for session initialization
     if (userInput === 'start') {
-      const treatmentContext = await this.getOrCreateContextAsync(sessionId, context);
+      const treatmentContext = this.getOrCreateContext(sessionId, context);
+      console.log(`🔍 START: currentStep=${treatmentContext.currentStep}, currentPhase=${treatmentContext.currentPhase}`);
+      
       const currentPhase = this.phases.get(treatmentContext.currentPhase);
       
       if (!currentPhase) {
@@ -94,7 +98,10 @@ export class TreatmentStateMachine {
       };
     }
 
-    const treatmentContext = await this.getOrCreateContextAsync(sessionId, context);
+    const treatmentContext = this.getOrCreateContext(sessionId, context);
+    console.log(`🔍 CONTEXT BEFORE: currentStep=${treatmentContext.currentStep}, currentPhase=${treatmentContext.currentPhase}`);
+    console.log(`🔍 USER RESPONSES: ${JSON.stringify(treatmentContext.userResponses)}`);
+    
     const currentPhase = this.phases.get(treatmentContext.currentPhase);
     
     if (!currentPhase) {
@@ -109,9 +116,7 @@ export class TreatmentStateMachine {
     // Update context with user response
     treatmentContext.userResponses[treatmentContext.currentStep] = userInput;
     treatmentContext.lastActivity = new Date();
-
-    // Save context to database after updating user response
-    await this.saveContextToDatabase(treatmentContext);
+    console.log(`🔍 UPDATED USER RESPONSE: ${treatmentContext.currentStep} = "${userInput}"`);
 
     // Validate user input FIRST
     const validationResult = this.validateUserInput(userInput, currentStep);
@@ -155,11 +160,11 @@ export class TreatmentStateMachine {
 
     // Input is valid - proceed to next step
     const nextStepId = this.determineNextStep(currentStep, treatmentContext);
+    console.log(`🔍 DETERMINE NEXT STEP: current="${treatmentContext.currentStep}" -> next="${nextStepId}"`);
+    
     if (nextStepId) {
       treatmentContext.currentStep = nextStepId;
-      
-      // Save context to database after step transition
-      await this.saveContextToDatabase(treatmentContext);
+      console.log(`🔍 STEP TRANSITION: currentStep="${treatmentContext.currentStep}", currentPhase="${treatmentContext.currentPhase}"`);
       
       // Get the correct phase after potential phase change
       const updatedPhase = this.phases.get(treatmentContext.currentPhase);
@@ -172,6 +177,8 @@ export class TreatmentStateMachine {
       if (nextStep) {
         const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id);
+        
+        console.log(`🔍 RETURNING RESPONSE: step="${nextStepId}", response="${scriptedResponse.substring(0, 100)}..."`);
         
         return {
           canContinue: true,
@@ -2098,19 +2105,23 @@ export class TreatmentStateMachine {
 
   private determineNextStep(currentStep: TreatmentStep, context: TreatmentContext): string | null {
     const lastResponse = context.userResponses[context.currentStep]?.toLowerCase() || '';
+    console.log(`🔍 DETERMINE_NEXT_STEP: currentStep="${context.currentStep}", lastResponse="${lastResponse}"`);
     
     // Handle special flow logic based on current step
     switch (context.currentStep) {
       case 'mind_shifting_explanation':
+        console.log(`🔍 MIND_SHIFTING_EXPLANATION: checking lastResponse="${lastResponse}"`);
         // Check if this was a valid selection that was processed
         if (lastResponse.includes('1') || lastResponse.includes('2') || lastResponse.includes('3') || 
             lastResponse.includes('problem') || lastResponse.includes('goal') || 
             lastResponse.includes('negative') || lastResponse.includes('experience')) {
           // Valid selection made, go to work_type_description
           context.currentPhase = 'work_type_selection';
+          console.log(`🔍 VALID SELECTION: transitioning to work_type_description, phase="${context.currentPhase}"`);
           return 'work_type_description';
         } else {
           // Invalid selection, stay on current step
+          console.log(`🔍 INVALID SELECTION: staying on mind_shifting_explanation`);
           return 'mind_shifting_explanation';
         }
         
@@ -2523,18 +2534,18 @@ export class TreatmentStateMachine {
   /**
    * Public method to access treatment context for undo functionality
    */
-  public async getContextForUndo(sessionId: string): Promise<TreatmentContext> {
+  public getContextForUndo(sessionId: string): TreatmentContext {
     if (!sessionId) {
       throw new Error('SessionId is required for getContextForUndo');
     }
     console.log('TreatmentStateMachine: Getting context for sessionId:', sessionId);
-    return await this.getOrCreateContextAsync(sessionId);
+    return this.getOrCreateContext(sessionId);
   }
 
   /**
    * Public method to update context for undo functionality
    */
-  public async updateContextForUndo(sessionId: string, updates: Partial<TreatmentContext>): Promise<void> {
+  public updateContextForUndo(sessionId: string, updates: Partial<TreatmentContext>): void {
     if (!sessionId) {
       throw new Error('SessionId is required for updateContextForUndo');
     }
@@ -2542,55 +2553,31 @@ export class TreatmentStateMachine {
       throw new Error('Updates object is required for updateContextForUndo');
     }
     console.log('TreatmentStateMachine: Updating context for sessionId:', sessionId, 'with updates:', updates);
-    const context = await this.getOrCreateContextAsync(sessionId);
+    const context = this.getOrCreateContext(sessionId);
     Object.assign(context, updates);
-    await this.saveContextToDatabase(context);
   }
 
   /**
    * Public method to clear user responses for undo functionality
    */
-  public async clearUserResponsesForUndo(sessionId: string, stepsToKeep: Set<string>): Promise<void> {
+  public clearUserResponsesForUndo(sessionId: string, stepsToKeep: Set<string>): void {
     if (!sessionId) {
       throw new Error('SessionId is required for clearUserResponsesForUndo');
     }
     console.log('TreatmentStateMachine: Clearing user responses for sessionId:', sessionId);
-    const context = await this.getOrCreateContextAsync(sessionId);
+    const context = this.getOrCreateContext(sessionId);
     
     if (!context.userResponses) {
       console.log('TreatmentStateMachine: No user responses to clear');
       return;
     }
     
-    // Clear responses from context
     Object.keys(context.userResponses).forEach(stepId => {
       if (!stepsToKeep.has(stepId)) {
         console.log('TreatmentStateMachine: Clearing response for step:', stepId);
         delete context.userResponses[stepId];
       }
     });
-
-    // Also clear from database
-    try {
-      const supabase = createServerClient();
-      const stepsToDelete = Object.keys(context.userResponses).filter(stepId => !stepsToKeep.has(stepId));
-      
-      if (stepsToDelete.length > 0) {
-        const { error } = await supabase
-          .from('treatment_progress')
-          .delete()
-          .eq('session_id', sessionId)
-          .in('step_id', stepsToDelete);
-
-        if (error) {
-          console.error('Error clearing progress from database:', error);
-        }
-      }
-    } catch (error) {
-      console.error('Error clearing user responses from database:', error);
-    }
-
-    await this.saveContextToDatabase(context);
   }
 
   /**
