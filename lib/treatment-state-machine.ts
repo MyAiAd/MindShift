@@ -71,7 +71,6 @@ export class TreatmentStateMachine {
     userInput: string, 
     context?: Partial<TreatmentContext>
   ): Promise<ProcessingResult> {
-    console.log(`🔍 PROCESSING: sessionId=${sessionId}, userInput="${userInput}"`);
     // Special handling for session initialization
     if (userInput === 'start') {
       const treatmentContext = this.getOrCreateContext(sessionId, context);
@@ -96,7 +95,6 @@ export class TreatmentStateMachine {
     }
 
     const treatmentContext = this.getOrCreateContext(sessionId, context);
-    console.log(`🔍 CONTEXT: currentStep="${treatmentContext.currentStep}", currentPhase="${treatmentContext.currentPhase}", workType="${treatmentContext.metadata?.workType}"`);
     const currentPhase = this.phases.get(treatmentContext.currentPhase);
     
     if (!currentPhase) {
@@ -154,8 +152,6 @@ export class TreatmentStateMachine {
 
     // Input is valid - proceed to next step
     const nextStepId = this.determineNextStep(currentStep, treatmentContext);
-    console.log(`🔍 NEXT_STEP: determineNextStep returned "${nextStepId}" for currentStep "${treatmentContext.currentStep}"`);
-    
     if (nextStepId) {
       treatmentContext.currentStep = nextStepId;
       
@@ -423,18 +419,14 @@ export class TreatmentStateMachine {
             // Store the work type selection and ask for description
             if (input.includes('1') || input.includes('problem')) {
               context.metadata.workType = 'problem';
-              console.log(`🔍 MIND_SHIFTING: Setting workType=problem, context.metadata:`, context.metadata);
               return "Ok sure. Tell me what the problem is in a few words.";
             } else if (input.includes('2') || input.includes('goal')) {
               context.metadata.workType = 'goal';
-              console.log(`🔍 MIND_SHIFTING: Setting workType=goal, context.metadata:`, context.metadata);
               return "Ok sure. Tell me what the goal is in a few words.";
             } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
               context.metadata.workType = 'negative_experience';
-              console.log(`🔍 MIND_SHIFTING: Setting workType=negative_experience, context.metadata:`, context.metadata);
               return "Ok sure. Tell me what the negative experience was in a few words.";
             } else {
-              console.log(`🔍 MIND_SHIFTING: Invalid input="${input}", asking to choose again`);
               return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
             }
           },
@@ -483,7 +475,10 @@ export class TreatmentStateMachine {
             const workType = context.metadata.workType;
             
             if (workType === 'problem') {
-              return "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting";
+              // Problems automatically use Problem Shifting (most common method)
+              context.currentPhase = 'problem_shifting';
+              context.metadata.selectedMethod = 'problem_shifting';
+              return "Great! We'll use Problem Shifting to work on this. Let's begin the process.";
             } else if (workType === 'goal') {
               // Goals automatically use Reality Shifting
               context.currentPhase = 'reality_shifting';
@@ -564,7 +559,7 @@ export class TreatmentStateMachine {
             }
             
             const workType = context.metadata.workType || 'item';
-            console.log(`🔍 WORK_TYPE_DESCRIPTION: workType="${workType}", userInput="${userInput}", context.metadata:`, context.metadata);
+
             
             // Always ask for description - this step only handles asking for description
             if (workType === 'problem') {
@@ -596,8 +591,7 @@ export class TreatmentStateMachine {
             
             // Check if this is the first time (user provided description) or confirmation
             if (input === 'yes' || input === 'y' || input.includes('correct') || input.includes('right')) {
-              // User confirmed, continue - ensure workType is preserved
-              console.log(`🔍 CONFIRM_STATEMENT: User said yes, workType="${workType}"`);
+              // User confirmed, continue
               return "Great! Let's continue with the process.";
             } else if (input === 'no' || input === 'n' || input.includes('wrong') || input.includes('incorrect')) {
               // User said no, go back to description
@@ -643,7 +637,10 @@ export class TreatmentStateMachine {
             const workType = context.metadata.workType;
             
             if (workType === 'problem') {
-              return "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting";
+              // Problems automatically use Problem Shifting (most common method)
+              context.currentPhase = 'problem_shifting';
+              context.metadata.selectedMethod = 'problem_shifting';
+              return "Great! We'll use Problem Shifting to work on this. Let's begin the process.";
             } else if (workType === 'goal') {
               // Goals automatically use Reality Shifting
               context.currentPhase = 'reality_shifting';
