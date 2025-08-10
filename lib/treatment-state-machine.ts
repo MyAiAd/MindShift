@@ -71,6 +71,7 @@ export class TreatmentStateMachine {
     userInput: string, 
     context?: Partial<TreatmentContext>
   ): Promise<ProcessingResult> {
+    console.log(`🔍 PROCESSING: sessionId=${sessionId}, userInput="${userInput}"`);
     // Special handling for session initialization
     if (userInput === 'start') {
       const treatmentContext = this.getOrCreateContext(sessionId, context);
@@ -95,6 +96,7 @@ export class TreatmentStateMachine {
     }
 
     const treatmentContext = this.getOrCreateContext(sessionId, context);
+    console.log(`🔍 CONTEXT: currentStep="${treatmentContext.currentStep}", currentPhase="${treatmentContext.currentPhase}", workType="${treatmentContext.metadata?.workType}"`);
     const currentPhase = this.phases.get(treatmentContext.currentPhase);
     
     if (!currentPhase) {
@@ -152,6 +154,8 @@ export class TreatmentStateMachine {
 
     // Input is valid - proceed to next step
     const nextStepId = this.determineNextStep(currentStep, treatmentContext);
+    console.log(`🔍 NEXT_STEP: determineNextStep returned "${nextStepId}" for currentStep "${treatmentContext.currentStep}"`);
+    
     if (nextStepId) {
       treatmentContext.currentStep = nextStepId;
       
@@ -419,14 +423,18 @@ export class TreatmentStateMachine {
             // Store the work type selection and ask for description
             if (input.includes('1') || input.includes('problem')) {
               context.metadata.workType = 'problem';
+              console.log(`🔍 MIND_SHIFTING: Setting workType=problem, context.metadata:`, context.metadata);
               return "Ok sure. Tell me what the problem is in a few words.";
             } else if (input.includes('2') || input.includes('goal')) {
               context.metadata.workType = 'goal';
+              console.log(`🔍 MIND_SHIFTING: Setting workType=goal, context.metadata:`, context.metadata);
               return "Ok sure. Tell me what the goal is in a few words.";
             } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
               context.metadata.workType = 'negative_experience';
+              console.log(`🔍 MIND_SHIFTING: Setting workType=negative_experience, context.metadata:`, context.metadata);
               return "Ok sure. Tell me what the negative experience was in a few words.";
             } else {
+              console.log(`🔍 MIND_SHIFTING: Invalid input="${input}", asking to choose again`);
               return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
             }
           },
@@ -556,6 +564,7 @@ export class TreatmentStateMachine {
             }
             
             const workType = context.metadata.workType || 'item';
+            console.log(`🔍 WORK_TYPE_DESCRIPTION: workType="${workType}", userInput="${userInput}", context.metadata:`, context.metadata);
             
             // Always ask for description - this step only handles asking for description
             if (workType === 'problem') {
@@ -2095,15 +2104,18 @@ export class TreatmentStateMachine {
     // Handle special flow logic based on current step
     switch (context.currentStep) {
       case 'mind_shifting_explanation':
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: lastResponse="${lastResponse}"`);
         // Check if this was a valid selection that was processed
         if (lastResponse.includes('1') || lastResponse.includes('2') || lastResponse.includes('3') || 
             lastResponse.includes('problem') || lastResponse.includes('goal') || 
             lastResponse.includes('negative') || lastResponse.includes('experience')) {
           // Valid selection made, go to work_type_description
           context.currentPhase = 'work_type_selection';
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Valid selection, transitioning to work_type_description`);
           return 'work_type_description';
         } else {
           // Invalid selection, stay on current step
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Invalid selection, staying on mind_shifting_explanation`);
           return 'mind_shifting_explanation';
         }
         
