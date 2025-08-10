@@ -596,7 +596,8 @@ export class TreatmentStateMachine {
             
             // Check if this is the first time (user provided description) or confirmation
             if (input === 'yes' || input === 'y' || input.includes('correct') || input.includes('right')) {
-              // User confirmed, continue
+              // User confirmed, continue - ensure workType is preserved
+              console.log(`🔍 CONFIRM_STATEMENT: User said yes, workType="${workType}"`);
               return "Great! Let's continue with the process.";
             } else if (input === 'no' || input === 'n' || input.includes('wrong') || input.includes('incorrect')) {
               // User said no, go back to description
