@@ -120,6 +120,8 @@ export class TreatmentStateMachine {
 
     // Validate user input FIRST
     const validationResult = this.validateUserInput(userInput, currentStep);
+    console.log(`🔍 VALIDATION: isValid=${validationResult.isValid}, error="${validationResult.error}"`);
+    
     if (!validationResult.isValid) {
       // Special handling for multiple problems detected
       if (validationResult.error === 'MULTIPLE_PROBLEMS_DETECTED') {
@@ -159,6 +161,7 @@ export class TreatmentStateMachine {
     }
 
     // Input is valid - proceed to next step
+    console.log(`🔍 VALIDATION PASSED - proceeding to step transition`);
     const nextStepId = this.determineNextStep(currentStep, treatmentContext);
     console.log(`🔍 DETERMINE NEXT STEP: current="${treatmentContext.currentStep}" -> next="${nextStepId}"`);
     
@@ -190,11 +193,15 @@ export class TreatmentStateMachine {
           needsLinguisticProcessing
         };
       } else {
+        console.log(`🔍 ERROR: Step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'`);
         throw new Error(`Step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'`);
       }
+    } else {
+      console.log(`🔍 NO NEXT STEP: determineNextStep returned null`);
     }
 
     // Phase complete or error
+    console.log(`🔍 PHASE COMPLETION: handling phase completion`);
     return this.handlePhaseCompletion(treatmentContext);
   }
 
