@@ -71,13 +71,9 @@ export class TreatmentStateMachine {
     userInput: string, 
     context?: Partial<TreatmentContext>
   ): Promise<ProcessingResult> {
-    console.log(`🔍 PROCESSING: sessionId=${sessionId}, userInput="${userInput}"`);
-    
     // Special handling for session initialization
     if (userInput === 'start') {
       const treatmentContext = this.getOrCreateContext(sessionId, context);
-      console.log(`🔍 START: currentStep=${treatmentContext.currentStep}, currentPhase=${treatmentContext.currentPhase}`);
-      
       const currentPhase = this.phases.get(treatmentContext.currentPhase);
       
       if (!currentPhase) {
@@ -99,9 +95,6 @@ export class TreatmentStateMachine {
     }
 
     const treatmentContext = this.getOrCreateContext(sessionId, context);
-    console.log(`🔍 CONTEXT BEFORE: currentStep=${treatmentContext.currentStep}, currentPhase=${treatmentContext.currentPhase}`);
-    console.log(`🔍 USER RESPONSES: ${JSON.stringify(treatmentContext.userResponses)}`);
-    
     const currentPhase = this.phases.get(treatmentContext.currentPhase);
     
     if (!currentPhase) {
@@ -116,12 +109,9 @@ export class TreatmentStateMachine {
     // Update context with user response
     treatmentContext.userResponses[treatmentContext.currentStep] = userInput;
     treatmentContext.lastActivity = new Date();
-    console.log(`🔍 UPDATED USER RESPONSE: ${treatmentContext.currentStep} = "${userInput}"`);
 
     // Validate user input FIRST
     const validationResult = this.validateUserInput(userInput, currentStep);
-    console.log(`🔍 VALIDATION: isValid=${validationResult.isValid}, error="${validationResult.error}"`);
-    
     if (!validationResult.isValid) {
       // Special handling for multiple problems detected
       if (validationResult.error === 'MULTIPLE_PROBLEMS_DETECTED') {
@@ -161,13 +151,9 @@ export class TreatmentStateMachine {
     }
 
     // Input is valid - proceed to next step
-    console.log(`🔍 VALIDATION PASSED - proceeding to step transition`);
     const nextStepId = this.determineNextStep(currentStep, treatmentContext);
-    console.log(`🔍 DETERMINE NEXT STEP: current="${treatmentContext.currentStep}" -> next="${nextStepId}"`);
-    
     if (nextStepId) {
       treatmentContext.currentStep = nextStepId;
-      console.log(`🔍 STEP TRANSITION: currentStep="${treatmentContext.currentStep}", currentPhase="${treatmentContext.currentPhase}"`);
       
       // Get the correct phase after potential phase change
       const updatedPhase = this.phases.get(treatmentContext.currentPhase);
@@ -175,16 +161,11 @@ export class TreatmentStateMachine {
         throw new Error(`Invalid updated phase: ${treatmentContext.currentPhase}`);
       }
       
-      console.log(`🔍 LOOKING FOR STEP: "${nextStepId}" in phase "${treatmentContext.currentPhase}"`);
-      console.log(`🔍 AVAILABLE STEPS: ${updatedPhase.steps.map(s => s.id).join(', ')}`);
-      
       const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
       
       if (nextStep) {
         const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id);
-        
-        console.log(`🔍 RETURNING RESPONSE: step="${nextStepId}", response="${scriptedResponse.substring(0, 100)}..."`);
         
         return {
           canContinue: true,
@@ -193,15 +174,11 @@ export class TreatmentStateMachine {
           needsLinguisticProcessing
         };
       } else {
-        console.log(`🔍 ERROR: Step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'`);
         throw new Error(`Step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'`);
       }
-    } else {
-      console.log(`🔍 NO NEXT STEP: determineNextStep returned null`);
     }
 
     // Phase complete or error
-    console.log(`🔍 PHASE COMPLETION: handling phase completion`);
     return this.handlePhaseCompletion(treatmentContext);
   }
 
@@ -655,19 +632,18 @@ export class TreatmentStateMachine {
           scriptedResponse: (userInput, context) => {
             const workType = context.metadata.workType;
             
-            if (workType === 'goal') {
-              // Goals go directly to Reality Shifting
+            if (workType === 'problem') {
+              return "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting";
+            } else if (workType === 'goal') {
+              // Goals automatically use Reality Shifting
               context.currentPhase = 'reality_shifting';
               context.metadata.selectedMethod = 'reality_shifting';
-              return 'reality_shifting_intro';
+              return "For goals, we'll use Reality Shifting. Let's begin the process.";
             } else if (workType === 'negative_experience') {
-              // Negative experiences go directly to Trauma Shifting
+              // Negative experiences automatically use Trauma Shifting
               context.currentPhase = 'trauma_shifting';
               context.metadata.selectedMethod = 'trauma_shifting';
-              return 'trauma_shifting_intro';
-            } else if (workType === 'problem') {
-              // Problems need method selection
-              return 'method_selected';
+              return "For negative experiences, we'll use Trauma Shifting. Let's begin the process.";
             }
             
             return "Please let me know what you'd like to work on.";
@@ -2115,29 +2091,24 @@ export class TreatmentStateMachine {
 
   private determineNextStep(currentStep: TreatmentStep, context: TreatmentContext): string | null {
     const lastResponse = context.userResponses[context.currentStep]?.toLowerCase() || '';
-    console.log(`🔍 DETERMINE_NEXT_STEP: currentStep="${context.currentStep}", lastResponse="${lastResponse}"`);
     
     // Handle special flow logic based on current step
     switch (context.currentStep) {
       case 'mind_shifting_explanation':
-        console.log(`🔍 MIND_SHIFTING_EXPLANATION: checking lastResponse="${lastResponse}"`);
         // Check if this was a valid selection that was processed
         if (lastResponse.includes('1') || lastResponse.includes('2') || lastResponse.includes('3') || 
             lastResponse.includes('problem') || lastResponse.includes('goal') || 
             lastResponse.includes('negative') || lastResponse.includes('experience')) {
           // Valid selection made, go to work_type_description
           context.currentPhase = 'work_type_selection';
-          console.log(`🔍 VALID SELECTION: transitioning to work_type_description, phase="${context.currentPhase}"`);
           return 'work_type_description';
         } else {
           // Invalid selection, stay on current step
-          console.log(`🔍 INVALID SELECTION: staying on mind_shifting_explanation`);
           return 'mind_shifting_explanation';
         }
         
       case 'work_type_description':
         // User provided description, go to confirm_statement
-        console.log(`🔍 WORK_TYPE_DESCRIPTION: transitioning to confirm_statement`);
         return 'confirm_statement';
         
       case 'work_type_selection':
