@@ -172,6 +172,9 @@ export class TreatmentStateMachine {
         throw new Error(`Invalid updated phase: ${treatmentContext.currentPhase}`);
       }
       
+      console.log(`🔍 LOOKING FOR STEP: "${nextStepId}" in phase "${treatmentContext.currentPhase}"`);
+      console.log(`🔍 AVAILABLE STEPS: ${updatedPhase.steps.map(s => s.id).join(', ')}`);
+      
       const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
       
       if (nextStep) {
@@ -2127,6 +2130,7 @@ export class TreatmentStateMachine {
         
       case 'work_type_description':
         // User provided description, go to confirm_statement
+        console.log(`🔍 WORK_TYPE_DESCRIPTION: transitioning to confirm_statement`);
         return 'confirm_statement';
         
       case 'work_type_selection':
