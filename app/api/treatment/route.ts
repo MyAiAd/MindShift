@@ -207,7 +207,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         if (['problem_shifting_intro', 'reality_shifting_intro', 'blockage_shifting_intro', 
              'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
           // Get the stored problem statement that the intro step will use
-          const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+          const treatmentContext = await treatmentMachine.getContextForUndo(sessionId);
           textToProcess = treatmentContext?.problemStatement || 
                         treatmentContext?.userResponses?.['restate_selected_problem'] || 
                         treatmentContext?.userResponses?.['mind_shifting_explanation'] || 
@@ -614,7 +614,7 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
     // Get the current treatment context with safety check
     let context;
     try {
-      context = treatmentMachine.getContextForUndo(sessionId);
+      context = await treatmentMachine.getContextForUndo(sessionId);
       console.log('Treatment API: Context retrieved successfully');
     } catch (contextError) {
       console.error('Treatment API: Failed to get context:', contextError);
@@ -643,7 +643,7 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
     } catch (phaseError) {
       console.error('Treatment API: Failed to get phase steps:', phaseError);
       // Clear all responses as a safe fallback
-      treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
+      await treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
       console.log('Treatment API: Cleared all responses due to phase error');
     }
     
@@ -662,11 +662,11 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       try {
         if (foundTargetStep) {
           // Clear responses for steps after our target
-          treatmentMachine.clearUserResponsesForUndo(sessionId, stepsToKeep);
+          await treatmentMachine.clearUserResponsesForUndo(sessionId, stepsToKeep);
           console.log('Treatment API: Cleared user responses after target step');
         } else {
           // If not found in current phase, clear all responses to be safe
-          treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
+          await treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
           console.log('Treatment API: Cleared all user responses - undoing to different phase');
         }
       } catch (clearError) {
@@ -676,7 +676,7 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
     } else {
       console.log('Treatment API: No phase steps found, clearing all responses');
       try {
-        treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
+        await treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
       } catch (clearError) {
         console.error('Treatment API: Error clearing all responses:', clearError);
         // Continue - this isn't critical for the undo operation
@@ -689,7 +689,7 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
   
   // Update context to the target step with correct phase
   try {
-    treatmentMachine.updateContextForUndo(sessionId, {
+    await treatmentMachine.updateContextForUndo(sessionId, {
       currentStep: undoToStep,
       currentPhase: targetPhase,
       lastActivity: new Date()
@@ -703,7 +703,7 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
     // Get updated context for logging
     let updatedContext;
     try {
-      updatedContext = treatmentMachine.getContextForUndo(sessionId);
+      updatedContext = await treatmentMachine.getContextForUndo(sessionId);
       console.log('Context after undo:', { 
         currentStep: updatedContext.currentStep, 
         currentPhase: updatedContext.currentPhase,

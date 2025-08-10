@@ -1,3 +1,5 @@
+import { createServerClient } from './database-server';
+
 export interface TreatmentPhase {
   name: string;
   steps: TreatmentStep[];
@@ -71,7 +73,7 @@ export class TreatmentStateMachine {
   ): Promise<ProcessingResult> {
     // Special handling for session initialization
     if (userInput === 'start') {
-      const treatmentContext = this.getOrCreateContext(sessionId, context);
+      const treatmentContext = await this.getOrCreateContextAsync(sessionId, context);
       const currentPhase = this.phases.get(treatmentContext.currentPhase);
       
       if (!currentPhase) {
@@ -92,7 +94,7 @@ export class TreatmentStateMachine {
       };
     }
 
-    const treatmentContext = this.getOrCreateContext(sessionId, context);
+    const treatmentContext = await this.getOrCreateContextAsync(sessionId, context);
     const currentPhase = this.phases.get(treatmentContext.currentPhase);
     
     if (!currentPhase) {
@@ -107,6 +109,9 @@ export class TreatmentStateMachine {
     // Update context with user response
     treatmentContext.userResponses[treatmentContext.currentStep] = userInput;
     treatmentContext.lastActivity = new Date();
+
+    // Save context to database after updating user response
+    await this.saveContextToDatabase(treatmentContext);
 
     // Validate user input FIRST
     const validationResult = this.validateUserInput(userInput, currentStep);
@@ -152,6 +157,9 @@ export class TreatmentStateMachine {
     const nextStepId = this.determineNextStep(currentStep, treatmentContext);
     if (nextStepId) {
       treatmentContext.currentStep = nextStepId;
+      
+      // Save context to database after step transition
+      await this.saveContextToDatabase(treatmentContext);
       
       // Get the correct phase after potential phase change
       const updatedPhase = this.phases.get(treatmentContext.currentPhase);
@@ -2047,6 +2055,47 @@ export class TreatmentStateMachine {
     return this.contexts.get(sessionId)!;
   }
 
+  /**
+   * Get or create context with database persistence
+   */
+  private async getOrCreateContextAsync(sessionId: string, context?: Partial<TreatmentContext>): Promise<TreatmentContext> {
+    // Check if context exists in memory first
+    if (this.contexts.has(sessionId)) {
+      return this.contexts.get(sessionId)!;
+    }
+
+    // Try to load from database
+    const dbContext = await this.loadContextFromDatabase(sessionId);
+    if (dbContext) {
+      this.contexts.set(sessionId, dbContext);
+      return dbContext;
+    }
+
+    // Create new context if not found
+    const newContext: TreatmentContext = {
+      userId: context?.userId || '',
+      sessionId,
+      currentPhase: 'introduction',
+      currentStep: 'mind_shifting_explanation',
+      userResponses: {},
+      startTime: new Date(),
+      lastActivity: new Date(),
+      metadata: {
+        cycleCount: 0,
+        problemStatement: '',
+        lastResponse: '',
+        problemType: 'problem'
+      }
+    };
+
+    this.contexts.set(sessionId, newContext);
+    
+    // Save new context to database
+    await this.saveContextToDatabase(newContext);
+    
+    return newContext;
+  }
+
   private determineNextStep(currentStep: TreatmentStep, context: TreatmentContext): string | null {
     const lastResponse = context.userResponses[context.currentStep]?.toLowerCase() || '';
     
@@ -2474,18 +2523,18 @@ export class TreatmentStateMachine {
   /**
    * Public method to access treatment context for undo functionality
    */
-  public getContextForUndo(sessionId: string): TreatmentContext {
+  public async getContextForUndo(sessionId: string): Promise<TreatmentContext> {
     if (!sessionId) {
       throw new Error('SessionId is required for getContextForUndo');
     }
     console.log('TreatmentStateMachine: Getting context for sessionId:', sessionId);
-    return this.getOrCreateContext(sessionId);
+    return await this.getOrCreateContextAsync(sessionId);
   }
 
   /**
    * Public method to update context for undo functionality
    */
-  public updateContextForUndo(sessionId: string, updates: Partial<TreatmentContext>): void {
+  public async updateContextForUndo(sessionId: string, updates: Partial<TreatmentContext>): Promise<void> {
     if (!sessionId) {
       throw new Error('SessionId is required for updateContextForUndo');
     }
@@ -2493,31 +2542,55 @@ export class TreatmentStateMachine {
       throw new Error('Updates object is required for updateContextForUndo');
     }
     console.log('TreatmentStateMachine: Updating context for sessionId:', sessionId, 'with updates:', updates);
-    const context = this.getOrCreateContext(sessionId);
+    const context = await this.getOrCreateContextAsync(sessionId);
     Object.assign(context, updates);
+    await this.saveContextToDatabase(context);
   }
 
   /**
    * Public method to clear user responses for undo functionality
    */
-  public clearUserResponsesForUndo(sessionId: string, stepsToKeep: Set<string>): void {
+  public async clearUserResponsesForUndo(sessionId: string, stepsToKeep: Set<string>): Promise<void> {
     if (!sessionId) {
       throw new Error('SessionId is required for clearUserResponsesForUndo');
     }
     console.log('TreatmentStateMachine: Clearing user responses for sessionId:', sessionId);
-    const context = this.getOrCreateContext(sessionId);
+    const context = await this.getOrCreateContextAsync(sessionId);
     
     if (!context.userResponses) {
       console.log('TreatmentStateMachine: No user responses to clear');
       return;
     }
     
+    // Clear responses from context
     Object.keys(context.userResponses).forEach(stepId => {
       if (!stepsToKeep.has(stepId)) {
         console.log('TreatmentStateMachine: Clearing response for step:', stepId);
         delete context.userResponses[stepId];
       }
     });
+
+    // Also clear from database
+    try {
+      const supabase = createServerClient();
+      const stepsToDelete = Object.keys(context.userResponses).filter(stepId => !stepsToKeep.has(stepId));
+      
+      if (stepsToDelete.length > 0) {
+        const { error } = await supabase
+          .from('treatment_progress')
+          .delete()
+          .eq('session_id', sessionId)
+          .in('step_id', stepsToDelete);
+
+        if (error) {
+          console.error('Error clearing progress from database:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error clearing user responses from database:', error);
+    }
+
+    await this.saveContextToDatabase(context);
   }
 
   /**
@@ -2536,5 +2609,124 @@ export class TreatmentStateMachine {
     }
     console.log('TreatmentStateMachine: Found', phase.steps.length, 'steps for phase:', phaseName);
     return phase.steps;
+  }
+
+  /**
+   * Load treatment context from database
+   */
+  private async loadContextFromDatabase(sessionId: string): Promise<TreatmentContext | null> {
+    try {
+      const supabase = createServerClient();
+      
+      // Get session data
+      const { data: session, error: sessionError } = await supabase
+        .from('treatment_sessions')
+        .select('*')
+        .eq('session_id', sessionId)
+        .single();
+
+      if (sessionError || !session) {
+        console.log('No session found in database for:', sessionId);
+        return null;
+      }
+
+      // Get user responses from treatment_progress
+      const { data: progressData, error: progressError } = await supabase
+        .from('treatment_progress')
+        .select('step_id, user_response')
+        .eq('session_id', sessionId);
+
+      if (progressError) {
+        console.error('Error loading progress data:', progressError);
+      }
+
+      // Build userResponses object
+      const userResponses: Record<string, string> = {};
+      if (progressData) {
+        progressData.forEach(progress => {
+          if (progress.user_response) {
+            userResponses[progress.step_id] = progress.user_response;
+          }
+        });
+      }
+
+      // Construct context from database data
+      const context: TreatmentContext = {
+        userId: session.user_id,
+        sessionId: session.session_id,
+        currentPhase: session.current_phase,
+        currentStep: session.current_step,
+        userResponses,
+        problemStatement: session.problem_statement || undefined,
+        startTime: new Date(session.created_at),
+        lastActivity: new Date(session.updated_at || session.created_at),
+        metadata: session.metadata || {
+          cycleCount: 0,
+          problemStatement: '',
+          lastResponse: '',
+          problemType: 'problem'
+        }
+      };
+
+      console.log('Loaded context from database:', { 
+        sessionId, 
+        currentStep: context.currentStep, 
+        currentPhase: context.currentPhase,
+        userResponseCount: Object.keys(userResponses).length 
+      });
+
+      return context;
+    } catch (error) {
+      console.error('Error loading context from database:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Save treatment context to database
+   */
+  private async saveContextToDatabase(context: TreatmentContext): Promise<void> {
+    try {
+      const supabase = createServerClient();
+
+      // Update session data
+      const { error: sessionError } = await supabase
+        .from('treatment_sessions')
+        .upsert({
+          session_id: context.sessionId,
+          user_id: context.userId,
+          current_phase: context.currentPhase,
+          current_step: context.currentStep,
+          problem_statement: context.problemStatement,
+          metadata: context.metadata,
+          updated_at: new Date().toISOString()
+        });
+
+      if (sessionError) {
+        console.error('Error saving session data:', sessionError);
+      }
+
+      // Save user responses to treatment_progress
+      for (const [stepId, response] of Object.entries(context.userResponses)) {
+        if (response) {
+          const { error: progressError } = await supabase
+            .from('treatment_progress')
+            .upsert({
+              session_id: context.sessionId,
+              phase_id: context.currentPhase,
+              step_id: stepId,
+              user_response: response
+            });
+
+          if (progressError) {
+            console.error('Error saving progress data:', progressError);
+          }
+        }
+      }
+
+      console.log('Context saved to database:', context.sessionId);
+    } catch (error) {
+      console.error('Error saving context to database:', error);
+    }
   }
 } 
