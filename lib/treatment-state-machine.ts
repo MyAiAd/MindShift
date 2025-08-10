@@ -609,10 +609,10 @@ export class TreatmentStateMachine {
             const input = (userInput || '').toLowerCase();
             
             // Check if this is the first time (user provided description) or confirmation
-            if (input.includes('yes') || input.includes('y') || input.includes('correct') || input.includes('right')) {
+            if (input === 'yes' || input === 'y' || input.includes('correct') || input.includes('right')) {
               // User confirmed, continue
               return "Great! Let's continue with the process.";
-            } else if (input.includes('no') || input.includes('n') || input.includes('wrong') || input.includes('incorrect')) {
+            } else if (input === 'no' || input === 'n' || input.includes('wrong') || input.includes('incorrect')) {
               // User said no, go back to description
               context.currentStep = 'work_type_description';
               if (workType === 'problem') {
