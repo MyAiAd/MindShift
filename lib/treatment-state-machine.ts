@@ -554,35 +554,16 @@ export class TreatmentStateMachine {
             }
             
             const workType = context.metadata.workType || 'item';
-            const input = (userInput || '').toLowerCase();
             
-            // Check if this is the initial transition from selection (input will be "1", "2", "3", etc.)
-            if (input === '1' || input === '2' || input === '3' || 
-                input.includes('problem') || input.includes('goal') || input.includes('negative') || input.includes('experience')) {
-              // First time here - ask for description
-              if (workType === 'problem') {
-                return "Tell me what the problem is in a few words.";
-              } else if (workType === 'goal') {
-                return "Tell me what the goal is in a few words.";
-              } else if (workType === 'negative_experience') {
-                return "Tell me what the negative experience was in a few words.";
-              } else {
-                return "Tell me what you want to work on in a few words.";
-              }
+            // Always ask for description - this step only handles asking for description
+            if (workType === 'problem') {
+              return "Tell me what the problem is in a few words.";
+            } else if (workType === 'goal') {
+              return "Tell me what the goal is in a few words.";
+            } else if (workType === 'negative_experience') {
+              return "Tell me what the negative experience was in a few words.";
             } else {
-              // Second time here - user provided actual description, store and confirm
-              const statement = userInput || '';
-              context.metadata.problemStatement = statement;
-              
-              if (workType === 'problem') {
-                return `So you want to work on '${statement}'. Is that correct?`;
-              } else if (workType === 'goal') {
-                return `So you want to work on the goal of '${statement}'. Is that correct?`;
-              } else if (workType === 'negative_experience') {
-                return `So you want to work on the negative experience of '${statement}'. Is that correct?`;
-              } else {
-                return `So you want to work on '${statement}'. Is that correct?`;
-              }
+              return "Tell me what you want to work on in a few words.";
             }
           },
           expectedResponseType: 'description',
@@ -599,14 +580,16 @@ export class TreatmentStateMachine {
         {
           id: 'confirm_statement',
           scriptedResponse: (userInput, context) => {
+            const workType = context.metadata.workType || 'item';
             const input = (userInput || '').toLowerCase();
             
-            // Handle yes/no confirmation
+            // Check if this is the first time (user provided description) or confirmation
             if (input.includes('yes') || input.includes('y') || input.includes('correct') || input.includes('right')) {
+              // User confirmed, continue
               return "Great! Let's continue with the process.";
             } else if (input.includes('no') || input.includes('n') || input.includes('wrong') || input.includes('incorrect')) {
-              // Go back to ask for description again
-              const workType = context.metadata.workType || 'item';
+              // User said no, go back to description
+              context.currentStep = 'work_type_description';
               if (workType === 'problem') {
                 return "Tell me what the problem is in a few words.";
               } else if (workType === 'goal') {
@@ -617,7 +600,20 @@ export class TreatmentStateMachine {
                 return "Tell me what you want to work on in a few words.";
               }
             } else {
-              return "Please confirm if this is correct by saying 'yes' or 'no'.";
+              // First time here - user provided description, store it and ask for confirmation
+              const statement = userInput || '';
+              context.metadata.problemStatement = statement;
+              context.problemStatement = statement; // Keep for compatibility
+              
+              if (workType === 'problem') {
+                return `So you want to work on '${statement}'. Is that correct?`;
+              } else if (workType === 'goal') {
+                return `So you want to work on the goal of '${statement}'. Is that correct?`;
+              } else if (workType === 'negative_experience') {
+                return `So you want to work on the negative experience of '${statement}'. Is that correct?`;
+              } else {
+                return `So you want to work on '${statement}'. Is that correct?`;
+              }
             }
           },
           expectedResponseType: 'yesno',
@@ -2070,31 +2066,26 @@ export class TreatmentStateMachine {
         }
         
       case 'work_type_description':
-        // Check if user provided selection or actual description
-        const input = (lastResponse || '').toLowerCase();
-        if (input === '1' || input === '2' || input === '3' || 
-            input.includes('problem') || input.includes('goal') || input.includes('negative') || input.includes('experience')) {
-          // User provided selection, stay on work_type_description to ask for description
-          return 'work_type_description';
-        } else {
-          // User provided actual description, go to confirm_statement
-          return 'confirm_statement';
-        }
+        // User provided description, go to confirm_statement
+        return 'confirm_statement';
         
       case 'work_type_selection':
         // Already handled in the scriptedResponse, continue to next step
         return 'confirm_statement';
         
       case 'confirm_statement':
-        // If user says "no", ask them to restate 
-        if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          return 'work_type_selection';
+        const confirmInput = lastResponse.toLowerCase();
+        
+        // If user says "no", go back to work_type_description
+        if (confirmInput.includes('no') || confirmInput.includes('not') || confirmInput.includes('wrong') || confirmInput.includes('incorrect')) {
+          return 'work_type_description';
         }
         // If user says "yes", route to method selection or direct to treatment
-        if (lastResponse.includes('yes') || lastResponse.includes('correct') || lastResponse.includes('right')) {
+        if (confirmInput.includes('yes') || confirmInput.includes('correct') || confirmInput.includes('right')) {
           return 'route_to_method';
         }
-        break;
+        // If it's not yes/no, stay on confirm_statement (it will handle showing confirmation)
+        return 'confirm_statement';
         
       case 'route_to_method':
         const workType = context.metadata.workType;
