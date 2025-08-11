@@ -677,9 +677,7 @@ export class TreatmentStateMachine {
               // Goals automatically use Reality Shifting - go directly to first step
               context.currentPhase = 'reality_shifting';
               context.metadata.selectedMethod = 'reality_shifting';
-              // Get the problem statement for goal capture
-              const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this problem';
-              return `Instead of having '${problemStatement}', what do you want?`;
+              return `What do you want?`;
             } else if (workType === 'negative_experience') {
               // Negative experiences automatically use Trauma Shifting - go directly to first step
               context.currentPhase = 'trauma_shifting';
@@ -1231,9 +1229,7 @@ export class TreatmentStateMachine {
         {
           id: 'reality_goal_capture',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement first
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this problem';
-            return `Instead of having '${problemStatement}', what do you want?`;
+            return `What do you want?`;
           },
           expectedResponseType: 'goal',
           validationRules: [
