@@ -456,10 +456,13 @@ export class TreatmentStateMachine {
             
             // Handle problem description after method selection
             if (context.metadata.workType === 'problem' && context.metadata.selectedMethod) {
-              // User has provided problem description, store it and proceed
+              // User has provided problem description, store it and proceed directly to treatment
               context.metadata.problemStatement = userInput;
               context.problemStatement = userInput; // Keep for compatibility
-              return `So you want to work on '${userInput}'. Is that correct?`;
+              // Skip confirmation step - go directly to method routing
+              context.currentStep = 'route_to_method';
+              context.currentPhase = 'work_type_selection';
+              return "SKIP_TO_METHOD_ROUTING";
             }
             
             // Handle initial work type selection
@@ -2087,11 +2090,11 @@ export class TreatmentStateMachine {
         const selectedWorkType = context.metadata.workType;
         const selectedMethod = context.metadata.selectedMethod;
         
-        // If user selected a work type and method (for problems), go to description
+        // If user selected a work type and method (for problems), skip confirmation and go directly to routing
         if (selectedWorkType === 'problem' && selectedMethod) {
-          console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem and method selected, changing phase and going to work_type_description`);
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem and method selected, skipping confirmation and going to route_to_method`);
           context.currentPhase = 'work_type_selection';
-          return 'work_type_description';
+          return 'route_to_method';
         } else if (selectedWorkType === 'goal') {
           // Goal selected, go directly to description
           console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected, changing phase and going to work_type_description`);
