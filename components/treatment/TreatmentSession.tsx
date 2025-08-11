@@ -345,8 +345,7 @@ export default function TreatmentSession({
       setSelectedWorkType('NEGATIVE EXPERIENCE');
     }
 
-    // Set loading state immediately
-    setIsLoading(true);
+    // Let sendMessageWithContent handle the loading state
     try {
       // For GOAL and NEGATIVE EXPERIENCE, automatically proceed with the designated method
       if (method === '2' || method.toUpperCase() === 'GOAL') {
