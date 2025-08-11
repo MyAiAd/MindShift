@@ -61,6 +61,7 @@ export default function TreatmentSession({
   const [stepHistory, setStepHistory] = useState<StepHistoryEntry[]>([]);
   const [voiceError, setVoiceError] = useState<string>('');
   const [selectedWorkType, setSelectedWorkType] = useState<string | null>(null);
+  const [clickedButton, setClickedButton] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -335,6 +336,10 @@ export default function TreatmentSession({
     if (!['1', '2', '3', 'PROBLEM', 'GOAL', 'NEGATIVE EXPERIENCE'].includes(method.toUpperCase())) {
       return;
     }
+
+    // Set visual feedback immediately
+    setClickedButton(method);
+    setTimeout(() => setClickedButton(null), 300);
 
     // Set the selected work type for UI state management
     let workType = '';
@@ -881,7 +886,11 @@ export default function TreatmentSession({
                         <button
                           onClick={() => handleWorkTypeSelection('1')}
                           disabled={isLoading}
-                          className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''}`}
+                          className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                            isLoading ? 'opacity-50' : ''
+                          } ${
+                            clickedButton === '1' ? 'scale-105 bg-blue-700 shadow-lg' : ''
+                          }`}
                         >
                           <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
                           <span>PROBLEM</span>
@@ -890,7 +899,11 @@ export default function TreatmentSession({
                         <button
                           onClick={() => handleWorkTypeSelection('2')}
                           disabled={isLoading}
-                          className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''}`}
+                          className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                            isLoading ? 'opacity-50' : ''
+                          } ${
+                            clickedButton === '2' ? 'scale-105 bg-green-700 shadow-lg' : ''
+                          }`}
                         >
                           <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
                           <span>GOAL</span>
@@ -899,7 +912,11 @@ export default function TreatmentSession({
                         <button
                           onClick={() => handleWorkTypeSelection('3')}
                           disabled={isLoading}
-                          className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''}`}
+                          className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                            isLoading ? 'opacity-50' : ''
+                          } ${
+                            clickedButton === '3' ? 'scale-105 bg-purple-700 shadow-lg' : ''
+                          }`}
                         >
                           <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">3</span>
                           <span>NEGATIVE EXPERIENCE</span>
@@ -955,25 +972,6 @@ export default function TreatmentSession({
                             <span>Blockage Shifting</span>
                           </button>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Show status for automatic method selection */}
-                  {(selectedWorkType === 'GOAL' || selectedWorkType === 'NEGATIVE EXPERIENCE') && (
-                    <div className="text-center border-t pt-4">
-                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                        <h3 className="text-md font-semibold text-blue-900 dark:text-blue-200 mb-2">
-                          {selectedWorkType === 'GOAL' ? 'Reality Shifting Selected' : 'Trauma Shifting Selected'}
-                        </h3>
-                        <p className="text-sm text-blue-700 dark:text-blue-300">
-                          {isLoading 
-                            ? 'Starting treatment...'
-                            : selectedWorkType === 'GOAL' 
-                            ? 'Goals are best addressed with Reality Shifting - proceeding automatically...'
-                            : 'Negative experiences are best addressed with Trauma Shifting - proceeding automatically...'
-                          }
-                        </p>
                       </div>
                     </div>
                   )}
@@ -1052,11 +1050,7 @@ export default function TreatmentSession({
             ) : currentStep === 'mind_shifting_explanation' ? (
               selectedWorkType === 'PROBLEM' 
                 ? 'First select PROBLEM above, then choose your preferred problem-clearing method'
-                : selectedWorkType === 'GOAL'
-                ? 'Reality Shifting will begin automatically for your goal'
-                : selectedWorkType === 'NEGATIVE EXPERIENCE' 
-                ? 'Trauma Shifting will begin automatically for your negative experience'
-                : 'Select what you want to work on above - GOAL and NEGATIVE EXPERIENCE proceed automatically'
+                : 'Select what you want to work on above'
             ) : (
               'Press Enter to send • Voice controls in accessibility settings • This session uses 95% scripted responses for optimal performance'
             )}
