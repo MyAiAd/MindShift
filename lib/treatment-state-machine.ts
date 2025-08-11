@@ -152,16 +152,21 @@ export class TreatmentStateMachine {
 
     // Input is valid - proceed to next step
     const nextStepId = this.determineNextStep(currentStep, treatmentContext);
+    console.log(`🔍 PROCESS_INPUT: nextStepId="${nextStepId}", currentPhase="${treatmentContext.currentPhase}"`);
+    
     if (nextStepId) {
       treatmentContext.currentStep = nextStepId;
       
       // Get the correct phase after potential phase change
       const updatedPhase = this.phases.get(treatmentContext.currentPhase);
+      console.log(`🔍 PROCESS_INPUT: Looking for step "${nextStepId}" in phase "${treatmentContext.currentPhase}"`);
+      
       if (!updatedPhase) {
         throw new Error(`Invalid updated phase: ${treatmentContext.currentPhase}`);
       }
       
       const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
+      console.log(`🔍 PROCESS_INPUT: Found nextStep:`, nextStep ? `YES (${nextStep.id})` : 'NO');
       
       if (nextStep) {
         const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
@@ -2099,6 +2104,8 @@ export class TreatmentStateMachine {
 
   private determineNextStep(currentStep: TreatmentStep, context: TreatmentContext): string | null {
     const lastResponse = context.userResponses[context.currentStep]?.toLowerCase() || '';
+    
+    console.log(`🔍 DETERMINE_NEXT_STEP: currentStep="${context.currentStep}", lastResponse="${lastResponse}", userResponses=`, context.userResponses);
     
     // Handle special flow logic based on current step
     switch (context.currentStep) {
