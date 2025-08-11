@@ -247,6 +247,11 @@ export class TreatmentStateMachine {
     
     // Special validation for introduction phase
     if (step.id === 'mind_shifting_explanation') {
+      // Skip validation for work type selection inputs (1, 2, 3)
+      if (trimmed === '1' || trimmed === '2' || trimmed === '3') {
+        return { isValid: true };
+      }
+      
       // Check if user stated it as a goal instead of problem
       if (lowerInput.includes('want to') || lowerInput.includes('goal') || lowerInput.includes('achieve') || 
           lowerInput.includes('wish to') || lowerInput.includes('hope to') || lowerInput.includes('plan to')) {
