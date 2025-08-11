@@ -198,6 +198,9 @@ export default function TreatmentSession({
 
       const data = await response.json();
       console.log('📤 API Response data:', data);
+      console.log('📤 API Response message:', data.message);
+      console.log('📤 API Response currentStep:', data.currentStep);
+      console.log('📤 API Response success:', data.success);
       
       if (data.success) {
         // Skip adding messages for backend confirmation messages that UI already handles
