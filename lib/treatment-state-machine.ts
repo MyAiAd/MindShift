@@ -420,6 +420,27 @@ export class TreatmentStateMachine {
             
             const input = userInput.toLowerCase();
             
+            // Handle initial work type selection FIRST (reset state for fresh selection)
+            if (input.includes('1') || input.includes('problem')) {
+              // Reset all work type metadata for fresh selection
+              context.metadata.workType = 'problem';
+              context.metadata.selectedMethod = undefined;
+              // For problems, show method selection (UI will show buttons, this is for backend logic)
+              return "PROBLEM_SELECTION_CONFIRMED";
+            } else if (input.includes('2') || input.includes('goal')) {
+              // Reset all work type metadata for fresh selection
+              context.metadata.workType = 'goal';
+              context.metadata.selectedMethod = undefined;
+              // Goals go directly to goal capture question
+              return "What do you want?";
+            } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
+              // Reset all work type metadata for fresh selection
+              context.metadata.workType = 'negative_experience';
+              context.metadata.selectedMethod = undefined;
+              // Negative experiences go directly to trauma shifting intro
+              return "Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience you want to work on. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?";
+            }
+            
             // Check if we're already in problem method selection mode
             if (context.metadata.workType === 'problem' && !context.metadata.selectedMethod) {
               // Handle method selection for problems - only respond to method names (frontend sends these)
@@ -476,22 +497,8 @@ export class TreatmentStateMachine {
               return "SKIP_TO_TREATMENT_INTRO";
             }
             
-            // Handle initial work type selection
-            if (input.includes('1') || input.includes('problem')) {
-              context.metadata.workType = 'problem';
-              // For problems, show method selection (UI will show buttons, this is for backend logic)
-              return "PROBLEM_SELECTION_CONFIRMED";
-            } else if (input.includes('2') || input.includes('goal')) {
-              context.metadata.workType = 'goal';
-              // Goals go directly to goal capture question
-              return "What do you want?";
-            } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
-              context.metadata.workType = 'negative_experience';
-              // Negative experiences go directly to trauma shifting intro
-              return "Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience you want to work on. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?";
-            } else {
-              return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
-            }
+            // If we get here, it's not a valid work type selection
+            return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
           },
           expectedResponseType: 'selection',
           validationRules: [
