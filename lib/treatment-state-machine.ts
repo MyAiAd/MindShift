@@ -167,6 +167,7 @@ export class TreatmentStateMachine {
       
       const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
       console.log(`🔍 PROCESS_INPUT: Found nextStep:`, nextStep ? `YES (${nextStep.id})` : 'NO');
+      console.log(`🔍 PROCESS_INPUT: Available steps in phase "${treatmentContext.currentPhase}":`, updatedPhase.steps.map(s => s.id));
       
       if (nextStep) {
         const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
@@ -179,7 +180,10 @@ export class TreatmentStateMachine {
           needsLinguisticProcessing
         };
       } else {
-        throw new Error(`Step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'`);
+        console.error(`❌ PROCESS_INPUT: Step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'`);
+        console.error(`❌ PROCESS_INPUT: Available steps:`, updatedPhase.steps.map(s => s.id));
+        console.error(`❌ PROCESS_INPUT: Context metadata:`, JSON.stringify(treatmentContext.metadata, null, 2));
+        throw new Error(`Step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'. Available steps: ${updatedPhase.steps.map(s => s.id).join(', ')}`);
       }
     }
 
@@ -430,18 +434,21 @@ export class TreatmentStateMachine {
               // Reset all work type metadata for fresh selection
               context.metadata.workType = 'problem';
               context.metadata.selectedMethod = undefined;
+              console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'problem'`);
               // For problems, show method selection (UI will show buttons, this is for backend logic)
               return "PROBLEM_SELECTION_CONFIRMED";
             } else if (input.includes('2') || input.includes('goal')) {
               // Reset all work type metadata for fresh selection
               context.metadata.workType = 'goal';
               context.metadata.selectedMethod = undefined;
+              console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'goal'`);
               // Signal that we'll ask for description in next step
               return "GOAL_SELECTION_CONFIRMED";
             } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
               // Reset all work type metadata for fresh selection
               context.metadata.workType = 'negative_experience';
               context.metadata.selectedMethod = undefined;
+              console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'negative_experience'`);
               // Signal that we'll ask for description in next step  
               return "NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED";
             }
@@ -2137,9 +2144,11 @@ export class TreatmentStateMachine {
     switch (context.currentStep) {
       case 'mind_shifting_explanation':
         console.log(`🔍 MIND_SHIFTING_DETERMINE: lastResponse="${lastResponse}", workType="${context.metadata.workType}", selectedMethod="${context.metadata.selectedMethod}"`);
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: Full metadata:`, JSON.stringify(context.metadata, null, 2));
         
         const selectedWorkType = context.metadata.workType;
         const selectedMethod = context.metadata.selectedMethod;
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: selectedWorkType="${selectedWorkType}", selectedMethod="${selectedMethod}"`);  
         
         // If user selected a work type and method (for problems), skip confirmation and routing - go directly to treatment intro
         if (selectedWorkType === 'problem' && selectedMethod) {
@@ -2160,8 +2169,9 @@ export class TreatmentStateMachine {
         } else if (selectedWorkType === 'goal') {
           // Check if we have the goal description yet
           if (!context.problemStatement && !context.metadata.problemStatement) {
-            // Go to dedicated goal description step
+            // Go to dedicated goal description step - ensure we stay in introduction phase
             console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected, going to goal_description step`);
+            context.currentPhase = 'introduction'; // Explicitly set to ensure we're in correct phase
             return 'goal_description';
           } else {
             // Have description, go to reality shifting intro
@@ -2173,8 +2183,9 @@ export class TreatmentStateMachine {
         } else if (selectedWorkType === 'negative_experience') {
           // Check if we have the negative experience description yet
           if (!context.problemStatement && !context.metadata.problemStatement) {
-            // Go to dedicated negative experience description step
+            // Go to dedicated negative experience description step - ensure we stay in introduction phase
             console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience selected, going to negative_experience_description step`);
+            context.currentPhase = 'introduction'; // Explicitly set to ensure we're in correct phase
             return 'negative_experience_description';
           } else {
             // Have description, go to trauma shifting intro
