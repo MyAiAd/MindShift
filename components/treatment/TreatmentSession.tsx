@@ -950,23 +950,6 @@ export default function TreatmentSession({
                       </div>
                     </div>
                   )}
-                  
-                  {/* Show status for automatic method selection */}
-                  {(selectedWorkType === 'GOAL' || selectedWorkType === 'NEGATIVE EXPERIENCE') && !isLoading && (
-                    <div className="text-center border-t pt-4">
-                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                        <h3 className="text-md font-semibold text-blue-900 dark:text-blue-200 mb-2">
-                          {selectedWorkType === 'GOAL' ? 'Reality Shifting Selected' : 'Trauma Shifting Selected'}
-                        </h3>
-                        <p className="text-sm text-blue-700 dark:text-blue-300">
-                          {selectedWorkType === 'GOAL' 
-                            ? 'Goals are best addressed with Reality Shifting - proceeding automatically...'
-                            : 'Negative experiences are best addressed with Trauma Shifting - proceeding automatically...'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             ) : (
@@ -1042,11 +1025,7 @@ export default function TreatmentSession({
             ) : currentStep === 'mind_shifting_explanation' ? (
               selectedWorkType === 'PROBLEM' 
                 ? 'First select PROBLEM above, then choose your preferred problem-clearing method'
-                : selectedWorkType === 'GOAL'
-                ? 'Reality Shifting will begin automatically for your goal'
-                : selectedWorkType === 'NEGATIVE EXPERIENCE' 
-                ? 'Trauma Shifting will begin automatically for your negative experience'
-                : 'Select what you want to work on - GOAL and NEGATIVE EXPERIENCE proceed automatically'
+                : 'Select what you want to work on above'
             ) : (
               'Press Enter to send • Voice controls in accessibility settings • This session uses 95% scripted responses for optimal performance'
             )}

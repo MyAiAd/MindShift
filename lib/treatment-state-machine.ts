@@ -674,15 +674,19 @@ export class TreatmentStateMachine {
                 return "Great! Let's begin Blockage Shifting.";
               }
             } else if (workType === 'goal') {
-              // Goals automatically use Reality Shifting
+              // Goals automatically use Reality Shifting - go directly to first step
               context.currentPhase = 'reality_shifting';
               context.metadata.selectedMethod = 'reality_shifting';
-              return "For goals, we'll use Reality Shifting. Let's begin the process.";
+              // Get the problem statement for goal capture
+              const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this problem';
+              return `Instead of having '${problemStatement}', what do you want?`;
             } else if (workType === 'negative_experience') {
-              // Negative experiences automatically use Trauma Shifting
+              // Negative experiences automatically use Trauma Shifting - go directly to first step
               context.currentPhase = 'trauma_shifting';
               context.metadata.selectedMethod = 'trauma_shifting';
-              return "For negative experiences, we'll use Trauma Shifting. Let's begin the process.";
+              // Get the negative experience statement
+              const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
+              return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?`;
             }
             
             // Should not reach here - method should be selected first
@@ -692,7 +696,7 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please continue.' }
           ],
-          nextStep: undefined, // Will be determined by the treatment phase
+                    nextStep: undefined, // Will be determined by custom logic based on work type
           aiTriggers: []
         }
       ]
@@ -2165,15 +2169,15 @@ export class TreatmentStateMachine {
         const routeSelectedMethod = context.metadata.selectedMethod;
         
         if (routeWorkType === 'goal') {
-          // Goals go directly to Reality Shifting
+          // Goals: we showed reality_goal_capture content, so go to reality_shifting_intro next
           context.currentPhase = 'reality_shifting';
           context.metadata.selectedMethod = 'reality_shifting';
           return 'reality_shifting_intro';
         } else if (routeWorkType === 'negative_experience') {
-          // Negative experiences go directly to Trauma Shifting
+          // Negative experiences: we showed trauma_shifting_intro content, so go to trauma_dissolve_step_a next
           context.currentPhase = 'trauma_shifting';
           context.metadata.selectedMethod = 'trauma_shifting';
-          return 'trauma_shifting_intro';
+          return 'trauma_dissolve_step_a';
         } else if (routeWorkType === 'problem' && routeSelectedMethod) {
           // Problems with selected method - route to appropriate intro
           if (routeSelectedMethod === 'problem_shifting') {
