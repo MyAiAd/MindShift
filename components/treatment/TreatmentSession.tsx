@@ -206,6 +206,8 @@ export default function TreatmentSession({
         // Skip adding messages for backend confirmation messages that UI already handles
         const isUIHandledMessage = data.message === 'PROBLEM_SELECTION_CONFIRMED' || 
                                    data.message === 'METHOD_SELECTION_NEEDED' ||
+                                   data.message === 'GOAL_SELECTION_CONFIRMED' ||
+                                   data.message === 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED' ||
                                    data.message === 'SKIP_TO_TREATMENT_INTRO';
         
         if (!isUIHandledMessage) {

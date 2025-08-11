@@ -436,34 +436,17 @@ export class TreatmentStateMachine {
               // Reset all work type metadata for fresh selection
               context.metadata.workType = 'goal';
               context.metadata.selectedMethod = undefined;
-              // Ask for the goal description
-              return "What do you want? Please describe your goal in a few words.";
+              // Signal that we'll ask for description in next step
+              return "GOAL_SELECTION_CONFIRMED";
             } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
               // Reset all work type metadata for fresh selection
               context.metadata.workType = 'negative_experience';
               context.metadata.selectedMethod = undefined;
-              // Ask for the negative experience description first
-              return "What negative experience do you want to work on? Please describe it in a few words.";
+              // Signal that we'll ask for description in next step  
+              return "NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED";
             }
             
-            // Handle goal description after work type selection
-            if (context.metadata.workType === 'goal' && !context.problemStatement && !context.metadata.problemStatement) {
-              // User is providing their goal description
-              context.problemStatement = userInput;
-              context.metadata.problemStatement = userInput;
-              context.metadata.currentGoal = userInput;
-              console.log(`🔍 GOAL_DESC: Stored goal: "${userInput}"`);
-              return "Close your eyes and keep them closed throughout the process. We're going to work with your goal of '" + userInput + "'.\n\nFeel that '" + userInput + "' is coming to you... what does it feel like?";
-            }
-            
-            // Handle negative experience description after work type selection
-            if (context.metadata.workType === 'negative_experience' && !context.problemStatement && !context.metadata.problemStatement) {
-              // User is providing their negative experience description
-              context.problemStatement = userInput;
-              context.metadata.problemStatement = userInput;
-              console.log(`🔍 NEGATIVE_EXPERIENCE_DESC: Stored description: "${userInput}"`);
-              return "Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '" + userInput + "'. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?";
-            }
+
             
             // Check if we're already in problem method selection mode
             if (context.metadata.workType === 'problem' && !context.metadata.selectedMethod) {
@@ -576,6 +559,30 @@ export class TreatmentStateMachine {
             { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
           ],
           nextStep: 'work_type_description',
+          aiTriggers: []
+        },
+        {
+          id: 'goal_description',
+          scriptedResponse: (userInput, context) => {
+            return "What do you want? Please describe your goal in a few words.";
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you want to achieve.' }
+          ],
+          nextStep: undefined, // Will be determined by determineNextStep logic
+          aiTriggers: []
+        },
+        {
+          id: 'negative_experience_description',
+          scriptedResponse: (userInput, context) => {
+            return "What negative experience do you want to work on? Please describe it in a few words.";
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please describe the negative experience.' }
+          ],
+          nextStep: undefined, // Will be determined by determineNextStep logic
           aiTriggers: []
         }
       ]
@@ -2153,9 +2160,9 @@ export class TreatmentStateMachine {
         } else if (selectedWorkType === 'goal') {
           // Check if we have the goal description yet
           if (!context.problemStatement && !context.metadata.problemStatement) {
-            // Still need description, stay on current step
-            console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected but no description yet, staying on mind_shifting_explanation`);
-            return 'mind_shifting_explanation';
+            // Go to dedicated goal description step
+            console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected, going to goal_description step`);
+            return 'goal_description';
           } else {
             // Have description, go to reality shifting intro
             console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal and description provided, going to reality_shifting_intro`);
@@ -2166,9 +2173,9 @@ export class TreatmentStateMachine {
         } else if (selectedWorkType === 'negative_experience') {
           // Check if we have the negative experience description yet
           if (!context.problemStatement && !context.metadata.problemStatement) {
-            // Still need description, stay on current step
-            console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience selected but no description yet, staying on mind_shifting_explanation`);
-            return 'mind_shifting_explanation';
+            // Go to dedicated negative experience description step
+            console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience selected, going to negative_experience_description step`);
+            return 'negative_experience_description';
           } else {
             // Have description, go to trauma shifting intro
             console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience and description provided, going to trauma_shifting_intro`);
@@ -2236,6 +2243,25 @@ export class TreatmentStateMachine {
           }
         }
         break;
+        
+      case 'goal_description':
+        // User provided goal description, store it and go to reality shifting intro  
+        context.problemStatement = lastResponse;
+        context.metadata.problemStatement = lastResponse;
+        context.metadata.currentGoal = lastResponse;
+        context.currentPhase = 'reality_shifting';
+        context.metadata.selectedMethod = 'reality_shifting';
+        console.log(`🔍 GOAL_DESCRIPTION: Stored goal: "${lastResponse}"`);
+        return 'reality_shifting_intro';
+        
+      case 'negative_experience_description':
+        // User provided negative experience description, store it and go to trauma shifting intro
+        context.problemStatement = lastResponse;
+        context.metadata.problemStatement = lastResponse;
+        context.currentPhase = 'trauma_shifting';
+        context.metadata.selectedMethod = 'trauma_shifting';
+        console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Stored description: "${lastResponse}"`);
+        return 'trauma_shifting_intro';
         
       case 'multiple_problems_selection':
         return 'restate_selected_problem';
