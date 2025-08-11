@@ -420,19 +420,15 @@ export class TreatmentStateMachine {
               // Handle method selection for problems
               if (input.includes('1') || input.includes('problem shifting')) {
                 context.metadata.selectedMethod = 'problem_shifting';
-                context.currentPhase = 'work_type_selection';
                 return "Great! We'll use Problem Shifting. Tell me what the problem is in a few words.";
               } else if (input.includes('2') || input.includes('identity shifting')) {
                 context.metadata.selectedMethod = 'identity_shifting';
-                context.currentPhase = 'work_type_selection';
                 return "Great! We'll use Identity Shifting. Tell me what the problem is in a few words.";
               } else if (input.includes('3') || input.includes('belief shifting')) {
                 context.metadata.selectedMethod = 'belief_shifting';
-                context.currentPhase = 'work_type_selection';
                 return "Great! We'll use Belief Shifting. Tell me what the problem is in a few words.";
               } else if (input.includes('4') || input.includes('blockage shifting')) {
                 context.metadata.selectedMethod = 'blockage_shifting';
-                context.currentPhase = 'work_type_selection';
                 return "Great! We'll use Blockage Shifting. Tell me what the problem is in a few words.";
               } else {
                 return "Please choose 1 for Problem Shifting, 2 for Identity Shifting, 3 for Belief Shifting, or 4 for Blockage Shifting.";
@@ -446,12 +442,10 @@ export class TreatmentStateMachine {
               return "Great! For problems, you can choose from several methods:\n\n1. Problem Shifting (most common)\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting\n\nPlease choose 1, 2, 3, or 4, or say the method name.";
             } else if (input.includes('2') || input.includes('goal')) {
               context.metadata.workType = 'goal';
-              context.currentPhase = 'work_type_selection';
               // Goals go directly to description
               return "Ok sure. Tell me what the goal is in a few words.";
             } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
               context.metadata.workType = 'negative_experience';
-              context.currentPhase = 'work_type_selection';
               // Negative experiences go directly to description  
               return "Ok sure. Tell me what the negative experience was in a few words.";
             } else {
@@ -2068,15 +2062,18 @@ export class TreatmentStateMachine {
         
         // If user selected a work type and method (for problems), go to description
         if (selectedWorkType === 'problem' && selectedMethod) {
-          console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem and method selected, going to work_type_description`);
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem and method selected, changing phase and going to work_type_description`);
+          context.currentPhase = 'work_type_selection';
           return 'work_type_description';
         } else if (selectedWorkType === 'goal') {
           // Goal selected, go directly to description
-          console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected, going to work_type_description`);
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected, changing phase and going to work_type_description`);
+          context.currentPhase = 'work_type_selection';
           return 'work_type_description';
         } else if (selectedWorkType === 'negative_experience') {
           // Negative experience selected, go directly to description
-          console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience selected, going to work_type_description`);
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience selected, changing phase and going to work_type_description`);
+          context.currentPhase = 'work_type_selection';
           return 'work_type_description';
         } else if (selectedWorkType === 'problem' && !selectedMethod) {
           // Problem selected but no method yet, stay on current step for method selection
