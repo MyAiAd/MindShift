@@ -806,7 +806,7 @@ export default function TreatmentSession({
                 </div>
                 </div>
               </div>
-            ) : (currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection') ? (
+            ) : (currentStep === 'mind_shifting_explanation') ? (
               /* Combined Work Type and Method Selection Interface */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Combined Selection */}
@@ -1018,7 +1018,7 @@ export default function TreatmentSession({
               'Select your answer using the buttons above'
             ) : currentStep === 'digging_deeper_start' ? (
               'Select your answer using the buttons above'
-            ) : currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection' ? (
+            ) : currentStep === 'mind_shifting_explanation' ? (
               selectedWorkType === 'PROBLEM' 
                 ? 'First select PROBLEM above, then choose your preferred problem-clearing method'
                 : selectedWorkType === 'GOAL'
