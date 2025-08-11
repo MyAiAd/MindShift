@@ -490,6 +490,19 @@ export default function TreatmentSession({
     }
   };
 
+  // Helper function to detect if method has been selected and user should input problem description
+  const isMethodSelectedAndWaitingForProblemDescription = () => {
+    // Check if we have messages and the last bot message asks for problem description
+    if (messages.length === 0) return false;
+    
+    // Get the last bot message
+    const lastBotMessage = messages.filter(m => !m.isUser).pop();
+    if (!lastBotMessage) return false;
+    
+    // Check if the message contains the problem description request
+    return lastBotMessage.content.includes("Tell me what the problem is in a few words");
+  };
+
   const getResponseTimeColor = (responseTime: number): string => {
     if (responseTime < 200) return 'text-green-600'; // Instant
     if (responseTime < 1000) return 'text-yellow-600'; // Fast
@@ -813,7 +826,7 @@ export default function TreatmentSession({
                 </div>
                 </div>
               </div>
-            ) : (currentStep === 'mind_shifting_explanation') ? (
+            ) : (currentStep === 'mind_shifting_explanation' && !isMethodSelectedAndWaitingForProblemDescription()) ? (
               /* Combined Work Type and Method Selection Interface */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Combined Selection */}
