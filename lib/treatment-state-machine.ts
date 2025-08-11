@@ -454,6 +454,14 @@ export class TreatmentStateMachine {
               }
             }
             
+            // Handle problem description after method selection
+            if (context.metadata.workType === 'problem' && context.metadata.selectedMethod) {
+              // User has provided problem description, store it and proceed
+              context.metadata.problemStatement = userInput;
+              context.problemStatement = userInput; // Keep for compatibility
+              return `So you want to work on '${userInput}'. Is that correct?`;
+            }
+            
             // Handle initial work type selection
             if (input.includes('1') || input.includes('problem')) {
               context.metadata.workType = 'problem';
