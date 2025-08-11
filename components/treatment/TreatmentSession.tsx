@@ -521,8 +521,8 @@ export default function TreatmentSession({
   // If there's an error starting the session, show error state
   if (hasError && !isSessionActive && messages.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto h-screen flex flex-col bg-white dark:bg-gray-900">
-        <div className="flex-1 flex items-center justify-center">
+      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 min-h-96">
+        <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -545,9 +545,9 @@ export default function TreatmentSession({
   }
 
   return (
-    <div className="max-w-4xl mx-auto h-screen flex flex-col bg-white dark:bg-gray-900">
+    <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900">
       {/* Header with Session Stats */}
-      <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-400 p-4 flex-shrink-0">
+      <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-400 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Brain className="h-6 w-6 text-indigo-600" />
@@ -610,8 +610,8 @@ export default function TreatmentSession({
         </div>
       )}
 
-      {/* Messages Area - Scrollable with bottom padding for fixed input */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-40">
+      {/* Messages Area - No longer scrollable, uses page scroll instead */}
+      <div className="px-4 py-3 space-y-3 pb-40">
         {messages.map((message) => (
           <div
             key={message.id}
