@@ -842,44 +842,46 @@ export default function TreatmentSession({
                 )}
 
                 <div className="flex flex-col space-y-4 flex-1">
-                  {/* Work Type Selection Section */}
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                      What do you want to work on?
-                    </h3>
-                    <div className="flex space-x-4 justify-center mb-4">
-                      <button
-                        onClick={() => handleWorkTypeSelection('1')}
-                        disabled={isLoading}
-                        className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''} ${selectedWorkType === 'PROBLEM' ? 'ring-2 ring-blue-300' : ''}`}
-                      >
-                        <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
-                        <span>{isLoading && selectedWorkType === 'PROBLEM' ? 'Processing...' : 'PROBLEM'}</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => handleWorkTypeSelection('2')}
-                        disabled={isLoading}
-                        className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''} ${selectedWorkType === 'GOAL' ? 'ring-2 ring-green-300' : ''}`}
-                      >
-                        <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
-                        <span>{isLoading && selectedWorkType === 'GOAL' ? 'Starting Reality Shifting...' : 'GOAL'}</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => handleWorkTypeSelection('3')}
-                        disabled={isLoading}
-                        className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''} ${selectedWorkType === 'NEGATIVE EXPERIENCE' ? 'ring-2 ring-purple-300' : ''}`}
-                      >
-                        <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">3</span>
-                        <span>{isLoading && selectedWorkType === 'NEGATIVE EXPERIENCE' ? 'Starting Trauma Shifting...' : 'NEGATIVE EXPERIENCE'}</span>
-                      </button>
+                  {/* Work Type Selection Section - Only show when no work type selected */}
+                  {!selectedWorkType && (
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                        What do you want to work on?
+                      </h3>
+                      <div className="flex space-x-4 justify-center mb-4">
+                        <button
+                          onClick={() => handleWorkTypeSelection('1')}
+                          disabled={isLoading}
+                          className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''}`}
+                        >
+                          <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
+                          <span>PROBLEM</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => handleWorkTypeSelection('2')}
+                          disabled={isLoading}
+                          className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''}`}
+                        >
+                          <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
+                          <span>GOAL</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => handleWorkTypeSelection('3')}
+                          disabled={isLoading}
+                          className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''}`}
+                        >
+                          <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">3</span>
+                          <span>NEGATIVE EXPERIENCE</span>
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
                   {/* Method Selection Section - Only show for PROBLEM work type */}
                   {selectedWorkType === 'PROBLEM' && (
-                    <div className="text-center border-t pt-4">
+                    <div className="text-center">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                         Choose your preferred problem-clearing method:
                       </h3>
