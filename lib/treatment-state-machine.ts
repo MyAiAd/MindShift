@@ -456,13 +456,24 @@ export class TreatmentStateMachine {
             
             // Handle problem description after method selection
             if (context.metadata.workType === 'problem' && context.metadata.selectedMethod) {
-              // User has provided problem description, store it and proceed directly to treatment
+              // User has provided problem description, store it and proceed directly to treatment intro
               context.metadata.problemStatement = userInput;
               context.problemStatement = userInput; // Keep for compatibility
-              // Skip confirmation step - go directly to method routing
-              context.currentStep = 'route_to_method';
-              context.currentPhase = 'work_type_selection';
-              return "SKIP_TO_METHOD_ROUTING";
+              // Skip confirmation and routing - go directly to treatment intro
+              if (context.metadata.selectedMethod === 'problem_shifting') {
+                context.currentStep = 'problem_shifting_intro';
+                context.currentPhase = 'problem_shifting';
+              } else if (context.metadata.selectedMethod === 'identity_shifting') {
+                context.currentStep = 'identity_shifting_intro';
+                context.currentPhase = 'identity_shifting';
+              } else if (context.metadata.selectedMethod === 'belief_shifting') {
+                context.currentStep = 'belief_shifting_intro';
+                context.currentPhase = 'belief_shifting';
+              } else if (context.metadata.selectedMethod === 'blockage_shifting') {
+                context.currentStep = 'blockage_shifting_intro';
+                context.currentPhase = 'blockage_shifting';
+              }
+              return "SKIP_TO_TREATMENT_INTRO";
             }
             
             // Handle initial work type selection
@@ -2090,11 +2101,22 @@ export class TreatmentStateMachine {
         const selectedWorkType = context.metadata.workType;
         const selectedMethod = context.metadata.selectedMethod;
         
-        // If user selected a work type and method (for problems), skip confirmation and go directly to routing
+        // If user selected a work type and method (for problems), skip confirmation and routing - go directly to treatment intro
         if (selectedWorkType === 'problem' && selectedMethod) {
-          console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem and method selected, skipping confirmation and going to route_to_method`);
-          context.currentPhase = 'work_type_selection';
-          return 'route_to_method';
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem and method selected, skipping confirmation and routing - going directly to treatment intro`);
+          if (selectedMethod === 'problem_shifting') {
+            context.currentPhase = 'problem_shifting';
+            return 'problem_shifting_intro';
+          } else if (selectedMethod === 'identity_shifting') {
+            context.currentPhase = 'identity_shifting';
+            return 'identity_shifting_intro';
+          } else if (selectedMethod === 'belief_shifting') {
+            context.currentPhase = 'belief_shifting';
+            return 'belief_shifting_intro';
+          } else if (selectedMethod === 'blockage_shifting') {
+            context.currentPhase = 'blockage_shifting';
+            return 'blockage_shifting_intro';
+          }
         } else if (selectedWorkType === 'goal') {
           // Goal selected, go directly to description
           console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected, changing phase and going to work_type_description`);
