@@ -578,11 +578,10 @@ export class TreatmentStateMachine {
           id: 'route_to_method',
           scriptedResponse: (userInput, context) => {
             const workType = context.metadata.workType;
+            const selectedMethod = context.metadata.selectedMethod;
             
-            if (workType === 'problem') {
-              // For problems, get the selected method and start treatment
-              const selectedMethod = context.metadata.selectedMethod;
-              
+            if (workType === 'problem' && selectedMethod) {
+              // For problems with selected method, start treatment
               if (selectedMethod === 'problem_shifting') {
                 context.currentPhase = 'problem_shifting';
                 return "Great! Let's begin Problem Shifting.";
@@ -595,11 +594,6 @@ export class TreatmentStateMachine {
               } else if (selectedMethod === 'blockage_shifting') {
                 context.currentPhase = 'blockage_shifting';
                 return "Great! Let's begin Blockage Shifting.";
-              } else {
-                // Default to Problem Shifting if no method selected
-                context.currentPhase = 'problem_shifting';
-                context.metadata.selectedMethod = 'problem_shifting';
-                return "Great! Let's begin Problem Shifting.";
               }
             } else if (workType === 'goal') {
               // Goals automatically use Reality Shifting
@@ -613,52 +607,14 @@ export class TreatmentStateMachine {
               return "For negative experiences, we'll use Trauma Shifting. Let's begin the process.";
             }
             
-            return "Let's continue with the treatment process.";
+            // Should not reach here - method should be selected first
+            return "Please select a method first.";
           },
           expectedResponseType: 'open',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please continue.' }
           ],
           nextStep: undefined, // Will be determined by the treatment phase
-          aiTriggers: []
-        },
-        {
-          id: 'method_selected',
-          scriptedResponse: (userInput, context) => {
-            const workType = context.metadata.workType;
-            
-            if (workType === 'problem') {
-              const input = (userInput || '').toLowerCase();
-              
-              if (input.includes('1') || input.includes('problem shifting')) {
-                context.currentPhase = 'problem_shifting';
-                context.metadata.selectedMethod = 'problem_shifting';
-                return "Great! We'll use Problem Shifting. Let's begin the process.";
-              } else if (input.includes('2') || input.includes('identity shifting')) {
-                context.currentPhase = 'identity_shifting';
-                context.metadata.selectedMethod = 'identity_shifting';
-                return "Great! We'll use Identity Shifting. Let's begin the process.";
-              } else if (input.includes('3') || input.includes('belief shifting')) {
-                context.currentPhase = 'belief_shifting';
-                context.metadata.selectedMethod = 'belief_shifting';
-                return "Great! We'll use Belief Shifting. Let's begin the process.";
-              } else if (input.includes('4') || input.includes('blockage shifting')) {
-                context.currentPhase = 'blockage_shifting';
-                context.metadata.selectedMethod = 'blockage_shifting';
-                return "Great! We'll use Blockage Shifting. Let's begin the process.";
-              } else {
-                return "Please choose 1 for Problem Shifting, 2 for Identity Shifting, 3 for Belief Shifting, or 4 for Blockage Shifting.";
-              }
-            }
-            
-            // For goals and negative experiences, this step shouldn't be reached as they auto-route
-            return "Let's continue with the selected method.";
-          },
-          expectedResponseType: 'open',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please confirm your selection.' }
-          ],
-          nextStep: undefined, // Will be handled by routing logic
           aiTriggers: []
         }
       ]
@@ -2112,36 +2068,30 @@ export class TreatmentStateMachine {
         return 'confirm_statement';
         
       case 'route_to_method':
-        const workType = context.metadata.workType;
+        const routeWorkType = context.metadata.workType;
+        const routeSelectedMethod = context.metadata.selectedMethod;
         
-        if (workType === 'goal') {
+        if (routeWorkType === 'goal') {
           // Goals go directly to Reality Shifting
           context.currentPhase = 'reality_shifting';
           context.metadata.selectedMethod = 'reality_shifting';
           return 'reality_shifting_intro';
-        } else if (workType === 'negative_experience') {
+        } else if (routeWorkType === 'negative_experience') {
           // Negative experiences go directly to Trauma Shifting
           context.currentPhase = 'trauma_shifting';
           context.metadata.selectedMethod = 'trauma_shifting';
           return 'trauma_shifting_intro';
-        } else if (workType === 'problem') {
-          // Problems need method selection
-          return 'method_selected';
-        }
-        break;
-        
-      case 'method_selected':
-        // Method selection is handled in the scriptedResponse, route to appropriate intro
-        const selectedMethod = context.metadata.selectedMethod;
-        
-        if (selectedMethod === 'problem_shifting') {
-          return 'problem_shifting_intro';
-        } else if (selectedMethod === 'identity_shifting') {
-          return 'identity_shifting_intro';
-        } else if (selectedMethod === 'belief_shifting') {
-          return 'belief_shifting_intro';
-        } else if (selectedMethod === 'blockage_shifting') {
-          return 'blockage_shifting_intro';
+        } else if (routeWorkType === 'problem' && routeSelectedMethod) {
+          // Problems with selected method - route to appropriate intro
+          if (routeSelectedMethod === 'problem_shifting') {
+            return 'problem_shifting_intro';
+          } else if (routeSelectedMethod === 'identity_shifting') {
+            return 'identity_shifting_intro';
+          } else if (routeSelectedMethod === 'belief_shifting') {
+            return 'belief_shifting_intro';
+          } else if (routeSelectedMethod === 'blockage_shifting') {
+            return 'blockage_shifting_intro';
+          }
         }
         break;
         
