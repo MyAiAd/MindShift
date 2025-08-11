@@ -637,10 +637,8 @@ export class TreatmentStateMachine {
             const workType = context.metadata.workType;
             
             if (workType === 'problem') {
-              // Problems automatically use Problem Shifting (most common method)
-              context.currentPhase = 'problem_shifting';
-              context.metadata.selectedMethod = 'problem_shifting';
-              return "Great! We'll use Problem Shifting to work on this. Let's begin the process.";
+              // Problems need method selection - show options
+              return "Great! For problems, you can choose from several methods:\n\n1. Problem Shifting (most common)\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting\n\nPlease choose 1, 2, 3, or 4, or say the method name.";
             } else if (workType === 'goal') {
               // Goals automatically use Reality Shifting
               context.currentPhase = 'reality_shifting';
@@ -2048,7 +2046,7 @@ export class TreatmentStateMachine {
           cycleCount: 0,
           problemStatement: '',
           lastResponse: '',
-          problemType: 'problem' // default to problem type
+          workType: 'problem' // default to problem type
         }
       });
     }
@@ -2084,7 +2082,7 @@ export class TreatmentStateMachine {
         cycleCount: 0,
         problemStatement: '',
         lastResponse: '',
-        problemType: 'problem'
+        workType: 'problem'
       }
     };
 
@@ -2643,7 +2641,7 @@ export class TreatmentStateMachine {
           cycleCount: 0,
           problemStatement: '',
           lastResponse: '',
-          problemType: 'problem'
+          workType: 'problem'
         }
       };
 
