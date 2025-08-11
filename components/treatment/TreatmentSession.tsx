@@ -337,29 +337,38 @@ export default function TreatmentSession({
     }
 
     // Set the selected work type for UI state management
+    let workType = '';
     if (method === '1' || method.toUpperCase() === 'PROBLEM') {
       setSelectedWorkType('PROBLEM');
+      workType = 'PROBLEM';
     } else if (method === '2' || method.toUpperCase() === 'GOAL') {
       setSelectedWorkType('GOAL');
+      workType = 'GOAL';
     } else if (method === '3' || method.toUpperCase() === 'NEGATIVE EXPERIENCE') {
       setSelectedWorkType('NEGATIVE EXPERIENCE');
+      workType = 'NEGATIVE EXPERIENCE';
     }
 
     // Let sendMessageWithContent handle the loading state
+    console.log('🎯 handleWorkTypeSelection: Processing selection:', method, 'Selected work type:', workType);
     try {
       // For GOAL and NEGATIVE EXPERIENCE, automatically proceed with the designated method
       if (method === '2' || method.toUpperCase() === 'GOAL') {
+        console.log('🎯 handleWorkTypeSelection: Sending GOAL selection to backend');
         await sendMessageWithContent('2'); // Send work type selection
         // The backend should automatically route to Reality Shifting
       } else if (method === '3' || method.toUpperCase() === 'NEGATIVE EXPERIENCE') {
+        console.log('🎯 handleWorkTypeSelection: Sending NEGATIVE EXPERIENCE selection to backend');
         await sendMessageWithContent('3'); // Send work type selection
         // The backend should automatically route to Trauma Shifting
       } else {
+        console.log('🎯 handleWorkTypeSelection: Sending PROBLEM selection to backend');
         // For PROBLEM (1), just send the work type selection and show method choices
         await sendMessageWithContent(method);
       }
+      console.log('🎯 handleWorkTypeSelection: Selection processing completed successfully');
     } catch (error) {
-      console.error('Error in work type selection:', error);
+      console.error('🎯 handleWorkTypeSelection: Error in work type selection:', error);
     }
   };
 
