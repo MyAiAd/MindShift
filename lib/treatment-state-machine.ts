@@ -150,9 +150,59 @@ export class TreatmentStateMachine {
       };
     }
 
-    // Input is valid - proceed to next step
+    // Get the current step's response to check for internal signals
+    const currentStepResponse = this.getScriptedResponse(currentStep, treatmentContext, userInput);
+    console.log(`🔍 PROCESS_INPUT: currentStepResponse="${currentStepResponse}"`);
+    
+    // Check if this is an internal confirmation signal that should trigger automatic step progression
+    const isInternalSignal = currentStepResponse === 'GOAL_SELECTION_CONFIRMED' || 
+                            currentStepResponse === 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED' ||
+                            currentStepResponse === 'PROBLEM_SELECTION_CONFIRMED';
+    
+    if (isInternalSignal) {
+      console.log(`🔍 PROCESS_INPUT: Internal signal detected, proceeding to determine next step automatically`);
+      // For internal signals, we need to determine the next step and continue processing
+      const nextStepId = this.determineNextStep(currentStep, treatmentContext);
+      console.log(`🔍 PROCESS_INPUT: Auto-progression nextStepId="${nextStepId}", currentPhase="${treatmentContext.currentPhase}"`);
+      
+      if (nextStepId) {
+        treatmentContext.currentStep = nextStepId;
+        
+        // Get the correct phase after potential phase change
+        const updatedPhase = this.phases.get(treatmentContext.currentPhase);
+        console.log(`🔍 PROCESS_INPUT: Auto-progression looking for step "${nextStepId}" in phase "${treatmentContext.currentPhase}"`);
+        
+        if (!updatedPhase) {
+          throw new Error(`Invalid updated phase: ${treatmentContext.currentPhase}`);
+        }
+        
+        const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
+        console.log(`🔍 PROCESS_INPUT: Auto-progression found nextStep:`, nextStep ? `YES (${nextStep.id})` : 'NO');
+        console.log(`🔍 PROCESS_INPUT: Available steps in phase "${treatmentContext.currentPhase}":`, updatedPhase.steps.map(s => s.id));
+        
+        if (nextStep) {
+          const actualResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
+          const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id);
+          
+          console.log(`🔍 PROCESS_INPUT: Auto-progression final response="${actualResponse}"`);
+          return {
+            canContinue: true,
+            nextStep: nextStepId,
+            scriptedResponse: actualResponse,
+            needsLinguisticProcessing
+          };
+        } else {
+          console.error(`❌ PROCESS_INPUT: Auto-progression step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'`);
+          console.error(`❌ PROCESS_INPUT: Available steps:`, updatedPhase.steps.map(s => s.id));
+          console.error(`❌ PROCESS_INPUT: Context metadata:`, JSON.stringify(treatmentContext.metadata, null, 2));
+          throw new Error(`Step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'. Available steps: ${updatedPhase.steps.map(s => s.id).join(', ')}`);
+        }
+      }
+    }
+
+    // Regular flow - proceed to next step
     const nextStepId = this.determineNextStep(currentStep, treatmentContext);
-    console.log(`🔍 PROCESS_INPUT: nextStepId="${nextStepId}", currentPhase="${treatmentContext.currentPhase}"`);
+    console.log(`🔍 PROCESS_INPUT: Regular flow nextStepId="${nextStepId}", currentPhase="${treatmentContext.currentPhase}"`);
     
     if (nextStepId) {
       treatmentContext.currentStep = nextStepId;
