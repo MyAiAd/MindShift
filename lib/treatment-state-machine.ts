@@ -417,17 +417,22 @@ export class TreatmentStateMachine {
             
             // Check if we're already in problem method selection mode
             if (context.metadata.workType === 'problem' && !context.metadata.selectedMethod) {
+              // If no input, show method selection options
+              if (!input.trim()) {
+                return "Great! For problems, you can choose from several methods:\n\n1. Problem Shifting (most common)\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting\n\nPlease choose 1, 2, 3, or 4, or say the method name.";
+              }
+              
               // Handle method selection for problems
-              if (input.includes('1') || input.includes('problem shifting')) {
+              if (input === '1' || input.includes('problem shifting')) {
                 context.metadata.selectedMethod = 'problem_shifting';
                 return "Great! We'll use Problem Shifting. Tell me what the problem is in a few words.";
-              } else if (input.includes('2') || input.includes('identity shifting')) {
+              } else if (input === '2' || input.includes('identity shifting')) {
                 context.metadata.selectedMethod = 'identity_shifting';
                 return "Great! We'll use Identity Shifting. Tell me what the problem is in a few words.";
-              } else if (input.includes('3') || input.includes('belief shifting')) {
+              } else if (input === '3' || input.includes('belief shifting')) {
                 context.metadata.selectedMethod = 'belief_shifting';
                 return "Great! We'll use Belief Shifting. Tell me what the problem is in a few words.";
-              } else if (input.includes('4') || input.includes('blockage shifting')) {
+              } else if (input === '4' || input.includes('blockage shifting')) {
                 context.metadata.selectedMethod = 'blockage_shifting';
                 return "Great! We'll use Blockage Shifting. Tell me what the problem is in a few words.";
               } else {
