@@ -437,16 +437,16 @@ export class TreatmentStateMachine {
                 return "Great! We'll use Blockage Shifting. Tell me what the problem is in a few words.";
               } else {
                 // If we get here with work type 'problem' but no method selected,
-                // and input doesn't match method names, show method options
-                return "Great! For problems, you can choose from several methods:\n\n1. Problem Shifting (most common)\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting\n\nPlease choose 1, 2, 3, or 4, or say the method name.";
+                // UI will show method buttons - no redundant chat message needed
+                return "[UI_HANDLES_RESPONSE]";
               }
             }
             
             // Handle initial work type selection
             if (input.includes('1') || input.includes('problem')) {
               context.metadata.workType = 'problem';
-              // For problems, show method selection 
-              return "Great! For problems, you can choose from several methods:\n\n1. Problem Shifting (most common)\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting\n\nPlease choose 1, 2, 3, or 4, or say the method name.";
+              // For problems, UI will show method selection buttons - no chat message needed
+              return "[UI_HANDLES_RESPONSE]";
             } else if (input.includes('2') || input.includes('goal')) {
               context.metadata.workType = 'goal';
               // Goals go directly to description

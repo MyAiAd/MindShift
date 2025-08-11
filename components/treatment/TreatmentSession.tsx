@@ -199,29 +199,33 @@ export default function TreatmentSession({
       console.log('📤 API Response data:', data);
       
       if (data.success) {
-        const botMessage: TreatmentMessage = {
-          id: (Date.now() + 1).toString(),
-          content: data.message,
-          isUser: false,
-          timestamp: new Date(),
-          responseTime: data.responseTime,
-          usedAI: data.usedAI,
-          metadata: {
-            aiCost: data.aiCost,
-            aiTokens: data.aiTokens,
-            requiresRetry: data.requiresRetry
-          }
-        };
+        // Skip adding messages for UI-only responses
+        if (data.message !== '[UI_HANDLES_RESPONSE]') {
+          const botMessage: TreatmentMessage = {
+            id: (Date.now() + 1).toString(),
+            content: data.message,
+            isUser: false,
+            timestamp: new Date(),
+            responseTime: data.responseTime,
+            usedAI: data.usedAI,
+            metadata: {
+              aiCost: data.aiCost,
+              aiTokens: data.aiTokens,
+              requiresRetry: data.requiresRetry
+            }
+          };
 
-        setMessages(prev => [...prev, botMessage]);
+          setMessages(prev => [...prev, botMessage]);
+
+          // Global voice: Auto-speak bot response when enabled in accessibility settings
+          if (voice.isVoiceOutputEnabled) {
+            voice.speakGlobally(botMessage.content);
+          }
+        }
+        
         setCurrentStep(data.currentStep);
         setLastResponseTime(data.responseTime);
         updateStats(data);
-
-        // Global voice: Auto-speak bot response when enabled in accessibility settings
-        if (voice.isVoiceOutputEnabled) {
-          voice.speakGlobally(botMessage.content);
-        }
 
         // SAFE: Save to history AFTER successful state update (doesn't interfere with state machine)
         // Delay to ensure all state updates are complete and voice system is stable
