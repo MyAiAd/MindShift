@@ -60,6 +60,7 @@ export default function TreatmentSession({
   const [lastResponseTime, setLastResponseTime] = useState<number>(0);
   const [stepHistory, setStepHistory] = useState<StepHistoryEntry[]>([]);
   const [voiceError, setVoiceError] = useState<string>('');
+  const [selectedWorkType, setSelectedWorkType] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -85,6 +86,7 @@ export default function TreatmentSession({
     setIsLoading(true);
     setHasError(false);
     setErrorMessage('');
+    setSelectedWorkType(null); // Reset work type selection
     
     try {
       const response = await fetch('/api/treatment', {
@@ -274,8 +276,8 @@ export default function TreatmentSession({
           handleWorkTypeSelection(transcript);
           return;
         }
-        // Handle method selection by name
-        if (['problem shifting', 'blockage shifting', 'identity shifting', 'reality shifting', 'trauma shifting', 'belief shifting'].includes(transcript.toLowerCase())) {
+        // Handle method selection by name (only for problem-clearing methods)
+        if (['problem shifting', 'identity shifting', 'belief shifting', 'blockage shifting'].includes(transcript.toLowerCase())) {
           handleMethodSelection(transcript);
           return;
         }
@@ -326,10 +328,29 @@ export default function TreatmentSession({
       return;
     }
 
+    // Set the selected work type for UI state management
+    if (method === '1' || method.toUpperCase() === 'PROBLEM') {
+      setSelectedWorkType('PROBLEM');
+    } else if (method === '2' || method.toUpperCase() === 'GOAL') {
+      setSelectedWorkType('GOAL');
+    } else if (method === '3' || method.toUpperCase() === 'NEGATIVE EXPERIENCE') {
+      setSelectedWorkType('NEGATIVE EXPERIENCE');
+    }
+
     // Set loading state immediately
     setIsLoading(true);
     try {
-      await sendMessageWithContent(method);
+      // For GOAL and NEGATIVE EXPERIENCE, automatically proceed with the designated method
+      if (method === '2' || method.toUpperCase() === 'GOAL') {
+        await sendMessageWithContent('2'); // Send work type selection
+        // The backend should automatically route to Reality Shifting
+      } else if (method === '3' || method.toUpperCase() === 'NEGATIVE EXPERIENCE') {
+        await sendMessageWithContent('3'); // Send work type selection
+        // The backend should automatically route to Trauma Shifting
+      } else {
+        // For PROBLEM (1), just send the work type selection and show method choices
+        await sendMessageWithContent(method);
+      }
     } catch (error) {
       console.error('Error in work type selection:', error);
     }
@@ -830,99 +851,99 @@ export default function TreatmentSession({
                       <button
                         onClick={() => handleWorkTypeSelection('1')}
                         disabled={isLoading}
-                        className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''}`}
+                        className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''} ${selectedWorkType === 'PROBLEM' ? 'ring-2 ring-blue-300' : ''}`}
                       >
                         <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
-                        <span>{isLoading ? 'Processing...' : 'PROBLEM'}</span>
+                        <span>{isLoading && selectedWorkType === 'PROBLEM' ? 'Processing...' : 'PROBLEM'}</span>
                       </button>
                       
                       <button
                         onClick={() => handleWorkTypeSelection('2')}
                         disabled={isLoading}
-                        className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''}`}
+                        className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''} ${selectedWorkType === 'GOAL' ? 'ring-2 ring-green-300' : ''}`}
                       >
                         <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
-                        <span>{isLoading ? 'Processing...' : 'GOAL'}</span>
+                        <span>{isLoading && selectedWorkType === 'GOAL' ? 'Starting Reality Shifting...' : 'GOAL'}</span>
                       </button>
                       
                       <button
                         onClick={() => handleWorkTypeSelection('3')}
                         disabled={isLoading}
-                        className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''}`}
+                        className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''} ${selectedWorkType === 'NEGATIVE EXPERIENCE' ? 'ring-2 ring-purple-300' : ''}`}
                       >
                         <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">3</span>
-                        <span>{isLoading ? 'Processing...' : 'NEGATIVE EXPERIENCE'}</span>
+                        <span>{isLoading && selectedWorkType === 'NEGATIVE EXPERIENCE' ? 'Starting Trauma Shifting...' : 'NEGATIVE EXPERIENCE'}</span>
                       </button>
                     </div>
                   </div>
                   
-                  {/* Method Selection Section */}
-                  <div className="text-center border-t pt-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                      Choose your preferred Mind Shifting method:
-                    </h3>
-                    <div className="flex flex-col space-y-3 items-center">
-                      {/* First row: Problem, Blockage, Identity */}
-                      <div className="flex space-x-3 justify-center">
-                        <button
-                          onClick={() => handleMethodSelection('Problem Shifting')}
-                          disabled={isLoading}
-                          className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
-                        >
-                          <span className="bg-blue-700 px-2 py-1 rounded text-xs font-bold">1</span>
-                          <span>Problem Shifting</span>
-                        </button>
+                  {/* Method Selection Section - Only show for PROBLEM work type */}
+                  {selectedWorkType === 'PROBLEM' && (
+                    <div className="text-center border-t pt-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                        Choose your preferred problem-clearing method:
+                      </h3>
+                      <div className="flex flex-col space-y-3 items-center">
+                        {/* Problem-clearing methods in 2x2 layout */}
+                        <div className="flex space-x-3 justify-center">
+                          <button
+                            onClick={() => handleMethodSelection('Problem Shifting')}
+                            disabled={isLoading}
+                            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          >
+                            <span className="bg-blue-700 px-2 py-1 rounded text-xs font-bold">1</span>
+                            <span>Problem Shifting</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => handleMethodSelection('Identity Shifting')}
+                            disabled={isLoading}
+                            className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          >
+                            <span className="bg-purple-700 px-2 py-1 rounded text-xs font-bold">2</span>
+                            <span>Identity Shifting</span>
+                          </button>
+                        </div>
                         
-                        <button
-                          onClick={() => handleMethodSelection('Blockage Shifting')}
-                          disabled={isLoading}
-                          className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
-                        >
-                          <span className="bg-orange-700 px-2 py-1 rounded text-xs font-bold">2</span>
-                          <span>Blockage Shifting</span>
-                        </button>
-                        
-                        <button
-                          onClick={() => handleMethodSelection('Identity Shifting')}
-                          disabled={isLoading}
-                          className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
-                        >
-                          <span className="bg-purple-700 px-2 py-1 rounded text-xs font-bold">3</span>
-                          <span>Identity Shifting</span>
-                        </button>
-                      </div>
-                      
-                      {/* Second row: Reality, Trauma, Belief */}
-                      <div className="flex space-x-3 justify-center">
-                        <button
-                          onClick={() => handleMethodSelection('Reality Shifting')}
-                          disabled={isLoading}
-                          className="px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
-                        >
-                          <span className="bg-teal-700 px-2 py-1 rounded text-xs font-bold">4</span>
-                          <span>Reality Shifting</span>
-                        </button>
-                        
-                        <button
-                          onClick={() => handleMethodSelection('Trauma Shifting')}
-                          disabled={isLoading}
-                          className="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
-                        >
-                          <span className="bg-red-700 px-2 py-1 rounded text-xs font-bold">5</span>
-                          <span>Trauma Shifting</span>
-                        </button>
-                        
-                        <button
-                          onClick={() => handleMethodSelection('Belief Shifting')}
-                          disabled={isLoading}
-                          className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
-                        >
-                          <span className="bg-green-700 px-2 py-1 rounded text-xs font-bold">6</span>
-                          <span>Belief Shifting</span>
-                        </button>
+                        <div className="flex space-x-3 justify-center">
+                          <button
+                            onClick={() => handleMethodSelection('Belief Shifting')}
+                            disabled={isLoading}
+                            className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          >
+                            <span className="bg-green-700 px-2 py-1 rounded text-xs font-bold">3</span>
+                            <span>Belief Shifting</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => handleMethodSelection('Blockage Shifting')}
+                            disabled={isLoading}
+                            className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          >
+                            <span className="bg-orange-700 px-2 py-1 rounded text-xs font-bold">4</span>
+                            <span>Blockage Shifting</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+                  
+                  {/* Show status for automatic method selection */}
+                  {(selectedWorkType === 'GOAL' || selectedWorkType === 'NEGATIVE EXPERIENCE') && !isLoading && (
+                    <div className="text-center border-t pt-4">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                        <h3 className="text-md font-semibold text-blue-900 dark:text-blue-200 mb-2">
+                          {selectedWorkType === 'GOAL' ? 'Reality Shifting Selected' : 'Trauma Shifting Selected'}
+                        </h3>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          {selectedWorkType === 'GOAL' 
+                            ? 'Goals are best addressed with Reality Shifting - proceeding automatically...'
+                            : 'Negative experiences are best addressed with Trauma Shifting - proceeding automatically...'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -996,7 +1017,13 @@ export default function TreatmentSession({
             ) : currentStep === 'digging_deeper_start' ? (
               'Select your answer using the buttons above'
             ) : currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection' ? (
-              'First select what you want to work on, then choose your preferred Mind Shifting method'
+              selectedWorkType === 'PROBLEM' 
+                ? 'First select PROBLEM above, then choose your preferred problem-clearing method'
+                : selectedWorkType === 'GOAL'
+                ? 'Reality Shifting will begin automatically for your goal'
+                : selectedWorkType === 'NEGATIVE EXPERIENCE' 
+                ? 'Trauma Shifting will begin automatically for your negative experience'
+                : 'Select what you want to work on - GOAL and NEGATIVE EXPERIENCE proceed automatically'
             ) : (
               'Press Enter to send • Voice controls in accessibility settings • This session uses 95% scripted responses for optimal performance'
             )}
