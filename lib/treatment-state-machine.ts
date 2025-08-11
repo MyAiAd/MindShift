@@ -483,12 +483,12 @@ export class TreatmentStateMachine {
               return "PROBLEM_SELECTION_CONFIRMED";
             } else if (input.includes('2') || input.includes('goal')) {
               context.metadata.workType = 'goal';
-              // Goals go directly to description
-              return "Ok sure. Tell me what the goal is in a few words.";
+              // Goals go directly to goal capture question
+              return "What do you want?";
             } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
               context.metadata.workType = 'negative_experience';
-              // Negative experiences go directly to description  
-              return "Ok sure. Tell me what the negative experience was in a few words.";
+              // Negative experiences go directly to trauma shifting intro
+              return "Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience you want to work on. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?";
             } else {
               return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
             }
@@ -2118,15 +2118,17 @@ export class TreatmentStateMachine {
             return 'blockage_shifting_intro';
           }
         } else if (selectedWorkType === 'goal') {
-          // Goal selected, go directly to description
-          console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected, changing phase and going to work_type_description`);
-          context.currentPhase = 'work_type_selection';
-          return 'work_type_description';
+          // Goal selected, go directly to goal capture question
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected, going directly to reality_goal_capture`);
+          context.currentPhase = 'reality_shifting';
+          context.metadata.selectedMethod = 'reality_shifting';
+          return 'reality_goal_capture';
         } else if (selectedWorkType === 'negative_experience') {
-          // Negative experience selected, go directly to description
-          console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience selected, changing phase and going to work_type_description`);
-          context.currentPhase = 'work_type_selection';
-          return 'work_type_description';
+          // Negative experience selected, go directly to Trauma Shifting intro
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience selected, going directly to trauma_shifting_intro`);
+          context.currentPhase = 'trauma_shifting';
+          context.metadata.selectedMethod = 'trauma_shifting';
+          return 'trauma_shifting_intro';
         } else if (selectedWorkType === 'problem' && !selectedMethod) {
           // Problem selected but no method yet, stay on current step for method selection
           console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem selected, waiting for method selection, staying on mind_shifting_explanation`);
