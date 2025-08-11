@@ -437,16 +437,16 @@ export class TreatmentStateMachine {
                 return "Great! We'll use Blockage Shifting. Tell me what the problem is in a few words.";
               } else {
                 // If we get here with work type 'problem' but no method selected,
-                // UI will show method buttons - no redundant chat message needed
-                return "[UI_HANDLES_RESPONSE]";
+                // UI will show method buttons - return confirmation for backend logic
+                return "METHOD_SELECTION_NEEDED";
               }
             }
             
             // Handle initial work type selection
             if (input.includes('1') || input.includes('problem')) {
               context.metadata.workType = 'problem';
-              // For problems, UI will show method selection buttons - no chat message needed
-              return "[UI_HANDLES_RESPONSE]";
+              // For problems, show method selection (UI will show buttons, this is for backend logic)
+              return "PROBLEM_SELECTION_CONFIRMED";
             } else if (input.includes('2') || input.includes('goal')) {
               context.metadata.workType = 'goal';
               // Goals go directly to description

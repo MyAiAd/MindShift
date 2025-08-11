@@ -199,8 +199,11 @@ export default function TreatmentSession({
       console.log('📤 API Response data:', data);
       
       if (data.success) {
-        // Skip adding messages for UI-only responses
-        if (data.message !== '[UI_HANDLES_RESPONSE]') {
+        // Skip adding messages for backend confirmation messages that UI already handles
+        const isUIHandledMessage = data.message === 'PROBLEM_SELECTION_CONFIRMED' || 
+                                   data.message === 'METHOD_SELECTION_NEEDED';
+        
+        if (!isUIHandledMessage) {
           const botMessage: TreatmentMessage = {
             id: (Date.now() + 1).toString(),
             content: data.message,
