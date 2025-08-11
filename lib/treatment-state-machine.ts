@@ -413,18 +413,22 @@ export class TreatmentStateMachine {
               return "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
             }
             
-            // Handle user selection
+            // Handle user selection - only store work type, don't ask for description yet
             const input = (userInput || '').toLowerCase();
             
-            // Store the work type selection and ask for description
             if (input.includes('1') || input.includes('problem')) {
               context.metadata.workType = 'problem';
-              return "Ok sure. Tell me what the problem is in a few words.";
+              // For problems, we need method selection first
+              return "Great! For problems, you can choose from several methods:\n\n1. Problem Shifting (most common)\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting\n\nPlease choose 1, 2, 3, or 4, or say the method name.";
             } else if (input.includes('2') || input.includes('goal')) {
               context.metadata.workType = 'goal';
+              context.currentPhase = 'work_type_selection';
+              // Goals go directly to description
               return "Ok sure. Tell me what the goal is in a few words.";
             } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
               context.metadata.workType = 'negative_experience';
+              context.currentPhase = 'work_type_selection';
+              // Negative experiences go directly to description  
               return "Ok sure. Tell me what the negative experience was in a few words.";
             } else {
               return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
@@ -434,74 +438,13 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose 1, 2, or 3.' }
           ],
-          nextStep: 'work_type_description',
+          nextStep: 'method_selection', // This will be handled by determineNextStep logic
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
         },
         {
-          id: 'confirm_statement',
-          scriptedResponse: (userInput, context) => {
-            const workType = context.metadata.workType || 'item';
-            const statement = userInput || '';
-            const words = statement.split(' ').length || 0;
-            
-            if (words <= 20 && statement) {
-              // Store the statement
-              context.problemStatement = statement; // Keep using problemStatement for compatibility
-              context.metadata.problemStatement = statement;
-              
-              const typeLabel = workType === 'problem' ? 'problem' : 
-                               workType === 'goal' ? 'goal' : 'negative experience';
-              return `OK what I heard you say is '${statement}' - is that right for the ${typeLabel} you want to work on?`;
-            } else if (statement) {
-              return `OK I understand what you have said, but please tell me what the ${workType === 'problem' ? 'problem' : workType === 'goal' ? 'goal' : 'negative experience'} is in just a few words`;
-            } else {
-              return `Please tell me what you would like to work on in a few words.`;
-            }
-          },
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please confirm if this is correct.' }
-          ],
-          nextStep: 'route_to_method',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
-        },
-        {
-          id: 'route_to_method',
-          scriptedResponse: (userInput, context) => {
-            const workType = context.metadata.workType;
-            
-            if (workType === 'problem') {
-              // Problems automatically use Problem Shifting (most common method)
-              context.currentPhase = 'problem_shifting';
-              context.metadata.selectedMethod = 'problem_shifting';
-              return "Great! We'll use Problem Shifting to work on this. Let's begin the process.";
-            } else if (workType === 'goal') {
-              // Goals automatically use Reality Shifting
-              context.currentPhase = 'reality_shifting';
-              context.metadata.selectedMethod = 'reality_shifting';
-              return "For goals, we'll use Reality Shifting. Let's begin the process.";
-            } else if (workType === 'negative_experience') {
-              // Negative experiences automatically use Trauma Shifting
-              context.currentPhase = 'trauma_shifting';
-              context.metadata.selectedMethod = 'trauma_shifting';
-              return "For negative experiences, we'll use Trauma Shifting. Let's begin the process.";
-            }
-            
-            return "Please let me know what you'd like to work on.";
-          },
-          expectedResponseType: 'selection',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
-          ],
-          nextStep: 'method_selected',
-          aiTriggers: []
-        },
-        {
-          id: 'method_selected',
+          id: 'method_selection',
           scriptedResponse: (userInput, context) => {
             const workType = context.metadata.workType;
             
@@ -509,34 +452,34 @@ export class TreatmentStateMachine {
               const input = (userInput || '').toLowerCase();
               
               if (input.includes('1') || input.includes('problem shifting')) {
-                context.currentPhase = 'problem_shifting';
                 context.metadata.selectedMethod = 'problem_shifting';
-                return "Great! We'll use Problem Shifting. Let's begin the process.";
+                context.currentPhase = 'work_type_selection';
+                return "Great! We'll use Problem Shifting. Tell me what the problem is in a few words.";
               } else if (input.includes('2') || input.includes('identity shifting')) {
-                context.currentPhase = 'identity_shifting';
                 context.metadata.selectedMethod = 'identity_shifting';
-                return "Great! We'll use Identity Shifting. Let's begin the process.";
+                context.currentPhase = 'work_type_selection';
+                return "Great! We'll use Identity Shifting. Tell me what the problem is in a few words.";
               } else if (input.includes('3') || input.includes('belief shifting')) {
-                context.currentPhase = 'belief_shifting';
                 context.metadata.selectedMethod = 'belief_shifting';
-                return "Great! We'll use Belief Shifting. Let's begin the process.";
+                context.currentPhase = 'work_type_selection';
+                return "Great! We'll use Belief Shifting. Tell me what the problem is in a few words.";
               } else if (input.includes('4') || input.includes('blockage shifting')) {
-                context.currentPhase = 'blockage_shifting';
                 context.metadata.selectedMethod = 'blockage_shifting';
-                return "Great! We'll use Blockage Shifting. Let's begin the process.";
+                context.currentPhase = 'work_type_selection';
+                return "Great! We'll use Blockage Shifting. Tell me what the problem is in a few words.";
               } else {
                 return "Please choose 1 for Problem Shifting, 2 for Identity Shifting, 3 for Belief Shifting, or 4 for Blockage Shifting.";
               }
             }
             
-            // For goals and negative experiences, this step shouldn't be reached as they auto-route
-            return "Let's continue with the selected method.";
+            // This shouldn't be reached for goals/negative experiences
+            return "Let's continue.";
           },
-          expectedResponseType: 'open',
+          expectedResponseType: 'selection',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please confirm your selection.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
           ],
-          nextStep: undefined, // Will be handled by routing logic
+          nextStep: 'work_type_description',
           aiTriggers: []
         }
       ]
@@ -637,8 +580,27 @@ export class TreatmentStateMachine {
             const workType = context.metadata.workType;
             
             if (workType === 'problem') {
-              // Problems need method selection - show options
-              return "Great! For problems, you can choose from several methods:\n\n1. Problem Shifting (most common)\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting\n\nPlease choose 1, 2, 3, or 4, or say the method name.";
+              // For problems, get the selected method and start treatment
+              const selectedMethod = context.metadata.selectedMethod;
+              
+              if (selectedMethod === 'problem_shifting') {
+                context.currentPhase = 'problem_shifting';
+                return "Great! Let's begin Problem Shifting.";
+              } else if (selectedMethod === 'identity_shifting') {
+                context.currentPhase = 'identity_shifting';
+                return "Great! Let's begin Identity Shifting.";
+              } else if (selectedMethod === 'belief_shifting') {
+                context.currentPhase = 'belief_shifting';
+                return "Great! Let's begin Belief Shifting.";
+              } else if (selectedMethod === 'blockage_shifting') {
+                context.currentPhase = 'blockage_shifting';
+                return "Great! Let's begin Blockage Shifting.";
+              } else {
+                // Default to Problem Shifting if no method selected
+                context.currentPhase = 'problem_shifting';
+                context.metadata.selectedMethod = 'problem_shifting';
+                return "Great! Let's begin Problem Shifting.";
+              }
             } else if (workType === 'goal') {
               // Goals automatically use Reality Shifting
               context.currentPhase = 'reality_shifting';
@@ -651,13 +613,13 @@ export class TreatmentStateMachine {
               return "For negative experiences, we'll use Trauma Shifting. Let's begin the process.";
             }
             
-            return "Please let me know what you'd like to work on.";
+            return "Let's continue with the treatment process.";
           },
-          expectedResponseType: 'selection',
+          expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please continue.' }
           ],
-          nextStep: 'method_selected',
+          nextStep: undefined, // Will be determined by the treatment phase
           aiTriggers: []
         },
         {
@@ -2100,20 +2062,32 @@ export class TreatmentStateMachine {
     // Handle special flow logic based on current step
     switch (context.currentStep) {
       case 'mind_shifting_explanation':
-        console.log(`🔍 MIND_SHIFTING_DETERMINE: lastResponse="${lastResponse}"`);
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: lastResponse="${lastResponse}", workType="${context.metadata.workType}"`);
+        
+        const selectedWorkType = context.metadata.workType;
+        
         // Check if this was a valid selection that was processed
-        if (lastResponse.includes('1') || lastResponse.includes('2') || lastResponse.includes('3') || 
-            lastResponse.includes('problem') || lastResponse.includes('goal') || 
-            lastResponse.includes('negative') || lastResponse.includes('experience')) {
-          // Valid selection made, go to work_type_description
-          context.currentPhase = 'work_type_selection';
-          console.log(`🔍 MIND_SHIFTING_DETERMINE: Valid selection, transitioning to work_type_description`);
+        if (lastResponse.includes('1') || lastResponse.includes('problem')) {
+          // Problem selected, go to method selection
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem selected, going to method_selection`);
+          return 'method_selection';
+        } else if (lastResponse.includes('2') || lastResponse.includes('goal')) {
+          // Goal selected, go directly to description
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected, going to work_type_description`);
+          return 'work_type_description';
+        } else if (lastResponse.includes('3') || lastResponse.includes('negative') || lastResponse.includes('experience')) {
+          // Negative experience selected, go directly to description
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience selected, going to work_type_description`);
           return 'work_type_description';
         } else {
           // Invalid selection, stay on current step
           console.log(`🔍 MIND_SHIFTING_DETERMINE: Invalid selection, staying on mind_shifting_explanation`);
           return 'mind_shifting_explanation';
         }
+        
+      case 'method_selection':
+        // Method selected for problems, now go to description
+        return 'work_type_description';
         
       case 'work_type_description':
         // User provided description, go to confirm_statement
