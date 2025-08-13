@@ -613,19 +613,19 @@ export class TreatmentStateMachine {
               if (input.includes('1') || input.includes('problem shifting')) {
                 context.metadata.selectedMethod = 'problem_shifting';
                 context.currentPhase = 'work_type_selection';
-                return "Great! We'll use Problem Shifting. Tell me what the problem is in a few words.";
+                return "Great! We'll use Problem Shifting.";
               } else if (input.includes('2') || input.includes('identity shifting')) {
                 context.metadata.selectedMethod = 'identity_shifting';
                 context.currentPhase = 'work_type_selection';
-                return "Great! We'll use Identity Shifting. Tell me what the problem is in a few words.";
+                return "Great! We'll use Identity Shifting.";
               } else if (input.includes('3') || input.includes('belief shifting')) {
                 context.metadata.selectedMethod = 'belief_shifting';
                 context.currentPhase = 'work_type_selection';
-                return "Great! We'll use Belief Shifting. Tell me what the problem is in a few words.";
+                return "Great! We'll use Belief Shifting.";
               } else if (input.includes('4') || input.includes('blockage shifting')) {
                 context.metadata.selectedMethod = 'blockage_shifting';
                 context.currentPhase = 'work_type_selection';
-                return "Great! We'll use Blockage Shifting. Tell me what the problem is in a few words.";
+                return "Great! We'll use Blockage Shifting.";
               } else {
                 return "Please choose 1 for Problem Shifting, 2 for Identity Shifting, 3 for Belief Shifting, or 4 for Blockage Shifting.";
               }
@@ -2402,6 +2402,19 @@ export class TreatmentStateMachine {
           context.currentPhase = 'problem_shifting';
           context.metadata.selectedMethod = 'problem_shifting';
           return 'problem_shifting_intro';
+        }
+
+      case 'method_selection':
+        // When user has selected a method, check if method is set and route appropriately
+        const currentSelectedMethod = context.metadata.selectedMethod;
+        console.log(`🔍 METHOD_SELECTION_DETERMINE: selectedMethod="${currentSelectedMethod}"`);
+        
+        if (currentSelectedMethod) {
+          // Method was selected, now ask for problem description
+          return 'work_type_description';
+        } else {
+          // No method selected yet, stay on method selection
+          return 'method_selection';
         }
         
       case 'check_if_still_problem':
