@@ -562,6 +562,28 @@ export class TreatmentStateMachine {
               return "SKIP_TO_TREATMENT_INTRO";
             }
             
+            // Handle goal description after work type selection for goals
+            if (context.metadata.workType === 'goal' && !context.metadata.selectedMethod) {
+              // User has provided goal description, store it and proceed directly to reality shifting
+              context.metadata.goalStatement = userInput;
+              context.problemStatement = userInput; // Keep for compatibility  
+              context.currentStep = 'reality_goal_capture';
+              context.currentPhase = 'reality_shifting';
+              context.metadata.selectedMethod = 'reality_shifting';
+              return "SKIP_TO_TREATMENT_INTRO";
+            }
+
+            // Handle negative experience description after work type selection for negative experiences
+            if (context.metadata.workType === 'negative_experience' && !context.metadata.selectedMethod) {
+              // User has provided negative experience description, store it and proceed directly to trauma shifting
+              context.metadata.negativeExperienceStatement = userInput;
+              context.problemStatement = userInput; // Keep for compatibility
+              context.currentStep = 'trauma_shifting_intro';  
+              context.currentPhase = 'trauma_shifting';
+              context.metadata.selectedMethod = 'trauma_shifting';
+              return "SKIP_TO_TREATMENT_INTRO";
+            }
+            
             // If we get here, it's not a valid work type selection
             return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
           },
@@ -1188,7 +1210,7 @@ export class TreatmentStateMachine {
           scriptedResponse: (userInput, context) => {
             // Get the problem statement
             const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            return `Please close your eyes and keep them closed throughout the rest of the process.\n\nFeel the problem of '${problemStatement}'... what kind of person are you being when you're experiencing this problem?`;
+            return `Please close your eyes and keep them closed throughout the rest of the process.\n\nFeel the problem of '${problemStatement}' - what kind of person are you being when you're experiencing this problem?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -1579,7 +1601,7 @@ export class TreatmentStateMachine {
           scriptedResponse: (userInput, context) => {
             // Get the negative experience statement
             const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
-            return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?`;
+            return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience...now freeze it there. Keep feeling this frozen moment...what kind of person are you being in this moment?`;
           },
           expectedResponseType: 'open',
           validationRules: [
