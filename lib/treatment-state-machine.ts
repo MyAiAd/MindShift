@@ -696,20 +696,39 @@ export class TreatmentStateMachine {
                 return "Tell me what you want to work on in a few words.";
               }
             } else {
-              // User provided description, store it and ask for confirmation
+              // User provided description, store it and proceed directly to treatment
               const statement = userInput || '';
               context.metadata.problemStatement = statement;
               context.problemStatement = statement; // Keep for compatibility
               
+              // Skip confirmation and route directly to treatment
               if (workType === 'problem') {
-                return `So you want to work on '${statement}'. Is that correct?`;
+                const selectedMethod = context.metadata.selectedMethod;
+                if (selectedMethod === 'identity_shifting') {
+                  context.currentPhase = 'identity_shifting';
+                  return 'SKIP_TO_TREATMENT_INTRO';
+                } else if (selectedMethod === 'problem_shifting') {
+                  context.currentPhase = 'problem_shifting';
+                  return 'SKIP_TO_TREATMENT_INTRO';
+                } else if (selectedMethod === 'belief_shifting') {
+                  context.currentPhase = 'belief_shifting';
+                  return 'SKIP_TO_TREATMENT_INTRO';
+                } else if (selectedMethod === 'blockage_shifting') {
+                  context.currentPhase = 'blockage_shifting';
+                  return 'SKIP_TO_TREATMENT_INTRO';
+                }
               } else if (workType === 'goal') {
-                return `So you want to work on the goal of '${statement}'. Is that correct?`;
+                context.currentPhase = 'reality_shifting';
+                context.metadata.selectedMethod = 'reality_shifting';
+                return 'SKIP_TO_TREATMENT_INTRO';
               } else if (workType === 'negative_experience') {
-                return `So you want to work on the negative experience of '${statement}'. Is that correct?`;
-              } else {
-                return `So you want to work on '${statement}'. Is that correct?`;
+                context.currentPhase = 'trauma_shifting';
+                context.metadata.selectedMethod = 'trauma_shifting';
+                return 'SKIP_TO_TREATMENT_INTRO';
               }
+              
+              // Fallback to confirmation if no method set
+              return `So you want to work on '${statement}'. Is that correct?`;
             }
           },
           expectedResponseType: 'description',
@@ -2496,6 +2515,10 @@ export class TreatmentStateMachine {
           return 'digging_deeper_start';
         }
         break;
+
+      case 'identity_shifting_intro':
+        // Identity Shifting intro completed, move to first dissolve step
+        return 'identity_dissolve_step_a';
         
       case 'confirm_identity_problem':
         // If confirmed, go back to identity shifting
