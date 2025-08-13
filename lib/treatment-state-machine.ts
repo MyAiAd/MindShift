@@ -480,21 +480,22 @@ export class TreatmentStateMachine {
             const input = userInput.toLowerCase();
             
             // Handle initial work type selection FIRST (reset state for fresh selection)
-            if (input.includes('1') || input.includes('problem')) {
+            // Use more specific checks to avoid conflicts with method names
+            if (input.includes('1') || (input.includes('problem') && !input.includes('shifting'))) {
               // Reset all work type metadata for fresh selection
               context.metadata.workType = 'problem';
               context.metadata.selectedMethod = undefined;
               console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'problem'`);
               // For problems, show method selection (UI will show buttons, this is for backend logic)
               return "PROBLEM_SELECTION_CONFIRMED";
-            } else if (input.includes('2') || input.includes('goal')) {
+            } else if (input.includes('2') || (input.includes('goal') && !input.includes('shifting'))) {
               // Reset all work type metadata for fresh selection
               context.metadata.workType = 'goal';
               context.metadata.selectedMethod = undefined;
               console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'goal'`);
               // Signal that we'll ask for description in next step
               return "GOAL_SELECTION_CONFIRMED";
-            } else if (input.includes('3') || input.includes('negative') || input.includes('experience')) {
+            } else if (input.includes('3') || (input.includes('negative') && !input.includes('shifting')) || (input.includes('experience') && !input.includes('shifting'))) {
               // Reset all work type metadata for fresh selection
               context.metadata.workType = 'negative_experience';
               context.metadata.selectedMethod = undefined;
