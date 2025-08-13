@@ -2211,21 +2211,29 @@ export class TreatmentStateMachine {
         const selectedMethod = context.metadata.selectedMethod;
         console.log(`🔍 MIND_SHIFTING_DETERMINE: selectedWorkType="${selectedWorkType}", selectedMethod="${selectedMethod}"`);  
         
-        // If user selected a work type and method (for problems), skip confirmation and routing - go directly to treatment intro
+        // If user selected a work type and method (for problems), check if we have problem statement
         if (selectedWorkType === 'problem' && selectedMethod) {
-          console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem and method selected, skipping confirmation and routing - going directly to treatment intro`);
-          if (selectedMethod === 'problem_shifting') {
-            context.currentPhase = 'problem_shifting';
-            return 'problem_shifting_intro';
-          } else if (selectedMethod === 'identity_shifting') {
-            context.currentPhase = 'identity_shifting';
-            return 'identity_shifting_intro';
-          } else if (selectedMethod === 'belief_shifting') {
-            context.currentPhase = 'belief_shifting';
-            return 'belief_shifting_intro';
-          } else if (selectedMethod === 'blockage_shifting') {
-            context.currentPhase = 'blockage_shifting';
-            return 'blockage_shifting_intro';
+          // Only skip to treatment intro if we already have a problem statement
+          if (context.problemStatement || context.metadata.problemStatement) {
+            console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem, method, and problem statement all present - going directly to treatment intro`);
+            if (selectedMethod === 'problem_shifting') {
+              context.currentPhase = 'problem_shifting';
+              return 'problem_shifting_intro';
+            } else if (selectedMethod === 'identity_shifting') {
+              context.currentPhase = 'identity_shifting';
+              return 'identity_shifting_intro';
+            } else if (selectedMethod === 'belief_shifting') {
+              context.currentPhase = 'belief_shifting';
+              return 'belief_shifting_intro';
+            } else if (selectedMethod === 'blockage_shifting') {
+              context.currentPhase = 'blockage_shifting';
+              return 'blockage_shifting_intro';
+            }
+          } else {
+            // Method selected but no problem statement yet - need to collect it
+            console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem and method selected, but no problem statement - going to collect problem description`);
+            context.currentPhase = 'work_type_selection';
+            return 'work_type_description';
           }
         } else if (selectedWorkType === 'goal') {
           // Check if we have the goal description yet
