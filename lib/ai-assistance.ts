@@ -44,6 +44,9 @@ export class AIAssistanceManager {
     'blockage_step_d',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'belief_step_b',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'belief_step_e',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+    'identity_dissolve_step_a', // Identity Shifting: "Feel yourself being [identity]... as [identity], what do you want?"
+    'identity_dissolve_step_b', // Identity Shifting: "Feel yourself being [identity]... exaggerate the feeling of it and tell me the first thing that you notice about it."
+    'identity_check',          // Identity Shifting: "Can you still feel yourself being [identity]?"
     // Intro steps that need user input contextualisation
     'problem_shifting_intro',  // Problem Shifting: Ensure input is stated as a problem
     'reality_shifting_intro',  // Reality Shifting: Ensure input is stated as a goal
@@ -403,6 +406,81 @@ Examples:
 - User: "feeling anxious" → "feeling calm and peaceful"
 
 Rephrase the user's input as a goal statement now:`;
+    } else if (stepId === 'identity_dissolve_step_a') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's identity response.
+
+User's response: "${userInput}"
+Current scripted response: "${scriptedResponse}"
+
+Task: Extract the core identity from the user's response and use it naturally in the template.
+
+Template: "Feel yourself being [contextualized identity]... as [contextualized identity], what do you want?"
+
+Rules:
+1. Extract the core identity concept from the user's response
+2. Remove unnecessary words like "someone who is", "a person who", "I am", etc.
+3. Make it sound natural and conversational
+4. Use the same identity concept in both places in the template
+5. Return only the rephrased response, nothing else
+
+Examples:
+- User: "someone who is always stressed" → "Feel yourself being stressed... as someone who's stressed, what do you want?"
+- User: "a person who can't control their future" → "Feel yourself being out of control... as someone out of control, what do you want?"
+- User: "I am powerless" → "Feel yourself being powerless... as someone powerless, what do you want?"
+- User: "victim" → "Feel yourself being a victim... as a victim, what do you want?"
+- User: "in control of my own future" → "Feel yourself being in control of your future... as someone in control of their future, what do you want?"
+
+Extract the core identity and apply the template now:`;
+    } else if (stepId === 'identity_dissolve_step_b') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's identity response.
+
+User's response: "${userInput}"
+Current scripted response: "${scriptedResponse}"
+
+Task: Extract the core identity from the user's response and use it naturally in the template.
+
+Template: "Feel yourself being [contextualized identity]... exaggerate the feeling of it and tell me the first thing that you notice about it."
+
+Rules:
+1. Extract the core identity concept from the user's response
+2. Remove unnecessary words like "someone who is", "a person who", "I am", etc.
+3. Make it sound natural and conversational
+4. Keep the exact template structure
+5. Return only the rephrased response, nothing else
+
+Examples:
+- User: "someone who is always stressed" → "Feel yourself being stressed... exaggerate the feeling of it and tell me the first thing that you notice about it."
+- User: "a person who can't control their future" → "Feel yourself being out of control... exaggerate the feeling of it and tell me the first thing that you notice about it."
+- User: "I am powerless" → "Feel yourself being powerless... exaggerate the feeling of it and tell me the first thing that you notice about it."
+- User: "victim" → "Feel yourself being a victim... exaggerate the feeling of it and tell me the first thing that you notice about it."
+- User: "in control of my own future" → "Feel yourself being in control of your future... exaggerate the feeling of it and tell me the first thing that you notice about it."
+
+Extract the core identity and apply the template now:`;
+    } else if (stepId === 'identity_check') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's identity response.
+
+User's response: "${userInput}"
+Current scripted response: "${scriptedResponse}"
+
+Task: Extract the core identity from the user's response and use it naturally in the template.
+
+Template: "Can you still feel yourself being [contextualized identity]?"
+
+Rules:
+1. Extract the core identity concept from the user's response
+2. Remove unnecessary words like "someone who is", "a person who", "I am", etc.
+3. Make it sound natural and conversational
+4. Keep the exact template structure
+5. Return only the rephrased response, nothing else
+
+Examples:
+- User: "someone who is always stressed" → "Can you still feel yourself being stressed?"
+- User: "a person who can't control their future" → "Can you still feel yourself being out of control?"
+- User: "I am powerless" → "Can you still feel yourself being powerless?"
+- User: "victim" → "Can you still feel yourself being a victim?"
+- User: "in control of my own future" → "Can you still feel yourself being in control of your future?"
+
+Extract the core identity and apply the template now:`;
     } else if (stepId === 'trauma_shifting_intro') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to rephrase the user's input as a negative experience statement.
 
@@ -459,6 +537,12 @@ Rephrase now:`;
         return `Feel "${userResponse}"... what does "${userResponse}" feel like in your body?`;
       case 'sensation_progression':
         return `Feel "${userResponse}"... what happens to "${userResponse}" when you feel "${userResponse}"?`;
+      case 'identity_dissolve_step_a':
+        return `Feel yourself being "${userResponse}"... as "${userResponse}", what do you want?`;
+      case 'identity_dissolve_step_b':
+        return `Feel yourself being "${userResponse}"... exaggerate the feeling of it and tell me the first thing that you notice about it.`;
+      case 'identity_check':
+        return `Can you still feel yourself being "${userResponse}"?`;
       default:
         return `Feel "${userResponse}"... what does that feel like?`;
     }

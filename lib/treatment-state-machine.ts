@@ -268,6 +268,13 @@ export class TreatmentStateMachine {
       'belief_step_e'           // "Feel 'that feeling'... what does 'that feeling' feel like?"
     ];
     
+    // Identity Shifting steps that need linguistic processing
+    const identityShiftingSteps = [
+      'identity_dissolve_step_a', // "Feel yourself being [identity]... as [identity], what do you want?"
+      'identity_dissolve_step_b', // "Feel yourself being [identity]... exaggerate the feeling of it and tell me the first thing that you notice about it."
+      'identity_check'           // "Can you still feel yourself being [identity]?"
+    ];
+    
     // All modality intro steps that need linguistic processing for user input contextualisation
     const introSteps = [
       'problem_shifting_intro',  // Ensure problem is stated as a problem
@@ -278,7 +285,7 @@ export class TreatmentStateMachine {
       'belief_shifting_intro'    // Ensure problem is stated as a problem
     ];
     
-    return problemShiftingSteps.includes(stepId) || realityShiftingSteps.includes(stepId) || blockageShiftingSteps.includes(stepId) || beliefShiftingSteps.includes(stepId) || introSteps.includes(stepId);
+    return problemShiftingSteps.includes(stepId) || realityShiftingSteps.includes(stepId) || blockageShiftingSteps.includes(stepId) || beliefShiftingSteps.includes(stepId) || identityShiftingSteps.includes(stepId) || introSteps.includes(stepId);
   }
 
   /**
@@ -1244,8 +1251,11 @@ export class TreatmentStateMachine {
           id: 'identity_dissolve_step_a',
           scriptedResponse: (userInput, context) => {
             // Store the identity for use throughout the process
-            context.metadata.currentIdentity = userInput || context.metadata.currentIdentity || 'that identity';
-            const identity = context.metadata.currentIdentity;
+            // Only update identity if we don't already have one stored (i.e., not looping back from identity_check)
+            if (!context.metadata.currentIdentity || (userInput && userInput.trim().length > 3 && !['yes', 'no', 'still'].some(word => userInput.toLowerCase().includes(word)))) {
+              context.metadata.currentIdentity = userInput || 'that identity';
+            }
+            const identity = context.metadata.currentIdentity || 'that identity';
             return `Feel yourself being '${identity}'... as '${identity}', what do you want?`;
           },
           expectedResponseType: 'open',
