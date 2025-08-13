@@ -511,28 +511,16 @@ export class TreatmentStateMachine {
               // Handle method selection for problems - only respond to method names (frontend sends these)
               if (input.includes('problem shifting')) {
                 context.metadata.selectedMethod = 'problem_shifting';
-                // Store the response to trigger step transition
-                context.userResponses = context.userResponses || {};
-                context.userResponses['mind_shifting_explanation'] = userInput;
-                return "Great! We'll use Problem Shifting. Tell me what the problem is in a few words.";
+                return "Great! We'll use Problem Shifting.";
               } else if (input.includes('identity shifting')) {
                 context.metadata.selectedMethod = 'identity_shifting';
-                // Store the response to trigger step transition
-                context.userResponses = context.userResponses || {};
-                context.userResponses['mind_shifting_explanation'] = userInput;
-                return "Great! We'll use Identity Shifting. Tell me what the problem is in a few words.";
+                return "Great! We'll use Identity Shifting.";
               } else if (input.includes('belief shifting')) {
                 context.metadata.selectedMethod = 'belief_shifting';
-                // Store the response to trigger step transition
-                context.userResponses = context.userResponses || {};
-                context.userResponses['mind_shifting_explanation'] = userInput;
-                return "Great! We'll use Belief Shifting. Tell me what the problem is in a few words.";
+                return "Great! We'll use Belief Shifting.";
               } else if (input.includes('blockage shifting')) {
                 context.metadata.selectedMethod = 'blockage_shifting';
-                // Store the response to trigger step transition
-                context.userResponses = context.userResponses || {};
-                context.userResponses['mind_shifting_explanation'] = userInput;
-                return "Great! We'll use Blockage Shifting. Tell me what the problem is in a few words.";
+                return "Great! We'll use Blockage Shifting.";
               } else {
                 // If we get here with work type 'problem' but no method selected,
                 // UI will show method buttons - return confirmation for backend logic
