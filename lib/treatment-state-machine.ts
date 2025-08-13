@@ -701,42 +701,31 @@ export class TreatmentStateMachine {
               context.metadata.problemStatement = statement;
               context.problemStatement = statement; // Keep for compatibility
               
-              // Skip confirmation and route directly to treatment intro step
+              // Skip confirmation and route directly to treatment intro step  
               if (workType === 'problem') {
                 const selectedMethod = context.metadata.selectedMethod;
                 if (selectedMethod === 'identity_shifting') {
                   context.currentPhase = 'identity_shifting';
-                  context.currentStep = 'identity_shifting_intro';
-                  const problemStatement = context?.problemStatement || statement || 'the problem';
-                  return `Please close your eyes and keep them closed throughout the rest of the process.\n\nFeel the problem of '${problemStatement}' - what kind of person are you being when you're experiencing this problem?`;
+                  // Set step for next transition but return simple acknowledgment
+                  return `Great! Let's begin Identity Shifting.`;
                 } else if (selectedMethod === 'problem_shifting') {
                   context.currentPhase = 'problem_shifting';
-                  context.currentStep = 'problem_shifting_intro';
-                  const problemStatement = context?.problemStatement || statement || 'the problem';
-                  return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.\n\nFeel the problem '${problemStatement}'... what does it feel like?`;
+                  return `Great! Let's begin Problem Shifting.`;
                 } else if (selectedMethod === 'belief_shifting') {
                   context.currentPhase = 'belief_shifting';
-                  context.currentStep = 'belief_shifting_intro';
-                  const problemStatement = context?.problemStatement || statement || 'the problem';
-                  return `Please close your eyes and keep them closed throughout the rest of the process.\n\nFeel the problem of '${problemStatement}' - what's the feeling?`;
+                  return `Great! Let's begin Belief Shifting.`;
                 } else if (selectedMethod === 'blockage_shifting') {
                   context.currentPhase = 'blockage_shifting';
-                  context.currentStep = 'blockage_shifting_intro';
-                  const problemStatement = context?.problemStatement || statement || 'the problem';
-                  return `Please close your eyes and keep them closed throughout the rest of the process.\n\nFeel the problem of '${problemStatement}' - what's the feeling?`;
+                  return `Great! Let's begin Blockage Shifting.`;
                 }
               } else if (workType === 'goal') {
                 context.currentPhase = 'reality_shifting';
                 context.metadata.selectedMethod = 'reality_shifting';
-                context.currentStep = 'reality_goal_capture';
-                const goalStatement = context?.problemStatement || statement || 'the goal';
-                return `What do you want? Please describe your goal in a few words.`;
+                return `Great! Let's begin Reality Shifting.`;
               } else if (workType === 'negative_experience') {
                 context.currentPhase = 'trauma_shifting';
                 context.metadata.selectedMethod = 'trauma_shifting';
-                context.currentStep = 'trauma_shifting_intro';
-                const experienceStatement = context?.problemStatement || statement || 'the negative experience';
-                return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about the negative experience of '${experienceStatement}' - feel it dissolving...`;
+                return `Great! Let's begin Trauma Shifting.`;
               }
               
               // Fallback to confirmation if no method set
@@ -2316,9 +2305,28 @@ export class TreatmentStateMachine {
 
         
       case 'work_type_description':
-        // User provided description, routing handled by scriptedResponse directly
-        // Return the step that was set by the scriptedResponse
-        return context.currentStep;
+        // User provided description, route to appropriate treatment intro
+        const descWorkType = context.metadata.workType;
+        const descSelectedMethod = context.metadata.selectedMethod;
+        
+        if (descWorkType === 'problem' && descSelectedMethod) {
+          if (descSelectedMethod === 'identity_shifting') {
+            return 'identity_shifting_intro';
+          } else if (descSelectedMethod === 'problem_shifting') {
+            return 'problem_shifting_intro';
+          } else if (descSelectedMethod === 'belief_shifting') {
+            return 'belief_shifting_intro';
+          } else if (descSelectedMethod === 'blockage_shifting') {
+            return 'blockage_shifting_intro';
+          }
+        } else if (descWorkType === 'goal') {
+          return 'reality_shifting_intro';
+        } else if (descWorkType === 'negative_experience') {
+          return 'trauma_shifting_intro';
+        }
+        
+        // Fallback to confirmation step
+        return 'confirm_statement';
         
       case 'work_type_selection':
         // Already handled in the scriptedResponse, continue to next step
