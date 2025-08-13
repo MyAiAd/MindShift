@@ -674,8 +674,18 @@ export class TreatmentStateMachine {
             
             const workType = context.metadata.workType || 'item';
 
-            // If no user input, ask for description
-            if (!userInput) {
+            // Check if user input is actually a method name (not a problem description)
+            const isMethodName = userInput && (
+              userInput.toLowerCase().includes('problem shifting') ||
+              userInput.toLowerCase().includes('identity shifting') ||
+              userInput.toLowerCase().includes('belief shifting') ||
+              userInput.toLowerCase().includes('blockage shifting') ||
+              userInput.toLowerCase().includes('reality shifting') ||
+              userInput.toLowerCase().includes('trauma shifting')
+            );
+            
+            // If no user input OR if user input is a method name, ask for description
+            if (!userInput || isMethodName) {
               if (workType === 'problem') {
                 return "Tell me what the problem is in a few words.";
               } else if (workType === 'goal') {
