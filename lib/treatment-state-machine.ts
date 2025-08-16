@@ -275,6 +275,13 @@ export class TreatmentStateMachine {
       'identity_check'           // "Can you still feel yourself being [identity]?"
     ];
     
+    // Trauma Shifting steps that need linguistic processing
+    const traumaShiftingSteps = [
+      'trauma_dissolve_step_a',   // "Feel yourself being [identity]... as [identity], what do you want?"
+      'trauma_dissolve_step_b',   // "Feel yourself being [identity]... exaggerate the feeling of it and tell me the first thing that you notice about it."
+      'trauma_identity_check'     // "Can you still feel yourself being [identity]?"
+    ];
+    
     // All modality intro steps that need linguistic processing for user input contextualisation
     const introSteps = [
       'problem_shifting_intro',  // Ensure problem is stated as a problem
@@ -285,7 +292,7 @@ export class TreatmentStateMachine {
       'belief_shifting_intro'    // Ensure problem is stated as a problem
     ];
     
-    return problemShiftingSteps.includes(stepId) || realityShiftingSteps.includes(stepId) || blockageShiftingSteps.includes(stepId) || beliefShiftingSteps.includes(stepId) || identityShiftingSteps.includes(stepId) || introSteps.includes(stepId);
+    return problemShiftingSteps.includes(stepId) || realityShiftingSteps.includes(stepId) || blockageShiftingSteps.includes(stepId) || beliefShiftingSteps.includes(stepId) || identityShiftingSteps.includes(stepId) || traumaShiftingSteps.includes(stepId) || introSteps.includes(stepId);
   }
 
   /**
@@ -1644,9 +1651,16 @@ export class TreatmentStateMachine {
         {
           id: 'trauma_dissolve_step_a',
           scriptedResponse: (userInput, context) => {
-            // Store the trauma identity for use throughout the process
-            context.metadata.currentTraumaIdentity = userInput || context.metadata.currentTraumaIdentity || 'that identity';
-            const identity = context.metadata.currentTraumaIdentity;
+            // Get the identity from the trauma_shifting_intro response
+            const traumaIntroResponse = context.userResponses?.['trauma_shifting_intro'];
+            
+            // Store the identity from the intro step if we don't have it yet
+            if (!context.metadata.currentTraumaIdentity && traumaIntroResponse) {
+              context.metadata.currentTraumaIdentity = traumaIntroResponse.trim();
+            }
+            
+            // Use the stored identity, don't overwrite with current userInput (which is the goal they want)
+            const identity = context.metadata.currentTraumaIdentity || 'that identity';
             return `Feel yourself being '${identity}'... as '${identity}', what do you want?`;
           },
           expectedResponseType: 'open',
