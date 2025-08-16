@@ -204,7 +204,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         
         // For intro steps, use the problem statement from context, not the current user input
         let textToProcess = userInput;
-        if (['problem_shifting_intro', 'reality_shifting_intro', 'blockage_shifting_intro', 
+        if (['problem_shifting_intro', 'blockage_shifting_intro', 
              'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
           // Get the stored problem statement that the intro step will use
           const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
