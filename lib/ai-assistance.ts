@@ -388,27 +388,15 @@ Examples:
 
 Rephrase the user's input as a problem statement now:`;
     } else if (stepId === 'reality_shifting_intro') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to rephrase the user's input as a clear goal statement.
+      return `You are assisting with Mind Shifting sessions. The user has already provided their goal statement. Your task is to preserve their EXACT wording.
 
-User's input: "${userInput}"
+User's goal statement: "${userInput}"
 
-Task: Rephrase the user's input as a positive goal statement that makes sense in the Reality Shifting context.
+CRITICAL: You must use the user's EXACT words for their goal. Do not change, rephrase, or modify their goal statement in any way.
 
-Rules:
-1. Keep the user's core meaning intact
-2. Phrase it as something the user wants to achieve or experience
-3. Make it sound natural and grammatically correct
-4. Return ONLY the rephrased goal statement, nothing else
-5. Do not change the therapeutic script - only rephrase the user's input
+The scripted response should use their goal exactly as stated: "${userInput}"
 
-Examples:
-- User: "work life balance problems" → "better work life balance"
-- User: "I struggle with money" → "financial stability"
-- User: "relationship issues" → "a healthy relationship"
-- User: "lack of confidence" → "being confident"
-- User: "feeling anxious" → "feeling calm and peaceful"
-
-Rephrase the user's input as a goal statement now:`;
+Return the scripted response using their exact goal wording without any modifications.`;
     } else if (stepId === 'identity_dissolve_step_a') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's identity response.
 

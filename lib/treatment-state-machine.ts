@@ -1388,6 +1388,69 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 3, errorMessage: 'Please tell me what you want instead.' }
           ],
+          nextStep: 'goal_deadline_check',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'goal_deadline_check',
+          scriptedResponse: 'Is there a deadline?',
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'goal_deadline_date',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'goal_deadline_date',
+          scriptedResponse: 'When do you want to achieve this goal by?',
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me when you want to achieve this goal.' }
+          ],
+          nextStep: 'goal_confirmation',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'goal_confirmation',
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context?.metadata?.currentGoal || 'your goal';
+            const deadline = userInput || '';
+            const hasDeadline = context?.userResponses?.['goal_deadline_check']?.toLowerCase().includes('yes') || false;
+            
+            if (hasDeadline && deadline) {
+              context.metadata.goalWithDeadline = `${goalStatement} by ${deadline}`;
+              return `OK, so your goal statement including the deadline is '${goalStatement} by ${deadline}', is that right?`;
+            } else {
+              return `OK, so your goal statement is '${goalStatement}', is that right?`;
+            }
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please confirm yes or no.' }
+          ],
+          nextStep: 'goal_certainty',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'goal_certainty',
+          scriptedResponse: 'How certain are you between 0% and 100% that you will achieve this goal?',
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please give me a percentage.' }
+          ],
           nextStep: 'reality_shifting_intro',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
@@ -1397,10 +1460,14 @@ export class TreatmentStateMachine {
         {
           id: 'reality_shifting_intro',
           scriptedResponse: (userInput, context) => {
-            // Store the goal from the previous step
-            const goalStatement = userInput || context?.metadata?.currentGoal || 'your goal';
+            // Use the exact goal statement without changing wording
+            const goalStatement = context?.metadata?.currentGoal || 'your goal';
             context.metadata.currentGoal = goalStatement;
-            return `Close your eyes and keep them closed throughout the process. We're going to work with your goal of '${goalStatement}'.\n\nFeel that '${goalStatement}' is coming to you... what does it feel like?`;
+            return `Close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. If ever you feel your goal has changed just let me know.
+
+We're going to work with your goal of '${goalStatement}'.
+
+Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
@@ -2417,13 +2484,38 @@ export class TreatmentStateMachine {
         break;
         
       case 'goal_description':
-        // User provided goal description, store it and go to reality shifting intro  
+        // User provided goal description, store it and go to deadline check  
         context.problemStatement = lastResponse;
         context.metadata.problemStatement = lastResponse;
         context.metadata.currentGoal = lastResponse;
         context.currentPhase = 'reality_shifting';
         context.metadata.selectedMethod = 'reality_shifting';
         console.log(`🔍 GOAL_DESCRIPTION: Stored goal: "${lastResponse}"`);
+        return 'goal_deadline_check';
+        
+      case 'goal_deadline_check':
+        // Check if user said yes to deadline
+        if (lastResponse.toLowerCase().includes('yes') || lastResponse.toLowerCase().includes('y')) {
+          return 'goal_deadline_date';
+        } else {
+          return 'goal_confirmation';
+        }
+        
+      case 'goal_deadline_date':
+        // User provided deadline, proceed to confirmation
+        return 'goal_confirmation';
+        
+      case 'goal_confirmation':
+        // User confirmed goal statement, ask about certainty
+        if (lastResponse.toLowerCase().includes('yes') || lastResponse.toLowerCase().includes('y')) {
+          return 'goal_certainty';
+        } else {
+          // If user says no, we might need to restart goal capture
+          return 'goal_description';
+        }
+        
+      case 'goal_certainty':
+        // User provided certainty percentage, proceed to reality shifting intro
         return 'reality_shifting_intro';
         
       case 'negative_experience_description':
