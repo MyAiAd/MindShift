@@ -1678,7 +1678,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           id: 'reality_certainty_check',
           scriptedResponse: (userInput, context) => {
             const goalStatement = context?.metadata?.currentGoal || 'your goal';
-            return `Does it feel like '${goalStatement}' has already come to you?`;
+            return `Are there any doubts left in your mind that you will achieve your goal of ${goalStatement}?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
@@ -2807,10 +2807,31 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           // User provided what it would feel like without the problem, go to B4
           return 'reality_cycle_b4';
           
-        case 'reality_cycle_b4':
-          // Completed B2-B4 cycle, go back to certainty checking
-          return 'reality_checking_questions';
-          
+                 case 'reality_cycle_b4':
+           // Completed B2-B4 cycle, check if we came from first or second checking question
+           const fromSecondCheck = context?.metadata?.fromSecondCheckingQuestion;
+           if (fromSecondCheck) {
+             // Clear the flag and go back to second checking question
+             context.metadata.fromSecondCheckingQuestion = false;
+             return 'reality_certainty_check';
+           } else {
+             // Go back to first checking question
+             return 'reality_checking_questions';
+           }
+           
+        case 'reality_certainty_check':
+          // Second checking question: Are there any doubts left?
+          if (lastResponse.includes('yes')) {
+            // Yes, there are doubts - ask for the reason and cycle through B2-B4
+            context.metadata.fromSecondCheckingQuestion = true;
+            return 'reality_doubt_reason';
+          }
+          if (lastResponse.includes('no') || lastResponse.includes('not')) {
+            // No doubts left - proceed to next step
+            return 'reality_doubts_check';
+          }
+          break;
+           
         case 'reality_doubts_check':
         // Reality Shifting: Check if doubts remain
         if (lastResponse.includes('yes')) {
