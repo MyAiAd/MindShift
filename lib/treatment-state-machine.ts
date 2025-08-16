@@ -1531,12 +1531,13 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         {
           id: 'reality_why_not_possible',
-          scriptedResponse: () => {
-            return `Why is it possible that it will not come to you?`;
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context?.metadata?.currentGoal || 'your goal';
+            return `Why might you not achieve your goal of '${goalStatement}'?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me why you think it might not come to you.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me why you might not achieve your goal.' }
           ],
           nextStep: 'reality_feel_reason',
           aiTriggers: [
@@ -1563,10 +1564,12 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         {
           id: 'reality_feel_reason_2',
-          scriptedResponse: (userInput) => `Feel that '${userInput || 'feeling'}'... what can you feel now?`,
+          scriptedResponse: (userInput, context) => {
+            return `What would it feel like to not have that problem?`;
+          },
           expectedResponseType: 'feeling',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you can feel now.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it would feel like.' }
           ],
           nextStep: 'reality_feel_reason_3',
           aiTriggers: [
@@ -1576,12 +1579,16 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         {
           id: 'reality_feel_reason_3',
-          scriptedResponse: (userInput) => `Feel that '${userInput || 'feeling'}'... what's the first thing you notice about it?`,
-          expectedResponseType: 'open',
+          scriptedResponse: (userInput, context) => {
+            // Get the response from reality_feel_reason_2 (what it would feel like to not have the problem)
+            const goodFeeling = context?.userResponses?.['reality_feel_reason_2'] || userInput || 'good';
+            return `Feel '${goodFeeling}'... what does '${goodFeeling}' feel like?`;
+          },
+          expectedResponseType: 'feeling',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about it.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
           ],
-          nextStep: 'reality_step_b',
+          nextStep: 'reality_checking_questions',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
