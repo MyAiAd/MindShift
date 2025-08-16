@@ -2659,10 +2659,9 @@ export class TreatmentStateMachine {
       case 'trauma_dig_deeper':
         // Trauma Shifting: Check if anything else is a problem
         if (lastResponse.includes('yes')) {
-          // Yes, something else is a problem - need to route appropriately
-          // For now, go to digging deeper phase
-          context.currentPhase = 'digging_deeper';
-          return 'digging_deeper_start';
+          // Yes, something else is a problem - ask them to define it in a few words first
+          context.currentPhase = 'discovery';
+          return 'restate_selected_problem';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
           // No other problems - proceed to integration
