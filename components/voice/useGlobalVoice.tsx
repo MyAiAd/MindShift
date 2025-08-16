@@ -190,7 +190,7 @@ export const useGlobalVoice = ({
     // Handle yes/no button contexts (buttons 1 and 2)
     if (step === 'analyze_response' || step === 'check_if_still_problem' || step === 'blockage_check_if_still_problem' || 
         step === 'identity_dissolve_step_e' || step === 'identity_check' || step === 'identity_problem_check' || 
-        step === 'confirm_identity_problem' || step === 'reality_step_b' || step === 'reality_checking_questions' || 
+        step === 'confirm_identity_problem' || step === 'reality_step_b' || 
         step === 'reality_doubts_check' || step === 'trauma_dissolve_step_e' || step === 'trauma_identity_check' || 
         step === 'trauma_experience_check' || step === 'trauma_dig_deeper' || step === 'belief_step_f' || 
         step === 'belief_check_1' || step === 'belief_check_2' || step === 'belief_check_3' || 
