@@ -1684,26 +1684,13 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'reality_doubts_check',
+          nextStep: 'reality_integration_intro',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
         },
 
-        {
-          id: 'reality_doubts_check',
-          scriptedResponse: () => {
-            return `Are there any doubts left in your mind that you will achieve your goal?`;
-          },
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
-          ],
-          nextStep: 'reality_integration_start',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
-        },
+
 
         {
           id: 'reality_integration_intro',
@@ -2810,8 +2797,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         
       case 'reality_checking_questions':
         // Reality Shifting: Handle certainty percentage and doubt
-        const certaintlyMatch = lastResponse.match(/(\d+)%?/);
-        const certaintyPercentage = certaintlyMatch ? parseInt(certaintlyMatch[1]) : 0;
+        const certaintyMatch = lastResponse.match(/(\d+)%?/);
+        const certaintyPercentage = certaintyMatch ? parseInt(certaintyMatch[1]) : 0;
         
         if (certaintyPercentage >= 100) {
           // 100% certainty - proceed to second checking question
@@ -2856,25 +2843,12 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             return 'reality_doubt_reason';
           }
           if (lastResponse.includes('no') || lastResponse.includes('not')) {
-            // No doubts left - proceed to next step
-            return 'reality_doubts_check';
+            // No doubts left - proceed to integration
+            return 'reality_integration_intro';
           }
           break;
            
-        case 'reality_doubts_check':
-        // Reality Shifting: Check if doubts remain
-        if (lastResponse.includes('yes')) {
-          // Yes, doubts remain - repeat Step 2 starting with B
-          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          return 'reality_step_b';
-        }
-        if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No doubts - proceed to integration intro
-          return 'reality_integration_intro';
-        }
-        break;
-        
-      case 'reality_integration_intro':
+        case 'reality_integration_intro':
         // User responded to integration intro, proceed to helped question
         return 'reality_integration_helped';
         

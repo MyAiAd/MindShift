@@ -542,7 +542,6 @@ function getPhaseForStep(stepId: string): string {
     'reality_cycle_b3': 'reality_shifting',
     'reality_cycle_b4': 'reality_shifting',
     'reality_certainty_check': 'reality_shifting',
-    'reality_doubts_check': 'reality_shifting',
     'reality_integration_intro': 'reality_shifting',
     'reality_integration_start': 'reality_shifting',
     'reality_integration_helped': 'reality_shifting',
