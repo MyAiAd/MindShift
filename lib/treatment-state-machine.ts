@@ -1611,17 +1611,82 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
 
         {
-          id: 'reality_certainty_check',
-          scriptedResponse: () => {
-            return `How certain are you between 0% and 100% that you will achieve your goal?`;
+          id: 'reality_doubt_reason',
+          scriptedResponse: (userInput, context) => {
+            const doubtPercentage = context?.metadata?.doubtPercentage || '10';
+            return `What's the reason for the ${doubtPercentage}% doubt?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please tell me your certainty percentage.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me the reason for your doubt.' }
+          ],
+          nextStep: 'reality_cycle_b2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_cycle_b2',
+          scriptedResponse: (userInput, context) => {
+            // Use the doubt reason from the previous step
+            const doubtReason = context?.userResponses?.['reality_doubt_reason'] || userInput || 'that reason';
+            context.metadata.currentReason = doubtReason;
+            return `Feel '${doubtReason}'... what does it feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
+          ],
+          nextStep: 'reality_cycle_b3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_cycle_b3',
+          scriptedResponse: 'What would it feel like to not have that problem?',
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it would feel like.' }
+          ],
+          nextStep: 'reality_cycle_b4',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_cycle_b4',
+          scriptedResponse: (userInput, context) => {
+            // Get the response from reality_cycle_b3
+            const goodFeeling = context?.userResponses?.['reality_cycle_b3'] || userInput || 'good';
+            return `Feel '${goodFeeling}'... what does '${goodFeeling}' feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
+          ],
+          nextStep: 'reality_checking_questions',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_certainty_check',
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context?.metadata?.currentGoal || 'your goal';
+            return `Does it feel like '${goalStatement}' has already come to you?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
           nextStep: 'reality_doubts_check',
           aiTriggers: [
-            { condition: 'userStuck', action: 'clarify' }
+            { condition: 'needsClarification', action: 'clarify' }
           ]
         },
 
@@ -2715,11 +2780,38 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         break;
         
       case 'reality_checking_questions':
-        // For Reality Shifting, checking questions don't cycle based on yes/no
-        // They just proceed to the next question
-        return 'reality_certainty_check';
+        // Reality Shifting: Handle certainty percentage and doubt
+        const certaintlyMatch = lastResponse.match(/(\d+)%?/);
+        const certaintyPercentage = certaintlyMatch ? parseInt(certaintlyMatch[1]) : 0;
         
-      case 'reality_doubts_check':
+        if (certaintyPercentage >= 100) {
+          // 100% certainty - proceed to second checking question
+          return 'reality_certainty_check';
+        } else if (certaintyPercentage > 0) {
+          // Less than 100% - ask about the doubt reason
+          context.metadata.doubtPercentage = 100 - certaintyPercentage;
+          return 'reality_doubt_reason';
+        }
+                 // If we can't parse percentage, ask for clarification
+         break;
+          
+        case 'reality_doubt_reason':
+          // User provided doubt reason, cycle back to B2
+          return 'reality_cycle_b2';
+          
+        case 'reality_cycle_b2':
+          // User provided feeling for doubt reason, go to B3
+          return 'reality_cycle_b3';
+          
+        case 'reality_cycle_b3':
+          // User provided what it would feel like without the problem, go to B4
+          return 'reality_cycle_b4';
+          
+        case 'reality_cycle_b4':
+          // Completed B2-B4 cycle, go back to certainty checking
+          return 'reality_checking_questions';
+          
+        case 'reality_doubts_check':
         // Reality Shifting: Check if doubts remain
         if (lastResponse.includes('yes')) {
           // Yes, doubts remain - repeat Step 2 starting with B
