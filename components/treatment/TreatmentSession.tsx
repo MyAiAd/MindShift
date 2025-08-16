@@ -886,7 +886,7 @@ export default function TreatmentSession({
                       Choose your Mind Shifting method:
                     </h3>
                     <div className="flex flex-col space-y-3 items-center">
-                      {/* First row */}
+                      {/* First row - 3 buttons */}
                       <div className="flex space-x-3 justify-center">
                         <button
                           onClick={() => handleMethodSelection('Problem Shifting')}
@@ -905,10 +905,7 @@ export default function TreatmentSession({
                           <span className="bg-orange-700 px-2 py-1 rounded text-xs font-bold">2</span>
                           <span>Blockage Shifting</span>
                         </button>
-                      </div>
-                      
-                      {/* Second row */}
-                      <div className="flex space-x-3 justify-center">
+                        
                         <button
                           onClick={() => handleMethodSelection('Identity Shifting')}
                           disabled={isLoading}
@@ -917,7 +914,10 @@ export default function TreatmentSession({
                           <span className="bg-purple-700 px-2 py-1 rounded text-xs font-bold">3</span>
                           <span>Identity Shifting</span>
                         </button>
-                        
+                      </div>
+                      
+                      {/* Second row - 3 buttons */}
+                      <div className="flex space-x-3 justify-center">
                         <button
                           onClick={() => handleMethodSelection('Reality Shifting')}
                           disabled={isLoading}
@@ -926,10 +926,7 @@ export default function TreatmentSession({
                           <span className="bg-cyan-700 px-2 py-1 rounded text-xs font-bold">4</span>
                           <span>Reality Shifting</span>
                         </button>
-                      </div>
-                      
-                      {/* Third row */}
-                      <div className="flex space-x-3 justify-center">
+                        
                         <button
                           onClick={() => handleMethodSelection('Trauma Shifting')}
                           disabled={isLoading}
