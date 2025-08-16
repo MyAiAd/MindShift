@@ -2088,7 +2088,11 @@ export class TreatmentStateMachine {
         },
         {
           id: 'intention_question',
-          scriptedResponse: "What's your intention now in relation to this?",
+          scriptedResponse: (userInput, context) => {
+            // Get the problem statement from the stored context or fallback to previous responses
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the former problem';
+            return `What's your intention now in relation to the former problem of '${problemStatement}'?`;
+          },
           expectedResponseType: 'open',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what your intention is now.' }
