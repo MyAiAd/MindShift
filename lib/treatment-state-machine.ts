@@ -2046,12 +2046,12 @@ export class TreatmentStateMachine {
           id: 'integration_start',
           scriptedResponse: (userInput, context) => {
             // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this';
-            return `How do you feel about ${problemStatement} now?`;
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            return `Ok now we have cleared the problem, next I will ask you some questions about how your perspective has shifted and what you want to do next. So firstly, how do you feel about the former problem of '${problemStatement}' now?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me how you feel about it now.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me how you feel about the former problem now.' }
           ],
           nextStep: 'awareness_question',
           aiTriggers: []
