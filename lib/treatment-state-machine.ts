@@ -1676,8 +1676,14 @@ export class TreatmentStateMachine {
         {
           id: 'trauma_dissolve_step_b',
           scriptedResponse: (userInput, context) => {
-            // Store the goal for later use
-            context.metadata.currentTraumaGoal = userInput || context.metadata.currentTraumaGoal || 'that goal';
+            // Get the goal from trauma_dissolve_step_a response (what they want as that identity)
+            const traumaGoalResponse = context.userResponses?.['trauma_dissolve_step_a'];
+            
+            // Store the goal from step_a response if we don't have it yet
+            if (!context.metadata.currentTraumaGoal && traumaGoalResponse) {
+              context.metadata.currentTraumaGoal = traumaGoalResponse.trim();
+            }
+            
             const identity = context.metadata.currentTraumaIdentity || 'that identity';
             return `Feel yourself being '${identity}'... exaggerate the feeling of it and tell me the first thing that you notice about it.`;
           },
