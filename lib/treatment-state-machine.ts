@@ -2102,7 +2102,11 @@ export class TreatmentStateMachine {
         },
         {
           id: 'action_question',
-          scriptedResponse: "What needs to happen for you to realise your intention?",
+          scriptedResponse: (userInput, context) => {
+            // Get the intention from the previous step (intention_question)
+            const userIntention = context.userResponses?.['intention_question'] || 'your intention';
+            return `What needs to happen for you to realise your intention of '${userIntention}'?`;
+          },
           expectedResponseType: 'open',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what needs to happen.' }
@@ -2112,10 +2116,14 @@ export class TreatmentStateMachine {
         },
         {
           id: 'action_followup',
-          scriptedResponse: "What else needs to happen for you to realise your intention?",
+          scriptedResponse: (userInput, context) => {
+            // Get the intention from the intention_question step
+            const userIntention = context.userResponses?.['intention_question'] || 'your intention';
+            return `What else needs to happen for you to realise your intention of '${userIntention}'?`;
+          },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what else needs to happen.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please tell me what else needs to happen, or say "nothing" if nothing else comes to mind.' }
           ],
           nextStep: 'one_thing_question',
           aiTriggers: []
@@ -2749,6 +2757,25 @@ export class TreatmentStateMachine {
       case 'session_complete':
         // Session is finished
         return null;
+        
+      case 'action_question':
+        // First action question - always go to action_followup
+        return 'action_followup';
+        
+      case 'action_followup':
+        // Keep asking action_followup until user says nothing
+        if (lastResponse.includes('nothing') || lastResponse.includes('Nothing') || 
+            lastResponse.toLowerCase().includes('nothing coming up') || 
+            lastResponse.toLowerCase().includes('nothing else') ||
+            lastResponse.toLowerCase().trim() === 'no' ||
+            lastResponse.toLowerCase().includes('that\'s it') ||
+            lastResponse.toLowerCase().includes('thats it')) {
+          // User has nothing more to add - proceed to next question
+          return 'one_thing_question';
+        } else {
+          // User provided more actions - ask again
+          return 'action_followup';
+        }
         
       default:
         // Default behavior - follow the nextStep
