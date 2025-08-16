@@ -1481,10 +1481,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         {
           id: 'reality_step_a2',
-          scriptedResponse: (userInput) => `Feel that '${userInput || 'feeling'}'... what can you feel now?`,
+          scriptedResponse: (userInput, context) => {
+            // Get the original feeling from reality_shifting_intro step
+            const originalFeeling = context?.userResponses?.['reality_shifting_intro'] || userInput || 'that';
+            return `Feel ${originalFeeling}... what does ${originalFeeling} feel like?`;
+          },
           expectedResponseType: 'feeling',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you can feel now.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
           ],
           nextStep: 'reality_step_a3',
           aiTriggers: [
@@ -1494,10 +1498,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         
         {
           id: 'reality_step_a3',
-          scriptedResponse: (userInput) => `Feel that '${userInput || 'feeling'}'... what's the first thing you notice about it?`,
+          scriptedResponse: (userInput, context) => {
+            // Get the original feeling from reality_shifting_intro step
+            const originalFeeling = context?.userResponses?.['reality_shifting_intro'] || userInput || 'that';
+            return `Feel ${originalFeeling}... what happens in yourself when you feel ${originalFeeling}?`;
+          },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about it.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself.' }
           ],
           nextStep: 'reality_step_b',
           aiTriggers: [
