@@ -1706,6 +1706,20 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
 
         {
+          id: 'reality_integration_intro',
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context?.metadata?.currentGoal || 'your goal';
+            return `OK now we have cleared all the blockages in the way of your goal, next I will ask you some questions about how your perspective has shifted and the steps you need to take to achieve your goal. So firstly, how do you feel about your goal of '${goalStatement}' now?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me how you feel about your goal now.' }
+          ],
+          nextStep: 'reality_integration_helped',
+          aiTriggers: []
+        },
+
+        {
           id: 'reality_integration_start',
           scriptedResponse: (userInput, context) => {
             const goalStatement = context?.metadata?.currentGoal || 'your goal';
@@ -2840,10 +2854,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'reality_step_b';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No doubts - proceed to integration
-          return 'reality_integration_start';
+          // No doubts - proceed to integration intro
+          return 'reality_integration_intro';
         }
         break;
+        
+      case 'reality_integration_intro':
+        // User responded to integration intro, proceed to helped question
+        return 'reality_integration_helped';
         
       case 'reality_session_complete':
         // Reality Shifting session is complete - let the API layer handle completion
