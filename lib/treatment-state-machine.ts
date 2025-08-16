@@ -3029,7 +3029,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
   private handlePhaseCompletion(context: TreatmentContext): ProcessingResult {
     // Check if this is truly session completion or just a phase transition
-    if (context.currentStep === 'session_complete') {
+    if (context.currentStep === 'session_complete' || 
+        context.currentStep === 'reality_session_complete' ||
+        context.currentStep?.includes('session_complete')) {
       return {
         canContinue: false,
         reason: 'Session completed successfully',
