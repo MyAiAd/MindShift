@@ -1761,12 +1761,27 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         {
           id: 'reality_integration_action',
-          scriptedResponse: () => {
-            return `What if anything do you need to do to enable your goal to be achieved?`;
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context?.metadata?.currentGoal || 'your goal';
+            return `What needs to happen for you to achieve your goal of '${goalStatement}'?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you need to do to achieve your goal.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what needs to happen to achieve your goal.' }
+          ],
+          nextStep: 'reality_integration_action_more',
+          aiTriggers: []
+        },
+
+        {
+          id: 'reality_integration_action_more',
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context?.metadata?.currentGoal || 'your goal';
+            return `What else needs to happen for you to achieve your goal of '${goalStatement}'?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please tell me what else needs to happen, or say "nothing".' }
           ],
           nextStep: 'reality_session_complete',
           aiTriggers: []
@@ -2862,6 +2877,20 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       case 'reality_integration_intro':
         // User responded to integration intro, proceed to helped question
         return 'reality_integration_helped';
+        
+      case 'reality_integration_action':
+        // User answered what needs to happen, ask what else
+        return 'reality_integration_action_more';
+        
+      case 'reality_integration_action_more':
+        // User answered what else needs to happen
+        if (lastResponse.toLowerCase().includes('nothing') || lastResponse.toLowerCase().includes('no') || lastResponse.toLowerCase().includes('not')) {
+          // User said nothing more needs to happen - complete session
+          return 'reality_session_complete';
+        } else {
+          // User gave another action - keep asking what else
+          return 'reality_integration_action_more';
+        }
         
       case 'reality_session_complete':
         // Reality Shifting session is complete - let the API layer handle completion

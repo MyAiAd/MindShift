@@ -548,6 +548,7 @@ function getPhaseForStep(stepId: string): string {
     'reality_integration_helped': 'reality_shifting',
     'reality_integration_awareness': 'reality_shifting',
     'reality_integration_action': 'reality_shifting',
+    'reality_integration_action_more': 'reality_shifting',
     'reality_session_complete': 'reality_shifting',
     
     // Trauma shifting phase
