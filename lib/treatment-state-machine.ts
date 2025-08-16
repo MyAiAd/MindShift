@@ -1598,11 +1598,11 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           id: 'reality_checking_questions',
           scriptedResponse: (userInput, context) => {
             const goalStatement = context?.metadata?.currentGoal || 'your goal';
-            return `Does it feel like '${goalStatement}' has already come to you?`;
+            return `How certain are you now between 0% and 100% that you will achieve your goal of ${goalStatement}?`;
           },
-          expectedResponseType: 'yesno',
+          expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please give me a percentage.' }
           ],
           nextStep: 'reality_certainty_check',
           aiTriggers: [
