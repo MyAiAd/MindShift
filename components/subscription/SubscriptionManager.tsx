@@ -82,35 +82,80 @@ export default function SubscriptionManager() {
     clearMessages();
     
     try {
-      const response = await fetch('/api/subscriptions', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, action }),
-      });
+      if (action === 'subscribe') {
+        // Redirect to Stripe Checkout for new subscriptions
+        const response = await fetch('/api/checkout/create', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId }),
+        });
 
-      if (response.ok) {
-        const actionMessages = {
-          subscribe: 'Successfully subscribed to plan!',
-          upgrade: 'Successfully upgraded your subscription!',
-          downgrade: 'Successfully downgraded your subscription!'
-        };
-        
-        setSuccess(actionMessages[action as keyof typeof actionMessages] || 'Subscription updated successfully!');
-        
-        // Wait a moment to show success message before reloading
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-        
-        await fetchSubscriptionData();
+        if (response.ok) {
+          const { checkout_url } = await response.json();
+          window.location.href = checkout_url;
+          return;
+        } else {
+          const errorData = await response.json();
+          setError(errorData.error || 'Failed to create checkout session.');
+        }
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to update subscription. Please try again.');
+        // Handle upgrades/downgrades via existing API
+        const response = await fetch('/api/subscriptions', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId, action }),
+        });
+
+        if (response.ok) {
+          const actionMessages = {
+            upgrade: 'Successfully upgraded your subscription!',
+            downgrade: 'Successfully downgraded your subscription!'
+          };
+          
+          setSuccess(actionMessages[action as keyof typeof actionMessages] || 'Subscription updated successfully!');
+          
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+          
+          await fetchSubscriptionData();
+        } else {
+          const errorData = await response.json();
+          setError(errorData.error || 'Failed to update subscription. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Error updating subscription:', error);
       setError('Failed to update subscription. Please check your connection and try again.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    setActionLoading('billing');
+    clearMessages();
+    
+    try {
+      const response = await fetch('/api/billing/portal', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      if (response.ok) {
+        const { portal_url } = await response.json();
+        window.location.href = portal_url;
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to open billing portal.');
+      }
+    } catch (error) {
+      console.error('Error opening billing portal:', error);
+      setError('Failed to open billing portal. Please try again.');
     } finally {
       setActionLoading(null);
     }
@@ -261,6 +306,7 @@ export default function SubscriptionManager() {
           <button
             onClick={clearMessages}
             className="text-red-500 hover:text-red-700 ml-3"
+            aria-label="Close error message"
           >
             <XCircle className="h-5 w-5" />
           </button>
@@ -277,6 +323,7 @@ export default function SubscriptionManager() {
           <button
             onClick={clearMessages}
             className="text-green-500 hover:text-green-700 ml-3"
+            aria-label="Close success message"
           >
             <XCircle className="h-5 w-5" />
           </button>
@@ -301,7 +348,18 @@ export default function SubscriptionManager() {
                 </p>
               </div>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleManageBilling}
+                disabled={actionLoading === 'billing'}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center"
+              >
+                {actionLoading === 'billing' ? (
+                  'Opening...'
+                ) : (
+                  'Manage Billing'
+                )}
+              </button>
               {!subscription.cancel_at_period_end && (
                 <button
                   onClick={() => handleCancel(false)}
