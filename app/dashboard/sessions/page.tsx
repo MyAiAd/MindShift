@@ -378,7 +378,7 @@ export default function SessionsPage() {
                 : 0;
               
               return (
-                <div key={`treatment-${session.id}`} className="p-6 hover:bg-blue-50 border-l-4 border-l-blue-500">
+                <div key={`treatment-${session.id}`} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/30 border-l-4 border-l-blue-500">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
