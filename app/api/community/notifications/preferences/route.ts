@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/database-server';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 // GET /api/community/notifications/preferences - Get user's notification preferences
 export async function GET(request: NextRequest) {
   try {

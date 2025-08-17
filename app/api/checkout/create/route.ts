@@ -3,6 +3,9 @@ import { createServerClient } from '@/lib/database-server';
 import { customerService } from '@/services/payment/stripe.service';
 import { stripe } from '@/services/payment/stripe.service';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerClient();
