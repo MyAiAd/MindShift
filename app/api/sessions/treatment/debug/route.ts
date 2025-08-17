@@ -57,18 +57,33 @@ export async function GET(request: NextRequest) {
     console.log('DEBUG: Treatment sessions with profiles (original query):', treatmentSessionsWithProfiles);
     console.log('DEBUG: Join error:', joinError);
 
-    // Try alternative join syntax
-    const { data: treatmentSessionsAltJoin, error: altJoinError } = await supabase
+    // Try the new approach: fetch separately then combine
+    const { data: sessionsForNewApproach, error: newApproachError } = await supabase
       .from('treatment_sessions')
-      .select(`
-        *,
-        profiles(id, first_name, last_name, email)
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
-      .limit(5);
+      .limit(3);
 
-    console.log('DEBUG: Treatment sessions with profiles (alt join):', treatmentSessionsAltJoin);
-    console.log('DEBUG: Alt join error:', altJoinError);
+    let sessionsWithManualJoin = [];
+    if (sessionsForNewApproach && sessionsForNewApproach.length > 0) {
+      sessionsWithManualJoin = await Promise.all(
+        sessionsForNewApproach.map(async (session) => {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, email')
+            .eq('id', session.user_id)
+            .single();
+
+          return {
+            ...session,
+            profiles: profileData || { id: session.user_id, first_name: 'Unknown', last_name: 'User', email: 'unknown@example.com' },
+            profileFetchError: profileError
+          };
+        })
+      );
+    }
+
+    console.log('DEBUG: Treatment sessions with manual profile fetch:', sessionsWithManualJoin);
 
     return NextResponse.json({
       debug: {
@@ -81,8 +96,8 @@ export async function GET(request: NextRequest) {
         userTreatmentError,
         treatmentSessionsWithProfiles: treatmentSessionsWithProfiles?.length || 0,
         joinError,
-        treatmentSessionsAltJoin: treatmentSessionsAltJoin?.length || 0,
-        altJoinError,
+        sessionsWithManualJoin: sessionsWithManualJoin?.length || 0,
+        newApproachError,
         latestSession: allTreatmentSessions?.[0] || null
       }
     });

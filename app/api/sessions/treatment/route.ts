@@ -27,13 +27,10 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const status = searchParams.get('status'); // active, completed, cancelled
 
-    // Build query for treatment sessions
+    // Build query for treatment sessions (without join first)
     let query = supabase
       .from('treatment_sessions')
-      .select(`
-        *,
-        profiles!treatment_sessions_user_id_fkey(id, first_name, last_name, email)
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -58,7 +55,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ treatmentSessions: sessions || [] });
+    // Now fetch profile data for each session
+    const sessionsWithProfiles = await Promise.all(
+      (sessions || []).map(async (session) => {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email')
+          .eq('id', session.user_id)
+          .single();
+
+        return {
+          ...session,
+          profiles: profileData || {
+            id: session.user_id,
+            first_name: 'Unknown',
+            last_name: 'User', 
+            email: 'unknown@example.com'
+          }
+        };
+      })
+    );
+
+    return NextResponse.json({ treatmentSessions: sessionsWithProfiles });
   } catch (error) {
     console.error('Error in treatment sessions fetch:', error);
     return NextResponse.json(
