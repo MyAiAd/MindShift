@@ -1,4 +1,8 @@
--- Update session stats function to include treatment sessions
+-- Update session stats function to include treatment sessions (idempotent)
+-- First, drop the existing function if it exists with old signature
+DROP FUNCTION IF EXISTS get_session_stats(UUID, UUID, INTEGER);
+
+-- Now create the new function with extended return type
 CREATE OR REPLACE FUNCTION get_session_stats(
     p_user_id UUID DEFAULT NULL,
     p_tenant_id UUID DEFAULT NULL,
