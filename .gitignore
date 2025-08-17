@@ -238,3 +238,4 @@ openai.env
 personal-notes.txt
 notes.txt
 todo-secrets.txt
+*.png

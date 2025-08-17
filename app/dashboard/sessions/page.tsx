@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity } from 'lucide-react';
+import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity, Zap } from 'lucide-react';
 
 interface CoachingSession {
   id: string;
@@ -29,6 +29,33 @@ interface CoachingSession {
   };
 }
 
+interface TreatmentSession {
+  id: string;
+  session_id: string;
+  user_id: string;
+  tenant_id: string | null;
+  status: 'active' | 'completed' | 'paused' | 'cancelled';
+  current_phase: string;
+  current_step: string;
+  problem_statement?: string;
+  metadata: any;
+  avg_response_time: number;
+  scripted_responses: number;
+  ai_responses: number;
+  duration_minutes: number;
+  total_ai_cost: number;
+  total_ai_tokens: number;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string;
+  profiles: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+}
+
 interface SessionStats {
   total_sessions: number;
   upcoming_sessions: number;
@@ -36,11 +63,16 @@ interface SessionStats {
   cancelled_sessions: number;
   total_hours_this_month: number;
   available_slots: number;
+  treatment_sessions: number;
+  active_treatment_sessions: number;
+  completed_treatment_sessions: number;
+  total_treatment_hours_this_month: number;
 }
 
 export default function SessionsPage() {
   const { profile } = useAuth();
   const [sessions, setSessions] = useState<CoachingSession[]>([]);
+  const [treatmentSessions, setTreatmentSessions] = useState<TreatmentSession[]>([]);
   const [stats, setStats] = useState<SessionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showBookModal, setShowBookModal] = useState(false);
@@ -49,18 +81,24 @@ export default function SessionsPage() {
   useEffect(() => {
     const fetchSessionData = async () => {
       try {
-        const [sessionsResponse, statsResponse] = await Promise.all([
+        const [sessionsResponse, treatmentSessionsResponse, statsResponse] = await Promise.all([
           fetch('/api/sessions'),
+          fetch('/api/sessions/treatment'),
           fetch('/api/sessions/stats')
         ]);
 
-        const [sessionsData, statsData] = await Promise.all([
+        const [sessionsData, treatmentSessionsData, statsData] = await Promise.all([
           sessionsResponse.json(),
+          treatmentSessionsResponse.json(),
           statsResponse.json()
         ]);
 
         if (sessionsData.sessions) {
           setSessions(sessionsData.sessions);
+        }
+
+        if (treatmentSessionsData.treatmentSessions) {
+          setTreatmentSessions(treatmentSessionsData.treatmentSessions);
         }
 
         if (statsData.stats) {
@@ -96,6 +134,33 @@ export default function SessionsPage() {
     const dateStr = date.toLocaleDateString();
     const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return { date: dateStr, time: timeStr };
+  };
+
+  const getTreatmentSessionTitle = (session: TreatmentSession) => {
+    const methodName = session.metadata?.selectedMethod || 'Mind Shifting';
+    return `${methodName} Session`;
+  };
+
+  const getTreatmentSessionDescription = (session: TreatmentSession) => {
+    if (session.problem_statement) {
+      return `Problem: ${session.problem_statement}`;
+    }
+    return `Phase: ${session.current_phase} • Step: ${session.current_step}`;
+  };
+
+  const getTreatmentStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">In Progress</span>;
+      case 'completed':
+        return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Completed</span>;
+      case 'paused':
+        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Paused</span>;
+      case 'cancelled':
+        return <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Cancelled</span>;
+      default:
+        return null;
+    }
   };
 
   const isUpcoming = (session: CoachingSession) => {
@@ -150,11 +215,16 @@ export default function SessionsPage() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-50 rounded-lg">
-                  <Calendar className="h-6 w-6 text-blue-600" />
+                  <Activity className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.upcoming_sessions || 0}</p>
-                  <p className="text-gray-600 dark:text-gray-300">Upcoming</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {(stats?.total_sessions || 0) + (stats?.treatment_sessions || 0)}
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-300">Total Sessions</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {stats?.total_sessions || 0} coaching + {stats?.treatment_sessions || 0} treatment
+                  </p>
                 </div>
               </div>
             </div>
@@ -165,8 +235,13 @@ export default function SessionsPage() {
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.completed_sessions || 0}</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {(stats?.completed_sessions || 0) + (stats?.completed_treatment_sessions || 0)}
+                  </p>
                   <p className="text-gray-600 dark:text-gray-300">Completed</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {stats?.completed_sessions || 0} coaching + {stats?.completed_treatment_sessions || 0} treatment
+                  </p>
                 </div>
               </div>
             </div>
@@ -174,11 +249,16 @@ export default function SessionsPage() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-purple-50 rounded-lg">
-                  <Clock className="h-6 w-6 text-purple-600" />
+                  <Calendar className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.total_hours_this_month || 0}</p>
-                  <p className="text-gray-600 dark:text-gray-300">Hours This Month</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {(stats?.upcoming_sessions || 0) + (stats?.active_treatment_sessions || 0)}
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-300">Active Sessions</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {stats?.upcoming_sessions || 0} scheduled + {stats?.active_treatment_sessions || 0} in-progress
+                  </p>
                 </div>
               </div>
             </div>
@@ -186,11 +266,16 @@ export default function SessionsPage() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-yellow-50 rounded-lg">
-                  <Video className="h-6 w-6 text-yellow-600" />
+                  <Clock className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.available_slots || 0}</p>
-                  <p className="text-gray-600 dark:text-gray-300">Available Slots</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {((stats?.total_hours_this_month || 0) + (stats?.total_treatment_hours_this_month || 0)).toFixed(1)}
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-300">Hours This Month</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {stats?.total_hours_this_month?.toFixed(1) || '0.0'} coaching + {stats?.total_treatment_hours_this_month?.toFixed(1) || '0.0'} treatment
+                  </p>
                 </div>
               </div>
             </div>
@@ -221,14 +306,15 @@ export default function SessionsPage() {
               </div>
             ))}
           </div>
-        ) : sessions.length > 0 ? (
+        ) : sessions.length > 0 || treatmentSessions.length > 0 ? (
           <div className="divide-y divide-gray-200">
+            {/* Coaching Sessions */}
             {sessions.map((session) => {
               const { date, time } = formatDateTime(session.scheduled_at);
               const coachName = `${session.coach.first_name} ${session.coach.last_name}`;
               
               return (
-                <div key={session.id} className="p-6 hover:bg-gray-50">
+                <div key={`coaching-${session.id}`} className="p-6 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -276,6 +362,70 @@ export default function SessionsPage() {
                         <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm">
                           View Notes
                         </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Treatment Sessions */}
+            {treatmentSessions.map((session) => {
+              const { date, time } = formatDateTime(session.created_at);
+              const userName = `${session.profiles.first_name} ${session.profiles.last_name}`;
+              const aiUsagePercent = session.ai_responses + session.scripted_responses > 0 
+                ? Math.round((session.ai_responses / (session.ai_responses + session.scripted_responses)) * 100)
+                : 0;
+              
+              return (
+                <div key={`treatment-${session.id}`} className="p-6 hover:bg-blue-50 border-l-4 border-l-blue-500">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Activity className="h-6 w-6 text-blue-600" />
+                      </div>
+                      
+                      <div className="flex-1">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                          {getTreatmentSessionTitle(session)}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {profile?.role === 'super_admin' ? `by ${userName}` : 'Self-guided session'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {getTreatmentSessionDescription(session)}
+                        </p>
+                        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            {date}
+                          </div>
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-1" />
+                            {time} ({session.duration_minutes || 'N/A'} min)
+                          </div>
+                          <div className="flex items-center">
+                            <Zap className="h-4 w-4 mr-1" />
+                            {aiUsagePercent}% AI
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      {getTreatmentStatusBadge(session.status)}
+                      {session.status === 'active' && (
+                        <button 
+                          onClick={() => router.push(`/dashboard/sessions/treatment?sessionId=${session.session_id}`)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm inline-flex items-center"
+                        >
+                          Continue Session
+                        </button>
+                      )}
+                      {session.status === 'completed' && (
+                        <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                          ${session.total_ai_cost?.toFixed(4) || '0.00'}
+                        </div>
                       )}
                     </div>
                   </div>
