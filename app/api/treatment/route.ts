@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TreatmentStateMachine, ProcessingResult } from '@/lib/treatment-state-machine';
-import { AIAssistanceManager, AIAssistanceRequest } from '@/lib/ai-assistance';
+import { AIAssistanceManager, AIAssistanceRequest, ValidationAssistanceRequest } from '@/lib/ai-assistance';
 import { createServerClient } from '@/lib/database-server';
 
 // Singleton instances for performance
@@ -274,6 +274,26 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         aiTokens: aiResponse.tokenCount
       };
 
+    } else if (result.reason && result.reason.startsWith('AI_VALIDATION_NEEDED:')) {
+      // NEW: Handle AI validation requests
+      const validationType = result.reason.split(':')[1] as 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience';
+      const validationResponse = await handleAIValidation(userInput, validationType, sessionId, userId);
+      const endTime = performance.now();
+      const responseTime = endTime - startTime;
+
+      finalResponse = {
+        ...finalResponse,
+        message: validationResponse.message,
+        currentStep: validationResponse.currentStep,
+        responseTime: Math.round(responseTime),
+        usedAI: validationResponse.usedAI,
+        ...(validationResponse.usedAI && { 
+          aiCost: validationResponse.aiCost, 
+          aiTokens: validationResponse.aiTokens 
+        }),
+        requiresRetry: validationResponse.needsCorrection
+      };
+
     } else {
       // Validation error or other issue
       const endTime = performance.now();
@@ -299,6 +319,76 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       { error: 'Failed to process input', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * NEW: Handle AI validation request for problem/goal/question and negative experience validation
+ */
+async function handleAIValidation(
+  userInput: string,
+  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience',
+  sessionId: string,
+  userId: string
+) {
+  try {
+    // Get current context from state machine
+    const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+    
+    // Create a mock current step for validation (we only need the id for validation)
+    const currentStep = {
+      id: treatmentContext.currentStep,
+      scriptedResponse: '',
+      expectedResponseType: 'open' as const,
+      validationRules: [],
+      aiTriggers: []
+    };
+    
+    const validationRequest: ValidationAssistanceRequest = {
+      userInput,
+      validationType,
+      context: treatmentContext,
+      currentStep: currentStep
+    };
+    
+    const validationResult = await aiAssistance.processValidationAssistance(validationRequest);
+    
+    if (validationResult.needsCorrection) {
+      // Return correction message and keep user on same step
+      return {
+        message: validationResult.correctionMessage || 'Please rephrase your response.',
+        currentStep: treatmentContext.currentStep, // Stay on same step
+        usedAI: true,
+        aiCost: validationResult.cost,
+        aiTokens: validationResult.tokenCount,
+        needsCorrection: true
+      };
+    } else {
+      // Validation passed - continue with normal flow
+      // Re-process the input with AI validation bypassed (but other validation still applies)
+      const result = await treatmentMachine.processUserInput(sessionId, userInput, { userId }, true);
+      
+      return {
+        message: result.scriptedResponse || 'Please continue.',
+        currentStep: result.nextStep || treatmentContext.currentStep,
+        usedAI: true,
+        aiCost: validationResult.cost,
+        aiTokens: validationResult.tokenCount,
+        needsCorrection: false
+      };
+    }
+  } catch (error) {
+    console.error('AI validation error:', error);
+    // Fallback to allowing the input
+    const result = await treatmentMachine.processUserInput(sessionId, userInput, { userId });
+    return {
+      message: result.scriptedResponse || 'Please continue.',
+      currentStep: result.nextStep || treatmentMachine.getContextForUndo(sessionId).currentStep,
+      usedAI: false,
+      aiCost: 0,
+      aiTokens: 0,
+      needsCorrection: false
+    };
   }
 }
 

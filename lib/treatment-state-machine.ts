@@ -69,7 +69,8 @@ export class TreatmentStateMachine {
   async processUserInput(
     sessionId: string, 
     userInput: string, 
-    context?: Partial<TreatmentContext>
+    context?: Partial<TreatmentContext>,
+    bypassValidation?: boolean
   ): Promise<ProcessingResult> {
     // Special handling for session initialization
     if (userInput === 'start') {
@@ -110,9 +111,10 @@ export class TreatmentStateMachine {
     treatmentContext.userResponses[treatmentContext.currentStep] = userInput;
     treatmentContext.lastActivity = new Date();
 
-    // Validate user input FIRST
-    const validationResult = this.validateUserInput(userInput, currentStep);
-    if (!validationResult.isValid) {
+    // Validate user input FIRST (unless bypassed)
+    if (!bypassValidation) {
+      const validationResult = this.validateUserInput(userInput, currentStep);
+      if (!validationResult.isValid) {
       // Special handling for multiple problems detected
       if (validationResult.error === 'MULTIPLE_PROBLEMS_DETECTED') {
         // Move to multiple problems selection step
@@ -148,6 +150,7 @@ export class TreatmentStateMachine {
         reason: validationResult.error,
         scriptedResponse: this.getValidationPrompt(currentStep, validationResult.error || 'Invalid input')
       };
+      }
     }
 
     // Get the current step's response to check for internal signals
@@ -325,15 +328,15 @@ export class TreatmentStateMachine {
         return { isValid: true };
       }
       
-      // Check if user stated it as a goal instead of problem
+      // Check if user stated it as a goal instead of problem - FLAG FOR AI VALIDATION
       if (lowerInput.includes('want to') || lowerInput.includes('goal') || lowerInput.includes('achieve') || 
           lowerInput.includes('wish to') || lowerInput.includes('hope to') || lowerInput.includes('plan to')) {
-        return { isValid: false, error: 'How would you state that as a problem instead of a goal?' };
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
       }
       
-      // Check if user stated it as a question
+      // Check if user stated it as a question - FLAG FOR AI VALIDATION
       if (trimmed.endsWith('?')) {
-        return { isValid: false, error: 'How would you state that as a problem instead of a question?' };
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
       }
       
       // Check if user stated only an emotion
@@ -367,6 +370,39 @@ export class TreatmentStateMachine {
       // Check if too long (over 20 words)
       if (words > 20) {
         return { isValid: false, error: 'OK I understand what you have said, but please tell me what the problem is in just a few words' };
+      }
+    }
+    
+    // Special validation for trauma shifting - negative experience should be single event
+    if (step.id === 'trauma_shifting_intro') {
+      // Check for multiple event indicators
+      const multipleEventIndicators = [
+        'always', 'often', 'repeatedly', 'throughout', 'during my childhood',
+        'as a child', 'growing up', 'my entire childhood', 'for years',
+        'every time', 'whenever', 'all the time'
+      ];
+      
+      const hasMultipleEventIndicators = multipleEventIndicators.some(indicator => 
+        lowerInput.includes(indicator)
+      );
+      
+      if (hasMultipleEventIndicators) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:single_negative_experience' };
+      }
+    }
+    
+    // Special validation for problem-focused method intros
+    const problemFocusedIntros = ['problem_shifting_intro', 'blockage_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'];
+    if (problemFocusedIntros.includes(step.id)) {
+      // Check if user stated it as a goal instead of problem
+      if (lowerInput.includes('want to') || lowerInput.includes('goal') || lowerInput.includes('achieve') || 
+          lowerInput.includes('wish to') || lowerInput.includes('hope to') || lowerInput.includes('plan to')) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
+      }
+      
+      // Check if user stated it as a question
+      if (trimmed.endsWith('?')) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
       }
     }
     

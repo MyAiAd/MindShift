@@ -27,6 +27,20 @@ export interface AIAssistanceResponse {
   cost: number;
 }
 
+export interface ValidationAssistanceRequest {
+  userInput: string;
+  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience';
+  context: TreatmentContext;
+  currentStep: TreatmentStep;
+}
+
+export interface ValidationAssistanceResponse {
+  needsCorrection: boolean;
+  correctionMessage?: string;
+  tokenCount: number;
+  cost: number;
+}
+
 export class AIAssistanceManager {
   private readonly MAX_TOKENS = 150; // Slightly increased for linguistic processing
   private readonly TARGET_COST_PER_SESSION = 0.05; // $0.05 per session target
@@ -58,6 +72,158 @@ export class AIAssistanceManager {
     'trauma_shifting_intro',   // Trauma Shifting: Ensure input is stated as a negative experience
     'belief_shifting_intro'    // Belief Shifting: Ensure input is stated as a problem
   ];
+
+  /**
+   * NEW: Process validation assistance for problem/goal/question and negative experience validation
+   */
+  async processValidationAssistance(request: ValidationAssistanceRequest): Promise<ValidationAssistanceResponse> {
+    // Track usage for cost control
+    this.trackUsage(request.context.sessionId);
+    
+    // Check if session has exceeded AI usage limits
+    if (this.hasExceededLimits(request.context.sessionId)) {
+      return {
+        needsCorrection: false, // Fallback to allowing input
+        tokenCount: 0,
+        cost: 0
+      };
+    }
+
+    const prompt = this.buildValidationPrompt(request);
+    
+    try {
+      const aiResponse = await this.callOpenAIService(prompt, true);
+      this.updateUsageStats(request.context.sessionId, aiResponse.tokenCount, aiResponse.cost);
+      
+      // Parse the AI response to determine if correction is needed
+      const needsCorrection = aiResponse.content.toLowerCase().includes('needs correction');
+      const correctionMessage = needsCorrection ? this.extractCorrectionMessage(aiResponse.content, request.validationType) : undefined;
+      
+      return {
+        needsCorrection,
+        correctionMessage,
+        tokenCount: aiResponse.tokenCount,
+        cost: aiResponse.cost
+      };
+    } catch (error) {
+      console.error('Validation assistance failed:', error);
+      return {
+        needsCorrection: false, // Fallback to allowing input
+        tokenCount: 0,
+        cost: 0
+      };
+    }
+  }
+
+  /**
+   * NEW: Build validation prompt for specific validation types
+   */
+  private buildValidationPrompt(request: ValidationAssistanceRequest): string {
+    const { userInput, validationType } = request;
+    
+    switch (validationType) {
+      case 'problem_vs_goal':
+        return `You are analyzing user input for Mind Shifting sessions. The user was asked to state something as a PROBLEM, but they may have stated it as a goal instead.
+
+User's input: "${userInput}"
+
+Task: Determine if the user stated this as a goal rather than a problem.
+
+A GOAL typically includes words like:
+- "want to", "wish to", "hope to", "plan to"
+- "achieve", "get", "become", "have"
+- "goal", "objective", "aim"
+
+A PROBLEM typically includes words like:
+- "struggling with", "having trouble with", "can't", "difficult"
+- "problem", "issue", "challenge"
+- States something negative or unwanted
+
+Analysis:
+1. Does this sound like a goal (something they want to achieve)?
+2. Does this sound like a problem (something they're struggling with)?
+
+If this is stated as a GOAL when it should be a PROBLEM, respond with: "NEEDS CORRECTION: how would you state that as a problem instead of a goal?"
+
+If this is properly stated as a PROBLEM, respond with: "VALID PROBLEM STATEMENT"
+
+Response:`;
+
+      case 'problem_vs_question':
+        return `You are analyzing user input for Mind Shifting sessions. The user was asked to state something as a PROBLEM, but they may have stated it as a question instead.
+
+User's input: "${userInput}"
+
+Task: Determine if the user stated this as a question rather than a problem statement.
+
+A QUESTION typically:
+- Ends with a question mark (?)
+- Starts with question words like "how", "what", "why", "when", "where", "should"
+- Asks for information or advice
+
+A PROBLEM STATEMENT typically:
+- States something they are experiencing as a difficulty
+- Describes a situation they want to change
+- Does not ask a question
+
+If this is stated as a QUESTION when it should be a PROBLEM, respond with: "NEEDS CORRECTION: how would you state that as a problem instead of a question?"
+
+If this is properly stated as a PROBLEM, respond with: "VALID PROBLEM STATEMENT"
+
+Response:`;
+
+      case 'single_negative_experience':
+        return `You are analyzing user input for Trauma Shifting sessions. The user was asked to describe a negative experience, but they may have described multiple events instead of a single specific event.
+
+User's input: "${userInput}"
+
+Task: Determine if this refers to multiple events or a single specific event.
+
+MULTIPLE EVENTS indicators:
+- "I was bullied as a child" (refers to ongoing/repeated bullying)
+- "My parents always fought" (refers to repeated fights)
+- "I had a difficult childhood" (refers to general ongoing difficulties)
+- "I was abused" (could refer to multiple incidents)
+- Words like "always", "often", "repeatedly", "throughout", "during my childhood"
+
+SINGLE EVENT indicators:
+- "The day my father left" (specific single event)
+- "When I was fired from my job" (specific single event)  
+- "The car accident last year" (specific single event)
+- References to a specific time, date, or single incident
+
+If this refers to MULTIPLE EVENTS, respond with: "NEEDS CORRECTION: it is important that we only work on one memory of a single event at a time, so please recall a significant event where [extract key theme] and tell me what the event was in a few words"
+
+If this refers to a SINGLE EVENT, respond with: "VALID SINGLE EVENT"
+
+Response:`;
+
+      default:
+        return `Analyze the user input: "${userInput}" and determine if it needs correction. Respond with either "NEEDS CORRECTION: [message]" or "VALID INPUT".`;
+    }
+  }
+
+  /**
+   * NEW: Extract correction message from AI response
+   */
+  private extractCorrectionMessage(aiResponse: string, validationType: string): string {
+    if (aiResponse.includes('NEEDS CORRECTION:')) {
+      const message = aiResponse.split('NEEDS CORRECTION:')[1]?.trim();
+      if (message) return message;
+    }
+    
+    // Fallback messages based on validation type
+    switch (validationType) {
+      case 'problem_vs_goal':
+        return 'How would you state that as a problem instead of a goal?';
+      case 'problem_vs_question':
+        return 'How would you state that as a problem instead of a question?';
+      case 'single_negative_experience':
+        return 'It is important that we only work on one memory of a single event at a time, so please recall a significant event and tell me what the event was in a few words.';
+      default:
+        return 'Please rephrase your response.';
+    }
+  }
 
   /**
    * Process AI assistance request - Only called for specific scenarios
