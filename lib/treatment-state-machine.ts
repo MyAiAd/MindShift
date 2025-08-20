@@ -378,6 +378,25 @@ export class TreatmentStateMachine {
       }
     }
     
+    // Special validation for negative experience description step
+    if (step.id === 'negative_experience_description') {
+      // Check for multiple event indicators
+      const multipleEventIndicators = [
+        'always', 'often', 'repeatedly', 'throughout', 'during my childhood',
+        'as a child', 'growing up', 'my entire childhood', 'for years',
+        'every time', 'whenever', 'all the time', 'when I was young',
+        'in my childhood', 'as a kid', 'while growing up'
+      ];
+      
+      const hasMultipleEventIndicators = multipleEventIndicators.some(indicator => 
+        lowerInput.includes(indicator)
+      );
+      
+      if (hasMultipleEventIndicators) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:single_negative_experience' };
+      }
+    }
+
     // Special validation for trauma shifting - negative experience should be single event
     if (step.id === 'trauma_shifting_intro') {
       // Check for multiple event indicators
