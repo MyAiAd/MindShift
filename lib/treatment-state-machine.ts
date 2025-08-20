@@ -113,7 +113,7 @@ export class TreatmentStateMachine {
 
     // Validate user input FIRST (unless bypassed)
     if (!bypassValidation) {
-      const validationResult = this.validateUserInput(userInput, currentStep);
+      const validationResult = this.validateUserInput(userInput, currentStep, treatmentContext);
       if (!validationResult.isValid) {
       // Special handling for multiple problems detected
       if (validationResult.error === 'MULTIPLE_PROBLEMS_DETECTED') {
@@ -316,7 +316,7 @@ export class TreatmentStateMachine {
   /**
    * Validate user input against step requirements
    */
-  private validateUserInput(userInput: string, step: TreatmentStep): { isValid: boolean; error?: string } {
+  private validateUserInput(userInput: string, step: TreatmentStep, context?: TreatmentContext): { isValid: boolean; error?: string } {
     const trimmed = userInput.trim();
     const words = trimmed.split(' ').length;
     const lowerInput = trimmed.toLowerCase();
@@ -396,6 +396,27 @@ export class TreatmentStateMachine {
       }
     }
     
+    // Special validation for work_type_description when asking for problems
+    if (step.id === 'work_type_description' && context?.metadata?.workType === 'problem') {
+      // Only validate for problem work type (not for goals or negative experiences)
+      
+      // Check if user stated it as a goal instead of problem
+      const goalIndicators = ['want to', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      
+      if (hasGoalLanguage) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
+      }
+      
+      // Check if user stated it as a question
+      const questionIndicators = ['how can', 'what should', 'why do', 'when will', 'where can', 'should i'];
+      const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
+      
+      if (hasQuestionLanguage) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
+      }
+    }
+
     // Special validation for problem-focused method intros
     const problemFocusedIntros = ['problem_shifting_intro', 'blockage_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'];
     if (problemFocusedIntros.includes(step.id)) {
