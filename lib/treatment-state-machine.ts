@@ -1904,6 +1904,38 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           scriptedResponse: (userInput, context) => {
             // Get the negative experience statement
             const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
+            return `Will you be comfortable recalling the worst part of this experience and freezing it briefly in your mind?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'trauma_identity_step',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_problem_redirect',
+          scriptedResponse: (userInput, context) => {
+            return `How do you feel now about the fact that this happened?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me how you feel about the fact that this happened.' }
+          ],
+          nextStep: 'choose_method',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_identity_step',
+          scriptedResponse: (userInput, context) => {
+            // Get the negative experience statement
+            const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
             return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience...now freeze it there. Keep feeling this frozen moment...what kind of person are you being in this moment?`;
           },
           expectedResponseType: 'open',
@@ -1919,12 +1951,12 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'trauma_dissolve_step_a',
           scriptedResponse: (userInput, context) => {
-            // Get the identity from the trauma_shifting_intro response
-            const traumaIntroResponse = context.userResponses?.['trauma_shifting_intro'];
+            // Get the identity from the trauma_identity_step response
+            const traumaIdentityResponse = context.userResponses?.['trauma_identity_step'];
             
-            // Store the identity from the intro step if we don't have it yet
-            if (!context.metadata.currentTraumaIdentity && traumaIntroResponse) {
-              context.metadata.currentTraumaIdentity = traumaIntroResponse.trim();
+            // Store the identity from the identity step if we don't have it yet
+            if (!context.metadata.currentTraumaIdentity && traumaIdentityResponse) {
+              context.metadata.currentTraumaIdentity = traumaIdentityResponse.trim();
             }
             
             // Use the stored identity, don't overwrite with current userInput (which is the goal they want)
@@ -2975,6 +3007,29 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         // Reality Shifting session is complete - let the API layer handle completion
         return null;
         
+      case 'trauma_shifting_intro':
+        // Trauma Shifting: Check if user is comfortable with recalling worst part
+        if (lastResponse.includes('yes') || lastResponse.includes('y')) {
+          // User is comfortable - proceed to identity step
+          return 'trauma_identity_step';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('n')) {
+          // User is not comfortable - ask how they feel about the fact it happened and route to problem clearing
+          return 'trauma_problem_redirect';
+        }
+        break;
+
+      case 'trauma_problem_redirect':
+        // User answered how they feel about the fact it happened - now route to problem clearing methods
+        // Store their feeling as the problem statement and reset to problem work type
+        context.problemStatement = lastResponse;
+        context.metadata.problemStatement = lastResponse;
+        context.metadata.workType = 'problem';
+        context.metadata.selectedMethod = undefined; // Reset method selection
+        context.currentPhase = 'method_selection';
+        return 'choose_method';
+        break;
+
       case 'trauma_dissolve_step_e':
         // Trauma Shifting: Check if goal is fully achieved
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
