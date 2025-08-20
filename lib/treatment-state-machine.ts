@@ -329,13 +329,18 @@ export class TreatmentStateMachine {
       }
       
       // Check if user stated it as a goal instead of problem - FLAG FOR AI VALIDATION
-      if (lowerInput.includes('want to') || lowerInput.includes('goal') || lowerInput.includes('achieve') || 
-          lowerInput.includes('wish to') || lowerInput.includes('hope to') || lowerInput.includes('plan to')) {
+      const goalIndicators = ['want to', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      
+      if (hasGoalLanguage) {
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
       }
       
       // Check if user stated it as a question - FLAG FOR AI VALIDATION
-      if (trimmed.endsWith('?')) {
+      const questionIndicators = ['how can', 'what should', 'why do', 'when will', 'where can', 'should i'];
+      const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
+      
+      if (hasQuestionLanguage) {
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
       }
       
@@ -395,13 +400,18 @@ export class TreatmentStateMachine {
     const problemFocusedIntros = ['problem_shifting_intro', 'blockage_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'];
     if (problemFocusedIntros.includes(step.id)) {
       // Check if user stated it as a goal instead of problem
-      if (lowerInput.includes('want to') || lowerInput.includes('goal') || lowerInput.includes('achieve') || 
-          lowerInput.includes('wish to') || lowerInput.includes('hope to') || lowerInput.includes('plan to')) {
+      const goalIndicators = ['want to', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      
+      if (hasGoalLanguage) {
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
       }
       
       // Check if user stated it as a question
-      if (trimmed.endsWith('?')) {
+      const questionIndicators = ['how can', 'what should', 'why do', 'when will', 'where can', 'should i'];
+      const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
+      
+      if (hasQuestionLanguage) {
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
       }
     }

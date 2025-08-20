@@ -97,7 +97,7 @@ export class AIAssistanceManager {
       
       // Parse the AI response to determine if correction is needed
       const needsCorrection = aiResponse.content.toLowerCase().includes('needs correction');
-      const correctionMessage = needsCorrection ? this.extractCorrectionMessage(aiResponse.content, request.validationType) : undefined;
+      const correctionMessage = needsCorrection ? this.extractCorrectionMessage(aiResponse.content, request.validationType, request.userInput) : undefined;
       
       return {
         needsCorrection,
@@ -123,80 +123,31 @@ export class AIAssistanceManager {
     
     switch (validationType) {
       case 'problem_vs_goal':
-        return `You are analyzing user input for Mind Shifting sessions. The user was asked to state something as a PROBLEM, but they may have stated it as a goal instead.
+        return `The user was asked to state a PROBLEM but they said: "${userInput}"
 
-User's input: "${userInput}"
+This contains goal language like "want to", "wish to", "hope to", "achieve", "get", "become", "have", "goal".
 
-Task: Determine if the user stated this as a goal rather than a problem.
+Since this is a GOAL instead of a PROBLEM, respond exactly: "NEEDS CORRECTION"
 
-A GOAL typically includes words like:
-- "want to", "wish to", "hope to", "plan to"
-- "achieve", "get", "become", "have"
-- "goal", "objective", "aim"
-
-A PROBLEM typically includes words like:
-- "struggling with", "having trouble with", "can't", "difficult"
-- "problem", "issue", "challenge"
-- States something negative or unwanted
-
-Analysis:
-1. Does this sound like a goal (something they want to achieve)?
-2. Does this sound like a problem (something they're struggling with)?
-
-If this is stated as a GOAL when it should be a PROBLEM, respond with: "NEEDS CORRECTION: how would you state that as a problem instead of a goal?"
-
-If this is properly stated as a PROBLEM, respond with: "VALID PROBLEM STATEMENT"
-
-Response:`;
+If this was actually a proper problem statement, respond exactly: "VALID PROBLEM STATEMENT"`;
 
       case 'problem_vs_question':
-        return `You are analyzing user input for Mind Shifting sessions. The user was asked to state something as a PROBLEM, but they may have stated it as a question instead.
+        return `The user was asked to state a PROBLEM but they said: "${userInput}"
 
-User's input: "${userInput}"
+This is a QUESTION (ends with ? or starts with how/what/why/when/where/should) instead of a PROBLEM.
 
-Task: Determine if the user stated this as a question rather than a problem statement.
+Since this is a QUESTION instead of a PROBLEM, respond exactly: "NEEDS CORRECTION"
 
-A QUESTION typically:
-- Ends with a question mark (?)
-- Starts with question words like "how", "what", "why", "when", "where", "should"
-- Asks for information or advice
-
-A PROBLEM STATEMENT typically:
-- States something they are experiencing as a difficulty
-- Describes a situation they want to change
-- Does not ask a question
-
-If this is stated as a QUESTION when it should be a PROBLEM, respond with: "NEEDS CORRECTION: how would you state that as a problem instead of a question?"
-
-If this is properly stated as a PROBLEM, respond with: "VALID PROBLEM STATEMENT"
-
-Response:`;
+If this was actually a proper problem statement, respond exactly: "VALID PROBLEM STATEMENT"`;
 
       case 'single_negative_experience':
-        return `You are analyzing user input for Trauma Shifting sessions. The user was asked to describe a negative experience, but they may have described multiple events instead of a single specific event.
+        return `The user was asked to describe a negative experience but they said: "${userInput}"
 
-User's input: "${userInput}"
+This contains words indicating MULTIPLE EVENTS like "always", "often", "repeatedly", "throughout", "as a child", "growing up", etc.
 
-Task: Determine if this refers to multiple events or a single specific event.
+Since this refers to MULTIPLE EVENTS instead of a SINGLE EVENT, respond exactly: "NEEDS CORRECTION"
 
-MULTIPLE EVENTS indicators:
-- "I was bullied as a child" (refers to ongoing/repeated bullying)
-- "My parents always fought" (refers to repeated fights)
-- "I had a difficult childhood" (refers to general ongoing difficulties)
-- "I was abused" (could refer to multiple incidents)
-- Words like "always", "often", "repeatedly", "throughout", "during my childhood"
-
-SINGLE EVENT indicators:
-- "The day my father left" (specific single event)
-- "When I was fired from my job" (specific single event)  
-- "The car accident last year" (specific single event)
-- References to a specific time, date, or single incident
-
-If this refers to MULTIPLE EVENTS, respond with: "NEEDS CORRECTION: it is important that we only work on one memory of a single event at a time, so please recall a significant event where [extract key theme] and tell me what the event was in a few words"
-
-If this refers to a SINGLE EVENT, respond with: "VALID SINGLE EVENT"
-
-Response:`;
+If this was actually a single specific event, respond exactly: "VALID SINGLE EVENT"`;
 
       default:
         return `Analyze the user input: "${userInput}" and determine if it needs correction. Respond with either "NEEDS CORRECTION: [message]" or "VALID INPUT".`;
@@ -206,23 +157,49 @@ Response:`;
   /**
    * NEW: Extract correction message from AI response
    */
-  private extractCorrectionMessage(aiResponse: string, validationType: string): string {
-    if (aiResponse.includes('NEEDS CORRECTION:')) {
-      const message = aiResponse.split('NEEDS CORRECTION:')[1]?.trim();
-      if (message) return message;
-    }
-    
-    // Fallback messages based on validation type
+  private extractCorrectionMessage(aiResponse: string, validationType: string, userInput: string): string {
+    // Always use the exact messages specified in requirements
     switch (validationType) {
       case 'problem_vs_goal':
         return 'How would you state that as a problem instead of a goal?';
       case 'problem_vs_question':
         return 'How would you state that as a problem instead of a question?';
       case 'single_negative_experience':
-        return 'It is important that we only work on one memory of a single event at a time, so please recall a significant event and tell me what the event was in a few words.';
+        // Extract the key theme from the user input for a more specific message
+        const theme = this.extractThemeFromInput(userInput);
+        return `It is important that we only work on one memory of a single event at a time, so please recall a significant event where ${theme} and tell me what the event was in a few words.`;
       default:
         return 'Please rephrase your response.';
     }
+  }
+
+  /**
+   * Extract theme from user input for negative experience correction
+   */
+  private extractThemeFromInput(userInput: string): string {
+    const input = userInput.toLowerCase();
+    
+    if (input.includes('bullied') || input.includes('bully')) {
+      return 'you were bullied';
+    }
+    if (input.includes('abuse') || input.includes('abused')) {
+      return 'you were abused';
+    }
+    if (input.includes('fight') || input.includes('fought') || input.includes('arguing')) {
+      return 'there was fighting or conflict';
+    }
+    if (input.includes('difficult') || input.includes('hard') || input.includes('tough')) {
+      return 'you experienced difficulty';
+    }
+    if (input.includes('trauma') || input.includes('traumatic')) {
+      return 'you experienced trauma';
+    }
+    if (input.includes('hurt') || input.includes('pain')) {
+      return 'you were hurt';
+    }
+    
+    // Generic fallback
+    return 'you experienced this negative situation';
   }
 
   /**
