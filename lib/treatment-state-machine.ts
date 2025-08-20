@@ -417,6 +417,25 @@ export class TreatmentStateMachine {
       }
     }
 
+    // Special validation for work_type_description when asking for negative experiences
+    if (step.id === 'work_type_description' && context?.metadata?.workType === 'negative_experience') {
+      // Check for multiple event indicators
+      const multipleEventIndicators = [
+        'always', 'often', 'repeatedly', 'throughout', 'during my childhood',
+        'as a child', 'growing up', 'my entire childhood', 'for years',
+        'every time', 'whenever', 'all the time', 'when I was young',
+        'in my childhood', 'as a kid', 'while growing up'
+      ];
+      
+      const hasMultipleEventIndicators = multipleEventIndicators.some(indicator => 
+        lowerInput.includes(indicator)
+      );
+      
+      if (hasMultipleEventIndicators) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:single_negative_experience' };
+      }
+    }
+
     // Special validation for problem-focused method intros
     const problemFocusedIntros = ['problem_shifting_intro', 'blockage_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'];
     if (problemFocusedIntros.includes(step.id)) {
