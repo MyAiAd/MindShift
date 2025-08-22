@@ -335,7 +335,7 @@ export class TreatmentStateMachine {
       }
       
       // Check if user stated it as a goal instead of problem - FLAG FOR AI VALIDATION
-      const goalIndicators = ['want to', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
       const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
       
       if (hasGoalLanguage) {
@@ -494,7 +494,7 @@ export class TreatmentStateMachine {
     if (problemFocusedIntros.includes(step.id)) {
       console.log(`🔍 PROBLEM_INTRO_VALIDATION: Checking input in step "${step.id}": "${userInput}" (lowercase: "${lowerInput}")`);
       // Check if user stated it as a goal instead of problem
-      const goalIndicators = ['want to', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
       const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
       
       console.log(`🔍 PROBLEM_INTRO_VALIDATION: Goal indicators check - hasGoalLanguage: ${hasGoalLanguage}`);
