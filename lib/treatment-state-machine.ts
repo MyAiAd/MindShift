@@ -1246,8 +1246,8 @@ export class TreatmentStateMachine {
         {
           id: 'problem_integration_awareness_1',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
-            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${problemStatement}' now?`;
+            const subject = this.getIntegrationSubject(context, 'problem');
+            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${subject}' now?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -1500,8 +1500,8 @@ export class TreatmentStateMachine {
         {
           id: 'blockage_integration_awareness_1',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
-            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${problemStatement}' now?`;
+            const subject = this.getIntegrationSubject(context, 'problem');
+            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${subject}' now?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -1832,8 +1832,8 @@ export class TreatmentStateMachine {
         {
           id: 'integration_awareness_1',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
-            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${problemStatement}' now?`;
+            const subject = this.getIntegrationSubject(context, 'problem');
+            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${subject}' now?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -2407,31 +2407,18 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please share your new narrative.' }
           ],
-          nextStep: 'reality_integration_awareness_5',
-          aiTriggers: [
-            { condition: 'userStuck', action: 'clarify' }
-          ]
-        },
-
-        {
-          id: 'reality_integration_awareness_5',
-          scriptedResponse: (userInput, context) => {
-            return `What's your intention now in relation to this?`;
-          },
-          expectedResponseType: 'open',
-          validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please share your intention now.' }
-          ],
           nextStep: 'reality_integration_action_1',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
 
+        // Skip awareness_5 for goals (intention question not needed)
+
         {
           id: 'reality_integration_action_1',
           scriptedResponse: (userInput, context) => {
-            return `Integration Questions - ACTION Section:\n\nWhat needs to happen for you to realise your intention?... What else needs to happen for you to realise your intention? (Until they are clear on their plan of action)`;
+            return `Integration Questions - ACTION Section:\n\nWhat needs to happen for you to achieve your goal?... What else needs to happen for you to achieve your goal? (Until they are clear on their plan of action)`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -2674,8 +2661,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'trauma_integration_awareness_1',
           scriptedResponse: (userInput, context) => {
-            const negativeExperience = context?.metadata?.negativeExperienceStatement || context?.problemStatement || 'the negative experience';
-            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${negativeExperience}' now?`;
+            const subject = this.getIntegrationSubject(context, 'negative_experience');
+            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${subject}' now?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -2992,8 +2979,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'belief_integration_awareness_1',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
-            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${problemStatement}' now?`;
+            const subject = this.getIntegrationSubject(context, 'problem');
+            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${subject}' now?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -4838,6 +4825,40 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       console.log('Context saved to database:', context.sessionId);
     } catch (error) {
       console.error('Error saving context to database:', error);
+    }
+  }
+
+  /**
+   * Determine if multiple problems were worked on during the session
+   */
+  private hasMultipleProblems(context: TreatmentContext): boolean {
+    // Check if digging deeper was used and additional problems were found
+    const dugDeeper = context.userResponses['digging_deeper_start'] === 'yes' || 
+                      context.userResponses['future_problem_check'] === 'yes' ||
+                      context.userResponses['identity_dig_deeper'] === 'yes' ||
+                      context.userResponses['belief_dig_deeper'] === 'yes' ||
+                      context.userResponses['blockage_dig_deeper'] === 'yes' ||
+                      context.userResponses['trauma_dig_deeper'] === 'yes';
+    
+    return dugDeeper || (context.metadata.multipleProblems === true);
+  }
+
+  /**
+   * Get the appropriate subject for Integration Questions
+   */
+  private getIntegrationSubject(context: TreatmentContext, workType: 'problem' | 'goal' | 'negative_experience'): string {
+    if (workType === 'goal') {
+      return context?.metadata?.currentGoal || context?.metadata?.goalStatement || 'your goal';
+    } else if (workType === 'negative_experience') {
+      if (this.hasMultipleProblems(context)) {
+        return 'the whole topic';
+      }
+      return context?.metadata?.negativeExperienceStatement || context?.problemStatement || 'the negative experience';
+    } else { // problem
+      if (this.hasMultipleProblems(context)) {
+        return 'the whole topic';
+      }
+      return context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
     }
   }
 
