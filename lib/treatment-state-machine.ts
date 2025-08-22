@@ -1388,7 +1388,14 @@ export class TreatmentStateMachine {
           scriptedResponse: (userInput, context) => {
             // Get the problem statement
             const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${problemStatement}'... what kind of person are you being when you're experiencing this problem?`;
+            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Retrieved problem statement: "${problemStatement}"`);
+            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Available sources - problemStatement: "${context?.problemStatement}", metadata.problemStatement: "${context?.metadata?.problemStatement}"`);
+            
+            // Use the cleanest version of the problem statement
+            const cleanProblemStatement = context?.metadata?.problemStatement || context?.problemStatement || problemStatement;
+            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}"`);
+            
+            return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
           },
           expectedResponseType: 'open',
           validationRules: [
