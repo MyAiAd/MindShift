@@ -398,9 +398,9 @@ export class TreatmentStateMachine {
       }
     }
 
-    // Special validation for reality shifting - goal capture
-    if (step.id === 'reality_goal_capture') {
-      console.log(`🔍 GOAL_VALIDATION: Checking input "${userInput}" (lowercase: "${lowerInput}")`);
+    // Special validation for goal description and goal capture
+    if (step.id === 'goal_description' || step.id === 'reality_goal_capture') {
+      console.log(`🔍 GOAL_VALIDATION: Checking input in step "${step.id}": "${userInput}" (lowercase: "${lowerInput}")`);
       // Check if user stated it as a problem instead of goal - FLAG FOR AI VALIDATION
       const problemIndicators = ['problem', 'issue', 'trouble', 'difficulty', 'struggle', 'can\'t', 'cannot', 'unable to', 'don\'t', 'do not', 'not able', 'hard to', 'difficult to', 'not enough', 'lack of', 'need more'];
       const hasProblemLanguage = problemIndicators.some(indicator => lowerInput.includes(indicator));
