@@ -1185,9 +1185,13 @@ export class TreatmentStateMachine {
         {
           id: 'problem_shifting_intro',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.\n\nFeel the problem '${problemStatement}'... what does it feel like?`;
+            // Use the cleanest version of the problem statement
+            const cleanProblemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            console.log(`🔍 PROBLEM_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}"`);
+            
+            return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.
+
+Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
