@@ -161,7 +161,12 @@ export class TreatmentStateMachine {
     const isInternalSignal = currentStepResponse === 'GOAL_SELECTION_CONFIRMED' || 
                             currentStepResponse === 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED' ||
                             currentStepResponse === 'PROBLEM_SELECTION_CONFIRMED' ||
-                            currentStepResponse === 'SKIP_TO_TREATMENT_INTRO';
+                            currentStepResponse === 'SKIP_TO_TREATMENT_INTRO' ||
+                            currentStepResponse === 'ROUTE_TO_PROBLEM_INTEGRATION' ||
+                            currentStepResponse === 'ROUTE_TO_IDENTITY_INTEGRATION' ||
+                            currentStepResponse === 'ROUTE_TO_BELIEF_INTEGRATION' ||
+                            currentStepResponse === 'ROUTE_TO_BLOCKAGE_INTEGRATION' ||
+                            currentStepResponse === 'ROUTE_TO_TRAUMA_INTEGRATION';
     
     if (isInternalSignal) {
       console.log(`🔍 PROCESS_INPUT: Internal signal detected, proceeding to determine next step automatically`);
@@ -1237,7 +1242,7 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please tell me if it still feels like a problem.' }
           ],
-          nextStep: 'problem_integration_awareness_1',
+          nextStep: 'digging_deeper_start',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
@@ -1491,7 +1496,7 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please tell me how you feel or if there is still a problem.' }
           ],
-          nextStep: 'blockage_integration_awareness_1', // This will be handled by the state machine logic
+          nextStep: 'digging_deeper_start', // This will be handled by the state machine logic
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
@@ -1808,26 +1813,13 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'identity_dig_deeper',
+          nextStep: 'digging_deeper_start',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
         },
 
-        {
-          id: 'identity_dig_deeper',
-          scriptedResponse: (userInput, context) => {
-            return `Do you feel the problem will come back in the future? Is there any scenario in which this would still be a problem for you? Is there anything else about this that's still a problem for you?`;
-          },
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
-          ],
-          nextStep: 'identity_integration',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
-        },
+
 
         {
           id: 'integration_awareness_1',
@@ -3567,10 +3559,48 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'integration_start',
+          nextStep: 'route_to_integration',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
+        },
+
+        {
+          id: 'route_to_integration',
+          scriptedResponse: (userInput, context) => {
+            // Mark that multiple problems were worked on
+            context.metadata.multipleProblems = true;
+            
+            // Route to appropriate integration questions based on original method
+            const originalMethod = context.metadata.selectedMethod;
+            
+            if (originalMethod === 'problem_shifting') {
+              context.currentPhase = 'problem_shifting';
+              return 'ROUTE_TO_PROBLEM_INTEGRATION';
+            } else if (originalMethod === 'identity_shifting') {
+              context.currentPhase = 'identity_shifting';
+              return 'ROUTE_TO_IDENTITY_INTEGRATION';
+            } else if (originalMethod === 'belief_shifting') {
+              context.currentPhase = 'belief_shifting';
+              return 'ROUTE_TO_BELIEF_INTEGRATION';
+            } else if (originalMethod === 'blockage_shifting') {
+              context.currentPhase = 'blockage_shifting';
+              return 'ROUTE_TO_BLOCKAGE_INTEGRATION';
+            } else if (originalMethod === 'trauma_shifting') {
+              context.currentPhase = 'trauma_shifting';
+              return 'ROUTE_TO_TRAUMA_INTEGRATION';
+            } else {
+              // Default to problem shifting integration
+              context.currentPhase = 'problem_shifting';
+              return 'ROUTE_TO_PROBLEM_INTEGRATION';
+            }
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please continue.' }
+          ],
+          nextStep: undefined, // Handled by routing logic
+          aiTriggers: []
         }
       ]
     });
@@ -3811,6 +3841,24 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
     
     console.log(`🔍 DETERMINE_NEXT_STEP: currentStep="${context.currentStep}", lastResponse="${lastResponse}", userResponses=`, context.userResponses);
     
+    // Handle special routing signals for integration questions
+    if (currentStep.scriptedResponse && typeof currentStep.scriptedResponse === 'function') {
+      const response = currentStep.scriptedResponse('', context);
+      if (response.startsWith('ROUTE_TO_')) {
+        if (response === 'ROUTE_TO_PROBLEM_INTEGRATION') {
+          return 'problem_integration_awareness_1';
+        } else if (response === 'ROUTE_TO_IDENTITY_INTEGRATION') {
+          return 'integration_awareness_1';
+        } else if (response === 'ROUTE_TO_BELIEF_INTEGRATION') {
+          return 'belief_integration_awareness_1';
+        } else if (response === 'ROUTE_TO_BLOCKAGE_INTEGRATION') {
+          return 'blockage_integration_awareness_1';
+        } else if (response === 'ROUTE_TO_TRAUMA_INTEGRATION') {
+          return 'trauma_integration_awareness_1';
+        }
+      }
+    }
+
     // Handle special flow logic based on current step
     switch (context.currentStep) {
       case 'mind_shifting_explanation':
