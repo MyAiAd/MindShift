@@ -400,11 +400,15 @@ export class TreatmentStateMachine {
 
     // Special validation for reality shifting - goal capture
     if (step.id === 'reality_goal_capture') {
+      console.log(`🔍 GOAL_VALIDATION: Checking input "${userInput}" (lowercase: "${lowerInput}")`);
       // Check if user stated it as a problem instead of goal - FLAG FOR AI VALIDATION
-      const problemIndicators = ['problem', 'issue', 'trouble', 'difficulty', 'struggle', 'can\'t', 'cannot', 'unable to', 'don\'t', 'not able', 'hard to', 'difficult to'];
+      const problemIndicators = ['problem', 'issue', 'trouble', 'difficulty', 'struggle', 'can\'t', 'cannot', 'unable to', 'don\'t', 'do not', 'not able', 'hard to', 'difficult to', 'not enough', 'lack of', 'need more'];
       const hasProblemLanguage = problemIndicators.some(indicator => lowerInput.includes(indicator));
       
+      console.log(`🔍 GOAL_VALIDATION: Problem indicators check - hasProblemLanguage: ${hasProblemLanguage}`);
       if (hasProblemLanguage) {
+        const matchedIndicator = problemIndicators.find(indicator => lowerInput.includes(indicator));
+        console.log(`🔍 GOAL_VALIDATION: Matched problem indicator: "${matchedIndicator}"`);
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:goal_vs_problem' };
       }
       
@@ -412,9 +416,14 @@ export class TreatmentStateMachine {
       const questionIndicators = ['how can', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
       const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
       
+      console.log(`🔍 GOAL_VALIDATION: Question indicators check - hasQuestionLanguage: ${hasQuestionLanguage}`);
       if (hasQuestionLanguage) {
+        const matchedIndicator = questionIndicators.find(indicator => lowerInput.includes(indicator));
+        console.log(`🔍 GOAL_VALIDATION: Matched question indicator: "${matchedIndicator}"`);
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:goal_vs_question' };
       }
+      
+      console.log(`🔍 GOAL_VALIDATION: No validation issues found, allowing input`);
     }
 
     // Special validation for trauma shifting - negative experience should be single event
