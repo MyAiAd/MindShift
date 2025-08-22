@@ -29,7 +29,7 @@ export interface AIAssistanceResponse {
 
 export interface ValidationAssistanceRequest {
   userInput: string;
-  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience';
+  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question';
   context: TreatmentContext;
   currentStep: TreatmentStep;
 }
@@ -67,6 +67,7 @@ export class AIAssistanceManager {
     // Intro steps that need user input contextualisation
     'problem_shifting_intro',  // Problem Shifting: Ensure input is stated as a problem
     'reality_shifting_intro',  // Reality Shifting: Ensure input is stated as a goal
+    'reality_goal_capture',    // Reality Shifting: Ensure input is stated as a goal
     'blockage_shifting_intro', // Blockage Shifting: Ensure input is stated as a problem  
     'identity_shifting_intro', // Identity Shifting: Ensure input is stated as a problem
     'trauma_shifting_intro',   // Trauma Shifting: Ensure input is stated as a negative experience
@@ -149,6 +150,24 @@ Since this refers to MULTIPLE EVENTS instead of a SINGLE EVENT, respond exactly:
 
 If this was actually a single specific event, respond exactly: "VALID SINGLE EVENT"`;
 
+      case 'goal_vs_problem':
+        return `The user was asked to state a GOAL (what they want) but they said: "${userInput}"
+
+This contains problem language like "problem", "issue", "trouble", "difficulty", "struggle", "can't", "cannot", "unable to", "don't", "not able", "hard to", "difficult to".
+
+Since this is a PROBLEM instead of a GOAL, respond exactly: "NEEDS CORRECTION"
+
+If this was actually a proper goal statement, respond exactly: "VALID GOAL STATEMENT"`;
+
+      case 'goal_vs_question':
+        return `The user was asked to state a GOAL (what they want) but they said: "${userInput}"
+
+This is a QUESTION (ends with ? or starts with how/what/why/when/where/should) instead of a GOAL.
+
+Since this is a QUESTION instead of a GOAL, respond exactly: "NEEDS CORRECTION"
+
+If this was actually a proper goal statement, respond exactly: "VALID GOAL STATEMENT"`;
+
       default:
         return `Analyze the user input: "${userInput}" and determine if it needs correction. Respond with either "NEEDS CORRECTION: [message]" or "VALID INPUT".`;
     }
@@ -168,6 +187,10 @@ If this was actually a single specific event, respond exactly: "VALID SINGLE EVE
         // Extract the key theme from the user input for a more specific message
         const theme = this.extractThemeFromInput(userInput);
         return `It is important that we only work on one memory of a single event at a time, so please recall a significant event where ${theme} and tell me what the event was in a few words.`;
+      case 'goal_vs_problem':
+        return 'How would you state that as a goal instead of a problem?';
+      case 'goal_vs_question':
+        return 'How would you state that as a goal instead of a question?';
       default:
         return 'Please rephrase your response.';
     }
@@ -712,6 +735,29 @@ Examples:
 - User: "anxiety" → "traumatic experiences that caused anxiety"
 
 Rephrase the user's input as a negative experience statement now:`;
+    } else if (stepId === 'reality_goal_capture') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to rephrase the user's input as a clear goal statement.
+
+User's input: "${userInput}"
+
+Task: Rephrase the user's input as a goal statement that makes sense in the Reality Shifting context.
+
+Rules:
+1. Keep the user's core meaning intact
+2. Phrase it as something the user wants to achieve or obtain
+3. Make it sound natural and grammatically correct
+4. Return ONLY the rephrased goal statement, nothing else
+5. Do not change the therapeutic script - only rephrase the user's input
+
+Examples:
+- User: "I have money problems" → "to have financial stability"
+- User: "I can't find a good relationship" → "to be in a loving relationship"
+- User: "I struggle with confidence" → "to feel confident"
+- User: "How can I be happier?" → "to be happy"
+- User: "My career is stuck" → "to have a fulfilling career"
+- User: "I don't have enough time" → "to have better time management"
+
+Rephrase the user's input as a goal statement now:`;
     }
     
     // Fallback for any other steps
