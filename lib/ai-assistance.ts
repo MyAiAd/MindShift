@@ -531,28 +531,15 @@ Examples:
 
 Extract the core emotion and apply the template now:`;
     } else if (stepId === 'problem_shifting_intro' || stepId === 'blockage_shifting_intro' || stepId === 'identity_shifting_intro' || stepId === 'belief_shifting_intro') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to rephrase the user's input as a clear problem statement.
+      return `You are assisting with Mind Shifting sessions. The user has already provided their problem statement. Your task is to preserve their EXACT wording.
 
-User's input: "${userInput}"
+User's problem statement: "${userInput}"
 
-Task: Rephrase the user's input as a problem statement that makes sense in the therapeutic context.
+CRITICAL: You must use the user's EXACT words for their problem. Do not change, rephrase, or modify their problem statement in any way.
 
-Rules:
-1. Keep the user's core meaning intact
-2. Phrase it as something the user is experiencing as a problem
-3. Make it sound natural and grammatically correct
-4. Return ONLY the rephrased problem statement, nothing else
-5. Do not change the therapeutic script - only rephrase the user's input
+The scripted response should use their problem exactly as stated: "${userInput}"
 
-Examples:
-- User: "work life balance" → "struggling with work life balance"
-- User: "money" → "having money problems"  
-- User: "relationship" → "relationship difficulties"
-- User: "career" → "career challenges"
-- User: "anxiety" → "feeling anxious"
-- User: "I want to be confident" → "lack of confidence"
-
-Rephrase the user's input as a problem statement now:`;
+Return the scripted response using their exact problem wording without any modifications.`;
     } else if (stepId === 'reality_shifting_intro') {
       return `You are assisting with Mind Shifting sessions. The user has already provided their goal statement. Your task is to preserve their EXACT wording.
 
@@ -714,50 +701,25 @@ Examples:
 
 Extract the core trauma identity and apply the template now:`;
     } else if (stepId === 'trauma_shifting_intro') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to rephrase the user's input as a negative experience statement.
+      return `You are assisting with Mind Shifting sessions. The user has already provided their negative experience statement. Your task is to preserve their EXACT wording.
 
-User's input: "${userInput}"
+User's negative experience statement: "${userInput}"
 
-Task: Rephrase the user's input as a negative experience that makes sense in the Trauma Shifting context.
+CRITICAL: You must use the user's EXACT words for their negative experience. Do not change, rephrase, or modify their statement in any way.
 
-Rules:
-1. Keep the user's core meaning intact
-2. Phrase it as a negative experience or traumatic situation the user went through
-3. Make it sound natural and grammatically correct
-4. Return ONLY the rephrased negative experience statement, nothing else
-5. Do not change the therapeutic script - only rephrase the user's input
+The scripted response should use their negative experience exactly as stated: "${userInput}"
 
-Examples:
-- User: "work life balance" → "being overwhelmed by work demands"
-- User: "money problems" → "financial stress and hardship"
-- User: "relationship" → "painful relationship experiences"
-- User: "confidence issues" → "experiences that damaged my confidence"
-- User: "anxiety" → "traumatic experiences that caused anxiety"
-
-Rephrase the user's input as a negative experience statement now:`;
+Return the scripted response using their exact wording without any modifications.`;
     } else if (stepId === 'reality_goal_capture') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to rephrase the user's input as a clear goal statement.
+      return `You are assisting with Mind Shifting sessions. The user has already provided their goal statement. Your task is to preserve their EXACT wording.
 
-User's input: "${userInput}"
+User's goal statement: "${userInput}"
 
-Task: Rephrase the user's input as a goal statement that makes sense in the Reality Shifting context.
+CRITICAL: You must use the user's EXACT words for their goal. Do not change, rephrase, or modify their goal statement in any way.
 
-Rules:
-1. Keep the user's core meaning intact
-2. Phrase it as something the user wants to achieve or obtain
-3. Make it sound natural and grammatically correct
-4. Return ONLY the rephrased goal statement, nothing else
-5. Do not change the therapeutic script - only rephrase the user's input
+The scripted response should use their goal exactly as stated: "${userInput}"
 
-Examples:
-- User: "I have money problems" → "to have financial stability"
-- User: "I can't find a good relationship" → "to be in a loving relationship"
-- User: "I struggle with confidence" → "to feel confident"
-- User: "How can I be happier?" → "to be happy"
-- User: "My career is stuck" → "to have a fulfilling career"
-- User: "I don't have enough time" → "to have better time management"
-
-Rephrase the user's input as a goal statement now:`;
+Return the scripted response using their exact goal wording without any modifications.`;
     }
     
     // Fallback for any other steps
