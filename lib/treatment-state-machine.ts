@@ -520,6 +520,35 @@ export class TreatmentStateMachine {
       
       console.log(`🔍 PROBLEM_INTRO_VALIDATION: No validation issues found, allowing input`);
     }
+
+    // Special validation for work_type_description when collecting problem statements
+    if (step.id === 'work_type_description' && context?.metadata?.workType === 'problem') {
+      console.log(`🔍 WORK_TYPE_DESCRIPTION: Checking problem statement input "${userInput}" (lowercase: "${lowerInput}")`);
+      
+      // Check if user stated it as a goal instead of problem
+      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      
+      console.log(`🔍 WORK_TYPE_DESCRIPTION: Goal indicators check - hasGoalLanguage: ${hasGoalLanguage}`);
+      if (hasGoalLanguage) {
+        const matchedIndicator = goalIndicators.find(indicator => lowerInput.includes(indicator));
+        console.log(`🔍 WORK_TYPE_DESCRIPTION: Matched goal indicator: "${matchedIndicator}"`);
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
+      }
+      
+      // Check if user stated it as a question
+      const questionIndicators = ['how can', 'how do', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
+      const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
+      
+      console.log(`🔍 WORK_TYPE_DESCRIPTION: Question indicators check - hasQuestionLanguage: ${hasQuestionLanguage}`);
+      if (hasQuestionLanguage) {
+        const matchedIndicator = questionIndicators.find(indicator => lowerInput.includes(indicator)) || (trimmed.endsWith('?') ? 'ends with ?' : '');
+        console.log(`🔍 WORK_TYPE_DESCRIPTION: Matched question indicator: "${matchedIndicator}"`);
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
+      }
+      
+      console.log(`🔍 WORK_TYPE_DESCRIPTION: No validation issues found, allowing input`);
+    }
     
     // Standard validation rules
     for (const rule of step.validationRules) {
