@@ -1588,13 +1588,119 @@ export class TreatmentStateMachine {
         },
 
         {
-          id: 'identity_integration',
+          id: 'integration_awareness_1',
           scriptedResponse: (userInput, context) => {
-            return `Integration Questions: How do you feel about the process? What insights did you gain? How will you apply this in your life?`;
+            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${problemStatement}' now?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please share your thoughts about the process.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please share how you feel about it now.' }
+          ],
+          nextStep: 'integration_awareness_2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'integration_awareness_2',
+          scriptedResponse: (userInput, context) => {
+            return `What are you more aware of now than before we did this process?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share what you are more aware of now.' }
+          ],
+          nextStep: 'integration_awareness_3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'integration_awareness_3',
+          scriptedResponse: (userInput, context) => {
+            return `How has it helped you to do this process?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share how this process has helped you.' }
+          ],
+          nextStep: 'integration_awareness_4',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'integration_awareness_4',
+          scriptedResponse: (userInput, context) => {
+            return `What is your new narrative about this?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share your new narrative.' }
+          ],
+          nextStep: 'integration_awareness_5',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'integration_awareness_5',
+          scriptedResponse: (userInput, context) => {
+            return `What's your intention now in relation to this?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share your intention now.' }
+          ],
+          nextStep: 'integration_action_1',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'integration_action_1',
+          scriptedResponse: (userInput, context) => {
+            return `Integration Questions - ACTION Section:\n\nWhat needs to happen for you to realise your intention?... What else needs to happen for you to realise your intention? (Until they are clear on their plan of action)`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share what needs to happen.' }
+          ],
+          nextStep: 'integration_action_2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'integration_action_2',
+          scriptedResponse: (userInput, context) => {
+            return `What is the one thing you can do that will make everything else easier or unnecessary?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share the one thing you can do.' }
+          ],
+          nextStep: 'integration_action_3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'integration_action_3',
+          scriptedResponse: (userInput, context) => {
+            return `What is the first action that you can commit to now that will help you to realise your intention?... when will you do this?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share your first action and when you will do it.' }
           ],
           nextStep: undefined, // End of Identity Shifting process
           aiTriggers: [
