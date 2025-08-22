@@ -1237,9 +1237,130 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please tell me if it still feels like a problem.' }
           ],
-          nextStep: 'digging_deeper_start',
+          nextStep: 'problem_integration_awareness_1',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'problem_integration_awareness_1',
+          scriptedResponse: (userInput, context) => {
+            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${problemStatement}' now?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share how you feel about it now.' }
+          ],
+          nextStep: 'problem_integration_awareness_2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'problem_integration_awareness_2',
+          scriptedResponse: (userInput, context) => {
+            return `What are you more aware of now than before we did this process?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share what you are more aware of now.' }
+          ],
+          nextStep: 'problem_integration_awareness_3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'problem_integration_awareness_3',
+          scriptedResponse: (userInput, context) => {
+            return `How has it helped you to do this process?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share how this process has helped you.' }
+          ],
+          nextStep: 'problem_integration_awareness_4',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'problem_integration_awareness_4',
+          scriptedResponse: (userInput, context) => {
+            return `What is your new narrative about this?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share your new narrative.' }
+          ],
+          nextStep: 'problem_integration_awareness_5',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'problem_integration_awareness_5',
+          scriptedResponse: (userInput, context) => {
+            return `What's your intention now in relation to this?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share your intention now.' }
+          ],
+          nextStep: 'problem_integration_action_1',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'problem_integration_action_1',
+          scriptedResponse: (userInput, context) => {
+            return `Integration Questions - ACTION Section:\n\nWhat needs to happen for you to realise your intention?... What else needs to happen for you to realise your intention? (Until they are clear on their plan of action)`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share what needs to happen.' }
+          ],
+          nextStep: 'problem_integration_action_2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'problem_integration_action_2',
+          scriptedResponse: (userInput, context) => {
+            return `What is the one thing you can do that will make everything else easier or unnecessary?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share the one thing you can do.' }
+          ],
+          nextStep: 'problem_integration_action_3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'problem_integration_action_3',
+          scriptedResponse: (userInput, context) => {
+            return `What is the first action that you can commit to now that will help you to realise your intention?... when will you do this?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share your first action and when you will do it.' }
+          ],
+          nextStep: undefined, // End of Problem Shifting process
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
           ]
         }
       ]
@@ -2106,21 +2227,129 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please tell me what else needs to happen, or say "nothing".' }
           ],
-          nextStep: 'reality_session_complete',
+          nextStep: 'reality_integration_awareness_1',
           aiTriggers: []
         },
 
         {
-          id: 'reality_session_complete',
-          scriptedResponse: () => {
-            return `Thank you for doing this Reality Shifting session. The process is now complete. How do you feel overall about the work we've done today?`;
+          id: 'reality_integration_awareness_1',
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context?.metadata?.currentGoal || context?.metadata?.goalStatement || 'your goal';
+            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${goalStatement}' now?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please share how you feel about the session.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please share how you feel about it now.' }
           ],
-          nextStep: undefined,
-          aiTriggers: []
+          nextStep: 'reality_integration_awareness_2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_integration_awareness_2',
+          scriptedResponse: (userInput, context) => {
+            return `What are you more aware of now than before we did this process?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share what you are more aware of now.' }
+          ],
+          nextStep: 'reality_integration_awareness_3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_integration_awareness_3',
+          scriptedResponse: (userInput, context) => {
+            return `How has it helped you to do this process?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share how this process has helped you.' }
+          ],
+          nextStep: 'reality_integration_awareness_4',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_integration_awareness_4',
+          scriptedResponse: (userInput, context) => {
+            return `What is your new narrative about this?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share your new narrative.' }
+          ],
+          nextStep: 'reality_integration_awareness_5',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_integration_awareness_5',
+          scriptedResponse: (userInput, context) => {
+            return `What's your intention now in relation to this?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share your intention now.' }
+          ],
+          nextStep: 'reality_integration_action_1',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_integration_action_1',
+          scriptedResponse: (userInput, context) => {
+            return `Integration Questions - ACTION Section:\n\nWhat needs to happen for you to realise your intention?... What else needs to happen for you to realise your intention? (Until they are clear on their plan of action)`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share what needs to happen.' }
+          ],
+          nextStep: 'reality_integration_action_2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_integration_action_2',
+          scriptedResponse: (userInput, context) => {
+            return `What is the one thing you can do that will make everything else easier or unnecessary?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share the one thing you can do.' }
+          ],
+          nextStep: 'reality_integration_action_3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_integration_action_3',
+          scriptedResponse: (userInput, context) => {
+            return `What is the first action that you can commit to now that will help you to realise your intention?... when will you do this?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share your first action and when you will do it.' }
+          ],
+          nextStep: undefined, // End of Reality Shifting process
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
         }
       ]
     });
