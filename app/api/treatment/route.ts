@@ -364,7 +364,13 @@ async function handleAIValidation(
         needsCorrection: true
       };
     } else {
-      // Validation passed - continue with normal flow
+      // Validation passed - continue with normal flow but store the corrected statement
+      if (treatmentContext.currentStep === 'mind_shifting_explanation' && treatmentContext.metadata.selectedMethod) {
+        // Store the corrected problem statement before continuing
+        treatmentContext.metadata.problemStatement = userInput;
+        treatmentContext.problemStatement = userInput;
+      }
+      
       // Re-process the input with AI validation bypassed (but other validation still applies)
       const result = await treatmentMachine.processUserInput(sessionId, userInput, { userId }, true);
       

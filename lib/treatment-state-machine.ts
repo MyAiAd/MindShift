@@ -160,7 +160,8 @@ export class TreatmentStateMachine {
     // Check if this is an internal confirmation signal that should trigger automatic step progression
     const isInternalSignal = currentStepResponse === 'GOAL_SELECTION_CONFIRMED' || 
                             currentStepResponse === 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED' ||
-                            currentStepResponse === 'PROBLEM_SELECTION_CONFIRMED';
+                            currentStepResponse === 'PROBLEM_SELECTION_CONFIRMED' ||
+                            currentStepResponse === 'SKIP_TO_TREATMENT_INTRO';
     
     if (isInternalSignal) {
       console.log(`🔍 PROCESS_INPUT: Internal signal detected, proceeding to determine next step automatically`);
