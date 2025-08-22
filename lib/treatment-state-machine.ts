@@ -2289,50 +2289,478 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       ]
     });
 
-    // Phase 5: Digging Deeper (Optional)
+    // Phase 5: Digging Deeper (Comprehensive Implementation)
     this.phases.set('digging_deeper', {
       name: 'Digging Deeper',
-      maxDuration: 10,
+      maxDuration: 20,
       steps: [
         {
           id: 'digging_deeper_start',
+          scriptedResponse: "Would you like to dig deeper in this area?",
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'future_problem_check',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'future_problem_check',
           scriptedResponse: "Do you feel the problem will come back in the future?",
           expectedResponseType: 'yesno',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes, no, or maybe.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'scenario_check',
-          aiTriggers: []
+          nextStep: 'restate_problem_future',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
         },
         {
           id: 'restate_problem_future',
-          scriptedResponse: "How would you state the problem now in a few words?",
+          scriptedResponse: "How would you state the problem in a few words?",
           expectedResponseType: 'problem',
           validationRules: [
             { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state the problem now.' }
           ],
-          nextStep: 'scenario_check',
+          nextStep: 'clear_future_problem',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' },
+            { condition: 'tooLong', action: 'simplify' }
+          ]
+        },
+        {
+          id: 'clear_future_problem',
+          scriptedResponse: (userInput, context) => {
+            // Store the new problem statement for clearing
+            const newProblem = context?.userResponses?.['restate_problem_future'] || 'the problem';
+            context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
+            context.metadata.returnToDiggingStep = 'scenario_check_1'; // Where to return after clearing
+            
+            // Route to appropriate method based on original method used
+            const originalMethod = context.metadata.selectedMethod;
+            if (originalMethod === 'problem_shifting') {
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Problem Shifting. Feel the problem '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'identity_shifting') {
+              context.currentPhase = 'identity_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Identity Shifting. Feel the problem of '${newProblem}' - what kind of person are you being when you're experiencing this problem?`;
+            } else if (originalMethod === 'belief_shifting') {
+              context.currentPhase = 'belief_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Belief Shifting. Feel the problem that '${newProblem}'... what do you believe about yourself that's causing you to experience this problem?`;
+            } else if (originalMethod === 'blockage_shifting') {
+              context.currentPhase = 'blockage_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Blockage Shifting. Feel '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'reality_shifting') {
+              context.currentPhase = 'reality_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this using Reality Shifting. What do you want instead of '${newProblem}'?`;
+            } else if (originalMethod === 'trauma_shifting') {
+              context.currentPhase = 'trauma_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this using Trauma Shifting. Will you be comfortable recalling the worst part of '${newProblem}' and freezing it briefly in your mind?`;
+            } else {
+              // Default to problem shifting
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem. Feel the problem '${newProblem}'... what does it feel like?`;
+            }
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please continue with the process.' }
+          ],
+          nextStep: undefined, // Handled by routing logic
           aiTriggers: []
         },
         {
-          id: 'scenario_check',
+          id: 'scenario_check_1',
           scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'anything_else_check',
+          nextStep: 'restate_scenario_problem_1',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'restate_scenario_problem_1',
+          scriptedResponse: "How would you state the problem in a few words?",
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state this scenario problem.' }
+          ],
+          nextStep: 'clear_scenario_problem_1',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' },
+            { condition: 'tooLong', action: 'simplify' }
+          ]
+        },
+        {
+          id: 'clear_scenario_problem_1',
+          scriptedResponse: (userInput, context) => {
+            // Store the new scenario problem for clearing
+            const newProblem = context?.userResponses?.['restate_scenario_problem_1'] || 'the problem';
+            context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 2) + 1;
+            context.metadata.returnToDiggingStep = 'scenario_check_2'; // Where to return after clearing
+            
+            // Route to appropriate method based on original method used
+            const originalMethod = context.metadata.selectedMethod;
+            if (originalMethod === 'problem_shifting') {
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Problem Shifting. Feel the problem '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'identity_shifting') {
+              context.currentPhase = 'identity_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Identity Shifting. Feel the problem of '${newProblem}' - what kind of person are you being when you're experiencing this problem?`;
+            } else if (originalMethod === 'belief_shifting') {
+              context.currentPhase = 'belief_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Belief Shifting. Feel the problem that '${newProblem}'... what do you believe about yourself that's causing you to experience this problem?`;
+            } else if (originalMethod === 'blockage_shifting') {
+              context.currentPhase = 'blockage_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Blockage Shifting. Feel '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'reality_shifting') {
+              context.currentPhase = 'reality_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario using Reality Shifting. What do you want instead of '${newProblem}'?`;
+            } else if (originalMethod === 'trauma_shifting') {
+              context.currentPhase = 'trauma_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario using Trauma Shifting. Will you be comfortable recalling the worst part of '${newProblem}' and freezing it briefly in your mind?`;
+            } else {
+              // Default to problem shifting
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem. Feel the problem '${newProblem}'... what does it feel like?`;
+            }
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please continue with the process.' }
+          ],
+          nextStep: undefined, // Handled by routing logic
           aiTriggers: []
         },
         {
-          id: 'anything_else_check',
-          scriptedResponse: "Is there anything else about this that's still a problem for you?",
+          id: 'scenario_check_2',
+          scriptedResponse: "Is there any other scenario in which this would still be a problem for you?",
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'restate_scenario_problem_2',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'restate_scenario_problem_2',
+          scriptedResponse: "How would you state the problem in a few words?",
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state this scenario problem.' }
+          ],
+          nextStep: 'clear_scenario_problem_2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' },
+            { condition: 'tooLong', action: 'simplify' }
+          ]
+        },
+        {
+          id: 'clear_scenario_problem_2',
+          scriptedResponse: (userInput, context) => {
+            // Store the new scenario problem for clearing
+            const newProblem = context?.userResponses?.['restate_scenario_problem_2'] || 'the problem';
+            context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 3) + 1;
+            context.metadata.returnToDiggingStep = 'scenario_check_3'; // Where to return after clearing
+            
+            // Route to appropriate method based on original method used
+            const originalMethod = context.metadata.selectedMethod;
+            if (originalMethod === 'problem_shifting') {
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Problem Shifting. Feel the problem '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'identity_shifting') {
+              context.currentPhase = 'identity_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Identity Shifting. Feel the problem of '${newProblem}' - what kind of person are you being when you're experiencing this problem?`;
+            } else if (originalMethod === 'belief_shifting') {
+              context.currentPhase = 'belief_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Belief Shifting. Feel the problem that '${newProblem}'... what do you believe about yourself that's causing you to experience this problem?`;
+            } else if (originalMethod === 'blockage_shifting') {
+              context.currentPhase = 'blockage_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Blockage Shifting. Feel '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'reality_shifting') {
+              context.currentPhase = 'reality_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario using Reality Shifting. What do you want instead of '${newProblem}'?`;
+            } else if (originalMethod === 'trauma_shifting') {
+              context.currentPhase = 'trauma_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario using Trauma Shifting. Will you be comfortable recalling the worst part of '${newProblem}' and freezing it briefly in your mind?`;
+            } else {
+              // Default to problem shifting
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem. Feel the problem '${newProblem}'... what does it feel like?`;
+            }
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please continue with the process.' }
+          ],
+          nextStep: undefined, // Handled by routing logic
+          aiTriggers: []
+        },
+        {
+          id: 'scenario_check_3',
+          scriptedResponse: "Is there any other scenario in which this would still be a problem for you?",
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'restate_scenario_problem_3',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'restate_scenario_problem_3',
+          scriptedResponse: "How would you state the problem in a few words?",
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state this scenario problem.' }
+          ],
+          nextStep: 'clear_scenario_problem_3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' },
+            { condition: 'tooLong', action: 'simplify' }
+          ]
+        },
+        {
+          id: 'clear_scenario_problem_3',
+          scriptedResponse: (userInput, context) => {
+            // Store the new scenario problem for clearing
+            const newProblem = context?.userResponses?.['restate_scenario_problem_3'] || 'the problem';
+            context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 4) + 1;
+            context.metadata.returnToDiggingStep = 'anything_else_check_1'; // Move to "anything else" questions after this
+            
+            // Route to appropriate method based on original method used
+            const originalMethod = context.metadata.selectedMethod;
+            if (originalMethod === 'problem_shifting') {
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Problem Shifting. Feel the problem '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'identity_shifting') {
+              context.currentPhase = 'identity_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Identity Shifting. Feel the problem of '${newProblem}' - what kind of person are you being when you're experiencing this problem?`;
+            } else if (originalMethod === 'belief_shifting') {
+              context.currentPhase = 'belief_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Belief Shifting. Feel the problem that '${newProblem}'... what do you believe about yourself that's causing you to experience this problem?`;
+            } else if (originalMethod === 'blockage_shifting') {
+              context.currentPhase = 'blockage_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem using Blockage Shifting. Feel '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'reality_shifting') {
+              context.currentPhase = 'reality_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario using Reality Shifting. What do you want instead of '${newProblem}'?`;
+            } else if (originalMethod === 'trauma_shifting') {
+              context.currentPhase = 'trauma_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario using Trauma Shifting. Will you be comfortable recalling the worst part of '${newProblem}' and freezing it briefly in your mind?`;
+            } else {
+              // Default to problem shifting
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this scenario problem. Feel the problem '${newProblem}'... what does it feel like?`;
+            }
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please continue with the process.' }
+          ],
+          nextStep: undefined, // Handled by routing logic
+          aiTriggers: []
+        },
+        {
+          id: 'anything_else_check_1',
+          scriptedResponse: "Is there anything else about this that is still a problem for you?",
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'restate_anything_else_problem_1',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'restate_anything_else_problem_1',
+          scriptedResponse: "How would you state the problem in a few words?",
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state this problem.' }
+          ],
+          nextStep: 'clear_anything_else_problem_1',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' },
+            { condition: 'tooLong', action: 'simplify' }
+          ]
+        },
+        {
+          id: 'clear_anything_else_problem_1',
+          scriptedResponse: (userInput, context) => {
+            // Store the new "anything else" problem for clearing
+            const newProblem = context?.userResponses?.['restate_anything_else_problem_1'] || 'the problem';
+            context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
+            context.metadata.returnToDiggingStep = 'anything_else_check_2'; // Where to return after clearing
+            
+            // Route to appropriate method based on original method used
+            const originalMethod = context.metadata.selectedMethod;
+            if (originalMethod === 'problem_shifting') {
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Problem Shifting. Feel the problem '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'identity_shifting') {
+              context.currentPhase = 'identity_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Identity Shifting. Feel the problem of '${newProblem}' - what kind of person are you being when you're experiencing this problem?`;
+            } else if (originalMethod === 'belief_shifting') {
+              context.currentPhase = 'belief_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Belief Shifting. Feel the problem that '${newProblem}'... what do you believe about yourself that's causing you to experience this problem?`;
+            } else if (originalMethod === 'blockage_shifting') {
+              context.currentPhase = 'blockage_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Blockage Shifting. Feel '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'reality_shifting') {
+              context.currentPhase = 'reality_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this using Reality Shifting. What do you want instead of '${newProblem}'?`;
+            } else if (originalMethod === 'trauma_shifting') {
+              context.currentPhase = 'trauma_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this using Trauma Shifting. Will you be comfortable recalling the worst part of '${newProblem}' and freezing it briefly in your mind?`;
+            } else {
+              // Default to problem shifting
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem. Feel the problem '${newProblem}'... what does it feel like?`;
+            }
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please continue with the process.' }
+          ],
+          nextStep: undefined, // Handled by routing logic
+          aiTriggers: []
+        },
+        {
+          id: 'anything_else_check_2',
+          scriptedResponse: "Is there anything else about this that is still a problem for you?",
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'restate_anything_else_problem_2',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'restate_anything_else_problem_2',
+          scriptedResponse: "How would you state the problem in a few words?",
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state this problem.' }
+          ],
+          nextStep: 'clear_anything_else_problem_2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' },
+            { condition: 'tooLong', action: 'simplify' }
+          ]
+        },
+        {
+          id: 'clear_anything_else_problem_2',
+          scriptedResponse: (userInput, context) => {
+            // Store the new "anything else" problem for clearing
+            const newProblem = context?.userResponses?.['restate_anything_else_problem_2'] || 'the problem';
+            context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 6) + 1;
+            context.metadata.returnToDiggingStep = 'anything_else_check_3'; // Where to return after clearing
+            
+            // Route to appropriate method based on original method used
+            const originalMethod = context.metadata.selectedMethod;
+            if (originalMethod === 'problem_shifting') {
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Problem Shifting. Feel the problem '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'identity_shifting') {
+              context.currentPhase = 'identity_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Identity Shifting. Feel the problem of '${newProblem}' - what kind of person are you being when you're experiencing this problem?`;
+            } else if (originalMethod === 'belief_shifting') {
+              context.currentPhase = 'belief_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Belief Shifting. Feel the problem that '${newProblem}'... what do you believe about yourself that's causing you to experience this problem?`;
+            } else if (originalMethod === 'blockage_shifting') {
+              context.currentPhase = 'blockage_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem using Blockage Shifting. Feel '${newProblem}'... what does it feel like?`;
+            } else if (originalMethod === 'reality_shifting') {
+              context.currentPhase = 'reality_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this using Reality Shifting. What do you want instead of '${newProblem}'?`;
+            } else if (originalMethod === 'trauma_shifting') {
+              context.currentPhase = 'trauma_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this using Trauma Shifting. Will you be comfortable recalling the worst part of '${newProblem}' and freezing it briefly in your mind?`;
+            } else {
+              // Default to problem shifting
+              context.currentPhase = 'problem_shifting';
+              context.problemStatement = newProblem;
+              return `We need to clear this problem. Feel the problem '${newProblem}'... what does it feel like?`;
+            }
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please continue with the process.' }
+          ],
+          nextStep: undefined, // Handled by routing logic
+          aiTriggers: []
+        },
+        {
+          id: 'anything_else_check_3',
+          scriptedResponse: "Is there anything else about this that is still a problem for you?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
           nextStep: 'integration_start',
-          aiTriggers: []
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
         }
       ]
     });
@@ -2838,9 +3266,18 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'body_sensation_check';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer a problem - move to digging deeper
-          context.currentPhase = 'digging_deeper';
-          return 'digging_deeper_start';
+          // No longer a problem - check if we're in digging deeper flow
+          const returnStep = context.metadata?.returnToDiggingStep;
+          if (returnStep) {
+            // We're clearing a problem from digging deeper - return to that step
+            context.currentPhase = 'digging_deeper';
+            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            return returnStep;
+          } else {
+            // Regular flow - move to digging deeper start
+            context.currentPhase = 'digging_deeper';
+            return 'digging_deeper_start';
+          }
         }
         break;
         
@@ -2851,9 +3288,18 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator));
         
         if (seemsResolved) {
-          // Problem seems resolved - move to digging deeper
-          context.currentPhase = 'digging_deeper';
-          return 'digging_deeper_start';
+          // Problem seems resolved - check if we're in digging deeper flow
+          const returnStep = context.metadata?.returnToDiggingStep;
+          if (returnStep) {
+            // We're clearing a problem from digging deeper - return to that step
+            context.currentPhase = 'digging_deeper';
+            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            return returnStep;
+          } else {
+            // Regular flow - move to digging deeper start
+            context.currentPhase = 'digging_deeper';
+            return 'digging_deeper_start';
+          }
         } else {
           // Still a problem - cycle back to step A (blockage_shifting_intro)
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
@@ -2898,9 +3344,18 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'restate_identity_problem';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer a problem - move to digging deeper
-          context.currentPhase = 'digging_deeper';
-          return 'digging_deeper_start';
+          // No longer a problem - check if we're in digging deeper flow
+          const returnStep = context.metadata?.returnToDiggingStep;
+          if (returnStep) {
+            // We're clearing a problem from digging deeper - return to that step
+            context.currentPhase = 'digging_deeper';
+            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            return returnStep;
+          } else {
+            // Regular flow - move to digging deeper start
+            context.currentPhase = 'digging_deeper';
+            return 'digging_deeper_start';
+          }
         }
         break;
 
@@ -2996,8 +3451,17 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       case 'reality_integration_action_more':
         // User answered what else needs to happen
         if (lastResponse.toLowerCase().includes('nothing') || lastResponse.toLowerCase().includes('no') || lastResponse.toLowerCase().includes('not')) {
-          // User said nothing more needs to happen - complete session
-          return 'reality_session_complete';
+          // User said nothing more needs to happen - check if we're in digging deeper flow
+          const returnStep = context.metadata?.returnToDiggingStep;
+          if (returnStep) {
+            // We're clearing a problem from digging deeper - return to that step
+            context.currentPhase = 'digging_deeper';
+            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            return returnStep;
+          } else {
+            // Regular flow - complete session
+            return 'reality_session_complete';
+          }
         } else {
           // User gave another action - keep asking what else
           return 'reality_integration_action_more';
@@ -3077,9 +3541,18 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'restate_selected_problem';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No other problems - proceed to integration
-          context.currentPhase = 'integration';
-          return 'integration_start';
+          // No other problems - check if we're in digging deeper flow
+          const returnStep = context.metadata?.returnToDiggingStep;
+          if (returnStep) {
+            // We're clearing a problem from digging deeper - return to that step
+            context.currentPhase = 'digging_deeper';
+            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            return returnStep;
+          } else {
+            // Regular flow - proceed to integration
+            context.currentPhase = 'integration';
+            return 'integration_start';
+          }
         }
         break;
         
@@ -3105,9 +3578,18 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'restate_belief_problem';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer a problem - move to digging deeper
-          context.currentPhase = 'digging_deeper';
-          return 'digging_deeper_start';
+          // No longer a problem - check if we're in digging deeper flow
+          const returnStep = context.metadata?.returnToDiggingStep;
+          if (returnStep) {
+            // We're clearing a problem from digging deeper - return to that step
+            context.currentPhase = 'digging_deeper';
+            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            return returnStep;
+          } else {
+            // Regular flow - move to digging deeper start
+            context.currentPhase = 'digging_deeper';
+            return 'digging_deeper_start';
+          }
         }
         break;
         
@@ -3124,34 +3606,161 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         break;
         
       case 'digging_deeper_start':
-        // If user says "yes" or "maybe", ask them to restate the problem
-        if (lastResponse.includes('yes') || lastResponse.includes('maybe')) {
+        // If user says "yes", continue to future problem check
+        if (lastResponse.includes('yes')) {
+          return 'future_problem_check';
+        }
+        // If "no", skip digging deeper and go straight to integration
+        if (lastResponse.includes('no')) {
+          context.currentPhase = 'integration';
+          return 'integration_start';
+        }
+        break;
+        
+      case 'future_problem_check':
+        // If user says "yes", ask them to restate the problem
+        if (lastResponse.includes('yes')) {
           return 'restate_problem_future';
         }
-        // If "no", continue to next digging deeper question
+        // If "no", continue to scenario check
         if (lastResponse.includes('no')) {
-          return currentStep.nextStep || null;
+          return 'scenario_check_1';
         }
         break;
         
       case 'restate_problem_future':
-        // After restating the problem, continue with scenario check
-        return 'scenario_check';
+        // After restating the problem, route to clearing step
+        return 'clear_future_problem';
         
-      case 'scenario_check':
-      case 'anything_else_check':
-        // If any digging deeper question is "yes", go back to asking for new problem
+      case 'clear_future_problem':
+        // This step routes to appropriate treatment method
+        // The routing is handled in the scriptedResponse function
+        // After clearing, return to digging deeper flow based on metadata
+        const returnStep = context.metadata?.returnToDiggingStep;
+        if (returnStep) {
+          context.currentPhase = 'digging_deeper';
+          return returnStep;
+        }
+        return 'scenario_check_1';
+        
+      // Handle all scenario check steps
+      case 'scenario_check_1':
         if (lastResponse.includes('yes')) {
+          return 'restate_scenario_problem_1';
+        }
+        if (lastResponse.includes('no')) {
+          return 'scenario_check_2';
+        }
+        break;
+        
+      case 'restate_scenario_problem_1':
+        return 'clear_scenario_problem_1';
+        
+      case 'clear_scenario_problem_1':
+        // After clearing, return to next scenario check
+        const returnStep1 = context.metadata?.returnToDiggingStep;
+        if (returnStep1) {
+          context.currentPhase = 'digging_deeper';
+          return returnStep1;
+        }
+        return 'scenario_check_2';
+        
+      case 'scenario_check_2':
+        if (lastResponse.includes('yes')) {
+          return 'restate_scenario_problem_2';
+        }
+        if (lastResponse.includes('no')) {
+          return 'scenario_check_3';
+        }
+        break;
+        
+      case 'restate_scenario_problem_2':
+        return 'clear_scenario_problem_2';
+        
+      case 'clear_scenario_problem_2':
+        // After clearing, return to next scenario check
+        const returnStep2 = context.metadata?.returnToDiggingStep;
+        if (returnStep2) {
+          context.currentPhase = 'digging_deeper';
+          return returnStep2;
+        }
+        return 'scenario_check_3';
+        
+      case 'scenario_check_3':
+        if (lastResponse.includes('yes')) {
+          return 'restate_scenario_problem_3';
+        }
+        if (lastResponse.includes('no')) {
+          return 'anything_else_check_1';
+        }
+        break;
+        
+      case 'restate_scenario_problem_3':
+        return 'clear_scenario_problem_3';
+        
+      case 'clear_scenario_problem_3':
+        // After clearing, move to anything else checks
+        const returnStep3 = context.metadata?.returnToDiggingStep;
+        if (returnStep3) {
+          context.currentPhase = 'digging_deeper';
+          return returnStep3;
+        }
+        return 'anything_else_check_1';
+        
+      // Handle all "anything else" check steps
+      case 'anything_else_check_1':
+        if (lastResponse.includes('yes')) {
+          return 'restate_anything_else_problem_1';
+        }
+        if (lastResponse.includes('no')) {
+          return 'anything_else_check_2';
+        }
+        break;
+        
+      case 'restate_anything_else_problem_1':
+        return 'clear_anything_else_problem_1';
+        
+      case 'clear_anything_else_problem_1':
+        // After clearing, return to next anything else check
+        const returnStepAE1 = context.metadata?.returnToDiggingStep;
+        if (returnStepAE1) {
+          context.currentPhase = 'digging_deeper';
+          return returnStepAE1;
+        }
+        return 'anything_else_check_2';
+        
+      case 'anything_else_check_2':
+        if (lastResponse.includes('yes')) {
+          return 'restate_anything_else_problem_2';
+        }
+        if (lastResponse.includes('no')) {
+          return 'anything_else_check_3';
+        }
+        break;
+        
+      case 'restate_anything_else_problem_2':
+        return 'clear_anything_else_problem_2';
+        
+      case 'clear_anything_else_problem_2':
+        // After clearing, return to next anything else check
+        const returnStepAE2 = context.metadata?.returnToDiggingStep;
+        if (returnStepAE2) {
+          context.currentPhase = 'digging_deeper';
+          return returnStepAE2;
+        }
+        return 'anything_else_check_3';
+        
+      case 'anything_else_check_3':
+        if (lastResponse.includes('yes')) {
+          // If there are still more problems, we need to handle them
+          // For now, continue the pattern by going to discovery phase
           context.currentPhase = 'discovery';
           return 'restate_selected_problem';
         }
-        // If "no", continue to next digging deeper question or integration
         if (lastResponse.includes('no')) {
-          if (context.currentStep === 'anything_else_check') {
-            context.currentPhase = 'integration';
-            return 'integration_start';
-          }
-          return currentStep.nextStep || null;
+          // No more problems, proceed to integration
+          context.currentPhase = 'integration';
+          return 'integration_start';
         }
         break;
         
