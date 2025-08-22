@@ -1709,6 +1709,22 @@ export class TreatmentStateMachine {
             // Store the last response for use in next step
             context.metadata.lastResponse = userInput || 'that feeling';
             const identity = context.metadata.currentIdentity || 'that identity';
+            
+            // Check if this is a response to the "what are you when you're not being" question
+            if (context.metadata.askedWhatAreYou) {
+              // Check if they gave another negative identity
+              const negativeIdentities = ['hurt', 'scared', 'angry', 'sad', 'frustrated', 'anxious', 'worried', 'stressed', 'overwhelmed', 'helpless', 'powerless', 'weak'];
+              const isNegativeIdentity = negativeIdentities.some(neg => userInput?.toLowerCase().includes(neg));
+              
+              if (isNegativeIdentity && !context.metadata.askedMultipleIdentities) {
+                context.metadata.askedMultipleIdentities = true;
+                context.metadata.secondIdentity = userInput;
+                return `What are you when you're not being '${identity}' or '${userInput}'?`;
+              }
+            }
+            
+            // Mark that we've asked the "what are you" question
+            context.metadata.askedWhatAreYou = true;
             return `What are you when you're not being '${identity}'?`;
           },
           expectedResponseType: 'open',
@@ -1724,6 +1740,20 @@ export class TreatmentStateMachine {
         {
           id: 'identity_dissolve_step_d',
           scriptedResponse: (userInput, context) => {
+            // Check if current response is "I don't know" or "I can't feel it"
+            const unknownIndicators = ['don\'t know', 'can\'t feel', 'no idea', 'not sure'];
+            const isUnknownResponse = unknownIndicators.some(indicator => (userInput || '').toLowerCase().includes(indicator));
+            
+            if (isUnknownResponse && !context?.metadata?.hasAskedToGuessD) {
+              context.metadata.hasAskedToGuessD = true;
+              return `That's okay. Can you guess what it would feel like?`;
+            } else if (isUnknownResponse && context?.metadata?.hasAskedToGuessD) {
+              // They still can't guess, continue with their initial response
+              context.metadata.hasAskedToGuessD = false;
+              const initialResponse = context.metadata.lastResponse || 'that';
+              return `Feel yourself being '${initialResponse}'... what does '${initialResponse}' feel like?`;
+            }
+            
             // Store the last response for use in next step
             context.metadata.lastResponse = userInput || 'that';
             const lastResponse = context.metadata.lastResponse;
@@ -4644,6 +4674,34 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           // User provided more actions - ask again
           return 'action_followup';
         }
+
+      case 'identity_check':
+        // Handle repeat A-F cycle logic
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // If they can still feel the identity, repeat A-F cycle
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          console.log(`🔍 IDENTITY_CHECK: Still feeling identity, repeating A-F cycle (cycle ${context.metadata.cycleCount})`);
+          return 'identity_dissolve_step_a'; // Go back to step A
+        } else if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // Identity is dissolved, proceed to next step
+          console.log(`🔍 IDENTITY_CHECK: Identity dissolved, proceeding to future check`);
+          return 'identity_future_check';
+        }
+        break;
+
+      case 'identity_check':
+        // Handle repeat A-F cycle logic
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // If they can still feel the identity, repeat A-F cycle
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          console.log(`🔍 IDENTITY_CHECK: Still feeling identity, repeating A-F cycle (cycle ${context.metadata.cycleCount})`);
+          return 'identity_dissolve_step_a'; // Go back to step A
+        } else if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // Identity is dissolved, proceed to next step
+          console.log(`🔍 IDENTITY_CHECK: Identity dissolved, proceeding to future check`);
+          return 'identity_future_check';
+        }
+        break;
         
       default:
         // Default behavior - follow the nextStep
