@@ -457,7 +457,7 @@ export class TreatmentStateMachine {
       }
       
       // Check if user stated it as a question
-      const questionIndicators = ['how can', 'what should', 'why do', 'when will', 'where can', 'should i'];
+      const questionIndicators = ['how can', 'how do', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
       const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
       
       if (hasQuestionLanguage) {
@@ -487,21 +487,30 @@ export class TreatmentStateMachine {
     // Special validation for problem-focused method intros
     const problemFocusedIntros = ['problem_shifting_intro', 'blockage_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'];
     if (problemFocusedIntros.includes(step.id)) {
+      console.log(`🔍 PROBLEM_INTRO_VALIDATION: Checking input in step "${step.id}": "${userInput}" (lowercase: "${lowerInput}")`);
       // Check if user stated it as a goal instead of problem
       const goalIndicators = ['want to', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
       const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
       
+      console.log(`🔍 PROBLEM_INTRO_VALIDATION: Goal indicators check - hasGoalLanguage: ${hasGoalLanguage}`);
       if (hasGoalLanguage) {
+        const matchedIndicator = goalIndicators.find(indicator => lowerInput.includes(indicator));
+        console.log(`🔍 PROBLEM_INTRO_VALIDATION: Matched goal indicator: "${matchedIndicator}"`);
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
       }
       
       // Check if user stated it as a question
-      const questionIndicators = ['how can', 'what should', 'why do', 'when will', 'where can', 'should i'];
+      const questionIndicators = ['how can', 'how do', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
       const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
       
+      console.log(`🔍 PROBLEM_INTRO_VALIDATION: Question indicators check - hasQuestionLanguage: ${hasQuestionLanguage}`);
       if (hasQuestionLanguage) {
+        const matchedIndicator = questionIndicators.find(indicator => lowerInput.includes(indicator)) || (trimmed.endsWith('?') ? 'ends with ?' : '');
+        console.log(`🔍 PROBLEM_INTRO_VALIDATION: Matched question indicator: "${matchedIndicator}"`);
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
       }
+      
+      console.log(`🔍 PROBLEM_INTRO_VALIDATION: No validation issues found, allowing input`);
     }
     
     // Standard validation rules
