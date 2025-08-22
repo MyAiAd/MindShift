@@ -1379,7 +1379,7 @@ export class TreatmentStateMachine {
           scriptedResponse: (userInput, context) => {
             // Get the problem statement
             const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            return `Please close your eyes and keep them closed throughout the rest of the process.\n\nFeel the problem of '${problemStatement}' - what kind of person are you being when you're experiencing this problem?`;
+            return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${problemStatement}'... what kind of person are you being when you're experiencing this problem?`;
           },
           expectedResponseType: 'open',
           validationRules: [
