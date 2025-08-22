@@ -1395,6 +1395,21 @@ export class TreatmentStateMachine {
             const cleanProblemStatement = context?.metadata?.problemStatement || context?.problemStatement || problemStatement;
             console.log(`🔍 IDENTITY_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}"`);
             
+            // If we have user input, process and store the identity
+            if (userInput && userInput.trim()) {
+              const processedIdentity = this.processIdentityResponse(userInput.trim());
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Processing identity "${userInput}" -> "${processedIdentity}"`);
+              
+              // Check if user said "me" - need clarification
+              if (userInput.toLowerCase().trim() === 'me') {
+                return "What kind of me?";
+              }
+              
+              // Store the processed identity
+              context.metadata.currentIdentity = processedIdentity;
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Stored identity: "${processedIdentity}"`);
+            }
+            
             return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
           },
           expectedResponseType: 'open',
@@ -1487,10 +1502,24 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'identity_check',
+          nextStep: 'identity_step_3_intro',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
+        },
+
+        {
+          id: 'identity_step_3_intro',
+          scriptedResponse: (userInput, context) => {
+            const identity = context.metadata.currentIdentity || 'that identity';
+            return `Step 3: We're now going to check if the identity of '${identity}' is still there.`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please continue.' }
+          ],
+          nextStep: 'identity_check',
+          aiTriggers: []
         },
 
         {
@@ -4064,5 +4093,52 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
     } catch (error) {
       console.error('Error saving context to database:', error);
     }
+  }
+
+  /**
+   * Process identity response to convert emotions/adjectives to proper identity format
+   */
+  private processIdentityResponse(userInput: string): string {
+    const input = userInput.toLowerCase().trim();
+    
+    // Common emotions that should become "X person"
+    const emotionToIdentity: { [key: string]: string } = {
+      'hurt': 'hurt person',
+      'scared': 'scared person', 
+      'angry': 'angry person',
+      'sad': 'sad person',
+      'frustrated': 'frustrated person',
+      'anxious': 'anxious person',
+      'worried': 'worried person',
+      'stressed': 'stressed person',
+      'overwhelmed': 'overwhelmed person',
+      'helpless': 'helpless person',
+      'powerless': 'powerless person',
+      'weak': 'weak person',
+      'strong': 'strong person',
+      'confident': 'confident person',
+      'happy': 'happy person',
+      'peaceful': 'peaceful person',
+      'calm': 'calm person'
+    };
+    
+    // Check if it's a simple emotion that needs "person" added
+    if (emotionToIdentity[input]) {
+      return emotionToIdentity[input];
+    }
+    
+    // If it already contains "person", "me", or other identity words, use as-is
+    if (input.includes('person') || input.includes('me') || input.includes('someone') || input.includes('individual')) {
+      return userInput; // Preserve original casing
+    }
+    
+    // If it's an adjective without "person", add "person"
+    const singleWords = ['lazy', 'tired', 'energetic', 'motivated', 'lost', 'found', 'broken', 'whole', 'empty', 'full'];
+    if (singleWords.includes(input) || (input.split(' ').length === 1 && !input.includes('victim'))) {
+      return `${userInput} person`;
+    }
+    
+    // Return as-is for more complex responses
+    return userInput;
   }
 } 
