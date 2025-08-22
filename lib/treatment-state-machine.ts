@@ -668,7 +668,9 @@ export class TreatmentStateMachine {
             }
             
             // Handle problem description after method selection
+            console.log(`🔍 MIND_SHIFTING_EXPLANATION: Checking skip logic - workType="${context.metadata.workType}", selectedMethod="${context.metadata.selectedMethod}", userInput="${userInput}"`);
             if (context.metadata.workType === 'problem' && context.metadata.selectedMethod) {
+              console.log(`🔍 MIND_SHIFTING_EXPLANATION: Both workType and selectedMethod present, skipping to treatment intro`);
               // User has provided problem description, store it and proceed directly to treatment intro
               context.metadata.problemStatement = userInput;
               context.problemStatement = userInput; // Keep for compatibility
@@ -686,6 +688,7 @@ export class TreatmentStateMachine {
                 context.currentStep = 'blockage_shifting_intro';
                 context.currentPhase = 'blockage_shifting';
               }
+              console.log(`🔍 MIND_SHIFTING_EXPLANATION: Returning SKIP_TO_TREATMENT_INTRO`);
               return "SKIP_TO_TREATMENT_INTRO";
             }
             

@@ -367,6 +367,7 @@ async function handleAIValidation(
       // Validation passed - continue with normal flow but store the corrected statement
       if (treatmentContext.currentStep === 'mind_shifting_explanation' && treatmentContext.metadata.selectedMethod) {
         // Store the corrected problem statement before continuing
+        console.log(`🔍 VALIDATION: Storing corrected problem statement: "${userInput}" for method: ${treatmentContext.metadata.selectedMethod}`);
         treatmentContext.metadata.problemStatement = userInput;
         treatmentContext.problemStatement = userInput;
       }
