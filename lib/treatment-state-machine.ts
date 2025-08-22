@@ -327,6 +327,8 @@ export class TreatmentStateMachine {
     const words = trimmed.split(' ').length;
     const lowerInput = trimmed.toLowerCase();
     
+    console.log(`🔍 VALIDATE_USER_INPUT: Called for step "${step.id}" with input "${userInput}"`);
+    
     // Special validation for introduction phase
     if (step.id === 'mind_shifting_explanation') {
       // Skip validation for work type selection inputs (1, 2, 3)
@@ -491,6 +493,7 @@ export class TreatmentStateMachine {
 
     // Special validation for problem-focused method intros
     const problemFocusedIntros = ['problem_shifting_intro', 'blockage_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'];
+    console.log(`🔍 PROBLEM_INTRO_CHECK: Step "${step.id}" - is in problemFocusedIntros: ${problemFocusedIntros.includes(step.id)}`);
     if (problemFocusedIntros.includes(step.id)) {
       console.log(`🔍 PROBLEM_INTRO_VALIDATION: Checking input in step "${step.id}": "${userInput}" (lowercase: "${lowerInput}")`);
       // Check if user stated it as a goal instead of problem
