@@ -1425,17 +1425,12 @@ export class TreatmentStateMachine {
         {
           id: 'identity_dissolve_step_a',
           scriptedResponse: (userInput, context) => {
-            // Store the identity for use throughout the process
-            // Only update identity if we don't already have one stored (i.e., not looping back from identity_check)
-            if (!context.metadata.currentIdentity || (userInput && userInput.trim().length > 3 && !['yes', 'no', 'still'].some(word => userInput.toLowerCase().includes(word)))) {
-              context.metadata.currentIdentity = userInput || 'that identity';
-            }
             const identity = context.metadata.currentIdentity || 'that identity';
-            return `Feel yourself being '${identity}'... as '${identity}', what do you want?`;
+            return `Feel yourself being '${identity}'... what does it feel like?`;
           },
-          expectedResponseType: 'open',
+          expectedResponseType: 'feeling',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you want as that identity.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
           ],
           nextStep: 'identity_dissolve_step_b',
           aiTriggers: [
@@ -1446,14 +1441,14 @@ export class TreatmentStateMachine {
         {
           id: 'identity_dissolve_step_b',
           scriptedResponse: (userInput, context) => {
-            // Store the goal for later use
-            context.metadata.currentGoal = userInput || context.metadata.currentGoal || 'that goal';
-            const identity = context.metadata.currentIdentity || 'that identity';
-            return `Feel yourself being '${identity}'... exaggerate the feeling of it and tell me the first thing that you notice about it.`;
+            // Store the last response for use in next step
+            context.metadata.lastResponse = userInput || 'that feeling';
+            const lastResponse = context.metadata.lastResponse;
+            return `Feel '${lastResponse}'... what happens in yourself when you feel '${lastResponse}'?`;
           },
-          expectedResponseType: 'open',
+          expectedResponseType: 'feeling',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about exaggerating that feeling.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself.' }
           ],
           nextStep: 'identity_dissolve_step_c',
           aiTriggers: [
@@ -1464,12 +1459,14 @@ export class TreatmentStateMachine {
         {
           id: 'identity_dissolve_step_c',
           scriptedResponse: (userInput, context) => {
-            const goal = context.metadata.currentGoal || 'that goal';
-            return `Now feel yourself achieving your goal of '${goal}', imagine whatever you need to imagine in order to achieve that goal in your mind and tell me when you've done it.`;
+            // Store the last response for use in next step
+            context.metadata.lastResponse = userInput || 'that feeling';
+            const identity = context.metadata.currentIdentity || 'that identity';
+            return `What are you when you're not being '${identity}'?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me when you have achieved that goal.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you are when you\'re not being that identity.' }
           ],
           nextStep: 'identity_dissolve_step_d',
           aiTriggers: [
@@ -1479,12 +1476,15 @@ export class TreatmentStateMachine {
 
         {
           id: 'identity_dissolve_step_d',
-          scriptedResponse: () => {
-            return `What's the first thing you notice about it?`;
+          scriptedResponse: (userInput, context) => {
+            // Store the last response for use in next step
+            context.metadata.lastResponse = userInput || 'that';
+            const lastResponse = context.metadata.lastResponse;
+            return `Feel yourself being '${lastResponse}'... what does '${lastResponse}' feel like?`;
           },
-          expectedResponseType: 'open',
+          expectedResponseType: 'feeling',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about it.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
           ],
           nextStep: 'identity_dissolve_step_e',
           aiTriggers: [
@@ -1495,16 +1495,18 @@ export class TreatmentStateMachine {
         {
           id: 'identity_dissolve_step_e',
           scriptedResponse: (userInput, context) => {
-            const goal = context.metadata.currentGoal || 'that goal';
-            return `Have you fully achieved your goal of '${goal}'?`;
+            // Store the last response for use in next step
+            context.metadata.lastResponse = userInput || 'that feeling';
+            const lastResponse = context.metadata.lastResponse;
+            return `Feel '${lastResponse}'... what happens in yourself when you feel '${lastResponse}'?`;
           },
-          expectedResponseType: 'yesno',
+          expectedResponseType: 'feeling',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself.' }
           ],
           nextStep: 'identity_step_3_intro',
           aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
+            { condition: 'userStuck', action: 'clarify' }
           ]
         },
 
@@ -1532,6 +1534,22 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
+          nextStep: 'identity_future_check',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_future_check',
+          scriptedResponse: (userInput, context) => {
+            const identity = context.metadata.currentIdentity || 'that identity';
+            return `Do you think you might feel yourself being '${identity}' in the future? Is there any scenario in which you might still feel yourself being '${identity}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
           nextStep: 'identity_problem_check',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
@@ -1541,16 +1559,46 @@ export class TreatmentStateMachine {
         {
           id: 'identity_problem_check',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            return `Feel the initial problem of '${problemStatement}'... does it still feel like a problem?`;
+            const cleanProblemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            return `Feel '${cleanProblemStatement}'... does it still feel like a problem?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'digging_deeper_start',
+          nextStep: 'identity_dig_deeper',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_dig_deeper',
+          scriptedResponse: (userInput, context) => {
+            return `Do you feel the problem will come back in the future? Is there any scenario in which this would still be a problem for you? Is there anything else about this that's still a problem for you?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'identity_integration',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_integration',
+          scriptedResponse: (userInput, context) => {
+            return `Integration Questions: How do you feel about the process? What insights did you gain? How will you apply this in your life?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share your thoughts about the process.' }
+          ],
+          nextStep: undefined, // End of Identity Shifting process
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
           ]
         }
       ]
