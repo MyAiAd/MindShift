@@ -8,7 +8,7 @@ import { useNotifications } from '@/services/notification/notification.service';
 import { AccessibilityService } from '@/services/accessibility/accessibility.service';
 import { GDPRService } from '@/services/gdpr/gdpr.service';
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
-import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Flask } from 'lucide-react';
+import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker } from 'lucide-react';
 import OpenAIVoiceDemo from '@/components/labs/OpenAIVoiceDemo';
 
 interface FormState {
@@ -576,7 +576,7 @@ export default function SettingsPage() {
                 <span>Preferences</span>
               </a>
               <a href="#labs" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 ml-8">
-                <Flask className="h-4 w-4" />
+                <Beaker className="h-4 w-4" />
                 <span className="text-sm">Labs</span>
               </a>
             </nav>
@@ -1105,7 +1105,7 @@ export default function SettingsPage() {
           {/* Labs Section */}
           <div id="labs" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center space-x-2 mb-4">
-              <Flask className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <Beaker className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Labs</h3>
               <span className="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400 rounded-full">
                 Experimental
