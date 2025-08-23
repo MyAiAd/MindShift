@@ -15,7 +15,7 @@ SECRET_PATTERNS=(
     "T3sla12e"
     "BFpp5r01coZhe4tET2K01hnb9aGuA9PueNKl"
     "bkQnInBlb8r4zJQBjINB-Gv5ZhOS05xESsRmbkS0uoo"
-    "Sage@MyAi.ad"
+    "Jenny@MyAi.ad"
     "MyAi123"
 )
 
@@ -101,7 +101,7 @@ check_pattern "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" "JWT tokens"
 check_pattern "T3sla12e" "Database password"
 check_pattern "BFpp5r01coZhe4tET2K01hnb9aGuA9PueNKl" "VAPID public key"
 check_pattern "bkQnInBlb8r4zJQBjINB-Gv5ZhOS05xESsRmbkS0uoo" "VAPID private key"
-check_pattern "Sage@MyAi.ad" "Real email address"
+check_pattern "Jenny@MyAi.ad" "Real email address"
 check_pattern "MyAi123" "Hardcoded password"
 
 echo ""
