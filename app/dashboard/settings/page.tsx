@@ -10,6 +10,7 @@ import { GDPRService } from '@/services/gdpr/gdpr.service';
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
 import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker } from 'lucide-react';
 import OpenAIVoiceDemo from '@/components/labs/OpenAIVoiceDemo';
+import VoiceTreatmentDemo from '@/components/labs/VoiceTreatmentDemo';
 
 interface FormState {
   loading: boolean;
@@ -1115,7 +1116,10 @@ export default function SettingsPage() {
               Experimental features and demos. These features are in development and may change or be removed.
             </p>
             
-            <OpenAIVoiceDemo />
+            <div className="space-y-6">
+              <VoiceTreatmentDemo />
+              <OpenAIVoiceDemo />
+            </div>
           </div>
 
           {/* Danger Zone */}
