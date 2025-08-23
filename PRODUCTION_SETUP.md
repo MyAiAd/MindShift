@@ -72,7 +72,7 @@ Create a `.env` file with the following variables for local development:
 ```bash
 # Production Environment Variables
 RESEND_API_KEY=your_resend_api_key_here
-ADMIN_EMAIL=Contact@MyAi.ad
+ADMIN_EMAIL=Sage@MyAi.ad
 SENDER_NAME=MyAi
 OPENAI_API_KEY=your_openai_api_key_here
 ```

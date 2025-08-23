@@ -3,7 +3,7 @@
 ## 📋 **Your Current Setup:**
 - **Vercel Environment Variables**: ✅ Added
 - **RESEND_API_KEY**: `re_3n7DXFX3_ERxVAtYNSgzG2MR2ZVrUA6Y6`
-- **ADMIN_EMAIL**: `Contact@MyAi.ad`
+- **ADMIN_EMAIL**: `Sage@MyAi.ad`
 - **SENDER_NAME**: `MyAi`
 
 ---
@@ -19,7 +19,7 @@ Create or update your `.env.local` file:
 cat > .env.local << 'EOF'
 # Resend Email Configuration
 RESEND_API_KEY=re_3n7DXFX3_ERxVAtYNSgzG2MR2ZVrUA6Y6
-ADMIN_EMAIL=Contact@MyAi.ad
+ADMIN_EMAIL=Sage@MyAi.ad
 SENDER_NAME=MyAi
 
 # Your existing Supabase variables (add your actual values)
@@ -127,7 +127,7 @@ curl -X POST 'https://api.resend.com/emails' \
   -H 'Authorization: Bearer re_3n7DXFX3_ERxVAtYNSgzG2MR2ZVrUA6Y6' \
   -H 'Content-Type: application/json' \
   -d '{
-    "from": "MyAi <Contact@MyAi.ad>",
+    "from": "MyAi <Sage@MyAi.ad>",
     "to": ["your-email@example.com"],
     "subject": "Test Email",
     "html": "<h1>Test successful!</h1>"
@@ -172,8 +172,8 @@ curl -X POST 'https://api.resend.com/emails' \
   -H 'Authorization: Bearer re_3n7DXFX3_ERxVAtYNSgzG2MR2ZVrUA6Y6' \
   -H 'Content-Type: application/json' \
   -d '{
-    "from": "MyAi <Contact@MyAi.ad>",
-    "to": ["Contact@MyAi.ad"],
+    "from": "MyAi <Sage@MyAi.ad>",
+    "to": ["Sage@MyAi.ad"],
     "subject": "API Test",
     "html": "<h1>API key working!</h1>"
   }'
