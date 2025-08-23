@@ -27,6 +27,13 @@ interface TreatmentStep {
   scriptedResponse?: (userInput?: string, context?: any) => string;
 }
 
+interface DemoContext {
+  problemStatement: string;
+  goalStatement: string;
+  experienceStatement: string;
+  userResponses: Record<string, string>;
+}
+
 type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shifting' | 'identity_shifting' | 'blockage_shifting' | 'trauma_shifting';
 
 // Real treatment scripts from the actual system - completely isolated for demo
@@ -35,9 +42,16 @@ const TREATMENT_MODALITIES: Record<TreatmentModality, { name: string; steps: Tre
     name: 'Problem Shifting',
     steps: [
       {
+        id: 'problem_input',
+        phase: 'Problem Input',
+        instruction: 'What problem would you like to work on today? Please state it in a few words.',
+        expectedResponse: 'problem statement',
+        scriptedResponse: () => 'What problem would you like to work on today? Please state it in a few words.'
+      },
+      {
         id: 'problem_shifting_intro',
         phase: 'Introduction',
-        instruction: 'Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image.',
+        instruction: 'Please close your eyes and keep them closed throughout the process.',
         expectedResponse: 'acknowledgment',
         scriptedResponse: (userInput, context) => {
           const problemStatement = context?.problemStatement || 'the problem';
@@ -93,6 +107,103 @@ Feel the problem '${problemStatement}'... what does it feel like?`;
           const problemStatement = context?.problemStatement || 'the problem';
           return `Feel the problem '${problemStatement}'... does it still feel like a problem?`;
         }
+      },
+      {
+        id: 'digging_deeper_start',
+        phase: 'Digging Deeper',
+        instruction: 'Would you like to dig deeper in this area?',
+        expectedResponse: 'yes/no',
+        scriptedResponse: () => 'Would you like to dig deeper in this area?'
+      },
+      {
+        id: 'future_problem_check',
+        phase: 'Future Assessment',
+        instruction: 'Do you feel the problem will come back in the future?',
+        expectedResponse: 'yes/no',
+        scriptedResponse: () => 'Do you feel the problem will come back in the future?'
+      },
+      {
+        id: 'restate_problem_future',
+        phase: 'Problem Restatement',
+        instruction: 'How would you state the problem in a few words?',
+        expectedResponse: 'problem',
+        scriptedResponse: () => 'How would you state the problem in a few words?'
+      },
+      {
+        id: 'scenario_check_1',
+        phase: 'Scenario Check',
+        instruction: 'Is there any scenario in which this would still be a problem for you?',
+        expectedResponse: 'yes/no',
+        scriptedResponse: () => 'Is there any scenario in which this would still be a problem for you?'
+      },
+      {
+        id: 'problem_integration_awareness_1',
+        phase: 'Integration - Awareness',
+        instruction: 'How do you feel about your problem now?',
+        expectedResponse: 'feeling',
+        scriptedResponse: (userInput, context) => {
+          const problemStatement = context?.problemStatement || 'the problem';
+          return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${problemStatement}' now?`;
+        }
+      },
+      {
+        id: 'problem_integration_awareness_2',
+        phase: 'Integration - Awareness',
+        instruction: 'What are you more aware of now than before we did this process?',
+        expectedResponse: 'awareness',
+        scriptedResponse: () => 'What are you more aware of now than before we did this process?'
+      },
+      {
+        id: 'problem_integration_awareness_3',
+        phase: 'Integration - Benefits',
+        instruction: 'How has it helped you to do this process?',
+        expectedResponse: 'benefits',
+        scriptedResponse: () => 'How has it helped you to do this process?'
+      },
+      {
+        id: 'problem_integration_awareness_4',
+        phase: 'Integration - Narrative',
+        instruction: 'What is your new narrative about this?',
+        expectedResponse: 'narrative',
+        scriptedResponse: () => 'What is your new narrative about this?'
+      },
+      {
+        id: 'problem_integration_awareness_5',
+        phase: 'Integration - Intention',
+        instruction: 'What\'s your intention now in relation to this?',
+        expectedResponse: 'intention',
+        scriptedResponse: () => 'What\'s your intention now in relation to this?'
+      },
+      {
+        id: 'problem_integration_action_1',
+        phase: 'Integration - Action',
+        instruction: 'What needs to happen for you to realise your intention?',
+        expectedResponse: 'action plan',
+        scriptedResponse: () => 'Integration Questions - ACTION Section:\n\nWhat needs to happen for you to realise your intention?... What else needs to happen for you to realise your intention? (Until they are clear on their plan of action)'
+      },
+      {
+        id: 'problem_integration_action_2',
+        phase: 'Integration - Priority',
+        instruction: 'What is the one thing you can do that will make everything else easier or unnecessary?',
+        expectedResponse: 'priority action',
+        scriptedResponse: () => 'What is the one thing you can do that will make everything else easier or unnecessary?'
+      },
+      {
+        id: 'problem_integration_action_3',
+        phase: 'Integration - Commitment',
+        instruction: 'What is the first action that you can commit to now that will help you to realise your intention? When will you do this?',
+        expectedResponse: 'commitment',
+        scriptedResponse: () => 'What is the first action that you can commit to now that will help you to realise your intention?... when will you do this?'
+      },
+      {
+        id: 'treatment_complete',
+        phase: 'Completion',
+        instruction: 'Excellent work! You have completed the Problem Shifting treatment. Take a moment to notice how you feel about your original problem now.',
+        expectedResponse: 'acknowledgment',
+        scriptedResponse: (userInput, context) => {
+          const problemStatement = context?.problemStatement || 'your problem';
+          return `Excellent work! You have completed the Problem Shifting treatment. Take a moment to notice how you feel about '${problemStatement}' now. The treatment is complete.`;
+        }
       }
     ]
   },
@@ -112,6 +223,20 @@ Feel the problem '${problemStatement}'... what does it feel like?`;
         instruction: 'Is there a deadline?',
         expectedResponse: 'yes/no',
         scriptedResponse: () => 'Is there a deadline?'
+      },
+      {
+        id: 'goal_deadline_date',
+        phase: 'Deadline Details',
+        instruction: 'When do you want to achieve this goal by?',
+        expectedResponse: 'date/time',
+        scriptedResponse: () => 'When do you want to achieve this goal by?'
+      },
+      {
+        id: 'goal_certainty',
+        phase: 'Certainty Assessment',
+        instruction: 'How certain are you between 0% and 100% that you will achieve this goal?',
+        expectedResponse: 'percentage',
+        scriptedResponse: () => 'How certain are you between 0% and 100% that you will achieve this goal?'
       },
       {
         id: 'reality_shifting_intro',
@@ -148,6 +273,57 @@ Feel '${goalStatement}'... what does it feel like?`;
         instruction: 'Feel that obstacle... what can you feel now?',
         expectedResponse: 'feeling',
         scriptedResponse: (userInput) => `Feel '${userInput || 'that reason'}'... what does it feel like?`
+      },
+      {
+        id: 'reality_feel_reason_3',
+        phase: 'Deeper Obstacle Work',
+        instruction: 'Feel that feeling... what\'s the first thing you notice about it?',
+        expectedResponse: 'observation',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what's the first thing you notice about it?`
+      },
+      {
+        id: 'reality_check_goal_again',
+        phase: 'Goal Reassessment',
+        instruction: 'Feel your goal again... how certain are you now that you will achieve it?',
+        expectedResponse: 'percentage',
+        scriptedResponse: (userInput, context) => {
+          const goalStatement = context?.goalStatement || 'your goal';
+          return `Feel '${goalStatement}' again... how certain are you now between 0% and 100% that you will achieve it?`;
+        }
+      },
+      {
+        id: 'reality_integration_awareness_1',
+        phase: 'Integration - Awareness',
+        instruction: 'How do you feel about your goal now?',
+        expectedResponse: 'feeling',
+        scriptedResponse: (userInput, context) => {
+          const goalStatement = context?.goalStatement || 'your goal';
+          return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${goalStatement}' now?`;
+        }
+      },
+      {
+        id: 'reality_integration_action_1',
+        phase: 'Integration - Action',
+        instruction: 'What needs to happen for you to achieve your goal?',
+        expectedResponse: 'action plan',
+        scriptedResponse: () => 'Integration Questions - ACTION Section:\n\nWhat needs to happen for you to achieve your goal?'
+      },
+      {
+        id: 'reality_integration_action_2',
+        phase: 'Integration - First Step',
+        instruction: 'What is the first action you can take towards achieving your goal?',
+        expectedResponse: 'first action',
+        scriptedResponse: () => 'What is the first action you can take towards achieving your goal?'
+      },
+      {
+        id: 'treatment_complete',
+        phase: 'Completion',
+        instruction: 'Excellent work! You have completed the Reality Shifting treatment.',
+        expectedResponse: 'acknowledgment',
+        scriptedResponse: (userInput, context) => {
+          const goalStatement = context?.goalStatement || 'your goal';
+          return `Excellent work! You have completed the Reality Shifting treatment for '${goalStatement}'. Notice how you feel about achieving this goal now.`;
+        }
       }
     ]
   },
@@ -315,7 +491,7 @@ export default function VoiceTreatmentDemo() {
   const [lastTranscript, setLastTranscript] = useState('');
   const [selectedModality, setSelectedModality] = useState<TreatmentModality>('problem_shifting');
   const [showModalitySelector, setShowModalitySelector] = useState(false);
-  const [demoContext, setDemoContext] = useState<any>({
+  const [demoContext, setDemoContext] = useState<DemoContext>({
     problemStatement: '',
     goalStatement: '',
     experienceStatement: '',
@@ -505,8 +681,18 @@ Rules:
           const message = JSON.parse(event.data);
           // Handle conversation events if needed
           if (message.type === 'conversation.item.input_audio_transcription.completed') {
-            setLastTranscript(message.transcript || '');
-            addMessage(message.transcript || '', true, true);
+            const transcript = message.transcript || '';
+            setLastTranscript(transcript);
+            addMessage(transcript, true, true);
+            
+            // Capture problem/goal/experience based on current step
+            if (currentStep.id === 'problem_input' && transcript.trim()) {
+              setDemoContext(prev => ({ ...prev, problemStatement: transcript.trim() }));
+            } else if (currentStep.id === 'reality_goal_capture' && transcript.trim()) {
+              setDemoContext(prev => ({ ...prev, goalStatement: transcript.trim() }));
+            } else if (currentStep.id === 'trauma_shifting_intro' && transcript.trim()) {
+              setDemoContext(prev => ({ ...prev, experienceStatement: transcript.trim() }));
+            }
           }
         } catch (err) {
           // Ignore non-JSON messages
@@ -555,6 +741,15 @@ Rules:
       const actualResponse = nextStepData.scriptedResponse 
         ? nextStepData.scriptedResponse(lastTranscript, demoContext)
         : nextStepData.instruction;
+      
+      // Update context with user response
+      setDemoContext(prev => ({
+        ...prev,
+        userResponses: {
+          ...prev.userResponses,
+          [currentStep.id]: lastTranscript
+        }
+      }));
       
       addMessage(actualResponse, false, false);
       
@@ -670,6 +865,20 @@ Rules:
           </div>
         )}
       </div>
+
+      {/* Working On Display */}
+      {(demoContext.problemStatement || demoContext.goalStatement || demoContext.experienceStatement) && (
+        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+          <h5 className="font-medium text-green-900 dark:text-green-200 mb-1">
+            Working On:
+          </h5>
+          <p className="text-sm text-green-700 dark:text-green-300">
+            {selectedModality === 'reality_shifting' && demoContext.goalStatement && `Goal: "${demoContext.goalStatement}"`}
+            {selectedModality === 'trauma_shifting' && demoContext.experienceStatement && `Experience: "${demoContext.experienceStatement}"`}
+            {(selectedModality === 'problem_shifting' || selectedModality === 'belief_shifting' || selectedModality === 'identity_shifting' || selectedModality === 'blockage_shifting') && demoContext.problemStatement && `Problem: "${demoContext.problemStatement}"`}
+          </p>
+        </div>
+      )}
 
       {/* Current Step Info */}
       <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-md">
