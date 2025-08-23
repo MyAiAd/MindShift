@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Brain, Mic, MicOff, Phone, PhoneOff, Play, Square, AlertCircle, CheckCircle, MessageSquare, RotateCcw } from 'lucide-react';
+import { Brain, Mic, MicOff, Phone, PhoneOff, Play, Square, AlertCircle, CheckCircle, MessageSquare, RotateCcw, Settings } from 'lucide-react';
 
 interface VoiceSession {
   pc: RTCPeerConnection | null;
@@ -24,41 +24,286 @@ interface TreatmentStep {
   phase: string;
   instruction: string;
   expectedResponse: string;
+  scriptedResponse?: (userInput?: string, context?: any) => string;
 }
 
-// Simple demo treatment flow - completely separate from production
-const DEMO_TREATMENT_STEPS: TreatmentStep[] = [
-  {
-    id: 'welcome',
-    phase: 'Introduction',
-    instruction: 'Welcome to the Voice Treatment Demo. This is a safe demonstration that won\'t affect your actual treatment sessions. I\'m going to guide you through a simplified Mind Shifting process. Let\'s start by identifying something that\'s bothering you. What problem would you like to work on today?',
-    expectedResponse: 'problem statement'
+type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shifting' | 'identity_shifting' | 'blockage_shifting' | 'trauma_shifting';
+
+// Real treatment scripts from the actual system - completely isolated for demo
+const TREATMENT_MODALITIES: Record<TreatmentModality, { name: string; steps: TreatmentStep[] }> = {
+  problem_shifting: {
+    name: 'Problem Shifting',
+    steps: [
+      {
+        id: 'problem_shifting_intro',
+        phase: 'Introduction',
+        instruction: 'Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image.',
+        expectedResponse: 'acknowledgment',
+        scriptedResponse: (userInput, context) => {
+          const problemStatement = context?.problemStatement || 'the problem';
+          return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.
+
+Feel the problem '${problemStatement}'... what does it feel like?`;
+        }
+      },
+      {
+        id: 'body_sensation_check',
+        phase: 'Body Awareness',
+        instruction: 'Feel that feeling... what happens in yourself when you feel that feeling?',
+        expectedResponse: 'body sensation',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what happens in yourself when you feel '${userInput || 'that feeling'}'?`
+      },
+      {
+        id: 'what_needs_to_happen_step',
+        phase: 'Solution Finding',
+        instruction: 'Feel the problem... what needs to happen for this to not be a problem?',
+        expectedResponse: 'solution statement',
+        scriptedResponse: (userInput, context) => {
+          const problemStatement = context?.problemStatement || 'the problem';
+          return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
+        }
+      },
+      {
+        id: 'feel_solution_state',
+        phase: 'Solution State',
+        instruction: 'What would you feel like if that happened?',
+        expectedResponse: 'feeling',
+        scriptedResponse: (userInput) => `What would you feel like if '${userInput || 'that'}'?`
+      },
+      {
+        id: 'feel_good_state',
+        phase: 'Embodiment',
+        instruction: 'Feel that feeling... what does that feeling feel like?',
+        expectedResponse: 'feeling description',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`
+      },
+      {
+        id: 'what_happens_step',
+        phase: 'Integration',
+        instruction: 'Feel that feeling... what happens in yourself when you feel that feeling?',
+        expectedResponse: 'experience',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what happens in yourself when you feel '${userInput || 'that feeling'}'?`
+      },
+      {
+        id: 'check_if_still_problem',
+        phase: 'Verification',
+        instruction: 'Feel the problem... does it still feel like a problem?',
+        expectedResponse: 'yes/no',
+        scriptedResponse: (userInput, context) => {
+          const problemStatement = context?.problemStatement || 'the problem';
+          return `Feel the problem '${problemStatement}'... does it still feel like a problem?`;
+        }
+      }
+    ]
   },
-  {
-    id: 'problem_feeling',
-    phase: 'Problem Identification', 
-    instruction: 'Thank you for sharing that. Now, when you think about this problem, what do you feel in your body? Take a moment to notice any sensations, tension, or feelings that come up.',
-    expectedResponse: 'body sensation'
+  reality_shifting: {
+    name: 'Reality Shifting',
+    steps: [
+      {
+        id: 'reality_goal_capture',
+        phase: 'Goal Setting',
+        instruction: 'What do you want?',
+        expectedResponse: 'goal statement',
+        scriptedResponse: () => 'What do you want?'
+      },
+      {
+        id: 'goal_deadline_check',
+        phase: 'Timeline',
+        instruction: 'Is there a deadline?',
+        expectedResponse: 'yes/no',
+        scriptedResponse: () => 'Is there a deadline?'
+      },
+      {
+        id: 'reality_shifting_intro',
+        phase: 'Introduction',
+        instruction: 'Please close your eyes and keep them closed throughout the process.',
+        expectedResponse: 'acknowledgment',
+        scriptedResponse: (userInput, context) => {
+          const goalStatement = context?.goalStatement || 'your goal';
+          return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image.
+
+Feel '${goalStatement}'... what does it feel like?`;
+        }
+      },
+      {
+        id: 'reality_step_a2',
+        phase: 'Goal Feeling',
+        instruction: 'Feel that feeling... what can you feel now?',
+        expectedResponse: 'feeling',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what can you feel now?`
+      },
+      {
+        id: 'reality_feel_reason',
+        phase: 'Resistance Exploration',
+        instruction: 'What could get in the way of you achieving this goal?',
+        expectedResponse: 'obstacle',
+        scriptedResponse: (userInput, context) => {
+          const goalStatement = context?.goalStatement || 'your goal';
+          return `Feel '${goalStatement}'... what could get in the way of you achieving this goal?`;
+        }
+      },
+      {
+        id: 'reality_feel_reason_2',
+        phase: 'Obstacle Processing',
+        instruction: 'Feel that obstacle... what can you feel now?',
+        expectedResponse: 'feeling',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that reason'}'... what does it feel like?`
+      }
+    ]
   },
-  {
-    id: 'feeling_location',
-    phase: 'Body Awareness',
-    instruction: 'Good. Now focus on that feeling. Where exactly do you notice it in your body? Is it in your chest, stomach, shoulders, or somewhere else?',
-    expectedResponse: 'location description'
+  belief_shifting: {
+    name: 'Belief Shifting',
+    steps: [
+      {
+        id: 'belief_shifting_intro',
+        phase: 'Introduction',
+        instruction: 'Please close your eyes and keep them closed throughout the process.',
+        expectedResponse: 'acknowledgment',
+        scriptedResponse: (userInput, context) => {
+          const problemStatement = context?.problemStatement || 'the problem';
+          return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image.
+
+Feel the problem '${problemStatement}'... what does it feel like?`;
+        }
+      },
+      {
+        id: 'belief_step_b',
+        phase: 'Belief Exploration',
+        instruction: 'Feel that feeling... what does that feeling feel like?',
+        expectedResponse: 'feeling description',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`
+      },
+      {
+        id: 'belief_step_c',
+        phase: 'Belief Identification',
+        instruction: 'What belief do you have about yourself when you feel this way?',
+        expectedResponse: 'belief statement',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what belief do you have about yourself when you feel '${userInput || 'that feeling'}'?`
+      },
+      {
+        id: 'belief_step_d',
+        phase: 'Belief Origin',
+        instruction: 'Where did you learn this belief?',
+        expectedResponse: 'origin story',
+        scriptedResponse: (userInput) => `Feel the belief '${userInput || 'that belief'}'... where did you learn this belief?`
+      }
+    ]
   },
-  {
-    id: 'feeling_quality',
-    phase: 'Sensation Exploration',
-    instruction: 'Perfect. Now I want you to really feel that sensation. What does it feel like? Is it heavy, tight, hot, cold, moving, or still? Describe the quality of this feeling.',
-    expectedResponse: 'sensation quality'
+  identity_shifting: {
+    name: 'Identity Shifting',
+    steps: [
+      {
+        id: 'identity_shifting_intro',
+        phase: 'Introduction',
+        instruction: 'Please close your eyes and keep them closed throughout the process.',
+        expectedResponse: 'acknowledgment',
+        scriptedResponse: (userInput, context) => {
+          const problemStatement = context?.problemStatement || 'the problem';
+          return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image.
+
+Feel the problem '${problemStatement}'... what does it feel like?`;
+        }
+      },
+      {
+        id: 'identity_step_b',
+        phase: 'Identity Recognition',
+        instruction: 'Who are you being when you have this problem?',
+        expectedResponse: 'identity description',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... who are you being when you feel '${userInput || 'that feeling'}'?`
+      },
+      {
+        id: 'identity_dissolve_step_a',
+        phase: 'Identity Exploration',
+        instruction: 'Feel yourself being that identity... as that identity, what do you want?',
+        expectedResponse: 'desire/want',
+        scriptedResponse: (userInput) => `Feel yourself being '${userInput || 'that identity'}'... as '${userInput || 'that identity'}', what do you want?`
+      },
+      {
+        id: 'identity_dissolve_step_b',
+        phase: 'Identity Dissolution',
+        instruction: 'Feel yourself being that identity... exaggerate the feeling of it and tell me the first thing that you notice about it.',
+        expectedResponse: 'observation',
+        scriptedResponse: (userInput) => `Feel yourself being '${userInput || 'that identity'}'... exaggerate the feeling of it and tell me the first thing that you notice about it.`
+      }
+    ]
   },
-  {
-    id: 'completion',
-    phase: 'Demo Complete',
-    instruction: 'Excellent work! This concludes our voice treatment demo. In a real session, we would continue deeper into the Mind Shifting process, but this gives you a taste of how voice-guided treatment works. You can restart the demo anytime to try again.',
-    expectedResponse: 'acknowledgment'
+  blockage_shifting: {
+    name: 'Blockage Shifting',
+    steps: [
+      {
+        id: 'blockage_shifting_intro',
+        phase: 'Introduction',
+        instruction: 'Please close your eyes and keep them closed throughout the process.',
+        expectedResponse: 'acknowledgment',
+        scriptedResponse: (userInput, context) => {
+          const problemStatement = context?.problemStatement || 'the problem';
+          return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image.
+
+Feel the problem '${problemStatement}'... what does it feel like?`;
+        }
+      },
+      {
+        id: 'blockage_step_b',
+        phase: 'Blockage Feeling',
+        instruction: 'Feel that feeling... what does that feeling feel like?',
+        expectedResponse: 'feeling description',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`
+      },
+      {
+        id: 'blockage_step_c',
+        phase: 'Blockage Location',
+        instruction: 'Where do you feel this blockage in your body?',
+        expectedResponse: 'body location',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... where do you feel this in your body?`
+      },
+      {
+        id: 'blockage_step_d',
+        phase: 'Blockage Quality',
+        instruction: 'Feel that blockage... what does that blockage feel like?',
+        expectedResponse: 'blockage description',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that blockage'}'... what does '${userInput || 'that blockage'}' feel like?`
+      }
+    ]
+  },
+  trauma_shifting: {
+    name: 'Trauma Shifting',
+    steps: [
+      {
+        id: 'trauma_shifting_intro',
+        phase: 'Introduction',
+        instruction: 'Please close your eyes and keep them closed throughout the process.',
+        expectedResponse: 'acknowledgment',
+        scriptedResponse: (userInput, context) => {
+          const experienceStatement = context?.experienceStatement || 'the experience';
+          return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image.
+
+Feel the experience '${experienceStatement}'... what does it feel like?`;
+        }
+      },
+      {
+        id: 'trauma_step_b',
+        phase: 'Trauma Identity',
+        instruction: 'Who are you being in this experience?',
+        expectedResponse: 'identity description',
+        scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... who are you being when you feel '${userInput || 'that feeling'}'?`
+      },
+      {
+        id: 'trauma_dissolve_step_a',
+        phase: 'Trauma Identity Exploration',
+        instruction: 'Feel yourself being that identity... as that identity, what do you want?',
+        expectedResponse: 'desire/want',
+        scriptedResponse: (userInput) => `Feel yourself being '${userInput || 'that identity'}'... as '${userInput || 'that identity'}', what do you want?`
+      },
+      {
+        id: 'trauma_dissolve_step_b',
+        phase: 'Trauma Processing',
+        instruction: 'Feel yourself being that identity... exaggerate the feeling of it and tell me the first thing that you notice about it.',
+        expectedResponse: 'observation',
+        scriptedResponse: (userInput) => `Feel yourself being '${userInput || 'that identity'}'... exaggerate the feeling of it and tell me the first thing that you notice about it.`
+      }
+    ]
   }
-];
+};
 
 export default function VoiceTreatmentDemo() {
   const [status, setStatus] = useState<string>('idle');
@@ -68,6 +313,14 @@ export default function VoiceTreatmentDemo() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [lastTranscript, setLastTranscript] = useState('');
+  const [selectedModality, setSelectedModality] = useState<TreatmentModality>('problem_shifting');
+  const [showModalitySelector, setShowModalitySelector] = useState(false);
+  const [demoContext, setDemoContext] = useState<any>({
+    problemStatement: '',
+    goalStatement: '',
+    experienceStatement: '',
+    userResponses: {}
+  });
   
   const sessionRef = useRef<VoiceSession>({
     pc: null,
@@ -78,7 +331,8 @@ export default function VoiceTreatmentDemo() {
   });
 
   const recognitionRef = useRef<any>(null);
-  const currentStep = DEMO_TREATMENT_STEPS[currentStepIndex];
+  const currentModality = TREATMENT_MODALITIES[selectedModality];
+  const currentStep = currentModality.steps[currentStepIndex];
 
   const addMessage = useCallback((content: string, isUser: boolean, isVoice: boolean = false) => {
     const message: TreatmentMessage = {
@@ -131,20 +385,45 @@ export default function VoiceTreatmentDemo() {
       setError('');
       setStatus('starting');
 
+      // Set up initial context based on modality
+      let initialContext = { ...demoContext };
+      if (selectedModality === 'problem_shifting' || selectedModality === 'belief_shifting' || selectedModality === 'identity_shifting' || selectedModality === 'blockage_shifting') {
+        // For problem-based modalities, we need a problem statement
+        if (!initialContext.problemStatement) {
+          initialContext.problemStatement = 'your problem'; // Will be replaced when user provides one
+        }
+      } else if (selectedModality === 'reality_shifting') {
+        // For reality shifting, we need a goal statement
+        if (!initialContext.goalStatement) {
+          initialContext.goalStatement = 'your goal'; // Will be replaced when user provides one
+        }
+      } else if (selectedModality === 'trauma_shifting') {
+        // For trauma shifting, we need an experience statement
+        if (!initialContext.experienceStatement) {
+          initialContext.experienceStatement = 'your experience'; // Will be replaced when user provides one
+        }
+      }
+
+      // Get the actual scripted response for the first step
+      const initialResponse = currentStep.scriptedResponse 
+        ? currentStep.scriptedResponse('', initialContext)
+        : currentStep.instruction;
+
       // 1. Create ephemeral session with treatment-specific instructions
-      const treatmentInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided demo session. 
+      const treatmentInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided ${currentModality.name} demo session. 
 
 Current step: ${currentStep.phase}
-Your instruction to give: "${currentStep.instruction}"
+Your instruction to give: "${initialResponse}"
 
 Rules:
 1. Speak naturally and conversationally
 2. Be empathetic and supportive
 3. Keep responses concise but warm
-4. Guide the user through the current step
-5. Don't move to the next step - just focus on the current instruction
+4. Guide the user through the current step using the exact scripted response
+5. Use the Mind Shifting methodology exactly as provided
 6. If user seems confused, gently repeat or clarify the current step
-7. This is a DEMO - remind them it's safe and separate from real treatment`;
+7. This is a DEMO - remind them it's safe and separate from real treatment
+8. Follow the treatment script precisely for authentic experience`;
 
       const sessionResponse = await fetch('/api/labs/openai-session', {
         method: 'POST',
@@ -187,8 +466,8 @@ Rules:
         setStatus('connected');
         setIsConnected(true);
         
-        // Add the initial treatment message
-        addMessage(currentStep.instruction, false, true);
+        // Add the initial treatment message using the actual scripted response
+        addMessage(initialResponse, false, true);
       };
 
       pc.onconnectionstatechange = () => {
@@ -267,26 +546,31 @@ Rules:
   };
 
   const nextStep = () => {
-    if (currentStepIndex < DEMO_TREATMENT_STEPS.length - 1) {
+    if (currentStepIndex < currentModality.steps.length - 1) {
       const newIndex = currentStepIndex + 1;
       setCurrentStepIndex(newIndex);
-      const nextStepData = DEMO_TREATMENT_STEPS[newIndex];
+      const nextStepData = currentModality.steps[newIndex];
       
-      addMessage(nextStepData.instruction, false, false);
+      // Get the actual scripted response if available
+      const actualResponse = nextStepData.scriptedResponse 
+        ? nextStepData.scriptedResponse(lastTranscript, demoContext)
+        : nextStepData.instruction;
+      
+      addMessage(actualResponse, false, false);
       
       // Update AI context if connected
       if (sessionRef.current.dataChannel?.readyState === 'open') {
-        const newInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided demo session. 
+        const newInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided ${currentModality.name} demo session. 
 
 Current step: ${nextStepData.phase}
-Your instruction to give: "${nextStepData.instruction}"
+Your instruction to give: "${actualResponse}"
 
 Rules:
 1. Speak naturally and conversationally
 2. Be empathetic and supportive
 3. Keep responses concise but warm
 4. Guide the user through the current step
-5. Don't move to the next step - just focus on the current instruction
+5. Use the exact scripted response provided
 6. If user seems confused, gently repeat or clarify the current step
 7. This is a DEMO - remind them it's safe and separate from real treatment`;
 
@@ -303,6 +587,12 @@ Rules:
     setMessages([]);
     setCurrentStepIndex(0);
     setLastTranscript('');
+    setDemoContext({
+      problemStatement: '',
+      goalStatement: '',
+      experienceStatement: '',
+      userResponses: {}
+    });
   };
 
   const stopAudio = () => {
@@ -336,12 +626,57 @@ Rules:
         </div>
       </div>
 
+      {/* Modality Selector */}
+      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+        <div className="flex items-center justify-between">
+          <div>
+            <h5 className="font-medium text-blue-900 dark:text-blue-200">
+              Treatment Modality: {currentModality.name}
+            </h5>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+              Using real treatment scripts from production system
+            </p>
+          </div>
+          <button
+            onClick={() => setShowModalitySelector(!showModalitySelector)}
+            disabled={isConnected}
+            className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Settings className="h-3 w-3" />
+            <span>Change</span>
+          </button>
+        </div>
+        
+        {showModalitySelector && !isConnected && (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {(Object.keys(TREATMENT_MODALITIES) as TreatmentModality[]).map((modality) => (
+              <button
+                key={modality}
+                onClick={() => {
+                  setSelectedModality(modality);
+                  setCurrentStepIndex(0);
+                  setMessages([]);
+                  setShowModalitySelector(false);
+                }}
+                className={`p-2 text-sm rounded-md border transition-colors ${
+                  selectedModality === modality
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                }`}
+              >
+                {TREATMENT_MODALITIES[modality].name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Current Step Info */}
       <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-md">
         <div className="flex items-center justify-between">
           <div>
             <h5 className="font-medium text-indigo-900 dark:text-indigo-200">
-              Step {currentStepIndex + 1} of {DEMO_TREATMENT_STEPS.length}: {currentStep.phase}
+              Step {currentStepIndex + 1} of {currentModality.steps.length}: {currentStep.phase}
             </h5>
             <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-1">
               Expected: {currentStep.expectedResponse}
@@ -351,11 +686,11 @@ Rules:
             <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div 
                 className="bg-indigo-600 h-2 rounded-full transition-all duration-300" 
-                style={{ width: `${((currentStepIndex + 1) / DEMO_TREATMENT_STEPS.length) * 100}%` }}
+                style={{ width: `${((currentStepIndex + 1) / currentModality.steps.length) * 100}%` }}
               ></div>
             </div>
             <span className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-              {Math.round(((currentStepIndex + 1) / DEMO_TREATMENT_STEPS.length) * 100)}%
+              {Math.round(((currentStepIndex + 1) / currentModality.steps.length) * 100)}%
             </span>
           </div>
         </div>
@@ -381,7 +716,7 @@ Rules:
 
         <button
           onClick={nextStep}
-          disabled={!isConnected || currentStepIndex >= DEMO_TREATMENT_STEPS.length - 1}
+          disabled={!isConnected || currentStepIndex >= currentModality.steps.length - 1}
           className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <MessageSquare className="h-4 w-4" />
