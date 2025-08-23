@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Brain, Mic, MicOff, Phone, PhoneOff, Play, Square, AlertCircle, CheckCircle, MessageSquare, RotateCcw, Settings } from 'lucide-react';
+import { Brain, Mic, MicOff, Phone, PhoneOff, Play, Square, AlertCircle, CheckCircle, MessageSquare, RotateCcw, Settings, Shield } from 'lucide-react';
+import { TreatmentStateMachineDemo } from './TreatmentStateMachineDemo';
 
 interface VoiceSession {
   pc: RTCPeerConnection | null;
@@ -497,6 +498,9 @@ export default function VoiceTreatmentDemo() {
     experienceStatement: '',
     userResponses: {}
   });
+  const [useStateMachine, setUseStateMachine] = useState(false);
+  const [stateMachineDemo, setStateMachineDemo] = useState<TreatmentStateMachineDemo | null>(null);
+  const [processingWithStateMachine, setProcessingWithStateMachine] = useState(false);
   
   const sessionRef = useRef<VoiceSession>({
     pc: null,
@@ -731,31 +735,74 @@ Rules:
     }
   };
 
-  const nextStep = () => {
-    if (currentStepIndex < currentModality.steps.length - 1) {
-      const newIndex = currentStepIndex + 1;
-      setCurrentStepIndex(newIndex);
-      const nextStepData = currentModality.steps[newIndex];
-      
-      // Get the actual scripted response if available
-      const actualResponse = nextStepData.scriptedResponse 
-        ? nextStepData.scriptedResponse(lastTranscript, demoContext)
-        : nextStepData.instruction;
-      
-      // Update context with user response
-      setDemoContext(prev => ({
-        ...prev,
-        userResponses: {
-          ...prev.userResponses,
-          [currentStep.id]: lastTranscript
+  const nextStep = async () => {
+    if (useStateMachine && stateMachineDemo) {
+      // Use real state machine processing
+      setProcessingWithStateMachine(true);
+      try {
+        const result = await stateMachineDemo.processUserInput(lastTranscript);
+        
+        if (result.scriptedResponse) {
+          addMessage(result.scriptedResponse, false, false);
+          
+          // Update AI context with state machine response
+          if (sessionRef.current.dataChannel?.readyState === 'open') {
+            const context = stateMachineDemo.getCurrentContext();
+            const newInstructions = `You are a Mind Shifting treatment assistant using the real treatment state machine.
+
+Current response from state machine: "${result.scriptedResponse}"
+Treatment context: ${context ? `Phase: ${context.currentPhase}, Step: ${context.currentStep}` : 'Unknown'}
+
+Rules:
+1. Use the EXACT response provided by the state machine
+2. Follow all validation and guardrails from the production system
+3. Speak naturally but maintain the treatment methodology
+4. This is a DEMO using real treatment logic
+5. If the user seems confused, the state machine will handle appropriate responses`;
+
+            sessionRef.current.dataChannel.send(JSON.stringify({
+              type: 'session.update',
+              session: { instructions: newInstructions }
+            }));
+          }
         }
-      }));
-      
-      addMessage(actualResponse, false, false);
-      
-      // Update AI context if connected
-      if (sessionRef.current.dataChannel?.readyState === 'open') {
-        const newInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided ${currentModality.name} demo session. 
+        
+        if (!result.canContinue) {
+          addMessage('Treatment session completed or requires attention.', false, false);
+        }
+        
+      } catch (error) {
+        console.error('State machine processing error:', error);
+        setError('Error processing with state machine');
+      } finally {
+        setProcessingWithStateMachine(false);
+      }
+    } else {
+      // Use simplified demo flow
+      if (currentStepIndex < currentModality.steps.length - 1) {
+        const newIndex = currentStepIndex + 1;
+        setCurrentStepIndex(newIndex);
+        const nextStepData = currentModality.steps[newIndex];
+        
+        // Get the actual scripted response if available
+        const actualResponse = nextStepData.scriptedResponse 
+          ? nextStepData.scriptedResponse(lastTranscript, demoContext)
+          : nextStepData.instruction;
+        
+        // Update context with user response
+        setDemoContext(prev => ({
+          ...prev,
+          userResponses: {
+            ...prev.userResponses,
+            [currentStep.id]: lastTranscript
+          }
+        }));
+        
+        addMessage(actualResponse, false, false);
+        
+        // Update AI context if connected
+        if (sessionRef.current.dataChannel?.readyState === 'open') {
+          const newInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided ${currentModality.name} demo session. 
 
 Current step: ${nextStepData.phase}
 Your instruction to give: "${actualResponse}"
@@ -769,10 +816,11 @@ Rules:
 6. If user seems confused, gently repeat or clarify the current step
 7. This is a DEMO - remind them it's safe and separate from real treatment`;
 
-        sessionRef.current.dataChannel.send(JSON.stringify({
-          type: 'session.update',
-          session: { instructions: newInstructions }
-        }));
+          sessionRef.current.dataChannel.send(JSON.stringify({
+            type: 'session.update',
+            session: { instructions: newInstructions }
+          }));
+        }
       }
     }
   };
@@ -788,7 +836,36 @@ Rules:
       experienceStatement: '',
       userResponses: {}
     });
+    
+    // Reset state machine if enabled
+    if (stateMachineDemo) {
+      stateMachineDemo.resetSession();
+    }
   };
+
+  const initializeStateMachine = async () => {
+    if (useStateMachine && !stateMachineDemo) {
+      const demo = new TreatmentStateMachineDemo();
+      setStateMachineDemo(demo);
+      
+      try {
+        const result = await demo.initializeSession(selectedModality);
+        if (result.scriptedResponse) {
+          addMessage(result.scriptedResponse, false, false);
+        }
+      } catch (error) {
+        console.error('Failed to initialize state machine:', error);
+        setError('Failed to initialize treatment state machine');
+      }
+    }
+  };
+
+  // Initialize state machine when enabled
+  useEffect(() => {
+    if (useStateMachine) {
+      initializeStateMachine();
+    }
+  }, [useStateMachine, selectedModality]);
 
   const stopAudio = () => {
     if (sessionRef.current.audioEl) {
@@ -821,6 +898,38 @@ Rules:
         </div>
       </div>
 
+      {/* State Machine Toggle */}
+      <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-md">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Shield className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <div>
+              <h5 className="font-medium text-purple-900 dark:text-purple-200">
+                Treatment State Machine {useStateMachine ? '(Active)' : '(Inactive)'}
+              </h5>
+              <p className="text-sm text-purple-700 dark:text-purple-300">
+                {useStateMachine ? 'Using real state machine with full validation & guardrails' : 'Using simplified demo scripts'}
+              </p>
+            </div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input 
+              type="checkbox" 
+              className="sr-only peer" 
+              checked={useStateMachine}
+              disabled={isConnected}
+              onChange={(e) => {
+                setUseStateMachine(e.target.checked);
+                if (!e.target.checked) {
+                  setStateMachineDemo(null);
+                }
+              }}
+            />
+            <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 peer-disabled:opacity-50"></div>
+          </label>
+        </div>
+      </div>
+
       {/* Modality Selector */}
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
         <div className="flex items-center justify-between">
@@ -829,7 +938,7 @@ Rules:
               Treatment Modality: {currentModality.name}
             </h5>
             <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-              Using real treatment scripts from production system
+              {useStateMachine ? 'Real state machine with production logic' : 'Simplified demo scripts'}
             </p>
           </div>
           <button
@@ -925,11 +1034,11 @@ Rules:
 
         <button
           onClick={nextStep}
-          disabled={!isConnected || currentStepIndex >= currentModality.steps.length - 1}
+          disabled={!isConnected || processingWithStateMachine || (!useStateMachine && currentStepIndex >= currentModality.steps.length - 1)}
           className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <MessageSquare className="h-4 w-4" />
-          <span>Next Step</span>
+          <span>{processingWithStateMachine ? 'Processing...' : useStateMachine ? 'Process Input' : 'Next Step'}</span>
         </button>
 
         <button
