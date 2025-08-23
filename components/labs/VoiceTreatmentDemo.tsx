@@ -499,6 +499,7 @@ export default function VoiceTreatmentDemo() {
     userResponses: {}
   });
   const [useStateMachine, setUseStateMachine] = useState(false);
+  const [scriptMode, setScriptMode] = useState(true);
   const [stateMachineDemo, setStateMachineDemo] = useState<TreatmentStateMachineDemo | null>(null);
   const [processingWithStateMachine, setProcessingWithStateMachine] = useState(false);
   
@@ -740,7 +741,7 @@ Rules:
       // Use real state machine processing
       setProcessingWithStateMachine(true);
       try {
-        const result = await stateMachineDemo.processUserInput(lastTranscript);
+        const result = await stateMachineDemo.processUserInput(lastTranscript, undefined, scriptMode);
         
         if (result.scriptedResponse) {
           addMessage(result.scriptedResponse, false, false);
@@ -849,7 +850,7 @@ Rules:
       setStateMachineDemo(demo);
       
       try {
-        const result = await demo.initializeSession(selectedModality);
+        const result = await demo.initializeSession(selectedModality, undefined, scriptMode);
         if (result.scriptedResponse) {
           addMessage(result.scriptedResponse, false, false);
         }
@@ -918,6 +919,7 @@ Rules:
               className="sr-only peer" 
               checked={useStateMachine}
               disabled={isConnected}
+              aria-label="Toggle treatment state machine"
               onChange={(e) => {
                 setUseStateMachine(e.target.checked);
                 if (!e.target.checked) {
@@ -929,6 +931,36 @@ Rules:
           </label>
         </div>
       </div>
+
+      {/* Script Mode Toggle */}
+      {useStateMachine && (
+        <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-md">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Shield className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <div>
+                <h5 className="font-medium text-indigo-900 dark:text-indigo-200">
+                  Script Mode {scriptMode ? '(Strict)' : '(Flexible)'}
+                </h5>
+                <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                  {scriptMode ? 'Sticks closely to written scripts with minimal AI interference' : 'Full state machine with AI assistance and validation'}
+                </p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={scriptMode}
+                disabled={isConnected}
+                onChange={(e) => setScriptMode(e.target.checked)}
+                aria-label="Toggle script mode"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+            </label>
+          </div>
+        </div>
+      )}
 
       {/* Modality Selector */}
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">

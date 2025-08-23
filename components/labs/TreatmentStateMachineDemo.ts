@@ -41,7 +41,7 @@ export class TreatmentStateMachineDemo {
   /**
    * Initialize a demo treatment session
    */
-  async initializeSession(modality: string, initialInput?: string): Promise<ProcessingResult> {
+  async initializeSession(modality: string, initialInput?: string, scriptMode: boolean = true): Promise<ProcessingResult> {
     try {
       const response = await fetch('/api/labs/treatment-demo', {
         method: 'POST',
@@ -50,7 +50,8 @@ export class TreatmentStateMachineDemo {
           action: 'initialize',
           sessionId: this.demoSessionId,
           modality,
-          initialInput
+          initialInput,
+          scriptMode
         })
       });
 
@@ -80,7 +81,7 @@ export class TreatmentStateMachineDemo {
   /**
    * Process user input using the real state machine via API
    */
-  async processUserInput(userInput: string, contextOverrides?: Partial<TreatmentContext>): Promise<ProcessingResult> {
+  async processUserInput(userInput: string, contextOverrides?: Partial<TreatmentContext>, scriptMode: boolean = true): Promise<ProcessingResult> {
     try {
       const response = await fetch('/api/labs/treatment-demo', {
         method: 'POST',
@@ -89,7 +90,8 @@ export class TreatmentStateMachineDemo {
           action: 'process',
           sessionId: this.demoSessionId,
           userInput,
-          contextOverrides
+          contextOverrides,
+          scriptMode
         })
       });
 
