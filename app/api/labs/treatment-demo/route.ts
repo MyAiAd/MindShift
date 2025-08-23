@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Script-focused processing that sticks closely to written scripts
+// Script-focused processing that uses the REAL state machine with validation but forces exact scripted responses
 async function processScriptMode(
   stateMachine: TreatmentStateMachine, 
   sessionId: string, 
@@ -110,36 +110,69 @@ async function processScriptMode(
   contextOverrides?: any
 ): Promise<any> {
   try {
-    // Get current context
-    const context = stateMachine.getContextForUndo(sessionId);
-    if (!context) {
-      throw new Error('Context not found');
-    }
-
-    // Update context with user response
-    context.userResponses[context.currentStep] = userInput;
-    context.lastActivity = new Date();
-
-    // Simple step progression without complex validation
-    const nextStepId = determineNextStepSimple(context);
+    // Use the REAL state machine processing but intercept AI assistance
+    const originalAIMethod = (stateMachine as any).checkAITriggers;
+    const originalValidationMethod = (stateMachine as any).validateUserInput;
     
-    if (nextStepId) {
-      context.currentStep = nextStepId;
+    // Override validation to use exact scripted responses for validation errors
+    (stateMachine as any).validateUserInput = function(userInput: string, step: any, context?: any) {
+      const result = originalValidationMethod.call(this, userInput, step, context);
       
-      // Get the scripted response directly
-      const scriptedResponse = getSimpleScriptedResponse(context, userInput);
+      if (!result.isValid && result.error) {
+        // Convert AI validation flags to exact scripted responses
+        if (result.error === 'AI_VALIDATION_NEEDED:problem_vs_question') {
+          return {
+            isValid: false,
+            error: 'How would you state that as a problem instead of a question?'
+          };
+        }
+        if (result.error === 'AI_VALIDATION_NEEDED:problem_vs_goal') {
+          return {
+            isValid: false,
+            error: 'How would you state that as a problem instead of a goal?'
+          };
+        }
+        if (result.error === 'AI_VALIDATION_NEEDED:goal_vs_problem') {
+          return {
+            isValid: false,
+            error: 'How would you state that as a goal instead of a problem?'
+          };
+        }
+        if (result.error === 'AI_VALIDATION_NEEDED:goal_vs_question') {
+          return {
+            isValid: false,
+            error: 'How would you state that as a goal instead of a question?'
+          };
+        }
+        if (result.error === 'AI_VALIDATION_NEEDED:single_negative_experience') {
+          return {
+            isValid: false,
+            error: 'It is important that we only work on one memory of a single event at a time, so please recall a significant event and tell me what the event was in a few words.'
+          };
+        }
+      }
       
-      return {
-        canContinue: true,
-        nextStep: nextStepId,
-        scriptedResponse
-      };
-    }
-
-    return {
-      canContinue: true,
-      scriptedResponse: "Thank you for sharing that. Let's continue."
+      return result;
     };
+    
+    // Disable AI triggers to prevent deviation from scripts
+    (stateMachine as any).checkAITriggers = function() {
+      return null; // No AI triggers in script mode
+    };
+
+    // Process with the real state machine
+    const result = await stateMachine.processUserInput(
+      sessionId,
+      userInput,
+      contextOverrides,
+      false // Don't bypass validation - we want the exact validation messages
+    );
+
+    // Restore original methods
+    (stateMachine as any).checkAITriggers = originalAIMethod;
+    (stateMachine as any).validateUserInput = originalValidationMethod;
+
+    return result;
   } catch (error) {
     console.error('Script mode processing error:', error);
     return {
@@ -149,76 +182,7 @@ async function processScriptMode(
   }
 }
 
-// Simple step progression logic for script mode
-function determineNextStepSimple(context: any): string | null {
-  const currentStep = context.currentStep;
-  const modality = context.metadata?.selectedMethod || 'problem_shifting';
-  
-  // Define simple step sequences for each modality
-  const stepSequences: Record<string, string[]> = {
-    problem_shifting: [
-      'mind_shifting_explanation',
-      'problem_shifting_intro',
-      'body_sensation_check',
-      'feel_solution_state',
-      'feel_good_state',
-      'deeper_feeling_inquiry',
-      'sensation_progression',
-      'integration_check'
-    ],
-    reality_shifting: [
-      'reality_goal_capture',
-      'reality_step_a1',
-      'reality_step_a2',
-      'reality_feel_reason',
-      'reality_feel_reason_2',
-      'reality_feel_reason_3',
-      'reality_integration'
-    ],
-    // Add other modalities as needed
-  };
-  
-  const sequence = stepSequences[modality] || stepSequences.problem_shifting;
-  const currentIndex = sequence.indexOf(currentStep);
-  
-  if (currentIndex >= 0 && currentIndex < sequence.length - 1) {
-    return sequence[currentIndex + 1];
-  }
-  
-  return null;
-}
 
-// Get simple scripted responses for script mode
-function getSimpleScriptedResponse(context: any, userInput: string): string {
-  const currentStep = context.currentStep;
-  const modality = context.metadata?.selectedMethod || 'problem_shifting';
-  
-  // Simple script responses that stick to the written scripts
-  const scriptResponses: Record<string, Record<string, string>> = {
-    problem_shifting: {
-      'mind_shifting_explanation': `Great! Let's work on that problem. What specific problem would you like to work on?`,
-      'problem_shifting_intro': `Thank you. Now, feel that problem... what do you feel in your body when you think about that problem?`,
-      'body_sensation_check': `Feel ${userInput}... what happens in yourself when you feel ${userInput}?`,
-      'feel_solution_state': `What would you feel like if "${userInput}" had already happened?`,
-      'feel_good_state': `Feel "${userInput}"... what does "${userInput}" feel like?`,
-      'deeper_feeling_inquiry': `Feel "${userInput}"... what does "${userInput}" feel like in your body?`,
-      'sensation_progression': `Feel "${userInput}"... what happens to "${userInput}" when you feel "${userInput}"?`,
-      'integration_check': `Great! How do you feel about the original problem now?`
-    },
-    reality_shifting: {
-      'reality_goal_capture': `What goal would you like to work on achieving?`,
-      'reality_step_a1': `Thank you. Now think about that goal... what do you feel when you think about achieving that goal?`,
-      'reality_step_a2': `Feel ${userInput}... what can you feel now?`,
-      'reality_feel_reason': `What's the reason you can't have that goal right now?`,
-      'reality_feel_reason_2': `Feel ${userInput}... what can you feel now?`,
-      'reality_feel_reason_3': `Feel ${userInput}... what's the first thing you notice about it?`,
-      'reality_integration': `Great! How do you feel about your goal now?`
-    }
-  };
-  
-  const modalityResponses = scriptResponses[modality] || scriptResponses.problem_shifting;
-  return modalityResponses[currentStep] || `Thank you for sharing "${userInput}". Let's continue.`;
-}
 
 // Helper functions to map modalities to phases/steps
 function getInitialPhase(modality: string): string {
