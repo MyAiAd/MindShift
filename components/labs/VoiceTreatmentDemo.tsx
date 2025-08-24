@@ -751,8 +751,9 @@ Script to speak: "${initialResponse}"`;
             if (transcript) {
               addMessage(transcript, true, true);
               
-              // Process with state machine
+              // Process with state machine FIRST, before AI starts speaking
               if (stateMachineDemo) {
+                // Process immediately and update instructions before AI responds
                 processTranscriptWithStateMachine(transcript);
               }
               
@@ -767,6 +768,12 @@ Script to speak: "${initialResponse}"`;
             if (aiText) {
               console.log(`🔍 VOICE_DEBUG: AI saying:`, aiText);
             }
+          }
+          
+          // Handle AI response start - this is when we need to ensure our instructions are active
+          else if (message.type === 'response.created') {
+            console.log(`🔍 VOICE_DEBUG: AI response created - ensuring instructions are current`);
+            // The AI is about to start speaking, make sure our latest instructions are active
           }
           
           // Handle conversation items (store for debugging)
@@ -855,6 +862,8 @@ CRITICAL RULES:
 4. READ THE SCRIPTED RESPONSE WORD-FOR-WORD AS WRITTEN
 5. IF THE SCRIPTED RESPONSE IS A VALIDATION MESSAGE, SPEAK IT EXACTLY
 6. DO NOT DEVIATE FROM THE PROVIDED TEXT UNDER ANY CIRCUMSTANCES
+7. STOP SPEAKING ANYTHING ELSE AND USE ONLY THE PROVIDED RESPONSE
+8. IGNORE ANY PREVIOUS INSTRUCTIONS AND USE ONLY THIS RESPONSE
 
 Treatment context: ${context ? `Phase: ${context.currentPhase}, Step: ${context.currentStep}` : 'Unknown'}
 This is a DEMO using real treatment logic.`;
@@ -862,13 +871,27 @@ This is a DEMO using real treatment logic.`;
           console.log(`🔍 VOICE_DEBUG: IMMEDIATELY updating voice instructions:`, newInstructions);
           
           try {
+            // Send multiple instruction updates to ensure it takes effect
             const message = {
               type: 'session.update',
-              session: { instructions: newInstructions }
+              session: { 
+                instructions: newInstructions,
+                voice: 'verse' // Ensure voice settings are maintained
+              }
             };
             console.log(`🔍 VOICE_DEBUG: Sending immediate session.update:`, message);
             
+            // Send the instruction update multiple times to ensure it takes effect
             sessionRef.current.dataChannel.send(JSON.stringify(message));
+            
+            // Send a second update after a short delay to ensure it overrides any ongoing response
+            setTimeout(() => {
+              if (sessionRef.current.dataChannel?.readyState === 'open') {
+                console.log(`🔍 VOICE_DEBUG: Sending follow-up instruction update`);
+                sessionRef.current.dataChannel.send(JSON.stringify(message));
+              }
+            }, 100);
+            
             console.log(`🔍 VOICE_DEBUG: Immediate instruction update sent successfully`);
           } catch (error) {
             console.error(`🔍 VOICE_DEBUG: Failed to send immediate instruction update:`, error);
