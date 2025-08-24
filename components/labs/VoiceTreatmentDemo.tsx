@@ -712,6 +712,38 @@ Rules:
           // Log any other message types for debugging
           if (message.type !== 'conversation.item.input_audio_transcription.completed') {
             console.log(`🔍 VOICE_DEBUG: Other message type:`, message.type, message);
+            
+            // Check for alternative user transcript message types
+            if (message.type.includes('input') || message.type.includes('transcript') || message.type.includes('speech')) {
+              console.log(`🔍 VOICE_DEBUG: POTENTIAL USER INPUT DETECTED:`, message.type, message);
+              
+              // Try to extract transcript from various possible message formats
+              const possibleTranscript = message.transcript || message.text || message.content || message.speech || '';
+              if (possibleTranscript) {
+                console.log(`🔍 VOICE_DEBUG: EXTRACTED TRANSCRIPT: "${possibleTranscript}"`);
+                setLastTranscript(possibleTranscript);
+                addMessage(possibleTranscript, true, true);
+                
+                // IMMEDIATELY process with state machine
+                if (useStateMachine && stateMachineDemo) {
+                  console.log(`🔍 VOICE_DEBUG: Processing extracted transcript with state machine`);
+                  processTranscriptWithStateMachine(possibleTranscript);
+                }
+              }
+            }
+            
+            // Handle speech detection events
+            if (message.type === 'input_audio_buffer.speech_started') {
+              console.log(`🔍 VOICE_DEBUG: User started speaking`);
+            }
+            
+            if (message.type === 'input_audio_buffer.speech_stopped') {
+              console.log(`🔍 VOICE_DEBUG: User stopped speaking`);
+            }
+            
+            if (message.type === 'input_audio_buffer.committed') {
+              console.log(`🔍 VOICE_DEBUG: User speech committed to processing`);
+            }
           }
         } catch (err) {
           console.log(`🔍 VOICE_DEBUG: Non-JSON message received:`, event.data);
