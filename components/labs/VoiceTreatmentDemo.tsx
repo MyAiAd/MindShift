@@ -840,159 +840,13 @@ Script to speak: "${initialResponse}"`;
   };
 
   const nextStep = async () => {
-    if (stateMachineDemo) {
-      // Use real state machine processing
-      console.log(`🔍 CLIENT_DEBUG: Starting state machine processing`);
-      console.log(`🔍 CLIENT_DEBUG: Script mode enabled: true (always)`);
-      console.log(`🔍 CLIENT_DEBUG: No user input available - voice only mode`);
-      
-      setProcessingWithStateMachine(true);
-      try {
-        // Since we're in voice-only mode, we'll use a placeholder or skip processing
-        console.log(`🔍 CLIENT_DEBUG: Voice-only mode - skipping text processing`);
-        return;
-        
-        console.log(`🔍 CLIENT_DEBUG: State machine result:`, result);
-        
-        if (result.scriptedResponse) {
-          console.log(`🔍 CLIENT_DEBUG: Adding scripted response:`, result.scriptedResponse);
-          addMessage(result.scriptedResponse, false, false);
-          
-          // Update AI context with state machine response
-          if (sessionRef.current.dataChannel?.readyState === 'open') {
-            const context = stateMachineDemo.getCurrentContext();
-            const newInstructions = `You are a Mind Shifting treatment assistant using the real treatment state machine.
-
-EXACT SCRIPTED RESPONSE TO SPEAK: "${result.scriptedResponse}"
-
-CRITICAL RULES:
-1. SPEAK THE EXACT WORDS ABOVE - DO NOT CHANGE, IMPROVE, OR INTERPRET THEM
-2. DO NOT ADD ANY ADDITIONAL WORDS OR EXPLANATIONS
-3. DO NOT MAKE THE RESPONSE MORE NATURAL OR CONVERSATIONAL
-4. READ THE SCRIPTED RESPONSE WORD-FOR-WORD AS WRITTEN
-5. IF THE SCRIPTED RESPONSE IS A VALIDATION MESSAGE, SPEAK IT EXACTLY
-6. DO NOT DEVIATE FROM THE PROVIDED TEXT UNDER ANY CIRCUMSTANCES
-7. DO NOT ASK FOLLOW-UP QUESTIONS UNLESS THEY ARE IN THE SCRIPT
-8. DO NOT OFFER SUGGESTIONS OR ALTERNATIVES
-9. DO NOT IMPROVISE OR MAKE THINGS UP
-10. IF THE SCRIPT IS A QUESTION, ASK ONLY THAT QUESTION
-11. IF THE SCRIPT IS A STATEMENT, SAY ONLY THAT STATEMENT
-
-Treatment context: ${context ? `Phase: ${context.currentPhase}, Step: ${context.currentStep}` : 'Unknown'}
-This is a DEMO using real treatment logic.
-
-REMEMBER: SPEAK ONLY THE EXACT SCRIPT PROVIDED - NOTHING MORE, NOTHING LESS.`;
-
-            console.log(`🔍 VOICE_DEBUG: Sending instructions to OpenAI voice:`, newInstructions);
-            console.log(`🔍 VOICE_DEBUG: Data channel state:`, sessionRef.current.dataChannel?.readyState);
-            
-            try {
-              // Try the standard session.update approach
-              const message = {
-                type: 'session.update',
-                session: { instructions: newInstructions }
-              };
-              console.log(`🔍 VOICE_DEBUG: Sending session.update message:`, message);
-              
-              sessionRef.current.dataChannel.send(JSON.stringify(message));
-              console.log(`🔍 VOICE_DEBUG: session.update message sent successfully`);
-              
-              // Also try alternative instruction update approach
-              setTimeout(() => {
-                try {
-                  if (sessionRef.current.dataChannel?.readyState === 'open') {
-                    const altMessage = {
-                      type: 'instruction.update',
-                      instruction: newInstructions
-                    };
-                    console.log(`🔍 VOICE_DEBUG: Sending alternative instruction.update message:`, altMessage);
-                    sessionRef.current.dataChannel.send(JSON.stringify(altMessage));
-                    console.log(`🔍 VOICE_DEBUG: instruction.update message sent successfully`);
-                  }
-                } catch (altError) {
-                  console.error(`🔍 VOICE_DEBUG: Failed to send alternative message:`, altError);
-                }
-              }, 100);
-              
-            } catch (error) {
-              console.error(`🔍 VOICE_DEBUG: Failed to send message:`, error);
-            }
-          }
-        } else {
-          console.log(`🔍 CLIENT_DEBUG: No scripted response in result`);
-        }
-        
-        if (!result.canContinue) {
-          console.log(`🔍 CLIENT_DEBUG: State machine says cannot continue, reason:`, result.reason);
-          addMessage('Treatment session completed or requires attention.', false, false);
-        }
-        
-      } catch (error) {
-        console.error('🔍 CLIENT_DEBUG: State machine processing error:', error);
-        setError('Error processing with state machine');
-      } finally {
-        setProcessingWithStateMachine(false);
-      }
-    } else {
-      console.log(`🔍 CLIENT_DEBUG: Using simplified demo scripts (not state machine)`);
-      console.log(`🔍 CLIENT_DEBUG: User input:`, lastTranscript);
-      // Use simplified demo flow
-      if (currentStepIndex < currentModality.steps.length - 1) {
-        const newIndex = currentStepIndex + 1;
-        setCurrentStepIndex(newIndex);
-        const nextStepData = currentModality.steps[newIndex];
-        
-        // Get the actual scripted response if available
-        const actualResponse = nextStepData.scriptedResponse 
-          ? nextStepData.scriptedResponse(lastTranscript, demoContext)
-          : nextStepData.instruction;
-        
-        // Update context with user response
-        setDemoContext(prev => ({
-          ...prev,
-          userResponses: {
-            ...prev.userResponses,
-            [currentStep.id]: lastTranscript
-          }
-        }));
-        
-        addMessage(actualResponse, false, false);
-        
-        // Update AI context if connected
-        if (sessionRef.current.dataChannel?.readyState === 'open') {
-          const newInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided ${currentModality.name} demo session. 
-
-EXACT SCRIPTED RESPONSE TO SPEAK: "${actualResponse}"
-
-CRITICAL RULES:
-1. SPEAK THE EXACT WORDS ABOVE - DO NOT CHANGE, IMPROVE, OR INTERPRET THEM
-2. DO NOT ADD ANY ADDITIONAL WORDS OR EXPLANATIONS
-3. DO NOT MAKE THE RESPONSE MORE NATURAL OR CONVERSATIONAL
-4. READ THE SCRIPTED RESPONSE WORD-FOR-WORD AS WRITTEN
-5. DO NOT DEVIATE FROM THE PROVIDED TEXT UNDER ANY CIRCUMSTANCES
-6. IF THE SCRIPTED RESPONSE IS A VALIDATION MESSAGE, SPEAK IT EXACTLY
-
-Current step: ${nextStepData.phase}
-This is a DEMO - safe and separate from real treatment.`;
-
-          console.log(`🔍 VOICE_DEBUG: Sending instructions to OpenAI voice:`, newInstructions);
-          console.log(`🔍 VOICE_DEBUG: Data channel state:`, sessionRef.current.dataChannel?.readyState);
-          
-          try {
-            const message = {
-              type: 'session.update',
-              session: { instructions: newInstructions }
-            };
-            console.log(`🔍 VOICE_DEBUG: Sending message:`, message);
-            
-            sessionRef.current.dataChannel.send(JSON.stringify(message));
-            console.log(`🔍 VOICE_DEBUG: Message sent successfully`);
-          } catch (error) {
-            console.error(`🔍 VOICE_DEBUG: Failed to send message:`, error);
-          }
-        }
-      }
-    }
+    console.log(`🔍 CLIENT_DEBUG: nextStep called - voice-only mode`);
+    console.log(`🔍 CLIENT_DEBUG: Voice-only mode - this function is for manual progression`);
+    console.log(`🔍 CLIENT_DEBUG: In voice mode, progression happens automatically via voice input`);
+    
+    // In voice-only mode, this function is mainly for manual progression
+    // The actual processing happens in the voice message handlers
+    addMessage('Voice session is active. Please speak your response.', false, false);
   };
 
   // Process transcript immediately with state machine and update voice instructions
@@ -1056,7 +910,6 @@ This is a DEMO using real treatment logic.`;
     cleanup();
     setMessages([]);
     setCurrentStepIndex(0);
-    setLastTranscript('');
     setDemoContext({
       problemStatement: '',
       goalStatement: '',
