@@ -489,7 +489,6 @@ export default function VoiceTreatmentDemo() {
   const [messages, setMessages] = useState<TreatmentMessage[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isListening, setIsListening] = useState(false);
-  const [lastTranscript, setLastTranscript] = useState('');
   const [selectedModality, setSelectedModality] = useState<TreatmentModality>('problem_shifting');
   const [showModalitySelector, setShowModalitySelector] = useState(false);
   const [demoContext, setDemoContext] = useState<DemoContext>({
@@ -500,8 +499,6 @@ export default function VoiceTreatmentDemo() {
   });
   const [stateMachineDemo, setStateMachineDemo] = useState<TreatmentStateMachineDemo | null>(null);
   const [processingWithStateMachine, setProcessingWithStateMachine] = useState(false);
-  const [lastAIResponse, setLastAIResponse] = useState('');
-  const [waitingForUserInput, setWaitingForUserInput] = useState(false);
   
   const sessionRef = useRef<VoiceSession>({
     pc: null,
@@ -591,8 +588,7 @@ export default function VoiceTreatmentDemo() {
         : currentStep.instruction;
 
       // Set initial state
-      setLastAIResponse('');
-      setWaitingForUserInput(false);
+      
 
       // 1. Create ephemeral session with treatment-specific instructions
       const treatmentInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided ${currentModality.name} demo session. 
@@ -696,7 +692,6 @@ Script to speak: "${initialResponse}"`;
           if (message.type === 'conversation.item.input_audio_transcription.completed') {
             const transcript = message.transcript || '';
             console.log(`🔍 VOICE_DEBUG: User transcript:`, transcript);
-            setLastTranscript(transcript);
             addMessage(transcript, true, true); // isUser: true - this is actual user input
             
                           // IMMEDIATELY process with state machine and update voice instructions
@@ -732,7 +727,6 @@ Script to speak: "${initialResponse}"`;
               const possibleTranscript = message.transcript || message.text || message.content || message.speech || '';
               if (possibleTranscript) {
                 console.log(`🔍 VOICE_DEBUG: EXTRACTED USER TRANSCRIPT: "${possibleTranscript}"`);
-                setLastTranscript(possibleTranscript);
                 addMessage(possibleTranscript, true, true); // isUser: true
                 
                 // IMMEDIATELY process with state machine
@@ -751,8 +745,6 @@ Script to speak: "${initialResponse}"`;
               const aiResponseText = message.delta || message.text || message.content || '';
               if (aiResponseText) {
                 console.log(`🔍 VOICE_DEBUG: AI is saying: "${aiResponseText}"`);
-                setLastAIResponse(prev => prev + aiResponseText);
-                setWaitingForUserInput(true);
                 // Note: We don't add AI responses as messages here because they're streamed
                 // The voice system handles the audio output directly
               }
@@ -1311,57 +1303,7 @@ This is a DEMO using real treatment logic.`;
         </div>
       )}
 
-      {/* Fallback Text Input for when voice transcription fails */}
-      {isConnected && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-          <p className="text-sm text-red-800 dark:text-red-200 mb-2 font-semibold">
-            ⚠️ Voice transcription is not working properly. Please use the text input below:
-          </p>
-          <div className="flex space-x-2">
-                         <input
-               type="text"
-               placeholder="Type your response here (voice transcription is not working)..."
-               className="flex-1 px-3 py-2 border border-red-300 dark:border-red-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  const input = e.currentTarget.value.trim();
-                  if (input) {
-                    console.log(`🔍 VOICE_DEBUG: Manual input: "${input}"`);
-                    setLastTranscript(input);
-                    setLastAIResponse('');
-                    setWaitingForUserInput(false);
-                    addMessage(input, true, false);
-                    if (stateMachineDemo) {
-                      processTranscriptWithStateMachine(input);
-                    }
-                    e.currentTarget.value = '';
-                  }
-                }
-              }}
-            />
-            <button
-              onClick={(e) => {
-                const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                const value = input.value.trim();
-                if (value) {
-                  console.log(`🔍 VOICE_DEBUG: Manual input: "${value}"`);
-                  setLastTranscript(value);
-                  setLastAIResponse('');
-                  setWaitingForUserInput(false);
-                  addMessage(value, true, false);
-                  if (stateMachineDemo) {
-                    processTranscriptWithStateMachine(value);
-                  }
-                  input.value = '';
-                }
-              }}
-                             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-semibold"
-            >
-              Send
-            </button>
-          </div>
-        </div>
-      )}
+      
 
       {/* Messages */}
       {messages.length > 0 && (
