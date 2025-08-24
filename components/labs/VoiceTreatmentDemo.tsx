@@ -758,16 +758,20 @@ Rules:
             const context = stateMachineDemo.getCurrentContext();
             const newInstructions = `You are a Mind Shifting treatment assistant using the real treatment state machine.
 
-Current response from state machine: "${result.scriptedResponse}"
+EXACT SCRIPTED RESPONSE TO SPEAK: "${result.scriptedResponse}"
+
+CRITICAL RULES:
+1. SPEAK THE EXACT WORDS ABOVE - DO NOT CHANGE, IMPROVE, OR INTERPRET THEM
+2. DO NOT ADD ANY ADDITIONAL WORDS OR EXPLANATIONS
+3. DO NOT MAKE THE RESPONSE MORE NATURAL OR CONVERSATIONAL
+4. READ THE SCRIPTED RESPONSE WORD-FOR-WORD AS WRITTEN
+5. IF THE SCRIPTED RESPONSE IS A VALIDATION MESSAGE, SPEAK IT EXACTLY
+6. DO NOT DEVIATE FROM THE PROVIDED TEXT UNDER ANY CIRCUMSTANCES
+
 Treatment context: ${context ? `Phase: ${context.currentPhase}, Step: ${context.currentStep}` : 'Unknown'}
+This is a DEMO using real treatment logic.`;
 
-Rules:
-1. Use the EXACT response provided by the state machine
-2. Follow all validation and guardrails from the production system
-3. Speak naturally but maintain the treatment methodology
-4. This is a DEMO using real treatment logic
-5. If the user seems confused, the state machine will handle appropriate responses`;
-
+            console.log(`🔍 VOICE_DEBUG: Sending instructions to OpenAI voice:`, newInstructions);
             sessionRef.current.dataChannel.send(JSON.stringify({
               type: 'session.update',
               session: { instructions: newInstructions }
@@ -817,18 +821,20 @@ Rules:
         if (sessionRef.current.dataChannel?.readyState === 'open') {
           const newInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided ${currentModality.name} demo session. 
 
+EXACT SCRIPTED RESPONSE TO SPEAK: "${actualResponse}"
+
+CRITICAL RULES:
+1. SPEAK THE EXACT WORDS ABOVE - DO NOT CHANGE, IMPROVE, OR INTERPRET THEM
+2. DO NOT ADD ANY ADDITIONAL WORDS OR EXPLANATIONS
+3. DO NOT MAKE THE RESPONSE MORE NATURAL OR CONVERSATIONAL
+4. READ THE SCRIPTED RESPONSE WORD-FOR-WORD AS WRITTEN
+5. DO NOT DEVIATE FROM THE PROVIDED TEXT UNDER ANY CIRCUMSTANCES
+6. IF THE SCRIPTED RESPONSE IS A VALIDATION MESSAGE, SPEAK IT EXACTLY
+
 Current step: ${nextStepData.phase}
-Your instruction to give: "${actualResponse}"
+This is a DEMO - safe and separate from real treatment.`;
 
-Rules:
-1. Speak naturally and conversationally
-2. Be empathetic and supportive
-3. Keep responses concise but warm
-4. Guide the user through the current step
-5. Use the exact scripted response provided
-6. If user seems confused, gently repeat or clarify the current step
-7. This is a DEMO - remind them it's safe and separate from real treatment`;
-
+          console.log(`🔍 VOICE_DEBUG: Sending instructions to OpenAI voice:`, newInstructions);
           sessionRef.current.dataChannel.send(JSON.stringify({
             type: 'session.update',
             session: { instructions: newInstructions }
