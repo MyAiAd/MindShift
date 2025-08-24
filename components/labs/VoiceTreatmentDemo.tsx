@@ -739,11 +739,18 @@ Rules:
   const nextStep = async () => {
     if (useStateMachine && stateMachineDemo) {
       // Use real state machine processing
+      console.log(`🔍 CLIENT_DEBUG: Starting state machine processing`);
+      console.log(`🔍 CLIENT_DEBUG: Script mode enabled:`, scriptMode);
+      console.log(`🔍 CLIENT_DEBUG: User input:`, lastTranscript);
+      
       setProcessingWithStateMachine(true);
       try {
         const result = await stateMachineDemo.processUserInput(lastTranscript, undefined, scriptMode);
         
+        console.log(`🔍 CLIENT_DEBUG: State machine result:`, result);
+        
         if (result.scriptedResponse) {
+          console.log(`🔍 CLIENT_DEBUG: Adding scripted response:`, result.scriptedResponse);
           addMessage(result.scriptedResponse, false, false);
           
           // Update AI context with state machine response
@@ -766,19 +773,24 @@ Rules:
               session: { instructions: newInstructions }
             }));
           }
+        } else {
+          console.log(`🔍 CLIENT_DEBUG: No scripted response in result`);
         }
         
         if (!result.canContinue) {
+          console.log(`🔍 CLIENT_DEBUG: State machine says cannot continue, reason:`, result.reason);
           addMessage('Treatment session completed or requires attention.', false, false);
         }
         
       } catch (error) {
-        console.error('State machine processing error:', error);
+        console.error('🔍 CLIENT_DEBUG: State machine processing error:', error);
         setError('Error processing with state machine');
       } finally {
         setProcessingWithStateMachine(false);
       }
     } else {
+      console.log(`🔍 CLIENT_DEBUG: Using simplified demo scripts (not state machine)`);
+      console.log(`🔍 CLIENT_DEBUG: User input:`, lastTranscript);
       // Use simplified demo flow
       if (currentStepIndex < currentModality.steps.length - 1) {
         const newIndex = currentStepIndex + 1;

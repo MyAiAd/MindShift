@@ -16,6 +16,9 @@ export async function POST(request: NextRequest) {
     let stateMachine = demoSessions.get(sessionId);
     
     if (action === 'initialize') {
+      console.log(`🔍 SCRIPT_MODE_DEBUG: Initializing new demo session for modality: ${modality}`);
+      console.log(`🔍 SCRIPT_MODE_DEBUG: Script mode enabled: ${scriptMode}`);
+      
       // Create new state machine for this demo session
       stateMachine = new TreatmentStateMachine();
       demoSessions.set(sessionId, stateMachine);
@@ -45,13 +48,19 @@ export async function POST(request: NextRequest) {
         }
       };
 
+      console.log(`🔍 SCRIPT_MODE_DEBUG: Initial context created:`, initialContext);
+      
       // Initialize the session
-      const result = initialInput 
-        ? await stateMachine.processUserInput(sessionId, initialInput, initialContext, scriptMode)
-        : await stateMachine.processUserInput(sessionId, 'start', initialContext, scriptMode);
+      const initInput = initialInput || 'start';
+      console.log(`🔍 SCRIPT_MODE_DEBUG: Initializing with input: "${initInput}"`);
+      
+      const result = await stateMachine.processUserInput(sessionId, initInput, initialContext, scriptMode);
+      
+      console.log(`🔍 SCRIPT_MODE_DEBUG: Initialization result:`, result);
 
       // Get the current context
       const currentContext = stateMachine.getContextForUndo(sessionId);
+      console.log(`🔍 SCRIPT_MODE_DEBUG: Final context after initialization:`, currentContext);
 
       return NextResponse.json({
         processingResult: result,
@@ -109,57 +118,84 @@ async function processScriptMode(
   userInput: string, 
   contextOverrides?: any
 ): Promise<any> {
+  console.log(`🔍 SCRIPT_MODE_DEBUG: Starting processScriptMode for session ${sessionId}`);
+  console.log(`🔍 SCRIPT_MODE_DEBUG: User input: "${userInput}"`);
+  
   try {
+    // Get current context for debugging
+    const context = stateMachine.getContextForUndo(sessionId);
+    console.log(`🔍 SCRIPT_MODE_DEBUG: Current context:`, {
+      currentPhase: context?.currentPhase,
+      currentStep: context?.currentStep,
+      modality: context?.metadata?.selectedMethod
+    });
+
     // Use the REAL state machine processing but intercept AI assistance
     const originalAIMethod = (stateMachine as any).checkAITriggers;
     const originalValidationMethod = (stateMachine as any).validateUserInput;
     
     // Override validation to use exact scripted responses for validation errors
     (stateMachine as any).validateUserInput = function(userInput: string, step: any, context?: any) {
+      console.log(`🔍 SCRIPT_MODE_DEBUG: Validating input "${userInput}" for step "${step?.id}"`);
       const result = originalValidationMethod.call(this, userInput, step, context);
+      console.log(`🔍 SCRIPT_MODE_DEBUG: Validation result:`, result);
       
       if (!result.isValid && result.error) {
+        console.log(`🔍 SCRIPT_MODE_DEBUG: Converting validation error "${result.error}" to exact scripted response`);
         // Convert AI validation flags to exact scripted responses
         if (result.error === 'AI_VALIDATION_NEEDED:problem_vs_question') {
-          return {
+          const exactResponse = {
             isValid: false,
             error: 'How would you state that as a problem instead of a question?'
           };
+          console.log(`🔍 SCRIPT_MODE_DEBUG: Returning exact response:`, exactResponse);
+          return exactResponse;
         }
         if (result.error === 'AI_VALIDATION_NEEDED:problem_vs_goal') {
-          return {
+          const exactResponse = {
             isValid: false,
             error: 'How would you state that as a problem instead of a goal?'
           };
+          console.log(`🔍 SCRIPT_MODE_DEBUG: Returning exact response:`, exactResponse);
+          return exactResponse;
         }
         if (result.error === 'AI_VALIDATION_NEEDED:goal_vs_problem') {
-          return {
+          const exactResponse = {
             isValid: false,
             error: 'How would you state that as a goal instead of a problem?'
           };
+          console.log(`🔍 SCRIPT_MODE_DEBUG: Returning exact response:`, exactResponse);
+          return exactResponse;
         }
         if (result.error === 'AI_VALIDATION_NEEDED:goal_vs_question') {
-          return {
+          const exactResponse = {
             isValid: false,
             error: 'How would you state that as a goal instead of a question?'
           };
+          console.log(`🔍 SCRIPT_MODE_DEBUG: Returning exact response:`, exactResponse);
+          return exactResponse;
         }
         if (result.error === 'AI_VALIDATION_NEEDED:single_negative_experience') {
-          return {
+          const exactResponse = {
             isValid: false,
             error: 'It is important that we only work on one memory of a single event at a time, so please recall a significant event and tell me what the event was in a few words.'
           };
+          console.log(`🔍 SCRIPT_MODE_DEBUG: Returning exact response:`, exactResponse);
+          return exactResponse;
         }
       }
       
+      console.log(`🔍 SCRIPT_MODE_DEBUG: No validation error conversion needed, returning original result:`, result);
       return result;
     };
     
     // Disable AI triggers to prevent deviation from scripts
-    (stateMachine as any).checkAITriggers = function() {
+    (stateMachine as any).checkAITriggers = function(userInput: string, step: any, context: any) {
+      console.log(`🔍 SCRIPT_MODE_DEBUG: AI triggers called but disabled in script mode`);
       return null; // No AI triggers in script mode
     };
 
+    console.log(`🔍 SCRIPT_MODE_DEBUG: Processing with real state machine...`);
     // Process with the real state machine
     const result = await stateMachine.processUserInput(
       sessionId,
@@ -168,10 +204,13 @@ async function processScriptMode(
       false // Don't bypass validation - we want the exact validation messages
     );
 
+    console.log(`🔍 SCRIPT_MODE_DEBUG: State machine result:`, result);
+
     // Restore original methods
     (stateMachine as any).checkAITriggers = originalAIMethod;
     (stateMachine as any).validateUserInput = originalValidationMethod;
 
+    console.log(`🔍 SCRIPT_MODE_DEBUG: Returning final result:`, result);
     return result;
   } catch (error) {
     console.error('Script mode processing error:', error);
