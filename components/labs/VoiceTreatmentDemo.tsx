@@ -499,6 +499,7 @@ export default function VoiceTreatmentDemo() {
   });
   const [stateMachineDemo, setStateMachineDemo] = useState<TreatmentStateMachineDemo | null>(null);
   const [processingWithStateMachine, setProcessingWithStateMachine] = useState(false);
+  const [conversationItems, setConversationItems] = useState<Map<string, any>>(new Map());
   
   const sessionRef = useRef<VoiceSession>({
     pc: null,
@@ -688,14 +689,14 @@ Script to speak: "${initialResponse}"`;
           const message = JSON.parse(event.data);
           console.log(`🔍 VOICE_DEBUG: Received message from OpenAI:`, message);
           
-          // Handle conversation events if needed
+                    // Handle conversation events if needed
           if (message.type === 'conversation.item.input_audio_transcription.completed') {
             const transcript = message.transcript || '';
             console.log(`🔍 VOICE_DEBUG: User transcript:`, transcript);
             addMessage(transcript, true, true); // isUser: true - this is actual user input
             
-                          // IMMEDIATELY process with state machine and update voice instructions
-              if (stateMachineDemo) {
+            // IMMEDIATELY process with state machine and update voice instructions
+            if (stateMachineDemo) {
               console.log(`🔍 VOICE_DEBUG: Immediately processing transcript with state machine`);
               processTranscriptWithStateMachine(transcript);
             }
@@ -707,6 +708,17 @@ Script to speak: "${initialResponse}"`;
               setDemoContext(prev => ({ ...prev, goalStatement: transcript.trim() }));
             } else if (currentStep.id === 'trauma_shifting_intro' && transcript.trim()) {
               setDemoContext(prev => ({ ...prev, experienceStatement: transcript.trim() }));
+            }
+          }
+          
+          // NEW: Track conversation items for transcript extraction
+          if (message.type === 'conversation.item.created') {
+            console.log(`🔍 VOICE_DEBUG: Conversation item created:`, message);
+            
+            // Track conversation items for transcript extraction
+            if (message.item && message.item.id) {
+              setConversationItems(prev => new Map(prev).set(message.item.id, message.item));
+              console.log(`🔍 VOICE_DEBUG: Stored conversation item: ${message.item.id}`);
             }
           }
           
@@ -804,8 +816,57 @@ Script to speak: "${initialResponse}"`;
                 } else {
                   console.log(`🔍 VOICE_DEBUG: No transcript found in fallback check - transcription may be failing`);
                   
-                  // Add a placeholder message to indicate we heard the user but transcription failed
-                  addMessage("[Voice detected but transcription failed - please try speaking again]", true, true);
+                  // NEW: Try to extract transcript from conversation item
+                  console.log(`🔍 VOICE_DEBUG: Attempting to extract transcript from conversation item`);
+                  
+                  // Check if we can find the conversation item that was created
+                  if (message.item_id) {
+                    console.log(`🔍 VOICE_DEBUG: Looking for conversation item: ${message.item_id}`);
+                    
+                    // Try to find any transcript data in the conversation
+                    const conversationItem = message.item || {};
+                    const itemTranscript = conversationItem.transcript || conversationItem.text || conversationItem.content || '';
+                    
+                    if (itemTranscript && itemTranscript.trim().length > 0) {
+                      console.log(`🔍 VOICE_DEBUG: CONVERSATION ITEM TRANSCRIPT FOUND: "${itemTranscript}"`);
+                      addMessage(itemTranscript, true, true);
+                      
+                      if (stateMachineDemo) {
+                        console.log(`🔍 VOICE_DEBUG: Processing conversation item transcript with state machine`);
+                        processTranscriptWithStateMachine(itemTranscript);
+                      }
+                    } else {
+                      console.log(`🔍 VOICE_DEBUG: No transcript in conversation item either`);
+                      
+                      // NEW: Check stored conversation items
+                      const storedItem = conversationItems.get(message.item_id);
+                      if (storedItem) {
+                        console.log(`🔍 VOICE_DEBUG: Found stored conversation item:`, storedItem);
+                        const storedTranscript = storedItem.transcript || storedItem.text || storedItem.content || '';
+                        
+                        if (storedTranscript && storedTranscript.trim().length > 0) {
+                          console.log(`🔍 VOICE_DEBUG: STORED CONVERSATION ITEM TRANSCRIPT FOUND: "${storedTranscript}"`);
+                          addMessage(storedTranscript, true, true);
+                          
+                          if (stateMachineDemo) {
+                            console.log(`🔍 VOICE_DEBUG: Processing stored conversation item transcript with state machine`);
+                            processTranscriptWithStateMachine(storedTranscript);
+                          }
+                        } else {
+                          console.log(`🔍 VOICE_DEBUG: No transcript in stored conversation item either`);
+                          addMessage("[Voice detected but transcription failed - please try speaking again]", true, true);
+                        }
+                      } else {
+                        console.log(`🔍 VOICE_DEBUG: No stored conversation item found for: ${message.item_id}`);
+                        addMessage("[Voice detected but transcription failed - please try speaking again]", true, true);
+                      }
+                    }
+                  } else {
+                    console.log(`🔍 VOICE_DEBUG: No item_id found in committed message`);
+                    
+                    // Add a placeholder message to indicate we heard the user but transcription failed
+                    addMessage("[Voice detected but transcription failed - please try speaking again]", true, true);
+                  }
                 }
               }, 2000); // Wait 2 seconds for transcription to complete
             }
