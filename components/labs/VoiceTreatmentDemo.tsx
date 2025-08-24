@@ -919,7 +919,23 @@ Script to speak: "${initialResponse}"`;
                           });
                           
                           if (contentItem && typeof contentItem === 'object') {
-                            const extractedTranscript = contentItem.transcript || contentItem.text || contentItem.content || '';
+                            console.log(`🔍 VOICE_DEBUG: Content item full structure:`, contentItem);
+                            
+                            // Try to extract transcript from various possible fields
+                            let extractedTranscript = '';
+                            if (contentItem.transcript) {
+                              extractedTranscript = contentItem.transcript;
+                            } else if (contentItem.text) {
+                              extractedTranscript = contentItem.text;
+                            } else if (contentItem.content) {
+                              extractedTranscript = contentItem.content;
+                            } else if (contentItem.delta) {
+                              extractedTranscript = contentItem.delta;
+                            } else if (contentItem.value) {
+                              extractedTranscript = contentItem.value;
+                            }
+                            
+                            // Ensure it's a string
                             storedTranscript = typeof extractedTranscript === 'string' ? extractedTranscript : String(extractedTranscript || '');
                             console.log(`🔍 VOICE_DEBUG: Extracted transcript from content item: "${storedTranscript}"`);
                           }
