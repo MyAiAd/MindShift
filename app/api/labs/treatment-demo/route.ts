@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TreatmentStateMachine, TreatmentContext, ProcessingResult } from '@/lib/treatment-state-machine';
 
+export async function GET(request: NextRequest) {
+  console.log('🔍 API_DEBUG: Treatment demo GET called');
+  return NextResponse.json({ 
+    message: 'Treatment demo API is accessible!',
+    timestamp: new Date().toISOString()
+  });
+}
+
 // In-memory storage for demo sessions (in production, you might use Redis)
 const demoSessions = new Map<string, TreatmentStateMachine>();
 
 export async function POST(request: NextRequest) {
+  console.log('🔍 API_DEBUG: Treatment demo API called');
   try {
     const body = await request.json();
+    console.log('🔍 API_DEBUG: Request body:', body);
     const { action, sessionId, modality, initialInput, userInput, contextOverrides, scriptMode = true } = body;
 
     if (!sessionId) {
