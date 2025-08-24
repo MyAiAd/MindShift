@@ -502,6 +502,8 @@ export default function VoiceTreatmentDemo() {
   const [scriptMode, setScriptMode] = useState(true);
   const [stateMachineDemo, setStateMachineDemo] = useState<TreatmentStateMachineDemo | null>(null);
   const [processingWithStateMachine, setProcessingWithStateMachine] = useState(false);
+  const [lastAIResponse, setLastAIResponse] = useState('');
+  const [waitingForUserInput, setWaitingForUserInput] = useState(false);
   
   const sessionRef = useRef<VoiceSession>({
     pc: null,
@@ -589,6 +591,10 @@ export default function VoiceTreatmentDemo() {
       const initialResponse = currentStep.scriptedResponse 
         ? currentStep.scriptedResponse('', initialContext)
         : currentStep.instruction;
+
+      // Set initial state
+      setLastAIResponse('');
+      setWaitingForUserInput(false);
 
       // 1. Create ephemeral session with treatment-specific instructions
       const treatmentInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided ${currentModality.name} demo session. 
@@ -742,6 +748,8 @@ Script to speak: "${initialResponse}"`;
               const aiResponseText = message.delta || message.text || message.content || '';
               if (aiResponseText) {
                 console.log(`🔍 VOICE_DEBUG: AI is saying: "${aiResponseText}"`);
+                setLastAIResponse(prev => prev + aiResponseText);
+                setWaitingForUserInput(true);
                 // Note: We don't add AI responses as messages here because they're streamed
                 // The voice system handles the audio output directly
               }
@@ -765,16 +773,42 @@ Script to speak: "${initialResponse}"`;
                 message.type === 'input_audio_transcription.completed' ||
                 message.type === 'user_input_transcription' ||
                 message.type === 'input_transcript' ||
-                message.type === 'conversation.item.input_audio_transcription.delta') {
+                message.type === 'conversation.item.input_audio_transcription.delta' ||
+                message.type === 'input_audio_transcription.delta' ||
+                message.type === 'conversation.item.input_audio_transcription.started' ||
+                message.type === 'input_audio_transcription.started') {
               const transcript = message.transcript || message.text || message.content || message.delta || '';
               console.log(`🔍 VOICE_DEBUG: USER INPUT DETECTED: "${transcript}"`);
               setLastTranscript(transcript);
+              setLastAIResponse(''); // Reset AI response tracking
+              setWaitingForUserInput(false); // No longer waiting for user input
               addMessage(transcript, true, true); // isUser: true
               
               // IMMEDIATELY process with state machine and update voice instructions
               if (useStateMachine && stateMachineDemo) {
                 console.log(`🔍 VOICE_DEBUG: Immediately processing user input with state machine`);
                 processTranscriptWithStateMachine(transcript);
+              }
+            }
+            
+            // Also check for any message that might contain user input
+            if (message.transcript || message.text || message.content || message.delta) {
+              // Only process if it's NOT an AI response
+              if (!message.type.includes('response') && !message.type.includes('output')) {
+                const possibleUserInput = message.transcript || message.text || message.content || message.delta || '';
+                if (possibleUserInput && possibleUserInput.trim().length > 0) {
+                  console.log(`🔍 VOICE_DEBUG: POTENTIAL USER INPUT FOUND: "${possibleUserInput}" (type: ${message.type})`);
+                  setLastTranscript(possibleUserInput);
+                  setLastAIResponse(''); // Reset AI response tracking
+                  setWaitingForUserInput(false); // No longer waiting for user input
+                  addMessage(possibleUserInput, true, true); // isUser: true
+                  
+                  // IMMEDIATELY process with state machine and update voice instructions
+                  if (useStateMachine && stateMachineDemo) {
+                    console.log(`🔍 VOICE_DEBUG: Immediately processing potential user input with state machine`);
+                    processTranscriptWithStateMachine(possibleUserInput);
+                  }
+                }
               }
             }
           }
