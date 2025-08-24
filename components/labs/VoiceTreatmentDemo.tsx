@@ -684,9 +684,12 @@ Rules:
       dataChannel.addEventListener('message', (event) => {
         try {
           const message = JSON.parse(event.data);
+          console.log(`🔍 VOICE_DEBUG: Received message from OpenAI:`, message);
+          
           // Handle conversation events if needed
           if (message.type === 'conversation.item.input_audio_transcription.completed') {
             const transcript = message.transcript || '';
+            console.log(`🔍 VOICE_DEBUG: User transcript:`, transcript);
             setLastTranscript(transcript);
             addMessage(transcript, true, true);
             
@@ -699,7 +702,13 @@ Rules:
               setDemoContext(prev => ({ ...prev, experienceStatement: transcript.trim() }));
             }
           }
+          
+          // Log any other message types for debugging
+          if (message.type !== 'conversation.item.input_audio_transcription.completed') {
+            console.log(`🔍 VOICE_DEBUG: Other message type:`, message.type, message);
+          }
         } catch (err) {
+          console.log(`🔍 VOICE_DEBUG: Non-JSON message received:`, event.data);
           // Ignore non-JSON messages
         }
       });
@@ -772,10 +781,39 @@ Treatment context: ${context ? `Phase: ${context.currentPhase}, Step: ${context.
 This is a DEMO using real treatment logic.`;
 
             console.log(`🔍 VOICE_DEBUG: Sending instructions to OpenAI voice:`, newInstructions);
-            sessionRef.current.dataChannel.send(JSON.stringify({
-              type: 'session.update',
-              session: { instructions: newInstructions }
-            }));
+            console.log(`🔍 VOICE_DEBUG: Data channel state:`, sessionRef.current.dataChannel?.readyState);
+            
+            try {
+              // Try the standard session.update approach
+              const message = {
+                type: 'session.update',
+                session: { instructions: newInstructions }
+              };
+              console.log(`🔍 VOICE_DEBUG: Sending session.update message:`, message);
+              
+              sessionRef.current.dataChannel.send(JSON.stringify(message));
+              console.log(`🔍 VOICE_DEBUG: session.update message sent successfully`);
+              
+              // Also try alternative instruction update approach
+              setTimeout(() => {
+                try {
+                  if (sessionRef.current.dataChannel?.readyState === 'open') {
+                    const altMessage = {
+                      type: 'instruction.update',
+                      instruction: newInstructions
+                    };
+                    console.log(`🔍 VOICE_DEBUG: Sending alternative instruction.update message:`, altMessage);
+                    sessionRef.current.dataChannel.send(JSON.stringify(altMessage));
+                    console.log(`🔍 VOICE_DEBUG: instruction.update message sent successfully`);
+                  }
+                } catch (altError) {
+                  console.error(`🔍 VOICE_DEBUG: Failed to send alternative message:`, altError);
+                }
+              }, 100);
+              
+            } catch (error) {
+              console.error(`🔍 VOICE_DEBUG: Failed to send message:`, error);
+            }
           }
         } else {
           console.log(`🔍 CLIENT_DEBUG: No scripted response in result`);
@@ -835,10 +873,20 @@ Current step: ${nextStepData.phase}
 This is a DEMO - safe and separate from real treatment.`;
 
           console.log(`🔍 VOICE_DEBUG: Sending instructions to OpenAI voice:`, newInstructions);
-          sessionRef.current.dataChannel.send(JSON.stringify({
-            type: 'session.update',
-            session: { instructions: newInstructions }
-          }));
+          console.log(`🔍 VOICE_DEBUG: Data channel state:`, sessionRef.current.dataChannel?.readyState);
+          
+          try {
+            const message = {
+              type: 'session.update',
+              session: { instructions: newInstructions }
+            };
+            console.log(`🔍 VOICE_DEBUG: Sending message:`, message);
+            
+            sessionRef.current.dataChannel.send(JSON.stringify(message));
+            console.log(`🔍 VOICE_DEBUG: Message sent successfully`);
+          } catch (error) {
+            console.error(`🔍 VOICE_DEBUG: Failed to send message:`, error);
+          }
         }
       }
     }
