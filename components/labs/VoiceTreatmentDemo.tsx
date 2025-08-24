@@ -229,17 +229,21 @@ export default function VoiceTreatmentDemo() {
         body: JSON.stringify({
           model: 'gpt-4o-realtime-preview-2024-12-17',
           voice: 'verse',
-          instructions: `You are a Mind Shifting treatment assistant. Speak exactly what you are instructed to speak.`,
+          instructions: `You are a Mind Shifting treatment assistant. You must ONLY speak exactly what you are instructed to speak. Do not generate any responses on your own.`,
           // CRITICAL: Enable transcription
           input_audio_transcription: {
             model: 'whisper-1'
           },
-          // CRITICAL: Enable voice detection but cancel automatic responses
+          // CRITICAL: Disable automatic responses - we want manual control only
           turn_detection: {
             type: 'server_vad',
             threshold: 0.5,
             prefix_padding_ms: 300,
-            silence_duration_ms: 800  // Slightly longer to prevent premature responses
+            silence_duration_ms: 800
+          },
+          // CRITICAL: Disable automatic responses
+          response_format: {
+            type: 'text'
           }
         })
       });
@@ -311,7 +315,7 @@ export default function VoiceTreatmentDemo() {
         const sessionConfig = {
           type: 'session.update',
           session: {
-            instructions: `You are a Mind Shifting treatment assistant. Speak exactly what you are instructed to speak.`,
+            instructions: `You are a Mind Shifting treatment assistant. You must ONLY speak exactly what you are instructed to speak. Do not generate any responses on your own.`,
             voice: 'verse',
             input_audio_transcription: {
               model: 'whisper-1'
@@ -321,6 +325,10 @@ export default function VoiceTreatmentDemo() {
               threshold: 0.5,
               prefix_padding_ms: 300,
               silence_duration_ms: 800
+            },
+            // CRITICAL: Disable automatic responses
+            response_format: {
+              type: 'text'
             }
           }
         };
@@ -328,6 +336,24 @@ export default function VoiceTreatmentDemo() {
         console.log('🔍 VOICE_DEBUG: Sending session config:', sessionConfig);
         dataChannel.send(JSON.stringify(sessionConfig));
         console.log('🔍 VOICE_DEBUG: Session configuration sent successfully');
+        
+        // CRITICAL: Send additional configuration to disable automatic responses
+        setTimeout(() => {
+          const disableAutoConfig = {
+            type: 'session.update',
+            session: {
+              instructions: `You are a Mind Shifting treatment assistant. You must ONLY speak exactly what you are instructed to speak. Do not generate any responses on your own. Never respond automatically.`,
+              turn_detection: {
+                type: 'server_vad',
+                threshold: 0.5,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 800
+              }
+            }
+          };
+          dataChannel.send(JSON.stringify(disableAutoConfig));
+          console.log('🔍 VOICE_DEBUG: Auto-response disable config sent');
+        }, 100);
       });
 
       // 5. CRITICAL: Manual response handling
@@ -388,13 +414,20 @@ export default function VoiceTreatmentDemo() {
             if (isLikelyManual) {
               console.log(`🔍 VOICE_DEBUG: Response created - likely manual, allowing it to proceed`);
             } else {
-              console.log(`🔍 VOICE_DEBUG: Automatic response created - cancelling it`);
+              console.log(`🔍 VOICE_DEBUG: Automatic response created - cancelling it immediately`);
               
               if (sessionRef.current.dataChannel?.readyState === 'open') {
                 try {
                   const cancelMessage = { type: 'response.cancel' };
                   sessionRef.current.dataChannel.send(JSON.stringify(cancelMessage));
                   console.log(`🔍 VOICE_DEBUG: Automatic response cancellation sent`);
+                  
+                  // Also send a stop message to ensure it's cancelled
+                  setTimeout(() => {
+                    const stopMessage = { type: 'response.stop' };
+                    sessionRef.current.dataChannel?.send(JSON.stringify(stopMessage));
+                    console.log(`🔍 VOICE_DEBUG: Response stop message sent as backup`);
+                  }, 50);
                 } catch (error) {
                   console.error(`🔍 VOICE_DEBUG: Failed to cancel automatic response:`, error);
                 }
