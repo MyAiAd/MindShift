@@ -1012,9 +1012,10 @@ This is a DEMO - safe and separate from real treatment.`;
     if (!stateMachineDemo) return;
     
     console.log(`🔍 VOICE_DEBUG: Processing transcript: "${transcript}"`);
+    console.log(`🔍 VOICE_DEBUG: About to call stateMachineDemo.processUserInput`);
     
     try {
-              const result = await stateMachineDemo.processUserInput(transcript, undefined, true);
+      const result = await stateMachineDemo.processUserInput(transcript, undefined, true);
       console.log(`🔍 VOICE_DEBUG: State machine result:`, result);
       
       if (result.scriptedResponse) {

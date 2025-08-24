@@ -83,6 +83,15 @@ export class TreatmentStateMachineDemo {
    */
   async processUserInput(userInput: string, contextOverrides?: Partial<TreatmentContext>, scriptMode: boolean = true): Promise<ProcessingResult> {
     try {
+      console.log(`🔍 CLIENT_DEBUG: Making API call to /api/labs/treatment-demo-simple`);
+      console.log(`🔍 CLIENT_DEBUG: Request payload:`, {
+        action: 'process',
+        sessionId: this.demoSessionId,
+        userInput,
+        contextOverrides,
+        scriptMode
+      });
+      
       const response = await fetch('/api/labs/treatment-demo-simple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,11 +104,17 @@ export class TreatmentStateMachineDemo {
         })
       });
 
+      console.log(`🔍 CLIENT_DEBUG: API response status:`, response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to process input');
+        console.error(`🔍 CLIENT_DEBUG: API call failed with status:`, response.status);
+        const errorText = await response.text();
+        console.error(`🔍 CLIENT_DEBUG: Error response:`, errorText);
+        throw new Error(`Failed to process input: ${response.status} ${errorText}`);
       }
 
       const result = await response.json();
+      console.log(`🔍 CLIENT_DEBUG: API response result:`, result);
       if (result.context) {
         this.currentContext = result.context;
       }
