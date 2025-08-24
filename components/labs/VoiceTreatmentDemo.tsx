@@ -730,8 +730,13 @@ Script to speak: "${initialResponse}"`;
                 hasText: !!message.item.text
               });
               
-              setConversationItems(prev => new Map(prev).set(message.item.id, message.item));
-              console.log(`🔍 VOICE_DEBUG: Stored conversation item: ${message.item.id}`);
+              setConversationItems(prev => {
+                const newMap = new Map(prev);
+                newMap.set(message.item.id, message.item);
+                console.log(`🔍 VOICE_DEBUG: Stored conversation item: ${message.item.id}`);
+                console.log(`🔍 VOICE_DEBUG: Total conversation items now: ${newMap.size}`);
+                return newMap;
+              });
             }
           }
           
@@ -881,11 +886,26 @@ Script to speak: "${initialResponse}"`;
                         
                         // Check content array for transcript data
                         let storedTranscript = '';
+                        console.log(`🔍 VOICE_DEBUG: Examining stored item content:`, {
+                          hasContent: !!storedItem.content,
+                          isArray: Array.isArray(storedItem.content),
+                          contentLength: storedItem.content?.length || 0,
+                          contentFirstItem: storedItem.content?.[0]
+                        });
+                        
                         if (storedItem.content && Array.isArray(storedItem.content) && storedItem.content.length > 0) {
                           // Look for transcript in content array
                           const contentItem = storedItem.content[0];
+                          console.log(`🔍 VOICE_DEBUG: Content item details:`, {
+                            hasContentItem: !!contentItem,
+                            isObject: typeof contentItem === 'object',
+                            contentItemKeys: contentItem ? Object.keys(contentItem) : [],
+                            contentItem: contentItem
+                          });
+                          
                           if (contentItem && typeof contentItem === 'object') {
                             storedTranscript = contentItem.transcript || contentItem.text || contentItem.content || '';
+                            console.log(`🔍 VOICE_DEBUG: Extracted transcript from content item: "${storedTranscript}"`);
                           }
                         }
                         
