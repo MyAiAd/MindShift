@@ -919,14 +919,16 @@ Script to speak: "${initialResponse}"`;
                           });
                           
                           if (contentItem && typeof contentItem === 'object') {
-                            storedTranscript = contentItem.transcript || contentItem.text || contentItem.content || '';
+                            const extractedTranscript = contentItem.transcript || contentItem.text || contentItem.content || '';
+                            storedTranscript = typeof extractedTranscript === 'string' ? extractedTranscript : String(extractedTranscript || '');
                             console.log(`🔍 VOICE_DEBUG: Extracted transcript from content item: "${storedTranscript}"`);
                           }
                         }
                         
                         // Fallback to direct fields
                         if (!storedTranscript) {
-                          storedTranscript = storedItem.transcript || storedItem.text || storedItem.content || '';
+                          const fallbackTranscript = storedItem.transcript || storedItem.text || storedItem.content || '';
+                          storedTranscript = typeof fallbackTranscript === 'string' ? fallbackTranscript : String(fallbackTranscript || '');
                         }
                         
                         if (storedTranscript && storedTranscript.trim().length > 0) {
@@ -964,14 +966,15 @@ Script to speak: "${initialResponse}"`;
               // Only process if it's NOT an AI response
               if (!message.type.includes('response') && !message.type.includes('output')) {
                 const possibleUserInput = message.transcript || message.text || message.content || message.delta || '';
-                if (possibleUserInput && possibleUserInput.trim().length > 0) {
-                  console.log(`🔍 VOICE_DEBUG: POTENTIAL USER INPUT FOUND: "${possibleUserInput}" (type: ${message.type})`);
-                  addMessage(possibleUserInput, true, true); // isUser: true
+                const safeUserInput = typeof possibleUserInput === 'string' ? possibleUserInput : String(possibleUserInput || '');
+                if (safeUserInput && safeUserInput.trim().length > 0) {
+                  console.log(`🔍 VOICE_DEBUG: POTENTIAL USER INPUT FOUND: "${safeUserInput}" (type: ${message.type})`);
+                  addMessage(safeUserInput, true, true); // isUser: true
                   
                   // IMMEDIATELY process with state machine and update voice instructions
                   if (stateMachineDemo) {
                     console.log(`🔍 VOICE_DEBUG: Immediately processing potential user input with state machine`);
-                    processTranscriptWithStateMachine(possibleUserInput);
+                    processTranscriptWithStateMachine(safeUserInput);
                   }
                 }
               }
