@@ -167,8 +167,13 @@ export default function VoiceTreatmentDemo() {
           input_audio_transcription: {
             model: 'whisper-1'
           },
-          // CRITICAL: Disable automatic responses - we control them manually
-          turn_detection: null
+          // CRITICAL: Enable voice detection but cancel automatic responses
+          turn_detection: {
+            type: 'server_vad',
+            threshold: 0.5,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 800  // Slightly longer to prevent premature responses
+          }
         })
       });
 
@@ -254,7 +259,7 @@ export default function VoiceTreatmentDemo() {
       dataChannel.addEventListener('open', () => {
         console.log('🔍 VOICE_DEBUG: DataChannel opened, configuring session...');
         
-        // Configure session with manual control
+        // Configure session with voice detection but manual response control
         const sessionConfig = {
           type: 'session.update',
           session: {
@@ -263,7 +268,12 @@ export default function VoiceTreatmentDemo() {
             input_audio_transcription: {
               model: 'whisper-1'
             },
-            turn_detection: null  // CRITICAL: Disable automatic responses
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 800
+            }
           }
         };
         
@@ -301,27 +311,29 @@ export default function VoiceTreatmentDemo() {
                   if (scriptedResponse) {
                     console.log(`🔍 VOICE_DEBUG: Creating manual response: "${scriptedResponse}"`);
                     
-                    // Manually create the response with our exact text
-                    if (sessionRef.current.dataChannel?.readyState === 'open') {
-                      try {
-                        const responseMessage = {
-                          type: 'response.create',
-                          response: {
-                            modalities: ['audio', 'text'],
-                            instructions: `Speak exactly and only this text: "${scriptedResponse}". Do not add any other words before or after.`
-                          }
-                        };
-                        
-                        sessionRef.current.dataChannel.send(JSON.stringify(responseMessage));
-                        console.log(`🔍 VOICE_DEBUG: Manual response creation sent`);
-                        
-                        // Add the AI response to our message history
-                        addMessage(scriptedResponse, false, true);
-                        
-                      } catch (error) {
-                        console.error(`🔍 VOICE_DEBUG: Failed to create manual response:`, error);
+                    // Wait for any automatic response cancellation to complete before creating our response
+                    setTimeout(() => {
+                      if (sessionRef.current.dataChannel?.readyState === 'open') {
+                        try {
+                          const responseMessage = {
+                            type: 'response.create',
+                            response: {
+                              modalities: ['audio', 'text'],
+                              instructions: `Speak exactly and only this text: "${scriptedResponse}". Do not add any other words before or after.`
+                            }
+                          };
+                          
+                          sessionRef.current.dataChannel.send(JSON.stringify(responseMessage));
+                          console.log(`🔍 VOICE_DEBUG: Manual response creation sent`);
+                          
+                          // Add the AI response to our message history
+                          addMessage(scriptedResponse, false, true);
+                          
+                        } catch (error) {
+                          console.error(`🔍 VOICE_DEBUG: Failed to create manual response:`, error);
+                        }
                       }
-                    }
+                    }, 100); // Small delay ensures cancellation completes
                   } else {
                     console.log(`🔍 VOICE_DEBUG: No scripted response available for manual creation`);
                   }
@@ -338,6 +350,21 @@ export default function VoiceTreatmentDemo() {
             const aiText = message.delta;
             if (aiText) {
               console.log(`🔍 VOICE_DEBUG: AI saying:`, aiText);
+            }
+          }
+          
+          // Handle automatic response creation - CANCEL IT IMMEDIATELY
+          else if (message.type === 'response.created') {
+            console.log(`🔍 VOICE_DEBUG: Automatic response created - cancelling it`);
+            
+            if (sessionRef.current.dataChannel?.readyState === 'open') {
+              try {
+                const cancelMessage = { type: 'response.cancel' };
+                sessionRef.current.dataChannel.send(JSON.stringify(cancelMessage));
+                console.log(`🔍 VOICE_DEBUG: Automatic response cancellation sent`);
+              } catch (error) {
+                console.error(`🔍 VOICE_DEBUG: Failed to cancel automatic response:`, error);
+              }
             }
           }
           

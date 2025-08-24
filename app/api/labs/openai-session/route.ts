@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         voice,
         ...(instructions && { instructions }),
         ...(input_audio_transcription && { input_audio_transcription }),
-        ...(turn_detection !== undefined && { turn_detection }) // Allow null values
+        ...(turn_detection && { turn_detection }) // Allow both null and object values
       }),
     });
 
