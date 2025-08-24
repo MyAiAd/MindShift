@@ -500,12 +500,14 @@ export default function VoiceTreatmentDemo() {
   const [stateMachineDemo, setStateMachineDemo] = useState<TreatmentStateMachineDemo | null>(null);
   const [processingWithStateMachine, setProcessingWithStateMachine] = useState(false);
   const [conversationItems, setConversationItems] = useState<Map<string, any>>(new Map());
+  const conversationItemsRef = useRef<Map<string, any>>(new Map());
   
   // Track when conversation items are being cleared
   useEffect(() => {
     console.log(`🔍 VOICE_DEBUG: Conversation items state changed - count: ${conversationItems.size}`);
     if (conversationItems.size === 0) {
       console.log(`🔍 VOICE_DEBUG: WARNING - Conversation items were cleared/reset!`);
+      console.log(`🔍 VOICE_DEBUG: Stack trace for state reset:`, new Error().stack);
     }
   }, [conversationItems]);
   
@@ -745,6 +747,10 @@ Script to speak: "${initialResponse}"`;
                 console.log(`🔍 VOICE_DEBUG: Total conversation items now: ${newMap.size}`);
                 return newMap;
               });
+              
+              // Also store in ref for persistence across re-renders
+              conversationItemsRef.current.set(message.item.id, message.item);
+              console.log(`🔍 VOICE_DEBUG: Stored in ref - ref count: ${conversationItemsRef.current.size}`);
             }
           }
           
@@ -879,8 +885,8 @@ Script to speak: "${initialResponse}"`;
                     } else {
                       console.log(`🔍 VOICE_DEBUG: No transcript in conversation item either`);
                       
-                      // NEW: Check stored conversation items
-                      const storedItem = conversationItems.get(message.item_id);
+                      // NEW: Check stored conversation items (use ref for persistence)
+                      const storedItem = conversationItemsRef.current.get(message.item_id);
                       if (storedItem) {
                         console.log(`🔍 VOICE_DEBUG: Found stored conversation item:`, {
                           id: storedItem.id,
@@ -938,6 +944,8 @@ Script to speak: "${initialResponse}"`;
                       } else {
                         console.log(`🔍 VOICE_DEBUG: No stored conversation item found for: ${message.item_id}`);
                         console.log(`🔍 VOICE_DEBUG: Available conversation items:`, Array.from(conversationItems.keys()));
+                        console.log(`🔍 VOICE_DEBUG: Ref conversation items count: ${conversationItemsRef.current.size}`);
+                        console.log(`🔍 VOICE_DEBUG: Ref conversation item keys:`, Array.from(conversationItemsRef.current.keys()));
                         addMessage("[Voice detected but transcription failed - please try speaking again]", true, true);
                       }
                     }
