@@ -721,6 +721,8 @@ Script to speak: "${initialResponse}"`;
                 id: message.item.id,
                 type: message.item.type,
                 content: message.item.content,
+                contentLength: message.item.content?.length || 0,
+                contentFirstItem: message.item.content?.[0],
                 transcript: message.item.transcript,
                 text: message.item.text,
                 hasContent: !!message.item.content,
@@ -815,7 +817,21 @@ Script to speak: "${initialResponse}"`;
                 console.log(`🔍 VOICE_DEBUG: Checking for delayed transcription after speech committed`);
                 
                 // Try to extract any available transcript from the conversation
-                const possibleTranscript = message.transcript || message.text || message.content || message.delta || '';
+                let possibleTranscript = '';
+                
+                // Check content array for transcript data
+                if (message.content && Array.isArray(message.content) && message.content.length > 0) {
+                  // Look for transcript in content array
+                  const contentItem = message.content[0];
+                  if (contentItem && typeof contentItem === 'object') {
+                    possibleTranscript = contentItem.transcript || contentItem.text || contentItem.content || '';
+                  }
+                }
+                
+                // Fallback to direct fields
+                if (!possibleTranscript) {
+                  possibleTranscript = message.transcript || message.text || message.content || message.delta || '';
+                }
                 if (possibleTranscript && possibleTranscript.trim().length > 0) {
                   console.log(`🔍 VOICE_DEBUG: FALLBACK TRANSCRIPT FOUND: "${possibleTranscript}"`);
                   addMessage(possibleTranscript, true, true);
@@ -863,7 +879,20 @@ Script to speak: "${initialResponse}"`;
                           hasText: !!storedItem.text
                         });
                         
-                        const storedTranscript = storedItem.transcript || storedItem.text || storedItem.content || '';
+                        // Check content array for transcript data
+                        let storedTranscript = '';
+                        if (storedItem.content && Array.isArray(storedItem.content) && storedItem.content.length > 0) {
+                          // Look for transcript in content array
+                          const contentItem = storedItem.content[0];
+                          if (contentItem && typeof contentItem === 'object') {
+                            storedTranscript = contentItem.transcript || contentItem.text || contentItem.content || '';
+                          }
+                        }
+                        
+                        // Fallback to direct fields
+                        if (!storedTranscript) {
+                          storedTranscript = storedItem.transcript || storedItem.text || storedItem.content || '';
+                        }
                         
                         if (storedTranscript && storedTranscript.trim().length > 0) {
                           console.log(`🔍 VOICE_DEBUG: STORED CONVERSATION ITEM TRANSCRIPT FOUND: "${storedTranscript}"`);
