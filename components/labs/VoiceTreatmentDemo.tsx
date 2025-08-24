@@ -1313,15 +1313,15 @@ This is a DEMO using real treatment logic.`;
 
       {/* Fallback Text Input for when voice transcription fails */}
       {isConnected && (
-        <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
-            If voice input isn't working, you can type your response here:
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+          <p className="text-sm text-red-800 dark:text-red-200 mb-2 font-semibold">
+            ⚠️ Voice transcription is not working properly. Please use the text input below:
           </p>
           <div className="flex space-x-2">
-            <input
-              type="text"
-              placeholder="Type your response..."
-              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                         <input
+               type="text"
+               placeholder="Type your response here (voice transcription is not working)..."
+               className="flex-1 px-3 py-2 border border-red-300 dark:border-red-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-red-500"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   const input = e.currentTarget.value.trim();
@@ -1355,7 +1355,7 @@ This is a DEMO using real treatment logic.`;
                   input.value = '';
                 }
               }}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-semibold"
             >
               Send
             </button>
