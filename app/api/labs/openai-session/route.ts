@@ -9,7 +9,13 @@ export async function POST(request: NextRequest) {
 
     // Get request body for any custom session parameters
     const body = await request.json().catch(() => ({}));
-    const { model = 'gpt-4o-realtime-preview-2024-12-17', voice = 'verse', instructions } = body;
+    const { 
+      model = 'gpt-4o-realtime-preview-2024-12-17', 
+      voice = 'verse', 
+      instructions,
+      input_audio_transcription,
+      turn_detection
+    } = body;
 
     // Create ephemeral client secret for WebRTC
     const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
@@ -21,7 +27,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model,
         voice,
-        ...(instructions && { instructions })
+        ...(instructions && { instructions }),
+        ...(input_audio_transcription && { input_audio_transcription }),
+        ...(turn_detection && { turn_detection })
       }),
     });
 

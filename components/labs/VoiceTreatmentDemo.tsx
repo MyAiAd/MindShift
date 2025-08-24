@@ -497,6 +497,26 @@ export default function VoiceTreatmentDemo() {
     experienceStatement: '',
     userResponses: {}
   });
+
+  // Add context update helper function
+  const updateContextFromTranscript = (transcript: string) => {
+    if (currentStep.id === 'problem_input' && transcript.trim()) {
+      setDemoContext(prev => ({ ...prev, problemStatement: transcript.trim() }));
+    } else if (currentStep.id === 'reality_goal_capture' && transcript.trim()) {
+      setDemoContext(prev => ({ ...prev, goalStatement: transcript.trim() }));
+    } else if (currentStep.id === 'trauma_shifting_intro' && transcript.trim()) {
+      setDemoContext(prev => ({ ...prev, experienceStatement: transcript.trim() }));
+    }
+    
+    // Store user response
+    setDemoContext(prev => ({
+      ...prev,
+      userResponses: {
+        ...prev.userResponses,
+        [currentStep.id]: transcript.trim()
+      }
+    }));
+  };
   const [stateMachineDemo, setStateMachineDemo] = useState<TreatmentStateMachineDemo | null>(null);
   const [processingWithStateMachine, setProcessingWithStateMachine] = useState(false);
   const [conversationItems, setConversationItems] = useState<Map<string, any>>(new Map());
@@ -625,7 +645,17 @@ Script to speak: "${initialResponse}"`;
         body: JSON.stringify({
           model: 'gpt-4o-realtime-preview-2024-12-17',
           voice: 'verse',
-          instructions: treatmentInstructions
+          instructions: treatmentInstructions,
+          // ADD CRITICAL TRANSCRIPTION SETTINGS:
+          input_audio_transcription: {
+            model: 'whisper-1'  // Enable transcription
+          },
+          turn_detection: {
+            type: 'server_vad',  // Server-side voice activity detection
+            threshold: 0.5,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 500
+          }
         })
       });
 
@@ -684,138 +714,76 @@ Script to speak: "${initialResponse}"`;
       sessionRef.current.dataChannel = dataChannel;
 
       dataChannel.addEventListener('open', () => {
-        // Send initial session update
-        dataChannel.send(JSON.stringify({
+        console.log('🔍 VOICE_DEBUG: DataChannel opened, configuring session...');
+        
+        // Send session update with transcription enabled
+        const sessionConfig = {
           type: 'session.update',
-          session: { 
+          session: {
             instructions: treatmentInstructions,
-            voice: 'verse'
+            voice: 'verse',
+            input_audio_transcription: {
+              model: 'whisper-1'
+            },
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 500
+            }
           }
-        }));
+        };
+        
+        console.log('🔍 VOICE_DEBUG: Sending session config:', sessionConfig);
+        dataChannel.send(JSON.stringify(sessionConfig));
       });
 
       dataChannel.addEventListener('message', (event) => {
         try {
           const message = JSON.parse(event.data);
-          console.log(`🔍 VOICE_DEBUG: Received message from OpenAI:`, message);
+          console.log(`🔍 VOICE_DEBUG: Received message:`, message.type, message);
           
-                    // Handle conversation events if needed
+          // Handle user transcription - THIS IS THE KEY EVENT
           if (message.type === 'conversation.item.input_audio_transcription.completed') {
-            const transcript = message.transcript || '';
+            const transcript = message.transcript?.trim();
             console.log(`🔍 VOICE_DEBUG: User transcript:`, transcript);
-            addMessage(transcript, true, true); // isUser: true - this is actual user input
             
-            // IMMEDIATELY process with state machine and update voice instructions
-            if (stateMachineDemo) {
-              console.log(`🔍 VOICE_DEBUG: Immediately processing transcript with state machine`);
-              processTranscriptWithStateMachine(transcript);
-            }
-            
-            // Capture problem/goal/experience based on current step
-            if (currentStep.id === 'problem_input' && transcript.trim()) {
-              setDemoContext(prev => ({ ...prev, problemStatement: transcript.trim() }));
-            } else if (currentStep.id === 'reality_goal_capture' && transcript.trim()) {
-              setDemoContext(prev => ({ ...prev, goalStatement: transcript.trim() }));
-            } else if (currentStep.id === 'trauma_shifting_intro' && transcript.trim()) {
-              setDemoContext(prev => ({ ...prev, experienceStatement: transcript.trim() }));
+            if (transcript) {
+              addMessage(transcript, true, true);
+              
+              // Process with state machine
+              if (stateMachineDemo) {
+                processTranscriptWithStateMachine(transcript);
+              }
+              
+              // Update context based on current step
+              updateContextFromTranscript(transcript);
             }
           }
           
-          // NEW: Track conversation items for transcript extraction
-          if (message.type === 'conversation.item.created') {
-            console.log(`🔍 VOICE_DEBUG: Conversation item created:`, message);
-            
-            // Track conversation items for transcript extraction
-            if (message.item && message.item.id) {
-              console.log(`🔍 VOICE_DEBUG: Conversation item details:`, {
-                id: message.item.id,
-                type: message.item.type,
-                content: message.item.content,
-                contentLength: message.item.content?.length || 0,
-                contentFirstItem: message.item.content?.[0],
-                transcript: message.item.transcript,
-                text: message.item.text,
-                hasContent: !!message.item.content,
-                hasTranscript: !!message.item.transcript,
-                hasText: !!message.item.text
-              });
-              
+          // Handle AI responses (for logging)
+          else if (message.type === 'response.audio_transcript.delta') {
+            const aiText = message.delta;
+            if (aiText) {
+              console.log(`🔍 VOICE_DEBUG: AI saying:`, aiText);
+            }
+          }
+          
+          // Handle conversation items (store for debugging)
+          else if (message.type === 'conversation.item.created') {
+            if (message.item?.id) {
               setConversationItems(prev => {
                 const newMap = new Map(prev);
                 newMap.set(message.item.id, message.item);
-                console.log(`🔍 VOICE_DEBUG: Stored conversation item: ${message.item.id}`);
-                console.log(`🔍 VOICE_DEBUG: Total conversation items now: ${newMap.size}`);
                 return newMap;
               });
-              
-              // Also store in ref for persistence across re-renders
-              conversationItemsRef.current.set(message.item.id, message.item);
-              console.log(`🔍 VOICE_DEBUG: Stored in ref - ref count: ${conversationItemsRef.current.size}`);
             }
           }
           
-          // Log any other message types for debugging
-          if (message.type !== 'conversation.item.input_audio_transcription.completed') {
-            console.log(`🔍 VOICE_DEBUG: Other message type:`, message.type, message);
-            
-            // Debug: Log all non-response messages to understand what we're receiving
-            if (!message.type.includes('response') && !message.type.includes('output')) {
-              console.log(`🔍 VOICE_DEBUG: NON-RESPONSE MESSAGE:`, message.type, message);
-            }
-            
-            // ONLY process messages that are clearly user input, not AI responses
-            if (message.type.includes('input') && !message.type.includes('response') && !message.type.includes('output')) {
-              console.log(`🔍 VOICE_DEBUG: POTENTIAL USER INPUT DETECTED:`, message.type, message);
-              
-              // Try to extract transcript from various possible message formats
-              const possibleTranscript = message.transcript || message.text || message.content || message.speech || '';
-              if (possibleTranscript) {
-                console.log(`🔍 VOICE_DEBUG: EXTRACTED USER TRANSCRIPT: "${possibleTranscript}"`);
-                addMessage(possibleTranscript, true, true); // isUser: true
-                
-                // IMMEDIATELY process with state machine
-                if (stateMachineDemo) {
-                  console.log(`🔍 VOICE_DEBUG: Processing extracted transcript with state machine`);
-                  processTranscriptWithStateMachine(possibleTranscript);
-                }
-              }
-            }
-            
-            // Handle AI response transcripts (these should NOT be treated as user input)
-            if (message.type.includes('response') && message.type.includes('audio_transcript')) {
-              console.log(`🔍 VOICE_DEBUG: AI RESPONSE TRANSCRIPT (NOT USER INPUT):`, message);
-              
-              // Extract the AI's response text
-              const aiResponseText = message.delta || message.text || message.content || '';
-              if (aiResponseText) {
-                console.log(`🔍 VOICE_DEBUG: AI is saying: "${aiResponseText}"`);
-                // Note: We don't add AI responses as messages here because they're streamed
-                // The voice system handles the audio output directly
-              }
-            }
-            
-            // Handle speech detection events
-            if (message.type === 'input_audio_buffer.speech_started') {
-              console.log(`🔍 VOICE_DEBUG: User started speaking`);
-            }
-            
-            if (message.type === 'input_audio_buffer.speech_stopped') {
-              console.log(`🔍 VOICE_DEBUG: User stopped speaking`);
-            }
-            
-            if (message.type === 'input_audio_buffer.committed') {
-              console.log(`🔍 VOICE_DEBUG: User speech committed to processing`);
-            }
-            
-            // Handle user input transcription - look for multiple possible message types
-            if (message.type === 'conversation.item.input_audio_transcription.completed' ||
-                message.type === 'input_audio_transcription.completed' ||
-                message.type === 'user_input_transcription' ||
-                message.type === 'input_transcript' ||
-                message.type === 'conversation.item.input_audio_transcription.delta' ||
-                message.type === 'input_audio_transcription.delta' ||
-                message.type === 'conversation.item.input_audio_transcription.started' ||
-                message.type === 'input_audio_transcription.started') {
+        } catch (err) {
+          console.log(`🔍 VOICE_DEBUG: Non-JSON message:`, event.data);
+        }
+      });
               const transcript = message.transcript || message.text || message.content || message.delta || '';
               console.log(`🔍 VOICE_DEBUG: USER INPUT DETECTED: "${transcript}"`);
               addMessage(transcript, true, true); // isUser: true
@@ -1424,4 +1392,5 @@ This is a DEMO using real treatment logic.`;
 
     </div>
   );
+} 
 } 
