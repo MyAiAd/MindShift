@@ -953,7 +953,9 @@ Script to speak: "${initialResponse}"`;
                             content: storedItem.content,
                             transcriptType: typeof storedItem.transcript,
                             textType: typeof storedItem.text,
-                            contentType: typeof storedItem.content
+                            contentType: typeof storedItem.content,
+                            isContentArray: Array.isArray(storedItem.content),
+                            contentLength: storedItem.content?.length
                           });
                           
                           let fallbackTranscript = '';
@@ -962,10 +964,25 @@ Script to speak: "${initialResponse}"`;
                           } else if (storedItem.text !== null && storedItem.text !== undefined && storedItem.text !== '') {
                             fallbackTranscript = storedItem.text;
                           } else if (storedItem.content !== null && storedItem.content !== undefined && storedItem.content !== '') {
-                            fallbackTranscript = storedItem.content;
+                            // Handle content array properly
+                            if (Array.isArray(storedItem.content) && storedItem.content.length > 0) {
+                              // Try to extract transcript from the first content item
+                              const firstContentItem = storedItem.content[0];
+                              if (firstContentItem && typeof firstContentItem === 'object') {
+                                if (firstContentItem.transcript !== null && firstContentItem.transcript !== undefined && firstContentItem.transcript !== '') {
+                                  fallbackTranscript = firstContentItem.transcript;
+                                } else if (firstContentItem.text !== null && firstContentItem.text !== undefined && firstContentItem.text !== '') {
+                                  fallbackTranscript = firstContentItem.text;
+                                } else if (firstContentItem.content !== null && firstContentItem.content !== undefined && firstContentItem.content !== '') {
+                                  fallbackTranscript = firstContentItem.content;
+                                }
+                              }
+                            } else if (typeof storedItem.content === 'string') {
+                              fallbackTranscript = storedItem.content;
+                            }
                           }
                           
-                          storedTranscript = typeof fallbackTranscript === 'string' ? fallbackTranscript : String(fallbackTranscript || '');
+                          storedTranscript = typeof fallbackTranscript === 'string' ? fallbackTranscript : '';
                           console.log(`🔍 VOICE_DEBUG: Fallback result: "${storedTranscript}"`);
                         }
                         
