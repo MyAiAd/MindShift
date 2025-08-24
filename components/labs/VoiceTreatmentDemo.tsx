@@ -593,18 +593,20 @@ export default function VoiceTreatmentDemo() {
       // 1. Create ephemeral session with treatment-specific instructions
       const treatmentInstructions = `You are a Mind Shifting treatment assistant conducting a voice-guided ${currentModality.name} demo session. 
 
-Current step: ${currentStep.phase}
-Your instruction to give: "${initialResponse}"
+CRITICAL: You must speak EXACTLY this script: "${initialResponse}"
 
-Rules:
-1. Speak naturally and conversationally
-2. Be empathetic and supportive
-3. Keep responses concise but warm
-4. Guide the user through the current step using the exact scripted response
-5. Use the Mind Shifting methodology exactly as provided
-6. If user seems confused, gently repeat or clarify the current step
-7. This is a DEMO - remind them it's safe and separate from real treatment
-8. Follow the treatment script precisely for authentic experience`;
+RULES:
+1. Speak the EXACT script provided - word for word
+2. Do NOT add, change, or improve the script
+3. Do NOT ask follow-up questions unless they are in the script
+4. Do NOT offer suggestions or alternatives
+5. Do NOT improvise or make things up
+6. If the script is a question, ask ONLY that question
+7. If the script is a statement, say ONLY that statement
+8. This is a DEMO - stick to the script precisely
+
+Current step: ${currentStep.phase}
+Script to speak: "${initialResponse}"`;
 
       const sessionResponse = await fetch('/api/labs/openai-session', {
         method: 'POST',
@@ -757,6 +759,24 @@ Rules:
             if (message.type === 'input_audio_buffer.committed') {
               console.log(`🔍 VOICE_DEBUG: User speech committed to processing`);
             }
+            
+            // Handle user input transcription - look for multiple possible message types
+            if (message.type === 'conversation.item.input_audio_transcription.completed' ||
+                message.type === 'input_audio_transcription.completed' ||
+                message.type === 'user_input_transcription' ||
+                message.type === 'input_transcript' ||
+                message.type === 'conversation.item.input_audio_transcription.delta') {
+              const transcript = message.transcript || message.text || message.content || message.delta || '';
+              console.log(`🔍 VOICE_DEBUG: USER INPUT DETECTED: "${transcript}"`);
+              setLastTranscript(transcript);
+              addMessage(transcript, true, true); // isUser: true
+              
+              // IMMEDIATELY process with state machine and update voice instructions
+              if (useStateMachine && stateMachineDemo) {
+                console.log(`🔍 VOICE_DEBUG: Immediately processing user input with state machine`);
+                processTranscriptWithStateMachine(transcript);
+              }
+            }
           }
         } catch (err) {
           console.log(`🔍 VOICE_DEBUG: Non-JSON message received:`, event.data);
@@ -827,9 +847,16 @@ CRITICAL RULES:
 4. READ THE SCRIPTED RESPONSE WORD-FOR-WORD AS WRITTEN
 5. IF THE SCRIPTED RESPONSE IS A VALIDATION MESSAGE, SPEAK IT EXACTLY
 6. DO NOT DEVIATE FROM THE PROVIDED TEXT UNDER ANY CIRCUMSTANCES
+7. DO NOT ASK FOLLOW-UP QUESTIONS UNLESS THEY ARE IN THE SCRIPT
+8. DO NOT OFFER SUGGESTIONS OR ALTERNATIVES
+9. DO NOT IMPROVISE OR MAKE THINGS UP
+10. IF THE SCRIPT IS A QUESTION, ASK ONLY THAT QUESTION
+11. IF THE SCRIPT IS A STATEMENT, SAY ONLY THAT STATEMENT
 
 Treatment context: ${context ? `Phase: ${context.currentPhase}, Step: ${context.currentStep}` : 'Unknown'}
-This is a DEMO using real treatment logic.`;
+This is a DEMO using real treatment logic.
+
+REMEMBER: SPEAK ONLY THE EXACT SCRIPT PROVIDED - NOTHING MORE, NOTHING LESS.`;
 
             console.log(`🔍 VOICE_DEBUG: Sending instructions to OpenAI voice:`, newInstructions);
             console.log(`🔍 VOICE_DEBUG: Data channel state:`, sessionRef.current.dataChannel?.readyState);
