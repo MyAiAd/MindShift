@@ -691,7 +691,7 @@ Rules:
             const transcript = message.transcript || '';
             console.log(`🔍 VOICE_DEBUG: User transcript:`, transcript);
             setLastTranscript(transcript);
-            addMessage(transcript, true, true);
+            addMessage(transcript, true, true); // isUser: true - this is actual user input
             
             // IMMEDIATELY process with state machine and update voice instructions
             if (useStateMachine && stateMachineDemo) {
@@ -713,22 +713,35 @@ Rules:
           if (message.type !== 'conversation.item.input_audio_transcription.completed') {
             console.log(`🔍 VOICE_DEBUG: Other message type:`, message.type, message);
             
-            // Check for alternative user transcript message types
-            if (message.type.includes('input') || message.type.includes('transcript') || message.type.includes('speech')) {
+            // ONLY process messages that are clearly user input, not AI responses
+            if (message.type.includes('input') && !message.type.includes('response') && !message.type.includes('output')) {
               console.log(`🔍 VOICE_DEBUG: POTENTIAL USER INPUT DETECTED:`, message.type, message);
               
               // Try to extract transcript from various possible message formats
               const possibleTranscript = message.transcript || message.text || message.content || message.speech || '';
               if (possibleTranscript) {
-                console.log(`🔍 VOICE_DEBUG: EXTRACTED TRANSCRIPT: "${possibleTranscript}"`);
+                console.log(`🔍 VOICE_DEBUG: EXTRACTED USER TRANSCRIPT: "${possibleTranscript}"`);
                 setLastTranscript(possibleTranscript);
-                addMessage(possibleTranscript, true, true);
+                addMessage(possibleTranscript, true, true); // isUser: true
                 
                 // IMMEDIATELY process with state machine
                 if (useStateMachine && stateMachineDemo) {
                   console.log(`🔍 VOICE_DEBUG: Processing extracted transcript with state machine`);
                   processTranscriptWithStateMachine(possibleTranscript);
                 }
+              }
+            }
+            
+            // Handle AI response transcripts (these should NOT be treated as user input)
+            if (message.type.includes('response') && message.type.includes('audio_transcript')) {
+              console.log(`🔍 VOICE_DEBUG: AI RESPONSE TRANSCRIPT (NOT USER INPUT):`, message);
+              
+              // Extract the AI's response text
+              const aiResponseText = message.delta || message.text || message.content || '';
+              if (aiResponseText) {
+                console.log(`🔍 VOICE_DEBUG: AI is saying: "${aiResponseText}"`);
+                // Note: We don't add AI responses as messages here because they're streamed
+                // The voice system handles the audio output directly
               }
             }
             
