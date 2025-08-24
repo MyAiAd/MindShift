@@ -923,20 +923,24 @@ Script to speak: "${initialResponse}"`;
                             
                             // Try to extract transcript from various possible fields
                             let extractedTranscript = '';
-                            if (contentItem.transcript) {
+                            if (contentItem.transcript !== null && contentItem.transcript !== undefined && contentItem.transcript !== '') {
                               extractedTranscript = contentItem.transcript;
-                            } else if (contentItem.text) {
+                            } else if (contentItem.text !== null && contentItem.text !== undefined && contentItem.text !== '') {
                               extractedTranscript = contentItem.text;
-                            } else if (contentItem.content) {
+                            } else if (contentItem.content !== null && contentItem.content !== undefined && contentItem.content !== '') {
                               extractedTranscript = contentItem.content;
-                            } else if (contentItem.delta) {
+                            } else if (contentItem.delta !== null && contentItem.delta !== undefined && contentItem.delta !== '') {
                               extractedTranscript = contentItem.delta;
-                            } else if (contentItem.value) {
+                            } else if (contentItem.value !== null && contentItem.value !== undefined && contentItem.value !== '') {
                               extractedTranscript = contentItem.value;
                             }
                             
-                            // Ensure it's a string
-                            storedTranscript = typeof extractedTranscript === 'string' ? extractedTranscript : String(extractedTranscript || '');
+                            // Only convert to string if we actually have a non-empty value
+                            if (extractedTranscript && extractedTranscript !== '') {
+                              storedTranscript = typeof extractedTranscript === 'string' ? extractedTranscript : String(extractedTranscript);
+                            } else {
+                              storedTranscript = '';
+                            }
                             console.log(`🔍 VOICE_DEBUG: Extracted transcript from content item: "${storedTranscript}"`);
                           }
                         }
