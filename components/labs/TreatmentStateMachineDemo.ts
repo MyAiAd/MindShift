@@ -43,7 +43,7 @@ export class TreatmentStateMachineDemo {
    */
   async initializeSession(modality: string, initialInput?: string, scriptMode: boolean = true): Promise<ProcessingResult> {
     try {
-      const response = await fetch('/api/labs/treatment-demo', {
+      const response = await fetch('/api/labs/treatment-demo-simple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -83,7 +83,7 @@ export class TreatmentStateMachineDemo {
    */
   async processUserInput(userInput: string, contextOverrides?: Partial<TreatmentContext>, scriptMode: boolean = true): Promise<ProcessingResult> {
     try {
-      const response = await fetch('/api/labs/treatment-demo', {
+      const response = await fetch('/api/labs/treatment-demo-simple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
