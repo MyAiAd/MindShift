@@ -774,9 +774,6 @@ Script to speak: "${initialResponse}"`;
                 message.type === 'input_audio_transcription.started') {
               const transcript = message.transcript || message.text || message.content || message.delta || '';
               console.log(`🔍 VOICE_DEBUG: USER INPUT DETECTED: "${transcript}"`);
-              setLastTranscript(transcript);
-              setLastAIResponse(''); // Reset AI response tracking
-              setWaitingForUserInput(false); // No longer waiting for user input
               addMessage(transcript, true, true); // isUser: true
               
               // IMMEDIATELY process with state machine and update voice instructions
@@ -793,9 +790,6 @@ Script to speak: "${initialResponse}"`;
                 const possibleUserInput = message.transcript || message.text || message.content || message.delta || '';
                 if (possibleUserInput && possibleUserInput.trim().length > 0) {
                   console.log(`🔍 VOICE_DEBUG: POTENTIAL USER INPUT FOUND: "${possibleUserInput}" (type: ${message.type})`);
-                  setLastTranscript(possibleUserInput);
-                  setLastAIResponse(''); // Reset AI response tracking
-                  setWaitingForUserInput(false); // No longer waiting for user input
                   addMessage(possibleUserInput, true, true); // isUser: true
                   
                   // IMMEDIATELY process with state machine and update voice instructions
