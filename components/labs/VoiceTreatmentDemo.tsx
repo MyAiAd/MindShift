@@ -501,6 +501,14 @@ export default function VoiceTreatmentDemo() {
   const [processingWithStateMachine, setProcessingWithStateMachine] = useState(false);
   const [conversationItems, setConversationItems] = useState<Map<string, any>>(new Map());
   
+  // Track when conversation items are being cleared
+  useEffect(() => {
+    console.log(`🔍 VOICE_DEBUG: Conversation items state changed - count: ${conversationItems.size}`);
+    if (conversationItems.size === 0) {
+      console.log(`🔍 VOICE_DEBUG: WARNING - Conversation items were cleared/reset!`);
+    }
+  }, [conversationItems]);
+  
   const sessionRef = useRef<VoiceSession>({
     pc: null,
     audioEl: null,
@@ -820,6 +828,7 @@ Script to speak: "${initialResponse}"`;
               // Wait a moment for transcription to complete, then check for any transcript
               setTimeout(() => {
                 console.log(`🔍 VOICE_DEBUG: Checking for delayed transcription after speech committed`);
+                console.log(`🔍 VOICE_DEBUG: Current conversation items count: ${conversationItems.size}`);
                 
                 // Try to extract any available transcript from the conversation
                 let possibleTranscript = '';
