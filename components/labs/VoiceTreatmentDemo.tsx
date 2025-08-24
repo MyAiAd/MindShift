@@ -130,6 +130,14 @@ export default function VoiceTreatmentDemo() {
       
       if (result.scriptedResponse) {
         console.log(`🔍 VOICE_DEBUG: Got scripted response: "${result.scriptedResponse}"`);
+        
+        // Store the scripted response in the state machine context
+        const context = stateMachineDemo.getCurrentContext();
+        if (context) {
+          // Add the scripted response to context for potential future use
+          console.log(`🔍 VOICE_DEBUG: Stored scripted response in context: "${result.scriptedResponse}"`);
+        }
+        
         return result.scriptedResponse;
       }
     } catch (error) {
@@ -230,8 +238,12 @@ export default function VoiceTreatmentDemo() {
       };
 
       // 3. Get microphone
+      console.log(`🔍 VOICE_DEBUG: Requesting microphone access...`);
       const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log(`🔍 VOICE_DEBUG: Microphone access granted, tracks:`, micStream.getAudioTracks().length);
+      
       const [track] = micStream.getAudioTracks();
+      console.log(`🔍 VOICE_DEBUG: Adding audio track to peer connection`);
       pc.addTrack(track, micStream);
       sessionRef.current.micStream = micStream;
 
@@ -257,6 +269,7 @@ export default function VoiceTreatmentDemo() {
         
         console.log('🔍 VOICE_DEBUG: Sending session config:', sessionConfig);
         dataChannel.send(JSON.stringify(sessionConfig));
+        console.log('🔍 VOICE_DEBUG: Session configuration sent successfully');
       });
 
       // 5. CRITICAL: Manual response handling
@@ -264,6 +277,15 @@ export default function VoiceTreatmentDemo() {
         try {
           const message = JSON.parse(event.data);
           console.log(`🔍 VOICE_DEBUG: Received message:`, message.type, message);
+          
+          // Enhanced debugging for voice input detection
+          if (message.type === 'input_audio_buffer.speech_started') {
+            console.log(`🔍 VOICE_DEBUG: Speech started - user is speaking`);
+          } else if (message.type === 'input_audio_buffer.speech_stopped') {
+            console.log(`🔍 VOICE_DEBUG: Speech stopped - waiting for transcription`);
+          } else if (message.type === 'input_audio_buffer.committed') {
+            console.log(`🔍 VOICE_DEBUG: Audio buffer committed - transcription should follow`);
+          }
           
           // Handle user transcription completion - manually create response
           if (message.type === 'conversation.item.input_audio_transcription.completed') {
@@ -430,20 +452,7 @@ export default function VoiceTreatmentDemo() {
         </div>
       </div>
 
-      {/* Treatment State Machine Status */}
-      <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-md">
-        <div className="flex items-center space-x-3">
-          <Shield className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-          <div>
-            <h5 className="font-medium text-indigo-900 dark:text-indigo-200">
-              Treatment State Machine (Always Active)
-            </h5>
-            <p className="text-sm text-indigo-700 dark:text-indigo-300">
-              Strict script adherence - follows doctor's treatment protocol exactly
-            </p>
-          </div>
-        </div>
-      </div>
+
 
       {/* Modality Selector */}
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
