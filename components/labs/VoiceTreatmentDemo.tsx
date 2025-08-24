@@ -693,6 +693,12 @@ Rules:
             setLastTranscript(transcript);
             addMessage(transcript, true, true);
             
+            // IMMEDIATELY process with state machine and update voice instructions
+            if (useStateMachine && stateMachineDemo) {
+              console.log(`🔍 VOICE_DEBUG: Immediately processing transcript with state machine`);
+              processTranscriptWithStateMachine(transcript);
+            }
+            
             // Capture problem/goal/experience based on current step
             if (currentStep.id === 'problem_input' && transcript.trim()) {
               setDemoContext(prev => ({ ...prev, problemStatement: transcript.trim() }));
@@ -889,6 +895,62 @@ This is a DEMO - safe and separate from real treatment.`;
           }
         }
       }
+    }
+  };
+
+  // Process transcript immediately with state machine and update voice instructions
+  const processTranscriptWithStateMachine = async (transcript: string) => {
+    if (!stateMachineDemo) return;
+    
+    console.log(`🔍 VOICE_DEBUG: Processing transcript: "${transcript}"`);
+    
+    try {
+      const result = await stateMachineDemo.processUserInput(transcript, undefined, scriptMode);
+      console.log(`🔍 VOICE_DEBUG: State machine result:`, result);
+      
+      if (result.scriptedResponse) {
+        console.log(`🔍 VOICE_DEBUG: Got scripted response: "${result.scriptedResponse}"`);
+        
+        // Update voice instructions immediately
+        if (sessionRef.current.dataChannel?.readyState === 'open') {
+          const context = stateMachineDemo.getCurrentContext();
+          const newInstructions = `You are a Mind Shifting treatment assistant using the real treatment state machine.
+
+EXACT SCRIPTED RESPONSE TO SPEAK: "${result.scriptedResponse}"
+
+CRITICAL RULES:
+1. SPEAK THE EXACT WORDS ABOVE - DO NOT CHANGE, IMPROVE, OR INTERPRET THEM
+2. DO NOT ADD ANY ADDITIONAL WORDS OR EXPLANATIONS
+3. DO NOT MAKE THE RESPONSE MORE NATURAL OR CONVERSATIONAL
+4. READ THE SCRIPTED RESPONSE WORD-FOR-WORD AS WRITTEN
+5. IF THE SCRIPTED RESPONSE IS A VALIDATION MESSAGE, SPEAK IT EXACTLY
+6. DO NOT DEVIATE FROM THE PROVIDED TEXT UNDER ANY CIRCUMSTANCES
+
+Treatment context: ${context ? `Phase: ${context.currentPhase}, Step: ${context.currentStep}` : 'Unknown'}
+This is a DEMO using real treatment logic.`;
+
+          console.log(`🔍 VOICE_DEBUG: IMMEDIATELY updating voice instructions:`, newInstructions);
+          
+          try {
+            const message = {
+              type: 'session.update',
+              session: { instructions: newInstructions }
+            };
+            console.log(`🔍 VOICE_DEBUG: Sending immediate session.update:`, message);
+            
+            sessionRef.current.dataChannel.send(JSON.stringify(message));
+            console.log(`🔍 VOICE_DEBUG: Immediate instruction update sent successfully`);
+          } catch (error) {
+            console.error(`🔍 VOICE_DEBUG: Failed to send immediate instruction update:`, error);
+          }
+        } else {
+          console.log(`🔍 VOICE_DEBUG: Data channel not open, cannot update instructions`);
+        }
+      } else {
+        console.log(`🔍 VOICE_DEBUG: No scripted response from state machine`);
+      }
+    } catch (error) {
+      console.error(`🔍 VOICE_DEBUG: Error processing transcript with state machine:`, error);
     }
   };
 
