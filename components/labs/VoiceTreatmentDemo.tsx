@@ -717,6 +717,17 @@ Script to speak: "${initialResponse}"`;
             
             // Track conversation items for transcript extraction
             if (message.item && message.item.id) {
+              console.log(`🔍 VOICE_DEBUG: Conversation item details:`, {
+                id: message.item.id,
+                type: message.item.type,
+                content: message.item.content,
+                transcript: message.item.transcript,
+                text: message.item.text,
+                hasContent: !!message.item.content,
+                hasTranscript: !!message.item.transcript,
+                hasText: !!message.item.text
+              });
+              
               setConversationItems(prev => new Map(prev).set(message.item.id, message.item));
               console.log(`🔍 VOICE_DEBUG: Stored conversation item: ${message.item.id}`);
             }
@@ -841,7 +852,17 @@ Script to speak: "${initialResponse}"`;
                       // NEW: Check stored conversation items
                       const storedItem = conversationItems.get(message.item_id);
                       if (storedItem) {
-                        console.log(`🔍 VOICE_DEBUG: Found stored conversation item:`, storedItem);
+                        console.log(`🔍 VOICE_DEBUG: Found stored conversation item:`, {
+                          id: storedItem.id,
+                          type: storedItem.type,
+                          content: storedItem.content,
+                          transcript: storedItem.transcript,
+                          text: storedItem.text,
+                          hasContent: !!storedItem.content,
+                          hasTranscript: !!storedItem.transcript,
+                          hasText: !!storedItem.text
+                        });
+                        
                         const storedTranscript = storedItem.transcript || storedItem.text || storedItem.content || '';
                         
                         if (storedTranscript && storedTranscript.trim().length > 0) {
@@ -858,6 +879,7 @@ Script to speak: "${initialResponse}"`;
                         }
                       } else {
                         console.log(`🔍 VOICE_DEBUG: No stored conversation item found for: ${message.item_id}`);
+                        console.log(`🔍 VOICE_DEBUG: Available conversation items:`, Array.from(conversationItems.keys()));
                         addMessage("[Voice detected but transcription failed - please try speaking again]", true, true);
                       }
                     }
