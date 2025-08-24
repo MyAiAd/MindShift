@@ -783,6 +783,33 @@ Script to speak: "${initialResponse}"`;
               }
             }
             
+            // NEW: Fallback - use speech committed as trigger for user input processing
+            if (message.type === 'input_audio_buffer.committed') {
+              console.log(`🔍 VOICE_DEBUG: SPEECH COMMITTED - Attempting fallback transcription detection`);
+              
+              // Wait a moment for transcription to complete, then check for any transcript
+              setTimeout(() => {
+                console.log(`🔍 VOICE_DEBUG: Checking for delayed transcription after speech committed`);
+                
+                // Try to extract any available transcript from the conversation
+                const possibleTranscript = message.transcript || message.text || message.content || message.delta || '';
+                if (possibleTranscript && possibleTranscript.trim().length > 0) {
+                  console.log(`🔍 VOICE_DEBUG: FALLBACK TRANSCRIPT FOUND: "${possibleTranscript}"`);
+                  addMessage(possibleTranscript, true, true);
+                  
+                  if (stateMachineDemo) {
+                    console.log(`🔍 VOICE_DEBUG: Processing fallback transcript with state machine`);
+                    processTranscriptWithStateMachine(possibleTranscript);
+                  }
+                } else {
+                  console.log(`🔍 VOICE_DEBUG: No transcript found in fallback check - transcription may be failing`);
+                  
+                  // Add a placeholder message to indicate we heard the user but transcription failed
+                  addMessage("[Voice detected but transcription failed - please try speaking again]", true, true);
+                }
+              }, 2000); // Wait 2 seconds for transcription to complete
+            }
+            
             // Also check for any message that might contain user input
             if (message.transcript || message.text || message.content || message.delta) {
               // Only process if it's NOT an AI response
