@@ -719,6 +719,11 @@ Script to speak: "${initialResponse}"`;
           if (message.type !== 'conversation.item.input_audio_transcription.completed') {
             console.log(`🔍 VOICE_DEBUG: Other message type:`, message.type, message);
             
+            // Debug: Log all non-response messages to understand what we're receiving
+            if (!message.type.includes('response') && !message.type.includes('output')) {
+              console.log(`🔍 VOICE_DEBUG: NON-RESPONSE MESSAGE:`, message.type, message);
+            }
+            
             // ONLY process messages that are clearly user input, not AI responses
             if (message.type.includes('input') && !message.type.includes('response') && !message.type.includes('output')) {
               console.log(`🔍 VOICE_DEBUG: POTENTIAL USER INPUT DETECTED:`, message.type, message);
@@ -1301,6 +1306,58 @@ This is a DEMO using real treatment logic.`;
                 <span className="text-xs text-green-700 dark:text-green-300">Listening...</span>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Fallback Text Input for when voice transcription fails */}
+      {isConnected && (
+        <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
+            If voice input isn't working, you can type your response here:
+          </p>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              placeholder="Type your response..."
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  const input = e.currentTarget.value.trim();
+                  if (input) {
+                    console.log(`🔍 VOICE_DEBUG: Manual input: "${input}"`);
+                    setLastTranscript(input);
+                    setLastAIResponse('');
+                    setWaitingForUserInput(false);
+                    addMessage(input, true, false);
+                    if (stateMachineDemo) {
+                      processTranscriptWithStateMachine(input);
+                    }
+                    e.currentTarget.value = '';
+                  }
+                }
+              }}
+            />
+            <button
+              onClick={(e) => {
+                const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                const value = input.value.trim();
+                if (value) {
+                  console.log(`🔍 VOICE_DEBUG: Manual input: "${value}"`);
+                  setLastTranscript(value);
+                  setLastAIResponse('');
+                  setWaitingForUserInput(false);
+                  addMessage(value, true, false);
+                  if (stateMachineDemo) {
+                    processTranscriptWithStateMachine(value);
+                  }
+                  input.value = '';
+                }
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
+              Send
+            </button>
           </div>
         </div>
       )}
