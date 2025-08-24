@@ -46,6 +46,9 @@ export default function VoiceTreatmentDemo() {
   const [stateMachineDemo, setStateMachineDemo] = useState<TreatmentStateMachineDemo | null>(null);
   const [conversationItems, setConversationItems] = useState<Map<string, any>>(new Map());
   
+  // Track manual responses so we don't cancel them
+  const pendingManualResponses = useRef<Set<string>>(new Set());
+  
   const sessionRef = useRef<VoiceSession>({
     pc: null,
     audioEl: null,
@@ -118,6 +121,42 @@ export default function VoiceTreatmentDemo() {
     setStatus('idle');
   }, []);
 
+  // Helper function to create tracked manual responses
+  const createManualResponse = (scriptedResponse: string) => {
+    const responseId = `manual_${Date.now()}`;
+    
+    // Track this as a manual response
+    pendingManualResponses.current.add(responseId);
+    console.log(`🔍 VOICE_DEBUG: Creating tracked manual response: "${scriptedResponse}"`);
+    
+    if (sessionRef.current.dataChannel?.readyState === 'open') {
+      try {
+        const responseMessage = {
+          type: 'response.create',
+          response: {
+            modalities: ['audio', 'text'],
+            instructions: `Speak exactly and only this text: "${scriptedResponse}". Do not add any other words before or after.`
+          }
+        };
+        
+        sessionRef.current.dataChannel.send(JSON.stringify(responseMessage));
+        console.log(`🔍 VOICE_DEBUG: Manual response creation sent`);
+        
+        // Add the AI response to our message history
+        addMessage(scriptedResponse, false, true);
+        
+        // Clean up tracking after delay
+        setTimeout(() => {
+          pendingManualResponses.current.delete(responseId);
+        }, 2000);
+        
+      } catch (error) {
+        console.error(`🔍 VOICE_DEBUG: Failed to create manual response:`, error);
+        pendingManualResponses.current.delete(responseId);
+      }
+    }
+  };
+
   // CRITICAL: Process transcript and create manual response
   const processTranscriptWithStateMachine = async (transcript: string) => {
     if (!stateMachineDemo) return;
@@ -152,8 +191,30 @@ export default function VoiceTreatmentDemo() {
       setError('');
       setStatus('starting');
 
+      // CRITICAL: Ensure state machine is initialized before starting voice session
+      if (!stateMachineDemo) {
+        console.log(`🔍 VOICE_DEBUG: Initializing state machine before voice session...`);
+        const demo = new TreatmentStateMachineDemo();
+        setStateMachineDemo(demo);
+        await demo.initializeSession(selectedModality, undefined, true);
+        console.log(`🔍 VOICE_DEBUG: State machine initialized successfully`);
+      }
+
       // Get initial response from state machine
-      const initialResponse = "What problem would you like to work on today? Please state it in a few words.";
+      let initialResponse = "What problem would you like to work on today? Please state it in a few words.";
+      
+      // Try to get the actual initial response from state machine
+      if (stateMachineDemo) {
+        try {
+          const result = await stateMachineDemo.processUserInput("", undefined, true);
+          if (result.scriptedResponse) {
+            initialResponse = result.scriptedResponse;
+            console.log(`🔍 VOICE_DEBUG: Using state machine initial response: "${initialResponse}"`);
+          }
+        } catch (error) {
+          console.log(`🔍 VOICE_DEBUG: Using fallback initial response: "${initialResponse}"`);
+        }
+      }
 
       // 1. Create ephemeral session with CRITICAL transcription settings
       const sessionResponse = await fetch('/api/labs/openai-session', {
@@ -210,26 +271,7 @@ export default function VoiceTreatmentDemo() {
         
         // Since we disabled automatic turn detection, manually create the initial response
         setTimeout(() => {
-          if (sessionRef.current.dataChannel?.readyState === 'open') {
-            try {
-              const initialResponseMessage = {
-                type: 'response.create',
-                response: {
-                  modalities: ['audio', 'text'],
-                  instructions: `Speak exactly and only this text: "${initialResponse}". Do not add any other words before or after.`
-                }
-              };
-              
-              sessionRef.current.dataChannel.send(JSON.stringify(initialResponseMessage));
-              console.log(`🔍 VOICE_DEBUG: Initial manual response creation sent`);
-              
-              // Add the initial treatment message
-              addMessage(initialResponse, false, true);
-              
-            } catch (error) {
-              console.error(`🔍 VOICE_DEBUG: Failed to create initial manual response:`, error);
-            }
-          }
+          createManualResponse(initialResponse);
         }, 1000);
       };
 
@@ -309,30 +351,9 @@ export default function VoiceTreatmentDemo() {
               if (stateMachineDemo) {
                 processTranscriptWithStateMachine(transcript).then((scriptedResponse) => {
                   if (scriptedResponse) {
-                    console.log(`🔍 VOICE_DEBUG: Creating manual response: "${scriptedResponse}"`);
-                    
                     // Wait for any automatic response cancellation to complete before creating our response
                     setTimeout(() => {
-                      if (sessionRef.current.dataChannel?.readyState === 'open') {
-                        try {
-                          const responseMessage = {
-                            type: 'response.create',
-                            response: {
-                              modalities: ['audio', 'text'],
-                              instructions: `Speak exactly and only this text: "${scriptedResponse}". Do not add any other words before or after.`
-                            }
-                          };
-                          
-                          sessionRef.current.dataChannel.send(JSON.stringify(responseMessage));
-                          console.log(`🔍 VOICE_DEBUG: Manual response creation sent`);
-                          
-                          // Add the AI response to our message history
-                          addMessage(scriptedResponse, false, true);
-                          
-                        } catch (error) {
-                          console.error(`🔍 VOICE_DEBUG: Failed to create manual response:`, error);
-                        }
-                      }
+                      createManualResponse(scriptedResponse);
                     }, 100); // Small delay ensures cancellation completes
                   } else {
                     console.log(`🔍 VOICE_DEBUG: No scripted response available for manual creation`);
@@ -353,17 +374,24 @@ export default function VoiceTreatmentDemo() {
             }
           }
           
-          // Handle automatic response creation - CANCEL IT IMMEDIATELY
+          // Handle response creation - distinguish between manual and automatic
           else if (message.type === 'response.created') {
-            console.log(`🔍 VOICE_DEBUG: Automatic response created - cancelling it`);
+            // Check if this might be one of our manual responses
+            const isLikelyManual = pendingManualResponses.current.size > 0;
             
-            if (sessionRef.current.dataChannel?.readyState === 'open') {
-              try {
-                const cancelMessage = { type: 'response.cancel' };
-                sessionRef.current.dataChannel.send(JSON.stringify(cancelMessage));
-                console.log(`🔍 VOICE_DEBUG: Automatic response cancellation sent`);
-              } catch (error) {
-                console.error(`🔍 VOICE_DEBUG: Failed to cancel automatic response:`, error);
+            if (isLikelyManual) {
+              console.log(`🔍 VOICE_DEBUG: Response created - likely manual, allowing it to proceed`);
+            } else {
+              console.log(`🔍 VOICE_DEBUG: Automatic response created - cancelling it`);
+              
+              if (sessionRef.current.dataChannel?.readyState === 'open') {
+                try {
+                  const cancelMessage = { type: 'response.cancel' };
+                  sessionRef.current.dataChannel.send(JSON.stringify(cancelMessage));
+                  console.log(`🔍 VOICE_DEBUG: Automatic response cancellation sent`);
+                } catch (error) {
+                  console.error(`🔍 VOICE_DEBUG: Failed to cancel automatic response:`, error);
+                }
               }
             }
           }
