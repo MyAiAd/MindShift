@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { LabsTreatmentStateMachine } from '@/lib/labs-treatment-state-machine';
+
+// Create a singleton instance for demo sessions
+const demoSessions = new Map<string, LabsTreatmentStateMachine>();
 
 export async function GET(request: NextRequest) {
   return NextResponse.json({ 
@@ -12,56 +16,39 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     console.log('🔍 SIMPLE_API_DEBUG: Request body:', body);
-    const { action, sessionId, modality, userInput } = body;
+    const { action, sessionId, modality, userInput, scriptMode = true } = body;
 
     if (!sessionId) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
+    // Get or create state machine for this session
+    let stateMachine = demoSessions.get(sessionId);
+    if (!stateMachine) {
+      stateMachine = new LabsTreatmentStateMachine();
+      demoSessions.set(sessionId, stateMachine);
+    }
+
     if (action === 'initialize') {
       console.log(`🔍 SIMPLE_API_DEBUG: Initializing session for modality: ${modality}`);
       
-      // Simple initialization response
+      const result = stateMachine.initializeSession(sessionId, modality, userInput);
+      const context = stateMachine.getContext(sessionId);
+      
       return NextResponse.json({
-        processingResult: {
-          canContinue: true,
-          scriptedResponse: "Welcome to Mind Shifting. What problem would you like to work on today? Please state it in a few words.",
-          reason: 'initialization_success'
-        },
-        context: {
-          sessionId,
-          currentPhase: 'introduction',
-          currentStep: 'mind_shifting_explanation',
-          modality
-        }
+        processingResult: result,
+        context: context
       });
 
     } else if (action === 'process') {
       console.log(`🔍 SIMPLE_API_DEBUG: Processing user input: "${userInput}"`);
       
-      // Simple processing logic
-      let response = "Thank you for your response. Let's continue with the treatment.";
-      
-      if (userInput.toLowerCase().includes('money') || userInput.toLowerCase().includes('financial')) {
-        response = "I understand you want to work on financial issues. Let's focus on that specific problem. What exactly is the financial problem you're facing?";
-      } else if (userInput.toLowerCase().includes('problem') || userInput.toLowerCase().includes('issue')) {
-        response = "Good, you've identified a problem. Now let's work on it step by step. What specific aspect of this problem would you like to address first?";
-      } else if (userInput.toLowerCase().includes('goal') || userInput.toLowerCase().includes('want')) {
-        response = "I see you're stating a goal. For Mind Shifting, we need to work with the problem that's preventing you from achieving this goal. What's the problem that's stopping you from reaching this goal?";
-      }
+      const result = stateMachine.processUserInput(sessionId, userInput);
+      const context = stateMachine.getContext(sessionId);
       
       return NextResponse.json({
-        processingResult: {
-          canContinue: true,
-          scriptedResponse: response,
-          reason: 'processing_success'
-        },
-        context: {
-          sessionId,
-          currentPhase: 'introduction',
-          currentStep: 'problem_capture',
-          lastInput: userInput
-        }
+        processingResult: result,
+        context: context
       });
 
     } else {

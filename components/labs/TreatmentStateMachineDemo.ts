@@ -6,6 +6,8 @@ interface TreatmentContext {
   currentStep: string;
   userResponses: Record<string, string>;
   problemStatement?: string;
+  goalStatement?: string;
+  negativeExperienceStatement?: string;
   startTime: Date;
   lastActivity: Date;
   metadata: Record<string, any>;
