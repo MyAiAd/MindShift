@@ -947,8 +947,26 @@ Script to speak: "${initialResponse}"`;
                         
                         // Fallback to direct fields
                         if (!storedTranscript) {
-                          const fallbackTranscript = storedItem.transcript || storedItem.text || storedItem.content || '';
+                          console.log(`🔍 VOICE_DEBUG: Fallback check - storedItem fields:`, {
+                            transcript: storedItem.transcript,
+                            text: storedItem.text,
+                            content: storedItem.content,
+                            transcriptType: typeof storedItem.transcript,
+                            textType: typeof storedItem.text,
+                            contentType: typeof storedItem.content
+                          });
+                          
+                          let fallbackTranscript = '';
+                          if (storedItem.transcript !== null && storedItem.transcript !== undefined && storedItem.transcript !== '') {
+                            fallbackTranscript = storedItem.transcript;
+                          } else if (storedItem.text !== null && storedItem.text !== undefined && storedItem.text !== '') {
+                            fallbackTranscript = storedItem.text;
+                          } else if (storedItem.content !== null && storedItem.content !== undefined && storedItem.content !== '') {
+                            fallbackTranscript = storedItem.content;
+                          }
+                          
                           storedTranscript = typeof fallbackTranscript === 'string' ? fallbackTranscript : String(fallbackTranscript || '');
+                          console.log(`🔍 VOICE_DEBUG: Fallback result: "${storedTranscript}"`);
                         }
                         
                         if (storedTranscript && storedTranscript.trim().length > 0) {
