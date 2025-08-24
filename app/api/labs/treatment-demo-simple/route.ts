@@ -25,8 +25,15 @@ export async function POST(request: NextRequest) {
     // Get or create state machine for this session
     let stateMachine = demoSessions.get(sessionId);
     if (!stateMachine) {
+      console.log(`🔍 SIMPLE_API_DEBUG: Creating new state machine for session: ${sessionId}`);
       stateMachine = new LabsTreatmentStateMachine();
       demoSessions.set(sessionId, stateMachine);
+      
+      // If this is a process action and no session exists, initialize with default modality
+      if (action === 'process') {
+        console.log(`🔍 SIMPLE_API_DEBUG: Auto-initializing session for process action`);
+        stateMachine.initializeSession(sessionId, modality || 'problem_shifting', userInput);
+      }
     }
 
     if (action === 'initialize') {

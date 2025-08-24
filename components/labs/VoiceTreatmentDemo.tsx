@@ -159,19 +159,25 @@ export default function VoiceTreatmentDemo() {
 
   // CRITICAL: Process transcript and create manual response
   const processTranscriptWithStateMachine = async (transcript: string) => {
-    if (!stateMachineDemo) return;
+    if (!stateMachineDemo) {
+      console.log(`🔍 VOICE_DEBUG: State machine not initialized, initializing now...`);
+      const demo = new TreatmentStateMachineDemo();
+      setStateMachineDemo(demo);
+      await demo.initializeSession(selectedModality, undefined, true);
+      console.log(`🔍 VOICE_DEBUG: State machine initialized for transcript processing`);
+    }
     
     console.log(`🔍 VOICE_DEBUG: Processing transcript: "${transcript}"`);
     
     try {
-      const result = await stateMachineDemo.processUserInput(transcript, undefined, true);
+      const result = await stateMachineDemo!.processUserInput(transcript, undefined, true);
       console.log(`🔍 VOICE_DEBUG: State machine result:`, result);
       
       if (result.scriptedResponse) {
         console.log(`🔍 VOICE_DEBUG: Got scripted response: "${result.scriptedResponse}"`);
         
         // Store the scripted response in the state machine context
-        const context = stateMachineDemo.getCurrentContext();
+        const context = stateMachineDemo!.getCurrentContext();
         if (context) {
           // Add the scripted response to context for potential future use
           console.log(`🔍 VOICE_DEBUG: Stored scripted response in context: "${result.scriptedResponse}"`);
