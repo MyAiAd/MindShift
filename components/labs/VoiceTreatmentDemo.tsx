@@ -35,6 +35,7 @@ export default function VoiceTreatmentDemo() {
   const [error, setError] = useState<string>('');
   const [messages, setMessages] = useState<TreatmentMessage[]>([]);
   const [selectedModality, setSelectedModality] = useState<TreatmentModality>('problem_shifting');
+  const [showModalitySelector, setShowModalitySelector] = useState(false);
   const [demoContext, setDemoContext] = useState<DemoContext>({
     problemStatement: '',
     goalStatement: '',
@@ -52,6 +53,16 @@ export default function VoiceTreatmentDemo() {
     micStream: null,
     remoteStream: null
   });
+
+  // Treatment modality definitions
+  const TREATMENT_MODALITIES = {
+    problem_shifting: { name: 'Problem Shifting', description: 'Transform problems into solutions' },
+    reality_shifting: { name: 'Reality Shifting', description: 'Achieve your goals and desires' },
+    belief_shifting: { name: 'Belief Shifting', description: 'Change limiting beliefs' },
+    identity_shifting: { name: 'Identity Shifting', description: 'Transform your sense of self' },
+    blockage_shifting: { name: 'Blockage Shifting', description: 'Remove internal obstacles' },
+    trauma_shifting: { name: 'Trauma Shifting', description: 'Process and heal trauma' }
+  };
 
   // Context update helper
   const updateContextFromTranscript = (transcript: string) => {
@@ -379,6 +390,22 @@ export default function VoiceTreatmentDemo() {
     initializeStateMachine();
   }, [selectedModality]);
 
+  const resetDemo = () => {
+    cleanup();
+    setMessages([]);
+    setDemoContext({
+      problemStatement: '',
+      goalStatement: '',
+      experienceStatement: '',
+      userResponses: {}
+    });
+    
+    // Reset state machine
+    if (stateMachineDemo) {
+      stateMachineDemo.resetSession();
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -402,6 +429,80 @@ export default function VoiceTreatmentDemo() {
           </div>
         </div>
       </div>
+
+      {/* Treatment State Machine Status */}
+      <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-md">
+        <div className="flex items-center space-x-3">
+          <Shield className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+          <div>
+            <h5 className="font-medium text-indigo-900 dark:text-indigo-200">
+              Treatment State Machine (Always Active)
+            </h5>
+            <p className="text-sm text-indigo-700 dark:text-indigo-300">
+              Strict script adherence - follows doctor's treatment protocol exactly
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Modality Selector */}
+      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+        <div className="flex items-center justify-between">
+          <div>
+            <h5 className="font-medium text-blue-900 dark:text-blue-200">
+              Treatment Modality: {TREATMENT_MODALITIES[selectedModality].name}
+            </h5>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+              {TREATMENT_MODALITIES[selectedModality].description}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowModalitySelector(!showModalitySelector)}
+            disabled={isConnected}
+            className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Settings className="h-3 w-3" />
+            <span>Change</span>
+          </button>
+        </div>
+        
+        {showModalitySelector && !isConnected && (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {(Object.keys(TREATMENT_MODALITIES) as TreatmentModality[]).map((modality) => (
+              <button
+                key={modality}
+                onClick={() => {
+                  setSelectedModality(modality);
+                  setMessages([]);
+                  setShowModalitySelector(false);
+                  resetDemo();
+                }}
+                className={`p-2 text-sm rounded-md border transition-colors ${
+                  selectedModality === modality
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                }`}
+              >
+                {TREATMENT_MODALITIES[modality].name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Working On Display */}
+      {(demoContext.problemStatement || demoContext.goalStatement || demoContext.experienceStatement) && (
+        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+          <h5 className="font-medium text-green-900 dark:text-green-200 mb-1">
+            Working On:
+          </h5>
+          <p className="text-sm text-green-700 dark:text-green-300">
+            {selectedModality === 'reality_shifting' && demoContext.goalStatement && `Goal: "${demoContext.goalStatement}"`}
+            {selectedModality === 'trauma_shifting' && demoContext.experienceStatement && `Experience: "${demoContext.experienceStatement}"`}
+            {(selectedModality === 'problem_shifting' || selectedModality === 'belief_shifting' || selectedModality === 'identity_shifting' || selectedModality === 'blockage_shifting') && demoContext.problemStatement && `Problem: "${demoContext.problemStatement}"`}
+          </p>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md flex items-center">
@@ -428,6 +529,14 @@ export default function VoiceTreatmentDemo() {
         >
           <PhoneOff className="h-4 w-4" />
           <span>End Session</span>
+        </button>
+
+        <button
+          onClick={resetDemo}
+          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <RotateCcw className="h-4 w-4" />
+          <span>Reset Demo</span>
         </button>
       </div>
 
