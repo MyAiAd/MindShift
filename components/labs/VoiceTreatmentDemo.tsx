@@ -844,11 +844,13 @@ Script to speak: "${initialResponse}"`;
       // Use real state machine processing
       console.log(`🔍 CLIENT_DEBUG: Starting state machine processing`);
       console.log(`🔍 CLIENT_DEBUG: Script mode enabled: true (always)`);
-      console.log(`🔍 CLIENT_DEBUG: User input:`, lastTranscript);
+      console.log(`🔍 CLIENT_DEBUG: No user input available - voice only mode`);
       
       setProcessingWithStateMachine(true);
       try {
-        const result = await stateMachineDemo.processUserInput(lastTranscript, undefined, true);
+        // Since we're in voice-only mode, we'll use a placeholder or skip processing
+        console.log(`🔍 CLIENT_DEBUG: Voice-only mode - skipping text processing`);
+        return;
         
         console.log(`🔍 CLIENT_DEBUG: State machine result:`, result);
         
@@ -1332,16 +1334,7 @@ This is a DEMO using real treatment logic.`;
         </div>
       )}
 
-      {/* Demo Notice */}
-      <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-        <div className="flex items-start">
-          <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" />
-          <div className="text-sm text-yellow-800 dark:text-yellow-200">
-            <p className="font-medium mb-1">Demo Mode Active</p>
-            <p>This is a safe demonstration that doesn't affect your real treatment sessions. It uses a simplified treatment flow to showcase voice-guided therapy capabilities.</p>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 } 
