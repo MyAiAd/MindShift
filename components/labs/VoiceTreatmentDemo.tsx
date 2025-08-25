@@ -121,7 +121,7 @@ export default function VoiceTreatmentDemo() {
     setStatus('idle');
   }, []);
 
-  // COMPLETELY REWRITTEN: Response creation with unique IDs and better conflict prevention
+  // COMPLETELY REWRITTEN: Simple response creation without custom IDs
   const createScriptedVoiceResponse = async (scriptedResponse: string, userTranscript: string = '') => {
     console.log(`🔍 VOICE_DEBUG: ====== Creating scripted response ======`);
     console.log(`🔍 VOICE_DEBUG: Script: "${scriptedResponse}"`);
@@ -151,15 +151,12 @@ export default function VoiceTreatmentDemo() {
     try {
       setIsAIResponding(true);
       
-      // Generate unique ID for our manual response
-      const manualResponseId = `manual_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-      console.log(`🔍 VOICE_DEBUG: Creating manual response with ID: ${manualResponseId}`);
+      console.log(`🔍 VOICE_DEBUG: Creating assistant message`);
       
       // Create assistant message with exact script
       const assistantMessageEvent = {
         type: 'conversation.item.create',
         item: {
-          id: `msg_${manualResponseId}`,
           type: 'message',
           role: 'assistant',
           status: 'completed',
@@ -174,21 +171,20 @@ export default function VoiceTreatmentDemo() {
       console.log(`🔍 VOICE_DEBUG: ✅ Assistant message sent`);
       
       // Wait before triggering response
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Create manual response with our unique ID
+      // Create simple response without custom ID
       const responseEvent = {
         type: 'response.create',
         response: {
-          id: manualResponseId,
           modalities: ['audio', 'text']
         }
       };
       
       sessionRef.current.dataChannel.send(JSON.stringify(responseEvent));
-      console.log(`🔍 VOICE_DEBUG: ✅ Manual audio response triggered with ID: ${manualResponseId}`);
+      console.log(`🔍 VOICE_DEBUG: ✅ Audio response triggered`);
       
-      // Update UI immediately (don't wait for audio completion)
+      // Update UI immediately
       addMessage(scriptedResponse, false, true);
       console.log(`🔍 VOICE_DEBUG: ✅ UI updated with scripted response`);
       
@@ -322,7 +318,7 @@ export default function VoiceTreatmentDemo() {
         }
       }
 
-      // 1. Create ephemeral session with manual control
+      // 1. Create ephemeral session with manual control from start
       const sessionResponse = await fetch('/api/labs/openai-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -330,17 +326,12 @@ export default function VoiceTreatmentDemo() {
           model: 'gpt-4o-realtime-preview-2024-12-17',
           voice: 'verse',
           instructions: `You are a Mind Shifting treatment assistant. Speak only exact text from assistant messages. Never generate automatic responses.`,
-          // Enable transcription but disable automatic responses
+          // Enable transcription
           input_audio_transcription: {
             model: 'whisper-1'
           },
-          // CRITICAL: Start with server VAD for speech detection but manual response control
-          turn_detection: {
-            type: 'server_vad',
-            threshold: 0.5,
-            prefix_padding_ms: 300,
-            silence_duration_ms: 800
-          },
+          // CRITICAL: Start with no turn detection to prevent automatic responses
+          turn_detection: null,
           temperature: 0.8
         })
       });
@@ -442,7 +433,7 @@ export default function VoiceTreatmentDemo() {
               silence_duration_ms: 800
             },
             modalities: ['text', 'audio'],
-            temperature: 0.1
+            temperature: 0.8
           }
         };
         
@@ -456,20 +447,28 @@ export default function VoiceTreatmentDemo() {
           const message = JSON.parse(event.data);
           console.log(`🔍 VOICE_DEBUG: Event:`, message.type);
           
-          // Speech detection events
+          // Speech detection events (may not fire with turn_detection: null)
           if (message.type === 'input_audio_buffer.speech_started') {
             console.log(`🔍 VOICE_DEBUG: User started speaking`);
-            setIsListening(true);
           } 
           else if (message.type === 'input_audio_buffer.speech_stopped') {
             console.log(`🔍 VOICE_DEBUG: User stopped speaking`);
-            setIsListening(false);
+            
+            // With turn detection disabled, we need to manually commit audio
+            try {
+              sessionRef.current.dataChannel?.send(JSON.stringify({
+                type: 'input_audio_buffer.commit'
+              }));
+              console.log(`🔍 VOICE_DEBUG: Manually committed audio buffer`);
+            } catch (error) {
+              console.log(`🔍 VOICE_DEBUG: Failed to commit audio:`, error);
+            }
           } 
           else if (message.type === 'input_audio_buffer.committed') {
             console.log(`🔍 VOICE_DEBUG: Audio committed, waiting for transcription`);
           }
           
-          // CRITICAL: Handle user transcription with aggressive response control
+          // Handle user transcription - simplified without cancellation attempts  
           else if (message.type === 'conversation.item.input_audio_transcription.completed') {
             const transcript = message.transcript?.trim();
             console.log(`🔍 VOICE_DEBUG: Transcription completed:`, transcript);
@@ -478,94 +477,28 @@ export default function VoiceTreatmentDemo() {
               addMessage(transcript, true, true);
               updateContextFromTranscript(transcript);
               
-              // AGGRESSIVE: Try multiple cancellation methods
-              try {
-                // Method 1: Cancel response
-                sessionRef.current.dataChannel?.send(JSON.stringify({
-                  type: 'response.cancel'
-                }));
-                
-                // Method 2: Clear output buffer
-                sessionRef.current.dataChannel?.send(JSON.stringify({
-                  type: 'output_audio_buffer.clear'
-                }));
-                
-                console.log(`🔍 VOICE_DEBUG: Sent cancellation and buffer clear commands`);
-              } catch (error) {
-                console.log(`🔍 VOICE_DEBUG: Cancellation failed:`, error);
-              }
-              
-              // Process with state machine after delay to ensure cancellation takes effect
+              // Process with state machine 
               setTimeout(() => {
                 if (stateMachineDemo) {
                   processTranscriptWithStateMachine(transcript);
                 }
-              }, 500); // Longer delay
+              }, 200); // Shorter delay since no cancellation needed
             }
           }
           
-          // Block any automatic responses that slip through
-          else if (message.type === 'response.created' && !message.response_id?.includes('manual_')) {
-            console.log(`🔍 VOICE_DEBUG: Blocking automatic response: ${message.response_id}`);
-            try {
-              sessionRef.current.dataChannel?.send(JSON.stringify({
-                type: 'response.cancel',
-                response_id: message.response_id
-              }));
-            } catch (error) {
-              console.log(`🔍 VOICE_DEBUG: Failed to cancel automatic response:`, error);
-            }
-          }
-          
-          // AI response events
-          else if (message.type === 'response.audio_transcript.delta') {
-            const aiText = message.delta;
-            if (aiText) {
-              console.log(`🔍 VOICE_DEBUG: AI speaking:`, aiText);
-            }
-          }
-          
-          // ENHANCED: AI response tracking with manual vs automatic detection
+          // Simplified response tracking
           else if (message.type === 'response.created') {
-            const responseId = message.response?.id || message.response_id || 'unknown';
-            console.log(`🔍 VOICE_DEBUG: Response created with ID: ${responseId}`);
-            
-            if (responseId.includes('manual_')) {
-              console.log(`🔍 VOICE_DEBUG: ✅ Manual response started: ${responseId}`);
-              setIsAIResponding(true);
-            } else {
-              console.log(`🔍 VOICE_DEBUG: ⚠️ Automatic response detected: ${responseId} - attempting to cancel`);
-              try {
-                sessionRef.current.dataChannel?.send(JSON.stringify({
-                  type: 'response.cancel',
-                  response_id: responseId
-                }));
-                sessionRef.current.dataChannel?.send(JSON.stringify({
-                  type: 'output_audio_buffer.clear'
-                }));
-                console.log(`🔍 VOICE_DEBUG: Cancellation sent for automatic response: ${responseId}`);
-              } catch (error) {
-                console.log(`🔍 VOICE_DEBUG: Failed to cancel automatic response:`, error);
-              }
-            }
+            console.log(`🔍 VOICE_DEBUG: ✅ Response started`);
+            setIsAIResponding(true);
           }
           
           else if (message.type === 'response.done') {
-            const responseId = message.response?.id || message.response_id || 'unknown';
-            console.log(`🔍 VOICE_DEBUG: Response completed: ${responseId}`);
-            
-            if (responseId.includes('manual_')) {
-              console.log(`🔍 VOICE_DEBUG: ✅ Manual response completed: ${responseId}`);
-            } else {
-              console.log(`🔍 VOICE_DEBUG: ❌ Automatic response completed (should have been cancelled): ${responseId}`);
-            }
-            
+            console.log(`🔍 VOICE_DEBUG: ✅ Response completed`);
             setIsAIResponding(false);
           }
           
           else if (message.type === 'response.cancelled') {
-            const responseId = message.response?.id || message.response_id || 'unknown';
-            console.log(`🔍 VOICE_DEBUG: ✅ Response cancelled: ${responseId}`);
+            console.log(`🔍 VOICE_DEBUG: ✅ Response cancelled`);
             setIsAIResponding(false);
           }
           
@@ -578,20 +511,22 @@ export default function VoiceTreatmentDemo() {
             console.log(`🔍 VOICE_DEBUG: Session updated successfully`);
           }
           
-          // ENHANCED: Better error handling with filtering
+          // ENHANCED: Better error handling with filtering for manual control
           else if (message.type === 'error') {
             console.error(`🔍 VOICE_DEBUG: API Error:`, message.error);
             
             const errorCode = message.error?.code;
             const errorMessage = message.error?.message || '';
             
-            // Filter out expected/recoverable errors that we handle automatically
+            // Filter out expected/recoverable errors from manual control approach
             if (errorCode === 'invalid_value' && errorMessage.includes('modalities')) {
               console.log(`🔍 VOICE_DEBUG: 🛠️ Modalities error (expected with manual control)`);
             } else if (errorCode === 'decimal_below_min_value' && errorMessage.includes('temperature')) {
               console.log(`🔍 VOICE_DEBUG: 🛠️ Temperature error (will be corrected by session update)`);
-            } else if (errorCode === 'invalid_request_error' && errorMessage.includes('response')) {
-              console.log(`🔍 VOICE_DEBUG: 🛠️ Response conflict error (part of manual control)`);
+            } else if (errorCode === 'unknown_parameter') {
+              console.log(`🔍 VOICE_DEBUG: 🛠️ Unknown parameter error (expected with manual control)`);
+            } else if (errorCode === 'response_cancel_not_active') {
+              console.log(`🔍 VOICE_DEBUG: 🛠️ No active response to cancel (expected with turn detection disabled)`);
             } else {
               // Show serious errors that need attention
               setError(`API Error: ${errorMessage}`);
@@ -676,17 +611,11 @@ export default function VoiceTreatmentDemo() {
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Voice Treatment Demo</h4>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Voice-guided Mind Shifting treatment with automatic speech detection
+              Voice-guided Mind Shifting treatment with manual speech control
             </p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          {isListening && (
-            <div className="flex items-center space-x-1 px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400 rounded-full text-sm">
-              <Mic className="h-3 w-3" />
-              <span>Listening</span>
-            </div>
-          )}
           {isAIResponding && (
             <div className="flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 rounded-full text-sm">
               <MessageSquare className="h-3 w-3" />
@@ -781,6 +710,28 @@ export default function VoiceTreatmentDemo() {
           <span>{status === 'starting' ? 'Starting...' : 'Start Voice Session'}</span>
         </button>
 
+        {/* Manual speech controls for when turn detection is disabled */}
+        {isConnected && (
+          <button
+            onClick={() => {
+              if (sessionRef.current.dataChannel?.readyState === 'open') {
+                try {
+                  sessionRef.current.dataChannel.send(JSON.stringify({
+                    type: 'input_audio_buffer.commit'
+                  }));
+                  console.log('🔍 VOICE_DEBUG: Manually committed speech');
+                } catch (error) {
+                  console.log('🔍 VOICE_DEBUG: Failed to commit speech:', error);
+                }
+              }
+            }}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Mic className="h-4 w-4" />
+            <span>Done Speaking</span>
+          </button>
+        )}
+
         <button
           onClick={cleanup}
           disabled={!isConnected}
@@ -805,9 +756,8 @@ export default function VoiceTreatmentDemo() {
           <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
           <div className="flex-1">
             <span className="text-sm text-green-800 dark:text-green-200">
-              🎙️ Voice session active! Speak naturally - the system uses your exact Mind Shifting scripts.
+              🎙️ Voice session active! Speak naturally, then click "Done Speaking" when finished.
               {isAIResponding && " 🗣️ AI is currently speaking..."}
-              {isListening && " 👂 Listening to you..."}
             </span>
           </div>
         </div>
