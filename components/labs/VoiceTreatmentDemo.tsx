@@ -36,6 +36,7 @@ export default function VoiceTreatmentDemo() {
   const [messages, setMessages] = useState<TreatmentMessage[]>([]);
   const [selectedModality, setSelectedModality] = useState<TreatmentModality>('problem_shifting');
   const [showModalitySelector, setShowModalitySelector] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [demoContext, setDemoContext] = useState<DemoContext>({
     problemStatement: '',
     goalStatement: '',
@@ -66,7 +67,6 @@ export default function VoiceTreatmentDemo() {
 
   // Context update helper
   const updateContextFromTranscript = (transcript: string) => {
-    // Store user responses based on current step
     setDemoContext(prev => ({
       ...prev,
       userResponses: {
@@ -115,20 +115,26 @@ export default function VoiceTreatmentDemo() {
     };
     
     setIsConnected(false);
+    setIsListening(false);
     setStatus('idle');
   }, []);
 
-  // NEW: Correct script-adherent response creation
-  const createScriptedVoiceResponse = async (scriptedResponse: string, userTranscript: string) => {
-    if (sessionRef.current.dataChannel?.readyState !== 'open') {
-      console.error('🔍 VOICE_DEBUG: DataChannel not ready');
-      return;
+  // FIXED: Proper scripted response creation with better timing
+  const createScriptedVoiceResponse = async (scriptedResponse: string, userTranscript: string = '') => {
+    const dataChannel = sessionRef.current.dataChannel;
+    if (!dataChannel || dataChannel.readyState !== 'open') {
+      console.error('🔍 VOICE_DEBUG: DataChannel not ready for scripted response');
+      await new Promise(resolve => setTimeout(resolve, 100)); // Brief wait
+      if (!dataChannel || dataChannel.readyState !== 'open') {
+        console.error('🔍 VOICE_DEBUG: DataChannel still not ready, skipping response');
+        return;
+      }
     }
     
     try {
       console.log(`🔍 VOICE_DEBUG: Creating scripted response: "${scriptedResponse}"`);
       
-      // Step 1: Create assistant message with exact script
+      // Create assistant message with exact script
       const assistantMessageEvent = {
         type: 'conversation.item.create',
         item: {
@@ -142,22 +148,21 @@ export default function VoiceTreatmentDemo() {
         }
       };
       
-      sessionRef.current.dataChannel.send(JSON.stringify(assistantMessageEvent));
-      console.log(`🔍 VOICE_DEBUG: Assistant message added to conversation`);
+      dataChannel.send(JSON.stringify(assistantMessageEvent));
+      console.log(`🔍 VOICE_DEBUG: Assistant message sent to conversation`);
       
-      // Step 2: Wait briefly then trigger audio response
-      setTimeout(() => {
-        const responseEvent = {
-          type: 'response.create',
-          response: {
-            modalities: ['audio']
-            // No instructions - uses the assistant message we just added
-          }
-        };
-        
-        sessionRef.current.dataChannel?.send(JSON.stringify(responseEvent));
-        console.log(`🔍 VOICE_DEBUG: Audio response triggered`);
-      }, 150);
+      // Wait then trigger audio response
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const responseEvent = {
+        type: 'response.create',
+        response: {
+          modalities: ['audio']
+        }
+      };
+      
+      dataChannel.send(JSON.stringify(responseEvent));
+      console.log(`🔍 VOICE_DEBUG: Audio response generation triggered`);
       
       // Update UI
       addMessage(scriptedResponse, false, true);
@@ -167,14 +172,20 @@ export default function VoiceTreatmentDemo() {
     }
   };
 
-  // CRITICAL: Process transcript and create manual response
+  // FIXED: Better transcript processing with proper state machine integration
   const processTranscriptWithStateMachine = async (transcript: string) => {
     if (!stateMachineDemo) {
       console.log(`🔍 VOICE_DEBUG: State machine not initialized, initializing now...`);
       const demo = new TreatmentStateMachineDemo();
       setStateMachineDemo(demo);
-      await demo.initializeSession(selectedModality, undefined, true);
-      console.log(`🔍 VOICE_DEBUG: State machine initialized for transcript processing`);
+      
+      try {
+        await demo.initializeSession(selectedModality, transcript, true);
+        console.log(`🔍 VOICE_DEBUG: State machine initialized for transcript processing`);
+      } catch (error) {
+        console.error(`🔍 VOICE_DEBUG: Failed to initialize state machine:`, error);
+        return null;
+      }
     }
     
     console.log(`🔍 VOICE_DEBUG: Processing transcript: "${transcript}"`);
@@ -185,21 +196,11 @@ export default function VoiceTreatmentDemo() {
       
       if (result.scriptedResponse) {
         console.log(`🔍 VOICE_DEBUG: Got scripted response: "${result.scriptedResponse}"`);
-        
-        // Store the scripted response in the state machine context
-        const context = stateMachineDemo!.getCurrentContext();
-        if (context) {
-          // Add the scripted response to context for potential future use
-          console.log(`🔍 VOICE_DEBUG: Stored scripted response in context: "${result.scriptedResponse}"`);
-        }
-        
-        // Use the correct script creation method
         await createScriptedVoiceResponse(result.scriptedResponse, transcript);
-        
         return result.scriptedResponse;
       }
     } catch (error) {
-      console.error(`🔍 VOICE_DEBUG: Error processing transcript with state machine:`, error);
+      console.error(`🔍 VOICE_DEBUG: Error processing transcript:`, error);
     }
     
     return null;
@@ -210,45 +211,47 @@ export default function VoiceTreatmentDemo() {
       setError('');
       setStatus('starting');
 
-      // CRITICAL: Ensure state machine is initialized before starting voice session
+      // Initialize state machine first
       if (!stateMachineDemo) {
-        console.log(`🔍 VOICE_DEBUG: Initializing state machine before voice session...`);
+        console.log(`🔍 VOICE_DEBUG: Initializing state machine...`);
         const demo = new TreatmentStateMachineDemo();
         setStateMachineDemo(demo);
         await demo.initializeSession(selectedModality, undefined, true);
-        console.log(`🔍 VOICE_DEBUG: State machine initialized successfully`);
+        console.log(`🔍 VOICE_DEBUG: State machine initialized`);
       }
 
-      // Get initial response from state machine
+      // Get initial response
       let initialResponse = "What problem would you like to work on today? Please state it in a few words.";
-      
-      // Try to get the actual initial response from state machine
       if (stateMachineDemo) {
         try {
           const result = await stateMachineDemo.processUserInput("", undefined, true);
-          if (result.scriptedResponse) {
+          if (result.scriptedResponse && result.scriptedResponse !== "Please provide a response.") {
             initialResponse = result.scriptedResponse;
-            console.log(`🔍 VOICE_DEBUG: Using state machine initial response: "${initialResponse}"`);
           }
         } catch (error) {
-          console.log(`🔍 VOICE_DEBUG: Using fallback initial response: "${initialResponse}"`);
+          console.log(`🔍 VOICE_DEBUG: Using fallback initial response`);
         }
       }
 
-      // 1. Create ephemeral session with CRITICAL transcription settings
+      // 1. Create ephemeral session
       const sessionResponse = await fetch('/api/labs/openai-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'gpt-4o-realtime-preview-2024-12-17',
           voice: 'verse',
-          // CRITICAL: System instructions for script adherence
-          instructions: `You are a Mind Shifting treatment assistant. You must only speak the exact text content from assistant messages in the conversation. Never generate original responses. Never add extra words, introductions, or explanations. Speak only what is explicitly provided in assistant message content.`,
-          // CRITICAL: Enable transcription
+          instructions: `You are a Mind Shifting treatment assistant. Speak only the exact text from assistant messages. Never generate original responses.`,
+          // FIXED: Enable transcription AND server VAD for better speech detection
           input_audio_transcription: {
             model: 'whisper-1'
+          },
+          // FIXED: Enable server-side voice activity detection
+          turn_detection: {
+            type: 'server_vad',
+            threshold: 0.5,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 800
           }
-          // Note: turn_detection, modalities, temperature, etc. will be set via session.update
         })
       });
 
@@ -279,17 +282,26 @@ export default function VoiceTreatmentDemo() {
       sessionRef.current.remoteStream = remoteStream;
 
       pc.ontrack = (event) => {
+        console.log('🔍 VOICE_DEBUG: Audio track received');
         event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
         setStatus('connected');
         setIsConnected(true);
         
-        // Since we disabled automatic turn detection, manually create the initial response
-        setTimeout(() => {
-          createScriptedVoiceResponse(initialResponse, ''); // Pass an empty transcript for initial response
-        }, 1000);
+        // Wait for data channel to be ready before sending initial response
+        const checkDataChannel = () => {
+          if (sessionRef.current.dataChannel?.readyState === 'open') {
+            setTimeout(() => {
+              createScriptedVoiceResponse(initialResponse, '');
+            }, 1000);
+          } else {
+            setTimeout(checkDataChannel, 100);
+          }
+        };
+        checkDataChannel();
       };
 
       pc.onconnectionstatechange = () => {
+        console.log('🔍 VOICE_DEBUG: Connection state:', pc.connectionState);
         if (['failed', 'closed', 'disconnected'].includes(pc.connectionState)) {
           setStatus(pc.connectionState);
           if (pc.connectionState === 'failed') {
@@ -298,115 +310,123 @@ export default function VoiceTreatmentDemo() {
         }
       };
 
-      // 3. Get microphone
+      // 3. Get microphone with better constraints
       console.log(`🔍 VOICE_DEBUG: Requesting microphone access...`);
-      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 24000
+        }
+      });
+      
       console.log(`🔍 VOICE_DEBUG: Microphone access granted, tracks:`, micStream.getAudioTracks().length);
       
       const [track] = micStream.getAudioTracks();
-      console.log(`🔍 VOICE_DEBUG: Adding audio track to peer connection`);
       pc.addTrack(track, micStream);
       sessionRef.current.micStream = micStream;
 
-      // 4. Set up data channel with MANUAL RESPONSE CONTROL
+      // 4. Set up data channel with improved event handling
       const dataChannel = pc.createDataChannel('oai-events');
       sessionRef.current.dataChannel = dataChannel;
 
       dataChannel.addEventListener('open', () => {
-        console.log('🔍 VOICE_DEBUG: DataChannel opened, configuring session...');
+        console.log('🔍 VOICE_DEBUG: DataChannel opened');
         
-        // Configure session with voice detection but manual response control
+        // FIXED: More comprehensive session configuration
         const sessionConfig = {
           type: 'session.update',
           session: {
-            instructions: `You are conducting a Mind Shifting treatment session. You must speak ONLY the exact text provided in assistant messages. Never generate original content. Never add words. Speak exactly what is provided, nothing more.`,
+            instructions: `You are conducting a Mind Shifting treatment session. Speak ONLY the exact text from assistant messages. Never generate original content.`,
             voice: 'verse',
             input_audio_transcription: {
               model: 'whisper-1'
             },
-            // CRITICAL: Disable automatic turn detection completely
-            turn_detection: null
+            // FIXED: Use server VAD for automatic speech detection
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 800
+            },
+            modalities: ['text', 'audio'],
+            temperature: 0.1
           }
         };
         
-        console.log('🔍 VOICE_DEBUG: Sending session config:', sessionConfig);
+        console.log('🔍 VOICE_DEBUG: Sending session config');
         dataChannel.send(JSON.stringify(sessionConfig));
-        console.log('🔍 VOICE_DEBUG: Session configuration sent successfully');
-        
       });
 
-      // 5. CRITICAL: Manual response handling
+      // FIXED: Enhanced message handling with better speech detection
       dataChannel.addEventListener('message', (event) => {
         try {
           const message = JSON.parse(event.data);
-          console.log(`🔍 VOICE_DEBUG: Received message:`, message.type, message);
+          console.log(`🔍 VOICE_DEBUG: Event:`, message.type);
           
-          // Enhanced debugging for voice input detection
+          // Speech detection events
           if (message.type === 'input_audio_buffer.speech_started') {
-            console.log(`🔍 VOICE_DEBUG: Speech started - user is speaking`);
-          } else if (message.type === 'input_audio_buffer.speech_stopped') {
-            console.log(`🔍 VOICE_DEBUG: Speech stopped - waiting for transcription`);
-          } else if (message.type === 'input_audio_buffer.committed') {
-            console.log(`🔍 VOICE_DEBUG: Audio buffer committed - transcription should follow`);
+            console.log(`🔍 VOICE_DEBUG: User started speaking`);
+            setIsListening(true);
+          } 
+          else if (message.type === 'input_audio_buffer.speech_stopped') {
+            console.log(`🔍 VOICE_DEBUG: User stopped speaking`);
+            setIsListening(false);
+          } 
+          else if (message.type === 'input_audio_buffer.committed') {
+            console.log(`🔍 VOICE_DEBUG: Audio committed, waiting for transcription`);
           }
           
-          // Handle user transcription completion - manually create response
-          if (message.type === 'conversation.item.input_audio_transcription.completed') {
+          // FIXED: Handle user transcription with better processing
+          else if (message.type === 'conversation.item.input_audio_transcription.completed') {
             const transcript = message.transcript?.trim();
-            console.log(`🔍 VOICE_DEBUG: User transcript completed:`, transcript);
+            console.log(`🔍 VOICE_DEBUG: Transcription completed:`, transcript);
             
-            if (transcript) {
+            if (transcript && transcript.length > 1) {
               addMessage(transcript, true, true);
+              updateContextFromTranscript(transcript);
               
-              // Process with state machine to get the scripted response
+              // Process with state machine
               if (stateMachineDemo) {
                 processTranscriptWithStateMachine(transcript);
               }
-              
-              // Update context
-              updateContextFromTranscript(transcript);
             }
           }
           
-          // Handle AI responses (for logging)
+          // AI response events
           else if (message.type === 'response.audio_transcript.delta') {
             const aiText = message.delta;
             if (aiText) {
-              console.log(`🔍 VOICE_DEBUG: AI saying:`, aiText);
+              console.log(`🔍 VOICE_DEBUG: AI speaking:`, aiText);
             }
           }
           
-          // Handle response creation - should be scripted now
-          else if (message.type === 'response.created') {
-            console.log(`🔍 VOICE_DEBUG: Response created - should be scripted`);
-          }
-          
-          // Handle response completion
           else if (message.type === 'response.done') {
             console.log(`🔍 VOICE_DEBUG: AI response completed`);
           }
           
-          // Handle conversation items (store for debugging)
-          else if (message.type === 'conversation.item.created') {
-            const role = message.item?.role;
-            const content = message.item?.content?.[0]?.text;
-            console.log(`🔍 VOICE_DEBUG: Item created - ${role}: "${content}"`);
-            
-            if (message.item?.id) {
-              setConversationItems(prev => {
-                const newMap = new Map(prev);
-                newMap.set(message.item.id, message.item);
-                return newMap;
-              });
-            }
+          // Session events
+          else if (message.type === 'session.created') {
+            console.log(`🔍 VOICE_DEBUG: Session created`);
+          }
+          
+          else if (message.type === 'session.updated') {
+            console.log(`🔍 VOICE_DEBUG: Session updated successfully`);
+          }
+          
+          // Error handling
+          else if (message.type === 'error') {
+            console.error(`🔍 VOICE_DEBUG: API Error:`, message.error);
+            setError(`API Error: ${message.error?.message || 'Unknown error'}`);
           }
           
         } catch (err) {
-          console.log(`🔍 VOICE_DEBUG: Non-JSON message:`, event.data);
+          console.log(`🔍 VOICE_DEBUG: Non-JSON message received`);
         }
       });
 
-      // 6. Create and send WebRTC offer
+      // 5. Create and send WebRTC offer
       await pc.setLocalDescription(await pc.createOffer());
 
       const sdpUrl = `https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17`;
@@ -427,8 +447,7 @@ export default function VoiceTreatmentDemo() {
       const answerSdp = await sdpResponse.text();
       await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
 
-      setStatus('connected');
-      setIsConnected(true);
+      console.log(`🔍 VOICE_DEBUG: WebRTC connection established`);
 
     } catch (err: any) {
       setError(err.message);
@@ -466,7 +485,6 @@ export default function VoiceTreatmentDemo() {
       userResponses: {}
     });
     
-    // Reset state machine
     if (stateMachineDemo) {
       stateMachineDemo.resetSession();
     }
@@ -480,11 +498,17 @@ export default function VoiceTreatmentDemo() {
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Voice Treatment Demo</h4>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Voice-guided Mind Shifting treatment with precise script control
+              Voice-guided Mind Shifting treatment with automatic speech detection
             </p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          {isListening && (
+            <div className="flex items-center space-x-1 px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400 rounded-full text-sm">
+              <Mic className="h-3 w-3" />
+              <span>Listening</span>
+            </div>
+          )}
           <div className={`px-3 py-1 rounded-full text-sm font-medium ${
             status === 'connected' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
             status === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
@@ -495,8 +519,6 @@ export default function VoiceTreatmentDemo() {
           </div>
         </div>
       </div>
-
-
 
       {/* Modality Selector */}
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
@@ -599,7 +621,7 @@ export default function VoiceTreatmentDemo() {
           <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
           <div className="flex-1">
             <span className="text-sm text-green-800 dark:text-green-200">
-              Voice session active! The AI will speak exactly the scripted responses from your state machine.
+              Voice session active! Speak naturally and the system will automatically detect when you're done speaking.
             </span>
           </div>
         </div>
