@@ -121,17 +121,21 @@ export default function VoiceTreatmentDemo() {
     setStatus('idle');
   }, []);
 
-  // FIXED: Response creation with conflict prevention
+  // COMPLETELY REWRITTEN: Response creation with unique IDs and better conflict prevention
   const createScriptedVoiceResponse = async (scriptedResponse: string, userTranscript: string = '') => {
+    console.log(`🔍 VOICE_DEBUG: ====== Creating scripted response ======`);
+    console.log(`🔍 VOICE_DEBUG: Script: "${scriptedResponse}"`);
+    console.log(`🔍 VOICE_DEBUG: AI responding: ${isAIResponding}`);
+    
     // Don't create response if AI is currently responding
     if (isAIResponding) {
-      console.log(`🔍 VOICE_DEBUG: Skipping response creation - AI is currently responding`);
+      console.log(`🔍 VOICE_DEBUG: ❌ Blocking - AI is currently responding`);
       return;
     }
     
-    // Wait for DataChannel to be ready with timeout
+    // Wait for DataChannel to be ready
     let attempts = 0;
-    const maxAttempts = 10;
+    const maxAttempts = 15;
     
     while (sessionRef.current.dataChannel?.readyState !== 'open' && attempts < maxAttempts) {
       console.log(`🔍 VOICE_DEBUG: Waiting for DataChannel, attempt ${attempts + 1}`);
@@ -140,18 +144,22 @@ export default function VoiceTreatmentDemo() {
     }
     
     if (sessionRef.current.dataChannel?.readyState !== 'open') {
-      console.error('🔍 VOICE_DEBUG: DataChannel not ready after timeout, skipping response');
+      console.error('🔍 VOICE_DEBUG: ❌ DataChannel not ready after timeout, aborting');
       return;
     }
     
     try {
-      console.log(`🔍 VOICE_DEBUG: Creating scripted response: "${scriptedResponse}"`);
       setIsAIResponding(true);
+      
+      // Generate unique ID for our manual response
+      const manualResponseId = `manual_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      console.log(`🔍 VOICE_DEBUG: Creating manual response with ID: ${manualResponseId}`);
       
       // Create assistant message with exact script
       const assistantMessageEvent = {
         type: 'conversation.item.create',
         item: {
+          id: `msg_${manualResponseId}`,
           type: 'message',
           role: 'assistant',
           status: 'completed',
@@ -163,26 +171,29 @@ export default function VoiceTreatmentDemo() {
       };
       
       sessionRef.current.dataChannel.send(JSON.stringify(assistantMessageEvent));
-      console.log(`🔍 VOICE_DEBUG: Assistant message sent to conversation`);
+      console.log(`🔍 VOICE_DEBUG: ✅ Assistant message sent`);
       
-      // Wait then trigger audio response
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Wait before triggering response
+      await new Promise(resolve => setTimeout(resolve, 400));
       
+      // Create manual response with our unique ID
       const responseEvent = {
         type: 'response.create',
         response: {
+          id: manualResponseId,
           modalities: ['audio', 'text']
         }
       };
       
       sessionRef.current.dataChannel.send(JSON.stringify(responseEvent));
-      console.log(`🔍 VOICE_DEBUG: Audio response generation triggered`);
+      console.log(`🔍 VOICE_DEBUG: ✅ Manual audio response triggered with ID: ${manualResponseId}`);
       
-      // Update UI
+      // Update UI immediately (don't wait for audio completion)
       addMessage(scriptedResponse, false, true);
+      console.log(`🔍 VOICE_DEBUG: ✅ UI updated with scripted response`);
       
     } catch (error) {
-      console.error(`🔍 VOICE_DEBUG: Failed to create scripted response:`, error);
+      console.error(`🔍 VOICE_DEBUG: ❌ Failed to create scripted response:`, error);
       setIsAIResponding(false);
     }
   };
@@ -369,9 +380,10 @@ export default function VoiceTreatmentDemo() {
         // Wait for data channel to be ready before sending initial response
         const checkDataChannel = () => {
           if (sessionRef.current.dataChannel?.readyState === 'open') {
+            console.log(`🔍 VOICE_DEBUG: 🎬 Sending initial response: "${initialResponse}"`);
             setTimeout(() => {
               createScriptedVoiceResponse(initialResponse, '');
-            }, 1000);
+            }, 1200); // Longer delay to ensure everything is ready
           } else {
             setTimeout(checkDataChannel, 100);
           }
@@ -457,7 +469,7 @@ export default function VoiceTreatmentDemo() {
             console.log(`🔍 VOICE_DEBUG: Audio committed, waiting for transcription`);
           }
           
-          // FIXED: Handle user transcription with proper response control
+          // CRITICAL: Handle user transcription with aggressive response control
           else if (message.type === 'conversation.item.input_audio_transcription.completed') {
             const transcript = message.transcript?.trim();
             console.log(`🔍 VOICE_DEBUG: Transcription completed:`, transcript);
@@ -466,22 +478,42 @@ export default function VoiceTreatmentDemo() {
               addMessage(transcript, true, true);
               updateContextFromTranscript(transcript);
               
-              // CRITICAL: Cancel any automatic response first
+              // AGGRESSIVE: Try multiple cancellation methods
               try {
+                // Method 1: Cancel response
                 sessionRef.current.dataChannel?.send(JSON.stringify({
                   type: 'response.cancel'
                 }));
-                console.log(`🔍 VOICE_DEBUG: Cancelled automatic response`);
+                
+                // Method 2: Clear output buffer
+                sessionRef.current.dataChannel?.send(JSON.stringify({
+                  type: 'output_audio_buffer.clear'
+                }));
+                
+                console.log(`🔍 VOICE_DEBUG: Sent cancellation and buffer clear commands`);
               } catch (error) {
-                console.log(`🔍 VOICE_DEBUG: No response to cancel`);
+                console.log(`🔍 VOICE_DEBUG: Cancellation failed:`, error);
               }
               
-              // Process with state machine after brief delay
+              // Process with state machine after delay to ensure cancellation takes effect
               setTimeout(() => {
                 if (stateMachineDemo) {
                   processTranscriptWithStateMachine(transcript);
                 }
-              }, 300);
+              }, 500); // Longer delay
+            }
+          }
+          
+          // Block any automatic responses that slip through
+          else if (message.type === 'response.created' && !message.response_id?.includes('manual_')) {
+            console.log(`🔍 VOICE_DEBUG: Blocking automatic response: ${message.response_id}`);
+            try {
+              sessionRef.current.dataChannel?.send(JSON.stringify({
+                type: 'response.cancel',
+                response_id: message.response_id
+              }));
+            } catch (error) {
+              console.log(`🔍 VOICE_DEBUG: Failed to cancel automatic response:`, error);
             }
           }
           
@@ -493,19 +525,47 @@ export default function VoiceTreatmentDemo() {
             }
           }
           
-          // AI response tracking
+          // ENHANCED: AI response tracking with manual vs automatic detection
           else if (message.type === 'response.created') {
-            console.log(`🔍 VOICE_DEBUG: AI response started`);
-            setIsAIResponding(true);
+            const responseId = message.response?.id || message.response_id || 'unknown';
+            console.log(`🔍 VOICE_DEBUG: Response created with ID: ${responseId}`);
+            
+            if (responseId.includes('manual_')) {
+              console.log(`🔍 VOICE_DEBUG: ✅ Manual response started: ${responseId}`);
+              setIsAIResponding(true);
+            } else {
+              console.log(`🔍 VOICE_DEBUG: ⚠️ Automatic response detected: ${responseId} - attempting to cancel`);
+              try {
+                sessionRef.current.dataChannel?.send(JSON.stringify({
+                  type: 'response.cancel',
+                  response_id: responseId
+                }));
+                sessionRef.current.dataChannel?.send(JSON.stringify({
+                  type: 'output_audio_buffer.clear'
+                }));
+                console.log(`🔍 VOICE_DEBUG: Cancellation sent for automatic response: ${responseId}`);
+              } catch (error) {
+                console.log(`🔍 VOICE_DEBUG: Failed to cancel automatic response:`, error);
+              }
+            }
           }
           
           else if (message.type === 'response.done') {
-            console.log(`🔍 VOICE_DEBUG: AI response completed`);
+            const responseId = message.response?.id || message.response_id || 'unknown';
+            console.log(`🔍 VOICE_DEBUG: Response completed: ${responseId}`);
+            
+            if (responseId.includes('manual_')) {
+              console.log(`🔍 VOICE_DEBUG: ✅ Manual response completed: ${responseId}`);
+            } else {
+              console.log(`🔍 VOICE_DEBUG: ❌ Automatic response completed (should have been cancelled): ${responseId}`);
+            }
+            
             setIsAIResponding(false);
           }
           
           else if (message.type === 'response.cancelled') {
-            console.log(`🔍 VOICE_DEBUG: Response cancelled`);
+            const responseId = message.response?.id || message.response_id || 'unknown';
+            console.log(`🔍 VOICE_DEBUG: ✅ Response cancelled: ${responseId}`);
             setIsAIResponding(false);
           }
           
@@ -518,19 +578,24 @@ export default function VoiceTreatmentDemo() {
             console.log(`🔍 VOICE_DEBUG: Session updated successfully`);
           }
           
-          // Error handling
+          // ENHANCED: Better error handling with filtering
           else if (message.type === 'error') {
             console.error(`🔍 VOICE_DEBUG: API Error:`, message.error);
             
-            // Handle specific errors
-            if (message.error?.code === 'invalid_value' && message.error?.message?.includes('modalities')) {
-              console.log(`🔍 VOICE_DEBUG: Modalities error - retrying with correct format`);
-              // Don't show this error to user, it's a recoverable API issue
-            } else if (message.error?.code === 'decimal_below_min_value' && message.error?.message?.includes('temperature')) {
-              console.log(`🔍 VOICE_DEBUG: Temperature error - session will be updated`);
-              // Don't show this error to user, it's handled by session update
+            const errorCode = message.error?.code;
+            const errorMessage = message.error?.message || '';
+            
+            // Filter out expected/recoverable errors that we handle automatically
+            if (errorCode === 'invalid_value' && errorMessage.includes('modalities')) {
+              console.log(`🔍 VOICE_DEBUG: 🛠️ Modalities error (expected with manual control)`);
+            } else if (errorCode === 'decimal_below_min_value' && errorMessage.includes('temperature')) {
+              console.log(`🔍 VOICE_DEBUG: 🛠️ Temperature error (will be corrected by session update)`);
+            } else if (errorCode === 'invalid_request_error' && errorMessage.includes('response')) {
+              console.log(`🔍 VOICE_DEBUG: 🛠️ Response conflict error (part of manual control)`);
             } else {
-              setError(`API Error: ${message.error?.message || 'Unknown error'}`);
+              // Show serious errors that need attention
+              setError(`API Error: ${errorMessage}`);
+              console.error(`🔍 VOICE_DEBUG: ❌ SERIOUS ERROR:`, message.error);
             }
           }
           
@@ -740,7 +805,9 @@ export default function VoiceTreatmentDemo() {
           <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
           <div className="flex-1">
             <span className="text-sm text-green-800 dark:text-green-200">
-              Voice session active! Speak naturally and the system will automatically detect when you're done speaking.
+              🎙️ Voice session active! Speak naturally - the system uses your exact Mind Shifting scripts.
+              {isAIResponding && " 🗣️ AI is currently speaking..."}
+              {isListening && " 👂 Listening to you..."}
             </span>
           </div>
         </div>
