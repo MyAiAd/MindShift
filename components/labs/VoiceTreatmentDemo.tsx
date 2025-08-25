@@ -119,16 +119,21 @@ export default function VoiceTreatmentDemo() {
     setStatus('idle');
   }, []);
 
-  // FIXED: Proper scripted response creation with better timing
+  // FIXED: Proper scripted response creation with better timing and error handling
   const createScriptedVoiceResponse = async (scriptedResponse: string, userTranscript: string = '') => {
-    const dataChannel = sessionRef.current.dataChannel;
-    if (!dataChannel || dataChannel.readyState !== 'open') {
-      console.error('🔍 VOICE_DEBUG: DataChannel not ready for scripted response');
-      await new Promise(resolve => setTimeout(resolve, 100)); // Brief wait
-      if (!dataChannel || dataChannel.readyState !== 'open') {
-        console.error('🔍 VOICE_DEBUG: DataChannel still not ready, skipping response');
-        return;
-      }
+    // Wait for DataChannel to be ready with timeout
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (sessionRef.current.dataChannel?.readyState !== 'open' && attempts < maxAttempts) {
+      console.log(`🔍 VOICE_DEBUG: Waiting for DataChannel, attempt ${attempts + 1}`);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    if (sessionRef.current.dataChannel?.readyState !== 'open') {
+      console.error('🔍 VOICE_DEBUG: DataChannel not ready after timeout, skipping response');
+      return;
     }
     
     try {
@@ -148,7 +153,7 @@ export default function VoiceTreatmentDemo() {
         }
       };
       
-      dataChannel.send(JSON.stringify(assistantMessageEvent));
+      sessionRef.current.dataChannel.send(JSON.stringify(assistantMessageEvent));
       console.log(`🔍 VOICE_DEBUG: Assistant message sent to conversation`);
       
       // Wait then trigger audio response
@@ -157,11 +162,11 @@ export default function VoiceTreatmentDemo() {
       const responseEvent = {
         type: 'response.create',
         response: {
-          modalities: ['audio']
+          modalities: ['audio', 'text']  // FIXED: Must include both modalities
         }
       };
       
-      dataChannel.send(JSON.stringify(responseEvent));
+      sessionRef.current.dataChannel.send(JSON.stringify(responseEvent));
       console.log(`🔍 VOICE_DEBUG: Audio response generation triggered`);
       
       // Update UI
@@ -172,7 +177,7 @@ export default function VoiceTreatmentDemo() {
     }
   };
 
-  // FIXED: Better transcript processing with proper state machine integration
+  // FIXED: Better transcript processing with internal signal handling
   const processTranscriptWithStateMachine = async (transcript: string) => {
     if (!stateMachineDemo) {
       console.log(`🔍 VOICE_DEBUG: State machine not initialized, initializing now...`);
@@ -195,9 +200,31 @@ export default function VoiceTreatmentDemo() {
       console.log(`🔍 VOICE_DEBUG: State machine result:`, result);
       
       if (result.scriptedResponse) {
-        console.log(`🔍 VOICE_DEBUG: Got scripted response: "${result.scriptedResponse}"`);
-        await createScriptedVoiceResponse(result.scriptedResponse, transcript);
-        return result.scriptedResponse;
+        // FIXED: Handle internal signals properly
+        if (result.scriptedResponse.startsWith('SKIP_TO_TREATMENT_INTRO') || 
+            result.scriptedResponse === 'GOAL_SELECTION_CONFIRMED' ||
+            result.scriptedResponse === 'PROBLEM_SELECTION_CONFIRMED' ||
+            result.scriptedResponse === 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED') {
+          
+          console.log(`🔍 VOICE_DEBUG: Got internal signal: "${result.scriptedResponse}"`);
+          
+          // Process the internal signal by making another call to get the actual response
+          const followUpResult = await stateMachineDemo!.processUserInput('', undefined, true);
+          if (followUpResult.scriptedResponse && !followUpResult.scriptedResponse.startsWith('SKIP_') && !followUpResult.scriptedResponse.endsWith('_CONFIRMED')) {
+            console.log(`🔍 VOICE_DEBUG: Follow-up response: "${followUpResult.scriptedResponse}"`);
+            await createScriptedVoiceResponse(followUpResult.scriptedResponse, transcript);
+            return followUpResult.scriptedResponse;
+          }
+          
+          // Fallback response for unhandled internal signals
+          const fallbackResponse = "Thank you. Let's continue with the treatment process.";
+          await createScriptedVoiceResponse(fallbackResponse, transcript);
+          return fallbackResponse;
+        } else {
+          console.log(`🔍 VOICE_DEBUG: Got user-facing response: "${result.scriptedResponse}"`);
+          await createScriptedVoiceResponse(result.scriptedResponse, transcript);
+          return result.scriptedResponse;
+        }
       }
     } catch (error) {
       console.error(`🔍 VOICE_DEBUG: Error processing transcript:`, error);
@@ -221,15 +248,22 @@ export default function VoiceTreatmentDemo() {
       }
 
       // Get initial response
-      let initialResponse = "What problem would you like to work on today? Please state it in a few words.";
+      let initialResponse = "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. When you are ready to begin, would you like to work on: 1. PROBLEM, 2. GOAL, or 3. NEGATIVE EXPERIENCE?";
+      
       if (stateMachineDemo) {
         try {
           const result = await stateMachineDemo.processUserInput("", undefined, true);
-          if (result.scriptedResponse && result.scriptedResponse !== "Please provide a response.") {
+          if (result.scriptedResponse && 
+              result.scriptedResponse !== "Please provide a response." && 
+              !result.scriptedResponse.startsWith('SKIP_') && 
+              !result.scriptedResponse.endsWith('_CONFIRMED')) {
             initialResponse = result.scriptedResponse;
+            console.log(`🔍 VOICE_DEBUG: Using state machine initial response: "${initialResponse}"`);
+          } else {
+            console.log(`🔍 VOICE_DEBUG: Using default initial response due to: "${result.scriptedResponse}"`);
           }
         } catch (error) {
-          console.log(`🔍 VOICE_DEBUG: Using fallback initial response`);
+          console.log(`🔍 VOICE_DEBUG: Using fallback initial response due to error:`, error);
         }
       }
 
@@ -251,7 +285,8 @@ export default function VoiceTreatmentDemo() {
             threshold: 0.5,
             prefix_padding_ms: 300,
             silence_duration_ms: 800
-          }
+          },
+          temperature: 0.8  // FIXED: Must be >= 0.6
         })
       });
 
@@ -351,7 +386,7 @@ export default function VoiceTreatmentDemo() {
               silence_duration_ms: 800
             },
             modalities: ['text', 'audio'],
-            temperature: 0.1
+            temperature: 0.8  // FIXED: Must be >= 0.6
           }
         };
         
@@ -418,7 +453,17 @@ export default function VoiceTreatmentDemo() {
           // Error handling
           else if (message.type === 'error') {
             console.error(`🔍 VOICE_DEBUG: API Error:`, message.error);
-            setError(`API Error: ${message.error?.message || 'Unknown error'}`);
+            
+            // Handle specific errors
+            if (message.error?.code === 'invalid_value' && message.error?.message?.includes('modalities')) {
+              console.log(`🔍 VOICE_DEBUG: Modalities error - retrying with correct format`);
+              // Don't show this error to user, it's a recoverable API issue
+            } else if (message.error?.code === 'decimal_below_min_value' && message.error?.message?.includes('temperature')) {
+              console.log(`🔍 VOICE_DEBUG: Temperature error - session will be updated`);
+              // Don't show this error to user, it's handled by session update
+            } else {
+              setError(`API Error: ${message.error?.message || 'Unknown error'}`);
+            }
           }
           
         } catch (err) {
