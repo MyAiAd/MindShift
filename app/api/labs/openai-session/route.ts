@@ -14,7 +14,11 @@ export async function POST(request: NextRequest) {
       voice = 'verse', 
       instructions,
       input_audio_transcription,
-      turn_detection
+      turn_detection,
+      modalities,
+      temperature,
+      max_response_output_tokens,
+      tools
     } = body;
 
     // Create ephemeral client secret for WebRTC
@@ -29,7 +33,11 @@ export async function POST(request: NextRequest) {
         voice,
         ...(instructions && { instructions }),
         ...(input_audio_transcription && { input_audio_transcription }),
-        ...(turn_detection && { turn_detection }) // Allow both null and object values
+        ...(turn_detection !== undefined && { turn_detection }), // Allow null values
+        ...(modalities && { modalities }),
+        ...(temperature !== undefined && { temperature }),
+        ...(max_response_output_tokens && { max_response_output_tokens }),
+        ...(tools && { tools })
       }),
     });
 
