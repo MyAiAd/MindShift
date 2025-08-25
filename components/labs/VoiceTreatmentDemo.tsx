@@ -247,14 +247,8 @@ export default function VoiceTreatmentDemo() {
           // CRITICAL: Enable transcription
           input_audio_transcription: {
             model: 'whisper-1'
-          },
-          // CRITICAL: Disable automatic turn detection completely
-          turn_detection: null,
-          modalities: ['text', 'audio'],
-          // CRITICAL: Minimum temperature for maximum consistency
-          temperature: 0.0,
-          max_response_output_tokens: 150,
-          tools: [] // No tools to prevent unexpected function calling
+          }
+          // Note: turn_detection, modalities, temperature, etc. will be set via session.update
         })
       });
 
@@ -331,12 +325,7 @@ export default function VoiceTreatmentDemo() {
               model: 'whisper-1'
             },
             // CRITICAL: Disable automatic turn detection completely
-            turn_detection: null,
-            modalities: ['text', 'audio'],
-            // CRITICAL: Minimum temperature for maximum consistency
-            temperature: 0.0,
-            max_response_output_tokens: 150,
-            tools: [] // No tools to prevent unexpected function calling
+            turn_detection: null
           }
         };
         
@@ -344,23 +333,6 @@ export default function VoiceTreatmentDemo() {
         dataChannel.send(JSON.stringify(sessionConfig));
         console.log('🔍 VOICE_DEBUG: Session configuration sent successfully');
         
-        // CRITICAL: Send additional configuration to disable automatic responses
-        setTimeout(() => {
-          const disableAutoConfig = {
-            type: 'session.update',
-            session: {
-              instructions: `You are conducting a Mind Shifting treatment session. You must speak ONLY the exact text provided in assistant messages. Never generate original content. Never add words. Speak exactly what is provided, nothing more.`,
-              turn_detection: {
-                type: 'server_vad',
-                threshold: 0.5,
-                prefix_padding_ms: 300,
-                silence_duration_ms: 800
-              }
-            }
-          };
-          dataChannel.send(JSON.stringify(disableAutoConfig));
-          console.log('🔍 VOICE_DEBUG: Auto-response disable config sent');
-        }, 100);
       });
 
       // 5. CRITICAL: Manual response handling
