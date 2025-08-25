@@ -46,9 +46,6 @@ export default function VoiceTreatmentDemo() {
   const [stateMachineDemo, setStateMachineDemo] = useState<TreatmentStateMachineDemo | null>(null);
   const [conversationItems, setConversationItems] = useState<Map<string, any>>(new Map());
   
-  // Track manual responses so we don't cancel them
-  const pendingManualResponses = useRef<Set<string>>(new Set());
-  
   const sessionRef = useRef<VoiceSession>({
     pc: null,
     audioEl: null,
@@ -121,39 +118,52 @@ export default function VoiceTreatmentDemo() {
     setStatus('idle');
   }, []);
 
-  // Helper function to create tracked manual responses
-  const createManualResponse = (scriptedResponse: string) => {
-    const responseId = `manual_${Date.now()}`;
+  // NEW: Correct script-adherent response creation
+  const createScriptedVoiceResponse = async (scriptedResponse: string, userTranscript: string) => {
+    if (sessionRef.current.dataChannel?.readyState !== 'open') {
+      console.error('🔍 VOICE_DEBUG: DataChannel not ready');
+      return;
+    }
     
-    // Track this as a manual response
-    pendingManualResponses.current.add(responseId);
-    console.log(`🔍 VOICE_DEBUG: Creating tracked manual response: "${scriptedResponse}"`);
-    
-    if (sessionRef.current.dataChannel?.readyState === 'open') {
-      try {
-        const responseMessage = {
+    try {
+      console.log(`🔍 VOICE_DEBUG: Creating scripted response: "${scriptedResponse}"`);
+      
+      // Step 1: Create assistant message with exact script
+      const assistantMessageEvent = {
+        type: 'conversation.item.create',
+        item: {
+          type: 'message',
+          role: 'assistant',
+          status: 'completed',
+          content: [{
+            type: 'text',
+            text: scriptedResponse
+          }]
+        }
+      };
+      
+      sessionRef.current.dataChannel.send(JSON.stringify(assistantMessageEvent));
+      console.log(`🔍 VOICE_DEBUG: Assistant message added to conversation`);
+      
+      // Step 2: Wait briefly then trigger audio response
+      setTimeout(() => {
+        const responseEvent = {
           type: 'response.create',
           response: {
-            modalities: ['audio', 'text'],
-            instructions: `Speak exactly and only this text: "${scriptedResponse}". Do not add any other words before or after.`
+            modalities: ['audio']
+            // No instructions - uses the assistant message we just added
           }
         };
         
-        sessionRef.current.dataChannel.send(JSON.stringify(responseMessage));
-        console.log(`🔍 VOICE_DEBUG: Manual response creation sent`);
-        
-        // Add the AI response to our message history
-        addMessage(scriptedResponse, false, true);
-        
-        // Clean up tracking after delay
-        setTimeout(() => {
-          pendingManualResponses.current.delete(responseId);
-        }, 2000);
-        
-      } catch (error) {
-        console.error(`🔍 VOICE_DEBUG: Failed to create manual response:`, error);
-        pendingManualResponses.current.delete(responseId);
-      }
+        sessionRef.current.dataChannel?.send(JSON.stringify(responseEvent));
+        console.log(`🔍 VOICE_DEBUG: Audio response triggered`);
+      }, 150);
+      
+      // Update UI
+      addMessage(scriptedResponse, false, true);
+      
+    } catch (error) {
+      console.error(`🔍 VOICE_DEBUG: Failed to create scripted response:`, error);
     }
   };
 
@@ -182,6 +192,9 @@ export default function VoiceTreatmentDemo() {
           // Add the scripted response to context for potential future use
           console.log(`🔍 VOICE_DEBUG: Stored scripted response in context: "${result.scriptedResponse}"`);
         }
+        
+        // Use the correct script creation method
+        await createScriptedVoiceResponse(result.scriptedResponse, transcript);
         
         return result.scriptedResponse;
       }
@@ -229,22 +242,19 @@ export default function VoiceTreatmentDemo() {
         body: JSON.stringify({
           model: 'gpt-4o-realtime-preview-2024-12-17',
           voice: 'verse',
-          instructions: `You are a Mind Shifting treatment assistant. You must ONLY speak exactly what you are instructed to speak. Do not generate any responses on your own.`,
+          // CRITICAL: System instructions for script adherence
+          instructions: `You are a Mind Shifting treatment assistant. You must only speak the exact text content from assistant messages in the conversation. Never generate original responses. Never add extra words, introductions, or explanations. Speak only what is explicitly provided in assistant message content.`,
           // CRITICAL: Enable transcription
           input_audio_transcription: {
             model: 'whisper-1'
           },
-          // CRITICAL: Disable automatic responses - we want manual control only
-          turn_detection: {
-            type: 'server_vad',
-            threshold: 0.5,
-            prefix_padding_ms: 300,
-            silence_duration_ms: 800
-          },
-          // CRITICAL: Disable automatic responses
-          response_format: {
-            type: 'text'
-          }
+          // CRITICAL: Disable automatic turn detection completely
+          turn_detection: null,
+          modalities: ['text', 'audio'],
+          // CRITICAL: Minimum temperature for maximum consistency
+          temperature: 0.0,
+          max_response_output_tokens: 150,
+          tools: [] // No tools to prevent unexpected function calling
         })
       });
 
@@ -281,7 +291,7 @@ export default function VoiceTreatmentDemo() {
         
         // Since we disabled automatic turn detection, manually create the initial response
         setTimeout(() => {
-          createManualResponse(initialResponse);
+          createScriptedVoiceResponse(initialResponse, ''); // Pass an empty transcript for initial response
         }, 1000);
       };
 
@@ -315,21 +325,18 @@ export default function VoiceTreatmentDemo() {
         const sessionConfig = {
           type: 'session.update',
           session: {
-            instructions: `You are a Mind Shifting treatment assistant. You must ONLY speak exactly what you are instructed to speak. Do not generate any responses on your own.`,
+            instructions: `You are conducting a Mind Shifting treatment session. You must speak ONLY the exact text provided in assistant messages. Never generate original content. Never add words. Speak exactly what is provided, nothing more.`,
             voice: 'verse',
             input_audio_transcription: {
               model: 'whisper-1'
             },
-            turn_detection: {
-              type: 'server_vad',
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 800
-            },
-            // CRITICAL: Disable automatic responses
-            response_format: {
-              type: 'text'
-            }
+            // CRITICAL: Disable automatic turn detection completely
+            turn_detection: null,
+            modalities: ['text', 'audio'],
+            // CRITICAL: Minimum temperature for maximum consistency
+            temperature: 0.0,
+            max_response_output_tokens: 150,
+            tools: [] // No tools to prevent unexpected function calling
           }
         };
         
@@ -342,7 +349,7 @@ export default function VoiceTreatmentDemo() {
           const disableAutoConfig = {
             type: 'session.update',
             session: {
-              instructions: `You are a Mind Shifting treatment assistant. You must ONLY speak exactly what you are instructed to speak. Do not generate any responses on your own. Never respond automatically.`,
+              instructions: `You are conducting a Mind Shifting treatment session. You must speak ONLY the exact text provided in assistant messages. Never generate original content. Never add words. Speak exactly what is provided, nothing more.`,
               turn_detection: {
                 type: 'server_vad',
                 threshold: 0.5,
@@ -381,16 +388,7 @@ export default function VoiceTreatmentDemo() {
               
               // Process with state machine to get the scripted response
               if (stateMachineDemo) {
-                processTranscriptWithStateMachine(transcript).then((scriptedResponse) => {
-                  if (scriptedResponse) {
-                    // Wait for any automatic response cancellation to complete before creating our response
-                    setTimeout(() => {
-                      createManualResponse(scriptedResponse);
-                    }, 100); // Small delay ensures cancellation completes
-                  } else {
-                    console.log(`🔍 VOICE_DEBUG: No scripted response available for manual creation`);
-                  }
-                });
+                processTranscriptWithStateMachine(transcript);
               }
               
               // Update context
@@ -406,33 +404,9 @@ export default function VoiceTreatmentDemo() {
             }
           }
           
-          // Handle response creation - distinguish between manual and automatic
+          // Handle response creation - should be scripted now
           else if (message.type === 'response.created') {
-            // Check if this might be one of our manual responses
-            const isLikelyManual = pendingManualResponses.current.size > 0;
-            
-            if (isLikelyManual) {
-              console.log(`🔍 VOICE_DEBUG: Response created - likely manual, allowing it to proceed`);
-            } else {
-              console.log(`🔍 VOICE_DEBUG: Automatic response created - cancelling it immediately`);
-              
-              if (sessionRef.current.dataChannel?.readyState === 'open') {
-                try {
-                  const cancelMessage = { type: 'response.cancel' };
-                  sessionRef.current.dataChannel.send(JSON.stringify(cancelMessage));
-                  console.log(`🔍 VOICE_DEBUG: Automatic response cancellation sent`);
-                  
-                  // Also send a stop message to ensure it's cancelled
-                  setTimeout(() => {
-                    const stopMessage = { type: 'response.stop' };
-                    sessionRef.current.dataChannel?.send(JSON.stringify(stopMessage));
-                    console.log(`🔍 VOICE_DEBUG: Response stop message sent as backup`);
-                  }, 50);
-                } catch (error) {
-                  console.error(`🔍 VOICE_DEBUG: Failed to cancel automatic response:`, error);
-                }
-              }
-            }
+            console.log(`🔍 VOICE_DEBUG: Response created - should be scripted`);
           }
           
           // Handle response completion
@@ -442,6 +416,10 @@ export default function VoiceTreatmentDemo() {
           
           // Handle conversation items (store for debugging)
           else if (message.type === 'conversation.item.created') {
+            const role = message.item?.role;
+            const content = message.item?.content?.[0]?.text;
+            console.log(`🔍 VOICE_DEBUG: Item created - ${role}: "${content}"`);
+            
             if (message.item?.id) {
               setConversationItems(prev => {
                 const newMap = new Map(prev);
