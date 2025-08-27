@@ -221,6 +221,11 @@ export default function SimpleProblemShiftingDemo() {
     isListeningRef.current = isListening;
   }, [isListening]);
 
+  // Debug: Log step changes
+  useEffect(() => {
+    console.log(`🎯 SIMPLE_DEMO: STEP CHANGED: Now on step ${currentStepIndex + 1}/${PROBLEM_SHIFTING_STEPS.length} - ${currentStep.title}`);
+  }, [currentStepIndex, currentStep.title]);
+
   const addMessage = useCallback((content: string, isUser: boolean, stepId: string) => {
     const message: TreatmentMessage = {
       id: Date.now().toString(),
@@ -435,8 +440,10 @@ export default function SimpleProblemShiftingDemo() {
     
     // Validate input for current step
     const validation = validateUserInput(transcript, currentStep.id);
+    console.log(`🎯 SIMPLE_DEMO: VALIDATION: Step "${currentStep.id}" - Input "${transcript}" - Valid: ${validation.isValid}`);
+    
     if (!validation.isValid) {
-      console.log(`🎯 SIMPLE_DEMO: Validation failed: ${validation.error}`);
+      console.log(`🎯 SIMPLE_DEMO: VALIDATION FAILED: ${validation.error}`);
       addMessage(transcript, true, currentStep.id);
       
       // Speak the correction message
@@ -445,6 +452,8 @@ export default function SimpleProblemShiftingDemo() {
       }, 500);
       return; // Don't advance to next step
     }
+    
+    console.log(`🎯 SIMPLE_DEMO: VALIDATION PASSED: Proceeding to next step`);
 
     // Store user response in context
     const newContext = {
@@ -467,20 +476,20 @@ export default function SimpleProblemShiftingDemo() {
     // Move to next step if available
     if (currentStepIndex < PROBLEM_SHIFTING_STEPS.length - 1) {
       const nextIndex = currentStepIndex + 1;
+      console.log(`🎯 SIMPLE_DEMO: ADVANCING: From step ${currentStepIndex + 1} to step ${nextIndex + 1}`);
+      
       setCurrentStepIndex(nextIndex);
       
       const nextStep = PROBLEM_SHIFTING_STEPS[nextIndex];
       const nextResponse = getScriptedResponse(nextStep, transcript, newContext);
       
-      console.log(`🎯 SIMPLE_DEMO: Moving to step ${nextIndex + 1}: ${nextStep.title}`);
-      console.log(`🎯 SIMPLE_DEMO: Next response: "${nextResponse}"`);
+      console.log(`🎯 SIMPLE_DEMO: NEW STEP: ${nextIndex + 1}/${PROBLEM_SHIFTING_STEPS.length} - ${nextStep.title}`);
+      console.log(`🎯 SIMPLE_DEMO: SPEAKING: "${nextResponse}"`);
       
       addMessage(nextResponse, false, nextStep.id);
       
-      // Wait a moment before speaking
-      setTimeout(() => {
-        speakText(nextResponse);
-      }, 1000);
+      // Speak immediately (no delay needed)
+      speakText(nextResponse);
     } else {
       // Session complete
       console.log(`🎯 SIMPLE_DEMO: Session completed`);
@@ -536,7 +545,11 @@ export default function SimpleProblemShiftingDemo() {
       
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
-        console.log('🎯 SIMPLE_DEMO: Speech recognized:', transcript);
+        console.log('🎯 SIMPLE_DEMO: ===== SPEECH RECOGNIZED =====');
+        console.log('🎯 SIMPLE_DEMO: Transcript:', transcript);
+        console.log('🎯 SIMPLE_DEMO: Current step:', currentStepIndex + 1, currentStep.title);
+        console.log('🎯 SIMPLE_DEMO: Status:', statusRef.current);
+        console.log('🎯 SIMPLE_DEMO: =============================');
         processUserTranscript(transcript);
       };
       
