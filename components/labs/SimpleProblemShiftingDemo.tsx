@@ -377,9 +377,9 @@ export default function SimpleProblemShiftingDemo() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: text,
-          voice: 'nova', // Faster, clearer voice
-          model: 'tts-1', // Use regular model for speed
-          speed: 1.2 // Faster speech
+          voice: 'alloy', // Natural, clear voice without echo
+          model: 'tts-1-hd', // Higher quality model for cleaner audio
+          speed: 1.0 // Normal speed to avoid artifacts
         })
       });
 
