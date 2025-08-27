@@ -44,8 +44,29 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI Realtime session error:', response.status, errorText);
+      console.error('Request body was:', JSON.stringify({
+        model,
+        voice,
+        ...(instructions && { instructions }),
+        ...(input_audio_transcription && { input_audio_transcription }),
+        ...(turn_detection !== undefined && { turn_detection }),
+        ...(modalities && { modalities }),
+        ...(temperature !== undefined && { temperature }),
+        ...(max_response_output_tokens && { max_response_output_tokens }),
+        ...(tools && { tools })
+      }, null, 2));
+      
+      // Return the actual OpenAI error to help with debugging
+      let openaiError = errorText;
+      try {
+        const parsedError = JSON.parse(errorText);
+        openaiError = parsedError.error?.message || parsedError.message || errorText;
+      } catch {
+        // Keep original error text if not JSON
+      }
+      
       return NextResponse.json(
-        { error: `Failed to create session: ${response.status}` },
+        { error: `OpenAI API Error: ${openaiError}` },
         { status: response.status }
       );
     }

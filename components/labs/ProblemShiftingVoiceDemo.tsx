@@ -284,16 +284,12 @@ export default function ProblemShiftingVoiceDemo() {
 
       console.log('🎯 PROBLEM_SHIFTING: Starting voice session...');
 
-      // 1. Create ephemeral session
+      // 1. Create ephemeral session - using minimal parameters to avoid API issues
       const sessionPayload = {
         model: 'gpt-4o-realtime-preview-2024-12-17',
-        voice: 'verse',
-        instructions: `You are conducting a Problem Shifting treatment session. Speak ONLY the exact text from assistant messages. Never generate original content or deviate from the provided scripts.`,
-        input_audio_transcription: {
-          model: 'whisper-1'
-        },
-        turn_detection: null, // Manual control
-        temperature: 0.1 // Very low for consistency
+        voice: 'verse'
+        // Removing other parameters that might be causing issues
+        // We'll configure these via session.update after connection
       };
 
       console.log('🎯 PROBLEM_SHIFTING: Session payload:', sessionPayload);
