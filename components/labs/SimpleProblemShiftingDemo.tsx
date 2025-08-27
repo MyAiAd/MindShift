@@ -254,8 +254,9 @@ export default function SimpleProblemShiftingDemo() {
             console.log(`🎯 SIMPLE_DEMO: Auto-starting speech recognition after TTS`);
             setTimeout(() => {
               console.log(`🎯 SIMPLE_DEMO: Attempting to start listening...`);
+              console.log(`🎯 SIMPLE_DEMO: Current isListening state:`, isListening);
               startListening();
-            }, 1000);
+            }, 2000); // Increased delay to 2 seconds
           } else {
             console.log(`🎯 SIMPLE_DEMO: Not auto-starting - status is: ${statusRef.current}`);
           }
@@ -354,6 +355,12 @@ export default function SimpleProblemShiftingDemo() {
       console.log(`🎯 SIMPLE_DEMO: Already listening, skipping`);
       return;
     }
+    
+    if (recognitionRef.current) {
+      console.log(`🎯 SIMPLE_DEMO: Recognition already exists, stopping it first`);
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
 
     try {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -394,6 +401,7 @@ export default function SimpleProblemShiftingDemo() {
       
       recognition.onend = () => {
         console.log('🎯 SIMPLE_DEMO: Speech recognition ended');
+        console.log('🎯 SIMPLE_DEMO: Recognition ended - was listening:', isListening);
         setIsListening(false);
         
         // Clear timeout
@@ -404,7 +412,10 @@ export default function SimpleProblemShiftingDemo() {
       };
       
       recognitionRef.current = recognition;
+      
+      console.log('🎯 SIMPLE_DEMO: About to start recognition...');
       recognition.start();
+      console.log('🎯 SIMPLE_DEMO: Recognition.start() called');
       
     } catch (error) {
       console.error('🎯 SIMPLE_DEMO: Failed to start speech recognition:', error);
@@ -520,6 +531,11 @@ export default function SimpleProblemShiftingDemo() {
             <p className="text-sm text-indigo-700 dark:text-indigo-300">
               {TREATMENT_MODALITIES[selectedModality].description}
             </p>
+            {selectedModality !== 'problem_shifting' && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                ⚠️ Only Problem Shifting is currently implemented
+              </p>
+            )}
           </div>
           <button
             onClick={() => setShowModalitySelector(!showModalitySelector)}
