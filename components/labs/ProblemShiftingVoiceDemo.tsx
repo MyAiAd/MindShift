@@ -27,68 +27,79 @@ interface ProblemShiftingStep {
   nextStep?: string;
 }
 
-// Exact Problem Shifting steps from the treatment state machine
+// EXACT Problem Shifting steps from the working treatment state machine
 const PROBLEM_SHIFTING_STEPS: ProblemShiftingStep[] = [
   {
-    id: 'intro',
-    title: 'Introduction & Problem Statement',
-    script: 'Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask "what needs to happen for the problem to not be a problem?" allow your answers to be different each time. What is the problem you want to work on? Please tell me in a few words.',
+    id: 'problem_capture',
+    title: 'Problem Statement',
+    script: 'Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. Please tell me what problem you want to work on in a few words.',
     expectedResponseType: 'problem',
-    nextStep: 'feel_problem'
+    nextStep: 'problem_shifting_intro'
   },
   {
-    id: 'feel_problem',
-    title: 'Feel the Problem',
-    script: (userInput: string) => `Feel the problem '${userInput}'... what does it feel like?`,
+    id: 'problem_shifting_intro',
+    title: 'Problem Shifting Introduction',
+    script: (userInput: string, context: any) => {
+      const problemStatement = context?.problemStatement || 'the problem';
+      return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.
+
+Feel the problem '${problemStatement}'... what does it feel like?`;
+    },
     expectedResponseType: 'feeling',
-    nextStep: 'body_sensation'
+    nextStep: 'body_sensation_check'
   },
   {
-    id: 'body_sensation',
+    id: 'body_sensation_check',
     title: 'Body Sensation Check',
-    script: (userInput: string) => `Feel '${userInput}'... what happens in yourself when you feel '${userInput}'?`,
+    script: (userInput: string) => `Feel '${userInput || 'that feeling'}'... what happens in yourself when you feel '${userInput || 'that feeling'}'?`,
     expectedResponseType: 'experience',
-    nextStep: 'what_needs_to_happen'
+    nextStep: 'what_needs_to_happen_step'
   },
   {
-    id: 'what_needs_to_happen',
+    id: 'what_needs_to_happen_step',
     title: 'What Needs to Happen',
-    script: (userInput: string, context: any) => `Feel the problem '${context.problemStatement}'... what needs to happen for this to not be a problem?`,
+    script: (userInput: string, context: any) => {
+      const problemStatement = context?.problemStatement || 'the problem';
+      return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
+    },
     expectedResponseType: 'open',
-    nextStep: 'feel_solution'
+    nextStep: 'feel_solution_state'
   },
   {
-    id: 'feel_solution',
+    id: 'feel_solution_state',
     title: 'Feel Solution State',
-    script: (userInput: string) => `What would you feel like if '${userInput}' had already happened?`,
+    script: (userInput: string) => `What would you feel like if '${userInput || 'that'}'?`,
     expectedResponseType: 'feeling',
     nextStep: 'feel_good_state'
   },
   {
     id: 'feel_good_state',
     title: 'Feel Good State',
-    script: (userInput: string) => `Feel '${userInput}'... what does '${userInput}' feel like?`,
+    script: (userInput: string) => `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`,
     expectedResponseType: 'feeling',
-    nextStep: 'what_happens_good'
+    nextStep: 'what_happens_step'
   },
   {
-    id: 'what_happens_good',
+    id: 'what_happens_step',
     title: 'What Happens in Good State',
-    script: (userInput: string) => `Feel '${userInput}'... what happens in yourself when you feel '${userInput}'?`,
+    script: (userInput: string) => `Feel '${userInput || 'that feeling'}'... what happens in yourself when you feel '${userInput || 'that feeling'}'?`,
     expectedResponseType: 'experience',
-    nextStep: 'check_problem'
+    nextStep: 'check_if_still_problem'
   },
   {
-    id: 'check_problem',
+    id: 'check_if_still_problem',
     title: 'Check if Still Problem',
-    script: (userInput: string, context: any) => `Feel the problem '${context.problemStatement}'... does it still feel like a problem?`,
+    script: (userInput: string, context: any) => {
+      const problemStatement = context?.problemStatement || 'the problem';
+      return `Feel the problem '${problemStatement}'... does it still feel like a problem?`;
+    },
     expectedResponseType: 'yesno',
     nextStep: 'completion'
   },
   {
     id: 'completion',
     title: 'Session Complete',
-    script: 'Excellent! The Problem Shifting process is now complete. You can open your eyes. How do you feel about the problem now?',
+    script: 'Excellent! The Problem Shifting process is now complete. You can open your eyes. The problem should feel different now.',
     expectedResponseType: 'open'
   }
 ];
@@ -167,8 +178,9 @@ export default function ProblemShiftingVoiceDemo() {
     return step.script;
   };
 
+  // CRITICAL: This function ensures we ONLY speak the exact scripted responses
   const createScriptedVoiceResponse = async (scriptedResponse: string) => {
-    console.log(`🎯 PROBLEM_SHIFTING: Creating scripted response: "${scriptedResponse}"`);
+    console.log(`🎯 PROBLEM_SHIFTING: Creating EXACT scripted response: "${scriptedResponse}"`);
     
     if (isAIResponding) {
       console.log(`🎯 PROBLEM_SHIFTING: Blocking - AI is currently responding`);
@@ -193,7 +205,7 @@ export default function ProblemShiftingVoiceDemo() {
     try {
       setIsAIResponding(true);
       
-      // Create assistant message with exact script
+      // CRITICAL: Create assistant message with EXACT script - no AI interpretation allowed
       const assistantMessageEvent = {
         type: 'conversation.item.create',
         item: {
@@ -208,12 +220,12 @@ export default function ProblemShiftingVoiceDemo() {
       };
       
       sessionRef.current.dataChannel.send(JSON.stringify(assistantMessageEvent));
-      console.log(`🎯 PROBLEM_SHIFTING: Assistant message sent`);
+      console.log(`🎯 PROBLEM_SHIFTING: EXACT script sent to AI`);
       
       // Wait before triggering response
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Create response
+      // Create response - AI will speak ONLY what we provided
       const responseEvent = {
         type: 'response.create',
         response: {
@@ -222,11 +234,11 @@ export default function ProblemShiftingVoiceDemo() {
       };
       
       sessionRef.current.dataChannel.send(JSON.stringify(responseEvent));
-      console.log(`🎯 PROBLEM_SHIFTING: Audio response triggered`);
+      console.log(`🎯 PROBLEM_SHIFTING: Audio response triggered for EXACT script`);
       
-      // Update UI immediately
+      // Update UI immediately with the exact script
       addMessage(scriptedResponse, false, currentStep.id);
-      console.log(`🎯 PROBLEM_SHIFTING: UI updated with scripted response`);
+      console.log(`🎯 PROBLEM_SHIFTING: UI updated with EXACT scripted response`);
       
     } catch (error) {
       console.error(`🎯 PROBLEM_SHIFTING: Failed to create scripted response:`, error);
@@ -234,11 +246,11 @@ export default function ProblemShiftingVoiceDemo() {
     }
   };
 
-  // FIXED: Simple self-contained transcript processing - no external API calls
+  // FIXED: Simple self-contained transcript processing - follows exact working system flow
   const processUserTranscript = async (transcript: string) => {
     console.log(`🎯 PROBLEM_SHIFTING: Processing transcript: "${transcript}" for step: ${currentStep.id}`);
     
-    // Store user response
+    // Store user response in context exactly like the working system
     const newContext = {
       ...sessionContext,
       userResponses: {
@@ -247,32 +259,35 @@ export default function ProblemShiftingVoiceDemo() {
       }
     };
 
-    // Store problem statement from first step
-    if (currentStep.id === 'intro') {
+    // Store problem statement from first step (exactly like working system)
+    if (currentStep.id === 'problem_capture') {
       newContext.problemStatement = transcript;
+      console.log(`🎯 PROBLEM_SHIFTING: Stored problem statement: "${transcript}"`);
     }
 
     setSessionContext(newContext);
     addMessage(transcript, true, currentStep.id);
 
-    // Move to next step if available
+    // Move to next step if available (exactly like working system)
     if (currentStepIndex < PROBLEM_SHIFTING_STEPS.length - 1) {
       const nextIndex = currentStepIndex + 1;
       setCurrentStepIndex(nextIndex);
       
       const nextStep = PROBLEM_SHIFTING_STEPS[nextIndex];
+      
+      // Get the EXACT scripted response using the same logic as working system
       const nextResponse = getScriptedResponse(nextStep, transcript);
       
       console.log(`🎯 PROBLEM_SHIFTING: Moving to step ${nextIndex + 1}: ${nextStep.title}`);
-      console.log(`🎯 PROBLEM_SHIFTING: Next response: "${nextResponse}"`);
+      console.log(`🎯 PROBLEM_SHIFTING: EXACT next response: "${nextResponse}"`);
       
-      // Wait a moment before responding
+      // Wait a moment before responding (like working system)
       setTimeout(() => {
         createScriptedVoiceResponse(nextResponse);
       }, 1000);
     } else {
       // Session complete
-      console.log(`🎯 PROBLEM_SHIFTING: Session completed`);
+      console.log(`🎯 PROBLEM_SHIFTING: Session completed - all steps done`);
       setStatus('completed');
     }
   };
@@ -282,14 +297,13 @@ export default function ProblemShiftingVoiceDemo() {
       setError('');
       setStatus('starting');
 
-      console.log('🎯 PROBLEM_SHIFTING: Starting voice session...');
+      console.log('🎯 PROBLEM_SHIFTING: Starting voice session with EXACT scripts...');
 
       // 1. Create ephemeral session - using minimal parameters to avoid API issues
       const sessionPayload = {
         model: 'gpt-4o-realtime-preview-2024-12-17',
         voice: 'verse'
-        // Removing other parameters that might be causing issues
-        // We'll configure these via session.update after connection
+        // We'll configure other parameters via session.update after connection
       };
 
       console.log('🎯 PROBLEM_SHIFTING: Session payload:', sessionPayload);
@@ -342,11 +356,11 @@ export default function ProblemShiftingVoiceDemo() {
         setStatus('connected');
         setIsConnected(true);
         
-        // Send initial response when ready
+        // Send initial response when ready - EXACT script from working system
         const checkDataChannel = () => {
           if (sessionRef.current.dataChannel?.readyState === 'open') {
             const initialResponse = getScriptedResponse(currentStep);
-            console.log(`🎯 PROBLEM_SHIFTING: Sending initial response: "${initialResponse}"`);
+            console.log(`🎯 PROBLEM_SHIFTING: Sending EXACT initial response: "${initialResponse}"`);
             setTimeout(() => {
               createScriptedVoiceResponse(initialResponse);
             }, 1200);
@@ -389,10 +403,11 @@ export default function ProblemShiftingVoiceDemo() {
       dataChannel.addEventListener('open', () => {
         console.log('🎯 PROBLEM_SHIFTING: DataChannel opened');
         
+        // CRITICAL: Configure session to ONLY speak exact text we provide
         const sessionConfig = {
           type: 'session.update',
           session: {
-            instructions: `You are conducting a Problem Shifting treatment session. Speak ONLY the exact text from assistant messages. Never generate original content.`,
+            instructions: `You are conducting a Problem Shifting treatment session. You MUST speak ONLY the exact text from assistant messages. NEVER generate original content, NEVER improvise, NEVER add anything. Speak EXACTLY what is provided in the assistant messages, word for word.`,
             voice: 'verse',
             input_audio_transcription: {
               model: 'whisper-1'
@@ -404,11 +419,11 @@ export default function ProblemShiftingVoiceDemo() {
               silence_duration_ms: 800
             },
             modalities: ['text', 'audio'],
-            temperature: 0.1
+            temperature: 0.0 // Absolutely no creativity allowed
           }
         };
         
-        console.log('🎯 PROBLEM_SHIFTING: Sending session config');
+        console.log('🎯 PROBLEM_SHIFTING: Sending STRICT session config');
         dataChannel.send(JSON.stringify(sessionConfig));
       });
 
@@ -430,7 +445,7 @@ export default function ProblemShiftingVoiceDemo() {
             console.log(`🎯 PROBLEM_SHIFTING: Transcription:`, transcript);
             
             if (transcript && transcript.length > 1) {
-              // FIXED: Use our own simple processing, no external API calls
+              // Use our EXACT working system processing
               processUserTranscript(transcript);
             }
           }
@@ -479,7 +494,7 @@ export default function ProblemShiftingVoiceDemo() {
       const answerSdp = await sdpResponse.text();
       await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
 
-      console.log(`🎯 PROBLEM_SHIFTING: WebRTC connection established`);
+      console.log(`🎯 PROBLEM_SHIFTING: WebRTC connection established with EXACT script control`);
 
     } catch (err: any) {
       console.error('🎯 PROBLEM_SHIFTING: Session start error:', err);
@@ -532,7 +547,7 @@ export default function ProblemShiftingVoiceDemo() {
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Problem Shifting Voice Demo</h4>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Voice-guided Problem Shifting treatment - stays perfectly on script
+              Voice-guided Problem Shifting - uses EXACT scripts from working system
             </p>
           </div>
         </div>
@@ -606,7 +621,7 @@ export default function ProblemShiftingVoiceDemo() {
           className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Phone className="h-4 w-4" />
-          <span>{status === 'starting' ? 'Starting...' : 'Start Problem Shifting Session'}</span>
+          <span>{status === 'starting' ? 'Starting...' : 'Start EXACT Script Session'}</span>
         </button>
 
         {isConnected && (
@@ -643,8 +658,8 @@ export default function ProblemShiftingVoiceDemo() {
           <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
           <div className="flex-1">
             <span className="text-sm text-green-800 dark:text-green-200">
-              🎙️ Voice session active! Speak naturally when prompted.
-              {isAIResponding && " 🗣️ AI is currently speaking..."}
+              🎙️ Voice session active! AI will speak ONLY the exact scripts.
+              {isAIResponding && " 🗣️ AI is speaking exact script..."}
               {isListening && " 👂 Listening to your response..."}
             </span>
           </div>
@@ -698,7 +713,7 @@ export default function ProblemShiftingVoiceDemo() {
 
       {/* Step Guide */}
       <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
-        <h6 className="font-medium text-gray-900 dark:text-white mb-2">Problem Shifting Steps:</h6>
+        <h6 className="font-medium text-gray-900 dark:text-white mb-2">EXACT Problem Shifting Steps:</h6>
         <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
           {PROBLEM_SHIFTING_STEPS.map((step, index) => (
             <div key={step.id} className={`flex items-center space-x-2 ${index === currentStepIndex ? 'text-indigo-600 dark:text-indigo-400 font-medium' : ''}`}>
