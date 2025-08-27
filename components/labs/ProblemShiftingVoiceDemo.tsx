@@ -202,19 +202,51 @@ export default function ProblemShiftingVoiceDemo() {
         // Wait a moment for cancellation to complete
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Load voices if not already loaded
+        // Load voices with timeout fallback
         let voices = speechSynthesis.getVoices();
         if (voices.length === 0) {
           console.log(`🎯 PROBLEM_SHIFTING: Loading voices...`);
-          await new Promise(resolve => {
+          
+          // Try to load voices with timeout
+          const voiceLoadPromise = new Promise(resolve => {
+            const checkVoices = () => {
+              voices = speechSynthesis.getVoices();
+              if (voices.length > 0) {
+                resolve(voices);
+              } else {
+                setTimeout(checkVoices, 100);
+              }
+            };
+            
             speechSynthesis.onvoiceschanged = () => {
               voices = speechSynthesis.getVoices();
-              resolve(voices);
+              if (voices.length > 0) {
+                resolve(voices);
+              }
             };
+            
+            // Start checking immediately
+            checkVoices();
           });
+          
+          // Wait max 2 seconds for voices to load
+          const timeoutPromise = new Promise(resolve => {
+            setTimeout(() => {
+              voices = speechSynthesis.getVoices();
+              console.log(`🎯 PROBLEM_SHIFTING: Voice loading timeout, using available voices:`, voices.length);
+              resolve(voices);
+            }, 2000);
+          });
+          
+          await Promise.race([voiceLoadPromise, timeoutPromise]);
         }
         
         console.log(`🎯 PROBLEM_SHIFTING: Available voices:`, voices.length);
+        
+        // If still no voices, proceed anyway (browser will use default)
+        if (voices.length === 0) {
+          console.log(`🎯 PROBLEM_SHIFTING: No voices loaded, using browser default`);
+        }
         
         // Create utterance with shorter text chunks to avoid synthesis-failed errors
         const maxChunkLength = 200; // Shorter chunks work better
@@ -245,17 +277,18 @@ export default function ProblemShiftingVoiceDemo() {
           utterance.pitch = 1.0;
           utterance.volume = 0.9;
           
-          // Select best available voice
-          const preferredVoice = voices.find(voice => 
-            (voice.lang.startsWith('en') && voice.localService) ||
-            voice.name.includes('Google') ||
-            voice.name.includes('Microsoft') ||
-            voice.lang.startsWith('en')
-          );
-          
-          if (preferredVoice) {
-            utterance.voice = preferredVoice;
-            console.log(`🎯 PROBLEM_SHIFTING: Using voice: ${preferredVoice.name}`);
+          // Select best available voice (simplified)
+          if (voices.length > 0) {
+            const preferredVoice = voices.find(voice => 
+              voice.lang.startsWith('en')
+            ) || voices[0]; // Fallback to first voice
+            
+            if (preferredVoice) {
+              utterance.voice = preferredVoice;
+              console.log(`🎯 PROBLEM_SHIFTING: Using voice: ${preferredVoice.name} (${preferredVoice.lang})`);
+            }
+          } else {
+            console.log(`🎯 PROBLEM_SHIFTING: Using browser default voice`);
           }
           
           utterance.onstart = () => {
@@ -710,6 +743,22 @@ export default function ProblemShiftingVoiceDemo() {
         >
           <RotateCcw className="h-4 w-4" />
           <span>Reset Demo</span>
+        </button>
+
+        <button
+          onClick={() => {
+            console.log('🎯 PROBLEM_SHIFTING: Testing TTS...');
+            const testUtterance = new SpeechSynthesisUtterance("Testing text to speech");
+            testUtterance.rate = 0.85;
+            testUtterance.onstart = () => console.log('🎯 PROBLEM_SHIFTING: Test TTS started');
+            testUtterance.onend = () => console.log('🎯 PROBLEM_SHIFTING: Test TTS ended');
+            testUtterance.onerror = (e) => console.error('🎯 PROBLEM_SHIFTING: Test TTS error:', e);
+            speechSynthesis.speak(testUtterance);
+          }}
+          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <Volume2 className="h-4 w-4" />
+          <span>Test TTS</span>
         </button>
       </div>
 
