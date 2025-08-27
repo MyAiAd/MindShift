@@ -12,6 +12,7 @@ import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, A
 import OpenAIVoiceDemo from '@/components/labs/OpenAIVoiceDemo';
 import VoiceTreatmentDemo from '@/components/labs/VoiceTreatmentDemo';
 import ProblemShiftingVoiceDemo from '@/components/labs/ProblemShiftingVoiceDemo';
+import SimpleProblemShiftingDemo from '@/components/labs/SimpleProblemShiftingDemo';
 
 interface FormState {
   loading: boolean;
@@ -1118,6 +1119,7 @@ export default function SettingsPage() {
             </p>
             
             <div className="space-y-6">
+              <SimpleProblemShiftingDemo />
               <ProblemShiftingVoiceDemo />
               <VoiceTreatmentDemo />
               <OpenAIVoiceDemo />
