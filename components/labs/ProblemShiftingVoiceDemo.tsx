@@ -282,25 +282,41 @@ export default function ProblemShiftingVoiceDemo() {
       setError('');
       setStatus('starting');
 
+      console.log('🎯 PROBLEM_SHIFTING: Starting voice session...');
+
       // 1. Create ephemeral session
+      const sessionPayload = {
+        model: 'gpt-4o-realtime-preview-2024-12-17',
+        voice: 'verse',
+        instructions: `You are conducting a Problem Shifting treatment session. Speak ONLY the exact text from assistant messages. Never generate original content or deviate from the provided scripts.`,
+        input_audio_transcription: {
+          model: 'whisper-1'
+        },
+        turn_detection: null, // Manual control
+        temperature: 0.1 // Very low for consistency
+      };
+
+      console.log('🎯 PROBLEM_SHIFTING: Session payload:', sessionPayload);
+
       const sessionResponse = await fetch('/api/labs/openai-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'gpt-4o-realtime-preview-2024-12-17',
-          voice: 'verse',
-          instructions: `You are conducting a Problem Shifting treatment session. Speak ONLY the exact text from assistant messages. Never generate original content or deviate from the provided scripts.`,
-          input_audio_transcription: {
-            model: 'whisper-1'
-          },
-          turn_detection: null, // Manual control
-          temperature: 0.1 // Very low for consistency
-        })
+        body: JSON.stringify(sessionPayload)
       });
 
       if (!sessionResponse.ok) {
-        const errorData = await sessionResponse.json();
-        throw new Error(errorData.error || 'Failed to create session');
+        const errorText = await sessionResponse.text();
+        console.error('🎯 PROBLEM_SHIFTING: Session creation failed:', sessionResponse.status, errorText);
+        let errorMessage = `Failed to create session (${sessionResponse.status})`;
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const sessionData = await sessionResponse.json();
@@ -470,7 +486,19 @@ export default function ProblemShiftingVoiceDemo() {
       console.log(`🎯 PROBLEM_SHIFTING: WebRTC connection established`);
 
     } catch (err: any) {
-      setError(err.message);
+      console.error('🎯 PROBLEM_SHIFTING: Session start error:', err);
+      let errorMessage = err.message;
+      
+      // Provide helpful error messages for common issues
+      if (errorMessage.includes('400')) {
+        errorMessage = 'OpenAI API configuration issue. Please check that the OPENAI_API_KEY is properly set in the environment variables.';
+      } else if (errorMessage.includes('401')) {
+        errorMessage = 'OpenAI API key is invalid or expired. Please check the API key configuration.';
+      } else if (errorMessage.includes('403')) {
+        errorMessage = 'OpenAI API access denied. Please check your API key permissions.';
+      }
+      
+      setError(errorMessage);
       setStatus('error');
       cleanup();
     }
