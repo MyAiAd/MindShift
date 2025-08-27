@@ -190,7 +190,7 @@ const TREATMENT_MODALITY_STEPS = {
   ]
 };
 
-export default function SimpleProblemShiftingDemo() {
+export default function UnifiedTreatmentDemo() {
   const [status, setStatus] = useState<string>('idle');
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
