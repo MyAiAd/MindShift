@@ -209,6 +209,7 @@ export default function SimpleProblemShiftingDemo() {
   const listeningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const statusRef = useRef<string>('idle');
   const isListeningRef = useRef<boolean>(false);
+  const currentStepIndexRef = useRef<number>(0);
 
   const currentStep = PROBLEM_SHIFTING_STEPS[currentStepIndex];
 
@@ -221,6 +222,10 @@ export default function SimpleProblemShiftingDemo() {
   useEffect(() => {
     isListeningRef.current = isListening;
   }, [isListening]);
+
+  useEffect(() => {
+    currentStepIndexRef.current = currentStepIndex;
+  }, [currentStepIndex]);
 
   // Debug: Log step changes
   useEffect(() => {
@@ -437,15 +442,16 @@ export default function SimpleProblemShiftingDemo() {
 
   // Process user transcript
   const processUserTranscript = async (transcript: string) => {
-    console.log(`🎯 SIMPLE_DEMO: Processing transcript: "${transcript}" for step: ${currentStep.id}`);
+    const currentStepFromRef = PROBLEM_SHIFTING_STEPS[currentStepIndexRef.current];
+    console.log(`🎯 SIMPLE_DEMO: Processing transcript: "${transcript}" for step: ${currentStepFromRef.id}`);
     
     // Validate input for current step
-    const validation = validateUserInput(transcript, currentStep.id);
-    console.log(`🎯 SIMPLE_DEMO: VALIDATION: Step "${currentStep.id}" - Input "${transcript}" - Valid: ${validation.isValid}`);
+    const validation = validateUserInput(transcript, currentStepFromRef.id);
+    console.log(`🎯 SIMPLE_DEMO: VALIDATION: Step "${currentStepFromRef.id}" - Input "${transcript}" - Valid: ${validation.isValid}`);
     
     if (!validation.isValid) {
       console.log(`🎯 SIMPLE_DEMO: VALIDATION FAILED: ${validation.error}`);
-      addMessage(transcript, true, currentStep.id);
+      addMessage(transcript, true, currentStepFromRef.id);
       
       // Speak the correction message
       setTimeout(() => {
@@ -461,23 +467,24 @@ export default function SimpleProblemShiftingDemo() {
       ...sessionContext,
       userResponses: {
         ...sessionContext.userResponses,
-        [currentStep.id]: transcript
+        [currentStepFromRef.id]: transcript
       }
     };
 
     // Store problem statement from first step ONLY
-    if (currentStep.id === 'problem_capture') {
+    if (currentStepFromRef.id === 'problem_capture') {
       newContext.problemStatement = transcript;
       console.log(`🎯 SIMPLE_DEMO: Stored problem statement: "${transcript}"`);
     }
 
     setSessionContext(newContext);
-    addMessage(transcript, true, currentStep.id);
+    addMessage(transcript, true, currentStepFromRef.id);
 
     // Move to next step if available
-    if (currentStepIndex < PROBLEM_SHIFTING_STEPS.length - 1) {
-      const nextIndex = currentStepIndex + 1;
-      console.log(`🎯 SIMPLE_DEMO: ADVANCING: From step ${currentStepIndex + 1} to step ${nextIndex + 1}`);
+    const currentIndex = currentStepIndexRef.current;
+    if (currentIndex < PROBLEM_SHIFTING_STEPS.length - 1) {
+      const nextIndex = currentIndex + 1;
+      console.log(`🎯 SIMPLE_DEMO: ADVANCING: From step ${currentIndex + 1} to step ${nextIndex + 1}`);
       
       setCurrentStepIndex(nextIndex);
       
@@ -535,7 +542,7 @@ export default function SimpleProblemShiftingDemo() {
       recognition.onstart = () => {
         console.log('🎯 SIMPLE_DEMO: ===== SPEECH RECOGNITION STARTED =====');
         console.log('🎯 SIMPLE_DEMO: Status:', statusRef.current);
-        console.log('🎯 SIMPLE_DEMO: Current step:', currentStepIndex + 1, currentStep.title);
+        console.log('🎯 SIMPLE_DEMO: Current step:', currentStepIndexRef.current + 1, PROBLEM_SHIFTING_STEPS[currentStepIndexRef.current].title);
         setIsListening(true);
         setError('');
         
@@ -550,7 +557,7 @@ export default function SimpleProblemShiftingDemo() {
         const transcript = event.results[0][0].transcript;
         console.log('🎯 SIMPLE_DEMO: ===== SPEECH RECOGNIZED =====');
         console.log('🎯 SIMPLE_DEMO: Transcript:', transcript);
-        console.log('🎯 SIMPLE_DEMO: Current step:', currentStepIndex + 1, currentStep.title);
+        console.log('🎯 SIMPLE_DEMO: Current step:', currentStepIndexRef.current + 1, PROBLEM_SHIFTING_STEPS[currentStepIndexRef.current].title);
         console.log('🎯 SIMPLE_DEMO: Status:', statusRef.current);
         console.log('🎯 SIMPLE_DEMO: =============================');
         
@@ -575,7 +582,7 @@ export default function SimpleProblemShiftingDemo() {
         console.log('🎯 SIMPLE_DEMO: ===== SPEECH RECOGNITION ENDED =====');
         console.log('🎯 SIMPLE_DEMO: Status:', statusRef.current);
         console.log('🎯 SIMPLE_DEMO: Was listening:', isListeningRef.current);
-        console.log('🎯 SIMPLE_DEMO: Current step:', currentStepIndex + 1, currentStep.title);
+        console.log('🎯 SIMPLE_DEMO: Current step:', currentStepIndexRef.current + 1, PROBLEM_SHIFTING_STEPS[currentStepIndexRef.current].title);
         console.log('🎯 SIMPLE_DEMO: ==========================================');
         setIsListening(false);
         
