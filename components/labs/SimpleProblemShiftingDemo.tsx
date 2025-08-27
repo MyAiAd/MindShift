@@ -570,8 +570,13 @@ export default function SimpleProblemShiftingDemo() {
       recognition.onerror = (event: any) => {
         console.error('🎯 SIMPLE_DEMO: Speech recognition error:', event.error);
         
-        // Don't show error for common non-critical issues
-        if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        if (event.error === 'no-speech') {
+          console.log('🎯 SIMPLE_DEMO: No speech detected - will auto-restart');
+        } else if (event.error === 'audio-capture') {
+          setError('Microphone access denied or not available. Please check your microphone permissions.');
+        } else if (event.error === 'not-allowed') {
+          setError('Microphone permission denied. Please allow microphone access and refresh the page.');
+        } else if (event.error !== 'aborted') {
           setError(`Speech recognition error: ${event.error}`);
         }
         
@@ -592,15 +597,17 @@ export default function SimpleProblemShiftingDemo() {
           listeningTimeoutRef.current = null;
         }
         
-        // Auto-restart recognition if demo is still active and not currently listening
-        if (statusRef.current === 'active' && !isListeningRef.current) {
-          console.log('🎯 SIMPLE_DEMO: Recognition ended, restarting in 1 second...');
+        // Auto-restart recognition if demo is still active
+        if (statusRef.current === 'active') {
+          console.log('🎯 SIMPLE_DEMO: Recognition ended, restarting in 1.5 seconds...');
           setTimeout(() => {
-            if (statusRef.current === 'active' && !isListeningRef.current) {
+            if (statusRef.current === 'active') {
               console.log('🎯 SIMPLE_DEMO: Auto-restarting speech recognition...');
               startListening();
             }
-          }, 1000);
+          }, 1500);
+        } else {
+          console.log('🎯 SIMPLE_DEMO: Not restarting - status is:', statusRef.current);
         }
       };
       
@@ -816,6 +823,16 @@ export default function SimpleProblemShiftingDemo() {
           <Play className="h-4 w-4" />
           <span>Start Voice Treatment</span>
         </button>
+
+        {status === 'active' && !isListening && (
+          <button
+            onClick={startListening}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Mic className="h-4 w-4" />
+            <span>Start Listening</span>
+          </button>
+        )}
 
         {status === 'active' && (
           <>
