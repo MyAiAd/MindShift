@@ -10,6 +10,7 @@ import { GDPRService } from '@/services/gdpr/gdpr.service';
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
 import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker } from 'lucide-react';
 import SimpleProblemShiftingDemo from '@/components/labs/SimpleProblemShiftingDemo';
+import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
 
 interface FormState {
   loading: boolean;
@@ -1117,6 +1118,7 @@ export default function SettingsPage() {
             
             <div className="space-y-6">
               <SimpleProblemShiftingDemo />
+              <RealityShiftingDemo />
             </div>
           </div>
 
