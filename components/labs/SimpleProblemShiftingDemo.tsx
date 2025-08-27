@@ -110,6 +110,7 @@ export default function SimpleProblemShiftingDemo() {
   
   const recognitionRef = useRef<any>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const listeningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentStep = PROBLEM_SHIFTING_STEPS[currentStepIndex];
 
@@ -231,6 +232,15 @@ export default function SimpleProblemShiftingDemo() {
           URL.revokeObjectURL(audioUrl);
           currentAudioRef.current = null;
           setIsSpeaking(false);
+          
+          // Auto-start listening after TTS completes (if demo is active)
+          if (status === 'active') {
+            console.log(`🎯 SIMPLE_DEMO: Auto-starting speech recognition after TTS`);
+            setTimeout(() => {
+              startListening();
+            }, 1000);
+          }
+          
           resolve();
         };
         
@@ -330,6 +340,12 @@ export default function SimpleProblemShiftingDemo() {
         console.log('🎯 SIMPLE_DEMO: Speech recognition started');
         setIsListening(true);
         setError('');
+        
+        // Set timeout to stop listening after 30 seconds
+        listeningTimeoutRef.current = setTimeout(() => {
+          console.log('🎯 SIMPLE_DEMO: Speech recognition timeout');
+          stopListening();
+        }, 30000);
       };
       
       recognition.onresult = (event: any) => {
@@ -340,13 +356,24 @@ export default function SimpleProblemShiftingDemo() {
       
       recognition.onerror = (event: any) => {
         console.error('🎯 SIMPLE_DEMO: Speech recognition error:', event.error);
-        setError(`Speech recognition error: ${event.error}`);
+        
+        // Don't show error for common non-critical issues
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          setError(`Speech recognition error: ${event.error}`);
+        }
+        
         setIsListening(false);
       };
       
       recognition.onend = () => {
         console.log('🎯 SIMPLE_DEMO: Speech recognition ended');
         setIsListening(false);
+        
+        // Clear timeout
+        if (listeningTimeoutRef.current) {
+          clearTimeout(listeningTimeoutRef.current);
+          listeningTimeoutRef.current = null;
+        }
       };
       
       recognitionRef.current = recognition;
@@ -364,6 +391,13 @@ export default function SimpleProblemShiftingDemo() {
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
+    
+    // Clear timeout
+    if (listeningTimeoutRef.current) {
+      clearTimeout(listeningTimeoutRef.current);
+      listeningTimeoutRef.current = null;
+    }
+    
     setIsListening(false);
   };
 
@@ -541,9 +575,10 @@ export default function SimpleProblemShiftingDemo() {
           <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
           <div className="flex-1">
             <span className="text-sm text-green-800 dark:text-green-200">
-              🎙️ Simple demo active! Click "Start Speaking" when ready to respond.
-              {isSpeaking && " 🗣️ AI is speaking..."}
-              {isListening && " 👂 Listening to your response..."}
+              🎙️ Simple demo active! 
+              {isSpeaking && " 🗣️ AI is speaking... (will auto-listen when done)"}
+              {isListening && " 👂 Listening to your response... (speak now)"}
+              {!isSpeaking && !isListening && " Ready for next interaction."}
             </span>
           </div>
         </div>
