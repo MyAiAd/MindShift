@@ -178,9 +178,96 @@ export default function ProblemShiftingVoiceDemo() {
     return step.script;
   };
 
-  // ROBUST TTS: Enhanced browser TTS with better error handling and fallbacks
+  // Browser TTS implementation (extracted for reuse)
+  const speakWithBrowserTTS = async (scriptedResponse: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      // Cancel any existing speech first
+      speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(scriptedResponse);
+      utterance.rate = 0.85;
+      utterance.pitch = 1.0;
+      utterance.volume = 0.9;
+      
+      // Use default voice (simpler approach)
+      console.log(`🎯 PROBLEM_SHIFTING: Speaking with browser TTS`);
+      
+      utterance.onstart = () => {
+        console.log(`🎯 PROBLEM_SHIFTING: Browser TTS started`);
+      };
+      
+      utterance.onend = () => {
+        console.log(`🎯 PROBLEM_SHIFTING: Browser TTS completed`);
+        resolve();
+      };
+      
+      utterance.onerror = (event) => {
+        console.error(`🎯 PROBLEM_SHIFTING: Browser TTS error:`, event.error);
+        reject(new Error(`Browser TTS failed: ${event.error}`));
+      };
+      
+      speechSynthesis.speak(utterance);
+    });
+  };
+
+  // OpenAI TTS fallback implementation
+  const speakWithOpenAITTS = async (scriptedResponse: string): Promise<void> => {
+    try {
+      console.log(`🎯 PROBLEM_SHIFTING: Generating OpenAI TTS for: "${scriptedResponse}"`);
+      
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: scriptedResponse,
+          voice: 'alloy',
+          model: 'tts-1'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI TTS API failed: ${response.status}`);
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      return new Promise((resolve, reject) => {
+        const audio = new Audio(audioUrl);
+        
+        audio.onloadeddata = () => {
+          console.log(`🎯 PROBLEM_SHIFTING: OpenAI TTS audio loaded`);
+        };
+        
+        audio.onplay = () => {
+          console.log(`🎯 PROBLEM_SHIFTING: OpenAI TTS started playing`);
+        };
+        
+        audio.onended = () => {
+          console.log(`🎯 PROBLEM_SHIFTING: OpenAI TTS completed`);
+          URL.revokeObjectURL(audioUrl);
+          resolve();
+        };
+        
+        audio.onerror = (event) => {
+          console.error(`🎯 PROBLEM_SHIFTING: OpenAI TTS playback error:`, event);
+          URL.revokeObjectURL(audioUrl);
+          reject(new Error('OpenAI TTS playback failed'));
+        };
+        
+        audio.play().catch(reject);
+      });
+      
+    } catch (error) {
+      console.error(`🎯 PROBLEM_SHIFTING: OpenAI TTS failed:`, error);
+      // Final fallback: just show text without audio
+      throw error;
+    }
+  };
+
+  // FALLBACK TTS: Try browser TTS first, then OpenAI TTS if browser fails
   const speakExactScript = async (scriptedResponse: string) => {
-    console.log(`🎯 PROBLEM_SHIFTING: Speaking EXACT script with enhanced TTS: "${scriptedResponse}"`);
+    console.log(`🎯 PROBLEM_SHIFTING: Speaking EXACT script with fallback TTS: "${scriptedResponse}"`);
     
     if (isAIResponding) {
       console.log(`🎯 PROBLEM_SHIFTING: Blocking - AI is currently responding`);
@@ -194,132 +281,56 @@ export default function ProblemShiftingVoiceDemo() {
       addMessage(scriptedResponse, false, currentStep.id);
       console.log(`🎯 PROBLEM_SHIFTING: UI updated with EXACT scripted response`);
       
-      // Enhanced Speech Synthesis with better error handling
+      // Try browser TTS first, with quick fallback to OpenAI TTS
+      let browserTTSFailed = false;
+      
       if ('speechSynthesis' in window) {
-        // Cancel any existing speech first
-        speechSynthesis.cancel();
+        console.log(`🎯 PROBLEM_SHIFTING: Attempting browser TTS...`);
         
-        // Wait a moment for cancellation to complete
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Quick test to see if browser TTS works
+        const testPromise = new Promise((resolve, reject) => {
+          const testUtterance = new SpeechSynthesisUtterance("test");
+          testUtterance.volume = 0; // Silent test
+          testUtterance.rate = 2; // Fast test
+          
+          const timeout = setTimeout(() => {
+            browserTTSFailed = true;
+            reject(new Error('Browser TTS timeout'));
+          }, 1000);
+          
+          testUtterance.onstart = () => {
+            clearTimeout(timeout);
+            resolve(true);
+          };
+          
+          testUtterance.onerror = (event) => {
+            clearTimeout(timeout);
+            browserTTSFailed = true;
+            reject(new Error(`Browser TTS failed: ${event.error}`));
+          };
+          
+          speechSynthesis.speak(testUtterance);
+        });
         
-        // Load voices with timeout fallback
-        let voices = speechSynthesis.getVoices();
-        if (voices.length === 0) {
-          console.log(`🎯 PROBLEM_SHIFTING: Loading voices...`);
-          
-          // Try to load voices with timeout
-          const voiceLoadPromise = new Promise(resolve => {
-            const checkVoices = () => {
-              voices = speechSynthesis.getVoices();
-              if (voices.length > 0) {
-                resolve(voices);
-              } else {
-                setTimeout(checkVoices, 100);
-              }
-            };
-            
-            speechSynthesis.onvoiceschanged = () => {
-              voices = speechSynthesis.getVoices();
-              if (voices.length > 0) {
-                resolve(voices);
-              }
-            };
-            
-            // Start checking immediately
-            checkVoices();
-          });
-          
-          // Wait max 2 seconds for voices to load
-          const timeoutPromise = new Promise(resolve => {
-            setTimeout(() => {
-              voices = speechSynthesis.getVoices();
-              console.log(`🎯 PROBLEM_SHIFTING: Voice loading timeout, using available voices:`, voices.length);
-              resolve(voices);
-            }, 2000);
-          });
-          
-          await Promise.race([voiceLoadPromise, timeoutPromise]);
+        try {
+          await testPromise;
+          console.log(`🎯 PROBLEM_SHIFTING: Browser TTS test passed, using browser TTS`);
+          await speakWithBrowserTTS(scriptedResponse);
+        } catch (error: any) {
+          console.log(`🎯 PROBLEM_SHIFTING: Browser TTS test failed:`, error.message);
+          browserTTSFailed = true;
         }
-        
-        console.log(`🎯 PROBLEM_SHIFTING: Available voices:`, voices.length);
-        
-        // If still no voices, proceed anyway (browser will use default)
-        if (voices.length === 0) {
-          console.log(`🎯 PROBLEM_SHIFTING: No voices loaded, using browser default`);
-        }
-        
-        // Create utterance with shorter text chunks to avoid synthesis-failed errors
-        const maxChunkLength = 200; // Shorter chunks work better
-        const chunks = scriptedResponse.match(new RegExp(`.{1,${maxChunkLength}}(\\s|$)`, 'g')) || [scriptedResponse];
-        
-        console.log(`🎯 PROBLEM_SHIFTING: Speaking in ${chunks.length} chunks`);
-        
-        let currentChunk = 0;
-        
-        const speakChunk = () => {
-          if (currentChunk >= chunks.length) {
-            console.log(`🎯 PROBLEM_SHIFTING: TTS completed all chunks`);
-            setIsAIResponding(false);
-            return;
-          }
-          
-          const chunk = chunks[currentChunk].trim();
-          if (!chunk) {
-            currentChunk++;
-            speakChunk();
-            return;
-          }
-          
-          console.log(`🎯 PROBLEM_SHIFTING: Speaking chunk ${currentChunk + 1}/${chunks.length}: "${chunk}"`);
-          
-          const utterance = new SpeechSynthesisUtterance(chunk);
-          utterance.rate = 0.85;
-          utterance.pitch = 1.0;
-          utterance.volume = 0.9;
-          
-          // Select best available voice (simplified)
-          if (voices.length > 0) {
-            const preferredVoice = voices.find(voice => 
-              voice.lang.startsWith('en')
-            ) || voices[0]; // Fallback to first voice
-            
-            if (preferredVoice) {
-              utterance.voice = preferredVoice;
-              console.log(`🎯 PROBLEM_SHIFTING: Using voice: ${preferredVoice.name} (${preferredVoice.lang})`);
-            }
-          } else {
-            console.log(`🎯 PROBLEM_SHIFTING: Using browser default voice`);
-          }
-          
-          utterance.onstart = () => {
-            console.log(`🎯 PROBLEM_SHIFTING: TTS started chunk ${currentChunk + 1}`);
-          };
-          
-          utterance.onend = () => {
-            console.log(`🎯 PROBLEM_SHIFTING: TTS finished chunk ${currentChunk + 1}`);
-            currentChunk++;
-            // Small delay between chunks
-            setTimeout(speakChunk, 200);
-          };
-          
-          utterance.onerror = (event) => {
-            console.error(`🎯 PROBLEM_SHIFTING: TTS error on chunk ${currentChunk + 1}:`, event.error);
-            // Try to continue with next chunk
-            currentChunk++;
-            setTimeout(speakChunk, 500);
-          };
-          
-          // Speak the chunk
-          speechSynthesis.speak(utterance);
-        };
-        
-        // Start speaking chunks
-        speakChunk();
-        
       } else {
-        console.error('🎯 PROBLEM_SHIFTING: Speech Synthesis not supported');
-        setIsAIResponding(false);
+        browserTTSFailed = true;
       }
+      
+      // Fallback to OpenAI TTS if browser TTS failed
+      if (browserTTSFailed) {
+        console.log(`🎯 PROBLEM_SHIFTING: Using OpenAI TTS fallback...`);
+        await speakWithOpenAITTS(scriptedResponse);
+      }
+      
+      setIsAIResponding(false);
       
     } catch (error) {
       console.error(`🎯 PROBLEM_SHIFTING: Failed to speak exact script:`, error);
