@@ -235,6 +235,9 @@ export default function ProblemShiftingVoiceDemo() {
       return new Promise((resolve, reject) => {
         const audio = new Audio(audioUrl);
         
+        // Store reference for overlap prevention
+        sessionRef.current.audioEl = audio;
+        
         audio.onloadeddata = () => {
           console.log(`🎯 PROBLEM_SHIFTING: OpenAI TTS audio loaded`);
         };
@@ -246,12 +249,14 @@ export default function ProblemShiftingVoiceDemo() {
         audio.onended = () => {
           console.log(`🎯 PROBLEM_SHIFTING: OpenAI TTS completed`);
           URL.revokeObjectURL(audioUrl);
+          sessionRef.current.audioEl = null; // Clear reference
           resolve();
         };
         
         audio.onerror = (event) => {
           console.error(`🎯 PROBLEM_SHIFTING: OpenAI TTS playback error:`, event);
           URL.revokeObjectURL(audioUrl);
+          sessionRef.current.audioEl = null; // Clear reference
           reject(new Error('OpenAI TTS playback failed'));
         };
         
@@ -270,8 +275,23 @@ export default function ProblemShiftingVoiceDemo() {
     console.log(`🎯 PROBLEM_SHIFTING: Speaking EXACT script with fallback TTS: "${scriptedResponse}"`);
     
     if (isAIResponding) {
-      console.log(`🎯 PROBLEM_SHIFTING: Blocking - AI is currently responding`);
+      console.log(`🎯 PROBLEM_SHIFTING: Blocking - AI is currently responding, queuing for later`);
       return;
+    }
+
+    // Prevent overlapping TTS by waiting for any existing audio to finish
+    if (sessionRef.current.audioEl && !sessionRef.current.audioEl.paused) {
+      console.log(`🎯 PROBLEM_SHIFTING: Waiting for previous audio to finish...`);
+      await new Promise(resolve => {
+        const checkAudio = () => {
+          if (sessionRef.current.audioEl?.paused || sessionRef.current.audioEl?.ended) {
+            resolve(true);
+          } else {
+            setTimeout(checkAudio, 100);
+          }
+        };
+        checkAudio();
+      });
     }
 
     try {
