@@ -9,9 +9,6 @@ import { AccessibilityService } from '@/services/accessibility/accessibility.ser
 import { GDPRService } from '@/services/gdpr/gdpr.service';
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
 import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker } from 'lucide-react';
-import OpenAIVoiceDemo from '@/components/labs/OpenAIVoiceDemo';
-import VoiceTreatmentDemo from '@/components/labs/VoiceTreatmentDemo';
-import ProblemShiftingVoiceDemo from '@/components/labs/ProblemShiftingVoiceDemo';
 import SimpleProblemShiftingDemo from '@/components/labs/SimpleProblemShiftingDemo';
 
 interface FormState {
@@ -1120,9 +1117,6 @@ export default function SettingsPage() {
             
             <div className="space-y-6">
               <SimpleProblemShiftingDemo />
-              <ProblemShiftingVoiceDemo />
-              <VoiceTreatmentDemo />
-              <OpenAIVoiceDemo />
             </div>
           </div>
 

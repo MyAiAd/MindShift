@@ -1,7 +1,19 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Brain, Mic, MicOff, Play, Square, AlertCircle, CheckCircle, MessageSquare, RotateCcw, ArrowRight, Volume2 } from 'lucide-react';
+import { Brain, Mic, MicOff, Play, Square, AlertCircle, CheckCircle, MessageSquare, RotateCcw, ArrowRight, Volume2, Settings } from 'lucide-react';
+
+type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shifting' | 'identity_shifting' | 'blockage_shifting' | 'trauma_shifting';
+
+// Treatment modality definitions
+const TREATMENT_MODALITIES = {
+  problem_shifting: { name: 'Problem Shifting', description: 'Transform problems into solutions' },
+  reality_shifting: { name: 'Reality Shifting', description: 'Achieve your goals and desires' },
+  belief_shifting: { name: 'Belief Shifting', description: 'Change limiting beliefs' },
+  identity_shifting: { name: 'Identity Shifting', description: 'Transform your sense of self' },
+  blockage_shifting: { name: 'Blockage Shifting', description: 'Remove internal obstacles' },
+  trauma_shifting: { name: 'Trauma Shifting', description: 'Process and heal trauma' }
+};
 
 interface TreatmentMessage {
   id: string;
@@ -103,6 +115,8 @@ export default function SimpleProblemShiftingDemo() {
   const [error, setError] = useState<string>('');
   const [messages, setMessages] = useState<TreatmentMessage[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [selectedModality, setSelectedModality] = useState<TreatmentModality>('problem_shifting');
+  const [showModalitySelector, setShowModalitySelector] = useState(false);
   const [sessionContext, setSessionContext] = useState<any>({
     problemStatement: '',
     userResponses: {}
@@ -467,9 +481,9 @@ export default function SimpleProblemShiftingDemo() {
         <div className="flex items-center space-x-3">
           <Brain className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
           <div>
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Simple Problem Shifting Demo</h4>
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Voice Treatment Demo</h4>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Browser Speech Recognition + OpenAI TTS - No competing audio sources
+              Voice-guided Mind Shifting treatment with manual speech control
             </p>
           </div>
         </div>
@@ -494,6 +508,49 @@ export default function SimpleProblemShiftingDemo() {
             {status}
           </div>
         </div>
+      </div>
+
+      {/* Treatment Modality Selector */}
+      <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h5 className="font-medium text-indigo-900 dark:text-indigo-200">
+              Treatment Modality: {TREATMENT_MODALITIES[selectedModality].name}
+            </h5>
+            <p className="text-sm text-indigo-700 dark:text-indigo-300">
+              {TREATMENT_MODALITIES[selectedModality].description}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowModalitySelector(!showModalitySelector)}
+            className="flex items-center space-x-2 px-3 py-2 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800 rounded-lg transition-colors"
+          >
+            <Settings className="h-4 w-4" />
+            <span>Change</span>
+          </button>
+        </div>
+        
+        {showModalitySelector && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+            {Object.entries(TREATMENT_MODALITIES).map(([key, modality]) => (
+              <button
+                key={key}
+                onClick={() => {
+                  setSelectedModality(key as TreatmentModality);
+                  setShowModalitySelector(false);
+                }}
+                className={`p-3 text-left rounded-lg border transition-colors ${
+                  selectedModality === key
+                    ? 'bg-indigo-100 dark:bg-indigo-800 border-indigo-300 dark:border-indigo-600 text-indigo-900 dark:text-indigo-100'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+              >
+                <div className="font-medium">{modality.name}</div>
+                <div className="text-sm opacity-75">{modality.description}</div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Current Step Progress */}
@@ -541,7 +598,7 @@ export default function SimpleProblemShiftingDemo() {
           className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Play className="h-4 w-4" />
-          <span>Start Simple Demo</span>
+          <span>Start Voice Treatment</span>
         </button>
 
         {status === 'active' && (
