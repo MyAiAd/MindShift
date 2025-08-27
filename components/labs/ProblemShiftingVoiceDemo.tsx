@@ -358,10 +358,77 @@ export default function ProblemShiftingVoiceDemo() {
     }
   };
 
-  // FIXED: Simple self-contained transcript processing - follows exact working system flow
+    // Validation logic from working treatment system
+  const validateUserInput = (transcript: string, stepId: string): { isValid: boolean; error?: string } => {
+    const trimmed = transcript.trim();
+    const lowerInput = trimmed.toLowerCase();
+    const words = trimmed.split(/\s+/).length;
+
+    console.log(`🎯 PROBLEM_SHIFTING: Validating input "${transcript}" for step: ${stepId}`);
+
+    // Validation for problem_capture step
+    if (stepId === 'problem_capture') {
+      // Check if user stated it as a goal instead of problem
+      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      
+      if (hasGoalLanguage) {
+        return { isValid: false, error: 'How would you state that as a problem instead of a goal?' };
+      }
+      
+      // Check if user stated it as a question
+      const questionIndicators = ['how can', 'how do', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
+      const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
+      
+      if (hasQuestionLanguage) {
+        return { isValid: false, error: 'How would you state that as a problem instead of a question?' };
+      }
+
+      // Check if user stated only an emotion
+      const emotionWords = ['stressed', 'anxious', 'sad', 'angry', 'worried', 'depressed', 'frustrated', 'upset', 'scared', 'nervous'];
+      if (words <= 2 && emotionWords.some(emotion => lowerInput.includes(emotion))) {
+        const emotion = emotionWords.find(emotion => lowerInput.includes(emotion));
+        return { isValid: false, error: `What are you ${emotion} about?` };
+      }
+
+      // Check for multiple problems
+      const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well', 'along with'];
+      const singleConceptPhrases = [
+        'love and peace', 'peace and love', 'health and wellness', 'wellness and health',
+        'happy and healthy', 'healthy and happy', 'mind and body', 'body and mind',
+        'work and life', 'life and work', 'friends and family', 'family and friends'
+      ];
+      
+      const isSingleConcept = singleConceptPhrases.some(phrase => lowerInput.includes(phrase));
+      
+      if (!isSingleConcept) {
+        const hasMultipleProblems = problemConnectors.some(connector => lowerInput.includes(connector));
+        if (hasMultipleProblems) {
+          return { isValid: false, error: 'Let\'s make sure this is only one issue and not multiple. Can you tell me the main problem you\'d like to focus on?' };
+        }
+      }
+    }
+
+    return { isValid: true };
+  };
+
+  // FIXED: Proper transcript processing with validation and correct step handling
   const processUserTranscript = async (transcript: string) => {
     console.log(`🎯 PROBLEM_SHIFTING: Processing transcript: "${transcript}" for step: ${currentStep.id}`);
     
+    // CRITICAL FIX: Validate input for current step
+    const validation = validateUserInput(transcript, currentStep.id);
+    if (!validation.isValid) {
+      console.log(`🎯 PROBLEM_SHIFTING: Validation failed: ${validation.error}`);
+      addMessage(transcript, true, currentStep.id);
+      
+      // Speak the correction message
+      setTimeout(() => {
+        speakExactScript(validation.error!);
+      }, 500);
+      return; // Don't advance to next step
+    }
+
     // Store user response in context exactly like the working system
     const newContext = {
       ...sessionContext,
@@ -371,7 +438,7 @@ export default function ProblemShiftingVoiceDemo() {
       }
     };
 
-    // Store problem statement from first step (exactly like working system)
+    // Store problem statement from first step ONLY (exactly like working system)
     if (currentStep.id === 'problem_capture') {
       newContext.problemStatement = transcript;
       console.log(`🎯 PROBLEM_SHIFTING: Stored problem statement: "${transcript}"`);
@@ -393,10 +460,10 @@ export default function ProblemShiftingVoiceDemo() {
       console.log(`🎯 PROBLEM_SHIFTING: Moving to step ${nextIndex + 1}: ${nextStep.title}`);
       console.log(`🎯 PROBLEM_SHIFTING: EXACT next response: "${nextResponse}"`);
       
-              // Wait a moment before responding (like working system)
-        setTimeout(() => {
-          speakExactScript(nextResponse);
-        }, 1000);
+      // Wait a moment before responding (like working system)
+      setTimeout(() => {
+        speakExactScript(nextResponse);
+      }, 1000);
     } else {
       // Session complete
       console.log(`🎯 PROBLEM_SHIFTING: Session completed - all steps done`);
