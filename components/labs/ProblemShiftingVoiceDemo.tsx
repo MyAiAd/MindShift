@@ -171,16 +171,16 @@ export default function ProblemShiftingVoiceDemo() {
     setStatus('idle');
   }, []);
 
-  const getScriptedResponse = (step: ProblemShiftingStep, userInput: string = ''): string => {
+  const getScriptedResponse = (step: ProblemShiftingStep, userInput: string = '', context?: any): string => {
     if (typeof step.script === 'function') {
-      return step.script(userInput, sessionContext);
+      return step.script(userInput, context || sessionContext);
     }
     return step.script;
   };
 
-  // HYBRID APPROACH: Use browser TTS for exact scripts, OpenAI for listening only
+  // ROBUST TTS: Enhanced browser TTS with better error handling and fallbacks
   const speakExactScript = async (scriptedResponse: string) => {
-    console.log(`🎯 PROBLEM_SHIFTING: Speaking EXACT script with TTS: "${scriptedResponse}"`);
+    console.log(`🎯 PROBLEM_SHIFTING: Speaking EXACT script with enhanced TTS: "${scriptedResponse}"`);
     
     if (isAIResponding) {
       console.log(`🎯 PROBLEM_SHIFTING: Blocking - AI is currently responding`);
@@ -190,50 +190,102 @@ export default function ProblemShiftingVoiceDemo() {
     try {
       setIsAIResponding(true);
       
-      // Use browser's Speech Synthesis API for exact script delivery
+      // Update UI immediately with the exact script
+      addMessage(scriptedResponse, false, currentStep.id);
+      console.log(`🎯 PROBLEM_SHIFTING: UI updated with EXACT scripted response`);
+      
+      // Enhanced Speech Synthesis with better error handling
       if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(scriptedResponse);
-        utterance.rate = 0.9;
-        utterance.pitch = 1.0;
-        utterance.volume = 0.8;
+        // Cancel any existing speech first
+        speechSynthesis.cancel();
         
-        // Try to use a natural voice
-        const voices = speechSynthesis.getVoices();
-        const preferredVoice = voices.find(voice => 
-          voice.name.includes('Natural') || 
-          voice.name.includes('Enhanced') ||
-          voice.name.includes('Premium') ||
-          voice.lang.startsWith('en')
-        );
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
+        // Wait a moment for cancellation to complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Load voices if not already loaded
+        let voices = speechSynthesis.getVoices();
+        if (voices.length === 0) {
+          console.log(`🎯 PROBLEM_SHIFTING: Loading voices...`);
+          await new Promise(resolve => {
+            speechSynthesis.onvoiceschanged = () => {
+              voices = speechSynthesis.getVoices();
+              resolve(voices);
+            };
+          });
         }
         
-        utterance.onstart = () => {
-          console.log(`🎯 PROBLEM_SHIFTING: TTS started speaking exact script`);
+        console.log(`🎯 PROBLEM_SHIFTING: Available voices:`, voices.length);
+        
+        // Create utterance with shorter text chunks to avoid synthesis-failed errors
+        const maxChunkLength = 200; // Shorter chunks work better
+        const chunks = scriptedResponse.match(new RegExp(`.{1,${maxChunkLength}}(\\s|$)`, 'g')) || [scriptedResponse];
+        
+        console.log(`🎯 PROBLEM_SHIFTING: Speaking in ${chunks.length} chunks`);
+        
+        let currentChunk = 0;
+        
+        const speakChunk = () => {
+          if (currentChunk >= chunks.length) {
+            console.log(`🎯 PROBLEM_SHIFTING: TTS completed all chunks`);
+            setIsAIResponding(false);
+            return;
+          }
+          
+          const chunk = chunks[currentChunk].trim();
+          if (!chunk) {
+            currentChunk++;
+            speakChunk();
+            return;
+          }
+          
+          console.log(`🎯 PROBLEM_SHIFTING: Speaking chunk ${currentChunk + 1}/${chunks.length}: "${chunk}"`);
+          
+          const utterance = new SpeechSynthesisUtterance(chunk);
+          utterance.rate = 0.85;
+          utterance.pitch = 1.0;
+          utterance.volume = 0.9;
+          
+          // Select best available voice
+          const preferredVoice = voices.find(voice => 
+            (voice.lang.startsWith('en') && voice.localService) ||
+            voice.name.includes('Google') ||
+            voice.name.includes('Microsoft') ||
+            voice.lang.startsWith('en')
+          );
+          
+          if (preferredVoice) {
+            utterance.voice = preferredVoice;
+            console.log(`🎯 PROBLEM_SHIFTING: Using voice: ${preferredVoice.name}`);
+          }
+          
+          utterance.onstart = () => {
+            console.log(`🎯 PROBLEM_SHIFTING: TTS started chunk ${currentChunk + 1}`);
+          };
+          
+          utterance.onend = () => {
+            console.log(`🎯 PROBLEM_SHIFTING: TTS finished chunk ${currentChunk + 1}`);
+            currentChunk++;
+            // Small delay between chunks
+            setTimeout(speakChunk, 200);
+          };
+          
+          utterance.onerror = (event) => {
+            console.error(`🎯 PROBLEM_SHIFTING: TTS error on chunk ${currentChunk + 1}:`, event.error);
+            // Try to continue with next chunk
+            currentChunk++;
+            setTimeout(speakChunk, 500);
+          };
+          
+          // Speak the chunk
+          speechSynthesis.speak(utterance);
         };
         
-        utterance.onend = () => {
-          console.log(`🎯 PROBLEM_SHIFTING: TTS finished speaking exact script`);
-          setIsAIResponding(false);
-        };
-        
-        utterance.onerror = (event) => {
-          console.error(`🎯 PROBLEM_SHIFTING: TTS error:`, event);
-          setIsAIResponding(false);
-        };
-        
-        speechSynthesis.speak(utterance);
-        
-        // Update UI immediately with the exact script
-        addMessage(scriptedResponse, false, currentStep.id);
-        console.log(`🎯 PROBLEM_SHIFTING: UI updated with EXACT scripted response`);
+        // Start speaking chunks
+        speakChunk();
         
       } else {
         console.error('🎯 PROBLEM_SHIFTING: Speech Synthesis not supported');
         setIsAIResponding(false);
-        // Fallback: just show text
-        addMessage(scriptedResponse, false, currentStep.id);
       }
       
     } catch (error) {
@@ -272,7 +324,7 @@ export default function ProblemShiftingVoiceDemo() {
       const nextStep = PROBLEM_SHIFTING_STEPS[nextIndex];
       
       // Get the EXACT scripted response using the same logic as working system
-      const nextResponse = getScriptedResponse(nextStep, transcript);
+      const nextResponse = getScriptedResponse(nextStep, transcript, newContext);
       
       console.log(`🎯 PROBLEM_SHIFTING: Moving to step ${nextIndex + 1}: ${nextStep.title}`);
       console.log(`🎯 PROBLEM_SHIFTING: EXACT next response: "${nextResponse}"`);
@@ -620,13 +672,27 @@ export default function ProblemShiftingVoiceDemo() {
         </button>
 
         {isConnected && (
-          <button
-            onClick={manualCommitSpeech}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-          >
-            <Mic className="h-4 w-4" />
-            <span>Done Speaking</span>
-          </button>
+          <>
+            <button
+              onClick={manualCommitSpeech}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <Mic className="h-4 w-4" />
+              <span>Done Speaking</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                const currentResponse = getScriptedResponse(currentStep, sessionContext.userResponses[currentStep.id] || '');
+                speakExactScript(currentResponse);
+              }}
+              disabled={isAIResponding}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Volume2 className="h-4 w-4" />
+              <span>Speak Again</span>
+            </button>
+          </>
         )}
 
         <button
