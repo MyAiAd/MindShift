@@ -553,6 +553,10 @@ export default function SimpleProblemShiftingDemo() {
         console.log('🎯 SIMPLE_DEMO: Current step:', currentStepIndex + 1, currentStep.title);
         console.log('🎯 SIMPLE_DEMO: Status:', statusRef.current);
         console.log('🎯 SIMPLE_DEMO: =============================');
+        
+        // Stop listening after receiving input
+        setIsListening(false);
+        
         processUserTranscript(transcript);
       };
       
@@ -579,6 +583,17 @@ export default function SimpleProblemShiftingDemo() {
         if (listeningTimeoutRef.current) {
           clearTimeout(listeningTimeoutRef.current);
           listeningTimeoutRef.current = null;
+        }
+        
+        // Auto-restart recognition if demo is still active and not currently listening
+        if (statusRef.current === 'active' && !isListeningRef.current) {
+          console.log('🎯 SIMPLE_DEMO: Recognition ended, restarting in 1 second...');
+          setTimeout(() => {
+            if (statusRef.current === 'active' && !isListeningRef.current) {
+              console.log('🎯 SIMPLE_DEMO: Auto-restarting speech recognition...');
+              startListening();
+            }
+          }, 1000);
         }
       };
       
