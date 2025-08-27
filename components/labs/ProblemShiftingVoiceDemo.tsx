@@ -143,7 +143,7 @@ export default function ProblemShiftingVoiceDemo() {
         session.audioEl.remove();
       }
     } catch (err) {
-      console.error('Cleanup error:', err);
+      console.error('🎯 PROBLEM_SHIFTING: Cleanup error:', err);
     }
     
     sessionRef.current = {
@@ -234,6 +234,7 @@ export default function ProblemShiftingVoiceDemo() {
     }
   };
 
+  // FIXED: Simple self-contained transcript processing - no external API calls
   const processUserTranscript = async (transcript: string) => {
     console.log(`🎯 PROBLEM_SHIFTING: Processing transcript: "${transcript}" for step: ${currentStep.id}`);
     
@@ -261,6 +262,9 @@ export default function ProblemShiftingVoiceDemo() {
       
       const nextStep = PROBLEM_SHIFTING_STEPS[nextIndex];
       const nextResponse = getScriptedResponse(nextStep, transcript);
+      
+      console.log(`🎯 PROBLEM_SHIFTING: Moving to step ${nextIndex + 1}: ${nextStep.title}`);
+      console.log(`🎯 PROBLEM_SHIFTING: Next response: "${nextResponse}"`);
       
       // Wait a moment before responding
       setTimeout(() => {
@@ -414,6 +418,7 @@ export default function ProblemShiftingVoiceDemo() {
             console.log(`🎯 PROBLEM_SHIFTING: Transcription:`, transcript);
             
             if (transcript && transcript.length > 1) {
+              // FIXED: Use our own simple processing, no external API calls
               processUserTranscript(transcript);
             }
           }
