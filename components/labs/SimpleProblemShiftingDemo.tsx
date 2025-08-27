@@ -208,8 +208,18 @@ export default function SimpleProblemShiftingDemo() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const listeningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const statusRef = useRef<string>('idle');
+  const isListeningRef = useRef<boolean>(false);
 
   const currentStep = PROBLEM_SHIFTING_STEPS[currentStepIndex];
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  useEffect(() => {
+    isListeningRef.current = isListening;
+  }, [isListening]);
 
   const addMessage = useCallback((content: string, isUser: boolean, stepId: string) => {
     const message: TreatmentMessage = {
@@ -227,6 +237,47 @@ export default function SimpleProblemShiftingDemo() {
       return step.script(userInput, context || sessionContext);
     }
     return step.script;
+  };
+
+  // Fast browser TTS for short texts
+  const speakWithBrowserTTS = (text: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (!('speechSynthesis' in window)) {
+        reject(new Error('Speech synthesis not supported'));
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.1;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      utterance.onend = () => {
+        console.log(`🎯 SIMPLE_DEMO: Browser TTS completed`);
+        setIsSpeaking(false);
+        
+        // Auto-start listening after TTS completes (if demo is active)
+        if (statusRef.current === 'active') {
+          console.log(`🎯 SIMPLE_DEMO: Auto-starting speech recognition after browser TTS`);
+          setTimeout(() => {
+            if (statusRef.current === 'active') {
+              startListening();
+            }
+          }, 300); // Very fast response
+        }
+        
+        resolve();
+      };
+
+      utterance.onerror = (event) => {
+        console.error(`🎯 SIMPLE_DEMO: Browser TTS error:`, event);
+        setIsSpeaking(false);
+        reject(new Error('Browser TTS failed'));
+      };
+
+      console.log(`🎯 SIMPLE_DEMO: Using browser TTS`);
+      speechSynthesis.speak(utterance);
+    });
   };
 
   // Validation logic from working treatment system
@@ -299,13 +350,25 @@ export default function SimpleProblemShiftingDemo() {
       setIsSpeaking(true);
       console.log(`🎯 SIMPLE_DEMO: Speaking: "${text}"`);
 
+      // Try browser TTS first for speed (if available and working)
+      if ('speechSynthesis' in window && text.length < 200) {
+        try {
+          await speakWithBrowserTTS(text);
+          return;
+        } catch (browserError) {
+          console.log(`🎯 SIMPLE_DEMO: Browser TTS failed, falling back to OpenAI TTS`);
+        }
+      }
+
+      // Fallback to OpenAI TTS
       const response = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: text,
-          voice: 'alloy',
-          model: 'tts-1'
+          voice: 'nova', // Faster, clearer voice
+          model: 'tts-1', // Use regular model for speed
+          speed: 1.2 // Faster speech
         })
       });
 
@@ -337,8 +400,10 @@ export default function SimpleProblemShiftingDemo() {
             setTimeout(() => {
               console.log(`🎯 SIMPLE_DEMO: Attempting to start listening...`);
               console.log(`🎯 SIMPLE_DEMO: Current isListening state:`, isListening);
-              startListening();
-            }, 2000); // Increased delay to 2 seconds
+              if (statusRef.current === 'active') {
+                startListening();
+              }
+            }, 500); // Reduced delay to 500ms for faster response
           } else {
             console.log(`🎯 SIMPLE_DEMO: Not auto-starting - status is: ${statusRef.current}`);
           }
@@ -433,7 +498,12 @@ export default function SimpleProblemShiftingDemo() {
       return;
     }
 
-    if (isListening) {
+    if (statusRef.current !== 'active') {
+      console.log(`🎯 SIMPLE_DEMO: Not starting listening - status is: ${statusRef.current}`);
+      return;
+    }
+
+    if (isListeningRef.current) {
       console.log(`🎯 SIMPLE_DEMO: Already listening, skipping`);
       return;
     }
@@ -549,6 +619,11 @@ export default function SimpleProblemShiftingDemo() {
     if (currentAudioRef.current) {
       currentAudioRef.current.pause();
       currentAudioRef.current = null;
+    }
+    
+    // Stop browser TTS
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
     }
     
     setStatus('idle');

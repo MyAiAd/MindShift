@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, voice = 'alloy', model = 'tts-1' } = await request.json();
+    const { text, voice = 'alloy', model = 'tts-1', speed = 1.0 } = await request.json();
 
     if (!text) {
       return NextResponse.json(
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       voice: voice as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer',
       input: text,
       response_format: 'mp3',
-      speed: 0.9
+      speed: Math.max(0.25, Math.min(4.0, speed)) // Clamp speed between 0.25 and 4.0
     });
 
     const audioBuffer = Buffer.from(await mp3Response.arrayBuffer());
