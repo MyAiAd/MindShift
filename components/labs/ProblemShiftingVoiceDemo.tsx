@@ -178,70 +178,66 @@ export default function ProblemShiftingVoiceDemo() {
     return step.script;
   };
 
-  // CRITICAL: This function ensures we ONLY speak the exact scripted responses
-  const createScriptedVoiceResponse = async (scriptedResponse: string) => {
-    console.log(`🎯 PROBLEM_SHIFTING: Creating EXACT scripted response: "${scriptedResponse}"`);
+  // HYBRID APPROACH: Use browser TTS for exact scripts, OpenAI for listening only
+  const speakExactScript = async (scriptedResponse: string) => {
+    console.log(`🎯 PROBLEM_SHIFTING: Speaking EXACT script with TTS: "${scriptedResponse}"`);
     
     if (isAIResponding) {
       console.log(`🎯 PROBLEM_SHIFTING: Blocking - AI is currently responding`);
       return;
     }
-    
-    // Wait for DataChannel to be ready
-    let attempts = 0;
-    const maxAttempts = 15;
-    
-    while (sessionRef.current.dataChannel?.readyState !== 'open' && attempts < maxAttempts) {
-      console.log(`🎯 PROBLEM_SHIFTING: Waiting for DataChannel, attempt ${attempts + 1}`);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-    }
-    
-    if (sessionRef.current.dataChannel?.readyState !== 'open') {
-      console.error('🎯 PROBLEM_SHIFTING: DataChannel not ready, aborting');
-      return;
-    }
-    
+
     try {
       setIsAIResponding(true);
       
-      // CRITICAL: Create assistant message with EXACT script - no AI interpretation allowed
-      const assistantMessageEvent = {
-        type: 'conversation.item.create',
-        item: {
-          type: 'message',
-          role: 'assistant',
-          status: 'completed',
-          content: [{
-            type: 'text',
-            text: scriptedResponse
-          }]
+      // Use browser's Speech Synthesis API for exact script delivery
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(scriptedResponse);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+        utterance.volume = 0.8;
+        
+        // Try to use a natural voice
+        const voices = speechSynthesis.getVoices();
+        const preferredVoice = voices.find(voice => 
+          voice.name.includes('Natural') || 
+          voice.name.includes('Enhanced') ||
+          voice.name.includes('Premium') ||
+          voice.lang.startsWith('en')
+        );
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
         }
-      };
-      
-      sessionRef.current.dataChannel.send(JSON.stringify(assistantMessageEvent));
-      console.log(`🎯 PROBLEM_SHIFTING: EXACT script sent to AI`);
-      
-      // Wait before triggering response
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Create response - AI will speak ONLY what we provided
-      const responseEvent = {
-        type: 'response.create',
-        response: {
-          modalities: ['audio', 'text']
-        }
-      };
-      
-      sessionRef.current.dataChannel.send(JSON.stringify(responseEvent));
-      console.log(`🎯 PROBLEM_SHIFTING: Audio response triggered for EXACT script`);
-      
-      // Update UI immediately with the exact script
-      addMessage(scriptedResponse, false, currentStep.id);
-      console.log(`🎯 PROBLEM_SHIFTING: UI updated with EXACT scripted response`);
+        
+        utterance.onstart = () => {
+          console.log(`🎯 PROBLEM_SHIFTING: TTS started speaking exact script`);
+        };
+        
+        utterance.onend = () => {
+          console.log(`🎯 PROBLEM_SHIFTING: TTS finished speaking exact script`);
+          setIsAIResponding(false);
+        };
+        
+        utterance.onerror = (event) => {
+          console.error(`🎯 PROBLEM_SHIFTING: TTS error:`, event);
+          setIsAIResponding(false);
+        };
+        
+        speechSynthesis.speak(utterance);
+        
+        // Update UI immediately with the exact script
+        addMessage(scriptedResponse, false, currentStep.id);
+        console.log(`🎯 PROBLEM_SHIFTING: UI updated with EXACT scripted response`);
+        
+      } else {
+        console.error('🎯 PROBLEM_SHIFTING: Speech Synthesis not supported');
+        setIsAIResponding(false);
+        // Fallback: just show text
+        addMessage(scriptedResponse, false, currentStep.id);
+      }
       
     } catch (error) {
-      console.error(`🎯 PROBLEM_SHIFTING: Failed to create scripted response:`, error);
+      console.error(`🎯 PROBLEM_SHIFTING: Failed to speak exact script:`, error);
       setIsAIResponding(false);
     }
   };
@@ -281,10 +277,10 @@ export default function ProblemShiftingVoiceDemo() {
       console.log(`🎯 PROBLEM_SHIFTING: Moving to step ${nextIndex + 1}: ${nextStep.title}`);
       console.log(`🎯 PROBLEM_SHIFTING: EXACT next response: "${nextResponse}"`);
       
-      // Wait a moment before responding (like working system)
-      setTimeout(() => {
-        createScriptedVoiceResponse(nextResponse);
-      }, 1000);
+              // Wait a moment before responding (like working system)
+        setTimeout(() => {
+          speakExactScript(nextResponse);
+        }, 1000);
     } else {
       // Session complete
       console.log(`🎯 PROBLEM_SHIFTING: Session completed - all steps done`);
@@ -362,7 +358,7 @@ export default function ProblemShiftingVoiceDemo() {
             const initialResponse = getScriptedResponse(currentStep);
             console.log(`🎯 PROBLEM_SHIFTING: Sending EXACT initial response: "${initialResponse}"`);
             setTimeout(() => {
-              createScriptedVoiceResponse(initialResponse);
+              speakExactScript(initialResponse);
             }, 1200);
           } else {
             setTimeout(checkDataChannel, 100);
@@ -403,12 +399,11 @@ export default function ProblemShiftingVoiceDemo() {
       dataChannel.addEventListener('open', () => {
         console.log('🎯 PROBLEM_SHIFTING: DataChannel opened');
         
-        // CRITICAL: Configure session to ONLY speak exact text we provide
+        // SIMPLIFIED: Configure session for listening only (TTS handles speaking)
         const sessionConfig = {
           type: 'session.update',
           session: {
-            instructions: `You are conducting a Problem Shifting treatment session. You MUST speak ONLY the exact text from assistant messages. NEVER generate original content, NEVER improvise, NEVER add anything. Speak EXACTLY what is provided in the assistant messages, word for word.`,
-            voice: 'verse',
+            instructions: `You are a transcription assistant. Only transcribe what the user says. Do not speak or respond with audio.`,
             input_audio_transcription: {
               model: 'whisper-1'
             },
@@ -418,8 +413,8 @@ export default function ProblemShiftingVoiceDemo() {
               prefix_padding_ms: 300,
               silence_duration_ms: 800
             },
-            modalities: ['text', 'audio'],
-            temperature: 0.0 // Absolutely no creativity allowed
+            modalities: ['text'], // Only text, no audio output
+            temperature: 0.6
           }
         };
         
@@ -547,7 +542,7 @@ export default function ProblemShiftingVoiceDemo() {
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Problem Shifting Voice Demo</h4>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Voice-guided Problem Shifting - uses EXACT scripts from working system
+              Hybrid Voice Demo: Browser TTS for EXACT scripts + OpenAI for listening
             </p>
           </div>
         </div>
@@ -621,7 +616,7 @@ export default function ProblemShiftingVoiceDemo() {
           className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Phone className="h-4 w-4" />
-          <span>{status === 'starting' ? 'Starting...' : 'Start EXACT Script Session'}</span>
+          <span>{status === 'starting' ? 'Starting...' : 'Start Hybrid Voice Session'}</span>
         </button>
 
         {isConnected && (
@@ -658,9 +653,9 @@ export default function ProblemShiftingVoiceDemo() {
           <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
           <div className="flex-1">
             <span className="text-sm text-green-800 dark:text-green-200">
-              🎙️ Voice session active! AI will speak ONLY the exact scripts.
-              {isAIResponding && " 🗣️ AI is speaking exact script..."}
-              {isListening && " 👂 Listening to your response..."}
+              🎙️ Hybrid voice session active! Browser TTS speaks EXACT scripts.
+              {isAIResponding && " 🗣️ Speaking exact script..."}
+              {isListening && " 👂 AI listening to your response..."}
             </span>
           </div>
         </div>
