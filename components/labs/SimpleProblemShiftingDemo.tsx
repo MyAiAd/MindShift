@@ -210,6 +210,7 @@ export default function SimpleProblemShiftingDemo() {
   const statusRef = useRef<string>('idle');
   const isListeningRef = useRef<boolean>(false);
   const currentStepIndexRef = useRef<number>(0);
+  const lastSpokenTextRef = useRef<string>('');
 
   const currentStep = PROBLEM_SHIFTING_STEPS[currentStepIndex];
 
@@ -267,15 +268,16 @@ export default function SimpleProblemShiftingDemo() {
         console.log(`🎯 SIMPLE_DEMO: Browser TTS completed`);
         setIsSpeaking(false);
         
-        // Auto-start listening after TTS completes (if demo is active)
-        if (statusRef.current === 'active') {
-          console.log(`🎯 SIMPLE_DEMO: Auto-starting speech recognition after browser TTS`);
-          setTimeout(() => {
-            if (statusRef.current === 'active') {
-              startListening();
-            }
-          }, 300); // Very fast response
-        }
+                  // Auto-start listening after TTS completes (if demo is active)
+          if (statusRef.current === 'active') {
+            console.log(`🎯 SIMPLE_DEMO: Auto-starting speech recognition after browser TTS`);
+            setTimeout(() => {
+              if (statusRef.current === 'active') {
+                console.log(`🎯 SIMPLE_DEMO: Starting listening after browser TTS buffer`);
+                startListening();
+              }
+            }, 800); // Longer buffer to prevent audio feedback
+          }
         
         resolve();
       };
@@ -359,6 +361,7 @@ export default function SimpleProblemShiftingDemo() {
 
     try {
       setIsSpeaking(true);
+      lastSpokenTextRef.current = text.toLowerCase(); // Store what we're speaking
       console.log(`🎯 SIMPLE_DEMO: Speaking: "${text}"`);
 
       // Try browser TTS first for speed (if available and working)
@@ -407,14 +410,14 @@ export default function SimpleProblemShiftingDemo() {
           
           // Auto-start listening after TTS completes (if demo is active)
           if (statusRef.current === 'active') {
-            console.log(`🎯 SIMPLE_DEMO: Auto-starting speech recognition after TTS`);
+            console.log(`🎯 SIMPLE_DEMO: Auto-starting speech recognition after OpenAI TTS`);
             setTimeout(() => {
-              console.log(`🎯 SIMPLE_DEMO: Attempting to start listening...`);
+              console.log(`🎯 SIMPLE_DEMO: Starting listening after OpenAI TTS buffer`);
               console.log(`🎯 SIMPLE_DEMO: Current isListening state:`, isListening);
               if (statusRef.current === 'active') {
                 startListening();
               }
-            }, 500); // Reduced delay to 500ms for faster response
+            }, 600); // Buffer to prevent audio feedback
           } else {
             console.log(`🎯 SIMPLE_DEMO: Not auto-starting - status is: ${statusRef.current}`);
           }
@@ -444,6 +447,15 @@ export default function SimpleProblemShiftingDemo() {
   const processUserTranscript = async (transcript: string) => {
     const currentStepFromRef = PROBLEM_SHIFTING_STEPS[currentStepIndexRef.current];
     console.log(`🎯 SIMPLE_DEMO: Processing transcript: "${transcript}" for step: ${currentStepFromRef.id}`);
+    
+    // Check if this transcript is similar to what we just spoke (audio feedback)
+    const transcriptLower = transcript.toLowerCase();
+    const lastSpoken = lastSpokenTextRef.current;
+    
+    if (lastSpoken && transcriptLower.includes(lastSpoken.substring(0, 20))) {
+      console.log(`🎯 SIMPLE_DEMO: IGNORING AUDIO FEEDBACK: "${transcript}" matches recent TTS`);
+      return; // Ignore audio feedback
+    }
     
     // Validate input for current step
     const validation = validateUserInput(transcript, currentStepFromRef.id);
