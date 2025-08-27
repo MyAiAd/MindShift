@@ -214,6 +214,7 @@ export default function SimpleProblemShiftingDemo() {
 
   // Keep refs in sync with state
   useEffect(() => {
+    console.log(`🎯 SIMPLE_DEMO: STATUS CHANGED: "${statusRef.current}" → "${status}"`);
     statusRef.current = status;
   }, [status]);
 
@@ -394,7 +395,7 @@ export default function SimpleProblemShiftingDemo() {
         
         audio.onended = () => {
           console.log(`🎯 SIMPLE_DEMO: TTS completed`);
-          console.log(`🎯 SIMPLE_DEMO: Current status: ${status}`);
+          console.log(`🎯 SIMPLE_DEMO: Current status: ${statusRef.current}`);
           URL.revokeObjectURL(audioUrl);
           currentAudioRef.current = null;
           setIsSpeaking(false);
@@ -532,7 +533,9 @@ export default function SimpleProblemShiftingDemo() {
       recognition.lang = 'en-US';
       
       recognition.onstart = () => {
-        console.log('🎯 SIMPLE_DEMO: Speech recognition started');
+        console.log('🎯 SIMPLE_DEMO: ===== SPEECH RECOGNITION STARTED =====');
+        console.log('🎯 SIMPLE_DEMO: Status:', statusRef.current);
+        console.log('🎯 SIMPLE_DEMO: Current step:', currentStepIndex + 1, currentStep.title);
         setIsListening(true);
         setError('');
         
@@ -565,8 +568,11 @@ export default function SimpleProblemShiftingDemo() {
       };
       
       recognition.onend = () => {
-        console.log('🎯 SIMPLE_DEMO: Speech recognition ended');
-        console.log('🎯 SIMPLE_DEMO: Recognition ended - was listening:', isListening);
+        console.log('🎯 SIMPLE_DEMO: ===== SPEECH RECOGNITION ENDED =====');
+        console.log('🎯 SIMPLE_DEMO: Status:', statusRef.current);
+        console.log('🎯 SIMPLE_DEMO: Was listening:', isListeningRef.current);
+        console.log('🎯 SIMPLE_DEMO: Current step:', currentStepIndex + 1, currentStep.title);
+        console.log('🎯 SIMPLE_DEMO: ==========================================');
         setIsListening(false);
         
         // Clear timeout
