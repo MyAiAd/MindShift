@@ -62,17 +62,14 @@ Feel the problem '${problemStatement}'... what does it feel like?`;
   {
     id: 'what_needs_to_happen_step',
     title: 'What Needs to Happen',
-    script: (userInput: string, context: any) => {
-      const problemStatement = context?.problemStatement || 'the problem';
-      return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
-    },
+    script: 'What needs to happen for the problem to not be a problem?',
     expectedResponseType: 'open',
     nextStep: 'feel_solution_state'
   },
   {
     id: 'feel_solution_state',
     title: 'Feel Solution State',
-    script: (userInput: string) => `What would you feel like if '${userInput || 'that'}'?`,
+    script: (userInput: string) => `What would you feel like if '${userInput || 'that'}' had already happened?`,
     expectedResponseType: 'feeling',
     nextStep: 'feel_good_state'
   },
@@ -80,13 +77,13 @@ Feel the problem '${problemStatement}'... what does it feel like?`;
     id: 'feel_good_state',
     title: 'Feel Good State',
     script: (userInput: string) => `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`,
-    expectedResponseType: 'feeling',
+    expectedResponseType: 'experience',
     nextStep: 'what_happens_step'
   },
   {
     id: 'what_happens_step',
     title: 'What Happens in Good State',
-    script: (userInput: string) => `Feel '${userInput || 'that feeling'}'... what happens in yourself when you feel '${userInput || 'that feeling'}'?`,
+    script: (userInput: string) => `What happens to '${userInput || 'that'}' when you feel '${userInput || 'that'}'?`,
     expectedResponseType: 'experience',
     nextStep: 'check_if_still_problem'
   },
@@ -95,18 +92,103 @@ Feel the problem '${problemStatement}'... what does it feel like?`;
     title: 'Check if Still Problem',
     script: (userInput: string, context: any) => {
       const problemStatement = context?.problemStatement || 'the problem';
-      return `Feel the problem '${problemStatement}'... does it still feel like a problem?`;
+      return `Can you still feel the problem '${problemStatement}'?`;
     },
     expectedResponseType: 'yesno',
-    nextStep: 'completion'
+    nextStep: 'session_complete'
   },
   {
-    id: 'completion',
+    id: 'session_complete',
     title: 'Session Complete',
-    script: 'Excellent! The Problem Shifting process is now complete. You can open your eyes. The problem should feel different now.',
+    script: 'Thank you for participating in this Mind Shifting demo. The treatment process has been completed.',
     expectedResponseType: 'open'
   }
 ];
+
+// Complete treatment modality step definitions
+const TREATMENT_MODALITY_STEPS = {
+  problem_shifting: [
+    { title: 'Problem Statement', description: 'State the problem you want to work on' },
+    { title: 'Problem Shifting Introduction', description: 'Feel the problem and describe what it feels like' },
+    { title: 'Body Sensation Check', description: 'Notice what happens in your body with that feeling' },
+    { title: 'What Needs to Happen', description: 'Identify what needs to happen for the problem to not be a problem' },
+    { title: 'Feel Solution State', description: 'Imagine how you would feel if that had already happened' },
+    { title: 'Feel Good State', description: 'Experience and describe that good feeling' },
+    { title: 'What Happens in Good State', description: 'Notice what happens when you feel that way' },
+    { title: 'Check if Still Problem', description: 'Check if you can still feel the original problem' },
+    { title: 'Session Complete', description: 'Treatment process completed' }
+  ],
+  reality_shifting: [
+    { title: 'Goal Statement', description: 'State what you want to achieve' },
+    { title: 'Goal Deadline Check', description: 'Determine if there is a deadline for your goal' },
+    { title: 'Goal Confirmation', description: 'Confirm your goal statement' },
+    { title: 'Goal Certainty', description: 'Rate your certainty about achieving this goal' },
+    { title: 'Reality Shifting Introduction', description: 'Feel having achieved your goal' },
+    { title: 'Reality Step A2', description: 'Notice what you can feel now' },
+    { title: 'Reality Step A3', description: 'Describe what that feels like' },
+    { title: 'Reality Step B', description: 'Explore why the goal might not be possible' },
+    { title: 'Why Not Possible', description: 'Identify the main reason it might not be possible' },
+    { title: 'Feel Reason', description: 'Feel that reason and describe what it feels like' },
+    { title: 'Feel Reason 2', description: 'Notice what you can feel now' },
+    { title: 'Feel Reason 3', description: 'Notice the first thing about that feeling' },
+    { title: 'Checking Questions', description: 'Answer checking questions about your doubt' },
+    { title: 'Doubt Reason', description: 'Explore the reason for your doubt' },
+    { title: 'Reality Cycle B2', description: 'Continue the reality shifting cycle' },
+    { title: 'Reality Cycle B3', description: 'Further exploration of the cycle' },
+    { title: 'Reality Cycle B4', description: 'Complete the reality cycle' },
+    { title: 'Certainty Check', description: 'Check your certainty level again' },
+    { title: 'Integration', description: 'Integrate the insights and plan actions' }
+  ],
+  belief_shifting: [
+    { title: 'Problem Statement', description: 'State the belief-related problem' },
+    { title: 'Belief Shifting Introduction', description: 'Feel the problem and what it feels like' },
+    { title: 'Belief Step B', description: 'Feel that feeling and describe what it feels like' },
+    { title: 'Belief Step C', description: 'Notice what happens when you feel that' },
+    { title: 'Belief Step D', description: 'Explore what needs to happen' },
+    { title: 'Belief Step E', description: 'Feel that solution state' },
+    { title: 'Belief Step F', description: 'Experience the good feeling' },
+    { title: 'Belief Step G', description: 'Notice what happens in that good state' },
+    { title: 'Belief Check', description: 'Check if you can still feel the original problem' },
+    { title: 'Integration', description: 'Integrate insights and plan actions' }
+  ],
+  identity_shifting: [
+    { title: 'Problem Statement', description: 'State the identity-related problem' },
+    { title: 'Identity Shifting Introduction', description: 'Feel the problem and describe the feeling' },
+    { title: 'Identity Dissolve Step A', description: 'Feel yourself being that identity and what you want' },
+    { title: 'Identity Dissolve Step B', description: 'Exaggerate the feeling and notice what you observe' },
+    { title: 'Identity Dissolve Step C', description: 'Continue the dissolving process' },
+    { title: 'Identity Dissolve Step D', description: 'Further dissolution work' },
+    { title: 'Identity Dissolve Step E', description: 'Complete the dissolution process' },
+    { title: 'Identity Step 3 Intro', description: 'Introduction to identity checking' },
+    { title: 'Identity Check', description: 'Check if you can still feel being that identity' },
+    { title: 'Future Check', description: 'Check how you feel about the future' },
+    { title: 'Problem Check', description: 'Check if the original problem is still there' },
+    { title: 'Integration', description: 'Integrate insights and plan actions' }
+  ],
+  blockage_shifting: [
+    { title: 'Problem Statement', description: 'State the blockage-related problem' },
+    { title: 'Blockage Shifting Introduction', description: 'Feel the problem and describe the feeling' },
+    { title: 'Blockage Step B', description: 'Feel that feeling and describe what it feels like' },
+    { title: 'Blockage Step C', description: 'Notice what happens when you feel that' },
+    { title: 'Blockage Step D', description: 'Feel the feeling again and describe it' },
+    { title: 'Blockage Step E', description: 'Continue working with the blockage feeling' },
+    { title: 'Blockage Check', description: 'Check if you can still feel the original problem' },
+    { title: 'Integration', description: 'Integrate insights and plan actions' }
+  ],
+  trauma_shifting: [
+    { title: 'Negative Experience Statement', description: 'Describe the negative experience' },
+    { title: 'Trauma Shifting Introduction', description: 'Feel the experience and describe the feeling' },
+    { title: 'Problem Redirect', description: 'Redirect if needed to focus on single experience' },
+    { title: 'Identity Step', description: 'Identify how you see yourself from this experience' },
+    { title: 'Trauma Dissolve Step A', description: 'Feel being that identity and what you want' },
+    { title: 'Trauma Dissolve Step B', description: 'Exaggerate the feeling and notice what you observe' },
+    { title: 'Trauma Dissolve Step C', description: 'Continue the trauma dissolution process' },
+    { title: 'Trauma Dissolve Step D', description: 'Further dissolution work' },
+    { title: 'Trauma Dissolve Step E', description: 'Complete the dissolution process' },
+    { title: 'Trauma Identity Check', description: 'Check if you can still feel being that identity' },
+    { title: 'Integration', description: 'Integrate insights and plan actions' }
+  ]
+};
 
 export default function SimpleProblemShiftingDemo() {
   const [status, setStatus] = useState<string>('idle');
@@ -569,23 +651,25 @@ export default function SimpleProblemShiftingDemo() {
         )}
       </div>
 
-      {/* Current Step Progress */}
-      <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-md">
-        <div className="flex items-center justify-between mb-2">
-          <h5 className="font-medium text-indigo-900 dark:text-indigo-200">
-            Step {currentStepIndex + 1} of {PROBLEM_SHIFTING_STEPS.length}: {currentStep.title}
-          </h5>
-          <span className="text-sm text-indigo-700 dark:text-indigo-300">
-            Expected: {currentStep.expectedResponseType}
-          </span>
+      {/* Current Step Progress - Only show for Problem Shifting */}
+      {selectedModality === 'problem_shifting' && (
+        <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-md">
+          <div className="flex items-center justify-between mb-2">
+            <h5 className="font-medium text-indigo-900 dark:text-indigo-200">
+              Step {currentStepIndex + 1} of {PROBLEM_SHIFTING_STEPS.length}: {currentStep.title}
+            </h5>
+            <span className="text-sm text-indigo-700 dark:text-indigo-300">
+              Expected: {currentStep.expectedResponseType}
+            </span>
+          </div>
+          <div className="w-full bg-indigo-200 dark:bg-indigo-800 rounded-full h-2">
+            <div 
+              className="bg-indigo-600 h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${((currentStepIndex + 1) / PROBLEM_SHIFTING_STEPS.length) * 100}%` }}
+            ></div>
+          </div>
         </div>
-        <div className="w-full bg-indigo-200 dark:bg-indigo-800 rounded-full h-2">
-          <div 
-            className="bg-indigo-600 h-2 rounded-full transition-all duration-300" 
-            style={{ width: `${((currentStepIndex + 1) / PROBLEM_SHIFTING_STEPS.length) * 100}%` }}
-          ></div>
-        </div>
-      </div>
+      )}
 
       {/* Working On Display */}
       {sessionContext.problemStatement && (
@@ -719,19 +803,32 @@ export default function SimpleProblemShiftingDemo() {
 
       {/* Step Guide */}
       <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
-        <h6 className="font-medium text-gray-900 dark:text-white mb-2">Problem Shifting Steps:</h6>
-        <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-          {PROBLEM_SHIFTING_STEPS.map((step, index) => (
-            <div key={step.id} className={`flex items-center space-x-2 ${index === currentStepIndex ? 'text-indigo-600 dark:text-indigo-400 font-medium' : ''}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                index < currentStepIndex ? 'bg-green-500 text-white' :
-                index === currentStepIndex ? 'bg-indigo-500 text-white' :
+        <h6 className="font-medium text-gray-900 dark:text-white mb-2">
+          {TREATMENT_MODALITIES[selectedModality].name} Steps:
+        </h6>
+        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+          {TREATMENT_MODALITY_STEPS[selectedModality].map((step, index) => (
+            <div key={index} className={`flex items-start space-x-3 p-2 rounded ${
+              selectedModality === 'problem_shifting' && index === currentStepIndex 
+                ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-100' 
+                : selectedModality === 'problem_shifting' && index < currentStepIndex
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-100'
+                : ''
+            }`}>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
+                selectedModality === 'problem_shifting' && index < currentStepIndex ? 'bg-green-500 text-white' :
+                selectedModality === 'problem_shifting' && index === currentStepIndex ? 'bg-indigo-500 text-white' :
                 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
               }`}>
-                {index < currentStepIndex ? '✓' : index + 1}
+                {selectedModality === 'problem_shifting' && index < currentStepIndex ? '✓' : index + 1}
               </span>
-              <span>{step.title}</span>
-              {index === currentStepIndex && <ArrowRight className="h-3 w-3" />}
+              <div className="flex-1 min-w-0">
+                <div className="font-medium">{step.title}</div>
+                <div className="text-xs opacity-75 mt-1">{step.description}</div>
+              </div>
+              {selectedModality === 'problem_shifting' && index === currentStepIndex && (
+                <ArrowRight className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              )}
             </div>
           ))}
         </div>
