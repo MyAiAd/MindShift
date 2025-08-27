@@ -141,6 +141,18 @@ export default function ProblemShiftingVoiceDemo() {
   const cleanup = useCallback(() => {
     const session = sessionRef.current;
     try {
+      // Stop all audio sources
+      if (session.audioEl && !session.audioEl.paused) {
+        session.audioEl.pause();
+        session.audioEl.currentTime = 0;
+      }
+      
+      // Cancel browser TTS
+      if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+      }
+      
+      // Close WebRTC connections
       if (session.dataChannel?.readyState === 'open') {
         session.dataChannel.close();
       }
@@ -169,6 +181,8 @@ export default function ProblemShiftingVoiceDemo() {
     setIsListening(false);
     setIsAIResponding(false);
     setStatus('idle');
+    
+    console.log('🎯 PROBLEM_SHIFTING: Complete cleanup - all audio stopped');
   }, []);
 
   const getScriptedResponse = (step: ProblemShiftingStep, userInput: string = '', context?: any): string => {
@@ -582,11 +596,11 @@ export default function ProblemShiftingVoiceDemo() {
       dataChannel.addEventListener('open', () => {
         console.log('🎯 PROBLEM_SHIFTING: DataChannel opened');
         
-        // SIMPLIFIED: Configure session for listening only (TTS handles speaking)
+        // TRANSCRIPTION ONLY: Completely disable AI audio responses
         const sessionConfig = {
           type: 'session.update',
           session: {
-            instructions: `You are a transcription assistant. Only transcribe what the user says. Do not speak or respond with audio.`,
+            instructions: `You are a transcription-only assistant. Your only job is to transcribe speech to text. Never generate responses. Never speak. Only transcribe.`,
             input_audio_transcription: {
               model: 'whisper-1'
             },
@@ -596,8 +610,9 @@ export default function ProblemShiftingVoiceDemo() {
               prefix_padding_ms: 300,
               silence_duration_ms: 800
             },
-            modalities: ['text'], // Only text, no audio output
-            temperature: 0.6
+            modalities: ['text'], // CRITICAL: Only text, absolutely no audio
+            temperature: 0.6,
+            max_response_output_tokens: 1 // Minimize any response generation
           }
         };
         
@@ -627,13 +642,12 @@ export default function ProblemShiftingVoiceDemo() {
               processUserTranscript(transcript);
             }
           }
+          // IGNORE OpenAI response events since we handle our own TTS
           else if (message.type === 'response.created') {
-            console.log(`🎯 PROBLEM_SHIFTING: Response started`);
-            setIsAIResponding(true);
+            console.log(`🎯 PROBLEM_SHIFTING: Ignoring OpenAI response (using our own TTS)`);
           }
           else if (message.type === 'response.done') {
-            console.log(`🎯 PROBLEM_SHIFTING: Response completed`);
-            setIsAIResponding(false);
+            console.log(`🎯 PROBLEM_SHIFTING: Ignoring OpenAI response completion (using our own TTS)`);
           }
           else if (message.type === 'error') {
             console.error(`🎯 PROBLEM_SHIFTING: API Error:`, message.error);
