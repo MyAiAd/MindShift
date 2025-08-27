@@ -111,6 +111,7 @@ export default function SimpleProblemShiftingDemo() {
   const recognitionRef = useRef<any>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const listeningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const statusRef = useRef<string>('idle');
 
   const currentStep = PROBLEM_SHIFTING_STEPS[currentStepIndex];
 
@@ -229,16 +230,20 @@ export default function SimpleProblemShiftingDemo() {
         
         audio.onended = () => {
           console.log(`🎯 SIMPLE_DEMO: TTS completed`);
+          console.log(`🎯 SIMPLE_DEMO: Current status: ${status}`);
           URL.revokeObjectURL(audioUrl);
           currentAudioRef.current = null;
           setIsSpeaking(false);
           
           // Auto-start listening after TTS completes (if demo is active)
-          if (status === 'active') {
+          if (statusRef.current === 'active') {
             console.log(`🎯 SIMPLE_DEMO: Auto-starting speech recognition after TTS`);
             setTimeout(() => {
+              console.log(`🎯 SIMPLE_DEMO: Attempting to start listening...`);
               startListening();
             }, 1000);
+          } else {
+            console.log(`🎯 SIMPLE_DEMO: Not auto-starting - status is: ${statusRef.current}`);
           }
           
           resolve();
@@ -323,8 +328,16 @@ export default function SimpleProblemShiftingDemo() {
 
   // Start speech recognition
   const startListening = () => {
+    console.log(`🎯 SIMPLE_DEMO: startListening called`);
+    
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      console.error(`🎯 SIMPLE_DEMO: Speech recognition not supported`);
       setError('Speech recognition not supported in this browser');
+      return;
+    }
+
+    if (isListening) {
+      console.log(`🎯 SIMPLE_DEMO: Already listening, skipping`);
       return;
     }
 
@@ -404,6 +417,7 @@ export default function SimpleProblemShiftingDemo() {
   // Start demo
   const startDemo = async () => {
     setStatus('active');
+    statusRef.current = 'active';
     setMessages([]);
     setCurrentStepIndex(0);
     setSessionContext({
@@ -431,6 +445,7 @@ export default function SimpleProblemShiftingDemo() {
     }
     
     setStatus('idle');
+    statusRef.current = 'idle';
     setIsSpeaking(false);
     setError('');
   };
