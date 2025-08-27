@@ -11,6 +11,10 @@ import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
 import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker } from 'lucide-react';
 import UnifiedTreatmentDemo from '@/components/labs/SimpleProblemShiftingDemo';
 import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
+import BeliefShiftingDemo from '@/components/labs/BeliefShiftingDemo';
+import IdentityShiftingDemo from '@/components/labs/IdentityShiftingDemo';
+import BlockageShiftingDemo from '@/components/labs/BlockageShiftingDemo';
+import TraumaShiftingDemo from '@/components/labs/TraumaShiftingDemo';
 
 interface FormState {
   loading: boolean;
@@ -1119,6 +1123,10 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <UnifiedTreatmentDemo />
               <RealityShiftingDemo />
+              <BeliefShiftingDemo />
+              <IdentityShiftingDemo />
+              <BlockageShiftingDemo />
+              <TraumaShiftingDemo />
             </div>
           </div>
 
