@@ -475,15 +475,22 @@ export default function UnifiedTreatmentDemo() {
       }
       
       // Strategy 3: Check for significant word overlap (for partial matches)
+      // BUT exclude common conversational words that naturally appear in responses
       const transcriptWords = transcriptLower.split(' ').filter(w => w.length > 2);
       const spokenWords = spokenText.split(' ').filter(w => w.length > 2);
       
-      if (transcriptWords.length >= 3 && spokenWords.length >= 3) {
-        const commonWords = transcriptWords.filter(word => spokenWords.includes(word));
-        const overlapRatio = commonWords.length / Math.min(transcriptWords.length, spokenWords.length);
+      // Exclude common conversational words that naturally overlap between questions and answers
+      const conversationalWords = ['feel', 'would', 'like', 'what', 'when', 'how', 'that', 'this', 'the', 'and', 'but', 'for', 'with', 'you', 'your', 'can', 'could', 'will', 'have', 'had', 'been', 'was', 'were', 'are', 'is'];
+      const meaningfulTranscriptWords = transcriptWords.filter(w => !conversationalWords.includes(w));
+      const meaningfulSpokenWords = spokenWords.filter(w => !conversationalWords.includes(w));
+      
+      if (meaningfulTranscriptWords.length >= 3 && meaningfulSpokenWords.length >= 3) {
+        const commonMeaningfulWords = meaningfulTranscriptWords.filter(word => meaningfulSpokenWords.includes(word));
+        const meaningfulOverlapRatio = commonMeaningfulWords.length / Math.min(meaningfulTranscriptWords.length, meaningfulSpokenWords.length);
         
-        if (overlapRatio > 0.6) { // 60% word overlap threshold
-          console.log(`🎯 SIMPLE_DEMO: IGNORING AUDIO FEEDBACK: "${transcript}" has ${Math.round(overlapRatio * 100)}% word overlap with recent TTS: "${spokenText}"`);
+        // Higher threshold for meaningful words (80%) and require at least 3 meaningful overlaps
+        if (meaningfulOverlapRatio > 0.8 && commonMeaningfulWords.length >= 3) {
+          console.log(`🎯 SIMPLE_DEMO: IGNORING AUDIO FEEDBACK: "${transcript}" has ${Math.round(meaningfulOverlapRatio * 100)}% meaningful word overlap with recent TTS: "${spokenText}" (common: ${commonMeaningfulWords.join(', ')})`);
           return;
         }
       }
