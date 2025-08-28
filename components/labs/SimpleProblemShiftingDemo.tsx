@@ -660,7 +660,15 @@ export default function UnifiedTreatmentDemo() {
             console.log(`🎯 SIMPLE_DEMO: Validation passed, proceeding to treatment`);
             setCurrentStepIndex(treatmentIntroIndex);
             const treatmentStep = PROBLEM_SHIFTING_STEPS[treatmentIntroIndex];
-            const treatmentResponse = getScriptedResponse(treatmentStep, transcript, newContext);
+            
+            // CRITICAL: Create context with correct problem statement for treatment
+            const treatmentContext = {
+              ...newContext,
+              problemStatement: finalProblemStatement // Use the validated problem statement
+            };
+            console.log(`🎯 SIMPLE_DEMO: Treatment context:`, JSON.stringify(treatmentContext, null, 2));
+            
+            const treatmentResponse = getScriptedResponse(treatmentStep, transcript, treatmentContext);
             addMessage(treatmentResponse, false, treatmentStep.id);
             speakText(treatmentResponse);
             return;
