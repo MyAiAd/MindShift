@@ -748,11 +748,6 @@ export default function UnifiedTreatmentDemo() {
             <p className="text-sm text-indigo-700 dark:text-indigo-300">
               {TREATMENT_MODALITIES[selectedModality].description}
             </p>
-            {selectedModality !== 'problem_shifting' && (
-              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                ⚠️ Only Problem Shifting is currently implemented
-              </p>
-            )}
           </div>
           <button
             onClick={() => setShowModalitySelector(!showModalitySelector)}
