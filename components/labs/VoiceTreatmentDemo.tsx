@@ -29,6 +29,9 @@ interface DemoContext {
 
 type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shifting' | 'identity_shifting' | 'blockage_shifting' | 'trauma_shifting';
 
+// Add comprehensive interaction state tracking
+type InteractionState = 'idle' | 'listening' | 'processing' | 'ai_speaking' | 'waiting_for_user' | 'error';
+
 export default function VoiceTreatmentDemo() {
   const [status, setStatus] = useState<string>('idle');
   const [isConnected, setIsConnected] = useState(false);
@@ -38,6 +41,11 @@ export default function VoiceTreatmentDemo() {
   const [showModalitySelector, setShowModalitySelector] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isAIResponding, setIsAIResponding] = useState(false); // Track AI response state
+  
+  // NEW: Comprehensive interaction state management
+  const [interactionState, setInteractionState] = useState<InteractionState>('idle');
+  const [stateMessage, setStateMessage] = useState<string>('');
+  
   const [demoContext, setDemoContext] = useState<DemoContext>({
     problemStatement: '',
     goalStatement: '',
@@ -75,6 +83,64 @@ export default function VoiceTreatmentDemo() {
         [Date.now().toString()]: transcript.trim()
       }
     }));
+  };
+
+  // NEW: Interaction state management helpers
+  const setInteractionStateWithMessage = (state: InteractionState, message: string) => {
+    console.log(`🔍 VOICE_DEBUG: State change: ${interactionState} → ${state} (${message})`);
+    setInteractionState(state);
+    setStateMessage(message);
+    
+    // Update legacy states for compatibility
+    setIsListening(state === 'listening');
+    setIsAIResponding(state === 'ai_speaking' || state === 'processing');
+  };
+
+  const getStateDisplayInfo = (state: InteractionState) => {
+    switch (state) {
+      case 'idle':
+        return { 
+          color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
+          icon: '⏸️',
+          canSpeak: false
+        };
+      case 'listening':
+        return { 
+          color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+          icon: '🎙️',
+          canSpeak: true
+        };
+      case 'processing':
+        return { 
+          color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+          icon: '🧠',
+          canSpeak: false
+        };
+      case 'ai_speaking':
+        return { 
+          color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
+          icon: '🗣️',
+          canSpeak: false
+        };
+      case 'waiting_for_user':
+        return { 
+          color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400',
+          icon: '👂',
+          canSpeak: true
+        };
+      case 'error':
+        return { 
+          color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+          icon: '❌',
+          canSpeak: false
+        };
+      default:
+        return { 
+          color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
+          icon: '❓',
+          canSpeak: false
+        };
+    }
   };
 
   const addMessage = useCallback((content: string, isUser: boolean, isVoice: boolean = false) => {
@@ -119,6 +185,7 @@ export default function VoiceTreatmentDemo() {
     setIsListening(false);
     setIsAIResponding(false);
     setStatus('idle');
+    setInteractionStateWithMessage('idle', 'Session ended');
   }, []);
 
   // COMPLETELY REWRITTEN: Simple response creation without custom IDs
@@ -128,10 +195,12 @@ export default function VoiceTreatmentDemo() {
     console.log(`🔍 VOICE_DEBUG: AI responding: ${isAIResponding}`);
     
     // Don't create response if AI is currently responding
-    if (isAIResponding) {
-      console.log(`🔍 VOICE_DEBUG: ❌ Blocking - AI is currently responding`);
+    if (isAIResponding || interactionState === 'ai_speaking' || interactionState === 'processing') {
+      console.log(`🔍 VOICE_DEBUG: ❌ Blocking - AI is currently responding (state: ${interactionState})`);
       return;
     }
+    
+    setInteractionStateWithMessage('processing', 'Preparing response...');
     
     // Wait for DataChannel to be ready
     let attempts = 0;
@@ -150,6 +219,7 @@ export default function VoiceTreatmentDemo() {
     
     try {
       setIsAIResponding(true);
+      setInteractionStateWithMessage('ai_speaking', 'AI is speaking...');
       
       console.log(`🔍 VOICE_DEBUG: Creating assistant message`);
       
@@ -191,10 +261,11 @@ export default function VoiceTreatmentDemo() {
     } catch (error) {
       console.error(`🔍 VOICE_DEBUG: ❌ Failed to create scripted response:`, error);
       setIsAIResponding(false);
+      setInteractionStateWithMessage('error', 'Failed to create response');
     }
   };
 
-  // FIXED: Enhanced transcript processing with better state machine flow
+  // ENHANCED: Transcript processing with comprehensive validation and guardrails
   const processTranscriptWithStateMachine = async (transcript: string) => {
     if (!stateMachineDemo) {
       console.log(`🔍 VOICE_DEBUG: State machine not initialized, initializing now...`);
@@ -216,33 +287,41 @@ export default function VoiceTreatmentDemo() {
       const result = await stateMachineDemo!.processUserInput(transcript, undefined, true);
       console.log(`🔍 VOICE_DEBUG: State machine result:`, result);
       
-      // Handle premature completion - restart if needed
-      if (!result.canContinue && result.reason === 'phase_complete') {
-        console.log(`🔍 VOICE_DEBUG: Session completed prematurely, checking if we should continue...`);
-        
-        // If we haven't really done much yet, restart the session
-        const currentContext = stateMachineDemo!.getCurrentContext();
-        if (currentContext && Object.keys(currentContext.userResponses || {}).length < 3) {
-          console.log(`🔍 VOICE_DEBUG: Restarting session to continue treatment properly`);
-          
-          // Reset and reinitialize
-          stateMachineDemo!.resetSession();
-          await stateMachineDemo!.initializeSession(selectedModality, transcript, true);
-          
-          // Try processing again
-          const retryResult = await stateMachineDemo!.processUserInput(transcript, undefined, true);
-          console.log(`🔍 VOICE_DEBUG: Retry result:`, retryResult);
-          
-          if (retryResult.scriptedResponse) {
-            await createScriptedVoiceResponse(retryResult.scriptedResponse, transcript);
-            return retryResult.scriptedResponse;
-          }
+      // Handle validation errors with helpful guidance
+      if (!result.canContinue) {
+        if (result.reason === 'validation_error' || result.reason === 'ai_assistance_needed') {
+          console.log(`🔍 VOICE_DEBUG: Validation error detected: "${result.scriptedResponse}"`);
+          await createScriptedVoiceResponse(result.scriptedResponse || "Please rephrase your response.", transcript);
+          return result.scriptedResponse || "Please rephrase your response.";
         }
         
-        // If we've done substantial work, allow completion
-        const completionResponse = "Thank you for participating in this Mind Shifting demo. The treatment process has been completed.";
-        await createScriptedVoiceResponse(completionResponse, transcript);
-        return completionResponse;
+        if (result.reason === 'phase_complete') {
+          console.log(`🔍 VOICE_DEBUG: Session completed prematurely, checking if we should continue...`);
+          
+          // If we haven't really done much yet, restart the session
+          const currentContext = stateMachineDemo!.getCurrentContext();
+          if (currentContext && Object.keys(currentContext.userResponses || {}).length < 3) {
+            console.log(`🔍 VOICE_DEBUG: Restarting session to continue treatment properly`);
+            
+            // Reset and reinitialize
+            stateMachineDemo!.resetSession();
+            await stateMachineDemo!.initializeSession(selectedModality, transcript, true);
+            
+            // Try processing again
+            const retryResult = await stateMachineDemo!.processUserInput(transcript, undefined, true);
+            console.log(`🔍 VOICE_DEBUG: Retry result:`, retryResult);
+            
+            if (retryResult.scriptedResponse) {
+              await createScriptedVoiceResponse(retryResult.scriptedResponse, transcript);
+              return retryResult.scriptedResponse;
+            }
+          }
+          
+          // If we've done substantial work, allow completion
+          const completionResponse = "Thank you for participating in this Mind Shifting demo. The treatment process has been completed.";
+          await createScriptedVoiceResponse(completionResponse, transcript);
+          return completionResponse;
+        }
       }
       
       if (result.scriptedResponse) {
@@ -288,6 +367,7 @@ export default function VoiceTreatmentDemo() {
     try {
       setError('');
       setStatus('starting');
+      setInteractionStateWithMessage('processing', 'Starting voice session...');
 
       // Initialize state machine first
       if (!stateMachineDemo) {
@@ -298,8 +378,8 @@ export default function VoiceTreatmentDemo() {
         console.log(`🔍 VOICE_DEBUG: State machine initialized`);
       }
 
-      // Get initial response
-      let initialResponse = "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. When you are ready to begin, would you like to work on: 1. PROBLEM, 2. GOAL, or 3. NEGATIVE EXPERIENCE?";
+      // Get initial response - using exact protocol from main system
+      let initialResponse = "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
       
       if (stateMachineDemo) {
         try {
@@ -367,6 +447,7 @@ export default function VoiceTreatmentDemo() {
         event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
         setStatus('connected');
         setIsConnected(true);
+        setInteractionStateWithMessage('processing', 'Initializing session...');
         
         // Wait for data channel to be ready before sending initial response
         const checkDataChannel = () => {
@@ -450,9 +531,11 @@ export default function VoiceTreatmentDemo() {
           // Speech detection events (may not fire with turn_detection: null)
           if (message.type === 'input_audio_buffer.speech_started') {
             console.log(`🔍 VOICE_DEBUG: User started speaking`);
+            setInteractionStateWithMessage('listening', 'Listening to your voice...');
           } 
           else if (message.type === 'input_audio_buffer.speech_stopped') {
             console.log(`🔍 VOICE_DEBUG: User stopped speaking`);
+            setInteractionStateWithMessage('processing', 'Processing your speech...');
             
             // With turn detection disabled, we need to manually commit audio
             try {
@@ -490,16 +573,19 @@ export default function VoiceTreatmentDemo() {
           else if (message.type === 'response.created') {
             console.log(`🔍 VOICE_DEBUG: ✅ Response started`);
             setIsAIResponding(true);
+            setInteractionStateWithMessage('ai_speaking', 'AI is speaking...');
           }
           
           else if (message.type === 'response.done') {
             console.log(`🔍 VOICE_DEBUG: ✅ Response completed`);
             setIsAIResponding(false);
+            setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
           }
           
           else if (message.type === 'response.cancelled') {
             console.log(`🔍 VOICE_DEBUG: ✅ Response cancelled`);
             setIsAIResponding(false);
+            setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
           }
           
           // Session events
@@ -597,14 +683,49 @@ export default function VoiceTreatmentDemo() {
       experienceStatement: '',
       userResponses: {}
     });
+    setInteractionStateWithMessage('idle', 'Demo reset');
     
     if (stateMachineDemo) {
       stateMachineDemo.resetSession();
     }
   };
 
+  const stateInfo = getStateDisplayInfo(interactionState);
+  
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      {/* Prominent State Overlay */}
+      {isConnected && interactionState !== 'idle' && (
+        <div className={`absolute inset-0 rounded-lg transition-all duration-300 ${
+          !stateInfo.canSpeak ? 'bg-black/20 backdrop-blur-sm' : 'bg-green-50/30 dark:bg-green-900/10'
+        } z-10 flex items-center justify-center`}>
+          <div className={`px-8 py-6 rounded-xl shadow-lg border-2 ${
+            stateInfo.canSpeak 
+              ? 'bg-green-100 border-green-300 dark:bg-green-900/40 dark:border-green-600' 
+              : 'bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-600'
+          }`}>
+            <div className="text-center">
+              <div className="text-4xl mb-3">{stateInfo.icon}</div>
+              <div className={`text-xl font-semibold mb-2 ${
+                stateInfo.canSpeak 
+                  ? 'text-green-800 dark:text-green-200' 
+                  : 'text-gray-800 dark:text-gray-200'
+              }`}>
+                {stateMessage}
+              </div>
+              {stateInfo.canSpeak ? (
+                <div className="text-sm text-green-700 dark:text-green-300">
+                  🎙️ You can speak now
+                </div>
+              ) : (
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Please wait...
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Brain className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
@@ -616,13 +737,14 @@ export default function VoiceTreatmentDemo() {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          {isAIResponding && (
-            <div className="flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 rounded-full text-sm">
-              <MessageSquare className="h-3 w-3" />
-              <span>AI Speaking</span>
-            </div>
-          )}
-          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+          {/* Enhanced State Indicator */}
+          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${stateInfo.color}`}>
+            <span>{stateInfo.icon}</span>
+            <span>{isConnected ? stateMessage : status}</span>
+          </div>
+          
+          {/* Connection Status */}
+          <div className={`px-2 py-1 rounded-full text-xs ${
             status === 'connected' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
             status === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
             status === 'starting' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
@@ -716,16 +838,19 @@ export default function VoiceTreatmentDemo() {
             onClick={() => {
               if (sessionRef.current.dataChannel?.readyState === 'open') {
                 try {
+                  setInteractionStateWithMessage('processing', 'Processing your speech...');
                   sessionRef.current.dataChannel.send(JSON.stringify({
                     type: 'input_audio_buffer.commit'
                   }));
                   console.log('🔍 VOICE_DEBUG: Manually committed speech');
                 } catch (error) {
                   console.log('🔍 VOICE_DEBUG: Failed to commit speech:', error);
+                  setInteractionStateWithMessage('error', 'Failed to process speech');
                 }
               }
             }}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            disabled={interactionState === 'processing' || interactionState === 'ai_speaking'}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Mic className="h-4 w-4" />
             <span>Done Speaking</span>
@@ -750,15 +875,32 @@ export default function VoiceTreatmentDemo() {
         </button>
       </div>
 
-      {/* Connection Status */}
+      {/* Enhanced Connection Status */}
       {isConnected && (
-        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md flex items-center">
-          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+        <div className={`mb-4 p-3 border rounded-md flex items-center transition-colors ${
+          stateInfo.canSpeak 
+            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+            : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+        }`}>
+          <div className="text-2xl mr-3">{stateInfo.icon}</div>
           <div className="flex-1">
-            <span className="text-sm text-green-800 dark:text-green-200">
-              🎙️ Voice session active! Speak naturally, then click "Done Speaking" when finished.
-              {isAIResponding && " 🗣️ AI is currently speaking..."}
-            </span>
+            <div className={`text-sm font-medium ${
+              stateInfo.canSpeak 
+                ? 'text-green-800 dark:text-green-200'
+                : 'text-blue-800 dark:text-blue-200'
+            }`}>
+              {stateMessage}
+            </div>
+            <div className={`text-xs mt-1 ${
+              stateInfo.canSpeak 
+                ? 'text-green-700 dark:text-green-300'
+                : 'text-blue-700 dark:text-blue-300'
+            }`}>
+              {stateInfo.canSpeak 
+                ? "Speak naturally - the system is listening"
+                : "Please wait while the AI processes or responds"
+              }
+            </div>
           </div>
         </div>
       )}
