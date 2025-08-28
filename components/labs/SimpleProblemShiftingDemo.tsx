@@ -557,32 +557,80 @@ export default function UnifiedTreatmentDemo() {
     setSessionContext(newContext);
     addMessage(transcript, true, currentStepFromRef.id);
 
-    // Handle special confirmation responses
-    const nextStep = PROBLEM_SHIFTING_STEPS[currentStepIndexRef.current + 1];
-    if (nextStep) {
-      const nextResponse = getScriptedResponse(nextStep, transcript, newContext);
+    // Handle special confirmation responses AFTER we advance to the response step
+    const currentStepIndex = currentStepIndexRef.current;
+    if (currentStepIndex < PROBLEM_SHIFTING_STEPS.length - 1) {
+      const nextIndex = currentStepIndex + 1;
+      const nextStep = PROBLEM_SHIFTING_STEPS[nextIndex];
       
-      // Handle confirmation flow
-      if (nextResponse === 'CONFIRMED_PROCEED_TO_TREATMENT') {
-        // Skip to treatment intro (problem_shifting_intro)
-        const treatmentIntroIndex = PROBLEM_SHIFTING_STEPS.findIndex(step => step.id === 'problem_shifting_intro');
-        if (treatmentIntroIndex !== -1) {
-          setCurrentStepIndex(treatmentIntroIndex);
-          const treatmentStep = PROBLEM_SHIFTING_STEPS[treatmentIntroIndex];
-          const treatmentResponse = getScriptedResponse(treatmentStep, transcript, newContext);
-          addMessage(treatmentResponse, false, treatmentStep.id);
-          speakText(treatmentResponse);
+      // If we're moving to the confirmation response step, handle the logic
+      if (nextStep.id === 'problem_confirmation_response') {
+        const nextResponse = getScriptedResponse(nextStep, transcript, newContext);
+        console.log(`🎯 SIMPLE_DEMO: Confirmation response: "${nextResponse}"`);
+        
+        // Handle confirmation flow
+        if (nextResponse === 'CONFIRMED_PROCEED_TO_TREATMENT') {
+          console.log(`🎯 SIMPLE_DEMO: User confirmed, validating final problem statement`);
+          
+          // Now validate the confirmed problem statement against guardrails
+          const finalProblemStatement = newContext.problemStatement;
+          console.log(`🎯 SIMPLE_DEMO: Final problem statement to validate: "${finalProblemStatement}"`);
+          
+          // Check if it's stated as a goal instead of problem
+          const lowerInput = (finalProblemStatement || '').toLowerCase();
+          const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+          const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+          
+          if (hasGoalLanguage) {
+            console.log(`🎯 SIMPLE_DEMO: Problem statement contains goal language, asking for reframe`);
+            addMessage("How would you state that as a problem instead of a goal?", false, 'validation_error');
+            speakText("How would you state that as a problem instead of a goal?");
+            setCurrentStepIndex(0); // Go back to problem capture
+            setSessionContext({ problemStatement: '', userResponses: {} });
+            return;
+          }
+          
+          // Check if it's stated as a question
+          const questionIndicators = ['how can', 'how do', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
+          const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || finalProblemStatement?.endsWith('?');
+          
+          if (hasQuestionLanguage) {
+            console.log(`🎯 SIMPLE_DEMO: Problem statement is a question, asking for reframe`);
+            addMessage("How would you state that as a problem instead of a question?", false, 'validation_error');
+            speakText("How would you state that as a problem instead of a question?");
+            setCurrentStepIndex(0); // Go back to problem capture
+            setSessionContext({ problemStatement: '', userResponses: {} });
+            return;
+          }
+          
+          // Skip to treatment intro (problem_shifting_intro) 
+          const treatmentIntroIndex = PROBLEM_SHIFTING_STEPS.findIndex(step => step.id === 'problem_shifting_intro');
+          if (treatmentIntroIndex !== -1) {
+            console.log(`🎯 SIMPLE_DEMO: Validation passed, proceeding to treatment`);
+            setCurrentStepIndex(treatmentIntroIndex);
+            const treatmentStep = PROBLEM_SHIFTING_STEPS[treatmentIntroIndex];
+            const treatmentResponse = getScriptedResponse(treatmentStep, transcript, newContext);
+            addMessage(treatmentResponse, false, treatmentStep.id);
+            speakText(treatmentResponse);
+            return;
+          }
+        } else if (nextResponse === 'RESTART_PROBLEM_CAPTURE') {
+          // Reset to problem capture
+          console.log(`🎯 SIMPLE_DEMO: User said no, restarting problem capture`);
+          setCurrentStepIndex(0);
+          setSessionContext({ problemStatement: '', userResponses: {} });
+          const problemStep = PROBLEM_SHIFTING_STEPS[0];
+          const problemResponse = getScriptedResponse(problemStep, '', { problemStatement: '', userResponses: {} });
+          addMessage("Let's try again. " + problemResponse, false, problemStep.id);
+          speakText("Let's try again. " + problemResponse);
+          return;
+        } else {
+          // Regular response, just show it and continue
+          setCurrentStepIndex(nextIndex);
+          addMessage(nextResponse, false, nextStep.id);
+          speakText(nextResponse);
           return;
         }
-      } else if (nextResponse === 'RESTART_PROBLEM_CAPTURE') {
-        // Reset to problem capture
-        setCurrentStepIndex(0);
-        setSessionContext({ problemStatement: '', userResponses: {} });
-        const problemStep = PROBLEM_SHIFTING_STEPS[0];
-        const problemResponse = getScriptedResponse(problemStep, '', { problemStatement: '', userResponses: {} });
-        addMessage("Let's try again. " + problemResponse, false, problemStep.id);
-        speakText("Let's try again. " + problemResponse);
-        return;
       }
     }
 
