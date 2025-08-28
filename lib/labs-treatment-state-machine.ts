@@ -79,9 +79,7 @@ export class LabsTreatmentStateMachine {
       lastActivity: new Date(),
       metadata: {
         modality,
-        initialInput,
-        // Set selectedMethod based on modality for proper routing
-        selectedMethod: modality
+        initialInput
       }
     };
 
