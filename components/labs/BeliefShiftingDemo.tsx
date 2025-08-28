@@ -26,6 +26,32 @@ const BELIEF_SHIFTING_STEPS: BeliefShiftingStep[] = [
     title: 'Problem Statement',
     script: 'Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. Please tell me what problem you want to work on in a few words.',
     expectedResponseType: 'problem',
+    nextStep: 'problem_confirmation'
+  },
+  {
+    id: 'problem_confirmation',
+    title: 'Problem Confirmation',
+    script: (userInput: string, context: any) => {
+      const problemStatement = context?.problemStatement || userInput || 'your problem';
+      return `I heard you say '${problemStatement}'. Is that correct?`;
+    },
+    expectedResponseType: 'yesno',
+    nextStep: 'problem_confirmation_response'
+  },
+  {
+    id: 'problem_confirmation_response',
+    title: 'Problem Confirmation Response',
+    script: (userInput: string, context: any) => {
+      const input = (userInput || '').toLowerCase().trim();
+      if (input.includes('yes') || input.includes('y') || input.includes('correct') || input.includes('right')) {
+        return 'CONFIRMED_PROCEED_TO_TREATMENT';
+      } else if (input.includes('no') || input.includes('n') || input.includes('wrong') || input.includes('incorrect')) {
+        return 'RESTART_PROBLEM_CAPTURE';
+      } else {
+        return 'Please answer yes or no. Is that what you want to work on?';
+      }
+    },
+    expectedResponseType: 'yesno',
     nextStep: 'belief_shifting_intro'
   },
   {
@@ -435,6 +461,35 @@ export default function BeliefShiftingDemo() {
 
     setSessionContext(newContext);
     addMessage(transcript, true, currentStepFromRef.id);
+
+    // Handle special confirmation responses
+    const nextStep = BELIEF_SHIFTING_STEPS[currentStepIndexRef.current + 1];
+    if (nextStep) {
+      const nextResponse = getScriptedResponse(nextStep, transcript, newContext);
+      
+      // Handle confirmation flow
+      if (nextResponse === 'CONFIRMED_PROCEED_TO_TREATMENT') {
+        // Skip to treatment intro (belief_shifting_intro)
+        const treatmentIntroIndex = BELIEF_SHIFTING_STEPS.findIndex(step => step.id === 'belief_shifting_intro');
+        if (treatmentIntroIndex !== -1) {
+          setCurrentStepIndex(treatmentIntroIndex);
+          const treatmentStep = BELIEF_SHIFTING_STEPS[treatmentIntroIndex];
+          const treatmentResponse = getScriptedResponse(treatmentStep, transcript, newContext);
+          addMessage(treatmentResponse, false, treatmentStep.id);
+          speakText(treatmentResponse);
+          return;
+        }
+      } else if (nextResponse === 'RESTART_PROBLEM_CAPTURE') {
+        // Reset to problem capture
+        setCurrentStepIndex(0);
+        setSessionContext({ problemStatement: '', userResponses: {} });
+        const problemStep = BELIEF_SHIFTING_STEPS[0];
+        const problemResponse = getScriptedResponse(problemStep, '', { problemStatement: '', userResponses: {} });
+        addMessage("Let's try again. " + problemResponse, false, problemStep.id);
+        speakText("Let's try again. " + problemResponse);
+        return;
+      }
+    }
 
     // Move to next step if available
     const currentIndex = currentStepIndexRef.current;

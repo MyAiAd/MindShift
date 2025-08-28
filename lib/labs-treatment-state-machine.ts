@@ -650,7 +650,19 @@ export class LabsTreatmentStateMachine {
 
     // Handle method selection routing
     if (currentStep.id === 'method_selection') {
-      return 'problem_description';
+      return 'work_type_description';
+    }
+
+    // Handle work_type_description routing to appropriate confirmation
+    if (currentStep.id === 'work_type_description') {
+      if (context.metadata.workType === 'problem') {
+        return 'problem_confirmation';
+      } else if (context.metadata.workType === 'goal') {
+        return 'goal_confirmation';
+      } else if (context.metadata.workType === 'negative_experience') {
+        return 'experience_confirmation';
+      }
+      return 'problem_confirmation'; // fallback
     }
 
     // Handle goal/negative experience routing
@@ -819,7 +831,40 @@ export class LabsTreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
           ],
-          nextStep: 'problem_description',
+          nextStep: 'work_type_description',
+          aiTriggers: []
+        },
+        {
+          id: 'work_type_description',
+          scriptedResponse: (userInput, context) => {
+            if (!context) {
+              throw new Error('Context is undefined in work_type_description');
+            }
+            
+            // Handle direct problem/goal/experience input from method selection
+            if (context.metadata.workType === 'problem') {
+              context.problemStatement = userInput;
+              context.metadata.problemStatement = userInput;
+              return "PROBLEM_SELECTION_CONFIRMED";
+            } else if (context.metadata.workType === 'goal') {
+              context.goalStatement = userInput;
+              context.metadata.goalStatement = userInput;
+              context.metadata.selectedMethod = 'reality_shifting';
+              return "GOAL_SELECTION_CONFIRMED";
+            } else if (context.metadata.workType === 'negative_experience') {
+              context.negativeExperienceStatement = userInput;
+              context.metadata.negativeExperienceStatement = userInput;
+              context.metadata.selectedMethod = 'trauma_shifting';
+              return "NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED";
+            }
+            
+            return "Please describe what you'd like to work on in a few words.";
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please describe what you want to work on in a few words.' }
+          ],
+          nextStep: 'problem_confirmation', // Will be dynamically determined based on work type
           aiTriggers: []
         },
         {
