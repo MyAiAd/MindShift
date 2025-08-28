@@ -290,10 +290,16 @@ export default function VoiceTreatmentDemo() {
     return responseCache.responses.get(responseKey) || null;
   };
 
-  // NEW: Automatic speech detection using browser Speech Recognition
+  // NEW: Enhanced automatic speech detection with better error handling
   const startAutomaticListening = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       console.log('🔍 VOICE_DEBUG: Browser speech recognition not supported, using manual mode');
+      return;
+    }
+
+    // Don't start if already listening or if we're not in the right state
+    if (speechRecognitionRef.current || interactionState !== 'waiting_for_user') {
+      console.log('🔍 VOICE_DEBUG: Skipping speech recognition - already active or wrong state');
       return;
     }
 
@@ -301,21 +307,46 @@ export default function VoiceTreatmentDemo() {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       
-      recognition.continuous = false;
-      recognition.interimResults = false;
+      // Enhanced configuration for better reliability
+      recognition.continuous = true; // Keep listening continuously
+      recognition.interimResults = true; // Get interim results for better responsiveness
       recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
+      
+      let speechTimeout: NodeJS.Timeout;
+      let hasSpeech = false;
       
       recognition.onstart = () => {
-        console.log('🔍 VOICE_DEBUG: 🎙️ Browser speech recognition started');
+        console.log('🔍 VOICE_DEBUG: 🎙️ Enhanced browser speech recognition started');
         setIsBrowserListening(true);
         setInteractionStateWithMessage('listening', 'Listening to your voice...');
+        hasSpeech = false;
       };
       
       recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript.trim();
-        console.log('🔍 VOICE_DEBUG: 🎯 Browser speech recognized:', transcript);
+        let finalTranscript = '';
+        let interimTranscript = '';
         
-        if (transcript && transcript.length > 1) {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        
+        // Clear any existing timeout
+        if (speechTimeout) {
+          clearTimeout(speechTimeout);
+        }
+        
+        if (finalTranscript.trim()) {
+          console.log('🔍 VOICE_DEBUG: 🎯 Final speech recognized:', finalTranscript.trim());
+          hasSpeech = true;
+          
+          // Stop recognition and process the speech
+          recognition.stop();
           setInteractionStateWithMessage('processing', 'Processing your speech...');
           
           // Commit the audio buffer to OpenAI for processing
@@ -329,6 +360,17 @@ export default function VoiceTreatmentDemo() {
               console.log('🔍 VOICE_DEBUG: Failed to auto-commit audio:', error);
             }
           }
+        } else if (interimTranscript.trim()) {
+          console.log('🔍 VOICE_DEBUG: 🎙️ Interim speech:', interimTranscript.trim());
+          hasSpeech = true;
+          
+          // Set a timeout to process speech if no more final results come
+          speechTimeout = setTimeout(() => {
+            if (hasSpeech) {
+              console.log('🔍 VOICE_DEBUG: 🎯 Processing interim speech due to timeout');
+              recognition.stop();
+            }
+          }, 2000);
         }
       };
       
@@ -336,24 +378,33 @@ export default function VoiceTreatmentDemo() {
         console.log('🔍 VOICE_DEBUG: Speech recognition error:', event.error);
         setIsBrowserListening(false);
         
-        // Restart listening after a brief pause
+        // Handle specific errors
+        if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+          console.log('🔍 VOICE_DEBUG: ❌ Microphone permission denied - falling back to manual mode');
+          setInteractionStateWithMessage('waiting_for_user', 'Click "I\'m Done Speaking" when ready');
+          return;
+        }
+        
+        // Restart listening after a brief pause for other errors
         setTimeout(() => {
           if (isConnected && interactionState === 'waiting_for_user') {
             startAutomaticListening();
           }
-        }, 1000);
+        }, 1500);
       };
       
       recognition.onend = () => {
-        console.log('🔍 VOICE_DEBUG: Browser speech recognition ended');
+        console.log('🔍 VOICE_DEBUG: Browser speech recognition ended, hasSpeech:', hasSpeech);
         setIsBrowserListening(false);
+        speechRecognitionRef.current = null;
         
-        // Restart listening if we're still in a listening state
-        setTimeout(() => {
-          if (isConnected && interactionState === 'waiting_for_user') {
+        // Only restart if we haven't processed speech and we're still waiting
+        if (!hasSpeech && isConnected && interactionState === 'waiting_for_user') {
+          console.log('🔍 VOICE_DEBUG: Restarting speech recognition - no speech detected');
+          setTimeout(() => {
             startAutomaticListening();
-          }
-        }, 500);
+          }, 1000);
+        }
       };
       
       speechRecognitionRef.current = recognition;
@@ -361,6 +412,7 @@ export default function VoiceTreatmentDemo() {
       
     } catch (error) {
       console.error('🔍 VOICE_DEBUG: Failed to start speech recognition:', error);
+      setInteractionStateWithMessage('waiting_for_user', 'Click "I\'m Done Speaking" when ready');
     }
   };
 
@@ -1340,8 +1392,11 @@ export default function VoiceTreatmentDemo() {
           <span>{status === 'starting' ? 'Starting...' : 'Start Voice Session'}</span>
         </button>
 
-        {/* Manual speech controls - fallback for browsers without speech recognition */}
-        {isConnected && !('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window) && (
+        {/* Manual speech controls - fallback for browsers without speech recognition or permission issues */}
+        {isConnected && (
+          (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) ||
+          (interactionState === 'waiting_for_user' && stateMessage.includes('Click'))
+        ) && (
           <button
             onClick={() => {
               if (sessionRef.current.dataChannel?.readyState === 'open') {
