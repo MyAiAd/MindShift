@@ -591,8 +591,9 @@ export default function UnifiedTreatmentDemo() {
           
           if (hasGoalLanguage) {
             console.log(`🎯 SIMPLE_DEMO: Problem statement contains goal language, asking for reframe`);
-            addMessage("How would you state that as a problem instead of a goal?", false, 'validation_error');
-            speakText("How would you state that as a problem instead of a goal?");
+            const goalReframeMessage = "How would you state that as a problem instead of a goal? Please tell me what problem you want to work on in a few words.";
+            addMessage(goalReframeMessage, false, 'validation_error');
+            speakText(goalReframeMessage);
             setCurrentStepIndex(0); // Go back to problem capture
             setSessionContext({ problemStatement: '', userResponses: {} });
             return;
@@ -604,8 +605,9 @@ export default function UnifiedTreatmentDemo() {
           
           if (hasQuestionLanguage) {
             console.log(`🎯 SIMPLE_DEMO: Problem statement is a question, asking for reframe`);
-            addMessage("How would you state that as a problem instead of a question?", false, 'validation_error');
-            speakText("How would you state that as a problem instead of a question?");
+            const questionReframeMessage = "How would you state that as a problem instead of a question? Please tell me what problem you want to work on in a few words.";
+            addMessage(questionReframeMessage, false, 'validation_error');
+            speakText(questionReframeMessage);
             setCurrentStepIndex(0); // Go back to problem capture
             setSessionContext({ problemStatement: '', userResponses: {} });
             return;
@@ -627,10 +629,9 @@ export default function UnifiedTreatmentDemo() {
           console.log(`🎯 SIMPLE_DEMO: User said no, restarting problem capture`);
           setCurrentStepIndex(0);
           setSessionContext({ problemStatement: '', userResponses: {} });
-          const problemStep = PROBLEM_SHIFTING_STEPS[0];
-          const problemResponse = getScriptedResponse(problemStep, '', { problemStatement: '', userResponses: {} });
-          addMessage("Let's try again. " + problemResponse, false, problemStep.id);
-          speakText("Let's try again. " + problemResponse);
+          const shortRestartMessage = "Let's try again. Please tell me what problem you want to work on in a few words.";
+          addMessage(shortRestartMessage, false, 'problem_capture');
+          speakText(shortRestartMessage);
           return;
         } else {
           // Regular response, just show it and continue
