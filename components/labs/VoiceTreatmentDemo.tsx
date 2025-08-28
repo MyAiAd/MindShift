@@ -268,7 +268,7 @@ export default function VoiceTreatmentDemo() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text,
-        voice: 'nova',
+        voice: 'alloy', // Use alloy for consistency with realtime API
         model: 'tts-1'
       })
     });
@@ -713,7 +713,7 @@ export default function VoiceTreatmentDemo() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'gpt-4o-realtime-preview-2024-12-17',
-          voice: 'nova', // Consistent female voice across all demos
+          voice: 'alloy', // Consistent voice across all demos (nova not supported in realtime)
           instructions: `You are a Mind Shifting treatment assistant. Speak only exact text from assistant messages. Never generate automatic responses.`,
           // Enable transcription
           input_audio_transcription: {
@@ -814,7 +814,7 @@ export default function VoiceTreatmentDemo() {
           type: 'session.update',
           session: {
             instructions: `You are conducting a Mind Shifting treatment session. Speak ONLY the exact text from assistant messages. Never generate original content.`,
-            voice: 'nova', // Consistent female voice across all demos
+            voice: 'alloy', // Consistent voice across all demos (nova not supported in realtime)
             input_audio_transcription: {
               model: 'whisper-1'
             },
