@@ -28,6 +28,11 @@ export async function POST(request: NextRequest) {
       console.log(`🔍 SIMPLE_API_DEBUG: Creating new state machine for session: ${sessionId}`);
       stateMachine = new LabsTreatmentStateMachine();
       demoSessions.set(sessionId, stateMachine);
+    } else {
+      // TEMPORARY: Force refresh state machine to pick up new confirmation steps
+      console.log(`🔍 SIMPLE_API_DEBUG: Force refreshing state machine for session: ${sessionId}`);
+      stateMachine = new LabsTreatmentStateMachine();
+      demoSessions.set(sessionId, stateMachine);
       
       // If this is a process action and no session exists, initialize with default modality
       if (action === 'process') {
