@@ -721,7 +721,7 @@ export default function VoiceTreatmentDemo() {
           input_audio_transcription: {
             model: 'whisper-1'
           },
-          // CRITICAL: Start with no turn detection to prevent automatic responses
+          // CRITICAL: Disable turn detection to prevent dual voice responses
           turn_detection: null,
           temperature: 0.8
         })
@@ -820,13 +820,8 @@ export default function VoiceTreatmentDemo() {
             input_audio_transcription: {
               model: 'whisper-1'
             },
-            // OPTIMIZED: Faster speech detection for reduced latency
-            turn_detection: {
-              type: 'server_vad',
-              threshold: 0.3, // More sensitive detection
-              prefix_padding_ms: 200, // Reduced padding
-              silence_duration_ms: 400 // Reduced from 800ms to 400ms for faster response
-            },
+            // CRITICAL: Disable automatic turn detection to prevent dual voices
+            turn_detection: null, // Disable OpenAI's automatic response generation
             modalities: ['text', 'audio'],
             temperature: 0.8
           }
@@ -842,31 +837,11 @@ export default function VoiceTreatmentDemo() {
           const message = JSON.parse(event.data);
           console.log(`🔍 VOICE_DEBUG: Event:`, message.type);
           
-          // Speech detection events (may not fire with turn_detection: null)
-          if (message.type === 'input_audio_buffer.speech_started') {
-            console.log(`🔍 VOICE_DEBUG: User started speaking`);
-            setInteractionStateWithMessage('listening', 'Listening to your voice...');
-          } 
-          else if (message.type === 'input_audio_buffer.speech_stopped') {
-            console.log(`🔍 VOICE_DEBUG: User stopped speaking`);
-            setInteractionStateWithMessage('processing', 'Processing your speech...');
-            
-            // With turn detection disabled, we need to manually commit audio
-            try {
-              sessionRef.current.dataChannel?.send(JSON.stringify({
-                type: 'input_audio_buffer.commit'
-              }));
-              console.log(`🔍 VOICE_DEBUG: Manually committed audio buffer`);
-            } catch (error) {
-              console.log(`🔍 VOICE_DEBUG: Failed to commit audio:`, error);
-            }
-          } 
-          else if (message.type === 'input_audio_buffer.committed') {
-            console.log(`🔍 VOICE_DEBUG: Audio committed, waiting for transcription`);
-          }
+          // Speech detection events (won't fire with turn_detection: null)
+          // We rely on manual "Done Speaking" button instead
           
           // Handle user transcription - simplified without cancellation attempts  
-          else if (message.type === 'conversation.item.input_audio_transcription.completed') {
+          if (message.type === 'conversation.item.input_audio_transcription.completed') {
             const transcript = message.transcript?.trim();
             console.log(`🔍 VOICE_DEBUG: Transcription completed:`, transcript);
             
@@ -925,6 +900,8 @@ export default function VoiceTreatmentDemo() {
               console.log(`🔍 VOICE_DEBUG: 🛠️ Unknown parameter error (expected with manual control)`);
             } else if (errorCode === 'response_cancel_not_active') {
               console.log(`🔍 VOICE_DEBUG: 🛠️ No active response to cancel (expected with turn detection disabled)`);
+            } else if (errorCode === 'input_audio_buffer_commit_empty') {
+              console.log(`🔍 VOICE_DEBUG: 🛠️ Empty audio buffer commit (expected with manual control)`);
             } else {
               // Show serious errors that need attention
               setError(`API Error: ${errorMessage}`);
@@ -1258,7 +1235,7 @@ export default function VoiceTreatmentDemo() {
           <span>{status === 'starting' ? 'Starting...' : 'Start Voice Session'}</span>
         </button>
 
-        {/* Manual speech controls for when turn detection is disabled */}
+        {/* Manual speech controls - primary interaction method */}
         {isConnected && (
           <button
             onClick={() => {
@@ -1268,7 +1245,7 @@ export default function VoiceTreatmentDemo() {
                   sessionRef.current.dataChannel.send(JSON.stringify({
                     type: 'input_audio_buffer.commit'
                   }));
-                  console.log('🔍 VOICE_DEBUG: Manually committed speech');
+                  console.log('🔍 VOICE_DEBUG: Manually committed speech for processing');
                 } catch (error) {
                   console.log('🔍 VOICE_DEBUG: Failed to commit speech:', error);
                   setInteractionStateWithMessage('error', 'Failed to process speech');
@@ -1279,7 +1256,7 @@ export default function VoiceTreatmentDemo() {
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Mic className="h-4 w-4" />
-            <span>Done Speaking</span>
+            <span>I'm Done Speaking</span>
           </button>
         )}
 
