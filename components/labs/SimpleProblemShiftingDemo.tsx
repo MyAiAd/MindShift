@@ -55,11 +55,17 @@ const PROBLEM_SHIFTING_STEPS: ProblemShiftingStep[] = [
     title: 'Problem Confirmation Response',
     script: (userInput: string, context: any) => {
       const input = (userInput || '').toLowerCase().trim();
-      if (input.includes('yes') || input.includes('y') || input.includes('correct') || input.includes('right')) {
-        return 'CONFIRMED_PROCEED_TO_TREATMENT';
-      } else if (input.includes('no') || input.includes('n') || input.includes('wrong') || input.includes('incorrect')) {
+      console.log(`🎯 SIMPLE_DEMO: Confirmation input analysis: "${input}"`);
+      
+      // Check for negative responses first (more specific)
+      if (input.includes('no') || input.includes('not correct') || input.includes('wrong') || input.includes('incorrect')) {
+        console.log(`🎯 SIMPLE_DEMO: Detected negative response`);
         return 'RESTART_PROBLEM_CAPTURE';
+      } else if (input.includes('yes') || input.includes('correct') || input.includes('right')) {
+        console.log(`🎯 SIMPLE_DEMO: Detected positive response`);
+        return 'CONFIRMED_PROCEED_TO_TREATMENT';
       } else {
+        console.log(`🎯 SIMPLE_DEMO: Ambiguous response, asking for clarification`);
         return 'Please answer yes or no. Is that what you want to work on?';
       }
     },
@@ -554,6 +560,7 @@ export default function UnifiedTreatmentDemo() {
       console.log(`🎯 SIMPLE_DEMO: Stored problem statement: "${transcript}"`);
     }
 
+    console.log(`🎯 SIMPLE_DEMO: Context before processing:`, JSON.stringify(newContext, null, 2));
     setSessionContext(newContext);
     addMessage(transcript, true, currentStepFromRef.id);
 
@@ -575,6 +582,7 @@ export default function UnifiedTreatmentDemo() {
           // Now validate the confirmed problem statement against guardrails
           const finalProblemStatement = newContext.problemStatement;
           console.log(`🎯 SIMPLE_DEMO: Final problem statement to validate: "${finalProblemStatement}"`);
+          console.log(`🎯 SIMPLE_DEMO: Full context:`, JSON.stringify(newContext, null, 2));
           
           // Check if it's stated as a goal instead of problem
           const lowerInput = (finalProblemStatement || '').toLowerCase();
