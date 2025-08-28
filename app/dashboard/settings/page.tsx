@@ -10,6 +10,7 @@ import { GDPRService } from '@/services/gdpr/gdpr.service';
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
 import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker } from 'lucide-react';
 import UnifiedTreatmentDemo from '@/components/labs/SimpleProblemShiftingDemo';
+import VoiceTreatmentDemo from '@/components/labs/VoiceTreatmentDemo';
 import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
 import BeliefShiftingDemo from '@/components/labs/BeliefShiftingDemo';
 import IdentityShiftingDemo from '@/components/labs/IdentityShiftingDemo';
@@ -1121,6 +1122,9 @@ export default function SettingsPage() {
             </p>
             
             <div className="space-y-6">
+              {/* NEW: Optimized Voice Treatment Demo with Pre-loading */}
+              <VoiceTreatmentDemo />
+              
               {/* Main treatment demo with modality selector - keep this visible */}
               <UnifiedTreatmentDemo />
               
