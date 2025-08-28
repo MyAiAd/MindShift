@@ -90,6 +90,10 @@ export default function VoiceTreatmentDemo() {
   });
   const responseTimerRef = useRef<number>(0);
   
+  // NEW: Browser speech recognition for automatic speech detection
+  const speechRecognitionRef = useRef<any>(null);
+  const [isBrowserListening, setIsBrowserListening] = useState(false);
+  
   const [demoContext, setDemoContext] = useState<DemoContext>({
     problemStatement: '',
     goalStatement: '',
@@ -286,6 +290,89 @@ export default function VoiceTreatmentDemo() {
     return responseCache.responses.get(responseKey) || null;
   };
 
+  // NEW: Automatic speech detection using browser Speech Recognition
+  const startAutomaticListening = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      console.log('🔍 VOICE_DEBUG: Browser speech recognition not supported, using manual mode');
+      return;
+    }
+
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+      
+      recognition.onstart = () => {
+        console.log('🔍 VOICE_DEBUG: 🎙️ Browser speech recognition started');
+        setIsBrowserListening(true);
+        setInteractionStateWithMessage('listening', 'Listening to your voice...');
+      };
+      
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript.trim();
+        console.log('🔍 VOICE_DEBUG: 🎯 Browser speech recognized:', transcript);
+        
+        if (transcript && transcript.length > 1) {
+          setInteractionStateWithMessage('processing', 'Processing your speech...');
+          
+          // Commit the audio buffer to OpenAI for processing
+          if (sessionRef.current.dataChannel?.readyState === 'open') {
+            try {
+              sessionRef.current.dataChannel.send(JSON.stringify({
+                type: 'input_audio_buffer.commit'
+              }));
+              console.log('🔍 VOICE_DEBUG: Auto-committed audio buffer after speech recognition');
+            } catch (error) {
+              console.log('🔍 VOICE_DEBUG: Failed to auto-commit audio:', error);
+            }
+          }
+        }
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.log('🔍 VOICE_DEBUG: Speech recognition error:', event.error);
+        setIsBrowserListening(false);
+        
+        // Restart listening after a brief pause
+        setTimeout(() => {
+          if (isConnected && interactionState === 'waiting_for_user') {
+            startAutomaticListening();
+          }
+        }, 1000);
+      };
+      
+      recognition.onend = () => {
+        console.log('🔍 VOICE_DEBUG: Browser speech recognition ended');
+        setIsBrowserListening(false);
+        
+        // Restart listening if we're still in a listening state
+        setTimeout(() => {
+          if (isConnected && interactionState === 'waiting_for_user') {
+            startAutomaticListening();
+          }
+        }, 500);
+      };
+      
+      speechRecognitionRef.current = recognition;
+      recognition.start();
+      
+    } catch (error) {
+      console.error('🔍 VOICE_DEBUG: Failed to start speech recognition:', error);
+    }
+  };
+
+  const stopAutomaticListening = () => {
+    if (speechRecognitionRef.current) {
+      speechRecognitionRef.current.stop();
+      speechRecognitionRef.current = null;
+      setIsBrowserListening(false);
+      console.log('🔍 VOICE_DEBUG: Stopped automatic speech recognition');
+    }
+  };
+
   // NEW: Interaction state management helpers
   const setInteractionStateWithMessage = (state: InteractionState, message: string) => {
     console.log(`🔍 VOICE_DEBUG: State change: ${interactionState} → ${state} (${message})`);
@@ -373,6 +460,9 @@ export default function VoiceTreatmentDemo() {
     } catch (err) {
       console.error('Cleanup error:', err);
     }
+    
+    // NEW: Stop automatic listening
+    stopAutomaticListening();
     
     sessionRef.current = {
       pc: null,
@@ -474,10 +564,15 @@ export default function VoiceTreatmentDemo() {
           // Update performance metrics
           updatePerformanceMetrics(totalTime, true);
           
-          // Reset state when audio ends
+          // Reset state when audio ends and start listening
           cachedAudioEl.addEventListener('ended', () => {
             setIsAIResponding(false);
             setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
+            
+            // NEW: Start automatic listening after cached response
+            setTimeout(() => {
+              startAutomaticListening();
+            }, 500);
           });
           
           return; // Exit early - cached response handled
@@ -867,12 +962,22 @@ export default function VoiceTreatmentDemo() {
             console.log(`🔍 VOICE_DEBUG: ✅ Response completed`);
             setIsAIResponding(false);
             setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
+            
+            // NEW: Start automatic listening after AI response completes
+            setTimeout(() => {
+              startAutomaticListening();
+            }, 500);
           }
           
           else if (message.type === 'response.cancelled') {
             console.log(`🔍 VOICE_DEBUG: ✅ Response cancelled`);
             setIsAIResponding(false);
             setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
+            
+            // NEW: Start automatic listening after response cancellation
+            setTimeout(() => {
+              startAutomaticListening();
+            }, 500);
           }
           
           // Session events
@@ -1056,7 +1161,7 @@ export default function VoiceTreatmentDemo() {
               </div>
               {stateInfo.canSpeak ? (
                 <div className="text-sm text-green-700 dark:text-green-300">
-                  🎙️ You can speak now
+                  {isBrowserListening ? '🎙️ Listening automatically...' : '🎙️ You can speak now'}
                 </div>
               ) : (
                 <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -1235,8 +1340,8 @@ export default function VoiceTreatmentDemo() {
           <span>{status === 'starting' ? 'Starting...' : 'Start Voice Session'}</span>
         </button>
 
-        {/* Manual speech controls - primary interaction method */}
-        {isConnected && (
+        {/* Manual speech controls - fallback for browsers without speech recognition */}
+        {isConnected && !('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window) && (
           <button
             onClick={() => {
               if (sessionRef.current.dataChannel?.readyState === 'open') {
