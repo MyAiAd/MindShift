@@ -299,7 +299,11 @@ export default function VoiceTreatmentDemo() {
 
     // Don't start if already listening or if we're not in the right state
     if (speechRecognitionRef.current || interactionState !== 'waiting_for_user') {
-      console.log('🔍 VOICE_DEBUG: Skipping speech recognition - already active or wrong state');
+      console.log('🔍 VOICE_DEBUG: Skipping speech recognition - already active or wrong state:', {
+        hasExistingRecognition: !!speechRecognitionRef.current,
+        currentState: interactionState,
+        expectedState: 'waiting_for_user'
+      });
       return;
     }
 
@@ -618,13 +622,24 @@ export default function VoiceTreatmentDemo() {
           
           // Reset state when audio ends and start listening
           cachedAudioEl.addEventListener('ended', () => {
+            console.log('🔍 VOICE_DEBUG: Cached audio ended, preparing for user input');
             setIsAIResponding(false);
+            
+            // Ensure clean state before starting listening
+            if (speechRecognitionRef.current) {
+              console.log('🔍 VOICE_DEBUG: Cleaning up existing speech recognition before restart');
+              speechRecognitionRef.current.stop();
+              speechRecognitionRef.current = null;
+              setIsBrowserListening(false);
+            }
+            
             setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
             
-            // NEW: Start automatic listening after cached response
+            // NEW: Start automatic listening after cached response with longer delay
             setTimeout(() => {
+              console.log('🔍 VOICE_DEBUG: Starting speech recognition after cached audio');
               startAutomaticListening();
-            }, 500);
+            }, 1000); // Increased delay to ensure state is clean
           });
           
           return; // Exit early - cached response handled
@@ -1013,23 +1028,43 @@ export default function VoiceTreatmentDemo() {
           else if (message.type === 'response.done') {
             console.log(`🔍 VOICE_DEBUG: ✅ Response completed`);
             setIsAIResponding(false);
+            
+            // Ensure clean state before starting listening
+            if (speechRecognitionRef.current) {
+              console.log('🔍 VOICE_DEBUG: Cleaning up existing speech recognition before restart');
+              speechRecognitionRef.current.stop();
+              speechRecognitionRef.current = null;
+              setIsBrowserListening(false);
+            }
+            
             setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
             
             // NEW: Start automatic listening after AI response completes
             setTimeout(() => {
+              console.log('🔍 VOICE_DEBUG: Starting speech recognition after AI response');
               startAutomaticListening();
-            }, 500);
+            }, 1000); // Increased delay for better reliability
           }
           
           else if (message.type === 'response.cancelled') {
             console.log(`🔍 VOICE_DEBUG: ✅ Response cancelled`);
             setIsAIResponding(false);
+            
+            // Ensure clean state before starting listening
+            if (speechRecognitionRef.current) {
+              console.log('🔍 VOICE_DEBUG: Cleaning up existing speech recognition before restart');
+              speechRecognitionRef.current.stop();
+              speechRecognitionRef.current = null;
+              setIsBrowserListening(false);
+            }
+            
             setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
             
             // NEW: Start automatic listening after response cancellation
             setTimeout(() => {
+              console.log('🔍 VOICE_DEBUG: Starting speech recognition after response cancellation');
               startAutomaticListening();
-            }, 500);
+            }, 1000);
           }
           
           // Session events
