@@ -129,13 +129,13 @@ export default function VoiceTreatmentDemo() {
     }));
   };
 
-  // NEW: Pre-loading and caching system
+  // NEW: Pre-loading and caching system with beautiful overlay
   const preloadCommonResponses = async () => {
     if (responseCache.isPreloading) return;
     
     console.log('🚀 PRELOAD: Starting response pre-loading...');
     setResponseCache(prev => ({ ...prev, isPreloading: true }));
-    setPreloadingProgress('Initializing pre-loading...');
+    setPreloadingProgress('🧠 Optimizing your experience...');
     
     try {
       // Get common responses from state machine
@@ -145,7 +145,8 @@ export default function VoiceTreatmentDemo() {
       
       for (const response of commonResponses) {
         try {
-          setPreloadingProgress(`Pre-loading ${processed + 1}/${total}: ${response.text.substring(0, 50)}...`);
+          // Show beautiful loading message without detailed countdown
+          setPreloadingProgress('🧠 Pre-loading responses for instant delivery...');
           
           // Pre-synthesize audio using OpenAI TTS
           const audioBlob = await synthesizeAudio(response.text);
@@ -165,19 +166,20 @@ export default function VoiceTreatmentDemo() {
           }));
           
           processed++;
-          console.log(`🚀 PRELOAD: Cached response for ${response.key}`);
+          console.log(`🚀 PRELOAD: Cached response ${processed}/${total} for ${response.key}`);
           
         } catch (error) {
           console.warn(`🚀 PRELOAD: Failed to cache ${response.key}:`, error);
         }
       }
       
-      setPreloadingProgress(`Pre-loading complete! ${processed}/${total} responses cached.`);
-      setTimeout(() => setPreloadingProgress(''), 3000);
+      // Show completion message briefly before hiding
+      setPreloadingProgress('🚀 Ready for instant responses!');
+      setTimeout(() => setPreloadingProgress(''), 2000);
       
     } catch (error) {
       console.error('🚀 PRELOAD: Pre-loading failed:', error);
-      setPreloadingProgress('Pre-loading failed');
+      setPreloadingProgress('⚠️ Pre-loading encountered issues');
       setTimeout(() => setPreloadingProgress(''), 3000);
     } finally {
       setResponseCache(prev => ({ ...prev, isPreloading: false }));
@@ -977,7 +979,7 @@ export default function VoiceTreatmentDemo() {
         // NEW: Trigger pre-loading after state machine is ready
         setTimeout(() => {
           preloadCommonResponses();
-        }, 1000); // Small delay to let state machine fully initialize
+        }, 500); // Reduced delay for faster user experience
         
       } catch (error) {
         console.error('Failed to initialize state machine:', error);
@@ -1034,6 +1036,28 @@ export default function VoiceTreatmentDemo() {
   
   return (
     <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      {/* Beautiful Pre-loading Overlay */}
+      {responseCache.isPreloading && (
+        <div className="absolute inset-0 rounded-lg transition-all duration-300 bg-indigo-50/90 dark:bg-indigo-900/90 backdrop-blur-sm z-20 flex items-center justify-center">
+          <div className="px-8 py-6 rounded-xl shadow-lg border-2 bg-white border-indigo-300 dark:bg-gray-800 dark:border-indigo-600">
+            <div className="text-center">
+              <div className="text-4xl mb-3">🧠</div>
+              <div className="text-xl font-semibold mb-2 text-indigo-800 dark:text-indigo-200">
+                {preloadingProgress || 'Optimizing your experience...'}
+              </div>
+              <div className="text-sm text-indigo-600 dark:text-indigo-400 mb-3">
+                Pre-loading responses for instant delivery
+              </div>
+              <div className="flex items-center justify-center space-x-1">
+                <div className="animate-pulse w-2 h-2 bg-indigo-500 rounded-full"></div>
+                <div className="animate-pulse w-2 h-2 bg-indigo-500 rounded-full" style={{animationDelay: '0.2s'}}></div>
+                <div className="animate-pulse w-2 h-2 bg-indigo-500 rounded-full" style={{animationDelay: '0.4s'}}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Prominent State Overlay */}
       {isConnected && interactionState !== 'idle' && (
         <div className={`absolute inset-0 rounded-lg transition-all duration-300 ${
@@ -1166,15 +1190,7 @@ export default function VoiceTreatmentDemo() {
         </div>
       )}
 
-      {/* NEW: Pre-loading Progress Indicator */}
-      {(responseCache.isPreloading || preloadingProgress) && (
-        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md flex items-center">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-          <span className="text-sm text-blue-800 dark:text-blue-200">
-            {preloadingProgress || 'Pre-loading responses for faster performance...'}
-          </span>
-        </div>
-      )}
+
 
       {/* NEW: Cache Status Indicator */}
       {!responseCache.isPreloading && responseCache.responses.size > 0 && (
