@@ -211,6 +211,7 @@ export default function UnifiedTreatmentDemo() {
   const isListeningRef = useRef<boolean>(false);
   const currentStepIndexRef = useRef<number>(0);
   const lastSpokenTextRef = useRef<string>('');
+  const recentSpokenTextsRef = useRef<string[]>([]); // Store multiple recent speeches
 
   const currentStep = PROBLEM_SHIFTING_STEPS[currentStepIndex];
 
@@ -362,6 +363,13 @@ export default function UnifiedTreatmentDemo() {
     try {
       setIsSpeaking(true);
       lastSpokenTextRef.current = text.toLowerCase(); // Store what we're speaking
+      
+      // Store in recent speeches array (keep last 3 speeches)
+      recentSpokenTextsRef.current.push(text.toLowerCase());
+      if (recentSpokenTextsRef.current.length > 3) {
+        recentSpokenTextsRef.current.shift(); // Remove oldest
+      }
+      
       console.log(`🎯 SIMPLE_DEMO: Speaking: "${text}"`);
 
       // Try browser TTS first for speed (if available and working)
@@ -448,13 +456,37 @@ export default function UnifiedTreatmentDemo() {
     const currentStepFromRef = PROBLEM_SHIFTING_STEPS[currentStepIndexRef.current];
     console.log(`🎯 SIMPLE_DEMO: Processing transcript: "${transcript}" for step: ${currentStepFromRef.id}`);
     
-    // Check if this transcript is similar to what we just spoke (audio feedback)
-    const transcriptLower = transcript.toLowerCase();
-    const lastSpoken = lastSpokenTextRef.current;
+    // Enhanced audio feedback filtering - check against multiple recent speeches
+    const transcriptLower = transcript.toLowerCase().trim();
+    const recentSpeeches = recentSpokenTextsRef.current;
     
-    if (lastSpoken && transcriptLower.includes(lastSpoken.substring(0, 20))) {
-      console.log(`🎯 SIMPLE_DEMO: IGNORING AUDIO FEEDBACK: "${transcript}" matches recent TTS`);
-      return; // Ignore audio feedback
+    // Check if transcript matches any recent speech (using multiple strategies)
+    for (const spokenText of recentSpeeches) {
+      // Strategy 1: Check if transcript is contained in spoken text
+      if (spokenText.includes(transcriptLower)) {
+        console.log(`🎯 SIMPLE_DEMO: IGNORING AUDIO FEEDBACK: "${transcript}" is contained in recent TTS: "${spokenText}"`);
+        return;
+      }
+      
+      // Strategy 2: Check if spoken text is contained in transcript  
+      if (transcriptLower.includes(spokenText)) {
+        console.log(`🎯 SIMPLE_DEMO: IGNORING AUDIO FEEDBACK: "${transcript}" contains recent TTS: "${spokenText}"`);
+        return;
+      }
+      
+      // Strategy 3: Check for significant word overlap (for partial matches)
+      const transcriptWords = transcriptLower.split(' ').filter(w => w.length > 2);
+      const spokenWords = spokenText.split(' ').filter(w => w.length > 2);
+      
+      if (transcriptWords.length >= 3 && spokenWords.length >= 3) {
+        const commonWords = transcriptWords.filter(word => spokenWords.includes(word));
+        const overlapRatio = commonWords.length / Math.min(transcriptWords.length, spokenWords.length);
+        
+        if (overlapRatio > 0.6) { // 60% word overlap threshold
+          console.log(`🎯 SIMPLE_DEMO: IGNORING AUDIO FEEDBACK: "${transcript}" has ${Math.round(overlapRatio * 100)}% word overlap with recent TTS: "${spokenText}"`);
+          return;
+        }
+      }
     }
     
     // Validate input for current step
