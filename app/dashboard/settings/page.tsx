@@ -1121,12 +1121,15 @@ export default function SettingsPage() {
             </p>
             
             <div className="space-y-6">
+              {/* Individual treatment modality demos - temporarily hidden for company review */}
+              {/* 
               <UnifiedTreatmentDemo />
               <RealityShiftingDemo />
               <BeliefShiftingDemo />
               <IdentityShiftingDemo />
               <BlockageShiftingDemo />
               <TraumaShiftingDemo />
+              */}
             </div>
           </div>
 
