@@ -244,6 +244,7 @@ export default function UnifiedTreatmentDemo() {
   const currentStepIndexRef = useRef<number>(0);
   const lastSpokenTextRef = useRef<string>('');
   const recentSpokenTextsRef = useRef<string[]>([]); // Store multiple recent speeches
+  const problemStatementRef = useRef<string>(''); // Persistent problem statement storage
 
   const currentStep = PROBLEM_SHIFTING_STEPS[currentStepIndex];
 
@@ -560,7 +561,8 @@ export default function UnifiedTreatmentDemo() {
     // Store problem statement from first step ONLY
     if (currentStepFromRef.id === 'problem_capture') {
       newContext.problemStatement = transcript;
-      console.log(`🎯 SIMPLE_DEMO: Stored problem statement: "${transcript}"`);
+      problemStatementRef.current = transcript; // Store in persistent ref
+      console.log(`🎯 SIMPLE_DEMO: Stored problem statement: "${transcript}" (both in context and ref)`);
     }
     
     // CRITICAL: Ensure problem statement is preserved across all steps
@@ -571,7 +573,9 @@ export default function UnifiedTreatmentDemo() {
     }
 
     console.log(`🎯 SIMPLE_DEMO: Context before processing:`, JSON.stringify(newContext, null, 2));
+    console.log(`🎯 SIMPLE_DEMO: About to call setSessionContext with:`, JSON.stringify(newContext, null, 2));
     setSessionContext(newContext);
+    console.log(`🎯 SIMPLE_DEMO: setSessionContext called (async, may not be updated yet)`);
     addMessage(transcript, true, currentStepFromRef.id);
 
     // Handle special confirmation responses AFTER we advance to the response step
@@ -580,9 +584,15 @@ export default function UnifiedTreatmentDemo() {
       const nextIndex = currentStepIndex + 1;
       const nextStep = PROBLEM_SHIFTING_STEPS[nextIndex];
       
-      // If we're moving to the confirmation response step, handle the logic
-      if (nextStep.id === 'problem_confirmation_response') {
-        const nextResponse = getScriptedResponse(nextStep, transcript, newContext);
+              // If we're moving to the confirmation response step, handle the logic
+        if (nextStep.id === 'problem_confirmation_response') {
+          // CRITICAL: Use newContext which has the correct problem statement
+          const contextForConfirmation = {
+            ...newContext,
+            // Ensure we have the problem statement from the previous step
+            problemStatement: newContext.problemStatement || sessionContext.problemStatement
+          };
+          const nextResponse = getScriptedResponse(nextStep, transcript, contextForConfirmation);
         console.log(`🎯 SIMPLE_DEMO: Confirmation response: "${nextResponse}"`);
         
         // Handle confirmation flow
@@ -590,7 +600,26 @@ export default function UnifiedTreatmentDemo() {
           console.log(`🎯 SIMPLE_DEMO: User confirmed, validating final problem statement`);
           
           // Now validate the confirmed problem statement against guardrails
-          const finalProblemStatement = newContext.problemStatement;
+          // CRITICAL: Get problem statement from userResponses since sessionContext is empty
+          // The problem statement should be in the problem_capture response from userResponses
+          let finalProblemStatement = newContext.problemStatement || 
+                                    contextForConfirmation.problemStatement ||
+                                    newContext.userResponses?.problem_capture ||
+                                    sessionContext.userResponses?.problem_capture;
+          
+          // If still not found, search through all userResponses for problem_capture
+          if (!finalProblemStatement) {
+            // Check if we have any userResponses with problem_capture
+            const allResponses = { ...sessionContext.userResponses, ...newContext.userResponses };
+            finalProblemStatement = allResponses.problem_capture;
+            console.log(`🎯 SIMPLE_DEMO: Searching all responses for problem statement:`, JSON.stringify(allResponses, null, 2));
+          }
+          
+          // Final fallback: use the persistent ref
+          if (!finalProblemStatement) {
+            finalProblemStatement = problemStatementRef.current;
+            console.log(`🎯 SIMPLE_DEMO: Using problem statement from persistent ref: "${finalProblemStatement}"`);
+          }
           console.log(`🎯 SIMPLE_DEMO: Final problem statement to validate: "${finalProblemStatement}"`);
           console.log(`🎯 SIMPLE_DEMO: Full context:`, JSON.stringify(newContext, null, 2));
           
@@ -606,6 +635,7 @@ export default function UnifiedTreatmentDemo() {
             speakText(goalReframeMessage);
             setCurrentStepIndex(0); // Go back to problem capture
             setSessionContext({ problemStatement: '', userResponses: {} });
+            problemStatementRef.current = ''; // Reset persistent ref
             return;
           }
           
@@ -620,6 +650,7 @@ export default function UnifiedTreatmentDemo() {
             speakText(questionReframeMessage);
             setCurrentStepIndex(0); // Go back to problem capture
             setSessionContext({ problemStatement: '', userResponses: {} });
+            problemStatementRef.current = ''; // Reset persistent ref
             return;
           }
           
@@ -639,6 +670,7 @@ export default function UnifiedTreatmentDemo() {
           console.log(`🎯 SIMPLE_DEMO: User said no, restarting problem capture`);
           setCurrentStepIndex(0);
           setSessionContext({ problemStatement: '', userResponses: {} });
+          problemStatementRef.current = ''; // Reset persistent ref
           const shortRestartMessage = "Let's try again. Please tell me what problem you want to work on in a few words.";
           addMessage(shortRestartMessage, false, 'problem_capture');
           speakText(shortRestartMessage);
@@ -862,6 +894,7 @@ export default function UnifiedTreatmentDemo() {
       problemStatement: '',
       userResponses: {}
     });
+    problemStatementRef.current = ''; // Reset persistent ref
   };
 
   return (
