@@ -297,15 +297,14 @@ export default function VoiceTreatmentDemo() {
       return;
     }
 
-    // Don't start if already listening or if we're not in the right state
-    if (speechRecognitionRef.current || interactionState !== 'waiting_for_user') {
-      console.log('🔍 VOICE_DEBUG: Skipping speech recognition - already active or wrong state:', {
-        hasExistingRecognition: !!speechRecognitionRef.current,
-        currentState: interactionState,
-        expectedState: 'waiting_for_user'
-      });
+    // Only skip if there's already an active recognition instance
+    if (speechRecognitionRef.current) {
+      console.log('🔍 VOICE_DEBUG: Skipping speech recognition - already has active instance');
       return;
     }
+    
+    // Log the current state for debugging but don't block based on it
+    console.log('🔍 VOICE_DEBUG: Starting speech recognition, current state:', interactionState);
 
     try {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -637,7 +636,13 @@ export default function VoiceTreatmentDemo() {
             
             // NEW: Start automatic listening after cached response with longer delay
             setTimeout(() => {
-              console.log('🔍 VOICE_DEBUG: Starting speech recognition after cached audio');
+              console.log('🔍 VOICE_DEBUG: Force starting speech recognition after cached audio');
+              // Force start regardless of state since we know we want to listen now
+              if (speechRecognitionRef.current) {
+                speechRecognitionRef.current.stop();
+                speechRecognitionRef.current = null;
+                setIsBrowserListening(false);
+              }
               startAutomaticListening();
             }, 1000); // Increased delay to ensure state is clean
           });
@@ -1041,7 +1046,13 @@ export default function VoiceTreatmentDemo() {
             
             // NEW: Start automatic listening after AI response completes
             setTimeout(() => {
-              console.log('🔍 VOICE_DEBUG: Starting speech recognition after AI response');
+              console.log('🔍 VOICE_DEBUG: Force starting speech recognition after AI response');
+              // Force start regardless of state since we know we want to listen now
+              if (speechRecognitionRef.current) {
+                speechRecognitionRef.current.stop();
+                speechRecognitionRef.current = null;
+                setIsBrowserListening(false);
+              }
               startAutomaticListening();
             }, 1000); // Increased delay for better reliability
           }
@@ -1062,7 +1073,13 @@ export default function VoiceTreatmentDemo() {
             
             // NEW: Start automatic listening after response cancellation
             setTimeout(() => {
-              console.log('🔍 VOICE_DEBUG: Starting speech recognition after response cancellation');
+              console.log('🔍 VOICE_DEBUG: Force starting speech recognition after response cancellation');
+              // Force start regardless of state since we know we want to listen now
+              if (speechRecognitionRef.current) {
+                speechRecognitionRef.current.stop();
+                speechRecognitionRef.current = null;
+                setIsBrowserListening(false);
+              }
               startAutomaticListening();
             }, 1000);
           }
