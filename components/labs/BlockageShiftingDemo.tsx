@@ -210,7 +210,7 @@ export default function BlockageShiftingDemo() {
       const response = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voice: 'alloy', model: 'tts-1-hd', speed: 1.0 })
+        body: JSON.stringify({ text, voice: 'nova', model: 'tts-1-hd', speed: 1.0 }) // Consistent female voice across all demos
       });
 
       if (!response.ok) throw new Error(`TTS API failed: ${response.status}`);

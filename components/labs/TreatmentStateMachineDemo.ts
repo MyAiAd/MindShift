@@ -81,7 +81,7 @@ export class TreatmentStateMachineDemo {
   }
 
   /**
-   * Process user input using the real state machine via API
+   * Process user input using the enhanced state machine via API with full validation
    */
   async processUserInput(userInput: string, contextOverrides?: Partial<TreatmentContext>, scriptMode: boolean = true): Promise<ProcessingResult> {
     try {
@@ -121,7 +121,29 @@ export class TreatmentStateMachineDemo {
         this.currentContext = result.context;
       }
       
-      return result.processingResult || {
+      const processingResult = result.processingResult;
+      
+      // Handle validation errors and AI assistance needs
+      if (!processingResult.canContinue) {
+        if (processingResult.triggeredAI && processingResult.needsAIAssistance) {
+          console.log(`🔍 CLIENT_DEBUG: AI assistance needed:`, processingResult.needsAIAssistance);
+          // For demo purposes, provide a fallback response
+          return {
+            canContinue: false,
+            scriptedResponse: processingResult.scriptedResponse || "I need to better understand your response. Could you please rephrase that?",
+            reason: processingResult.reason || 'ai_assistance_needed'
+          };
+        }
+        
+        // Return validation error with helpful message
+        return {
+          canContinue: false,
+          scriptedResponse: processingResult.scriptedResponse || processingResult.reason || "Please provide a valid response.",
+          reason: processingResult.reason || 'validation_error'
+        };
+      }
+      
+      return processingResult || {
         canContinue: true,
         scriptedResponse: "Thank you for your response. Let's continue.",
         reason: 'processing_error'

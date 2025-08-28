@@ -234,7 +234,7 @@ export default function ProblemShiftingVoiceDemo() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: scriptedResponse,
-          voice: 'alloy',
+          voice: 'nova', // Consistent female voice across all demos
           model: 'tts-1'
         })
       });
@@ -495,7 +495,7 @@ export default function ProblemShiftingVoiceDemo() {
       // 1. Create ephemeral session - using minimal parameters to avoid API issues
       const sessionPayload = {
         model: 'gpt-4o-realtime-preview-2024-12-17',
-        voice: 'verse'
+        voice: 'nova' // Consistent female voice across all demos
         // We'll configure other parameters via session.update after connection
       };
 

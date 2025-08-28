@@ -213,7 +213,7 @@ export default function IdentityShiftingDemo() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: text,
-          voice: 'alloy',
+          voice: 'nova', // Consistent female voice across all demos
           model: 'tts-1-hd',
           speed: 1.0
         })
