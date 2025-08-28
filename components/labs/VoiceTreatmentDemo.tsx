@@ -93,6 +93,7 @@ export default function VoiceTreatmentDemo() {
   // NEW: Browser speech recognition for automatic speech detection
   const speechRecognitionRef = useRef<any>(null);
   const [isBrowserListening, setIsBrowserListening] = useState(false);
+  const processingBrowserTranscript = useRef<boolean>(false);
   
   const [demoContext, setDemoContext] = useState<DemoContext>({
     problemStatement: '',
@@ -324,6 +325,7 @@ export default function VoiceTreatmentDemo() {
         setIsBrowserListening(true);
         setInteractionStateWithMessage('listening', 'Listening to your voice...');
         hasSpeech = false;
+        processingBrowserTranscript.current = false; // Reset for new interaction
       };
       
       recognition.onresult = (event: any) => {
@@ -348,20 +350,21 @@ export default function VoiceTreatmentDemo() {
           console.log('🔍 VOICE_DEBUG: 🎯 Final speech recognized:', finalTranscript.trim());
           hasSpeech = true;
           
-          // Stop recognition and process the speech
+          // Stop recognition and process the speech directly with browser transcription
           recognition.stop();
           setInteractionStateWithMessage('processing', 'Processing your speech...');
           
-          // Commit the audio buffer to OpenAI for processing
-          if (sessionRef.current.dataChannel?.readyState === 'open') {
-            try {
-              sessionRef.current.dataChannel.send(JSON.stringify({
-                type: 'input_audio_buffer.commit'
-              }));
-              console.log('🔍 VOICE_DEBUG: Auto-committed audio buffer after speech recognition');
-            } catch (error) {
-              console.log('🔍 VOICE_DEBUG: Failed to auto-commit audio:', error);
-            }
+          // Process the browser transcription directly instead of waiting for OpenAI
+          console.log('🔍 VOICE_DEBUG: Using browser transcription directly:', finalTranscript.trim());
+          processingBrowserTranscript.current = true;
+          
+          // Add the message to UI
+          addMessage(finalTranscript.trim(), true, true);
+          updateContextFromTranscript(finalTranscript.trim());
+          
+          // Process with state machine using browser transcription
+          if (stateMachineDemo) {
+            processTranscriptWithStateMachine(finalTranscript.trim());
           }
         } else if (interimTranscript.trim()) {
           console.log('🔍 VOICE_DEBUG: 🎙️ Interim speech:', interimTranscript.trim());
@@ -369,9 +372,23 @@ export default function VoiceTreatmentDemo() {
           
           // Set a timeout to process speech if no more final results come
           speechTimeout = setTimeout(() => {
-            if (hasSpeech) {
-              console.log('🔍 VOICE_DEBUG: 🎯 Processing interim speech due to timeout');
+            if (hasSpeech && interimTranscript.trim()) {
+              console.log('🔍 VOICE_DEBUG: 🎯 Processing interim speech due to timeout:', interimTranscript.trim());
               recognition.stop();
+              
+              // Process the interim transcription directly
+              setInteractionStateWithMessage('processing', 'Processing your speech...');
+              console.log('🔍 VOICE_DEBUG: Using interim transcription directly:', interimTranscript.trim());
+              processingBrowserTranscript.current = true;
+              
+              // Add the message to UI
+              addMessage(interimTranscript.trim(), true, true);
+              updateContextFromTranscript(interimTranscript.trim());
+              
+              // Process with state machine using browser transcription
+              if (stateMachineDemo) {
+                processTranscriptWithStateMachine(interimTranscript.trim());
+              }
             }
           }, 2000);
         }
@@ -1007,12 +1024,20 @@ export default function VoiceTreatmentDemo() {
           // Speech detection events (won't fire with turn_detection: null)
           // We rely on manual "Done Speaking" button instead
           
-          // Handle user transcription - simplified without cancellation attempts  
+          // Handle user transcription - skip if browser already processed it
           if (message.type === 'conversation.item.input_audio_transcription.completed') {
             const transcript = message.transcript?.trim();
-            console.log(`🔍 VOICE_DEBUG: Transcription completed:`, transcript);
+            console.log(`🔍 VOICE_DEBUG: OpenAI transcription completed:`, transcript);
+            
+            // Skip if we already processed browser transcription
+            if (processingBrowserTranscript.current) {
+              console.log(`🔍 VOICE_DEBUG: Skipping OpenAI transcription - already processed browser transcription`);
+              processingBrowserTranscript.current = false; // Reset for next interaction
+              return;
+            }
             
             if (transcript && transcript.length > 1) {
+              console.log(`🔍 VOICE_DEBUG: Using OpenAI transcription (no browser transcription available):`, transcript);
               addMessage(transcript, true, true);
               updateContextFromTranscript(transcript);
               
