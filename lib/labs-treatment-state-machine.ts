@@ -14,12 +14,19 @@ export interface LabsTreatmentStep {
   expectedResponseType: 'feeling' | 'problem' | 'experience' | 'yesno' | 'open' | 'goal' | 'selection' | 'description';
   validationRules: LabsValidationRule[];
   nextStep?: string;
+  aiTriggers?: LabsAITrigger[];
 }
 
 export interface LabsValidationRule {
   type: 'minLength' | 'maxLength' | 'containsKeywords' | 'format';
   value: number | string | string[];
   errorMessage: string;
+}
+
+export interface LabsAITrigger {
+  condition: 'userStuck' | 'needsClarification' | 'multipleProblems' | 'tooLong' | 'offTopic';
+  threshold?: number;
+  action: 'clarify' | 'redirect' | 'simplify' | 'focus';
 }
 
 export interface LabsTreatmentContext {
@@ -41,6 +48,12 @@ export interface LabsProcessingResult {
   reason?: string;
   scriptedResponse?: string;
   needsLinguisticProcessing?: boolean;
+  triggeredAI?: boolean;
+  needsAIAssistance?: {
+    trigger: LabsAITrigger;
+    context: string;
+    userInput: string;
+  };
 }
 
 export class LabsTreatmentStateMachine {
@@ -91,7 +104,7 @@ export class LabsTreatmentStateMachine {
   }
 
   /**
-   * Process user input using the treatment state machine
+   * Process user input using the treatment state machine with full validation
    */
   processUserInput(sessionId: string, userInput: string): LabsProcessingResult {
     const context = this.contexts.get(sessionId);
@@ -113,13 +126,41 @@ export class LabsTreatmentStateMachine {
     context.userResponses[context.currentStep] = userInput;
     context.lastActivity = new Date();
 
-    // Validate user input
+    // Validate user input with comprehensive validation from main system
     const validationResult = this.validateUserInput(userInput, currentStep, context);
     if (!validationResult.isValid) {
+      // Special handling for multiple problems detected
+      if (validationResult.error === 'MULTIPLE_PROBLEMS_DETECTED') {
+        context.currentStep = 'multiple_problems_selection';
+        const multipleProblemsStep = currentPhase.steps.find(s => s.id === 'multiple_problems_selection');
+        if (multipleProblemsStep) {
+          const scriptedResponse = this.getScriptedResponse(multipleProblemsStep, context);
+          return {
+            canContinue: true,
+            nextStep: 'multiple_problems_selection',
+            scriptedResponse
+          };
+        }
+      }
+      
+      // Check if we need AI assistance
+      const aiTrigger = this.checkAITriggers(userInput, currentStep, context);
+      if (aiTrigger) {
+        return {
+          canContinue: false,
+          triggeredAI: true,
+          needsAIAssistance: {
+            trigger: aiTrigger,
+            context: this.buildAIContext(context, currentStep),
+            userInput
+          }
+        };
+      }
+      
       return {
         canContinue: false,
         reason: validationResult.error,
-        scriptedResponse: validationResult.error
+        scriptedResponse: this.getValidationPrompt(currentStep, validationResult.error || 'Invalid input')
       };
     }
 
@@ -204,30 +245,331 @@ export class LabsTreatmentStateMachine {
   }
 
   /**
-   * Validate user input
+   * Comprehensive validation from main system
    */
   private validateUserInput(userInput: string, step: LabsTreatmentStep, context: LabsTreatmentContext): { isValid: boolean; error?: string } {
     const trimmed = userInput.trim();
     const words = trimmed.split(' ').length;
+    const lowerInput = trimmed.toLowerCase();
     
     // Basic validation
     if (trimmed.length === 0) {
       return { isValid: false, error: 'Please provide a response.' };
     }
 
-    // Check minimum length
-    const minLengthRule = step.validationRules.find(rule => rule.type === 'minLength');
-    if (minLengthRule && words < (minLengthRule.value as number)) {
-      return { isValid: false, error: minLengthRule.errorMessage };
+    // Special validation for introduction phase
+    if (step.id === 'mind_shifting_explanation') {
+      // Skip validation for work type selection inputs (1, 2, 3)
+      if (trimmed === '1' || trimmed === '2' || trimmed === '3') {
+        return { isValid: true };
+      }
+      
+      // Check if user stated it as a goal instead of problem - FLAG FOR AI VALIDATION
+      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      
+      if (hasGoalLanguage) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
+      }
+      
+      // Check if user stated it as a question - FLAG FOR AI VALIDATION
+      const questionIndicators = ['how can', 'what should', 'why do', 'when will', 'where can', 'should i'];
+      const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
+      
+      if (hasQuestionLanguage) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
+      }
+      
+      // Check if user stated only an emotion
+      const emotionWords = ['stressed', 'anxious', 'sad', 'angry', 'worried', 'depressed', 'frustrated', 'upset', 'scared', 'nervous'];
+      if (words <= 2 && emotionWords.some(emotion => lowerInput.includes(emotion))) {
+        const emotion = emotionWords.find(emotion => lowerInput.includes(emotion));
+        return { isValid: false, error: `What are you ${emotion} about?` };
+      }
+      
+      // Check for multiple problems
+      const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well', 'along with'];
+      
+      // Common phrase patterns that shouldn't be considered multiple problems
+      const singleConceptPhrases = [
+        'love and peace', 'peace and love', 'health and wellness', 'wellness and health',
+        'happy and healthy', 'healthy and happy', 'mind and body', 'body and mind',
+        'work and life', 'life and work', 'friends and family', 'family and friends',
+        'joy and happiness', 'happiness and joy', 'calm and peaceful', 'peaceful and calm'
+      ];
+      
+      // Check if the input contains a single concept phrase
+      const isSingleConcept = singleConceptPhrases.some(phrase => lowerInput.includes(phrase));
+      
+      if (!isSingleConcept) {
+        const hasMultipleProblems = problemConnectors.some(connector => lowerInput.includes(connector));
+        if (hasMultipleProblems) {
+          return { isValid: false, error: 'Let\'s make sure this is only one issue and not multiple. Can you tell me the main problem you\'d like to focus on?' };
+        }
+      }
+      
+      // Check if too long (over 20 words)
+      if (words > 20) {
+        return { isValid: false, error: 'OK I understand what you have said, but please tell me what the problem is in just a few words' };
+      }
     }
 
-    // Check maximum length
-    const maxLengthRule = step.validationRules.find(rule => rule.type === 'maxLength');
-    if (maxLengthRule && words > (maxLengthRule.value as number)) {
-      return { isValid: false, error: maxLengthRule.errorMessage };
+    // Special validation for goal description steps
+    if (step.id === 'goal_description' || step.id === 'reality_goal_capture') {
+      // Check if user stated it as a problem instead of goal - FLAG FOR AI VALIDATION
+      const problemIndicators = ['problem', 'issue', 'trouble', 'difficulty', 'struggle', 'can\'t', 'cannot', 'unable to', 'don\'t', 'do not', 'not able', 'hard to', 'difficult to', 'not enough', 'lack of', 'need more'];
+      const hasProblemLanguage = problemIndicators.some(indicator => lowerInput.includes(indicator));
+      
+      if (hasProblemLanguage) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:goal_vs_problem' };
+      }
+      
+      // Check if user stated it as a question - FLAG FOR AI VALIDATION  
+      const questionIndicators = ['how can', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
+      const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
+      
+      if (hasQuestionLanguage) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:goal_vs_question' };
+      }
+    }
+
+    // Special validation for negative experience description
+    if (step.id === 'negative_experience_description' || step.id === 'trauma_shifting_intro') {
+      // Check for multiple event indicators
+      const multipleEventIndicators = [
+        'always', 'often', 'repeatedly', 'throughout', 'during my childhood',
+        'as a child', 'growing up', 'my entire childhood', 'for years',
+        'every time', 'whenever', 'all the time', 'when I was young',
+        'in my childhood', 'as a kid', 'while growing up'
+      ];
+      
+      const hasMultipleEventIndicators = multipleEventIndicators.some(indicator => 
+        lowerInput.includes(indicator)
+      );
+      
+      if (hasMultipleEventIndicators) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:single_negative_experience' };
+      }
+    }
+
+    // Special validation for problem-focused method intros
+    const problemFocusedIntros = ['problem_shifting_intro', 'blockage_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'];
+    if (problemFocusedIntros.includes(step.id)) {
+      // Check if user stated it as a goal instead of problem
+      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      
+      if (hasGoalLanguage) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
+      }
+      
+      // Check if user stated it as a question
+      const questionIndicators = ['how can', 'how do', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
+      const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
+      
+      if (hasQuestionLanguage) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
+      }
+    }
+
+    // Standard validation rules
+    for (const rule of step.validationRules) {
+      switch (rule.type) {
+        case 'minLength':
+          if (trimmed.length < (rule.value as number)) {
+            return { isValid: false, error: rule.errorMessage };
+          }
+          break;
+          
+        case 'maxLength':
+          if (trimmed.length > (rule.value as number)) {
+            return { isValid: false, error: rule.errorMessage };
+          }
+          break;
+          
+        case 'containsKeywords':
+          const keywords = rule.value as string[];
+          const hasKeyword = keywords.some(keyword => 
+            trimmed.toLowerCase().includes(keyword.toLowerCase())
+          );
+          if (!hasKeyword) {
+            return { isValid: false, error: rule.errorMessage };
+          }
+          break;
+      }
     }
 
     return { isValid: true };
+  }
+
+  /**
+   * Check if AI assistance is needed - from main system
+   */
+  private checkAITriggers(userInput: string, step: LabsTreatmentStep, context: LabsTreatmentContext): LabsAITrigger | null {
+    const trimmed = userInput.trim();
+    const words = trimmed.split(' ').length;
+    const lowerInput = trimmed.toLowerCase();
+    
+    for (const trigger of step.aiTriggers || []) {
+      switch (trigger.condition) {
+        case 'userStuck':
+          // User says "I don't know", very short responses, or seems stuck
+          if (trimmed.length < 3 || 
+              lowerInput.includes("i don't know") ||
+              lowerInput.includes("not sure") ||
+              lowerInput.includes("can't think") ||
+              lowerInput.includes("don't feel") ||
+              lowerInput.includes("can't feel")) {
+            return trigger;
+          }
+          break;
+          
+        case 'tooLong':
+          // Response is too long - simulate 30 second interruption
+          if (words > 30) {
+            return trigger;
+          }
+          break;
+          
+        case 'multipleProblems':
+          // Multiple problems detected in discovery phase
+          const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well'];
+          const problemCount = problemConnectors.filter(connector => 
+            lowerInput.includes(connector)
+          ).length;
+          if (problemCount >= 1) {
+            return trigger;
+          }
+          break;
+          
+        case 'needsClarification':
+          // User seems confused or unclear about what's being asked
+          if (lowerInput.includes('what do you mean') ||
+              lowerInput.includes('i don\'t understand') ||
+              lowerInput.includes('confused') ||
+              lowerInput.includes('unclear') ||
+              lowerInput.includes('what should i') ||
+              (step.expectedResponseType === 'yesno' && !lowerInput.includes('yes') && !lowerInput.includes('no'))) {
+            return trigger;
+          }
+          break;
+          
+        case 'offTopic':
+          // User went completely off-topic
+          const offTopicKeywords = ['weather', 'politics', 'sports', 'food', 'work', 'money', 'family'];
+          if (offTopicKeywords.some(keyword => lowerInput.includes(keyword)) && 
+              context.currentStep.includes('feel') || context.currentStep.includes('problem')) {
+            return trigger;
+          }
+          break;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Build AI context for assistance
+   */
+  private buildAIContext(context: LabsTreatmentContext, currentStep: LabsTreatmentStep): string {
+    return `Current step: ${currentStep.id}, Phase: ${context.currentPhase}, Expected response: ${currentStep.expectedResponseType}`;
+  }
+
+  /**
+   * Get validation prompt for errors
+   */
+  private getValidationPrompt(step: LabsTreatmentStep, error: string): string {
+    if (error.startsWith('AI_VALIDATION_NEEDED:')) {
+      const validationType = error.split(':')[1];
+      switch (validationType) {
+        case 'problem_vs_goal':
+          return "I notice you've described this as something you want to achieve. For this process, please tell me what the problem is instead. What's the issue or difficulty you're experiencing?";
+        case 'goal_vs_problem':
+          return "I notice you've described this as a problem. For this process, please tell me what you want to achieve instead. What's your goal or desired outcome?";
+        case 'problem_vs_question':
+          return "I notice you've phrased this as a question. For this process, please tell me what the problem is as a statement instead.";
+        case 'goal_vs_question':
+          return "I notice you've phrased this as a question. For this process, please tell me what you want to achieve as a statement instead.";
+        case 'single_negative_experience':
+          return "For this process, please describe a single specific negative experience rather than a pattern of experiences. What's one particular incident you'd like to work on?";
+        default:
+          return error;
+      }
+    }
+    return error;
+  }
+
+  /**
+   * Process identity response - from main system
+   */
+  private processIdentityResponse(userInput: string): string {
+    const input = userInput.toLowerCase().trim();
+    
+    // Handle common identity patterns
+    if (input.startsWith('a ') || input.startsWith('an ')) {
+      return input.substring(2);
+    }
+    
+    if (input.startsWith('someone who ')) {
+      return input.substring(12);
+    }
+    
+    if (input.startsWith('i am ')) {
+      return input.substring(5);
+    }
+    
+    return input;
+  }
+
+  /**
+   * Count problems in user input
+   */
+  private countProblems(userInput: string): number {
+    const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well'];
+    let count = 1; // Start with 1 problem
+    
+    problemConnectors.forEach(connector => {
+      const regex = new RegExp(`\\b${connector}\\b`, 'gi');
+      const matches = userInput.match(regex);
+      if (matches) {
+        count += matches.length;
+      }
+    });
+    
+    return Math.min(count, 5); // Cap at 5 problems for UI purposes
+  }
+
+  /**
+   * Extract individual problems from user input
+   */
+  private extractProblems(userInput: string): string[] {
+    const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well'];
+    let problems = [userInput];
+    
+    problemConnectors.forEach(connector => {
+      const newProblems: string[] = [];
+      problems.forEach(problem => {
+        const parts = problem.split(new RegExp(`\\s+${connector}\\s+`, 'i'));
+        newProblems.push(...parts);
+      });
+      problems = newProblems;
+    });
+    
+    return problems.map(p => p.trim()).filter(p => p.length > 0).slice(0, 5);
+  }
+
+  /**
+   * Get integration subject for integration questions
+   */
+  private getIntegrationSubject(context: LabsTreatmentContext, type: string): string {
+    if (type === 'problem') {
+      return context.problemStatement || context.metadata?.problemStatement || 'this problem';
+    } else if (type === 'goal') {
+      return context.goalStatement || context.metadata?.goalStatement || 'this goal';
+    } else if (type === 'experience') {
+      return context.negativeExperienceStatement || context.metadata?.negativeExperienceStatement || 'this experience';
+    }
+    return 'this';
   }
 
   /**
@@ -264,7 +606,7 @@ export class LabsTreatmentStateMachine {
   }
 
   /**
-   * Determine next step based on current step and context
+   * Determine next step based on current step and context - enhanced from main system
    */
   private determineNextStep(currentStep: LabsTreatmentStep, context: LabsTreatmentContext): string | null {
     // Handle special routing logic
@@ -279,12 +621,97 @@ export class LabsTreatmentStateMachine {
       } else if (response === 'SKIP_TO_TREATMENT_INTRO') {
         // Route to appropriate treatment intro based on metadata
         const method = context.metadata.selectedMethod;
-        if (method === 'problem_shifting') return 'problem_shifting_intro';
-        if (method === 'identity_shifting') return 'identity_shifting_intro';
-        if (method === 'belief_shifting') return 'belief_shifting_intro';
-        if (method === 'blockage_shifting') return 'blockage_shifting_intro';
-        if (method === 'reality_shifting') return 'reality_goal_capture';
-        if (method === 'trauma_shifting') return 'trauma_shifting_intro';
+        if (method === 'problem_shifting') {
+          context.currentPhase = 'problem_shifting';
+          return 'problem_shifting_intro';
+        }
+        if (method === 'identity_shifting') {
+          context.currentPhase = 'identity_shifting';
+          return 'identity_shifting_intro';
+        }
+        if (method === 'belief_shifting') {
+          context.currentPhase = 'belief_shifting';
+          return 'belief_shifting_intro';
+        }
+        if (method === 'blockage_shifting') {
+          context.currentPhase = 'blockage_shifting';
+          return 'blockage_shifting_intro';
+        }
+        if (method === 'reality_shifting') {
+          context.currentPhase = 'reality_shifting';
+          return 'reality_goal_capture';
+        }
+        if (method === 'trauma_shifting') {
+          context.currentPhase = 'trauma_shifting';
+          return 'trauma_shifting_intro';
+        }
+      }
+    }
+
+    // Handle method selection routing
+    if (currentStep.id === 'method_selection') {
+      return 'problem_description';
+    }
+
+    // Handle goal/negative experience routing
+    if (currentStep.id === 'goal_description') {
+      context.currentPhase = 'reality_shifting';
+      context.metadata.selectedMethod = 'reality_shifting';
+      return 'reality_goal_capture';
+    }
+
+    if (currentStep.id === 'negative_experience_description') {
+      context.currentPhase = 'trauma_shifting';
+      context.metadata.selectedMethod = 'trauma_shifting';
+      return 'trauma_shifting_intro';
+    }
+
+    // Handle yes/no responses for problem checking
+    if (currentStep.id === 'check_if_still_problem' || 
+        currentStep.id === 'blockage_check_if_still_problem' ||
+        currentStep.id === 'identity_problem_check' ||
+        currentStep.id === 'belief_problem_check') {
+      
+      const userResponse = context.userResponses[currentStep.id]?.toLowerCase() || '';
+      
+      if (userResponse.includes('yes')) {
+        // Problem still exists, start digging deeper process
+        return 'digging_deeper_start';
+      } else if (userResponse.includes('no')) {
+        // Problem resolved, go to integration
+        const method = context.metadata.selectedMethod;
+        if (method === 'problem_shifting') return 'problem_integration_awareness_1';
+        if (method === 'blockage_shifting') return 'blockage_integration_awareness_1';
+        if (method === 'identity_shifting') return 'integration_awareness_1';
+        if (method === 'belief_shifting') return 'belief_integration_awareness_1';
+        return 'problem_integration_awareness_1'; // fallback
+      }
+    }
+
+    // Handle digging deeper responses
+    if (currentStep.id === 'digging_deeper_start') {
+      const userResponse = context.userResponses[currentStep.id]?.toLowerCase() || '';
+      
+      if (userResponse.includes('yes')) {
+        // Continue with current method
+        const method = context.metadata.selectedMethod;
+        if (method === 'blockage_shifting') {
+          // Cycle back to beginning of blockage shifting
+          return 'blockage_shifting_intro';
+        }
+        // For other methods, continue with their specific flow
+        return currentStep.nextStep || null;
+      } else if (userResponse.includes('no')) {
+        // Go to integration
+        const method = context.metadata.selectedMethod;
+        if (method === 'problem_shifting') return 'problem_integration_awareness_1';
+        if (method === 'blockage_shifting') return 'blockage_integration_awareness_1';
+        if (method === 'identity_shifting') return 'integration_awareness_1';
+        if (method === 'belief_shifting') return 'belief_integration_awareness_1';
+        return 'problem_integration_awareness_1'; // fallback
+      } else if (userResponse.includes('maybe')) {
+        // Continue with method but with modified approach
+        return currentStep.nextStep || null;
       }
     }
 
@@ -358,7 +785,10 @@ export class LabsTreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose 1, 2, or 3.' }
           ],
-          nextStep: 'method_selection'
+          nextStep: 'method_selection',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
         },
         {
           id: 'method_selection',
@@ -389,19 +819,57 @@ export class LabsTreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
           ],
-          nextStep: 'problem_description'
+          nextStep: 'problem_description',
+          aiTriggers: []
         },
         {
           id: 'problem_description',
           scriptedResponse: (userInput, context) => {
             context.problemStatement = userInput;
             context.metadata.problemStatement = userInput;
-            return "SKIP_TO_TREATMENT_INTRO";
+            return "PROBLEM_SELECTION_CONFIRMED";
           },
           expectedResponseType: 'problem',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please describe your problem in a few words.' }
-          ]
+          ],
+          nextStep: 'problem_confirmation',
+          aiTriggers: []
+        },
+        {
+          id: 'problem_confirmation',
+          scriptedResponse: (userInput, context) => {
+            const problemStatement = context.problemStatement || context.metadata.problemStatement || 'your problem';
+            return `I heard you say '${problemStatement}'. Is that correct?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'problem_confirmation_response',
+          aiTriggers: []
+        },
+        {
+          id: 'problem_confirmation_response',
+          scriptedResponse: (userInput, context) => {
+            const input = (userInput || '').toLowerCase().trim();
+            if (input.includes('yes') || input.includes('y') || input.includes('correct') || input.includes('right')) {
+              return "SKIP_TO_TREATMENT_INTRO";
+            } else if (input.includes('no') || input.includes('n') || input.includes('wrong') || input.includes('incorrect')) {
+              // Reset and ask again
+              context.problemStatement = '';
+              context.metadata.problemStatement = '';
+              context.currentStep = 'work_type_description';
+              return "Let's try again. Please describe your problem in a few words.";
+            } else {
+              return "Please answer yes or no. Is that what you want to work on?";
+            }
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          aiTriggers: []
         },
         {
           id: 'goal_description',
@@ -409,12 +877,49 @@ export class LabsTreatmentStateMachine {
             context.goalStatement = userInput;
             context.metadata.goalStatement = userInput;
             context.metadata.selectedMethod = 'reality_shifting';
-            return "SKIP_TO_TREATMENT_INTRO";
+            return "GOAL_SELECTION_CONFIRMED";
           },
           expectedResponseType: 'goal',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please describe your goal in a few words.' }
-          ]
+          ],
+          nextStep: 'goal_confirmation',
+          aiTriggers: []
+        },
+        {
+          id: 'goal_confirmation',
+          scriptedResponse: (userInput, context) => {
+            const goalStatement = context.goalStatement || context.metadata.goalStatement || 'your goal';
+            return `I heard you say '${goalStatement}'. Is that correct?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'goal_confirmation_response',
+          aiTriggers: []
+        },
+        {
+          id: 'goal_confirmation_response',
+          scriptedResponse: (userInput, context) => {
+            const input = (userInput || '').toLowerCase().trim();
+            if (input.includes('yes') || input.includes('y') || input.includes('correct') || input.includes('right')) {
+              return "SKIP_TO_TREATMENT_INTRO";
+            } else if (input.includes('no') || input.includes('n') || input.includes('wrong') || input.includes('incorrect')) {
+              // Reset and ask again
+              context.goalStatement = '';
+              context.metadata.goalStatement = '';
+              context.currentStep = 'work_type_description';
+              return "Let's try again. Please describe your goal in a few words.";
+            } else {
+              return "Please answer yes or no. Is that what you want to work on?";
+            }
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          aiTriggers: []
         },
         {
           id: 'negative_experience_description',
@@ -422,17 +927,54 @@ export class LabsTreatmentStateMachine {
             context.negativeExperienceStatement = userInput;
             context.metadata.negativeExperienceStatement = userInput;
             context.metadata.selectedMethod = 'trauma_shifting';
-            return "SKIP_TO_TREATMENT_INTRO";
+            return "NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED";
           },
           expectedResponseType: 'experience',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please describe the negative experience in a few words.' }
-          ]
+          ],
+          nextStep: 'experience_confirmation',
+          aiTriggers: []
+        },
+        {
+          id: 'experience_confirmation',
+          scriptedResponse: (userInput, context) => {
+            const experienceStatement = context.negativeExperienceStatement || context.metadata.negativeExperienceStatement || 'your experience';
+            return `I heard you say '${experienceStatement}'. Is that correct?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'experience_confirmation_response',
+          aiTriggers: []
+        },
+        {
+          id: 'experience_confirmation_response',
+          scriptedResponse: (userInput, context) => {
+            const input = (userInput || '').toLowerCase().trim();
+            if (input.includes('yes') || input.includes('y') || input.includes('correct') || input.includes('right')) {
+              return "SKIP_TO_TREATMENT_INTRO";
+            } else if (input.includes('no') || input.includes('n') || input.includes('wrong') || input.includes('incorrect')) {
+              // Reset and ask again
+              context.negativeExperienceStatement = '';
+              context.metadata.negativeExperienceStatement = '';
+              context.currentStep = 'work_type_description';
+              return "Let's try again. Please describe the negative experience in a few words.";
+            } else {
+              return "Please answer yes or no. Is that what you want to work on?";
+            }
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          aiTriggers: []
         }
       ]
     });
 
-    // Phase 2: Problem Shifting
+    // Phase 2: Problem Shifting - Updated with exact scripts from main system
     this.phases.set('problem_shifting', {
       name: 'Problem Shifting',
       maxDuration: 30,
@@ -440,14 +982,19 @@ export class LabsTreatmentStateMachine {
         {
           id: 'problem_shifting_intro',
           scriptedResponse: (userInput, context) => {
-            const problem = context.problemStatement || 'your problem';
-            return `We're going to use Problem Shifting to work on "${problem}". This method helps you transform problems into solutions by shifting your perspective and emotional state.\n\nLet's begin. Feel the problem "${problem}"... what happens in your body when you feel this problem?`;
+            const cleanProblemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.
+
+Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in your body.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
           ],
-          nextStep: 'body_sensation_check'
+          nextStep: 'body_sensation_check',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
         },
         {
           id: 'body_sensation_check',
@@ -456,19 +1003,25 @@ export class LabsTreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens when you feel that.' }
           ],
-          nextStep: 'what_needs_to_happen_step'
+          nextStep: 'what_needs_to_happen_step',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
         },
         {
           id: 'what_needs_to_happen_step',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context.problemStatement || 'the problem';
+            const problemStatement = context?.problemStatement || context?.metadata?.problemStatement || 'the problem';
             return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
           },
           expectedResponseType: 'open',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what needs to happen.' }
           ],
-          nextStep: 'feel_solution_state'
+          nextStep: 'feel_solution_state',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
         },
         {
           id: 'feel_solution_state',
@@ -477,7 +1030,10 @@ export class LabsTreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what you would feel like.' }
           ],
-          nextStep: 'feel_good_state'
+          nextStep: 'feel_good_state',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
         },
         {
           id: 'feel_good_state',
@@ -486,7 +1042,10 @@ export class LabsTreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feeling feels like.' }
           ],
-          nextStep: 'what_happens_step'
+          nextStep: 'what_happens_step',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
         },
         {
           id: 'what_happens_step',
@@ -495,31 +1054,52 @@ export class LabsTreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens when you feel that.' }
           ],
-          nextStep: 'check_if_still_problem'
+          nextStep: 'check_if_still_problem',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
         },
         {
           id: 'check_if_still_problem',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context.problemStatement || 'the problem';
+            const problemStatement = context?.problemStatement || context?.metadata?.problemStatement || 'the problem';
             return `Feel the problem '${problemStatement}'... does it still feel like a problem?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please tell me if it still feels like a problem.' }
           ],
-          nextStep: 'problem_integration_awareness_1'
+          nextStep: 'digging_deeper_start',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'digging_deeper_start',
+          scriptedResponse: () => `Do you want to dig deeper?`,
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'problem_integration_awareness_1',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
         },
         {
           id: 'problem_integration_awareness_1',
           scriptedResponse: (userInput, context) => {
-            const subject = context.problemStatement || 'this problem';
+            const subject = this.getIntegrationSubject(context, 'problem');
             return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${subject}' now?`;
           },
           expectedResponseType: 'open',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please share how you feel about it now.' }
           ],
-          nextStep: 'problem_integration_awareness_2'
+          nextStep: 'problem_integration_awareness_2',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
         },
         {
           id: 'problem_integration_awareness_2',
@@ -528,7 +1108,10 @@ export class LabsTreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please share what you are more aware of now.' }
           ],
-          nextStep: 'problem_integration_awareness_3'
+          nextStep: 'problem_integration_awareness_3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
         },
         {
           id: 'problem_integration_awareness_3',
@@ -537,7 +1120,10 @@ export class LabsTreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please share how this process has helped you.' }
           ],
-          nextStep: 'problem_integration_awareness_4'
+          nextStep: 'problem_integration_awareness_4',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
         },
         {
           id: 'problem_integration_awareness_4',
