@@ -303,15 +303,17 @@ export default function BeliefShiftingDemo() {
       
       console.log(`🎯 BELIEF_DEMO: Speaking: "${text}"`);
 
-      // Try browser TTS first for speed (if available and working)
-      if ('speechSynthesis' in window && text.length < 200) {
-        try {
-          await speakWithBrowserTTS(text);
-          return;
-        } catch (browserError) {
-          console.log(`🎯 BELIEF_DEMO: Browser TTS failed, falling back to OpenAI TTS`);
-        }
-      }
+      // DISABLED: Browser TTS to prevent voice switching mid-session
+      // Browser TTS uses system default voice which can be different gender than OpenAI voices
+      // This was causing voice switching when browser TTS failed and fell back to OpenAI
+      // if ('speechSynthesis' in window && text.length < 200) {
+      //   try {
+      //     await speakWithBrowserTTS(text);
+      //     return;
+      //   } catch (browserError) {
+      //     console.log(`🎯 BELIEF_DEMO: Browser TTS failed, falling back to OpenAI TTS`);
+      //   }
+      // }
 
       // Fallback to OpenAI TTS
       const response = await fetch('/api/tts', {
@@ -319,7 +321,7 @@ export default function BeliefShiftingDemo() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: text,
-          voice: 'alloy', // Natural, clear voice without echo
+          voice: 'nova', // Consistent female voice across all demos
           model: 'tts-1-hd', // Higher quality model for cleaner audio
           speed: 1.0 // Normal speed to avoid artifacts
         })
