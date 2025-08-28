@@ -546,6 +546,7 @@ export default function UnifiedTreatmentDemo() {
     }
     
     console.log(`🎯 SIMPLE_DEMO: VALIDATION PASSED: Proceeding to next step`);
+    console.log(`🎯 SIMPLE_DEMO: Current sessionContext:`, JSON.stringify(sessionContext, null, 2));
 
     // Store user response in context
     const newContext = {
@@ -560,6 +561,13 @@ export default function UnifiedTreatmentDemo() {
     if (currentStepFromRef.id === 'problem_capture') {
       newContext.problemStatement = transcript;
       console.log(`🎯 SIMPLE_DEMO: Stored problem statement: "${transcript}"`);
+    }
+    
+    // CRITICAL: Ensure problem statement is preserved across all steps
+    // If we have a problem statement in sessionContext, keep it in newContext
+    if (sessionContext.problemStatement && !newContext.problemStatement) {
+      newContext.problemStatement = sessionContext.problemStatement;
+      console.log(`🎯 SIMPLE_DEMO: Preserved problem statement from session: "${sessionContext.problemStatement}"`);
     }
 
     console.log(`🎯 SIMPLE_DEMO: Context before processing:`, JSON.stringify(newContext, null, 2));
