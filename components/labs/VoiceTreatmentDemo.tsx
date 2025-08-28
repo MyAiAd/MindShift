@@ -27,6 +27,20 @@ interface DemoContext {
   userResponses: Record<string, string>;
 }
 
+// NEW: Pre-loading and caching interfaces
+interface CachedResponse {
+  text: string;
+  audioBlob?: Blob;
+  audioUrl?: string;
+  timestamp: number;
+}
+
+interface ResponseCache {
+  responses: Map<string, CachedResponse>;
+  preloadedSteps: Set<string>;
+  isPreloading: boolean;
+}
+
 type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shifting' | 'identity_shifting' | 'blockage_shifting' | 'trauma_shifting';
 
 // Add comprehensive interaction state tracking
@@ -45,6 +59,14 @@ export default function VoiceTreatmentDemo() {
   // NEW: Comprehensive interaction state management
   const [interactionState, setInteractionState] = useState<InteractionState>('idle');
   const [stateMessage, setStateMessage] = useState<string>('');
+  
+  // NEW: Response pre-loading and caching system
+  const [responseCache, setResponseCache] = useState<ResponseCache>({
+    responses: new Map(),
+    preloadedSteps: new Set(),
+    isPreloading: false
+  });
+  const [preloadingProgress, setPreloadingProgress] = useState<string>('');
   
   const [demoContext, setDemoContext] = useState<DemoContext>({
     problemStatement: '',
@@ -83,6 +105,161 @@ export default function VoiceTreatmentDemo() {
         [Date.now().toString()]: transcript.trim()
       }
     }));
+  };
+
+  // NEW: Pre-loading and caching system
+  const preloadCommonResponses = async () => {
+    if (responseCache.isPreloading) return;
+    
+    console.log('🚀 PRELOAD: Starting response pre-loading...');
+    setResponseCache(prev => ({ ...prev, isPreloading: true }));
+    setPreloadingProgress('Initializing pre-loading...');
+    
+    try {
+      // Get common responses from state machine
+      const commonResponses = await getCommonResponses();
+      let processed = 0;
+      const total = commonResponses.length;
+      
+      for (const response of commonResponses) {
+        try {
+          setPreloadingProgress(`Pre-loading ${processed + 1}/${total}: ${response.text.substring(0, 50)}...`);
+          
+          // Pre-synthesize audio using OpenAI TTS
+          const audioBlob = await synthesizeAudio(response.text);
+          const audioUrl = URL.createObjectURL(audioBlob);
+          
+          const cachedResponse: CachedResponse = {
+            text: response.text,
+            audioBlob,
+            audioUrl,
+            timestamp: Date.now()
+          };
+          
+          setResponseCache(prev => ({
+            ...prev,
+            responses: new Map(prev.responses.set(response.key, cachedResponse)),
+            preloadedSteps: new Set(prev.preloadedSteps.add(response.step))
+          }));
+          
+          processed++;
+          console.log(`🚀 PRELOAD: Cached response for ${response.key}`);
+          
+        } catch (error) {
+          console.warn(`🚀 PRELOAD: Failed to cache ${response.key}:`, error);
+        }
+      }
+      
+      setPreloadingProgress(`Pre-loading complete! ${processed}/${total} responses cached.`);
+      setTimeout(() => setPreloadingProgress(''), 3000);
+      
+    } catch (error) {
+      console.error('🚀 PRELOAD: Pre-loading failed:', error);
+      setPreloadingProgress('Pre-loading failed');
+      setTimeout(() => setPreloadingProgress(''), 3000);
+    } finally {
+      setResponseCache(prev => ({ ...prev, isPreloading: false }));
+    }
+  };
+
+  const getCommonResponses = async () => {
+    // Get initial and common responses for the selected modality
+    const responses = [
+      {
+        key: 'initial_intro',
+        step: 'mind_shifting_explanation',
+        text: "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE"
+      },
+      {
+        key: 'problem_selection',
+        step: 'problem_selection_confirmed',
+        text: "Great! You've chosen to work on a problem. Please tell me about the problem you'd like to work on. Describe it in just a few words - be specific and concise."
+      },
+      {
+        key: 'goal_selection',
+        step: 'goal_selection_confirmed', 
+        text: "Excellent! You've chosen to work on a goal. Please tell me about the goal you'd like to achieve. Describe it in just a few words - be specific about what you want to accomplish."
+      },
+      {
+        key: 'experience_selection',
+        step: 'negative_experience_selection_confirmed',
+        text: "I understand. You've chosen to work on a negative experience. Please tell me about the negative experience you'd like to process. Describe it briefly but specifically."
+      },
+      {
+        key: 'validation_error',
+        step: 'validation_error',
+        text: "I need you to be more specific. Please rephrase your response with more detail so I can help you effectively."
+      },
+      {
+        key: 'clarification_needed',
+        step: 'clarification_needed',
+        text: "Could you clarify what you mean? I want to make sure I understand exactly what you'd like to work on."
+      }
+    ];
+    
+    // Add modality-specific responses
+    if (stateMachineDemo) {
+      try {
+        // Get a few predicted next responses from the state machine
+        const predictedResponses = await getPredictedResponses();
+        responses.push(...predictedResponses);
+      } catch (error) {
+        console.warn('🚀 PRELOAD: Could not get predicted responses:', error);
+      }
+    }
+    
+    return responses;
+  };
+
+  const getPredictedResponses = async () => {
+    // Get likely next responses based on current state
+    const predictions = [];
+    
+    try {
+      // Simulate common user inputs to get likely responses
+      const commonInputs = ['anxiety', 'stress', 'confidence', 'relationship', 'work', 'health'];
+      
+      for (const input of commonInputs) {
+        try {
+          const result = await stateMachineDemo!.processUserInput(input, undefined, true);
+          if (result.scriptedResponse && !result.scriptedResponse.startsWith('SKIP_')) {
+            predictions.push({
+              key: `predicted_${input}`,
+              step: `predicted_response_${input}`,
+              text: result.scriptedResponse
+            });
+          }
+        } catch (error) {
+          // Ignore prediction errors
+        }
+      }
+    } catch (error) {
+      console.warn('🚀 PRELOAD: Prediction generation failed:', error);
+    }
+    
+    return predictions;
+  };
+
+  const synthesizeAudio = async (text: string): Promise<Blob> => {
+    const response = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        voice: 'nova',
+        model: 'tts-1'
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('TTS synthesis failed');
+    }
+    
+    return await response.blob();
+  };
+
+  const getCachedResponse = (responseKey: string): CachedResponse | null => {
+    return responseCache.responses.get(responseKey) || null;
   };
 
   // NEW: Interaction state management helpers
@@ -188,10 +365,11 @@ export default function VoiceTreatmentDemo() {
     setInteractionStateWithMessage('idle', 'Session ended');
   }, []);
 
-  // COMPLETELY REWRITTEN: Simple response creation without custom IDs
-  const createScriptedVoiceResponse = async (scriptedResponse: string, userTranscript: string = '') => {
+  // ENHANCED: Response creation with pre-loading and caching
+  const createScriptedVoiceResponse = async (scriptedResponse: string, userTranscript: string = '', responseKey?: string) => {
     console.log(`🔍 VOICE_DEBUG: ====== Creating scripted response ======`);
     console.log(`🔍 VOICE_DEBUG: Script: "${scriptedResponse}"`);
+    console.log(`🔍 VOICE_DEBUG: Response key: ${responseKey}`);
     console.log(`🔍 VOICE_DEBUG: AI responding: ${isAIResponding}`);
     
     // Don't create response if AI is currently responding
@@ -200,7 +378,19 @@ export default function VoiceTreatmentDemo() {
       return;
     }
     
-    setInteractionStateWithMessage('processing', 'Preparing response...');
+    // NEW: Check for cached response first
+    let cachedResponse: CachedResponse | null = null;
+    if (responseKey) {
+      cachedResponse = getCachedResponse(responseKey);
+      if (cachedResponse) {
+        console.log(`🚀 CACHE_HIT: Using pre-loaded response for ${responseKey}`);
+        setInteractionStateWithMessage('processing', 'Using cached response...');
+      }
+    }
+    
+    if (!cachedResponse) {
+      setInteractionStateWithMessage('processing', 'Preparing response...');
+    }
     
     // OPTIMIZED: Reduced DataChannel waiting with faster polling
     let attempts = 0;
@@ -223,46 +413,80 @@ export default function VoiceTreatmentDemo() {
       
       console.log(`🔍 VOICE_DEBUG: Creating assistant message`);
       
-      // Create assistant message with exact script
-      const assistantMessageEvent = {
-        type: 'conversation.item.create',
-        item: {
-          type: 'message',
-          role: 'assistant',
-          status: 'completed',
-          content: [{
-            type: 'text',
-            text: scriptedResponse
-          }]
+      // NEW: Use cached audio if available, otherwise use real-time synthesis
+      if (cachedResponse && cachedResponse.audioUrl) {
+        console.log(`🚀 CACHE_AUDIO: Playing pre-synthesized audio`);
+        
+        // Play cached audio directly
+        const audioEl = sessionRef.current.audioEl;
+        if (audioEl) {
+          const cachedAudioEl = new Audio(cachedResponse.audioUrl);
+          cachedAudioEl.play().catch(error => {
+            console.warn('🚀 CACHE_AUDIO: Cached audio playback failed, falling back to real-time:', error);
+            // Fall back to real-time synthesis
+            createRealTimeResponse(scriptedResponse);
+          });
+          
+          // Update UI immediately with cached response
+          addMessage(scriptedResponse, false, true);
+          console.log(`🚀 CACHE_SUCCESS: Instant response delivered from cache`);
+          
+          // Reset state when audio ends
+          cachedAudioEl.addEventListener('ended', () => {
+            setIsAIResponding(false);
+            setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
+          });
+          
+          return; // Exit early - cached response handled
         }
-      };
+      }
       
-      sessionRef.current.dataChannel.send(JSON.stringify(assistantMessageEvent));
-      console.log(`🔍 VOICE_DEBUG: ✅ Assistant message sent`);
-      
-      // OPTIMIZED: Reduced delay before triggering response
-      await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 300ms to 100ms
-      
-      // Create simple response without custom ID
-      const responseEvent = {
-        type: 'response.create',
-        response: {
-          modalities: ['audio', 'text']
-        }
-      };
-      
-      sessionRef.current.dataChannel.send(JSON.stringify(responseEvent));
-      console.log(`🔍 VOICE_DEBUG: ✅ Audio response triggered`);
-      
-      // Update UI immediately
-      addMessage(scriptedResponse, false, true);
-      console.log(`🔍 VOICE_DEBUG: ✅ UI updated with scripted response`);
+      // Fall back to real-time response creation
+      await createRealTimeResponse(scriptedResponse);
       
     } catch (error) {
       console.error(`🔍 VOICE_DEBUG: ❌ Failed to create scripted response:`, error);
       setIsAIResponding(false);
       setInteractionStateWithMessage('error', 'Failed to create response');
     }
+  };
+
+  // NEW: Real-time response creation (original logic)
+  const createRealTimeResponse = async (scriptedResponse: string) => {
+    // Create assistant message with exact script
+    const assistantMessageEvent = {
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'assistant',
+        status: 'completed',
+        content: [{
+          type: 'text',
+          text: scriptedResponse
+        }]
+      }
+    };
+    
+    sessionRef.current.dataChannel!.send(JSON.stringify(assistantMessageEvent));
+    console.log(`🔍 VOICE_DEBUG: ✅ Assistant message sent`);
+    
+    // OPTIMIZED: Reduced delay before triggering response
+    await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 300ms to 100ms
+    
+    // Create simple response without custom ID
+    const responseEvent = {
+      type: 'response.create',
+      response: {
+        modalities: ['audio', 'text']
+      }
+    };
+    
+    sessionRef.current.dataChannel!.send(JSON.stringify(responseEvent));
+    console.log(`🔍 VOICE_DEBUG: ✅ Audio response triggered`);
+    
+    // Update UI immediately
+    addMessage(scriptedResponse, false, true);
+    console.log(`🔍 VOICE_DEBUG: ✅ UI updated with scripted response`);
   };
 
   // ENHANCED: Transcript processing with comprehensive validation and guardrails
@@ -291,7 +515,7 @@ export default function VoiceTreatmentDemo() {
       if (!result.canContinue) {
         if (result.reason === 'validation_error' || result.reason === 'ai_assistance_needed') {
           console.log(`🔍 VOICE_DEBUG: Validation error detected: "${result.scriptedResponse}"`);
-          await createScriptedVoiceResponse(result.scriptedResponse || "Please rephrase your response.", transcript);
+          await createScriptedVoiceResponse(result.scriptedResponse || "Please rephrase your response.", transcript, 'validation_error');
           return result.scriptedResponse || "Please rephrase your response.";
         }
         
@@ -312,14 +536,14 @@ export default function VoiceTreatmentDemo() {
             console.log(`🔍 VOICE_DEBUG: Retry result:`, retryResult);
             
             if (retryResult.scriptedResponse) {
-              await createScriptedVoiceResponse(retryResult.scriptedResponse, transcript);
+              await createScriptedVoiceResponse(retryResult.scriptedResponse, transcript, `retry_${selectedModality}`);
               return retryResult.scriptedResponse;
             }
           }
           
           // If we've done substantial work, allow completion
           const completionResponse = "Thank you for participating in this Mind Shifting demo. The treatment process has been completed.";
-          await createScriptedVoiceResponse(completionResponse, transcript);
+          await createScriptedVoiceResponse(completionResponse, transcript, 'completion_response');
           return completionResponse;
         }
       }
@@ -337,17 +561,24 @@ export default function VoiceTreatmentDemo() {
           const followUpResult = await stateMachineDemo!.processUserInput('', undefined, true);
           if (followUpResult.scriptedResponse && !followUpResult.scriptedResponse.startsWith('SKIP_') && !followUpResult.scriptedResponse.endsWith('_CONFIRMED')) {
             console.log(`🔍 VOICE_DEBUG: Follow-up response: "${followUpResult.scriptedResponse}"`);
-            await createScriptedVoiceResponse(followUpResult.scriptedResponse, transcript);
+            
+            // Determine cache key based on signal type
+            let cacheKey = 'followup_response';
+            if (result.scriptedResponse === 'PROBLEM_SELECTION_CONFIRMED') cacheKey = 'problem_selection';
+            else if (result.scriptedResponse === 'GOAL_SELECTION_CONFIRMED') cacheKey = 'goal_selection';
+            else if (result.scriptedResponse === 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED') cacheKey = 'experience_selection';
+            
+            await createScriptedVoiceResponse(followUpResult.scriptedResponse, transcript, cacheKey);
             return followUpResult.scriptedResponse;
           }
           
           // Fallback response for unhandled internal signals
           const fallbackResponse = "Thank you. Let's continue with the treatment process.";
-          await createScriptedVoiceResponse(fallbackResponse, transcript);
+          await createScriptedVoiceResponse(fallbackResponse, transcript, 'fallback_response');
           return fallbackResponse;
         } else {
           console.log(`🔍 VOICE_DEBUG: Got user-facing response: "${result.scriptedResponse}"`);
-          await createScriptedVoiceResponse(result.scriptedResponse, transcript);
+          await createScriptedVoiceResponse(result.scriptedResponse, transcript, `response_${selectedModality}`);
           return result.scriptedResponse;
         }
       }
@@ -356,7 +587,7 @@ export default function VoiceTreatmentDemo() {
       
       // Provide recovery response
       const recoveryResponse = "I apologize, let me help you continue. What would you like to work on today?";
-      await createScriptedVoiceResponse(recoveryResponse, transcript);
+      await createScriptedVoiceResponse(recoveryResponse, transcript, 'recovery_response');
       return recoveryResponse;
     }
     
@@ -451,12 +682,12 @@ export default function VoiceTreatmentDemo() {
         setIsConnected(true);
         setInteractionStateWithMessage('processing', 'Initializing session...');
         
-        // OPTIMIZED: Faster initial response delivery
+        // OPTIMIZED: Faster initial response delivery with caching
         const checkDataChannel = () => {
           if (sessionRef.current.dataChannel?.readyState === 'open') {
             console.log(`🔍 VOICE_DEBUG: 🎬 Sending initial response: "${initialResponse}"`);
             setTimeout(() => {
-              createScriptedVoiceResponse(initialResponse, '');
+              createScriptedVoiceResponse(initialResponse, '', 'initial_intro');
             }, 500); // Reduced from 1200ms to 500ms
           } else {
             setTimeout(checkDataChannel, 50); // Faster polling
@@ -656,7 +887,7 @@ export default function VoiceTreatmentDemo() {
     }
   };
 
-  // Initialize state machine
+  // Initialize state machine and trigger pre-loading
   const initializeStateMachine = async () => {
     if (!stateMachineDemo) {
       const demo = new TreatmentStateMachineDemo();
@@ -664,6 +895,12 @@ export default function VoiceTreatmentDemo() {
       
       try {
         await demo.initializeSession(selectedModality, undefined, true);
+        
+        // NEW: Trigger pre-loading after state machine is ready
+        setTimeout(() => {
+          preloadCommonResponses();
+        }, 1000); // Small delay to let state machine fully initialize
+        
       } catch (error) {
         console.error('Failed to initialize state machine:', error);
         setError('Failed to initialize treatment state machine');
@@ -685,6 +922,19 @@ export default function VoiceTreatmentDemo() {
       userResponses: {}
     });
     setInteractionStateWithMessage('idle', 'Demo reset');
+    
+    // NEW: Clean up cached audio URLs to prevent memory leaks
+    responseCache.responses.forEach(cached => {
+      if (cached.audioUrl) {
+        URL.revokeObjectURL(cached.audioUrl);
+      }
+    });
+    setResponseCache({
+      responses: new Map(),
+      preloadedSteps: new Set(),
+      isPreloading: false
+    });
+    setPreloadingProgress('');
     
     if (stateMachineDemo) {
       stateMachineDemo.resetSession();
@@ -822,6 +1072,26 @@ export default function VoiceTreatmentDemo() {
         </div>
       )}
 
+      {/* NEW: Pre-loading Progress Indicator */}
+      {(responseCache.isPreloading || preloadingProgress) && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md flex items-center">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+          <span className="text-sm text-blue-800 dark:text-blue-200">
+            {preloadingProgress || 'Pre-loading responses for faster performance...'}
+          </span>
+        </div>
+      )}
+
+      {/* NEW: Cache Status Indicator */}
+      {!responseCache.isPreloading && responseCache.responses.size > 0 && (
+        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md flex items-center">
+          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mr-2" />
+          <span className="text-sm text-green-800 dark:text-green-200">
+            🚀 Performance Mode: {responseCache.responses.size} responses pre-loaded for instant delivery
+          </span>
+        </div>
+      )}
+
       {/* Controls */}
       <div className="flex flex-wrap gap-3 mb-4">
         <button
@@ -874,6 +1144,20 @@ export default function VoiceTreatmentDemo() {
           <RotateCcw className="h-4 w-4" />
           <span>Reset Demo</span>
         </button>
+
+        {/* NEW: Manual Pre-load Button */}
+        {!isConnected && !responseCache.isPreloading && (
+          <button
+            onClick={preloadCommonResponses}
+            disabled={responseCache.responses.size > 0}
+            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Shield className="h-4 w-4" />
+            <span>
+              {responseCache.responses.size > 0 ? 'Pre-loaded' : 'Pre-load Responses'}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Enhanced Connection Status */}

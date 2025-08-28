@@ -1,55 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, voice = 'alloy', model = 'tts-1', speed = 1.0 } = await request.json();
+    const { text, voice = 'nova', model = 'tts-1' } = await request.json();
 
     if (!text) {
-      return NextResponse.json(
-        { error: 'Text is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      );
+    // Call OpenAI TTS API
+    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        input: text,
+        voice,
+        response_format: 'mp3'
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI TTS API error:', errorText);
+      return NextResponse.json({ error: 'TTS synthesis failed' }, { status: 500 });
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-
-    console.log(`🎯 TTS_API: Generating speech for text: "${text.substring(0, 100)}..."`);
-
-    const mp3Response = await openai.audio.speech.create({
-      model: model,
-      voice: voice as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer',
-      input: text,
-      response_format: 'mp3',
-      speed: Math.max(0.25, Math.min(4.0, speed)) // Clamp speed between 0.25 and 4.0
-    });
-
-    const audioBuffer = Buffer.from(await mp3Response.arrayBuffer());
-
-    console.log(`🎯 TTS_API: Generated ${audioBuffer.length} bytes of audio`);
-
+    // Return the audio data
+    const audioBuffer = await response.arrayBuffer();
+    
     return new NextResponse(audioBuffer, {
-      status: 200,
       headers: {
         'Content-Type': 'audio/mpeg',
-        'Content-Length': audioBuffer.length.toString(),
+        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
       },
     });
 
-  } catch (error: any) {
-    console.error('🎯 TTS_API: Error generating speech:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to generate speech' },
-      { status: 500 }
-    );
+  } catch (error) {
+    console.error('TTS API error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 
