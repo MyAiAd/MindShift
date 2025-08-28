@@ -202,13 +202,13 @@ export default function VoiceTreatmentDemo() {
     
     setInteractionStateWithMessage('processing', 'Preparing response...');
     
-    // Wait for DataChannel to be ready
+    // OPTIMIZED: Reduced DataChannel waiting with faster polling
     let attempts = 0;
-    const maxAttempts = 15;
+    const maxAttempts = 10; // Reduced from 15
     
     while (sessionRef.current.dataChannel?.readyState !== 'open' && attempts < maxAttempts) {
       console.log(`🔍 VOICE_DEBUG: Waiting for DataChannel, attempt ${attempts + 1}`);
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 50)); // Reduced from 100ms to 50ms
       attempts++;
     }
     
@@ -240,8 +240,8 @@ export default function VoiceTreatmentDemo() {
       sessionRef.current.dataChannel.send(JSON.stringify(assistantMessageEvent));
       console.log(`🔍 VOICE_DEBUG: ✅ Assistant message sent`);
       
-      // Wait before triggering response
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // OPTIMIZED: Reduced delay before triggering response
+      await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 300ms to 100ms
       
       // Create simple response without custom ID
       const responseEvent = {
@@ -428,8 +428,10 @@ export default function VoiceTreatmentDemo() {
         throw new Error('No ephemeral key received');
       }
 
-      // 2. Set up WebRTC
-      const pc = new RTCPeerConnection();
+      // OPTIMIZED: Set up WebRTC with low-latency configuration
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
       const remoteStream = new MediaStream();
       const audioEl = document.createElement('audio');
       
@@ -449,15 +451,15 @@ export default function VoiceTreatmentDemo() {
         setIsConnected(true);
         setInteractionStateWithMessage('processing', 'Initializing session...');
         
-        // Wait for data channel to be ready before sending initial response
+        // OPTIMIZED: Faster initial response delivery
         const checkDataChannel = () => {
           if (sessionRef.current.dataChannel?.readyState === 'open') {
             console.log(`🔍 VOICE_DEBUG: 🎬 Sending initial response: "${initialResponse}"`);
             setTimeout(() => {
               createScriptedVoiceResponse(initialResponse, '');
-            }, 1200); // Longer delay to ensure everything is ready
+            }, 500); // Reduced from 1200ms to 500ms
           } else {
-            setTimeout(checkDataChannel, 100);
+            setTimeout(checkDataChannel, 50); // Faster polling
           }
         };
         checkDataChannel();
@@ -473,14 +475,15 @@ export default function VoiceTreatmentDemo() {
         }
       };
 
-      // 3. Get microphone with better constraints
+      // OPTIMIZED: Get microphone with low-latency constraints
       console.log(`🔍 VOICE_DEBUG: Requesting microphone access...`);
       const micStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 24000
+          sampleRate: 24000,
+          channelCount: 1 // Mono for faster processing
         }
       });
       
@@ -506,12 +509,12 @@ export default function VoiceTreatmentDemo() {
             input_audio_transcription: {
               model: 'whisper-1'
             },
-            // FIXED: Use server VAD for automatic speech detection
+            // OPTIMIZED: Faster speech detection for reduced latency
             turn_detection: {
               type: 'server_vad',
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 800
+              threshold: 0.3, // More sensitive detection
+              prefix_padding_ms: 200, // Reduced padding
+              silence_duration_ms: 400 // Reduced from 800ms to 400ms for faster response
             },
             modalities: ['text', 'audio'],
             temperature: 0.8
@@ -560,12 +563,10 @@ export default function VoiceTreatmentDemo() {
               addMessage(transcript, true, true);
               updateContextFromTranscript(transcript);
               
-              // Process with state machine 
-              setTimeout(() => {
-                if (stateMachineDemo) {
-                  processTranscriptWithStateMachine(transcript);
-                }
-              }, 200); // Shorter delay since no cancellation needed
+              // OPTIMIZED: Process with state machine immediately
+              if (stateMachineDemo) {
+                processTranscriptWithStateMachine(transcript);
+              }
             }
           }
           
