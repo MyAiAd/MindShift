@@ -111,6 +111,9 @@ export class LabsTreatmentStateMachine {
     if (!context) {
       throw new Error(`Session not found: ${sessionId}`);
     }
+    
+    console.log(`🔍 LABS_STATE_DEBUG: Processing input "${userInput}" at step "${context.currentStep}" in phase "${context.currentPhase}"`);
+    console.log(`🔍 LABS_STATE_DEBUG: Current context metadata:`, context.metadata);
 
     const currentPhase = this.phases.get(context.currentPhase);
     if (!currentPhase) {
@@ -166,6 +169,7 @@ export class LabsTreatmentStateMachine {
 
     // Get the current step's response to check for internal signals
     const currentStepResponse = this.getScriptedResponse(currentStep, context, userInput);
+    console.log(`🔍 LABS_STATE_DEBUG: Generated response: "${currentStepResponse}"`);
     
     // Check if this is an internal confirmation signal
     const isInternalSignal = currentStepResponse === 'GOAL_SELECTION_CONFIRMED' || 
