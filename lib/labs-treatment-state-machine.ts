@@ -657,16 +657,42 @@ export class LabsTreatmentStateMachine {
       return 'work_type_description';
     }
 
-    // Handle work_type_description routing to appropriate confirmation
+    // Handle work_type_description routing
     if (currentStep.id === 'work_type_description') {
-      if (context.metadata.workType === 'problem') {
-        return 'problem_confirmation';
-      } else if (context.metadata.workType === 'goal') {
-        return 'goal_confirmation';
-      } else if (context.metadata.workType === 'negative_experience') {
-        return 'experience_confirmation';
+      const response = this.getScriptedResponse(currentStep, context);
+      
+      // If it's a validation correction, stay on same step
+      if (response.includes('How would you state that as a problem') || 
+          response.includes('How would you state that as a goal') ||
+          response.includes('It is important that we only work on one memory')) {
+        return 'work_type_description';
       }
-      return 'problem_confirmation'; // fallback
+      
+      // If it's a confirmation question, go to confirmation step
+      if (response.includes('I heard you say')) {
+        return 'statement_confirmation';
+      }
+      
+      // If asking for initial description, stay on same step
+      return 'work_type_description';
+    }
+
+    // Handle statement_confirmation routing
+    if (currentStep.id === 'statement_confirmation') {
+      const response = this.getScriptedResponse(currentStep, context);
+      
+      if (response === 'PROBLEM_SELECTION_CONFIRMED') {
+        return 'method_selection';
+      } else if (response === 'GOAL_SELECTION_CONFIRMED') {
+        return 'goal_description';
+      } else if (response === 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED') {
+        return 'negative_experience_description';
+      } else if (response.includes('Tell me what the')) {
+        // User said no, go back to description
+        return 'work_type_description';
+      }
+      
+      return 'statement_confirmation'; // Stay for clarification
     }
 
     // Handle goal/negative experience routing
@@ -845,21 +871,84 @@ export class LabsTreatmentStateMachine {
               throw new Error('Context is undefined in work_type_description');
             }
             
-            // Handle direct problem/goal/experience input from method selection
+            // If no input, ask for description
+            if (!userInput || userInput.trim().length === 0) {
+              if (context.metadata.workType === 'problem') {
+                return "Tell me what the problem is in a few words.";
+              } else if (context.metadata.workType === 'goal') {
+                return "Tell me what the goal is in a few words.";
+              } else if (context.metadata.workType === 'negative_experience') {
+                return "Tell me what the negative experience was in a few words.";
+              }
+              return "Please describe what you'd like to work on in a few words.";
+            }
+            
+            const lowerInput = userInput.toLowerCase().trim();
+            
+            // Validate PROBLEM statements
             if (context.metadata.workType === 'problem') {
+              // Check if user stated it as a goal instead of problem
+              const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
+              const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+              
+              if (hasGoalLanguage) {
+                return "How would you state that as a problem instead of a goal?";
+              }
+              
+              // Check if user stated it as a question
+              const questionIndicators = ['how can', 'how do', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
+              const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || userInput.trim().endsWith('?');
+              
+              if (hasQuestionLanguage) {
+                return "How would you state that as a problem instead of a question?";
+              }
+              
+              // Valid problem - store and confirm
               context.problemStatement = userInput;
               context.metadata.problemStatement = userInput;
-              return "PROBLEM_SELECTION_CONFIRMED";
-            } else if (context.metadata.workType === 'goal') {
+              return `I heard you say '${userInput}'. Is that correct?`;
+            }
+            
+            // Validate GOAL statements  
+            else if (context.metadata.workType === 'goal') {
+              // Check if user stated it as a problem instead of goal
+              const problemIndicators = ['problem', 'issue', 'trouble', 'difficulty', 'struggle', 'can\'t', 'cannot', 'unable to', 'don\'t', 'not able', 'hard to', 'difficult to'];
+              const hasProblemLanguage = problemIndicators.some(indicator => lowerInput.includes(indicator));
+              
+              if (hasProblemLanguage) {
+                return "How would you state that as a goal instead of a problem?";
+              }
+              
+              // Check if user stated it as a question
+              const questionIndicators = ['how can', 'how do', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
+              const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || userInput.trim().endsWith('?');
+              
+              if (hasQuestionLanguage) {
+                return "How would you state that as a goal instead of a question?";
+              }
+              
+              // Valid goal - store and confirm
               context.goalStatement = userInput;
               context.metadata.goalStatement = userInput;
               context.metadata.selectedMethod = 'reality_shifting';
-              return "GOAL_SELECTION_CONFIRMED";
-            } else if (context.metadata.workType === 'negative_experience') {
+              return `I heard you say '${userInput}'. Is that correct?`;
+            }
+            
+            // Handle NEGATIVE EXPERIENCE
+            else if (context.metadata.workType === 'negative_experience') {
+              // Check for multiple events vs single event
+              const multipleEventIndicators = ['always', 'often', 'repeatedly', 'throughout', 'as a child', 'growing up', 'every time', 'whenever', 'usually', 'frequently'];
+              const hasMultipleEvents = multipleEventIndicators.some(indicator => lowerInput.includes(indicator));
+              
+              if (hasMultipleEvents) {
+                return "It is important that we only work on one memory of a single event at a time, so please recall a significant event and tell me what the event was in a few words.";
+              }
+              
+              // Valid single experience - store and confirm
               context.negativeExperienceStatement = userInput;
               context.metadata.negativeExperienceStatement = userInput;
               context.metadata.selectedMethod = 'trauma_shifting';
-              return "NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED";
+              return `I heard you say '${userInput}'. Is that correct?`;
             }
             
             return "Please describe what you'd like to work on in a few words.";
@@ -868,7 +957,42 @@ export class LabsTreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please describe what you want to work on in a few words.' }
           ],
-          nextStep: 'problem_confirmation', // Will be dynamically determined based on work type
+          nextStep: 'statement_confirmation', // Confirmation step for all work types
+          aiTriggers: []
+        },
+        {
+          id: 'statement_confirmation',
+          scriptedResponse: (userInput, context) => {
+            const input = (userInput || '').toLowerCase().trim();
+            const workType = context.metadata.workType;
+            
+            if (input.includes('yes') || input.includes('y') || input.includes('correct') || input.includes('right')) {
+              // Confirmed - route to appropriate treatment intro
+              if (workType === 'problem') {
+                return "PROBLEM_SELECTION_CONFIRMED";
+              } else if (workType === 'goal') {
+                return "GOAL_SELECTION_CONFIRMED";  
+              } else if (workType === 'negative_experience') {
+                return "NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED";
+              }
+            } else if (input.includes('no') || input.includes('n') || input.includes('wrong') || input.includes('incorrect')) {
+              // Not correct - ask again
+              if (workType === 'problem') {
+                return "Tell me what the problem is in a few words.";
+              } else if (workType === 'goal') {
+                return "Tell me what the goal is in a few words.";
+              } else if (workType === 'negative_experience') {
+                return "Tell me what the negative experience was in a few words.";
+              }
+            }
+            
+            return "Please answer yes or no. Is that what you want to work on?";
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'method_selection', // Will be dynamically determined
           aiTriggers: []
         },
         {
