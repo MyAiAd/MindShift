@@ -47,7 +47,7 @@ type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shift
 type InteractionState = 'idle' | 'listening' | 'processing' | 'ai_speaking' | 'waiting_for_user' | 'error';
 
 // NEW: Version tracking for deployment verification
-const VOICE_DEMO_VERSION = "2.0.3-modalities-fix";
+const VOICE_DEMO_VERSION = "2.0.4-temperature-fix";
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 export default function VoiceTreatmentDemo() {
@@ -736,7 +736,7 @@ export default function VoiceTreatmentDemo() {
         modalities: ['audio', 'text'], // Required combination
         instructions: `You are a text-to-speech system. Read ONLY the exact text from the last assistant message word-for-word: "${scriptedResponse}". Do not generate any new text. Do not add commentary. Do not provide advice. Just read this exact text aloud.`,
         max_output_tokens: 50, // Very limited to prevent generation beyond the script
-        temperature: 0.0 // Force deterministic output
+        temperature: 0.6 // Minimum allowed temperature for realtime API
       }
     };
     
