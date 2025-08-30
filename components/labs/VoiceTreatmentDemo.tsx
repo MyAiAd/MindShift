@@ -47,7 +47,7 @@ type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shift
 type InteractionState = 'idle' | 'listening' | 'processing' | 'ai_speaking' | 'waiting_for_user' | 'error';
 
 // ENHANCED: Version tracking for deployment verification with script adherence
-const VOICE_DEMO_VERSION = "2.1.0-strict-script-adherence";
+const VOICE_DEMO_VERSION = "2.1.1-api-compatible-script-lock";
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 export default function VoiceTreatmentDemo() {
@@ -733,21 +733,39 @@ export default function VoiceTreatmentDemo() {
     console.log(`⏱️ PERF_TIMER: Real-time synthesis starting with STRICT script adherence...`);
     console.log(`🔒 SCRIPT_LOCK: Enforcing exact script: "${scriptedResponse}"`);
     
-    // CRITICAL: Use audio-only mode to prevent OpenAI from generating ANY text
+    // CRITICAL: Create assistant message with the EXACT script first
+    const assistantMessageEvent = {
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'assistant',
+        status: 'completed',
+        content: [{
+          type: 'text',
+          text: scriptedResponse
+        }]
+      }
+    };
+    
+    sessionRef.current.dataChannel!.send(JSON.stringify(assistantMessageEvent));
+    console.log(`🔒 SCRIPT_LOCK: ✅ Assistant message created with exact script`);
+    
+    // Brief delay to ensure message is processed
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    // CRITICAL: Use supported modalities with EXTREME constraints
     const responseEvent = {
       type: 'response.create',
       response: {
-        modalities: ['audio'], // AUDIO ONLY - prevents text generation completely
-        instructions: `You are a text-to-speech system. Your ONLY job is to read this exact text aloud word-for-word without any changes, additions, or interpretations: "${scriptedResponse}". Do not generate, modify, or add any content. Just read this exact text.`,
-        max_output_tokens: 1, // Absolute minimum to prevent ANY text generation
+        modalities: ['audio', 'text'], // Required supported combination
+        instructions: `You are a text-to-speech system. Read ONLY the exact text from the last assistant message. Do not generate any new content. Do not add anything. Do not modify anything. Just read the last assistant message exactly as written.`,
+        max_output_tokens: 1, // Absolute minimum to prevent ANY new text generation
         temperature: 0.6 // Minimum allowed temperature for realtime API
       }
     };
     
-    // Send the response request directly without creating assistant message
-    // This prevents OpenAI from having any conversation context to deviate from
     sessionRef.current.dataChannel!.send(JSON.stringify(responseEvent));
-    console.log(`🔒 SCRIPT_LOCK: ✅ Audio-only response triggered for exact script: "${scriptedResponse}"`);
+    console.log(`🔒 SCRIPT_LOCK: ✅ Constrained response triggered for exact script: "${scriptedResponse}"`);
     
     // Update UI immediately with the EXACT scripted response
     addMessage(scriptedResponse, false, true);
