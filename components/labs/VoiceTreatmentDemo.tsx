@@ -47,7 +47,7 @@ type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shift
 type InteractionState = 'idle' | 'listening' | 'processing' | 'ai_speaking' | 'waiting_for_user' | 'error';
 
 // NEW: Version tracking for deployment verification
-const VOICE_DEMO_VERSION = "2.0.2-script-enforcement";
+const VOICE_DEMO_VERSION = "2.0.3-modalities-fix";
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 export default function VoiceTreatmentDemo() {
@@ -729,19 +729,19 @@ export default function VoiceTreatmentDemo() {
     // OPTIMIZED: Reduced delay before triggering response
     await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 300ms to 100ms
     
-    // NEW APPROACH: Create response that only generates audio from the existing assistant message
+    // FIXED: Use supported modalities but constrain text generation
     const responseEvent = {
       type: 'response.create',
       response: {
-        modalities: ['audio'], // Only audio, no text generation
-        instructions: `Generate audio for the last assistant message. Do not create new text. Only convert the existing assistant message to speech.`,
-        max_output_tokens: 10, // Very low limit to prevent text generation
+        modalities: ['audio', 'text'], // Required combination
+        instructions: `You are a text-to-speech system. Read ONLY the exact text from the last assistant message word-for-word: "${scriptedResponse}". Do not generate any new text. Do not add commentary. Do not provide advice. Just read this exact text aloud.`,
+        max_output_tokens: 50, // Very limited to prevent generation beyond the script
         temperature: 0.0 // Force deterministic output
       }
     };
     
     sessionRef.current.dataChannel!.send(JSON.stringify(responseEvent));
-    console.log(`🔍 VOICE_DEBUG: ✅ Audio-only response triggered for: "${scriptedResponse}"`);
+    console.log(`🔍 VOICE_DEBUG: ✅ Constrained response triggered for: "${scriptedResponse}"`);
     
     // Update UI immediately
     addMessage(scriptedResponse, false, true);
