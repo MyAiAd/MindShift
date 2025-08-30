@@ -47,7 +47,7 @@ type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shift
 type InteractionState = 'idle' | 'listening' | 'processing' | 'ai_speaking' | 'waiting_for_user' | 'error';
 
 // NEW: Version tracking for deployment verification
-const VOICE_DEMO_VERSION = "2.0.5-single-voice";
+const VOICE_DEMO_VERSION = "2.0.6-prescription-cache";
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 export default function VoiceTreatmentDemo() {
@@ -92,6 +92,9 @@ export default function VoiceTreatmentDemo() {
   
   // NEW: Audio timeout safeguard
   const audioTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // NEW: Track when using cached audio to prevent OpenAI competition
+  const usingCachedAudioRef = useRef<boolean>(false);
   
   // NEW: Browser speech recognition for automatic speech detection
   const speechRecognitionRef = useRef<any>(null);
@@ -618,12 +621,64 @@ export default function VoiceTreatmentDemo() {
       
       console.log(`🔍 VOICE_DEBUG: Creating assistant message`);
       
-      // DISABLED: Use cached audio - causes competing voices with OpenAI realtime
-      // Instead, use OpenAI for all audio generation to maintain single voice stream
+      // NEW: Use cached audio (doctor's prescription) and prevent OpenAI competition
       if (cachedResponse && cachedResponse.audioUrl) {
-        console.log(`🚀 CACHE_AVAILABLE: Found cached response but using OpenAI for consistent voice stream`);
-        console.log(`⏱️ PERF_TIMER: Skipping cache to prevent dual voices - using real-time synthesis`);
-        // Don't use cached audio - fall through to real-time synthesis
+        const audioStartTime = performance.now();
+        console.log(`🚀 CACHE_AUDIO: Playing pre-synthesized audio (doctor's prescription)`);
+        console.log(`⏱️ PERF_TIMER: Audio playback started at ${(audioStartTime - startTime).toFixed(2)}ms from request start`);
+        
+        // Set flag to prevent OpenAI from competing
+        usingCachedAudioRef.current = true;
+        
+        // Play cached audio directly - this is the doctor's prescription
+        const cachedAudioEl = new Audio(cachedResponse.audioUrl);
+        cachedAudioEl.play().catch(error => {
+          console.warn('🚀 CACHE_AUDIO: Cached audio playback failed, falling back to real-time:', error);
+          usingCachedAudioRef.current = false;
+          // Fall back to real-time synthesis
+          createRealTimeResponse(scriptedResponse, startTime, false);
+        });
+        
+        // Update UI immediately with cached response
+        addMessage(scriptedResponse, false, true);
+        
+        const endTime = performance.now();
+        const totalTime = endTime - startTime;
+        console.log(`🚀 CACHE_SUCCESS: Doctor's prescription delivered from cache`);
+        console.log(`⏱️ PERF_TIMER: 🎯 CACHED RESPONSE TOTAL TIME: ${totalTime.toFixed(2)}ms`);
+        
+        // Update performance metrics
+        updatePerformanceMetrics(totalTime, true);
+        
+        // Reset state when audio ends and start listening
+        cachedAudioEl.addEventListener('ended', () => {
+          console.log('🔍 VOICE_DEBUG: Cached audio ended, preparing for user input');
+          setIsAIResponding(false);
+          usingCachedAudioRef.current = false; // Reset flag
+          
+          // Ensure clean state before starting listening
+          if (speechRecognitionRef.current) {
+            console.log('🔍 VOICE_DEBUG: Cleaning up existing speech recognition before restart');
+            speechRecognitionRef.current.stop();
+            speechRecognitionRef.current = null;
+            setIsBrowserListening(false);
+          }
+          
+          setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
+          
+          // Start automatic listening after cached response
+          setTimeout(() => {
+            console.log('🔍 VOICE_DEBUG: Starting speech recognition after cached audio');
+            if (speechRecognitionRef.current) {
+              speechRecognitionRef.current.stop();
+              speechRecognitionRef.current = null;
+              setIsBrowserListening(false);
+            }
+            startAutomaticListening();
+          }, 1000);
+        });
+        
+        return; // Exit early - cached response handled, prevent OpenAI generation
       }
       
       // Fall back to real-time response creation
@@ -1011,12 +1066,20 @@ export default function VoiceTreatmentDemo() {
           
           // Enhanced response and audio tracking
           else if (message.type === 'response.created') {
+            if (usingCachedAudioRef.current) {
+              console.log(`🔍 VOICE_DEBUG: 🚫 Ignoring OpenAI response.created - using cached audio`);
+              return;
+            }
             console.log(`🔍 VOICE_DEBUG: ✅ Response started`);
             setIsAIResponding(true);
             setInteractionStateWithMessage('ai_speaking', 'AI is speaking...');
           }
           
           else if (message.type === 'output_audio_buffer.started') {
+            if (usingCachedAudioRef.current) {
+              console.log(`🔍 VOICE_DEBUG: 🚫 Ignoring OpenAI audio buffer started - using cached audio`);
+              return;
+            }
             console.log(`🔍 VOICE_DEBUG: 🔊 Audio playback started - staying in speaking state`);
             // Ensure we stay in speaking state while audio plays
             setIsAIResponding(true);
@@ -1044,6 +1107,10 @@ export default function VoiceTreatmentDemo() {
           }
           
           else if (message.type === 'output_audio_buffer.stopped') {
+            if (usingCachedAudioRef.current) {
+              console.log(`🔍 VOICE_DEBUG: 🚫 Ignoring OpenAI audio buffer stopped - using cached audio`);
+              return;
+            }
             console.log(`🔍 VOICE_DEBUG: 🔊 Audio playback stopped - transitioning to listening`);
             
             // Clear the timeout safeguard since audio properly stopped
@@ -1198,10 +1265,10 @@ export default function VoiceTreatmentDemo() {
       try {
         await demo.initializeSession(selectedModality, undefined, true);
         
-        // DISABLED: Pre-loading causes competing voices with OpenAI realtime
-        // setTimeout(() => {
-        //   preloadCommonResponses();
-        // }, 500);
+        // NEW: Trigger pre-loading after state machine is ready (doctor's prescription)
+        setTimeout(() => {
+          preloadCommonResponses();
+        }, 500);
         
       } catch (error) {
         console.error('Failed to initialize state machine:', error);
@@ -1323,7 +1390,7 @@ export default function VoiceTreatmentDemo() {
               </span>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Voice-guided Mind Shifting treatment with OpenAI realtime audio
+              Voice-guided Mind Shifting treatment with pre-loaded prescription responses
             </p>
           </div>
         </div>
@@ -1517,7 +1584,7 @@ export default function VoiceTreatmentDemo() {
           <span>Reset Demo</span>
         </button>
 
-        {/* DISABLED: Pre-load Button - causes competing voices
+        {/* NEW: Manual Pre-load Button for doctor's prescription */}
         {!isConnected && !responseCache.isPreloading && (
           <button
             onClick={preloadCommonResponses}
@@ -1526,11 +1593,10 @@ export default function VoiceTreatmentDemo() {
           >
             <Shield className="h-4 w-4" />
             <span>
-              {responseCache.responses.size > 0 ? 'Pre-loaded' : 'Pre-load Responses'}
+              {responseCache.responses.size > 0 ? 'Pre-loaded' : 'Pre-load Prescription'}
             </span>
           </button>
         )}
-        */}
       </div>
 
       {/* Enhanced Connection Status */}
