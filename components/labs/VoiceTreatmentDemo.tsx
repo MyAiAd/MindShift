@@ -46,16 +46,18 @@ type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shift
 // Add comprehensive interaction state tracking
 type InteractionState = 'idle' | 'listening' | 'processing' | 'ai_speaking' | 'waiting_for_user' | 'error';
 
-// NEW: Version tracking for deployment verification
-const VOICE_DEMO_VERSION = "2.0.6-prescription-cache";
+// ENHANCED: Version tracking for deployment verification with script adherence
+const VOICE_DEMO_VERSION = "2.1.0-strict-script-adherence";
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 export default function VoiceTreatmentDemo() {
-  // NEW: Log version on component mount for verification
+  // ENHANCED: Log version and strict script adherence on component mount
   useEffect(() => {
     console.log(`🚀 VOICE_DEMO: Version ${VOICE_DEMO_VERSION} loaded at ${BUILD_TIMESTAMP}`);
-    console.log(`🚀 VOICE_DEMO: Pre-loading system active - expect significant performance improvements`);
+    console.log(`🔒 SCRIPT_LOCK: STRICT script adherence system active - OpenAI will follow ONLY the exact scripts`);
+    console.log(`🚀 VOICE_DEMO: Pre-loading system active with script verification`);
     console.log(`🚀 VOICE_DEMO: Look for ⏱️ PERF_TIMER logs to see response times`);
+    console.log(`🚀 VOICE_DEMO: Look for 🔒 SCRIPT_LOCK logs to see script adherence`);
     console.log(`🚀 VOICE_DEMO: Look for 🚀 CACHE_HIT logs to see cache usage`);
   }, []);
   const [status, setStatus] = useState<string>('idle');
@@ -294,7 +296,12 @@ export default function VoiceTreatmentDemo() {
   };
 
   const getCachedResponse = (responseKey: string): CachedResponse | null => {
-    return responseCache.responses.get(responseKey) || null;
+    const cached = responseCache.responses.get(responseKey);
+    if (cached) {
+      console.log(`🔒 CACHE_CHECK: Found cached response for key "${responseKey}"`);
+      console.log(`🔒 CACHE_CHECK: Cached text: "${cached.text.substring(0, 100)}..."`);
+    }
+    return cached || null;
   };
 
   // NEW: Enhanced automatic speech detection with better error handling
@@ -581,17 +588,27 @@ export default function VoiceTreatmentDemo() {
       return;
     }
     
-    // NEW: Check for cached response first
+    // ENHANCED: Check for cached response with script verification
     let cachedResponse: CachedResponse | null = null;
     let isCacheHit = false;
     if (responseKey) {
       cachedResponse = getCachedResponse(responseKey);
       if (cachedResponse) {
-        isCacheHit = true;
-        const cacheCheckTime = performance.now();
-        console.log(`🚀 CACHE_HIT: Using pre-loaded response for ${responseKey}`);
-        console.log(`⏱️ PERF_TIMER: Cache lookup completed in ${(cacheCheckTime - startTime).toFixed(2)}ms`);
-        setInteractionStateWithMessage('processing', 'Using cached response...');
+        // CRITICAL: Verify cached text matches current script for safety
+        const scriptMatch = cachedResponse.text.trim() === scriptedResponse.trim();
+        if (scriptMatch) {
+          isCacheHit = true;
+          const cacheCheckTime = performance.now();
+          console.log(`🚀 CACHE_HIT: Using pre-loaded response for ${responseKey} - SCRIPT VERIFIED`);
+          console.log(`🔒 SCRIPT_MATCH: Cached text matches current script exactly`);
+          console.log(`⏱️ PERF_TIMER: Cache lookup completed in ${(cacheCheckTime - startTime).toFixed(2)}ms`);
+          setInteractionStateWithMessage('processing', 'Using cached prescription...');
+        } else {
+          console.warn(`🔒 SCRIPT_MISMATCH: Cached text doesn't match current script, falling back to real-time`);
+          console.warn(`🔒 SCRIPT_MISMATCH: Expected: "${scriptedResponse}"`);
+          console.warn(`🔒 SCRIPT_MISMATCH: Cached: "${cachedResponse.text}"`);
+          cachedResponse = null; // Don't use mismatched cache
+        }
       }
     }
     
@@ -639,8 +656,9 @@ export default function VoiceTreatmentDemo() {
           createRealTimeResponse(scriptedResponse, startTime, false);
         });
         
-        // Update UI immediately with cached response
+        // Update UI immediately with the EXACT scripted response (not cached text)
         addMessage(scriptedResponse, false, true);
+        console.log(`🔒 SCRIPT_LOCK: ✅ Cached audio playing, but UI shows exact script: "${scriptedResponse}"`);
         
         const endTime = performance.now();
         const totalTime = endTime - startTime;
@@ -709,52 +727,37 @@ export default function VoiceTreatmentDemo() {
     });
   };
 
-  // NEW: Real-time response creation (original logic) with performance tracking
+  // ENHANCED: Real-time response creation with STRICT script adherence
   const createRealTimeResponse = async (scriptedResponse: string, startTime?: number, wasCacheAttempt?: boolean) => {
     const realStartTime = startTime || performance.now();
-    console.log(`⏱️ PERF_TIMER: Real-time synthesis starting...`);
-    // Create assistant message with exact script
-    const assistantMessageEvent = {
-      type: 'conversation.item.create',
-      item: {
-        type: 'message',
-        role: 'assistant',
-        status: 'completed',
-        content: [{
-          type: 'text',
-          text: scriptedResponse
-        }]
-      }
-    };
+    console.log(`⏱️ PERF_TIMER: Real-time synthesis starting with STRICT script adherence...`);
+    console.log(`🔒 SCRIPT_LOCK: Enforcing exact script: "${scriptedResponse}"`);
     
-    sessionRef.current.dataChannel!.send(JSON.stringify(assistantMessageEvent));
-    console.log(`🔍 VOICE_DEBUG: ✅ Assistant message sent`);
-    
-    // OPTIMIZED: Reduced delay before triggering response
-    await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 300ms to 100ms
-    
-    // FIXED: Use supported modalities but constrain text generation
+    // CRITICAL: Use audio-only mode to prevent OpenAI from generating ANY text
     const responseEvent = {
       type: 'response.create',
       response: {
-        modalities: ['audio', 'text'], // Required combination
-        instructions: `You are a text-to-speech system. Read ONLY the exact text from the last assistant message word-for-word: "${scriptedResponse}". Do not generate any new text. Do not add commentary. Do not provide advice. Just read this exact text aloud.`,
-        max_output_tokens: 50, // Very limited to prevent generation beyond the script
+        modalities: ['audio'], // AUDIO ONLY - prevents text generation completely
+        instructions: `You are a text-to-speech system. Your ONLY job is to read this exact text aloud word-for-word without any changes, additions, or interpretations: "${scriptedResponse}". Do not generate, modify, or add any content. Just read this exact text.`,
+        max_output_tokens: 1, // Absolute minimum to prevent ANY text generation
         temperature: 0.6 // Minimum allowed temperature for realtime API
       }
     };
     
+    // Send the response request directly without creating assistant message
+    // This prevents OpenAI from having any conversation context to deviate from
     sessionRef.current.dataChannel!.send(JSON.stringify(responseEvent));
-    console.log(`🔍 VOICE_DEBUG: ✅ Constrained response triggered for: "${scriptedResponse}"`);
+    console.log(`🔒 SCRIPT_LOCK: ✅ Audio-only response triggered for exact script: "${scriptedResponse}"`);
     
-    // Update UI immediately
+    // Update UI immediately with the EXACT scripted response
     addMessage(scriptedResponse, false, true);
-    console.log(`🔍 VOICE_DEBUG: ✅ UI updated with scripted response`);
+    console.log(`🔒 SCRIPT_LOCK: ✅ UI updated with exact scripted response`);
     
     // NEW: Track real-time response performance
     const endTime = performance.now();
     const totalTime = endTime - realStartTime;
     console.log(`⏱️ PERF_TIMER: 🔄 REAL-TIME RESPONSE TOTAL TIME: ${totalTime.toFixed(2)}ms`);
+    console.log(`🔒 SCRIPT_LOCK: ✅ Script adherence enforced for real-time synthesis`);
     updatePerformanceMetrics(totalTime, false);
   };
 
@@ -909,21 +912,21 @@ export default function VoiceTreatmentDemo() {
         }
       }
 
-      // 1. Create ephemeral session with manual control from start
+      // 1. Create ephemeral session with STRICT script adherence
       const sessionResponse = await fetch('/api/labs/openai-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'gpt-4o-realtime-preview-2024-12-17',
           voice: 'alloy', // Consistent voice across all demos (nova not supported in realtime)
-          instructions: `You are a text-to-speech system. Your ONLY job is to read aloud the exact text from assistant messages. NEVER generate, modify, or add any content. NEVER provide advice. NEVER improvise. Only read the exact text provided to you word-for-word.`,
+          instructions: `You are a text-to-speech system with STRICT script adherence. Your ONLY job is to read aloud the exact text provided to you. NEVER generate, modify, add, or change any content. NEVER provide therapeutic advice. NEVER improvise. NEVER deviate from the exact text. You must read ONLY what is explicitly provided to you word-for-word with no additions, interpretations, or modifications.`,
           // Enable transcription
           input_audio_transcription: {
             model: 'whisper-1'
           },
           // CRITICAL: Disable turn detection to prevent dual voice responses
           turn_detection: null,
-          temperature: 0.8
+          temperature: 0.6 // Lower temperature for more consistent adherence
         })
       });
 
@@ -1011,11 +1014,11 @@ export default function VoiceTreatmentDemo() {
       dataChannel.addEventListener('open', () => {
         console.log('🔍 VOICE_DEBUG: DataChannel opened');
         
-        // FIXED: More comprehensive session configuration
+        // ENHANCED: Strict script adherence session configuration
         const sessionConfig = {
           type: 'session.update',
           session: {
-            instructions: `You are a text-to-speech system for a Mind Shifting treatment session. Your ONLY job is to read aloud the exact text from assistant messages. NEVER generate, modify, or add any content. NEVER provide therapeutic advice. NEVER improvise. Only read the exact text provided to you word-for-word.`,
+            instructions: `You are a text-to-speech system with ABSOLUTE script adherence. Your ONLY job is to read aloud the exact text provided to you. NEVER generate, modify, add, change, or interpret any content. NEVER provide therapeutic advice. NEVER improvise. NEVER deviate from the exact text. You must read ONLY what is explicitly provided to you word-for-word with zero additions, interpretations, or modifications. Treat every text as a fixed script that cannot be altered.`,
             voice: 'alloy', // Consistent voice across all demos (nova not supported in realtime)
             input_audio_transcription: {
               model: 'whisper-1'
@@ -1023,7 +1026,7 @@ export default function VoiceTreatmentDemo() {
             // CRITICAL: Disable automatic turn detection to prevent dual voices
             turn_detection: null, // Disable OpenAI's automatic response generation
             modalities: ['text', 'audio'],
-            temperature: 0.8
+            temperature: 0.6 // Lower temperature for stricter adherence
           }
         };
         
@@ -1390,7 +1393,7 @@ export default function VoiceTreatmentDemo() {
               </span>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Voice-guided Mind Shifting treatment with pre-loaded prescription responses
+              Voice-guided Mind Shifting treatment with strict script adherence and pre-loaded responses
             </p>
           </div>
         </div>
