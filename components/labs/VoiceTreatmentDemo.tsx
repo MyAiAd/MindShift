@@ -47,7 +47,7 @@ type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shift
 type InteractionState = 'idle' | 'listening' | 'processing' | 'ai_speaking' | 'waiting_for_user' | 'error';
 
 // NEW: Version tracking for deployment verification
-const VOICE_DEMO_VERSION = "2.0.1-audio-fix";
+const VOICE_DEMO_VERSION = "2.0.2-script-enforcement";
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 export default function VoiceTreatmentDemo() {
@@ -729,16 +729,19 @@ export default function VoiceTreatmentDemo() {
     // OPTIMIZED: Reduced delay before triggering response
     await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 300ms to 100ms
     
-    // Create simple response without custom ID
+    // NEW APPROACH: Create response that only generates audio from the existing assistant message
     const responseEvent = {
       type: 'response.create',
       response: {
-        modalities: ['audio', 'text']
+        modalities: ['audio'], // Only audio, no text generation
+        instructions: `Generate audio for the last assistant message. Do not create new text. Only convert the existing assistant message to speech.`,
+        max_output_tokens: 10, // Very low limit to prevent text generation
+        temperature: 0.0 // Force deterministic output
       }
     };
     
     sessionRef.current.dataChannel!.send(JSON.stringify(responseEvent));
-    console.log(`🔍 VOICE_DEBUG: ✅ Audio response triggered`);
+    console.log(`🔍 VOICE_DEBUG: ✅ Audio-only response triggered for: "${scriptedResponse}"`);
     
     // Update UI immediately
     addMessage(scriptedResponse, false, true);
@@ -909,7 +912,7 @@ export default function VoiceTreatmentDemo() {
         body: JSON.stringify({
           model: 'gpt-4o-realtime-preview-2024-12-17',
           voice: 'alloy', // Consistent voice across all demos (nova not supported in realtime)
-          instructions: `You are a Mind Shifting treatment assistant. Speak only exact text from assistant messages. Never generate automatic responses.`,
+          instructions: `You are a text-to-speech system. Your ONLY job is to read aloud the exact text from assistant messages. NEVER generate, modify, or add any content. NEVER provide advice. NEVER improvise. Only read the exact text provided to you word-for-word.`,
           // Enable transcription
           input_audio_transcription: {
             model: 'whisper-1'
@@ -1008,7 +1011,7 @@ export default function VoiceTreatmentDemo() {
         const sessionConfig = {
           type: 'session.update',
           session: {
-            instructions: `You are conducting a Mind Shifting treatment session. Speak ONLY the exact text from assistant messages. Never generate original content.`,
+            instructions: `You are a text-to-speech system for a Mind Shifting treatment session. Your ONLY job is to read aloud the exact text from assistant messages. NEVER generate, modify, or add any content. NEVER provide therapeutic advice. NEVER improvise. Only read the exact text provided to you word-for-word.`,
             voice: 'alloy', // Consistent voice across all demos (nova not supported in realtime)
             input_audio_transcription: {
               model: 'whisper-1'
