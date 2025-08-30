@@ -47,7 +47,7 @@ type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shift
 type InteractionState = 'idle' | 'listening' | 'processing' | 'ai_speaking' | 'waiting_for_user' | 'error';
 
 // NEW: Version tracking for deployment verification
-const VOICE_DEMO_VERSION = "2.0.0-preload";
+const VOICE_DEMO_VERSION = "2.0.1-audio-fix";
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 export default function VoiceTreatmentDemo() {
@@ -89,6 +89,9 @@ export default function VoiceTreatmentDemo() {
     sessionStartTime: 0
   });
   const responseTimerRef = useRef<number>(0);
+  
+  // NEW: Audio timeout safeguard
+  const audioTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // NEW: Browser speech recognition for automatic speech detection
   const speechRecognitionRef = useRef<any>(null);
@@ -535,6 +538,12 @@ export default function VoiceTreatmentDemo() {
     
     // NEW: Stop automatic listening
     stopAutomaticListening();
+    
+    // NEW: Clear audio timeout safeguard
+    if (audioTimeoutRef.current) {
+      clearTimeout(audioTimeoutRef.current);
+      audioTimeoutRef.current = null;
+    }
     
     sessionRef.current = {
       pc: null,
@@ -1048,15 +1057,49 @@ export default function VoiceTreatmentDemo() {
             }
           }
           
-          // Simplified response tracking
+          // Enhanced response and audio tracking
           else if (message.type === 'response.created') {
             console.log(`🔍 VOICE_DEBUG: ✅ Response started`);
             setIsAIResponding(true);
             setInteractionStateWithMessage('ai_speaking', 'AI is speaking...');
           }
           
-          else if (message.type === 'response.done') {
-            console.log(`🔍 VOICE_DEBUG: ✅ Response completed`);
+          else if (message.type === 'output_audio_buffer.started') {
+            console.log(`🔍 VOICE_DEBUG: 🔊 Audio playback started - staying in speaking state`);
+            // Ensure we stay in speaking state while audio plays
+            setIsAIResponding(true);
+            setInteractionStateWithMessage('ai_speaking', 'AI is speaking...');
+            
+            // NEW: Set a timeout safeguard in case audio doesn't properly stop
+            if (audioTimeoutRef.current) {
+              clearTimeout(audioTimeoutRef.current);
+            }
+            audioTimeoutRef.current = setTimeout(() => {
+              console.log(`🔍 VOICE_DEBUG: ⚠️ Audio timeout safeguard triggered - forcing transition to listening`);
+              setIsAIResponding(false);
+              setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak (timeout)');
+              
+              // Start listening after timeout
+              setTimeout(() => {
+                if (speechRecognitionRef.current) {
+                  speechRecognitionRef.current.stop();
+                  speechRecognitionRef.current = null;
+                  setIsBrowserListening(false);
+                }
+                startAutomaticListening();
+              }, 500);
+            }, 10000); // 10 second timeout for very long responses
+          }
+          
+          else if (message.type === 'output_audio_buffer.stopped') {
+            console.log(`🔍 VOICE_DEBUG: 🔊 Audio playback stopped - transitioning to listening`);
+            
+            // Clear the timeout safeguard since audio properly stopped
+            if (audioTimeoutRef.current) {
+              clearTimeout(audioTimeoutRef.current);
+              audioTimeoutRef.current = null;
+            }
+            
             setIsAIResponding(false);
             
             // Ensure clean state before starting listening
@@ -1069,9 +1112,9 @@ export default function VoiceTreatmentDemo() {
             
             setInteractionStateWithMessage('waiting_for_user', 'Your turn to speak');
             
-            // NEW: Start automatic listening after AI response completes
+            // Start automatic listening after audio actually stops
             setTimeout(() => {
-              console.log('🔍 VOICE_DEBUG: Force starting speech recognition after AI response');
+              console.log('🔍 VOICE_DEBUG: Starting speech recognition after audio stopped');
               // Force start regardless of state since we know we want to listen now
               if (speechRecognitionRef.current) {
                 speechRecognitionRef.current.stop();
@@ -1079,7 +1122,23 @@ export default function VoiceTreatmentDemo() {
                 setIsBrowserListening(false);
               }
               startAutomaticListening();
-            }, 1000); // Increased delay for better reliability
+            }, 800); // Slightly longer delay to ensure audio has fully stopped
+          }
+          
+          else if (message.type === 'response.done') {
+            console.log(`🔍 VOICE_DEBUG: ✅ Response completed (text generation done)`);
+            // Don't transition state here - wait for audio to finish via output_audio_buffer.stopped
+          }
+          
+          // Additional audio events for better tracking
+          else if (message.type === 'response.audio.done') {
+            console.log(`🔍 VOICE_DEBUG: 🔊 Audio synthesis completed`);
+            // Audio is synthesized but might still be playing
+          }
+          
+          else if (message.type === 'response.audio_transcript.done') {
+            console.log(`🔍 VOICE_DEBUG: 🔊 Audio transcript completed`);
+            // Transcript is complete but audio might still be playing
           }
           
           else if (message.type === 'response.cancelled') {
