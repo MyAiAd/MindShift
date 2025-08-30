@@ -47,7 +47,7 @@ type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shift
 type InteractionState = 'idle' | 'listening' | 'processing' | 'ai_speaking' | 'waiting_for_user' | 'error';
 
 // ENHANCED: Version tracking for deployment verification with script adherence
-const VOICE_DEMO_VERSION = "2.1.1-api-compatible-script-lock";
+const VOICE_DEMO_VERSION = "2.1.2-robust-speech-recognition";
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 export default function VoiceTreatmentDemo() {
@@ -324,11 +324,19 @@ export default function VoiceTreatmentDemo() {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       
-      // Enhanced configuration for better reliability
+      // Enhanced configuration for better reliability and longer listening
       recognition.continuous = true; // Keep listening continuously
       recognition.interimResults = true; // Get interim results for better responsiveness
       recognition.lang = 'en-US';
       recognition.maxAlternatives = 1;
+      
+      // Configure for longer listening periods (browser-specific)
+      if ('grammars' in recognition) {
+        recognition.grammars = null;
+      }
+      if ('serviceURI' in recognition) {
+        recognition.serviceURI = '';
+      }
       
       let speechTimeout: NodeJS.Timeout;
       let hasSpeech = false;
@@ -418,12 +426,31 @@ export default function VoiceTreatmentDemo() {
           return;
         }
         
-        // Restart listening after a brief pause for other errors
-        setTimeout(() => {
-          if (isConnected && interactionState === 'waiting_for_user') {
-            startAutomaticListening();
-          }
-        }, 1500);
+        // Handle no-speech error (very common) - just restart immediately
+        if (event.error === 'no-speech') {
+          console.log('🔍 VOICE_DEBUG: 🔄 No speech detected, restarting recognition immediately');
+          setTimeout(() => {
+            if (isConnected && (interactionState === 'waiting_for_user' || interactionState === 'listening')) {
+              startAutomaticListening();
+            }
+          }, 500); // Shorter delay for no-speech
+          return;
+        }
+        
+        // Handle other recoverable errors
+        if (event.error === 'aborted' || event.error === 'audio-capture' || event.error === 'network') {
+          console.log(`🔍 VOICE_DEBUG: 🔄 Recoverable error (${event.error}), restarting recognition`);
+          setTimeout(() => {
+            if (isConnected && (interactionState === 'waiting_for_user' || interactionState === 'listening')) {
+              startAutomaticListening();
+            }
+          }, 1000);
+          return;
+        }
+        
+        // For other errors, fall back to manual mode
+        console.log(`🔍 VOICE_DEBUG: ❌ Unhandled speech recognition error (${event.error}), falling back to manual mode`);
+        setInteractionStateWithMessage('waiting_for_user', 'Click "I\'m Done Speaking" when ready');
       };
       
       recognition.onend = () => {
@@ -431,12 +458,19 @@ export default function VoiceTreatmentDemo() {
         setIsBrowserListening(false);
         speechRecognitionRef.current = null;
         
-        // Only restart if we haven't processed speech and we're still waiting
-        if (!hasSpeech && isConnected && interactionState === 'waiting_for_user') {
-          console.log('🔍 VOICE_DEBUG: Restarting speech recognition - no speech detected');
+        // Restart if we haven't processed speech and we're still in a listening state
+        if (!hasSpeech && isConnected && (interactionState === 'waiting_for_user' || interactionState === 'listening')) {
+          console.log('🔍 VOICE_DEBUG: 🔄 Restarting speech recognition - no speech processed yet');
           setTimeout(() => {
-            startAutomaticListening();
-          }, 1000);
+            // Double-check we're still in a state where we want to listen
+            if (isConnected && (interactionState === 'waiting_for_user' || interactionState === 'listening')) {
+              startAutomaticListening();
+            }
+          }, 800); // Slightly shorter delay
+        } else if (hasSpeech) {
+          console.log('🔍 VOICE_DEBUG: ✅ Speech was processed, not restarting recognition');
+        } else {
+          console.log('🔍 VOICE_DEBUG: 🛑 Not restarting recognition - not in listening state or not connected');
         }
       };
       
@@ -1389,7 +1423,13 @@ export default function VoiceTreatmentDemo() {
               </div>
               {stateInfo.canSpeak ? (
                 <div className="text-sm text-green-700 dark:text-green-300">
-                  {isBrowserListening ? '🎙️ Listening automatically...' : '🎙️ You can speak now'}
+                  {isBrowserListening ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span>🎙️ Listening automatically... Speak now!</span>
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                    </div>
+                  ) : '🎙️ You can speak now'}
                 </div>
               ) : (
                 <div className="text-sm text-gray-600 dark:text-gray-400">
