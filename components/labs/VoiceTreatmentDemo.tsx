@@ -47,7 +47,7 @@ type TreatmentModality = 'problem_shifting' | 'reality_shifting' | 'belief_shift
 type InteractionState = 'idle' | 'listening' | 'processing' | 'ai_speaking' | 'waiting_for_user' | 'error';
 
 // ENHANCED: Version tracking for deployment verification with script adherence
-const VOICE_DEMO_VERSION = "2.1.2-robust-speech-recognition";
+const VOICE_DEMO_VERSION = "2.1.3-speech-recognition-fix";
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 export default function VoiceTreatmentDemo() {
@@ -329,14 +329,6 @@ export default function VoiceTreatmentDemo() {
       recognition.interimResults = true; // Get interim results for better responsiveness
       recognition.lang = 'en-US';
       recognition.maxAlternatives = 1;
-      
-      // Configure for longer listening periods (browser-specific)
-      if ('grammars' in recognition) {
-        recognition.grammars = null;
-      }
-      if ('serviceURI' in recognition) {
-        recognition.serviceURI = '';
-      }
       
       let speechTimeout: NodeJS.Timeout;
       let hasSpeech = false;
