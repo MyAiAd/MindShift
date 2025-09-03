@@ -518,8 +518,41 @@ export default function TreatmentSession({
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (!lastBotMessage) return false;
     
-    // Check if the message contains the problem description request
-    return lastBotMessage.content.includes("Tell me what the problem is in a few words");
+    // Check for various problem description requests (including AI-generated ones)
+    const problemDescriptionIndicators = [
+      "Tell me what the problem is in a few words",
+      "Which specific", // AI clarification questions
+      "Please choose one to focus on", // AI focus requests
+      "What is bothering you the most", // AI specificity requests
+      "Please tell me what", // Other AI requests for clarification
+      "Can you be more specific", // AI asking for specificity
+      "What aspect of", // AI asking for aspect clarification
+    ];
+    
+    return problemDescriptionIndicators.some(indicator => 
+      lastBotMessage.content.includes(indicator)
+    );
+  };
+
+  // Helper function to determine if we should show method selection UI
+  const shouldShowMethodSelection = () => {
+    // Don't show method selection if we're past the initial explanation step
+    if (currentStep !== 'mind_shifting_explanation') return false;
+    
+    // Don't show if we're waiting for problem description or in AI clarification
+    if (isMethodSelectedAndWaitingForProblemDescription()) return false;
+    
+    // Don't show if the last message indicates we're in treatment phase or AI is involved
+    const lastBotMessage = messages.filter(m => !m.isUser).pop();
+    if (lastBotMessage?.usedAI) return false; // AI is asking clarifying questions
+    
+    // Don't show if we have user responses that indicate we're past method selection
+    const userMessages = messages.filter(m => m.isUser);
+    if (userMessages.length >= 2) { // User has made multiple inputs, likely past method selection
+      return false;
+    }
+    
+    return true;
   };
 
   const getResponseTimeColor = (responseTime: number): string => {
@@ -949,7 +982,7 @@ export default function TreatmentSession({
                   </div>
                 </div>
               </div>
-            ) : (currentStep === 'mind_shifting_explanation' && !isMethodSelectedAndWaitingForProblemDescription()) ? (
+            ) : shouldShowMethodSelection() ? (
               /* Combined Work Type and Method Selection Interface */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Combined Selection */}
