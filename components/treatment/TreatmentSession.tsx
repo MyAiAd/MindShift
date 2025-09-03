@@ -555,6 +555,68 @@ export default function TreatmentSession({
     return true;
   };
 
+  // Helper function to determine if we should show the choose_method buttons
+  const shouldShowChooseMethodButtons = () => {
+    // Only show for choose_method step
+    if (currentStep !== 'choose_method') return false;
+    
+    // Don't show if AI is asking clarifying questions
+    const lastBotMessage = messages.filter(m => !m.isUser).pop();
+    if (lastBotMessage?.usedAI) return false;
+    
+    // Check if the last bot message contains clarifying question patterns
+    if (lastBotMessage) {
+      const clarifyingIndicators = [
+        "Which specific", // AI clarification questions
+        "Please choose one to focus on", // AI focus requests
+        "What is bothering you the most", // AI specificity requests
+        "Please tell me what", // Other AI requests for clarification
+        "Can you be more specific", // AI asking for specificity
+        "What aspect of", // AI asking for aspect clarification
+        "Please describe", // AI asking for description
+        "Tell me more about", // AI asking for more details
+      ];
+      
+      if (clarifyingIndicators.some(indicator => lastBotMessage.content.includes(indicator))) {
+        return false; // Don't show buttons, show text input instead
+      }
+    }
+    
+    return true;
+  };
+
+  // Helper function to determine if we should show the digging_deeper_start buttons
+  const shouldShowDiggingDeeperButtons = () => {
+    // Only show for digging_deeper_start step
+    if (currentStep !== 'digging_deeper_start') return false;
+    
+    // Don't show if AI is asking clarifying questions
+    const lastBotMessage = messages.filter(m => !m.isUser).pop();
+    if (lastBotMessage?.usedAI) return false;
+    
+    // Check if the last bot message contains clarifying question patterns
+    if (lastBotMessage) {
+      const clarifyingIndicators = [
+        "Which specific", // AI clarification questions
+        "Please choose one to focus on", // AI focus requests
+        "What is bothering you the most", // AI specificity requests
+        "Please tell me what", // Other AI requests for clarification
+        "Can you be more specific", // AI asking for specificity
+        "What aspect of", // AI asking for aspect clarification
+        "Please describe", // AI asking for description
+        "Tell me more about", // AI asking for more details
+        "How would you", // AI asking for user perspective
+        "What do you think", // AI asking for opinion
+      ];
+      
+      if (clarifyingIndicators.some(indicator => lastBotMessage.content.includes(indicator))) {
+        return false; // Don't show buttons, show text input instead
+      }
+    }
+    
+    return true;
+  };
+
   const getResponseTimeColor = (responseTime: number): string => {
     if (responseTime < 200) return 'text-green-600'; // Instant
     if (responseTime < 1000) return 'text-yellow-600'; // Fast
@@ -795,7 +857,7 @@ export default function TreatmentSession({
                 </div>
                 </div>
               </div>
-            ) : currentStep === 'digging_deeper_start' ? (
+            ) : shouldShowDiggingDeeperButtons() ? (
               /* Yes/No/Maybe Button Interface */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Maybe Interface */}
@@ -878,7 +940,7 @@ export default function TreatmentSession({
                 </div>
                 </div>
               </div>
-            ) : (currentStep === 'choose_method') ? (
+            ) : shouldShowChooseMethodButtons() ? (
               /* Method Selection Interface for choose_method step */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Method Selection */}
@@ -1187,9 +1249,9 @@ export default function TreatmentSession({
           <div className="max-w-4xl mx-auto mt-2 text-xs text-gray-500 text-center">
             {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_dissolve_step_e' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_dissolve_step_e' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') ? (
               'Select your answer using the buttons above'
-            ) : currentStep === 'digging_deeper_start' ? (
+            ) : shouldShowDiggingDeeperButtons() ? (
               'Select your answer using the buttons above'
-            ) : currentStep === 'choose_method' ? (
+            ) : shouldShowChooseMethodButtons() ? (
               'Select your preferred Mind Shifting method using the buttons above'
             ) : currentStep === 'mind_shifting_explanation' ? (
               selectedWorkType === 'PROBLEM' 
