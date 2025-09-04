@@ -385,29 +385,31 @@ Examples:
 
 Extract the core emotion and apply the template now:`;
     } else if (stepId === 'feel_solution_state') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's response into a natural, past-tense phrase.
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's response into a natural phrase that works with "What would you feel like if you already...?"
 
 User's response: "${userInput}"
 Current scripted response: "${scriptedResponse}"
 
-Task: Transform the user's response into a natural, past-tense phrase that completes "What would you feel like if...?"
+Task: Transform the user's response into a natural phrase that completes "What would you feel like if you already...?"
 
 Rules:
-1. Convert the user's response to natural past tense
+1. Convert the user's response to work naturally after "already"
 2. Make it sound conversational, not robotic
 3. Keep the user's core meaning intact
-4. Return ONLY the contextualized phrase (what goes in the quotes), not the full question
-5. Do not include "had already happened" - that's redundant
+4. Return ONLY the phrase (no quotes), not the full question
+5. Use past tense or state of being that flows naturally
 
 Examples:
-- User: "more money" → "you had more money"
-- User: "better job" → "you had a better job"
-- User: "lose weight" → "you had lost weight"
-- User: "money issues need to be solved" → "your money issues were solved"
-- User: "relationship" → "you were in that relationship"
-- User: "be happy" → "you were happy"
+- User: "more money" → "had more money"
+- User: "better job" → "had a better job"
+- User: "lose weight" → "had lost weight"
+- User: "be nicer" → "were nicer"
+- User: "money issues need to be solved" → "had your money issues solved"
+- User: "relationship" → "were in that relationship"
+- User: "be happy" → "were happy"
+- User: "feel confident" → "felt confident"
 
-Transform the user's response into a past-tense phrase now:`;
+Transform the user's response now:`;
     } else if (stepId === 'reality_step_a2' || stepId === 'reality_feel_reason_2') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
 
