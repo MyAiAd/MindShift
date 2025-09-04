@@ -1238,6 +1238,14 @@ export class TreatmentStateMachine {
             const cleanProblemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
             console.log(`🔍 PROBLEM_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}"`);
             
+            // Check if we should skip intro instructions (when cycling back from check_if_still_problem)
+            if (context?.metadata?.skipIntroInstructions) {
+              // Clear the flag and return only the problem feeling question
+              context.metadata.skipIntroInstructions = false;
+              return `Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
+            }
+            
+            // First time through - show full instructions
             return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.
 
 Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
@@ -1254,12 +1262,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
 
         {
           id: 'body_sensation_check',
-          scriptedResponse: (userInput, context) => {
-            // When cycling back from check_if_still_problem, use the original problem statement
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'];
-            const feelingToUse = problemStatement || userInput || 'that feeling';
-            return `Feel '${feelingToUse}'... what happens in yourself when you feel '${feelingToUse}'?`;
-          },
+          scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what happens in yourself when you feel '${userInput || 'that feeling'}'?`,
           expectedResponseType: 'experience',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens when you feel that.' }
@@ -4240,9 +4243,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       case 'check_if_still_problem':
         // Core cycling logic for Problem Shifting
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {
-          // Still a problem - cycle back to step 2
+          // Still a problem - cycle back to problem_shifting_intro but skip the introductory instructions
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          return 'body_sensation_check';
+          context.metadata.skipIntroInstructions = true; // Flag to skip intro instructions
+          return 'problem_shifting_intro';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
           // No longer a problem - check if we're in digging deeper flow
