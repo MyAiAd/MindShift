@@ -337,8 +337,22 @@ export class TreatmentStateMachine {
       }
       
       // Check if user stated it as a goal instead of problem - FLAG FOR AI VALIDATION
-      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
-      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      // Improved logic to avoid false positives with "get" in problem contexts
+      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'become', 'have', 'need to', 'would like to'];
+      
+      // Special handling for "get" - only flag as goal if used in positive/aspirational context
+      const hasBasicGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      const hasGetInGoalContext = lowerInput.includes('get') && (
+        lowerInput.includes('get better') || 
+        lowerInput.includes('get rid of') ||
+        lowerInput.includes('get over') ||
+        lowerInput.includes('get help') ||
+        lowerInput.includes('get to') ||
+        lowerInput.includes('get more') ||
+        lowerInput.match(/\bget\s+(a|an|some|the)\s+\w+/) // "get a job", "get the promotion", etc.
+      );
+      
+      const hasGoalLanguage = hasBasicGoalLanguage || hasGetInGoalContext;
       
       if (hasGoalLanguage) {
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
@@ -456,8 +470,22 @@ export class TreatmentStateMachine {
       // Only validate for problem work type (not for goals or negative experiences)
       
       // Check if user stated it as a goal instead of problem
-      const goalIndicators = ['want to', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
-      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      // Improved logic to avoid false positives with "get" in problem contexts
+      const goalIndicators = ['want to', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'become', 'have', 'need to', 'would like to'];
+      
+      // Special handling for "get" - only flag as goal if used in positive/aspirational context
+      const hasBasicGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      const hasGetInGoalContext = lowerInput.includes('get') && (
+        lowerInput.includes('get better') || 
+        lowerInput.includes('get rid of') ||
+        lowerInput.includes('get over') ||
+        lowerInput.includes('get help') ||
+        lowerInput.includes('get to') ||
+        lowerInput.includes('get more') ||
+        lowerInput.match(/\bget\s+(a|an|some|the)\s+\w+/) // "get a job", "get the promotion", etc.
+      );
+      
+      const hasGoalLanguage = hasBasicGoalLanguage || hasGetInGoalContext;
       
       if (hasGoalLanguage) {
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
@@ -497,8 +525,22 @@ export class TreatmentStateMachine {
     if (problemFocusedIntros.includes(step.id)) {
       console.log(`🔍 PROBLEM_INTRO_VALIDATION: Checking input in step "${step.id}": "${userInput}" (lowercase: "${lowerInput}")`);
       // Check if user stated it as a goal instead of problem
-      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
-      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      // Improved logic to avoid false positives with "get" in problem contexts
+      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'become', 'have', 'need to', 'would like to'];
+      
+      // Special handling for "get" - only flag as goal if used in positive/aspirational context
+      const hasBasicGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      const hasGetInGoalContext = lowerInput.includes('get') && (
+        lowerInput.includes('get better') || 
+        lowerInput.includes('get rid of') ||
+        lowerInput.includes('get over') ||
+        lowerInput.includes('get help') ||
+        lowerInput.includes('get to') ||
+        lowerInput.includes('get more') ||
+        lowerInput.match(/\bget\s+(a|an|some|the)\s+\w+/) // "get a job", "get the promotion", etc.
+      );
+      
+      const hasGoalLanguage = hasBasicGoalLanguage || hasGetInGoalContext;
       
       console.log(`🔍 PROBLEM_INTRO_VALIDATION: Goal indicators check - hasGoalLanguage: ${hasGoalLanguage}`);
       if (hasGoalLanguage) {
@@ -526,8 +568,22 @@ export class TreatmentStateMachine {
       console.log(`🔍 WORK_TYPE_DESCRIPTION: Checking problem statement input "${userInput}" (lowercase: "${lowerInput}")`);
       
       // Check if user stated it as a goal instead of problem
-      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'get', 'become', 'have', 'need to', 'would like to'];
-      const hasGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      // Improved logic to avoid false positives with "get" in problem contexts
+      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'become', 'have', 'need to', 'would like to'];
+      
+      // Special handling for "get" - only flag as goal if used in positive/aspirational context
+      const hasBasicGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
+      const hasGetInGoalContext = lowerInput.includes('get') && (
+        lowerInput.includes('get better') || 
+        lowerInput.includes('get rid of') ||
+        lowerInput.includes('get over') ||
+        lowerInput.includes('get help') ||
+        lowerInput.includes('get to') ||
+        lowerInput.includes('get more') ||
+        lowerInput.match(/\bget\s+(a|an|some|the)\s+\w+/) // "get a job", "get the promotion", etc.
+      );
+      
+      const hasGoalLanguage = hasBasicGoalLanguage || hasGetInGoalContext;
       
       console.log(`🔍 WORK_TYPE_DESCRIPTION: Goal indicators check - hasGoalLanguage: ${hasGoalLanguage}`);
       if (hasGoalLanguage) {
