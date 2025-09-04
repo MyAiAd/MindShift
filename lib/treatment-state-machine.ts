@@ -4184,18 +4184,26 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         return 'analyze_response';
         
       case 'analyze_response':
-        // If user says "no", ask them to restate the problem
-        if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          return 'restate_selected_problem';
-        }
-        // If user says "yes", move to method selection
-        if (lastResponse.includes('yes') || lastResponse.includes('correct') || lastResponse.includes('right')) {
-          // Store the problem statement for later use
-          const problemResponse = context.userResponses['restate_selected_problem'] || context.userResponses['mind_shifting_explanation'] || '';
-          context.problemStatement = problemResponse;
-          context.metadata.problemStatement = problemResponse;
-          context.currentPhase = 'method_selection';
-          return 'choose_method';
+        // Check if this is Problem Shifting analyze_response (Step 2A) or problem selection analyze_response
+        if (context.currentPhase === 'problem_shifting') {
+          // This is Step 2A in Problem Shifting - always proceed to check_if_still_problem
+          // User is describing what the problem feels like, not answering yes/no
+          return 'check_if_still_problem';
+        } else {
+          // This is the problem selection analyze_response - use original logic
+          // If user says "no", ask them to restate the problem
+          if (lastResponse.includes('no') || lastResponse.includes('not')) {
+            return 'restate_selected_problem';
+          }
+          // If user says "yes", move to method selection
+          if (lastResponse.includes('yes') || lastResponse.includes('correct') || lastResponse.includes('right')) {
+            // Store the problem statement for later use
+            const problemResponse = context.userResponses['restate_selected_problem'] || context.userResponses['mind_shifting_explanation'] || '';
+            context.problemStatement = problemResponse;
+            context.metadata.problemStatement = problemResponse;
+            context.currentPhase = 'method_selection';
+            return 'choose_method';
+          }
         }
         break;
         
