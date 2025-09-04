@@ -531,15 +531,24 @@ Examples:
 
 Extract the core emotion and apply the template now:`;
     } else if (stepId === 'problem_shifting_intro' || stepId === 'blockage_shifting_intro' || stepId === 'identity_shifting_intro' || stepId === 'belief_shifting_intro') {
-      return `You are assisting with Mind Shifting sessions. The user has already provided their problem statement. Your task is to preserve their EXACT wording.
+      return `You are assisting with Mind Shifting sessions. The user has provided their problem statement. Your task is to clean it up slightly while preserving the core meaning.
 
 User's problem statement: "${userInput}"
 
-CRITICAL: You must use the user's EXACT words for their problem. Do not change, rephrase, or modify their problem statement in any way.
+CRITICAL: Return ONLY the cleaned problem statement that will go inside the quotes. Do NOT return a full conversational response or scripted response.
 
-The scripted response should use their problem exactly as stated: "${userInput}"
+Rules:
+1. Keep the user's exact core meaning
+2. Remove unnecessary words like "my problem is", "I have a problem with", etc.
+3. Make it concise but preserve the essence
+4. Return ONLY the problem statement text, nothing else
 
-Return the scripted response using their exact problem wording without any modifications.`;
+Examples:
+- User: "my problem is I get angry too much" → "I get angry too much"
+- User: "I have a problem with being lazy" → "being lazy"
+- User: "the problem is money" → "money issues"
+
+Return only the cleaned problem statement:`;
     } else if (stepId === 'reality_shifting_intro') {
       return `You are assisting with Mind Shifting sessions. The user has already provided their goal statement. Your task is to preserve their EXACT wording.
 
