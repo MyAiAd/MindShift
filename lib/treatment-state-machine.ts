@@ -1254,7 +1254,12 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
 
         {
           id: 'body_sensation_check',
-          scriptedResponse: (userInput) => `Feel '${userInput || 'that feeling'}'... what happens in yourself when you feel '${userInput || 'that feeling'}'?`,
+          scriptedResponse: (userInput, context) => {
+            // When cycling back from check_if_still_problem, use the original problem statement
+            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'];
+            const feelingToUse = problemStatement || userInput || 'that feeling';
+            return `Feel '${feelingToUse}'... what happens in yourself when you feel '${feelingToUse}'?`;
+          },
           expectedResponseType: 'experience',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens when you feel that.' }
@@ -4277,8 +4282,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         } else {
           // Still a problem - cycle back to step A (blockage_shifting_intro)
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          // Update the problem statement with the current response for the next cycle
-          context.metadata.problemStatement = lastResponse;
+          // Don't update the problem statement when cycling back from yes/no response
+          // Keep the original problem statement intact
           return 'blockage_shifting_intro';
         }
         break;
