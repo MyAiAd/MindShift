@@ -373,25 +373,18 @@ export class TreatmentStateMachine {
         return { isValid: false, error: `What are you ${emotion} about?` };
       }
       
-      // Check for multiple problems
-      const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well', 'along with'];
+      // Only check for multiple problems if this is NOT trauma shifting
+      // Trauma shifting handles single event validation separately
+      const isTraumaShifting = context?.metadata?.workType === 'negative_experience' || 
+                               context?.metadata?.selectedMethod === 'trauma_shifting';
       
-      // Common phrase patterns that shouldn't be considered multiple problems
-      const singleConceptPhrases = [
-        'love and peace', 'peace and love', 'health and wellness', 'wellness and health',
-        'happy and healthy', 'healthy and happy', 'mind and body', 'body and mind',
-        'work and life', 'life and work', 'friends and family', 'family and friends',
-        'joy and happiness', 'happiness and joy', 'calm and peaceful', 'peaceful and calm'
-      ];
-      
-      // Check if the input contains a single concept phrase
-      const isSingleConcept = singleConceptPhrases.some(phrase => lowerInput.includes(phrase));
-      
-      if (!isSingleConcept) {
-        const hasMultipleProblems = problemConnectors.some(connector => lowerInput.includes(connector));
-        if (hasMultipleProblems) {
-          return { isValid: false, error: 'Let\'s make sure this is only one issue and not multiple. Can you tell me the main problem you\'d like to focus on?' };
-        }
+      if (!isTraumaShifting) {
+        // For non-trauma modalities, we no longer enforce single problem validation
+        // Users can describe ongoing patterns or general issues
+        console.log(`🔍 MIND_SHIFTING_EXPLANATION: Skipping multiple problems validation for non-trauma modality`);
+      } else {
+        // For trauma shifting, the single event validation is handled in work_type_description step
+        console.log(`🔍 MIND_SHIFTING_EXPLANATION: Trauma shifting detected - single event validation handled elsewhere`);
       }
       
       // Check if too long (over 20 words)
