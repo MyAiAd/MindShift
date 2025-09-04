@@ -1311,22 +1311,6 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens when you feel that.' }
           ],
-          nextStep: 'analyze_response',
-          aiTriggers: [
-            { condition: 'userStuck', action: 'clarify' }
-          ]
-        },
-        {
-          id: 'analyze_response',
-          scriptedResponse: (userInput, context) => {
-            // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            return `Feel the problem '${problemStatement}'... what does it feel like?`;
-          },
-          expectedResponseType: 'feeling',
-          validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what the problem feels like now.' }
-          ],
           nextStep: 'check_if_still_problem',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
