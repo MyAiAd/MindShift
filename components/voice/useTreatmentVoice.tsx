@@ -65,7 +65,17 @@ export const useTreatmentVoice = ({
       if (lowerTranscript.includes('no') && !lowerTranscript.includes('yes')) {
         return 'no';
       }
-      if (step === 'digging_deeper_start' && lowerTranscript.includes('maybe')) {
+    }
+    
+    // Handle yes/no/maybe responses for future problem check
+    if (step === 'future_problem_check') {
+      if (lowerTranscript.includes('yes') && !lowerTranscript.includes('no')) {
+        return 'yes';
+      }
+      if (lowerTranscript.includes('no') && !lowerTranscript.includes('yes')) {
+        return 'no';
+      }
+      if (lowerTranscript.includes('maybe')) {
         return 'maybe';
       }
     }

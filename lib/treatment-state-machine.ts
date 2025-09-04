@@ -4546,6 +4546,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         if (lastResponse.includes('yes')) {
           return 'restate_problem_future';
         }
+        // If "maybe", also ask them to restate the problem (treat like yes)
+        if (lastResponse.includes('maybe')) {
+          return 'restate_problem_future';
+        }
         // If "no", continue to scenario check
         if (lastResponse.includes('no')) {
           return 'scenario_check_1';

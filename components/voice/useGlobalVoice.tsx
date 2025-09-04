@@ -212,8 +212,26 @@ export const useGlobalVoice = ({
       }
     }
 
-    // Handle yes/no/maybe button contexts (buttons 1, 2, and 3)
+    // Handle yes/no button contexts (buttons 1 and 2)
     if (step?.includes('digging_deeper_start')) {
+      // Number recognition for Yes/No
+      if (lowerTranscript.includes('1') || lowerTranscript.includes('one')) {
+        return 'yes';
+      }
+      if (lowerTranscript.includes('2') || lowerTranscript.includes('two')) {
+        return 'no';
+      }
+      // Text recognition (fallback)
+      if (lowerTranscript.includes('yes') && !lowerTranscript.includes('no')) {
+        return 'yes';
+      }
+      if (lowerTranscript.includes('no') && !lowerTranscript.includes('yes')) {
+        return 'no';
+      }
+    }
+
+    // Handle yes/no/maybe button contexts (buttons 1, 2, and 3) for future problem check
+    if (step?.includes('future_problem_check')) {
       // Number recognition for Yes/Maybe/No
       if (lowerTranscript.includes('1') || lowerTranscript.includes('one')) {
         return 'yes';
