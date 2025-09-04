@@ -1311,22 +1311,6 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens when you feel that.' }
           ],
-          nextStep: 'analyze_response',
-          aiTriggers: [
-            { condition: 'userStuck', action: 'clarify' }
-          ]
-        },
-        {
-          id: 'analyze_response',
-          scriptedResponse: (userInput, context) => {
-            // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            return `Feel the problem '${problemStatement}'... what does it feel like?`;
-          },
-          expectedResponseType: 'feeling',
-          validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what the problem feels like now.' }
-          ],
           nextStep: 'check_if_still_problem',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
@@ -4184,26 +4168,19 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         return 'analyze_response';
         
       case 'analyze_response':
-        // Check if this is Problem Shifting analyze_response (Step 2A) or problem selection analyze_response
-        if (context.currentPhase === 'problem_shifting') {
-          // This is Step 2A in Problem Shifting - always proceed to check_if_still_problem
-          // User is describing what the problem feels like, not answering yes/no
-          return 'check_if_still_problem';
-        } else {
-          // This is the problem selection analyze_response - use original logic
-          // If user says "no", ask them to restate the problem
-          if (lastResponse.includes('no') || lastResponse.includes('not')) {
-            return 'restate_selected_problem';
-          }
-          // If user says "yes", move to method selection
-          if (lastResponse.includes('yes') || lastResponse.includes('correct') || lastResponse.includes('right')) {
-            // Store the problem statement for later use
-            const problemResponse = context.userResponses['restate_selected_problem'] || context.userResponses['mind_shifting_explanation'] || '';
-            context.problemStatement = problemResponse;
-            context.metadata.problemStatement = problemResponse;
-            context.currentPhase = 'method_selection';
-            return 'choose_method';
-          }
+        // This is the problem selection analyze_response - use original logic
+        // If user says "no", ask them to restate the problem
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          return 'restate_selected_problem';
+        }
+        // If user says "yes", move to method selection
+        if (lastResponse.includes('yes') || lastResponse.includes('correct') || lastResponse.includes('right')) {
+          // Store the problem statement for later use
+          const problemResponse = context.userResponses['restate_selected_problem'] || context.userResponses['mind_shifting_explanation'] || '';
+          context.problemStatement = problemResponse;
+          context.metadata.problemStatement = problemResponse;
+          context.currentPhase = 'method_selection';
+          return 'choose_method';
         }
         break;
         
