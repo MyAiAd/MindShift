@@ -191,7 +191,7 @@ export class TreatmentStateMachine {
         
         if (nextStep) {
           const actualResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
-          const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id);
+          const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, treatmentContext);
           
           console.log(`🔍 PROCESS_INPUT: Auto-progression final response="${actualResponse}"`);
           return {
@@ -230,7 +230,7 @@ export class TreatmentStateMachine {
       
       if (nextStep) {
         const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
-        const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id);
+        const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, treatmentContext);
         
         return {
           canContinue: true,
@@ -253,7 +253,12 @@ export class TreatmentStateMachine {
   /**
    * Check if current step requires linguistic processing (for natural language flow)
    */
-  private isLinguisticProcessingStep(stepId: string): boolean {
+  private isLinguisticProcessingStep(stepId: string, context?: TreatmentContext): boolean {
+    // Check if we should skip linguistic processing (when cycling back)
+    if (context?.metadata?.skipLinguisticProcessing) {
+      return false;
+    }
+    
     // Problem Shifting steps
     const problemShiftingSteps = ['body_sensation_check', 'feel_solution_state'];
     
@@ -1240,8 +1245,9 @@ export class TreatmentStateMachine {
             
             // Check if we should skip intro instructions (when cycling back from check_if_still_problem)
             if (context?.metadata?.skipIntroInstructions) {
-              // Clear the flag and return only the problem feeling question
+              // Clear both flags and return only the problem feeling question
               context.metadata.skipIntroInstructions = false;
+              context.metadata.skipLinguisticProcessing = false;
               return `Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             }
             
@@ -4246,6 +4252,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           // Still a problem - cycle back to problem_shifting_intro but skip the introductory instructions
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
           context.metadata.skipIntroInstructions = true; // Flag to skip intro instructions
+          context.metadata.skipLinguisticProcessing = true; // Flag to prevent AI processing on repeat
           return 'problem_shifting_intro';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
