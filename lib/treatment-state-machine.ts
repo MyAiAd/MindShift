@@ -1282,7 +1282,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         },
         {
           id: 'feel_solution_state',
-          scriptedResponse: (userInput) => `What would you feel like if '${userInput || 'that'}'?`,
+          scriptedResponse: (userInput) => `What would you feel like if you were already '${userInput || 'that'}'?`,
           expectedResponseType: 'feeling',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what you would feel like.' }

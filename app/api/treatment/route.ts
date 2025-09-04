@@ -225,7 +225,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         if (linguisticResult.success) {
           // For feel_solution_state, integrate the AI result back into the template
           if (result.nextStep === 'feel_solution_state') {
-            finalMessage = `What would you feel like if '${linguisticResult.improvedResponse}'?`;
+            finalMessage = `What would you feel like if you were already '${linguisticResult.improvedResponse}'?`;
           } 
           // For intro steps, replace the problem statement in the original scripted response
           else if (['problem_shifting_intro', 'reality_shifting_intro', 'blockage_shifting_intro', 
