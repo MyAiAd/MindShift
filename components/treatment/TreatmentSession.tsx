@@ -304,6 +304,14 @@ export default function TreatmentSession({
         }
       }
       
+      if (currentStep === 'digging_method_selection') {
+        // Handle digging method selection by name or number
+        if (['1', '2', '3', 'problem shifting', 'identity shifting', 'belief shifting'].includes(transcript.toLowerCase())) {
+          handleMethodSelection(transcript);
+          return;
+        }
+      }
+      
       if (currentStep === 'future_problem_check') {
         if (['yes', 'no', 'maybe'].includes(transcript)) {
           handleYesNoMaybeResponse(transcript as 'yes' | 'no' | 'maybe');
@@ -588,6 +596,18 @@ export default function TreatmentSession({
         return false; // Don't show buttons, show text input instead
       }
     }
+    
+    return true;
+  };
+
+  // Helper function to determine if we should show the digging method selection buttons
+  const shouldShowDiggingMethodButtons = () => {
+    // Only show for digging_method_selection step
+    if (currentStep !== 'digging_method_selection') return false;
+    
+    // Don't show if AI is asking clarifying questions
+    const lastBotMessage = messages.filter(m => !m.isUser).pop();
+    if (lastBotMessage?.usedAI) return false;
     
     return true;
   };
@@ -1157,6 +1177,77 @@ export default function TreatmentSession({
                   </div>
                 </div>
               </div>
+            ) : shouldShowDiggingMethodButtons() ? (
+              /* Digging Method Selection Interface for digging_method_selection step */
+              <div className="flex space-x-3 max-w-4xl w-full">
+                {/* Undo Button for Digging Method Selection */}
+                <div className="flex items-center">
+                  <button
+                    onClick={handleUndo}
+                    disabled={isLoading || stepHistory.length === 0}
+                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
+                  >
+                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+
+                {/* Voice Indicator for Digging Method Selection */}
+                {((voice.isListening && voice.isVoiceInputEnabled) || (voice.isSpeaking && voice.isVoiceOutputEnabled)) && (
+                  <div className="flex items-center">
+                    <div className="flex items-center space-x-1 bg-black/80 text-white px-2 py-1 rounded-full text-xs">
+                      {voice.isListening && voice.isVoiceInputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          <span>Listening</span>
+                        </div>
+                      )}
+                      {voice.isSpeaking && voice.isVoiceOutputEnabled && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span>Speaking</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col space-y-4 flex-1">
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                      Choose your method to clear this problem:
+                    </h3>
+                    <div className="flex space-x-4 justify-center">
+                      <button
+                        onClick={() => handleMethodSelection('Problem Shifting')}
+                        disabled={isLoading}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+                      >
+                        <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
+                        <span>Problem Shifting</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => handleMethodSelection('Identity Shifting')}
+                        disabled={isLoading}
+                        className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+                      >
+                        <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">2</span>
+                        <span>Identity Shifting</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => handleMethodSelection('Belief Shifting')}
+                        disabled={isLoading}
+                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+                      >
+                        <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">3</span>
+                        <span>Belief Shifting</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : shouldShowMethodSelection() ? (
               /* Combined Work Type and Method Selection Interface */
               <div className="flex space-x-3 max-w-4xl w-full">
@@ -1368,6 +1459,8 @@ export default function TreatmentSession({
               'Select your answer using the buttons above'
             ) : shouldShowChooseMethodButtons() ? (
               'Select your preferred Mind Shifting method using the buttons above'
+            ) : shouldShowDiggingMethodButtons() ? (
+              'Select your preferred method to clear this problem using the buttons above'
             ) : currentStep === 'mind_shifting_explanation' ? (
               selectedWorkType === 'PROBLEM' 
                 ? 'First select PROBLEM above, then choose your preferred problem-clearing method'

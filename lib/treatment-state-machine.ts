@@ -3271,44 +3271,46 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
             context.metadata.returnToDiggingStep = 'scenario_check_1'; // Where to return after clearing
             
-            // Route to appropriate method based on original method used
-            const originalMethod = context.metadata.selectedMethod;
-            if (originalMethod === 'problem_shifting') {
+            // Store the new problem statement as the current problem to be cleared
+            context.problemStatement = newProblem;
+            
+            return `We need to clear this problem. Which method would you like to use?`;
+          },
+          expectedResponseType: 'selection',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
+          ],
+          nextStep: 'digging_method_selection',
+          aiTriggers: []
+        },
+        {
+          id: 'digging_method_selection',
+          scriptedResponse: (userInput, context) => {
+            const problemStatement = context.metadata.currentDiggingProblem || context.problemStatement || 'the problem';
+            const input = userInput || '';
+            
+            // Handle method selection
+            if (input.toLowerCase().includes('problem shifting') || input === '1') {
               context.currentPhase = 'problem_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this problem using Problem Shifting. Feel the problem '${newProblem}'... what does it feel like?`;
-            } else if (originalMethod === 'identity_shifting') {
+              context.metadata.selectedMethod = 'problem_shifting';
+              return `We'll use Problem Shifting. Feel the problem '${problemStatement}'... what does it feel like?`;
+            } else if (input.toLowerCase().includes('identity shifting') || input === '2') {
               context.currentPhase = 'identity_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this problem using Identity Shifting. Feel the problem of '${newProblem}' - what kind of person are you being when you're experiencing this problem?`;
-            } else if (originalMethod === 'belief_shifting') {
+              context.metadata.selectedMethod = 'identity_shifting';
+              return `We'll use Identity Shifting. Feel the problem of '${problemStatement}' - what kind of person are you being when you're experiencing this problem?`;
+            } else if (input.toLowerCase().includes('belief shifting') || input === '3') {
               context.currentPhase = 'belief_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this problem using Belief Shifting. Feel the problem that '${newProblem}'... what do you believe about yourself that's causing you to experience this problem?`;
-            } else if (originalMethod === 'blockage_shifting') {
-              context.currentPhase = 'blockage_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this problem using Blockage Shifting. Feel '${newProblem}'... what does it feel like?`;
-            } else if (originalMethod === 'reality_shifting') {
-              context.currentPhase = 'reality_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this using Reality Shifting. What do you want instead of '${newProblem}'?`;
-            } else if (originalMethod === 'trauma_shifting') {
-              context.currentPhase = 'trauma_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this using Trauma Shifting. Will you be comfortable recalling the worst part of '${newProblem}' and freezing it briefly in your mind?`;
+              context.metadata.selectedMethod = 'belief_shifting';
+              return `We'll use Belief Shifting. Feel the problem that '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem?`;
             } else {
-              // Default to problem shifting
-              context.currentPhase = 'problem_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this problem. Feel the problem '${newProblem}'... what does it feel like?`;
+              return "Please choose Problem Shifting, Identity Shifting, or Belief Shifting.";
             }
           },
-          expectedResponseType: 'open',
+          expectedResponseType: 'selection',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please continue with the process.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
           ],
-          nextStep: undefined, // Handled by routing logic
+          nextStep: undefined, // Handled by routing logic based on selected method
           aiTriggers: []
         },
         {
@@ -4627,15 +4629,22 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         return 'clear_future_problem';
         
       case 'clear_future_problem':
-        // This step routes to appropriate treatment method
-        // The routing is handled in the scriptedResponse function
-        // After clearing, return to digging deeper flow based on metadata
-        const returnStep = context.metadata?.returnToDiggingStep;
-        if (returnStep) {
-          context.currentPhase = 'digging_deeper';
-          return returnStep;
+        // Now routes to method selection instead of auto-routing
+        return 'digging_method_selection';
+        
+      case 'digging_method_selection':
+        // This step routes to appropriate treatment method based on user choice
+        // The routing is handled in the scriptedResponse function which sets the currentPhase
+        const diggingSelectedMethod = context.metadata?.selectedMethod;
+        if (diggingSelectedMethod === 'problem_shifting') {
+          return 'body_sensation_check';
+        } else if (diggingSelectedMethod === 'identity_shifting') {
+          return 'identity_dissolve_step_a';
+        } else if (diggingSelectedMethod === 'belief_shifting') {
+          return 'belief_step_a';
         }
-        return 'scenario_check_1';
+        // Default fallback
+        return 'body_sensation_check';
         
       // Handle all scenario check steps
       case 'scenario_check_1':
