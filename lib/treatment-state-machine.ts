@@ -895,7 +895,7 @@ export class TreatmentStateMachine {
         {
           id: 'negative_experience_description',
           scriptedResponse: (userInput, context) => {
-            return "What negative experience do you want to work on? Please describe it in a few words.";
+            return "Tell me what the negative experience was in a few words";
           },
           expectedResponseType: 'open',
           validationRules: [
