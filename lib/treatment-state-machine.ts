@@ -1790,10 +1790,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_dissolve_step_b',
           scriptedResponse: (userInput, context) => {
-            // Store the last response for use in next step
-            context.metadata.lastResponse = userInput || 'that feeling';
-            const lastResponse = context.metadata.lastResponse;
-            return `Feel '${lastResponse}'... what happens in yourself when you feel '${lastResponse}'?`;
+            // Store the response from step A for use in subsequent steps
+            context.metadata.stepAResponse = userInput || 'that feeling';
+            const stepAResponse = context.metadata.stepAResponse;
+            return `Feel '${stepAResponse}'... what happens in yourself when you feel '${stepAResponse}'?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
@@ -1808,25 +1808,9 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_dissolve_step_c',
           scriptedResponse: (userInput, context) => {
-            // Store the last response for use in next step
-            context.metadata.lastResponse = userInput || 'that feeling';
+            // Store the response from step B
+            context.metadata.stepBResponse = userInput || 'that';
             const identity = context.metadata.currentIdentity || 'that identity';
-            
-            // Check if this is a response to the "what are you when you're not being" question
-            if (context.metadata.askedWhatAreYou) {
-              // Check if they gave another negative identity
-              const negativeIdentities = ['hurt', 'scared', 'angry', 'sad', 'frustrated', 'anxious', 'worried', 'stressed', 'overwhelmed', 'helpless', 'powerless', 'weak'];
-              const isNegativeIdentity = negativeIdentities.some(neg => userInput?.toLowerCase().includes(neg));
-              
-              if (isNegativeIdentity && !context.metadata.askedMultipleIdentities) {
-                context.metadata.askedMultipleIdentities = true;
-                context.metadata.secondIdentity = userInput;
-                return `What are you when you're not being '${identity}' or '${userInput}'?`;
-              }
-            }
-            
-            // Mark that we've asked the "what are you" question
-            context.metadata.askedWhatAreYou = true;
             return `What are you when you're not being '${identity}'?`;
           },
           expectedResponseType: 'open',
@@ -1842,24 +1826,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_dissolve_step_d',
           scriptedResponse: (userInput, context) => {
-            // Check if current response is "I don't know" or "I can't feel it"
-            const unknownIndicators = ['don\'t know', 'can\'t feel', 'no idea', 'not sure'];
-            const isUnknownResponse = unknownIndicators.some(indicator => (userInput || '').toLowerCase().includes(indicator));
-            
-            if (isUnknownResponse && !context?.metadata?.hasAskedToGuessD) {
-              context.metadata.hasAskedToGuessD = true;
-              return `That's okay. Can you guess what it would feel like?`;
-            } else if (isUnknownResponse && context?.metadata?.hasAskedToGuessD) {
-              // They still can't guess, continue with their initial response
-              context.metadata.hasAskedToGuessD = false;
-              const initialResponse = context.metadata.lastResponse || 'that';
-              return `Feel yourself being '${initialResponse}'... what does '${initialResponse}' feel like?`;
-            }
-            
-            // Store the last response for use in next step
-            context.metadata.lastResponse = userInput || 'that';
-            const lastResponse = context.metadata.lastResponse;
-            return `Feel yourself being '${lastResponse}'... what does '${lastResponse}' feel like?`;
+            // Store the response from step C (what they are when not being the identity)
+            context.metadata.stepCResponse = userInput || 'that';
+            const stepCResponse = context.metadata.stepCResponse;
+            return `Feel yourself being '${stepCResponse}'... what does '${stepCResponse}' feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
@@ -1874,16 +1844,16 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_dissolve_step_e',
           scriptedResponse: (userInput, context) => {
-            // Store the last response for use in next step
-            context.metadata.lastResponse = userInput || 'that feeling';
-            const lastResponse = context.metadata.lastResponse;
-            return `Feel '${lastResponse}'... what happens in yourself when you feel '${lastResponse}'?`;
+            // Store the response from step D
+            context.metadata.stepDResponse = userInput || 'that feeling';
+            const stepDResponse = context.metadata.stepDResponse;
+            return `Feel '${stepDResponse}'... what happens in yourself when you feel '${stepDResponse}'?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself.' }
           ],
-          nextStep: 'identity_step_3_intro',
+          nextStep: 'identity_check',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
