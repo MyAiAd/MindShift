@@ -2648,13 +2648,13 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
               context.metadata.currentTraumaIdentity = traumaIdentityResponse.trim();
             }
             
-            // Use the stored identity, don't overwrite with current userInput (which is the goal they want)
+            // Use the stored identity, don't overwrite with current userInput
             const identity = context.metadata.currentTraumaIdentity || 'that identity';
             return `Feel yourself being '${identity}'... what does it feel like?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you want as that identity.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
           ],
           nextStep: 'trauma_dissolve_step_b',
           aiTriggers: [
@@ -2665,20 +2665,13 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'trauma_dissolve_step_b',
           scriptedResponse: (userInput, context) => {
-            // Get the goal from trauma_dissolve_step_a response (what they want as that identity)
-            const traumaGoalResponse = context.userResponses?.['trauma_dissolve_step_a'];
-            
-            // Store the goal from step_a response if we don't have it yet
-            if (!context.metadata.currentTraumaGoal && traumaGoalResponse) {
-              context.metadata.currentTraumaGoal = traumaGoalResponse.trim();
-            }
-            
-            const identity = context.metadata.currentTraumaIdentity || 'that identity';
-            return `Feel yourself being '${identity}'... exaggerate the feeling of it and tell me the first thing that you notice about it.`;
+            // Get the feeling from trauma_dissolve_step_a response
+            const lastResponse = context.userResponses?.['trauma_dissolve_step_a'] || 'that feeling';
+            return `Feel '${lastResponse}'... what happens in yourself when you feel '${lastResponse}'?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about exaggerating that feeling.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself when you feel that.' }
           ],
           nextStep: 'trauma_dissolve_step_c',
           aiTriggers: [
@@ -2689,12 +2682,12 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'trauma_dissolve_step_c',
           scriptedResponse: (userInput, context) => {
-            const goal = context.metadata.currentTraumaGoal || 'that goal';
-            return `Now feel yourself achieving your goal of '${goal}', imagine whatever you need to imagine in order to achieve that goal in your mind and tell me when you've done it.`;
+            const identity = context.metadata.currentTraumaIdentity || 'that identity';
+            return `What are you when you're not being '${identity}'?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me when you have achieved that goal.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you are when you are not being that.' }
           ],
           nextStep: 'trauma_dissolve_step_d',
           aiTriggers: [
@@ -2704,12 +2697,13 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         {
           id: 'trauma_dissolve_step_d',
-          scriptedResponse: () => {
-            return `What's the first thing you notice about it?`;
+          scriptedResponse: (userInput, context) => {
+            const lastResponse = context.userResponses?.['trauma_dissolve_step_c'] || 'that';
+            return `Feel yourself being '${lastResponse}'... what does it feel like?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you notice about it.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
           ],
           nextStep: 'trauma_dissolve_step_e',
           aiTriggers: [
@@ -2720,8 +2714,24 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'trauma_dissolve_step_e',
           scriptedResponse: (userInput, context) => {
-            const goal = context.metadata.currentTraumaGoal || 'that goal';
-            return `Have you fully achieved your goal of '${goal}'?`;
+            const lastResponse = context.userResponses?.['trauma_dissolve_step_d'] || 'that feeling';
+            return `Feel '${lastResponse}'... what happens in yourself when you feel '${lastResponse}'?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself when you feel that.' }
+          ],
+          nextStep: 'trauma_dissolve_step_f',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_dissolve_step_f',
+          scriptedResponse: (userInput, context) => {
+            const identity = context.metadata.currentTraumaIdentity || 'that identity';
+            return `Can you still feel yourself being '${identity}'?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
@@ -4506,15 +4516,15 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         return 'choose_method';
         break;
 
-      case 'trauma_dissolve_step_e':
-        // Trauma Shifting: Check if goal is fully achieved
-        if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // Goal not achieved - repeat steps B-E (go back to step B)
+      case 'trauma_dissolve_step_f':
+        // Trauma Shifting: Check if still feeling the identity
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // Still feeling identity - repeat from step A
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          return 'trauma_dissolve_step_b';
+          return 'trauma_dissolve_step_a';
         }
-        if (lastResponse.includes('yes')) {
-          // Goal achieved - proceed to identity check
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // Identity dissolved - proceed to identity check
           return 'trauma_identity_check';
         }
         break;
