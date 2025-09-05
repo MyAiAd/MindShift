@@ -2644,6 +2644,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             // Store the identity from the identity step if we don't have it yet
             if (!context.metadata.currentTraumaIdentity && traumaIdentityResponse) {
               context.metadata.currentTraumaIdentity = traumaIdentityResponse.trim();
+              context.metadata.originalTraumaIdentity = traumaIdentityResponse.trim(); // Store original for trauma_identity_check
             }
             
             // Use the stored identity, don't overwrite with current userInput
@@ -2744,7 +2745,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'trauma_identity_check',
           scriptedResponse: (userInput, context) => {
-            const identity = context.metadata.currentTraumaIdentity || 'that identity';
+            const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
             return `Can you still feel yourself being '${identity}'?`;
           },
           expectedResponseType: 'yesno',

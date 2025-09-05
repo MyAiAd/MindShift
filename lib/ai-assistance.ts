@@ -60,10 +60,10 @@ export class AIAssistanceManager {
     'belief_step_e',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'identity_dissolve_step_a', // Identity Shifting: "Feel yourself being [identity]... what does it feel like?"
     'identity_dissolve_step_b', // Identity Shifting: "Feel [last response]... what happens in yourself when you feel [last response]?"
-    'identity_check',          // Identity Shifting: "Can you still feel yourself being [identity]?"
+    // 'identity_check' removed - should use stored originalProblemIdentity, not AI processing
     'trauma_dissolve_step_a',   // Trauma Shifting: "Feel yourself being [identity]... what does it feel like?"
     'trauma_dissolve_step_b',   // Trauma Shifting: "Feel [last response]... what happens in yourself when you feel [last response]?"
-    'trauma_identity_check',    // Trauma Shifting: "Can you still feel yourself being [identity]?"
+    // 'trauma_identity_check' removed - should use stored originalProblemIdentity, not AI processing
     // Intro steps that need user input contextualisation
     'problem_shifting_intro',  // Problem Shifting: Ensure input is stated as a problem
     'reality_shifting_intro',  // Reality Shifting: Ensure input is stated as a goal
