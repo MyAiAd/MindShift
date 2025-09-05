@@ -4622,15 +4622,23 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         break;
         
       case 'digging_deeper_start':
+        // Ensure we're in the correct phase for digging deeper flow
+        console.log(`🔍 DIGGING_DEEPER_START: currentPhase="${context.currentPhase}", lastResponse="${lastResponse}"`);
+        context.currentPhase = 'digging_deeper';
+        console.log(`🔍 DIGGING_DEEPER_START: Set currentPhase to "digging_deeper"`);
+        
         // If user says "yes", continue to future problem check
         if (lastResponse.includes('yes')) {
+          console.log(`🔍 DIGGING_DEEPER_START: User said yes, going to future_problem_check`);
           return 'future_problem_check';
         }
         // If "no", skip digging deeper and go straight to integration
         if (lastResponse.includes('no')) {
+          console.log(`🔍 DIGGING_DEEPER_START: User said no, going to integration`);
           context.currentPhase = 'integration';
           return 'integration_start';
         }
+        console.log(`🔍 DIGGING_DEEPER_START: Unexpected response, breaking`);
         break;
         
       case 'future_problem_check':
