@@ -74,17 +74,20 @@ export class TreatmentStateMachine {
   ): Promise<ProcessingResult> {
     // Special handling for session initialization
     if (userInput === 'start') {
-      const treatmentContext = this.getOrCreateContext(sessionId, context);
-      const currentPhase = this.phases.get(treatmentContext.currentPhase);
-      
-      if (!currentPhase) {
-        throw new Error(`Invalid phase: ${treatmentContext.currentPhase}`);
-      }
+          const treatmentContext = this.getOrCreateContext(sessionId, context);
+    const currentPhase = this.phases.get(treatmentContext.currentPhase);
+    
+    console.log(`🔍 PROCESS_INPUT_START: sessionId="${sessionId}", currentPhase="${treatmentContext.currentPhase}", currentStep="${treatmentContext.currentStep}", userInput="${userInput}"`);
+    console.log(`🔍 PROCESS_INPUT_START: Context metadata:`, JSON.stringify(treatmentContext.metadata, null, 2));
+    
+    if (!currentPhase) {
+      throw new Error(`Invalid phase: ${treatmentContext.currentPhase}`);
+    }
 
-      const currentStep = currentPhase.steps.find(s => s.id === treatmentContext.currentStep);
-      if (!currentStep) {
-        throw new Error(`Invalid step: ${treatmentContext.currentStep}`);
-      }
+    const currentStep = currentPhase.steps.find(s => s.id === treatmentContext.currentStep);
+    if (!currentStep) {
+      throw new Error(`Invalid step: ${treatmentContext.currentStep}`);
+    }
 
       // Return the initial welcome message
       const scriptedResponse = this.getScriptedResponse(currentStep, treatmentContext);
@@ -4147,6 +4150,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         context.currentPhase = 'trauma_shifting';
         context.metadata.selectedMethod = 'trauma_shifting';
         console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Stored description: "${lastResponse}"`);
+        console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Setting phase to trauma_shifting and returning trauma_shifting_intro`);
+        console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Context after update:`, JSON.stringify({
+          currentPhase: context.currentPhase,
+          currentStep: context.currentStep,
+          problemStatement: context.problemStatement,
+          selectedMethod: context.metadata.selectedMethod,
+          workType: context.metadata.workType
+        }, null, 2));
         return 'trauma_shifting_intro';
         
       case 'multiple_problems_selection':
