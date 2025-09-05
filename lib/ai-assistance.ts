@@ -562,30 +562,30 @@ The scripted response should use their goal exactly as stated: "${userInput}"
 
 Return the scripted response using their exact goal wording without any modifications.`;
     } else if (stepId === 'identity_dissolve_step_a') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's identity response.
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to use the user's exact identity words in the template.
 
 User's response: "${userInput}"
 Current scripted response: "${scriptedResponse}"
 
-Task: Extract the core identity from the user's response and use it naturally in the template.
+Task: Use the user's exact identity words in the template without changing or interpreting them.
 
-Template: "Feel yourself being [contextualized identity]... as [contextualized identity], what do you want?"
+Template: "Feel yourself being [user's exact words]... as [user's exact words], what do you want?"
 
 Rules:
-1. Extract the core identity concept from the user's response
-2. Remove unnecessary words like "someone who is", "a person who", "I am", etc.
-3. Make it sound natural and conversational
-4. Use the same identity concept in both places in the template
-5. Return only the rephrased response, nothing else
+1. Use the user's exact words - do NOT change, interpret, or paraphrase them
+2. Only remove unnecessary phrases like "someone who is", "a person who", "I am" if present
+3. Preserve the user's exact adjectives and descriptive words (e.g., "not nice" stays "not nice", not "unkind")
+4. Use the same exact words in both places in the template
+5. Return only the response using their exact words, nothing else
 
 Examples:
-- User: "someone who is always stressed" → "Feel yourself being stressed... as someone who's stressed, what do you want?"
-- User: "a person who can't control their future" → "Feel yourself being out of control... as someone out of control, what do you want?"
+- User: "someone who is always stressed" → "Feel yourself being always stressed... as someone always stressed, what do you want?"
+- User: "a person who can't control their future" → "Feel yourself being someone who can't control their future... as someone who can't control their future, what do you want?"
 - User: "I am powerless" → "Feel yourself being powerless... as someone powerless, what do you want?"
+- User: "not nice" → "Feel yourself being not nice... as someone not nice, what do you want?"
 - User: "victim" → "Feel yourself being a victim... as a victim, what do you want?"
-- User: "in control of my own future" → "Feel yourself being in control of your future... as someone in control of their future, what do you want?"
 
-Extract the core identity and apply the template now:`;
+Use the user's exact words in the template now:`;
     } else if (stepId === 'identity_dissolve_step_b') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's identity response.
 
