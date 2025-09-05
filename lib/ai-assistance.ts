@@ -569,21 +569,21 @@ Current scripted response: "${scriptedResponse}"
 
 Task: Use the user's exact identity words in the template without changing or interpreting them.
 
-Template: "Feel yourself being [user's exact words]... as [user's exact words], what do you want?"
+Template: "Feel yourself being [user's exact words]... what does it feel like?"
 
 Rules:
 1. Use the user's exact words - do NOT change, interpret, or paraphrase them
 2. Only remove unnecessary phrases like "someone who is", "a person who", "I am" if present
 3. Preserve the user's exact adjectives and descriptive words (e.g., "not nice" stays "not nice", not "unkind")
-4. Use the same exact words in both places in the template
+4. Use the correct template ending "what does it feel like?" not "what do you want?"
 5. Return only the response using their exact words, nothing else
 
 Examples:
-- User: "someone who is always stressed" → "Feel yourself being always stressed... as someone always stressed, what do you want?"
-- User: "a person who can't control their future" → "Feel yourself being someone who can't control their future... as someone who can't control their future, what do you want?"
-- User: "I am powerless" → "Feel yourself being powerless... as someone powerless, what do you want?"
-- User: "not nice" → "Feel yourself being not nice... as someone not nice, what do you want?"
-- User: "victim" → "Feel yourself being a victim... as a victim, what do you want?"
+- User: "someone who is always stressed" → "Feel yourself being always stressed... what does it feel like?"
+- User: "a person who can't control their future" → "Feel yourself being someone who can't control their future... what does it feel like?"
+- User: "I am powerless" → "Feel yourself being powerless... what does it feel like?"
+- User: "not nice" → "Feel yourself being not nice... what does it feel like?"
+- User: "victim" → "Feel yourself being a victim... what does it feel like?"
 
 Use the user's exact words in the template now:`;
     } else if (stepId === 'identity_dissolve_step_b') {
