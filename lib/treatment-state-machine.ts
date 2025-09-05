@@ -1775,6 +1775,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               
               // Store the processed identity
               context.metadata.currentIdentity = processedIdentity;
+              context.metadata.originalProblemIdentity = processedIdentity; // Store original for identity_check
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: Stored identity: "${processedIdentity}"`);
             }
             
@@ -1895,7 +1896,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_check',
           scriptedResponse: (userInput, context) => {
-            const identity = context.metadata.currentIdentity || 'that identity';
+            const identity = context.metadata.originalProblemIdentity || context.metadata.currentIdentity || 'that identity';
             return `Can you still feel yourself being '${identity}'?`;
           },
           expectedResponseType: 'yesno',
@@ -1911,7 +1912,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_future_check',
           scriptedResponse: (userInput, context) => {
-            const identity = context.metadata.currentIdentity || 'that identity';
+            const identity = context.metadata.originalProblemIdentity || context.metadata.currentIdentity || 'that identity';
             return `Do you think you might feel yourself being '${identity}' in the future? Is there any scenario in which you might still feel yourself being '${identity}'?`;
           },
           expectedResponseType: 'yesno',
