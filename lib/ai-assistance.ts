@@ -361,29 +361,29 @@ Rephrase the template response now:`;
    */
   private buildLinguisticInterpretationPrompt(scriptedResponse: string, userInput: string, stepId: string): string {
     if (stepId === 'body_sensation_check') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to use the user's EXACT words in the template.
 
 User's response: "${userInput}"
 Current scripted response: "${scriptedResponse}"
 
-Task: Extract the core emotion/feeling from the user's response and use it in the template.
+Task: Use the user's exact feeling words in the template without changing or interpreting them.
 
-Template: "Feel [contextualized emotion]... what happens in yourself when you feel [contextualized emotion]?"
+Template: "Feel [user's exact words]... what happens in yourself when you feel [user's exact words]?"
 
 Rules:
-1. Extract the core emotional word from the user's response
-2. Remove unnecessary words like "like I am", "I feel", "it's", etc.
-3. Use only the core emotion in the template
+1. Use the user's EXACT words - do NOT change, interpret, or paraphrase them
+2. Only remove minimal filler words like "I feel", "it's", "like" if they prevent natural flow
+3. Preserve the user's exact descriptive language (e.g., "like a loser" stays "like a loser", not "defeated")
 4. Keep the exact template structure
 5. Return only the rephrased response, nothing else
 
 Examples:
-- User: "like I am overwhelmed" → "Feel overwhelmed... what happens in yourself when you feel overwhelmed?"
+- User: "like a loser" → "Feel like a loser... what happens in yourself when you feel like a loser?"
 - User: "I feel anxious" → "Feel anxious... what happens in yourself when you feel anxious?"
-- User: "it's stressful" → "Feel stressed... what happens in yourself when you feel stressed?"
+- User: "overwhelmed and stressed" → "Feel overwhelmed and stressed... what happens in yourself when you feel overwhelmed and stressed?"
 - User: "heavy" → "Feel heavy... what happens in yourself when you feel heavy?"
 
-Extract the core emotion and apply the template now:`;
+Use the user's exact words in the template now:`;
     } else if (stepId === 'feel_solution_state') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's response into a natural phrase that works with "What would you feel like if you already...?"
 
@@ -533,24 +533,25 @@ Examples:
 
 Extract the core emotion and apply the template now:`;
     } else if (stepId === 'problem_shifting_intro' || stepId === 'blockage_shifting_intro' || stepId === 'identity_shifting_intro' || stepId === 'belief_shifting_intro') {
-      return `You are assisting with Mind Shifting sessions. The user has provided their problem statement. Your task is to clean it up slightly while preserving the core meaning.
+      return `You are assisting with Mind Shifting sessions. The user has provided their problem statement. Your task is to preserve their EXACT wording while only removing minimal filler phrases.
 
 User's problem statement: "${userInput}"
 
-CRITICAL: Return ONLY the cleaned problem statement that will go inside the quotes. Do NOT return a full conversational response or scripted response.
+CRITICAL: Return ONLY the problem statement that will go inside the quotes. Do NOT return a full conversational response or scripted response.
 
 Rules:
-1. Keep the user's exact core meaning
-2. Remove unnecessary words like "my problem is", "I have a problem with", etc.
-3. Make it concise but preserve the essence
+1. Keep the user's EXACT words - do NOT change, interpret, or paraphrase them
+2. Only remove minimal filler phrases like "my problem is", "I have a problem with", "the issue is" if present
+3. Preserve their exact descriptive language (e.g., "need money" stays "need money", not "money issues")
 4. Return ONLY the problem statement text, nothing else
 
 Examples:
-- User: "my problem is I get angry too much" → "I get angry too much"
+- User: "my problem is I need money" → "I need money"
 - User: "I have a problem with being lazy" → "being lazy"
-- User: "the problem is money" → "money issues"
+- User: "need money" → "need money"
+- User: "I feel like a loser" → "I feel like a loser"
 
-Return only the cleaned problem statement:`;
+Return only the problem statement using their exact words:`;
     } else if (stepId === 'reality_shifting_intro') {
       return `You are assisting with Mind Shifting sessions. The user has already provided their goal statement. Your task is to preserve their EXACT wording.
 
