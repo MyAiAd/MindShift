@@ -3287,19 +3287,19 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
               return `We need to clear this problem. Which method would you like to use?`;
             }
             
-            // Handle method selection
+            // Handle method selection - route to proper treatment intro steps
             if (input.toLowerCase().includes('problem shifting') || input === '1') {
               context.currentPhase = 'problem_shifting';
               context.metadata.selectedMethod = 'problem_shifting';
-              return `We'll use Problem Shifting. Feel the problem '${problemStatement}'... what does it feel like?`;
+              return "PROBLEM_SHIFTING_SELECTED";
             } else if (input.toLowerCase().includes('identity shifting') || input === '2') {
               context.currentPhase = 'identity_shifting';
               context.metadata.selectedMethod = 'identity_shifting';
-              return `We'll use Identity Shifting. Feel the problem of '${problemStatement}' - what kind of person are you being when you're experiencing this problem?`;
+              return "IDENTITY_SHIFTING_SELECTED";
             } else if (input.toLowerCase().includes('belief shifting') || input === '3') {
               context.currentPhase = 'belief_shifting';
               context.metadata.selectedMethod = 'belief_shifting';
-              return `We'll use Belief Shifting. Feel the problem that '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem?`;
+              return "BELIEF_SHIFTING_SELECTED";
             } else {
               return "Please choose Problem Shifting, Identity Shifting, or Belief Shifting.";
             }
@@ -4628,17 +4628,17 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         
       case 'digging_method_selection':
         // This step routes to appropriate treatment method based on user choice
-        // The routing is handled in the scriptedResponse function which sets the currentPhase
+        // Route to the proper intro steps of each treatment method
         const diggingSelectedMethod = context.metadata?.selectedMethod;
         if (diggingSelectedMethod === 'problem_shifting') {
-          return 'body_sensation_check';
+          return 'problem_shifting_intro';
         } else if (diggingSelectedMethod === 'identity_shifting') {
-          return 'identity_dissolve_step_a';
+          return 'identity_shifting_intro';
         } else if (diggingSelectedMethod === 'belief_shifting') {
-          return 'belief_step_a';
+          return 'belief_shifting_intro';
         }
         // Default fallback
-        return 'body_sensation_check';
+        return 'problem_shifting_intro';
         
       // Handle all scenario check steps
       case 'scenario_check_1':

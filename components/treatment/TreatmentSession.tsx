@@ -208,7 +208,10 @@ export default function TreatmentSession({
                                    data.message === 'METHOD_SELECTION_NEEDED' ||
                                    data.message === 'GOAL_SELECTION_CONFIRMED' ||
                                    data.message === 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED' ||
-                                   data.message === 'SKIP_TO_TREATMENT_INTRO';
+                                   data.message === 'SKIP_TO_TREATMENT_INTRO' ||
+                                   data.message === 'PROBLEM_SHIFTING_SELECTED' ||
+                                   data.message === 'IDENTITY_SHIFTING_SELECTED' ||
+                                   data.message === 'BELIEF_SHIFTING_SELECTED';
         
         if (!isUIHandledMessage) {
           const botMessage: TreatmentMessage = {
