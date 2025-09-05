@@ -608,7 +608,7 @@ Examples:
 - User: "scared" → "Feel scared... what happens in yourself when you feel scared?"
 - User: "powerless" → "Feel powerless... what happens in yourself when you feel powerless?"
 - User: "like a victim" → "Feel like a victim... what happens in yourself when you feel like a victim?"
-- User: "in control of my own future" → "Feel yourself being in control of your future... exaggerate the feeling of it and tell me the first thing that you notice about it."
+        - User: "in control of my own future" → "Feel in control of your future... what happens in yourself when you feel in control of your future?"
 
 Extract the core identity and apply the template now:`;
     } else if (stepId === 'identity_check') {
@@ -669,7 +669,7 @@ Current scripted response: "${scriptedResponse}"
 
 Task: Extract the core trauma identity from the user's response and use it naturally in the template.
 
-Template: "Feel yourself being [contextualized identity]... exaggerate the feeling of it and tell me the first thing that you notice about it."
+Template: "Feel [contextualized feeling]... what happens in yourself when you feel [contextualized feeling]?"
 
 Rules:
 1. Extract the core identity concept from the user's response
@@ -679,11 +679,11 @@ Rules:
 5. Return only the rephrased response, nothing else
 
 Examples:
-- User: "someone who is angry and hurt" → "Feel yourself being angry and hurt... exaggerate the feeling of it and tell me the first thing that you notice about it."
-- User: "a person who can't trust anyone" → "Feel yourself being unable to trust... exaggerate the feeling of it and tell me the first thing that you notice about it."
-- User: "I am a victim" → "Feel yourself being a victim... exaggerate the feeling of it and tell me the first thing that you notice about it."
-- User: "powerless" → "Feel yourself being powerless... exaggerate the feeling of it and tell me the first thing that you notice about it."
-- User: "abandoned and alone" → "Feel yourself being abandoned and alone... exaggerate the feeling of it and tell me the first thing that you notice about it."
+        - User: "angry and hurt" → "Feel angry and hurt... what happens in yourself when you feel angry and hurt?"
+        - User: "unable to trust" → "Feel unable to trust... what happens in yourself when you feel unable to trust?"
+        - User: "like a victim" → "Feel like a victim... what happens in yourself when you feel like a victim?"
+        - User: "powerless" → "Feel powerless... what happens in yourself when you feel powerless?"
+        - User: "abandoned and alone" → "Feel abandoned and alone... what happens in yourself when you feel abandoned and alone?"
 
 Extract the core trauma identity and apply the template now:`;
     } else if (stepId === 'trauma_identity_check') {
@@ -768,13 +768,13 @@ Rephrase now:`;
       case 'identity_dissolve_step_a':
         return `Feel yourself being "${userResponse}"... as "${userResponse}", what do you want?`;
       case 'identity_dissolve_step_b':
-        return `Feel yourself being "${userResponse}"... exaggerate the feeling of it and tell me the first thing that you notice about it.`;
+        return `Feel "${userResponse}"... what happens in yourself when you feel "${userResponse}"?`;
       case 'identity_check':
         return `Can you still feel yourself being "${userResponse}"?`;
       case 'trauma_dissolve_step_a':
-        return `Feel yourself being "${userResponse}"... as "${userResponse}", what do you want?`;
+        return `Feel yourself being "${userResponse}"... what does it feel like?`;
       case 'trauma_dissolve_step_b':
-        return `Feel yourself being "${userResponse}"... exaggerate the feeling of it and tell me the first thing that you notice about it.`;
+        return `Feel "${userResponse}"... what happens in yourself when you feel "${userResponse}"?`;
       case 'trauma_identity_check':
         return `Can you still feel yourself being "${userResponse}"?`;
       default:
