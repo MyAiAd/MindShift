@@ -3274,12 +3274,11 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             // Store the new problem statement as the current problem to be cleared
             context.problemStatement = newProblem;
             
-            return `We need to clear this problem. Which method would you like to use?`;
+            // This step should auto-transition, so return a transition message
+            return "METHOD_SELECTION_NEEDED";
           },
-          expectedResponseType: 'selection',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
-          ],
+          expectedResponseType: 'open',
+          validationRules: [],
           nextStep: 'digging_method_selection',
           aiTriggers: []
         },
@@ -3288,6 +3287,11 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           scriptedResponse: (userInput, context) => {
             const problemStatement = context.metadata.currentDiggingProblem || context.problemStatement || 'the problem';
             const input = userInput || '';
+            
+            // If this is the first time showing this step (no user input yet), show the selection message
+            if (!input || input === 'METHOD_SELECTION_NEEDED') {
+              return `We need to clear this problem. Which method would you like to use?`;
+            }
             
             // Handle method selection
             if (input.toLowerCase().includes('problem shifting') || input === '1') {
