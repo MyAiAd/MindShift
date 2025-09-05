@@ -58,11 +58,11 @@ export class AIAssistanceManager {
     'blockage_step_d',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'belief_step_b',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'belief_step_e',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
-    'identity_dissolve_step_a', // Identity Shifting: "Feel yourself being [identity]... as [identity], what do you want?"
-    'identity_dissolve_step_b', // Identity Shifting: "Feel yourself being [identity]... exaggerate the feeling of it and tell me the first thing that you notice about it."
+    'identity_dissolve_step_a', // Identity Shifting: "Feel yourself being [identity]... what does it feel like?"
+    'identity_dissolve_step_b', // Identity Shifting: "Feel [last response]... what happens in yourself when you feel [last response]?"
     'identity_check',          // Identity Shifting: "Can you still feel yourself being [identity]?"
-    'trauma_dissolve_step_a',   // Trauma Shifting: "Feel yourself being [identity]... as [identity], what do you want?"
-    'trauma_dissolve_step_b',   // Trauma Shifting: "Feel yourself being [identity]... exaggerate the feeling of it and tell me the first thing that you notice about it."
+    'trauma_dissolve_step_a',   // Trauma Shifting: "Feel yourself being [identity]... what does it feel like?"
+    'trauma_dissolve_step_b',   // Trauma Shifting: "Feel [last response]... what happens in yourself when you feel [last response]?"
     'trauma_identity_check',    // Trauma Shifting: "Can you still feel yourself being [identity]?"
     // Intro steps that need user input contextualisation
     'problem_shifting_intro',  // Problem Shifting: Ensure input is stated as a problem
@@ -594,20 +594,20 @@ Current scripted response: "${scriptedResponse}"
 
 Task: Extract the core identity from the user's response and use it naturally in the template.
 
-Template: "Feel yourself being [contextualized identity]... exaggerate the feeling of it and tell me the first thing that you notice about it."
+Template: "Feel [user's exact words]... what happens in yourself when you feel [user's exact words]?"
 
 Rules:
-1. Extract the core identity concept from the user's response
-2. Remove unnecessary words like "someone who is", "a person who", "I am", etc.
-3. Make it sound natural and conversational
-4. Keep the exact template structure
-5. Return only the rephrased response, nothing else
+1. Use the user's exact words from their response - do NOT change, interpret, or paraphrase them
+2. Only remove unnecessary phrases like "someone who is", "a person who", "I am" if present
+3. Use the correct template ending "what happens in yourself when you feel [same words]?"
+4. Use the same exact words in both places in the template
+5. Return only the response using their exact words, nothing else
 
 Examples:
-- User: "someone who is always stressed" → "Feel yourself being stressed... exaggerate the feeling of it and tell me the first thing that you notice about it."
-- User: "a person who can't control their future" → "Feel yourself being out of control... exaggerate the feeling of it and tell me the first thing that you notice about it."
-- User: "I am powerless" → "Feel yourself being powerless... exaggerate the feeling of it and tell me the first thing that you notice about it."
-- User: "victim" → "Feel yourself being a victim... exaggerate the feeling of it and tell me the first thing that you notice about it."
+- User: "bad" → "Feel bad... what happens in yourself when you feel bad?"
+- User: "scared" → "Feel scared... what happens in yourself when you feel scared?"
+- User: "powerless" → "Feel powerless... what happens in yourself when you feel powerless?"
+- User: "like a victim" → "Feel like a victim... what happens in yourself when you feel like a victim?"
 - User: "in control of my own future" → "Feel yourself being in control of your future... exaggerate the feeling of it and tell me the first thing that you notice about it."
 
 Extract the core identity and apply the template now:`;
@@ -644,21 +644,21 @@ Current scripted response: "${scriptedResponse}"
 
 Task: Extract the core trauma identity from the user's response and use it naturally in the template.
 
-Template: "Feel yourself being [contextualized identity]... as [contextualized identity], what do you want?"
+Template: "Feel yourself being [user's exact words]... what does it feel like?"
 
 Rules:
-1. Extract the core identity concept from the user's response
-2. Remove unnecessary words like "someone who is", "a person who", "I am", etc.
-3. Make it sound natural and conversational for trauma processing
-4. Use the same identity concept in both places in the template
-5. Return only the rephrased response, nothing else
+1. Use the user's exact words - do NOT change, interpret, or paraphrase them
+2. Only remove unnecessary phrases like "someone who is", "a person who", "I am" if present
+3. Preserve the user's exact adjectives and descriptive words
+4. Use the correct template ending "what does it feel like?" not "what do you want?"
+5. Return only the response using their exact words, nothing else
 
 Examples:
-- User: "someone who is angry and hurt" → "Feel yourself being angry and hurt... as someone who's angry and hurt, what do you want?"
-- User: "a person who can't trust anyone" → "Feel yourself being unable to trust... as someone who can't trust, what do you want?"
-- User: "I am a victim" → "Feel yourself being a victim... as a victim, what do you want?"
-- User: "powerless" → "Feel yourself being powerless... as someone powerless, what do you want?"
-- User: "abandoned and alone" → "Feel yourself being abandoned and alone... as someone abandoned and alone, what do you want?"
+- User: "someone who is angry and hurt" → "Feel yourself being angry and hurt... what does it feel like?"
+- User: "a person who can't trust anyone" → "Feel yourself being someone who can't trust anyone... what does it feel like?"
+- User: "I am a victim" → "Feel yourself being a victim... what does it feel like?"
+- User: "powerless" → "Feel yourself being powerless... what does it feel like?"
+- User: "abandoned and alone" → "Feel yourself being abandoned and alone... what does it feel like?"
 
 Extract the core trauma identity and apply the template now:`;
     } else if (stepId === 'trauma_dissolve_step_b') {

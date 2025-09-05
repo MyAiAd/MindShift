@@ -284,15 +284,15 @@ export class TreatmentStateMachine {
     
     // Identity Shifting steps that need linguistic processing
     const identityShiftingSteps = [
-      'identity_dissolve_step_a', // "Feel yourself being [identity]... as [identity], what do you want?"
-      'identity_dissolve_step_b', // "Feel yourself being [identity]... exaggerate the feeling of it and tell me the first thing that you notice about it."
+      'identity_dissolve_step_a', // "Feel yourself being [identity]... what does it feel like?"
+      'identity_dissolve_step_b', // "Feel [last response]... what happens in yourself when you feel [last response]?"
       'identity_check'           // "Can you still feel yourself being [identity]?"
     ];
     
     // Trauma Shifting steps that need linguistic processing
     const traumaShiftingSteps = [
-      'trauma_dissolve_step_a',   // "Feel yourself being [identity]... as [identity], what do you want?"
-      'trauma_dissolve_step_b',   // "Feel yourself being [identity]... exaggerate the feeling of it and tell me the first thing that you notice about it."
+      'trauma_dissolve_step_a',   // "Feel yourself being [identity]... what does it feel like?"
+      'trauma_dissolve_step_b',   // "Feel [last response]... what happens in yourself when you feel [last response]?"
       'trauma_identity_check'     // "Can you still feel yourself being [identity]?"
     ];
     
@@ -2623,7 +2623,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             
             // Use the stored identity, don't overwrite with current userInput (which is the goal they want)
             const identity = context.metadata.currentTraumaIdentity || 'that identity';
-            return `Feel yourself being '${identity}'... as '${identity}', what do you want?`;
+            return `Feel yourself being '${identity}'... what does it feel like?`;
           },
           expectedResponseType: 'open',
           validationRules: [
