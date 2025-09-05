@@ -839,16 +839,8 @@ export class TreatmentStateMachine {
               return "SKIP_TO_TREATMENT_INTRO";
             }
 
-            // Handle negative experience description after work type selection for negative experiences
-            if (context.metadata.workType === 'negative_experience' && !context.metadata.selectedMethod) {
-              // User has provided negative experience description, store it and proceed directly to trauma shifting
-              context.metadata.negativeExperienceStatement = userInput;
-              context.problemStatement = userInput; // Keep for compatibility
-              context.currentStep = 'trauma_shifting_intro';  
-              context.currentPhase = 'trauma_shifting';
-              context.metadata.selectedMethod = 'trauma_shifting';
-              return "SKIP_TO_TREATMENT_INTRO";
-            }
+            // Negative experience descriptions are now handled by the dedicated negative_experience_description step
+            // This logic has been removed to avoid conflicts
             
             // If we get here, it's not a valid work type selection
             return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
@@ -4013,6 +4005,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
     }
 
     // Handle special flow logic based on current step
+    console.log(`🔍 DETERMINE_NEXT_STEP: *** SWITCH STATEMENT *** - context.currentStep="${context.currentStep}"`);
     switch (context.currentStep) {
       case 'mind_shifting_explanation':
         console.log(`🔍 MIND_SHIFTING_DETERMINE: lastResponse="${lastResponse}", workType="${context.metadata.workType}", selectedMethod="${context.metadata.selectedMethod}"`);
@@ -4192,6 +4185,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         
       case 'negative_experience_description':
         // User provided negative experience description, store it and go to trauma shifting intro
+        console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: *** CASE TRIGGERED *** - lastResponse="${lastResponse}"`);
         context.problemStatement = lastResponse;
         context.metadata.problemStatement = lastResponse;
         context.currentPhase = 'trauma_shifting';
