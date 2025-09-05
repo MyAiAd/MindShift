@@ -1239,9 +1239,10 @@ export class TreatmentStateMachine {
         {
           id: 'problem_shifting_intro',
           scriptedResponse: (userInput, context) => {
-            // Use the cleanest version of the problem statement
-            const cleanProblemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
-            console.log(`🔍 PROBLEM_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}"`);
+            // Use the cleanest version of the problem statement - prioritize digging deeper restated problem
+            const diggingProblem = context?.metadata?.currentDiggingProblem;
+            const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            console.log(`🔍 PROBLEM_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}" (digging: "${diggingProblem}")`);
             
             // Check if we should skip intro instructions (when cycling back from check_if_still_problem)
             if (context?.metadata?.skipIntroInstructions) {
@@ -1732,13 +1733,15 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_shifting_intro',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Retrieved problem statement: "${problemStatement}"`);
+            // Get the problem statement - prioritize digging deeper restated problem
+            const diggingProblem = context?.metadata?.currentDiggingProblem;
+            const originalProblem = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            
+            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Digging problem: "${diggingProblem}", Original problem: "${originalProblem}"`);
             console.log(`🔍 IDENTITY_SHIFTING_INTRO: Available sources - problemStatement: "${context?.problemStatement}", metadata.problemStatement: "${context?.metadata?.problemStatement}"`);
             
-            // Use the cleanest version of the problem statement
-            const cleanProblemStatement = context?.metadata?.problemStatement || context?.problemStatement || problemStatement;
+            // Use the restated problem from digging deeper if available, otherwise use original
+            const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || originalProblem;
             console.log(`🔍 IDENTITY_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}"`);
             
             // If we have user input, process and store the identity
@@ -2910,8 +2913,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'belief_shifting_intro',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            // Get the problem statement - prioritize digging deeper restated problem
+            const diggingProblem = context?.metadata?.currentDiggingProblem;
+            const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
             return `Please close your eyes and keep them closed throughout the process.\n\nFeel the problem that '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem that '${problemStatement}'?`;
           },
           expectedResponseType: 'open',
