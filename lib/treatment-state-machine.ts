@@ -179,6 +179,14 @@ export class TreatmentStateMachine {
       
       if (nextStepId) {
         treatmentContext.currentStep = nextStepId;
+        console.log(`🔍 PROCESS_INPUT: Auto-progression UPDATED currentStep to "${nextStepId}"`);
+        console.log(`🔍 PROCESS_INPUT: Auto-progression context after step update:`, JSON.stringify({
+          sessionId: treatmentContext.sessionId,
+          currentPhase: treatmentContext.currentPhase,
+          currentStep: treatmentContext.currentStep,
+          workType: treatmentContext.metadata.workType,
+          selectedMethod: treatmentContext.metadata.selectedMethod
+        }, null, 2));
         
         // Get the correct phase after potential phase change
         const updatedPhase = this.phases.get(treatmentContext.currentPhase);
@@ -197,6 +205,10 @@ export class TreatmentStateMachine {
           const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, treatmentContext);
           
           console.log(`🔍 PROCESS_INPUT: Auto-progression final response="${actualResponse}"`);
+          // Save the updated context back to the contexts map
+          this.contexts.set(treatmentContext.sessionId, treatmentContext);
+          console.log(`🔍 PROCESS_INPUT: Auto-progression SAVED context for session ${treatmentContext.sessionId}`);
+          
           return {
             canContinue: true,
             nextStep: nextStepId,
@@ -218,6 +230,14 @@ export class TreatmentStateMachine {
     
     if (nextStepId) {
       treatmentContext.currentStep = nextStepId;
+      console.log(`🔍 PROCESS_INPUT: Regular flow UPDATED currentStep to "${nextStepId}"`);
+      console.log(`🔍 PROCESS_INPUT: Regular flow context after step update:`, JSON.stringify({
+        sessionId: treatmentContext.sessionId,
+        currentPhase: treatmentContext.currentPhase,
+        currentStep: treatmentContext.currentStep,
+        workType: treatmentContext.metadata.workType,
+        selectedMethod: treatmentContext.metadata.selectedMethod
+      }, null, 2));
       
       // Get the correct phase after potential phase change
       const updatedPhase = this.phases.get(treatmentContext.currentPhase);
@@ -234,6 +254,10 @@ export class TreatmentStateMachine {
       if (nextStep) {
         const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, treatmentContext);
+        
+        // Save the updated context back to the contexts map
+        this.contexts.set(treatmentContext.sessionId, treatmentContext);
+        console.log(`🔍 PROCESS_INPUT: Regular flow SAVED context for session ${treatmentContext.sessionId}`);
         
         return {
           canContinue: true,
@@ -3882,6 +3906,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
   private getOrCreateContext(sessionId: string, context?: Partial<TreatmentContext>): TreatmentContext {
     if (!this.contexts.has(sessionId)) {
+      console.log(`🔍 GET_OR_CREATE_CONTEXT: Creating NEW context for session ${sessionId}`);
       this.contexts.set(sessionId, {
         userId: context?.userId || '',
         sessionId,
@@ -3897,8 +3922,20 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           workType: 'problem' // default to problem type
         }
       });
+    } else {
+      console.log(`🔍 GET_OR_CREATE_CONTEXT: Using EXISTING context for session ${sessionId}`);
     }
-    return this.contexts.get(sessionId)!;
+    
+    const retrievedContext = this.contexts.get(sessionId)!;
+    console.log(`🔍 GET_OR_CREATE_CONTEXT: Retrieved context:`, JSON.stringify({
+      sessionId: retrievedContext.sessionId,
+      currentPhase: retrievedContext.currentPhase,
+      currentStep: retrievedContext.currentStep,
+      workType: retrievedContext.metadata.workType,
+      selectedMethod: retrievedContext.metadata.selectedMethod
+    }, null, 2));
+    
+    return retrievedContext;
   }
 
   /**
