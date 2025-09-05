@@ -3256,39 +3256,33 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state the problem now.' }
           ],
-          nextStep: 'clear_future_problem',
+          nextStep: 'digging_method_selection',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' },
             { condition: 'tooLong', action: 'simplify' }
           ]
         },
         {
-          id: 'clear_future_problem',
-          scriptedResponse: (userInput, context) => {
-            // Store the new problem statement for clearing
-            const newProblem = context?.userResponses?.['restate_problem_future'] || 'the problem';
-            context.metadata.currentDiggingProblem = newProblem;
-            context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
-            context.metadata.returnToDiggingStep = 'scenario_check_1'; // Where to return after clearing
-            
-            // Store the new problem statement as the current problem to be cleared
-            context.problemStatement = newProblem;
-            
-            // This step should auto-transition, so return a transition message
-            return "METHOD_SELECTION_NEEDED";
-          },
-          expectedResponseType: 'open',
-          validationRules: [],
-          nextStep: 'digging_method_selection',
-          aiTriggers: []
-        },
-        {
           id: 'digging_method_selection',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context.metadata.currentDiggingProblem || context.problemStatement || 'the problem';
             const input = userInput || '';
             
-            // If this is the first time showing this step (no user input yet), show the selection message
+            // If this is the first time showing this step (coming from restate_problem_future), 
+            // store the problem and show the selection message
+            if (!context.metadata.currentDiggingProblem && input && input !== 'METHOD_SELECTION_NEEDED') {
+              // Store the new problem statement for clearing
+              const newProblem = input;
+              context.metadata.currentDiggingProblem = newProblem;
+              context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
+              context.metadata.returnToDiggingStep = 'scenario_check_1'; // Where to return after clearing
+              context.problemStatement = newProblem;
+              
+              return `We need to clear this problem. Which method would you like to use?`;
+            }
+            
+            const problemStatement = context.metadata.currentDiggingProblem || context.problemStatement || 'the problem';
+            
+            // If we already have the problem stored and no new input, show the selection message
             if (!input || input === 'METHOD_SELECTION_NEEDED') {
               return `We need to clear this problem. Which method would you like to use?`;
             }
@@ -4629,11 +4623,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         break;
         
       case 'restate_problem_future':
-        // After restating the problem, route to clearing step
-        return 'clear_future_problem';
-        
-      case 'clear_future_problem':
-        // Now routes to method selection instead of auto-routing
+        // After restating the problem, route directly to method selection
         return 'digging_method_selection';
         
       case 'digging_method_selection':
