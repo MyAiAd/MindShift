@@ -135,6 +135,9 @@ async function handleStartSession(sessionId: string, userId: string) {
 
     // Save session to database
     await saveSessionToDatabase(sessionId, userId, result, responseTime);
+    
+    // Ensure context is loaded from database for future interactions
+    await treatmentMachine.getOrCreateContextAsync(sessionId, { userId });
 
     return NextResponse.json({
       success: true,
@@ -310,6 +313,9 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
 
     // Save interaction to database
     await saveInteractionToDatabase(sessionId, userInput, finalResponse);
+
+    // Update session context in database
+    await updateSessionContextInDatabase(sessionId, finalResponse.currentStep, finalResponse.usedAI, finalResponse.responseTime);
 
     return NextResponse.json(finalResponse);
 
@@ -540,12 +546,16 @@ async function saveSessionToDatabase(
       user_id: userId,
       tenant_id: profile?.tenant_id || null, // Allow null for super admins
       status: 'active',
-      current_phase: 'intro',
-      current_step: 'welcome',
+      current_phase: 'introduction', // Use proper phase name from state machine
+      current_step: 'mind_shifting_explanation', // Use proper step name from state machine
       created_at: new Date().toISOString(),
-      avg_response_time: responseTime,
+      updated_at: new Date().toISOString(),
+      avg_response_time: Math.round(responseTime),
       scripted_responses: 1,
-      ai_responses: 0
+      ai_responses: 0,
+      duration_minutes: 0,
+      total_ai_cost: 0.00,
+      total_ai_tokens: 0
     };
     
     console.log('Treatment API: Inserting session data:', sessionData);
@@ -853,6 +863,8 @@ async function saveInteractionToDatabase(
       used_ai: response.usedAI,
       ai_cost: response.aiCost || 0,
       ai_tokens: response.aiTokens || 0,
+      step_id: response.currentStep,
+      phase_id: getPhaseForStep(response.currentStep || ''),
       created_at: new Date().toISOString()
     });
 
@@ -865,5 +877,51 @@ async function saveInteractionToDatabase(
   } catch (error) {
     console.error('Database interaction save error:', error);
     // Don't fail the request if database save fails
+  }
+}
+
+/**
+ * Update session context in database
+ */
+async function updateSessionContextInDatabase(
+  sessionId: string,
+  currentStep: string,
+  usedAI: boolean,
+  responseTime: number
+) {
+  try {
+    const supabase = createServerClient();
+    
+    // Get the context from the state machine
+    const context = treatmentMachine.getContextForUndo(sessionId);
+    
+    // Update the session with current state
+    await supabase
+      .from('treatment_sessions')
+      .update({
+        current_phase: context.currentPhase,
+        current_step: currentStep,
+        problem_statement: context.problemStatement,
+        metadata: context.metadata,
+        updated_at: new Date().toISOString()
+      })
+      .eq('session_id', sessionId);
+
+    // Save user response to treatment_progress if we have one
+    const userResponse = context.userResponses[context.currentStep];
+    if (userResponse) {
+      await supabase
+        .from('treatment_progress')
+        .upsert({
+          session_id: sessionId,
+          phase_id: context.currentPhase,
+          step_id: context.currentStep,
+          user_response: userResponse,
+          completed_at: new Date().toISOString()
+        });
+    }
+  } catch (error) {
+    console.error('Database context update error:', error);
+    // Don't fail the request if database update fails
   }
 } 

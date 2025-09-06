@@ -209,6 +209,11 @@ export class TreatmentStateMachine {
           this.contexts.set(treatmentContext.sessionId, treatmentContext);
           console.log(`🔍 PROCESS_INPUT: Auto-progression SAVED context for session ${treatmentContext.sessionId}`);
           
+          // Persist context to database
+          this.saveContextToDatabase(treatmentContext).catch(error => 
+            console.error('Failed to save context to database:', error)
+          );
+          
           return {
             canContinue: true,
             nextStep: nextStepId,
@@ -258,6 +263,11 @@ export class TreatmentStateMachine {
         // Save the updated context back to the contexts map
         this.contexts.set(treatmentContext.sessionId, treatmentContext);
         console.log(`🔍 PROCESS_INPUT: Regular flow SAVED context for session ${treatmentContext.sessionId}`);
+        
+        // Persist context to database
+        this.saveContextToDatabase(treatmentContext).catch(error => 
+          console.error('Failed to save context to database:', error)
+        );
         
         return {
           canContinue: true,
@@ -4019,9 +4029,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
   }
 
   /**
-   * Get or create context with database persistence
+   * Get or create context with database persistence (public method)
    */
-  private async getOrCreateContextAsync(sessionId: string, context?: Partial<TreatmentContext>): Promise<TreatmentContext> {
+  public async getOrCreateContextAsync(sessionId: string, context?: Partial<TreatmentContext>): Promise<TreatmentContext> {
     // Check if context exists in memory first
     if (this.contexts.has(sessionId)) {
       return this.contexts.get(sessionId)!;
@@ -5096,9 +5106,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
   }
 
   /**
-   * Save treatment context to database
+   * Save treatment context to database (public method)
    */
-  private async saveContextToDatabase(context: TreatmentContext): Promise<void> {
+  public async saveContextToDatabase(context: TreatmentContext): Promise<void> {
     try {
       const supabase = createServerClient();
 
