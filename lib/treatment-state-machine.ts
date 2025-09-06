@@ -495,8 +495,8 @@ export class TreatmentStateMachine {
       // Only validate for problem work type (not for goals or negative experiences)
       
       // Check if user stated it as a goal instead of problem
-      // Improved logic to avoid false positives with "get" in problem contexts
-      const goalIndicators = ['want to', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'become', 'have', 'need to', 'would like to'];
+      // Improved logic to avoid false positives with "get" and "have" in problem contexts
+      const goalIndicators = ['want to', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'become', 'need to', 'would like to'];
       
       // Special handling for "get" - only flag as goal if used in positive/aspirational context
       const hasBasicGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
@@ -510,7 +510,20 @@ export class TreatmentStateMachine {
         lowerInput.match(/\bget\s+(a|an|some|the)\s+\w+/) // "get a job", "get the promotion", etc.
       );
       
-      const hasGoalLanguage = hasBasicGoalLanguage || hasGetInGoalContext;
+      // Special handling for "have" - only flag as goal if used in aspirational context, not when describing current problems
+      const hasHaveInGoalContext = lowerInput.includes('have') && (
+        lowerInput.includes('want to have') ||
+        lowerInput.includes('wish to have') ||
+        lowerInput.includes('hope to have') ||
+        lowerInput.includes('would like to have') ||
+        lowerInput.includes('plan to have') ||
+        lowerInput.includes('need to have') ||
+        // Positive aspirational "have" patterns
+        lowerInput.match(/\bhave\s+(more|better|good|great|amazing|wonderful|perfect|ideal|successful|happy|peaceful|loving|healthy)\s+\w+/) ||
+        lowerInput.match(/\bhave\s+(a|an)\s+(good|great|better|successful|happy|peaceful|loving|healthy|perfect|ideal|amazing|wonderful)\s+\w+/)
+      );
+      
+      const hasGoalLanguage = hasBasicGoalLanguage || hasGetInGoalContext || hasHaveInGoalContext;
       
       if (hasGoalLanguage) {
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
