@@ -3366,6 +3366,11 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
               context.metadata.returnToDiggingStep = 'scenario_check_1'; // Where to return after clearing
               context.problemStatement = newProblem;
               
+              // CRITICAL: Set work type to 'problem' to ensure proper method selection
+              context.metadata.workType = 'problem';
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Stored new problem: "${newProblem}"`);
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Set workType to 'problem' for method selection`);
+              
               return `We need to clear this problem. Which method would you like to use?`;
             }
             
@@ -3380,14 +3385,17 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             if (input.toLowerCase().includes('problem shifting') || input === '1') {
               context.currentPhase = 'problem_shifting';
               context.metadata.selectedMethod = 'problem_shifting';
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Problem Shifting for digging deeper`);
               return "PROBLEM_SHIFTING_SELECTED";
             } else if (input.toLowerCase().includes('identity shifting') || input === '2') {
               context.currentPhase = 'identity_shifting';
               context.metadata.selectedMethod = 'identity_shifting';
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Identity Shifting for digging deeper`);
               return "IDENTITY_SHIFTING_SELECTED";
             } else if (input.toLowerCase().includes('belief shifting') || input === '3') {
               context.currentPhase = 'belief_shifting';
               context.metadata.selectedMethod = 'belief_shifting';
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Belief Shifting for digging deeper`);
               return "BELIEF_SHIFTING_SELECTED";
             } else {
               return "Please choose Problem Shifting, Identity Shifting, or Belief Shifting.";
