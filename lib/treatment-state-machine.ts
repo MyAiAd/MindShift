@@ -1962,7 +1962,9 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             }
             
             console.log(`🔍 IDENTITY_CHECK: Using identity="${identity}" (should be original problem identity)`);
-            return `Can you still feel yourself being '${identity}'?`;
+            const finalResponse = `Can you still feel yourself being '${identity}'?`;
+            console.log(`🔍 IDENTITY_CHECK: FINAL SCRIPTED RESPONSE: "${finalResponse}"`);
+            return finalResponse;
           },
           expectedResponseType: 'yesno',
           validationRules: [
