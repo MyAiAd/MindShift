@@ -1778,6 +1778,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             
             // If we have user input, process and store the identity
             if (userInput && userInput.trim()) {
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: RAW userInput received: "${userInput}"`);
               const processedIdentity = this.processIdentityResponse(userInput.trim());
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: Processing identity "${userInput}" -> "${processedIdentity}"`);
               
@@ -1792,10 +1793,13 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               // CRITICAL FIX: Only set originalProblemIdentity if it's not already set
               // This prevents it from being overwritten if the intro step is called multiple times
               if (!context.metadata.originalProblemIdentity) {
-                context.metadata.originalProblemIdentity = processedIdentity; // Store original for identity_check
+                // ENSURE we're storing the USER'S IDENTITY RESPONSE, not the problem statement
+                const userIdentityResponse = processedIdentity; // This should be the user's answer like "an angry one"
+                context.metadata.originalProblemIdentity = userIdentityResponse; // Store original for identity_check
                 // BACKUP: Also store in a separate field for extra protection
-                context.metadata.identityShiftingOriginalIdentity = processedIdentity;
-                console.log(`🔍 IDENTITY_SHIFTING_INTRO: SETTING originalProblemIdentity for the FIRST TIME: "${processedIdentity}"`);
+                context.metadata.identityShiftingOriginalIdentity = userIdentityResponse;
+                console.log(`🔍 IDENTITY_SHIFTING_INTRO: SETTING originalProblemIdentity for the FIRST TIME: "${userIdentityResponse}"`);
+                console.log(`🔍 IDENTITY_SHIFTING_INTRO: This should be the user's identity response, NOT the problem statement`);
               } else {
                 console.log(`🔍 IDENTITY_SHIFTING_INTRO: originalProblemIdentity already set to: "${context.metadata.originalProblemIdentity}", keeping it unchanged`);
               }
