@@ -126,7 +126,9 @@ export class AIAssistanceManager {
       case 'problem_vs_goal':
         return `The user was asked to state a PROBLEM but they said: "${userInput}"
 
-This contains goal language like "want to", "wish to", "hope to", "achieve", "get", "become", "have", "goal".
+This contains goal language like "want to", "wish to", "hope to", "achieve", "get", "become", "goal", or aspirational uses of "have" (like "want to have", "wish to have", "have more", "have better").
+
+Note: Simple statements like "I have a headache" or "I have anxiety" are valid problem statements, not goals.
 
 Since this is a GOAL instead of a PROBLEM, respond exactly: "NEEDS CORRECTION"
 
