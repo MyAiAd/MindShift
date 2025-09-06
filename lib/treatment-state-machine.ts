@@ -3332,7 +3332,15 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'restate_problem_future',
-          scriptedResponse: "How would you state the problem in a few words?",
+          scriptedResponse: (userInput, context) => {
+            // Store the new problem statement when user provides it
+            if (userInput && userInput.trim()) {
+              console.log(`🔍 RESTATE_PROBLEM_FUTURE: Storing new problem: "${userInput}"`);
+              context.metadata.newDiggingProblem = userInput.trim();
+              console.log(`🔍 RESTATE_PROBLEM_FUTURE: Next step should be digging_method_selection`);
+            }
+            return "How would you state the problem in a few words?";
+          },
           expectedResponseType: 'problem',
           validationRules: [
             { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state the problem now.' }
