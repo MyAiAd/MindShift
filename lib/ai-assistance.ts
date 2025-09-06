@@ -614,31 +614,7 @@ Examples:
         - User: "in control of my own future" → "Feel in control of your future... what happens in yourself when you feel in control of your future?"
 
 Extract the core identity and apply the template now:`;
-    } else if (stepId === 'identity_check') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's identity response.
-
-User's response: "${userInput}"
-Current scripted response: "${scriptedResponse}"
-
-Task: Extract the core identity from the user's response and use it naturally in the template.
-
-Template: "Can you still feel yourself being [contextualized identity]?"
-
-Rules:
-1. Extract the core identity concept from the user's response
-2. Remove unnecessary words like "someone who is", "a person who", "I am", etc.
-3. Make it sound natural and conversational
-4. Keep the exact template structure
-5. Return only the rephrased response, nothing else
-
-Examples:
-- User: "someone who is always stressed" → "Can you still feel yourself being stressed?"
-- User: "a person who can't control their future" → "Can you still feel yourself being out of control?"
-- User: "I am powerless" → "Can you still feel yourself being powerless?"
-- User: "victim" → "Can you still feel yourself being a victim?"
-- User: "in control of my own future" → "Can you still feel yourself being in control of your future?"
-
-Extract the core identity and apply the template now:`;
+    // REMOVED: identity_check should use stored originalProblemIdentity, not AI processing
     } else if (stepId === 'trauma_dissolve_step_a') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's identity response for Trauma Shifting.
 
@@ -689,31 +665,7 @@ Examples:
         - User: "abandoned and alone" → "Feel abandoned and alone... what happens in yourself when you feel abandoned and alone?"
 
 Extract the core trauma identity and apply the template now:`;
-    } else if (stepId === 'trauma_identity_check') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's trauma identity response.
-
-User's response: "${userInput}"
-Current scripted response: "${scriptedResponse}"
-
-Task: Extract the core trauma identity from the user's response and use it naturally in the template.
-
-Template: "Can you still feel yourself being [contextualized identity]?"
-
-Rules:
-1. Extract the core identity concept from the user's response
-2. Remove unnecessary words like "someone who is", "a person who", "I am", etc.
-3. Make it sound natural and conversational for trauma processing
-4. Keep the exact template structure
-5. Return only the rephrased response, nothing else
-
-Examples:
-- User: "someone who is angry and hurt" → "Can you still feel yourself being angry and hurt?"
-- User: "a person who can't trust anyone" → "Can you still feel yourself being unable to trust?"
-- User: "I am a victim" → "Can you still feel yourself being a victim?"
-- User: "powerless" → "Can you still feel yourself being powerless?"
-- User: "abandoned and alone" → "Can you still feel yourself being abandoned and alone?"
-
-Extract the core trauma identity and apply the template now:`;
+    // REMOVED: trauma_identity_check should use stored originalTraumaIdentity, not AI processing
     } else if (stepId === 'trauma_shifting_intro') {
       return `You are assisting with Mind Shifting sessions. The user has already provided their negative experience statement. Your task is to preserve their EXACT wording.
 
@@ -772,14 +724,12 @@ Rephrase now:`;
         return `Feel yourself being "${userResponse}"... as "${userResponse}", what do you want?`;
       case 'identity_dissolve_step_b':
         return `Feel "${userResponse}"... what happens in yourself when you feel "${userResponse}"?`;
-      case 'identity_check':
-        return `Can you still feel yourself being "${userResponse}"?`;
+      // REMOVED: identity_check should use stored originalProblemIdentity, not AI processing
       case 'trauma_dissolve_step_a':
         return `Feel yourself being "${userResponse}"... what does it feel like?`;
       case 'trauma_dissolve_step_b':
         return `Feel "${userResponse}"... what happens in yourself when you feel "${userResponse}"?`;
-      case 'trauma_identity_check':
-        return `Can you still feel yourself being "${userResponse}"?`;
+      // REMOVED: trauma_identity_check should use stored originalTraumaIdentity, not AI processing
       default:
         return `Feel "${userResponse}"... what does that feel like?`;
     }
