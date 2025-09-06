@@ -1791,6 +1791,9 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               context.metadata.originalProblemIdentity = processedIdentity; // Store original for identity_check
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: Stored identity: "${processedIdentity}"`);
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: originalProblemIdentity set to: "${context.metadata.originalProblemIdentity}"`);
+              
+              // CRITICAL: Ensure originalProblemIdentity is never overwritten after this point
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ORIGINAL PROBLEM IDENTITY LOCKED: "${processedIdentity}"`);
             }
             
             return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
@@ -1913,8 +1916,19 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             const originalIdentity = context.metadata.originalProblemIdentity;
             const currentIdentity = context.metadata.currentIdentity;
             console.log(`🔍 IDENTITY_CHECK: originalProblemIdentity="${originalIdentity}", currentIdentity="${currentIdentity}"`);
-            const identity = originalIdentity || currentIdentity || 'that identity';
-            console.log(`🔍 IDENTITY_CHECK: Using identity="${identity}"`);
+            console.log(`🔍 IDENTITY_CHECK: Full metadata:`, JSON.stringify(context.metadata, null, 2));
+            
+            // CRITICAL FIX: Always use originalProblemIdentity for the check, not currentIdentity
+            // The check should validate if the ORIGINAL problem identity is still felt
+            let identity = originalIdentity;
+            
+            // If originalProblemIdentity is somehow missing, use currentIdentity as fallback but log warning
+            if (!identity) {
+              console.warn(`🚨 IDENTITY_CHECK: originalProblemIdentity is missing! Using currentIdentity as fallback: "${currentIdentity}"`);
+              identity = currentIdentity || 'that identity';
+            }
+            
+            console.log(`🔍 IDENTITY_CHECK: Using identity="${identity}" (should be original problem identity)`);
             return `Can you still feel yourself being '${identity}'?`;
           },
           expectedResponseType: 'yesno',
