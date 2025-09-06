@@ -1969,9 +1969,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
           nextStep: 'identity_future_check',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
+          aiTriggers: [] // REMOVED: identity_check should be purely scripted, no AI assistance
         },
 
         {
@@ -2813,9 +2811,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
           nextStep: 'trauma_experience_check',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
+          aiTriggers: [] // REMOVED: trauma_identity_check should be purely scripted, no AI assistance
         },
 
         {
