@@ -1788,12 +1788,21 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               
               // Store the processed identity
               context.metadata.currentIdentity = processedIdentity;
-              context.metadata.originalProblemIdentity = processedIdentity; // Store original for identity_check
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Stored identity: "${processedIdentity}"`);
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: originalProblemIdentity set to: "${context.metadata.originalProblemIdentity}"`);
+              
+              // CRITICAL FIX: Only set originalProblemIdentity if it's not already set
+              // This prevents it from being overwritten if the intro step is called multiple times
+              if (!context.metadata.originalProblemIdentity) {
+                context.metadata.originalProblemIdentity = processedIdentity; // Store original for identity_check
+                console.log(`🔍 IDENTITY_SHIFTING_INTRO: SETTING originalProblemIdentity for the FIRST TIME: "${processedIdentity}"`);
+              } else {
+                console.log(`🔍 IDENTITY_SHIFTING_INTRO: originalProblemIdentity already set to: "${context.metadata.originalProblemIdentity}", keeping it unchanged`);
+              }
+              
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Stored currentIdentity: "${processedIdentity}"`);
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: originalProblemIdentity is: "${context.metadata.originalProblemIdentity}"`);
               
               // CRITICAL: Ensure originalProblemIdentity is never overwritten after this point
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ORIGINAL PROBLEM IDENTITY LOCKED: "${processedIdentity}"`);
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ORIGINAL PROBLEM IDENTITY LOCKED: "${context.metadata.originalProblemIdentity}"`);
             }
             
             return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
@@ -1848,6 +1857,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             // Store the response from step B
             context.metadata.stepBResponse = userInput || 'that';
             const identity = context.metadata.currentIdentity || 'that identity';
+            
+            // CRITICAL: Ensure originalProblemIdentity is preserved
+            console.log(`🔍 IDENTITY_DISSOLVE_STEP_C: originalProblemIdentity: "${context.metadata.originalProblemIdentity}", currentIdentity: "${context.metadata.currentIdentity}"`);
+            
             return `What are you when you're not being '${identity}'?`;
           },
           expectedResponseType: 'open',
@@ -1866,6 +1879,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             // Store the response from step C (what they are when not being the identity)
             context.metadata.stepCResponse = userInput || 'that';
             const stepCResponse = context.metadata.stepCResponse;
+            
+            // CRITICAL: Ensure originalProblemIdentity is preserved
+            console.log(`🔍 IDENTITY_DISSOLVE_STEP_D: originalProblemIdentity: "${context.metadata.originalProblemIdentity}", currentIdentity: "${context.metadata.currentIdentity}", stepCResponse: "${stepCResponse}"`);
+            
             return `Feel yourself being '${stepCResponse}'... what does '${stepCResponse}' feel like?`;
           },
           expectedResponseType: 'feeling',
@@ -1884,6 +1901,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             // Store the response from step D
             context.metadata.stepDResponse = userInput || 'that feeling';
             const stepDResponse = context.metadata.stepDResponse;
+            
+            // CRITICAL: Ensure originalProblemIdentity is preserved
+            console.log(`🔍 IDENTITY_DISSOLVE_STEP_E: originalProblemIdentity: "${context.metadata.originalProblemIdentity}", currentIdentity: "${context.metadata.currentIdentity}", stepDResponse: "${stepDResponse}"`);
+            
             return `Feel '${stepDResponse}'... what happens in yourself when you feel '${stepDResponse}'?`;
           },
           expectedResponseType: 'feeling',
