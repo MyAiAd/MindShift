@@ -1793,6 +1793,8 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               // This prevents it from being overwritten if the intro step is called multiple times
               if (!context.metadata.originalProblemIdentity) {
                 context.metadata.originalProblemIdentity = processedIdentity; // Store original for identity_check
+                // BACKUP: Also store in a separate field for extra protection
+                context.metadata.identityShiftingOriginalIdentity = processedIdentity;
                 console.log(`🔍 IDENTITY_SHIFTING_INTRO: SETTING originalProblemIdentity for the FIRST TIME: "${processedIdentity}"`);
               } else {
                 console.log(`🔍 IDENTITY_SHIFTING_INTRO: originalProblemIdentity already set to: "${context.metadata.originalProblemIdentity}", keeping it unchanged`);
@@ -1935,18 +1937,28 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           id: 'identity_check',
           scriptedResponse: (userInput, context) => {
             const originalIdentity = context.metadata.originalProblemIdentity;
+            const backupOriginalIdentity = context.metadata.identityShiftingOriginalIdentity;
             const currentIdentity = context.metadata.currentIdentity;
-            console.log(`🔍 IDENTITY_CHECK: originalProblemIdentity="${originalIdentity}", currentIdentity="${currentIdentity}"`);
+            console.log(`🔍 IDENTITY_CHECK: originalProblemIdentity="${originalIdentity}", backupOriginalIdentity="${backupOriginalIdentity}", currentIdentity="${currentIdentity}"`);
             console.log(`🔍 IDENTITY_CHECK: Full metadata:`, JSON.stringify(context.metadata, null, 2));
             
             // CRITICAL FIX: Always use originalProblemIdentity for the check, not currentIdentity
             // The check should validate if the ORIGINAL problem identity is still felt
-            let identity = originalIdentity;
+            let identity = originalIdentity || backupOriginalIdentity;
             
-            // If originalProblemIdentity is somehow missing, use currentIdentity as fallback but log warning
+            // If originalProblemIdentity is somehow missing, try to reconstruct it from userResponses
             if (!identity) {
-              console.warn(`🚨 IDENTITY_CHECK: originalProblemIdentity is missing! Using currentIdentity as fallback: "${currentIdentity}"`);
-              identity = currentIdentity || 'that identity';
+              console.warn(`🚨 IDENTITY_CHECK: originalProblemIdentity is missing! Attempting to reconstruct...`);
+              
+              // Try to get the original identity from the intro step response
+              const introResponse = context.userResponses?.['identity_shifting_intro'];
+              if (introResponse) {
+                identity = this.processIdentityResponse(introResponse.trim());
+                console.log(`🔍 IDENTITY_CHECK: Reconstructed identity from intro response: "${introResponse}" -> "${identity}"`);
+              } else {
+                console.warn(`🚨 IDENTITY_CHECK: Could not reconstruct originalProblemIdentity! Using currentIdentity as last resort: "${currentIdentity}"`);
+                identity = currentIdentity || 'that identity';
+              }
             }
             
             console.log(`🔍 IDENTITY_CHECK: Using identity="${identity}" (should be original problem identity)`);
