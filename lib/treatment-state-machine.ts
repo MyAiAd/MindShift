@@ -2793,25 +2793,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself when you feel that.' }
           ],
-          nextStep: 'trauma_dissolve_step_f',
-          aiTriggers: [
-            { condition: 'userStuck', action: 'clarify' }
-          ]
-        },
-
-        {
-          id: 'trauma_dissolve_step_f',
-          scriptedResponse: (userInput, context) => {
-            const identity = context.metadata.currentTraumaIdentity || 'that identity';
-            return `Can you still feel yourself being '${identity}'?`;
-          },
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
-          ],
           nextStep: 'trauma_identity_check',
           aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
+            { condition: 'userStuck', action: 'clarify' }
           ]
         },
 
@@ -4604,19 +4588,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         return 'choose_method';
         break;
 
-      case 'trauma_dissolve_step_f':
-        // Trauma Shifting: Check if still feeling the identity
-        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
-          // Still feeling identity - repeat from step A
-          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          return 'trauma_dissolve_step_a';
-        }
-        if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // Identity dissolved - proceed to identity check
-          return 'trauma_identity_check';
-        }
-        break;
-        
+
       case 'trauma_identity_check':
         // Trauma Shifting: Check if still feeling the identity
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {

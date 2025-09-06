@@ -191,7 +191,7 @@ export const useGlobalVoice = ({
     if (step === 'analyze_response' || step === 'check_if_still_problem' || step === 'blockage_check_if_still_problem' || 
         step === 'identity_dissolve_step_e' || step === 'identity_check' || step === 'identity_problem_check' || 
         step === 'confirm_identity_problem' || step === 'reality_step_b' || 
-        step === 'reality_doubts_check' || step === 'trauma_dissolve_step_f' || step === 'trauma_identity_check' || 
+        step === 'reality_doubts_check' || step === 'trauma_identity_check' || 
         step === 'trauma_experience_check' || step === 'trauma_dig_deeper' || step === 'belief_step_f' || 
         step === 'belief_check_1' || step === 'belief_check_2' || step === 'belief_check_3' || 
         step === 'belief_check_4' || step === 'belief_problem_check' || step === 'confirm_belief_problem' ||

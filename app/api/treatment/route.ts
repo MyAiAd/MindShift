@@ -654,7 +654,7 @@ function getPhaseForStep(stepId: string): string {
             'trauma_dissolve_step_c': 'trauma_shifting',
         'trauma_dissolve_step_d': 'trauma_shifting',
         'trauma_dissolve_step_e': 'trauma_shifting',
-        'trauma_dissolve_step_f': 'trauma_shifting',
+      
     'trauma_identity_check': 'trauma_shifting',
     'trauma_experience_check': 'trauma_shifting',
     'trauma_dig_deeper': 'trauma_shifting',
