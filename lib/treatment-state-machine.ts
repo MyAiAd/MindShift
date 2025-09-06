@@ -1973,10 +1973,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             
             console.log(`🔍 IDENTITY_CHECK: Using identity="${identity}" (should be original problem identity)`);
             
-            // TEMPORARY DEBUG: Add debug info to the response itself so we can see it in browser
-            const debugInfo = `[DEBUG: orig="${originalIdentity}", backup="${backupOriginalIdentity}", current="${currentIdentity}"]`;
-            const finalResponse = `Can you still feel yourself being '${identity}'? ${debugInfo}`;
+            // Clean user-facing response without debug info
+            const finalResponse = `Can you still feel yourself being '${identity}'?`;
             console.log(`🔍 IDENTITY_CHECK: FINAL SCRIPTED RESPONSE: "${finalResponse}"`);
+            console.log(`🔍 IDENTITY_CHECK: DEBUG VALUES - orig="${originalIdentity}", backup="${backupOriginalIdentity}", current="${currentIdentity}"`);
             return finalResponse;
           },
           expectedResponseType: 'yesno',
