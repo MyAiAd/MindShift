@@ -1,4 +1,7 @@
 -- Create or replace function to update treatment session statistics
+-- Drop existing function first to handle signature changes
+DROP FUNCTION IF EXISTS update_session_stats(VARCHAR, BOOLEAN, INTEGER);
+
 CREATE OR REPLACE FUNCTION update_session_stats(
     p_session_id VARCHAR,
     p_used_ai BOOLEAN,

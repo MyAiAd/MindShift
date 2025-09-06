@@ -1,4 +1,7 @@
 -- Create or replace function to get comprehensive session statistics including treatment sessions
+-- Drop existing function first to handle return type changes
+DROP FUNCTION IF EXISTS get_session_stats(UUID, UUID, INTEGER);
+
 CREATE OR REPLACE FUNCTION get_session_stats(
     p_user_id UUID,
     p_tenant_id UUID DEFAULT NULL,
