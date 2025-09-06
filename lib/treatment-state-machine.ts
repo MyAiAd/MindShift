@@ -312,15 +312,15 @@ export class TreatmentStateMachine {
     // Identity Shifting steps that need linguistic processing
     const identityShiftingSteps = [
       'identity_dissolve_step_a', // "Feel yourself being [identity]... what does it feel like?"
-      'identity_dissolve_step_b', // "Feel [last response]... what happens in yourself when you feel [last response]?"
-      'identity_check'           // "Can you still feel yourself being [identity]?"
+      'identity_dissolve_step_b'  // "Feel [last response]... what happens in yourself when you feel [last response]?"
+      // 'identity_check' REMOVED - should use stored originalProblemIdentity, not AI processing
     ];
     
     // Trauma Shifting steps that need linguistic processing
     const traumaShiftingSteps = [
       'trauma_dissolve_step_a',   // "Feel yourself being [identity]... what does it feel like?"
-      'trauma_dissolve_step_b',   // "Feel [last response]... what happens in yourself when you feel [last response]?"
-      'trauma_identity_check'     // "Can you still feel yourself being [identity]?"
+      'trauma_dissolve_step_b'    // "Feel [last response]... what happens in yourself when you feel [last response]?"
+      // 'trauma_identity_check' REMOVED - should use stored originalTraumaIdentity, not AI processing
     ];
     
     // All modality intro steps that need linguistic processing for user input contextualisation
