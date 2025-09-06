@@ -1962,7 +1962,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             }
             
             console.log(`🔍 IDENTITY_CHECK: Using identity="${identity}" (should be original problem identity)`);
-            const finalResponse = `Can you still feel yourself being '${identity}'?`;
+            
+            // TEMPORARY DEBUG: Add debug info to the response itself so we can see it in browser
+            const debugInfo = `[DEBUG: orig="${originalIdentity}", backup="${backupOriginalIdentity}", current="${currentIdentity}"]`;
+            const finalResponse = `Can you still feel yourself being '${identity}'? ${debugInfo}`;
             console.log(`🔍 IDENTITY_CHECK: FINAL SCRIPTED RESPONSE: "${finalResponse}"`);
             return finalResponse;
           },
