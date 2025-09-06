@@ -62,9 +62,21 @@ export default function TreatmentSession({
   const [voiceError, setVoiceError] = useState<string>('');
   const [selectedWorkType, setSelectedWorkType] = useState<string | null>(null);
   const [clickedButton, setClickedButton] = useState<string | null>(null);
+  const [sessionMethod, setSessionMethod] = useState<string>('mind_shifting');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Helper function to format method names
+  const formatMethodName = (methodName: string) => {
+    if (!methodName) return 'Mind Shifting';
+    
+    // Convert snake_case to Title Case
+    return methodName
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -203,6 +215,25 @@ export default function TreatmentSession({
       console.log('📤 API Response success:', data.success);
       
       if (data.success) {
+        // Update session method based on selection
+        if (data.message === 'PROBLEM_SHIFTING_SELECTED') {
+          setSessionMethod('problem_shifting');
+        } else if (data.message === 'IDENTITY_SHIFTING_SELECTED') {
+          setSessionMethod('identity_shifting');
+        } else if (data.message === 'BELIEF_SHIFTING_SELECTED') {
+          setSessionMethod('belief_shifting');
+        } else if (data.message === 'BLOCKAGE_SHIFTING_SELECTED') {
+          setSessionMethod('blockage_shifting');
+        } else if (data.message === 'REALITY_SHIFTING_SELECTED') {
+          setSessionMethod('reality_shifting');
+        } else if (data.message === 'TRAUMA_SHIFTING_SELECTED') {
+          setSessionMethod('trauma_shifting');
+        } else if (data.message === 'GOAL_SELECTION_CONFIRMED') {
+          setSessionMethod('reality_shifting'); // Goals use Reality Shifting
+        } else if (data.message === 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED') {
+          setSessionMethod('trauma_shifting'); // Negative experiences use Trauma Shifting
+        }
+
         // Skip adding messages for backend confirmation messages that UI already handles
         const isUIHandledMessage = data.message === 'PROBLEM_SELECTION_CONFIRMED' || 
                                    data.message === 'METHOD_SELECTION_NEEDED' ||
@@ -211,7 +242,10 @@ export default function TreatmentSession({
                                    data.message === 'SKIP_TO_TREATMENT_INTRO' ||
                                    data.message === 'PROBLEM_SHIFTING_SELECTED' ||
                                    data.message === 'IDENTITY_SHIFTING_SELECTED' ||
-                                   data.message === 'BELIEF_SHIFTING_SELECTED';
+                                   data.message === 'BELIEF_SHIFTING_SELECTED' ||
+                                   data.message === 'BLOCKAGE_SHIFTING_SELECTED' ||
+                                   data.message === 'REALITY_SHIFTING_SELECTED' ||
+                                   data.message === 'TRAUMA_SHIFTING_SELECTED';
         
         if (!isUIHandledMessage) {
           const botMessage: TreatmentMessage = {
@@ -726,7 +760,7 @@ export default function TreatmentSession({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Brain className="h-6 w-6 text-indigo-600" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mind Shifting Session</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{formatMethodName(sessionMethod)} Session</h2>
             <span className="text-sm text-gray-500 dark:text-gray-300">Step: {currentStep}</span>
           </div>
           
@@ -1482,7 +1516,7 @@ export default function TreatmentSession({
             <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
             <h3 className="text-lg font-semibold text-green-900 dark:text-green-200">Session Complete!</h3>
             <p className="text-green-700 dark:text-green-200 mt-1">
-              Your Mind Shifting session has been completed successfully.
+                              Your {formatMethodName(sessionMethod)} session has been completed successfully.
             </p>
             <div className="mt-3 text-sm text-green-600 dark:text-green-200">
               Performance: {sessionStats.scriptedResponses} scripted responses, 

@@ -136,9 +136,19 @@ export default function SessionsPage() {
     return { date: dateStr, time: timeStr };
   };
 
+  const formatMethodName = (methodName: string) => {
+    if (!methodName) return 'Mind Shifting';
+    
+    // Convert snake_case to Title Case
+    return methodName
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   const getTreatmentSessionTitle = (session: TreatmentSession) => {
-    const methodName = session.metadata?.selectedMethod || 'Mind Shifting';
-    return `${methodName} Session`;
+    const methodName = session.metadata?.selectedMethod || 'mind_shifting';
+    return `${formatMethodName(methodName)} Session`;
   };
 
   const getTreatmentSessionDescription = (session: TreatmentSession) => {
