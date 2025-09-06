@@ -1950,6 +1950,12 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             // The check should validate if the ORIGINAL problem identity is still felt
             let identity = originalIdentity || backupOriginalIdentity;
             
+            // EMERGENCY FIX: If originalProblemIdentity is the problem statement (bug), use currentIdentity instead
+            if (identity && (identity.includes('get mad') || identity.includes('too often') || identity.includes('problem'))) {
+              console.warn(`🚨 IDENTITY_CHECK: originalProblemIdentity appears to be problem statement: "${identity}", using currentIdentity instead: "${currentIdentity}"`);
+              identity = currentIdentity;
+            }
+            
             // If originalProblemIdentity is somehow missing, try to reconstruct it from userResponses
             if (!identity) {
               console.warn(`🚨 IDENTITY_CHECK: originalProblemIdentity is missing! Attempting to reconstruct...`);
