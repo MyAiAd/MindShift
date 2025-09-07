@@ -2083,7 +2083,31 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_dissolve_step_a',
           scriptedResponse: (userInput, context) => {
-            const identity = context.metadata.currentIdentity || 'that identity';
+            let identity = context.metadata.currentIdentity || 'that identity';
+            
+            // EMERGENCY FIX: If currentIdentity appears to be corrupted with problem statement, try to recover
+            const problemStatementPatterns = [
+              'get angry', 'too often', 'problem', 'I get', 'I am', 'I feel', 'I have',
+              'I do', 'I can\'t', 'I cannot', 'I don\'t', 'i get', 'i am', 'i feel'
+            ];
+            
+            const isCurrentIdentityCorrupted = identity && problemStatementPatterns.some(pattern => 
+              identity.toLowerCase().includes(pattern.toLowerCase())
+            );
+            
+            if (isCurrentIdentityCorrupted) {
+              console.warn(`🚨 IDENTITY_DISSOLVE_STEP_A: currentIdentity appears corrupted: "${identity}"`);
+              // Try to get the identity from the intro step response
+              const introResponse = context.userResponses?.['identity_shifting_intro'];
+              if (introResponse) {
+                identity = this.processIdentityResponse(introResponse.trim());
+                console.log(`🔍 IDENTITY_DISSOLVE_STEP_A: Recovered identity from intro response: "${introResponse}" -> "${identity}"`);
+              } else {
+                console.warn(`🚨 IDENTITY_DISSOLVE_STEP_A: Could not recover identity, using fallback`);
+                identity = 'that identity';
+              }
+            }
+            
             return `Feel yourself being '${identity}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
@@ -2119,10 +2143,33 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           scriptedResponse: (userInput, context) => {
             // Store the response from step B
             context.metadata.stepBResponse = userInput || 'that';
-            const identity = context.metadata.currentIdentity || 'that identity';
+            let identity = context.metadata.currentIdentity || 'that identity';
             
             // CRITICAL: Ensure originalProblemIdentity is preserved
             console.log(`🔍 IDENTITY_DISSOLVE_STEP_C: originalProblemIdentity: "${context.metadata.originalProblemIdentity}", currentIdentity: "${context.metadata.currentIdentity}"`);
+            
+            // EMERGENCY FIX: If currentIdentity appears to be corrupted with problem statement, try to recover
+            const problemStatementPatterns = [
+              'get angry', 'too often', 'problem', 'I get', 'I am', 'I feel', 'I have',
+              'I do', 'I can\'t', 'I cannot', 'I don\'t', 'i get', 'i am', 'i feel'
+            ];
+            
+            const isCurrentIdentityCorrupted = identity && problemStatementPatterns.some(pattern => 
+              identity.toLowerCase().includes(pattern.toLowerCase())
+            );
+            
+            if (isCurrentIdentityCorrupted) {
+              console.warn(`🚨 IDENTITY_DISSOLVE_STEP_C: currentIdentity appears corrupted: "${identity}"`);
+              // Try to get the identity from the intro step response
+              const introResponse = context.userResponses?.['identity_shifting_intro'];
+              if (introResponse) {
+                identity = this.processIdentityResponse(introResponse.trim());
+                console.log(`🔍 IDENTITY_DISSOLVE_STEP_C: Recovered identity from intro response: "${introResponse}" -> "${identity}"`);
+              } else {
+                console.warn(`🚨 IDENTITY_DISSOLVE_STEP_C: Could not recover identity, using fallback`);
+                identity = 'that identity';
+              }
+            }
             
             return `What are you when you're not being '${identity}'?`;
           },
