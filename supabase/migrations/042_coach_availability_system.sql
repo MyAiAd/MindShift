@@ -433,6 +433,7 @@ ALTER TABLE coach_availability ENABLE ROW LEVEL SECURITY;
 ALTER TABLE coach_availability_exceptions ENABLE ROW LEVEL SECURITY;
 
 -- Coach availability policies
+DROP POLICY IF EXISTS coach_availability_select_policy ON coach_availability;
 CREATE POLICY coach_availability_select_policy ON coach_availability
     FOR SELECT
     USING (
@@ -453,6 +454,7 @@ CREATE POLICY coach_availability_select_policy ON coach_availability
         )
     );
 
+DROP POLICY IF EXISTS coach_availability_insert_policy ON coach_availability;
 CREATE POLICY coach_availability_insert_policy ON coach_availability
     FOR INSERT
     WITH CHECK (
@@ -467,6 +469,7 @@ CREATE POLICY coach_availability_insert_policy ON coach_availability
         )
     );
 
+DROP POLICY IF EXISTS coach_availability_update_policy ON coach_availability;
 CREATE POLICY coach_availability_update_policy ON coach_availability
     FOR UPDATE
     USING (
@@ -479,6 +482,7 @@ CREATE POLICY coach_availability_update_policy ON coach_availability
         )
     );
 
+DROP POLICY IF EXISTS coach_availability_delete_policy ON coach_availability;
 CREATE POLICY coach_availability_delete_policy ON coach_availability
     FOR DELETE
     USING (
@@ -492,6 +496,7 @@ CREATE POLICY coach_availability_delete_policy ON coach_availability
     );
 
 -- Coach availability exceptions policies (similar structure)
+DROP POLICY IF EXISTS coach_exceptions_select_policy ON coach_availability_exceptions;
 CREATE POLICY coach_exceptions_select_policy ON coach_availability_exceptions
     FOR SELECT
     USING (
@@ -509,6 +514,7 @@ CREATE POLICY coach_exceptions_select_policy ON coach_availability_exceptions
         )
     );
 
+DROP POLICY IF EXISTS coach_exceptions_insert_policy ON coach_availability_exceptions;
 CREATE POLICY coach_exceptions_insert_policy ON coach_availability_exceptions
     FOR INSERT
     WITH CHECK (
@@ -521,6 +527,7 @@ CREATE POLICY coach_exceptions_insert_policy ON coach_availability_exceptions
         )
     );
 
+DROP POLICY IF EXISTS coach_exceptions_update_policy ON coach_availability_exceptions;
 CREATE POLICY coach_exceptions_update_policy ON coach_availability_exceptions
     FOR UPDATE
     USING (
@@ -533,6 +540,7 @@ CREATE POLICY coach_exceptions_update_policy ON coach_availability_exceptions
         )
     );
 
+DROP POLICY IF EXISTS coach_exceptions_delete_policy ON coach_availability_exceptions;
 CREATE POLICY coach_exceptions_delete_policy ON coach_availability_exceptions
     FOR DELETE
     USING (
