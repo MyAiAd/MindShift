@@ -2208,7 +2208,19 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             let identity = originalIdentity || backupOriginalIdentity;
             
             // EMERGENCY FIX: If originalProblemIdentity is the problem statement (bug), use currentIdentity instead
-            if (identity && (identity.includes('get mad') || identity.includes('too often') || identity.includes('problem'))) {
+            // Expanded detection patterns for problem statements vs identity responses
+            const problemStatementPatterns = [
+              'get mad', 'too often', 'problem', 'I get', 'I am', 'I feel', 'I have',
+              'I do', 'I can\'t', 'I cannot', 'I don\'t', 'I need', 'I want', 'I wish',
+              'my', 'when I', 'if I', 'because', 'since', 'whenever', 'always',
+              'never', 'sometimes', 'often', 'usually', 'tend to', 'keep', 'keeps'
+            ];
+            
+            const isProblemStatement = identity && problemStatementPatterns.some(pattern => 
+              identity.toLowerCase().includes(pattern.toLowerCase())
+            );
+            
+            if (isProblemStatement) {
               console.warn(`🚨 IDENTITY_CHECK: originalProblemIdentity appears to be problem statement: "${identity}", using currentIdentity instead: "${currentIdentity}"`);
               identity = currentIdentity;
             }
