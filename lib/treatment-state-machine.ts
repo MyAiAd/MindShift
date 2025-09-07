@@ -2257,10 +2257,11 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             // EMERGENCY FIX: If originalProblemIdentity is the problem statement (bug), use currentIdentity instead
             // Expanded detection patterns for problem statements vs identity responses
             const problemStatementPatterns = [
-              'get mad', 'too often', 'problem', 'I get', 'I am', 'I feel', 'I have',
+              'get mad', 'get angry', 'too often', 'problem', 'I get', 'I am', 'I feel', 'I have',
               'I do', 'I can\'t', 'I cannot', 'I don\'t', 'I need', 'I want', 'I wish',
               'my', 'when I', 'if I', 'because', 'since', 'whenever', 'always',
-              'never', 'sometimes', 'often', 'usually', 'tend to', 'keep', 'keeps'
+              'never', 'sometimes', 'often', 'usually', 'tend to', 'keep', 'keeps',
+              'i get', 'i am', 'i feel', 'i have', 'i do', 'i can\'t', 'i cannot', 'i don\'t'
             ];
             
             const isProblemStatement = identity && problemStatementPatterns.some(pattern => 
@@ -2270,6 +2271,20 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             if (isProblemStatement) {
               console.warn(`🚨 IDENTITY_CHECK: originalProblemIdentity appears to be problem statement: "${identity}", using currentIdentity instead: "${currentIdentity}"`);
               identity = currentIdentity;
+            }
+            
+            // ADDITIONAL FIX: If currentIdentity is also corrupted, try to recover from user response
+            if (identity && problemStatementPatterns.some(pattern => identity.toLowerCase().includes(pattern.toLowerCase()))) {
+              console.warn(`🚨 IDENTITY_CHECK: currentIdentity is also corrupted: "${identity}", trying to recover from user response`);
+              // Try to get the identity from the intro step response
+              const introResponse = context.userResponses?.['identity_shifting_intro'];
+              if (introResponse) {
+                identity = this.processIdentityResponse(introResponse.trim());
+                console.log(`🔍 IDENTITY_CHECK: Recovered identity from intro response: "${introResponse}" -> "${identity}"`);
+              } else {
+                console.warn(`🚨 IDENTITY_CHECK: Could not recover identity, using fallback`);
+                identity = 'that identity';
+              }
             }
             
             // If originalProblemIdentity is somehow missing, try to reconstruct it from userResponses
