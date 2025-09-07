@@ -386,11 +386,11 @@ BEGIN
                 SELECT * INTO existing_sessions
                 FROM coaching_sessions
                 WHERE coach_id = p_coach_id
-                AND DATE(scheduled_at) = p_date
+                AND scheduled_at::date = p_date
                 AND status IN ('scheduled', 'confirmed')
                 AND (
-                    (TIME(scheduled_at) <= slot_start AND TIME(scheduled_at) + (duration_minutes || ' minutes')::INTERVAL > slot_start) OR
-                    (TIME(scheduled_at) < slot_end AND TIME(scheduled_at) >= slot_start)
+                    (scheduled_at::time <= slot_start AND scheduled_at::time + (duration_minutes || ' minutes')::INTERVAL > slot_start) OR
+                    (scheduled_at::time < slot_end AND scheduled_at::time >= slot_start)
                 );
                 
                 IF FOUND THEN
