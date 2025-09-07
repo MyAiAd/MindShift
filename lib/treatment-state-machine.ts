@@ -1234,8 +1234,11 @@ export class TreatmentStateMachine {
             } else {
               // User provided description, store it and proceed directly to treatment
               const statement = userInput || '';
+              console.log(`🔍 WORK_TYPE_DESCRIPTION: Storing problem statement: "${statement}"`);
               context.metadata.problemStatement = statement;
               context.problemStatement = statement; // Keep for compatibility
+              console.log(`🔍 WORK_TYPE_DESCRIPTION: Stored in metadata.problemStatement: "${context.metadata.problemStatement}"`);
+              console.log(`🔍 WORK_TYPE_DESCRIPTION: Stored in problemStatement: "${context.problemStatement}"`);
               
               // Skip confirmation and route directly to treatment intro step  
               if (workType === 'problem') {
@@ -1528,6 +1531,7 @@ export class TreatmentStateMachine {
             const diggingProblem = context?.metadata?.currentDiggingProblem;
             const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
             console.log(`🔍 PROBLEM_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}" (digging: "${diggingProblem}")`);
+            console.log(`🔍 PROBLEM_SHIFTING_INTRO: Available sources - metadata.problemStatement: "${context?.metadata?.problemStatement}", problemStatement: "${context?.problemStatement}", userInput: "${userInput}"`);
             
             // Check if we should skip intro instructions (when cycling back from check_if_still_problem)
             if (context?.metadata?.skipIntroInstructions) {
