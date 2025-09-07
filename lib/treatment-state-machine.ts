@@ -2044,28 +2044,17 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
                 return "What kind of me?";
               }
               
-              // Store the processed identity
+              // Store the processed identity with proper labeling
+              context.metadata.identityResponse = {
+                type: 'IDENTITY',
+                value: processedIdentity,
+                originalInput: userInput.trim()
+              };
+              
+              // Keep currentIdentity for backward compatibility
               context.metadata.currentIdentity = processedIdentity;
               
-              // CRITICAL FIX: Only set originalProblemIdentity if it's not already set
-              // This prevents it from being overwritten if the intro step is called multiple times
-              if (!context.metadata.originalProblemIdentity) {
-                // ENSURE we're storing the USER'S IDENTITY RESPONSE, not the problem statement
-                const userIdentityResponse = processedIdentity; // This should be the user's answer like "an angry one"
-                context.metadata.originalProblemIdentity = userIdentityResponse; // Store original for identity_check
-                // BACKUP: Also store in a separate field for extra protection
-                context.metadata.identityShiftingOriginalIdentity = userIdentityResponse;
-                console.log(`🔍 IDENTITY_SHIFTING_INTRO: SETTING originalProblemIdentity for the FIRST TIME: "${userIdentityResponse}"`);
-                console.log(`🔍 IDENTITY_SHIFTING_INTRO: This should be the user's identity response, NOT the problem statement`);
-              } else {
-                console.log(`🔍 IDENTITY_SHIFTING_INTRO: originalProblemIdentity already set to: "${context.metadata.originalProblemIdentity}", keeping it unchanged`);
-              }
-              
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Stored currentIdentity: "${processedIdentity}"`);
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: originalProblemIdentity is: "${context.metadata.originalProblemIdentity}"`);
-              
-              // CRITICAL: Ensure originalProblemIdentity is never overwritten after this point
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ORIGINAL PROBLEM IDENTITY LOCKED: "${context.metadata.originalProblemIdentity}"`);
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Stored identity response:`, context.metadata.identityResponse);
             }
             
             return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
@@ -2083,29 +2072,15 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_dissolve_step_a',
           scriptedResponse: (userInput, context) => {
-            let identity = context.metadata.currentIdentity || 'that identity';
+            // Use the properly labeled identity response
+            const identityData = context.metadata.identityResponse;
+            let identity = 'that identity';
             
-            // EMERGENCY FIX: If currentIdentity appears to be corrupted with problem statement, try to recover
-            const problemStatementPatterns = [
-              'get angry', 'too often', 'problem', 'I get', 'I am', 'I feel', 'I have',
-              'I do', 'I can\'t', 'I cannot', 'I don\'t', 'i get', 'i am', 'i feel'
-            ];
-            
-            const isCurrentIdentityCorrupted = identity && problemStatementPatterns.some(pattern => 
-              identity.toLowerCase().includes(pattern.toLowerCase())
-            );
-            
-            if (isCurrentIdentityCorrupted) {
-              console.warn(`🚨 IDENTITY_DISSOLVE_STEP_A: currentIdentity appears corrupted: "${identity}"`);
-              // Try to get the identity from the intro step response
-              const introResponse = context.userResponses?.['identity_shifting_intro'];
-              if (introResponse) {
-                identity = this.processIdentityResponse(introResponse.trim());
-                console.log(`🔍 IDENTITY_DISSOLVE_STEP_A: Recovered identity from intro response: "${introResponse}" -> "${identity}"`);
-              } else {
-                console.warn(`🚨 IDENTITY_DISSOLVE_STEP_A: Could not recover identity, using fallback`);
-                identity = 'that identity';
-              }
+            if (identityData && identityData.type === 'IDENTITY') {
+              identity = identityData.value;
+            } else {
+              // Fallback to currentIdentity for backward compatibility
+              identity = context.metadata.currentIdentity || 'that identity';
             }
             
             return `Feel yourself being '${identity}'... what does it feel like?`;
@@ -2143,32 +2118,16 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           scriptedResponse: (userInput, context) => {
             // Store the response from step B
             context.metadata.stepBResponse = userInput || 'that';
-            let identity = context.metadata.currentIdentity || 'that identity';
             
-            // CRITICAL: Ensure originalProblemIdentity is preserved
-            console.log(`🔍 IDENTITY_DISSOLVE_STEP_C: originalProblemIdentity: "${context.metadata.originalProblemIdentity}", currentIdentity: "${context.metadata.currentIdentity}"`);
+            // Use the properly labeled identity response
+            const identityData = context.metadata.identityResponse;
+            let identity = 'that identity';
             
-            // EMERGENCY FIX: If currentIdentity appears to be corrupted with problem statement, try to recover
-            const problemStatementPatterns = [
-              'get angry', 'too often', 'problem', 'I get', 'I am', 'I feel', 'I have',
-              'I do', 'I can\'t', 'I cannot', 'I don\'t', 'i get', 'i am', 'i feel'
-            ];
-            
-            const isCurrentIdentityCorrupted = identity && problemStatementPatterns.some(pattern => 
-              identity.toLowerCase().includes(pattern.toLowerCase())
-            );
-            
-            if (isCurrentIdentityCorrupted) {
-              console.warn(`🚨 IDENTITY_DISSOLVE_STEP_C: currentIdentity appears corrupted: "${identity}"`);
-              // Try to get the identity from the intro step response
-              const introResponse = context.userResponses?.['identity_shifting_intro'];
-              if (introResponse) {
-                identity = this.processIdentityResponse(introResponse.trim());
-                console.log(`🔍 IDENTITY_DISSOLVE_STEP_C: Recovered identity from intro response: "${introResponse}" -> "${identity}"`);
-              } else {
-                console.warn(`🚨 IDENTITY_DISSOLVE_STEP_C: Could not recover identity, using fallback`);
-                identity = 'that identity';
-              }
+            if (identityData && identityData.type === 'IDENTITY') {
+              identity = identityData.value;
+            } else {
+              // Fallback to currentIdentity for backward compatibility
+              identity = context.metadata.currentIdentity || 'that identity';
             }
             
             return `What are you when you're not being '${identity}'?`;
@@ -2244,71 +2203,20 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_check',
           scriptedResponse: (userInput, context) => {
-            const originalIdentity = context.metadata.originalProblemIdentity;
-            const backupOriginalIdentity = context.metadata.identityShiftingOriginalIdentity;
-            const currentIdentity = context.metadata.currentIdentity;
-            console.log(`🔍 IDENTITY_CHECK: originalProblemIdentity="${originalIdentity}", backupOriginalIdentity="${backupOriginalIdentity}", currentIdentity="${currentIdentity}"`);
-            console.log(`🔍 IDENTITY_CHECK: Full metadata:`, JSON.stringify(context.metadata, null, 2));
+            // Use the properly labeled identity response
+            const identityData = context.metadata.identityResponse;
+            let identity = 'that identity';
             
-            // CRITICAL FIX: Always use originalProblemIdentity for the check, not currentIdentity
-            // The check should validate if the ORIGINAL problem identity is still felt
-            let identity = originalIdentity || backupOriginalIdentity;
-            
-            // EMERGENCY FIX: If originalProblemIdentity is the problem statement (bug), use currentIdentity instead
-            // Expanded detection patterns for problem statements vs identity responses
-            const problemStatementPatterns = [
-              'get mad', 'get angry', 'too often', 'problem', 'I get', 'I am', 'I feel', 'I have',
-              'I do', 'I can\'t', 'I cannot', 'I don\'t', 'I need', 'I want', 'I wish',
-              'my', 'when I', 'if I', 'because', 'since', 'whenever', 'always',
-              'never', 'sometimes', 'often', 'usually', 'tend to', 'keep', 'keeps',
-              'i get', 'i am', 'i feel', 'i have', 'i do', 'i can\'t', 'i cannot', 'i don\'t'
-            ];
-            
-            const isProblemStatement = identity && problemStatementPatterns.some(pattern => 
-              identity.toLowerCase().includes(pattern.toLowerCase())
-            );
-            
-            if (isProblemStatement) {
-              console.warn(`🚨 IDENTITY_CHECK: originalProblemIdentity appears to be problem statement: "${identity}", using currentIdentity instead: "${currentIdentity}"`);
-              identity = currentIdentity;
+            if (identityData && identityData.type === 'IDENTITY') {
+              identity = identityData.value;
+              console.log(`🔍 IDENTITY_CHECK: Using labeled identity: "${identity}"`);
+            } else {
+              // Fallback to currentIdentity for backward compatibility
+              identity = context.metadata.currentIdentity || 'that identity';
+              console.log(`🔍 IDENTITY_CHECK: Using fallback identity: "${identity}"`);
             }
             
-            // ADDITIONAL FIX: If currentIdentity is also corrupted, try to recover from user response
-            if (identity && problemStatementPatterns.some(pattern => identity.toLowerCase().includes(pattern.toLowerCase()))) {
-              console.warn(`🚨 IDENTITY_CHECK: currentIdentity is also corrupted: "${identity}", trying to recover from user response`);
-              // Try to get the identity from the intro step response
-              const introResponse = context.userResponses?.['identity_shifting_intro'];
-              if (introResponse) {
-                identity = this.processIdentityResponse(introResponse.trim());
-                console.log(`🔍 IDENTITY_CHECK: Recovered identity from intro response: "${introResponse}" -> "${identity}"`);
-              } else {
-                console.warn(`🚨 IDENTITY_CHECK: Could not recover identity, using fallback`);
-                identity = 'that identity';
-              }
-            }
-            
-            // If originalProblemIdentity is somehow missing, try to reconstruct it from userResponses
-            if (!identity) {
-              console.warn(`🚨 IDENTITY_CHECK: originalProblemIdentity is missing! Attempting to reconstruct...`);
-              
-              // Try to get the original identity from the intro step response
-              const introResponse = context.userResponses?.['identity_shifting_intro'];
-              if (introResponse) {
-                identity = this.processIdentityResponse(introResponse.trim());
-                console.log(`🔍 IDENTITY_CHECK: Reconstructed identity from intro response: "${introResponse}" -> "${identity}"`);
-              } else {
-                console.warn(`🚨 IDENTITY_CHECK: Could not reconstruct originalProblemIdentity! Using currentIdentity as last resort: "${currentIdentity}"`);
-                identity = currentIdentity || 'that identity';
-              }
-            }
-            
-            console.log(`🔍 IDENTITY_CHECK: Using identity="${identity}" (should be original problem identity)`);
-            
-            // Clean user-facing response without debug info
-            const finalResponse = `Can you still feel yourself being '${identity}'?`;
-            console.log(`🔍 IDENTITY_CHECK: FINAL SCRIPTED RESPONSE: "${finalResponse}"`);
-            console.log(`🔍 IDENTITY_CHECK: DEBUG VALUES - orig="${originalIdentity}", backup="${backupOriginalIdentity}", current="${currentIdentity}"`);
-            return finalResponse;
+            return `Can you still feel yourself being '${identity}'?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
