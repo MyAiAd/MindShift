@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // Build query for available coaches
     let query = supabase
       .from('profiles')
-      .select('id, first_name, last_name, email, role')
+      .select('id, first_name, last_name, email, role, settings')
       .in('role', ['coach', 'manager', 'tenant_admin'])
       .eq('is_active', true)
       .order('first_name', { ascending: true });

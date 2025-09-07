@@ -10,6 +10,7 @@ interface Coach {
   last_name: string;
   email: string;
   role: string;
+  settings?: string; // JSON string containing specialties and preferences
 }
 
 interface BookingModalProps {
@@ -159,16 +160,35 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
       setFormData(prev => ({ ...prev, meetingLink }));
     }
 
-    // Auto-generate title based on session type
+    // Reset coach selection when session type changes
     if (field === 'title' && sessionTypes.includes(value)) {
-      const coach = coaches.find(c => c.id === formData.coachId);
-      const coachName = coach ? `${coach.first_name} ${coach.last_name}` : 'Coach';
+      // Clear coach selection to force user to select from filtered list
       setFormData(prev => ({ 
         ...prev, 
-        description: `${value} session with ${coachName}` 
+        coachId: '',
+        description: `${value} session` 
       }));
     }
   };
+
+  // Filter coaches based on selected session type
+  const getFilteredCoaches = () => {
+    if (!formData.title || formData.title === 'Custom Session') {
+      // For custom sessions or no selection, show all coaches
+      return coaches;
+    }
+
+    // Filter coaches by their specialties
+    return coaches.filter(coach => {
+      const settings = coach.settings ? JSON.parse(coach.settings) : {};
+      const specialties = settings.specialties || [];
+      
+      // Check if coach specializes in the selected session type
+      return specialties.includes(formData.title);
+    });
+  };
+
+  const filteredCoaches = getFilteredCoaches();
 
   const validateForm = (): string | null => {
     if (!formData.title.trim()) return 'Session title is required';
@@ -338,6 +358,11 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Preferred Coach *
+                {formData.title && formData.title !== 'Custom Session' && (
+                  <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">
+                    (Showing {formData.title} specialists)
+                  </span>
+                )}
               </label>
               {loading ? (
                 <div className="flex items-center space-x-2 text-gray-500">
@@ -352,12 +377,22 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
                   required
                   disabled={submitting}
                 >
-                  <option value="">Select a coach...</option>
-                  {coaches.map(coach => (
+                  <option value="">
+                    {formData.title && formData.title !== 'Custom Session' 
+                      ? `Select a ${formData.title} coach...` 
+                      : 'Select a coach...'
+                    }
+                  </option>
+                  {filteredCoaches.map(coach => (
                     <option key={coach.id} value={coach.id}>
                       {coach.first_name} {coach.last_name} ({coach.role})
                     </option>
                   ))}
+                  {formData.title && formData.title !== 'Custom Session' && filteredCoaches.length === 0 && (
+                    <option value="" disabled>
+                      No coaches available for {formData.title}
+                    </option>
+                  )}
                 </select>
               )}
             </div>
