@@ -4443,6 +4443,15 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         
       case 'work_type_description':
+        // CRITICAL: Store the user's problem statement FIRST before routing
+        const userProblemStatement = context.userResponses[context.currentStep] || '';
+        if (userProblemStatement) {
+          console.log(`🔍 WORK_TYPE_DESCRIPTION_DETERMINE: Storing user problem statement: "${userProblemStatement}"`);
+          context.metadata.problemStatement = userProblemStatement;
+          context.problemStatement = userProblemStatement; // Keep for compatibility
+          console.log(`🔍 WORK_TYPE_DESCRIPTION_DETERMINE: Stored - metadata: "${context.metadata.problemStatement}", context: "${context.problemStatement}"`);
+        }
+        
         // User provided description, route to appropriate treatment intro
         const descWorkType = context.metadata.workType;
         const descSelectedMethod = context.metadata.selectedMethod;
