@@ -77,6 +77,8 @@ export default function SessionsPage() {
   const [stats, setStats] = useState<SessionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showBookModal, setShowBookModal] = useState(false);
+  const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -213,6 +215,114 @@ export default function SessionsPage() {
     } catch (error) {
       console.error('Error deleting session:', error);
       alert('Failed to delete session. Please try again.');
+    }
+  };
+
+  // Bulk delete functions
+  const handleSessionSelect = (sessionId: string, checked: boolean) => {
+    const newSelected = new Set(selectedSessions);
+    if (checked) {
+      newSelected.add(sessionId);
+    } else {
+      newSelected.delete(sessionId);
+    }
+    setSelectedSessions(newSelected);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allSessionIds = new Set([
+        ...sessions.map(s => `coaching-${s.id}`),
+        ...treatmentSessions.map(s => `treatment-${s.session_id}`)
+      ]);
+      setSelectedSessions(allSessionIds);
+    } else {
+      setSelectedSessions(new Set());
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedSessions.size === 0) return;
+
+    const sessionCount = selectedSessions.size;
+    if (!confirm(`Are you sure you want to delete ${sessionCount} session${sessionCount > 1 ? 's' : ''}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setBulkDeleting(true);
+    
+    try {
+      const deletePromises: Promise<any>[] = [];
+      
+      // Separate coaching and treatment sessions
+      const coachingSessions = Array.from(selectedSessions)
+        .filter(id => id.startsWith('coaching-'))
+        .map(id => id.replace('coaching-', ''));
+      
+      const treatmentSessionIds = Array.from(selectedSessions)
+        .filter(id => id.startsWith('treatment-'))
+        .map(id => id.replace('treatment-', ''));
+
+      // Delete coaching sessions (if API exists)
+      coachingSessions.forEach(sessionId => {
+        deletePromises.push(
+          fetch('/api/sessions', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          })
+        );
+      });
+
+      // Delete treatment sessions
+      treatmentSessionIds.forEach(sessionId => {
+        deletePromises.push(
+          fetch('/api/sessions/treatment', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          })
+        );
+      });
+
+      const results = await Promise.allSettled(deletePromises);
+      
+      // Check for any failures
+      const failures = results.filter(result => result.status === 'rejected');
+      if (failures.length > 0) {
+        console.error('Some deletions failed:', failures);
+        alert(`${failures.length} session${failures.length > 1 ? 's' : ''} failed to delete. Please try again.`);
+      }
+
+      // Update local state by removing successfully deleted sessions
+      const successfulCoachingDeletes = coachingSessions.filter((_, index) => {
+        const resultIndex = index;
+        return results[resultIndex]?.status === 'fulfilled';
+      });
+
+      const successfulTreatmentDeletes = treatmentSessionIds.filter((_, index) => {
+        const resultIndex = coachingSessions.length + index;
+        return results[resultIndex]?.status === 'fulfilled';
+      });
+
+      setSessions(prev => prev.filter(session => !successfulCoachingDeletes.includes(session.id)));
+      setTreatmentSessions(prev => prev.filter(session => !successfulTreatmentDeletes.includes(session.session_id)));
+      
+      // Clear selection
+      setSelectedSessions(new Set());
+      
+      // Refresh stats
+      const statsResponse = await fetch('/api/sessions/stats');
+      const statsData = await statsResponse.json();
+      if (statsData.stats) {
+        setStats(statsData.stats);
+      }
+
+    } catch (error) {
+      console.error('Error during bulk delete:', error);
+      alert('Failed to delete sessions. Please try again.');
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -388,7 +498,41 @@ export default function SessionsPage() {
       {/* Sessions List */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Sessions</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Sessions</h2>
+            {(sessions.length > 0 || treatmentSessions.length > 0) && (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="select-all"
+                    checked={selectedSessions.size > 0 && selectedSessions.size === (sessions.length + treatmentSessions.length)}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="select-all" className="text-sm text-gray-700 dark:text-gray-300">
+                    Select All
+                  </label>
+                </div>
+                {selectedSessions.size > 0 && (
+                  <button
+                    onClick={handleBulkDelete}
+                    disabled={bulkDeleting}
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  >
+                    {bulkDeleting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <span>Delete Selected ({selectedSessions.size})</span>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
         
         {loading ? (
@@ -419,6 +563,13 @@ export default function SessionsPage() {
                 <div key={`coaching-${session.id}`} className="p-6 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedSessions.has(`coaching-${session.id}`)}
+                        onChange={(e) => handleSessionSelect(`coaching-${session.id}`, e.target.checked)}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        aria-label={`Select ${session.title} session`}
+                      />
                       <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
                         {session.meeting_type === 'video' || session.meeting_type === 'zoom' || session.meeting_type === 'google_meet' ? (
                           <Video className="h-6 w-6 text-indigo-600" />
@@ -483,6 +634,13 @@ export default function SessionsPage() {
                 <div key={`treatment-${session.id}`} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/30 border-l-4 border-l-blue-500">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedSessions.has(`treatment-${session.session_id}`)}
+                        onChange={(e) => handleSessionSelect(`treatment-${session.session_id}`, e.target.checked)}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        aria-label={`Select ${getTreatmentSessionTitle(session)} session`}
+                      />
                       <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                         <Activity className="h-6 w-6 text-blue-600" />
                       </div>
