@@ -134,6 +134,28 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
       
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 Booking Modal: Raw coaches data:', data.coaches);
+        
+        // Debug each coach's settings
+        data.coaches?.forEach((coach: Coach, index: number) => {
+          console.log(`🔍 Coach ${index + 1} (${coach.first_name} ${coach.last_name}):`, {
+            id: coach.id,
+            role: coach.role,
+            settings: coach.settings,
+            settingsType: typeof coach.settings,
+            settingsLength: coach.settings?.length
+          });
+          
+          if (coach.settings) {
+            try {
+              const parsed = JSON.parse(coach.settings);
+              console.log(`✅ Parsed settings for ${coach.first_name}:`, parsed);
+            } catch (e) {
+              console.error(`❌ Failed to parse settings for ${coach.first_name}:`, e);
+            }
+          }
+        });
+        
         setCoaches(data.coaches || []);
       } else {
         const errorData = await response.json();
@@ -181,20 +203,43 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
   };
 
   const getFilteredCoaches = () => {
+    console.log('🔍 Filtering coaches with title:', formData.title);
+    
     if (!formData.title || formData.title === 'Custom Session') {
+      console.log('🔍 No title or Custom Session - returning all coaches');
       return coaches;
     }
 
     const filtered = coaches.filter(coach => {
-      if (!coach.settings) return true; // Include coaches without settings
+      console.log(`🔍 Checking coach ${coach.first_name} ${coach.last_name}:`, {
+        hasSettings: !!coach.settings,
+        settings: coach.settings
+      });
+      
+      if (!coach.settings) {
+        console.log(`✅ Coach ${coach.first_name} has no settings - including`);
+        return true; // Include coaches without settings
+      }
       
       try {
         const settings = JSON.parse(coach.settings);
         const specialties = settings.specialties || [];
-        return specialties.includes(formData.title);
-      } catch {
+        const matches = specialties.includes(formData.title);
+        
+        console.log(`🔍 Coach ${coach.first_name} specialties:`, specialties);
+        console.log(`🔍 Looking for "${formData.title}" - matches: ${matches}`);
+        
+        return matches;
+      } catch (e) {
+        console.error(`❌ Failed to parse settings for ${coach.first_name}:`, e);
         return true; // Include coaches with malformed settings as fallback
       }
+    });
+
+    console.log('🔍 Filtered coaches result:', {
+      originalCount: coaches.length,
+      filteredCount: filtered.length,
+      filteredCoaches: filtered.map(c => `${c.first_name} ${c.last_name}`)
     });
 
     // Ensure we always have at least some coaches available
