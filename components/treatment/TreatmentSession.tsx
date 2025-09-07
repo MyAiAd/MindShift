@@ -23,10 +23,17 @@ interface TreatmentSessionProps {
 }
 
 interface SessionStats {
-  scriptedResponses: number;
-  aiResponses: number;
+  totalResponses: number;
   avgResponseTime: number;
   aiUsagePercent: number;
+}
+
+// NEW: Performance metrics from response caching
+interface PerformanceMetrics {
+  cacheHitRate: number;
+  averageResponseTime: number;
+  preloadedResponsesUsed: number;
+  totalResponses: number;
 }
 
 interface StepHistoryEntry {
@@ -34,8 +41,7 @@ interface StepHistoryEntry {
   currentStep: string;
   userInput: string;
   sessionStats: SessionStats;
-  lastResponseTime: number;
-  timestamp: Date;
+  timestamp: number;
 }
 
 export default function TreatmentSession({ 
@@ -52,10 +58,17 @@ export default function TreatmentSession({
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [sessionStats, setSessionStats] = useState<SessionStats>({
-    scriptedResponses: 0,
-    aiResponses: 0,
+    totalResponses: 0,
     avgResponseTime: 0,
     aiUsagePercent: 0
+  });
+  
+  // NEW: Performance metrics state
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
+    cacheHitRate: 0,
+    averageResponseTime: 0,
+    preloadedResponsesUsed: 0,
+    totalResponses: 0
   });
   const [lastResponseTime, setLastResponseTime] = useState<number>(0);
   const [stepHistory, setStepHistory] = useState<StepHistoryEntry[]>([]);
@@ -205,6 +218,11 @@ export default function TreatmentSession({
         setLastResponseTime(data.responseTime);
         updateStats(data);
 
+        // NEW: Update performance metrics if available
+        if (data.performanceMetrics) {
+          setPerformanceMetrics(data.performanceMetrics);
+        }
+
         // Global voice: Auto-speak welcome message when enabled in accessibility settings
         if (voice.isVoiceOutputEnabled) {
           voice.speakGlobally(welcomeMessage.content);
@@ -347,6 +365,11 @@ export default function TreatmentSession({
         setCurrentStep(data.currentStep);
         setLastResponseTime(data.responseTime);
         updateStats(data);
+
+        // NEW: Update performance metrics if available
+        if (data.performanceMetrics) {
+          setPerformanceMetrics(data.performanceMetrics);
+        }
 
         // SAFE: Save to history AFTER successful state update (doesn't interfere with state machine)
         // Delay to ensure all state updates are complete and voice system is stable
@@ -525,8 +548,7 @@ export default function TreatmentSession({
       currentStep,
       userInput,
       sessionStats: { ...sessionStats }, // Deep copy
-      lastResponseTime,
-      timestamp: new Date()
+      timestamp: new Date().getTime() // Use current timestamp
     };
 
     setStepHistory(prev => {
@@ -596,7 +618,7 @@ export default function TreatmentSession({
       setCurrentStep(backendCurrentStep); // Use backend's step, not history step
       setUserInput(previousState.userInput);
       setSessionStats({ ...previousState.sessionStats });
-      setLastResponseTime(previousState.lastResponseTime);
+              // Note: lastResponseTime will be updated by the response handler
       
       // Remove the last history entry
       setStepHistory(prev => prev.slice(0, -1));
@@ -613,12 +635,11 @@ export default function TreatmentSession({
 
   const updateStats = (data: any) => {
     setSessionStats(prev => ({
-      scriptedResponses: data.usedAI ? prev.scriptedResponses : prev.scriptedResponses + 1,
-      aiResponses: data.usedAI ? prev.aiResponses + 1 : prev.aiResponses,
+      totalResponses: prev.totalResponses + 1, // Increment total responses
       avgResponseTime: data.responseTime || prev.avgResponseTime,
       aiUsagePercent: calculateAIUsagePercent(
-        data.usedAI ? prev.aiResponses + 1 : prev.aiResponses,
-        data.usedAI ? prev.scriptedResponses : prev.scriptedResponses + 1
+        data.usedAI ? prev.totalResponses : prev.totalResponses, // Use total responses for AI usage
+        data.usedAI ? prev.totalResponses - 1 : prev.totalResponses // Subtract 1 for scripted responses
       )
     }));
   };
@@ -1592,10 +1613,17 @@ export default function TreatmentSession({
             <p className="text-green-700 dark:text-green-200 mt-1">
                               Your {formatMethodName(sessionMethod)} session has been completed successfully.
             </p>
-            <div className="mt-3 text-sm text-green-600 dark:text-green-200">
-              Performance: {sessionStats.scriptedResponses} scripted responses, 
-              {sessionStats.aiResponses} AI-assisted ({sessionStats.aiUsagePercent}% AI usage)
-            </div>
+                                        <div className="mt-3 text-sm text-green-600 dark:text-green-200">
+                Performance: {sessionStats.totalResponses} total responses ({sessionStats.aiUsagePercent}% AI usage)
+                {performanceMetrics.totalResponses > 0 && (
+                  <span className="ml-2 text-blue-600 dark:text-blue-400">
+                    • Cache: {performanceMetrics.cacheHitRate.toFixed(1)}% hit rate
+                    {performanceMetrics.preloadedResponsesUsed > 0 && (
+                      <span> • {performanceMetrics.preloadedResponsesUsed} preloaded</span>
+                    )}
+                  </span>
+                )}
+              </div>
           </div>
         </div>
       )}

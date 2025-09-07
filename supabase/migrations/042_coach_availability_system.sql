@@ -115,6 +115,10 @@ END;
 $$;
 
 -- Function to update coach availability
+-- Drop the old function completely
+DROP FUNCTION IF EXISTS update_coach_availability(UUID, JSONB, VARCHAR);
+
+-- Create the corrected function
 CREATE OR REPLACE FUNCTION update_coach_availability(
     p_coach_id UUID,
     p_weekly_schedule JSONB,
@@ -129,6 +133,7 @@ DECLARE
     current_profile RECORD;
     coach_profile RECORD;
     schedule_item JSONB;
+    target_tenant_id UUID;
 BEGIN
     -- Get current user ID
     current_user_id := auth.uid();
@@ -165,9 +170,23 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'Selected user is not a coach');
     END IF;
     
+    -- Determine target tenant_id
+    target_tenant_id := coach_profile.tenant_id;
+    
+    -- Handle super admin with NULL tenant_id (for testing)
+    IF target_tenant_id IS NULL AND coach_profile.role = 'super_admin' THEN
+        SELECT id INTO target_tenant_id FROM tenants WHERE status = 'active' LIMIT 1;
+        IF target_tenant_id IS NULL THEN
+            SELECT id INTO target_tenant_id FROM tenants LIMIT 1;
+        END IF;
+        IF target_tenant_id IS NULL THEN
+            RETURN jsonb_build_object('success', false, 'error', 'No tenant available for super admin testing');
+        END IF;
+    END IF;
+    
     -- Verify access permissions (unless super admin)
     IF current_profile.role != 'super_admin' THEN
-        IF current_profile.role != 'tenant_admin' OR coach_profile.tenant_id != current_profile.tenant_id THEN
+        IF current_profile.role != 'tenant_admin' OR target_tenant_id != current_profile.tenant_id THEN
             RETURN jsonb_build_object('success', false, 'error', 'Coach not found or access denied');
         END IF;
     END IF;
@@ -189,7 +208,7 @@ BEGIN
             buffer_minutes
         ) VALUES (
             p_coach_id,
-            coach_profile.tenant_id,
+            target_tenant_id,
             (schedule_item->>'day_of_week')::INTEGER,
             (schedule_item->>'start_time')::TIME,
             (schedule_item->>'end_time')::TIME,
@@ -201,7 +220,8 @@ BEGIN
     
     RETURN jsonb_build_object(
         'success', true,
-        'message', 'Availability updated successfully'
+        'message', 'Availability updated successfully',
+        'tenant_id', target_tenant_id
     );
     
 EXCEPTION
@@ -230,7 +250,9 @@ AS $$
 DECLARE
     current_user_id UUID;
     current_profile RECORD;
+    coach_profile RECORD;
     exception_id UUID;
+    target_tenant_id UUID;
 BEGIN
     -- Get current user ID
     current_user_id := auth.uid();
@@ -253,13 +275,32 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'Insufficient permissions');
     END IF;
     
-    -- Verify coach exists and belongs to same tenant (unless super admin)
+    -- Get coach profile to determine tenant_id
+    SELECT * INTO coach_profile
+    FROM profiles 
+    WHERE id = p_coach_id;
+    
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Coach not found');
+    END IF;
+    
+    -- Determine target tenant_id
+    target_tenant_id := coach_profile.tenant_id;
+    
+    -- Handle super admin with NULL tenant_id (for testing)
+    IF target_tenant_id IS NULL AND coach_profile.role = 'super_admin' THEN
+        SELECT id INTO target_tenant_id FROM tenants WHERE status = 'active' LIMIT 1;
+        IF target_tenant_id IS NULL THEN
+            SELECT id INTO target_tenant_id FROM tenants LIMIT 1;
+        END IF;
+        IF target_tenant_id IS NULL THEN
+            RETURN jsonb_build_object('success', false, 'error', 'No tenant available for super admin testing');
+        END IF;
+    END IF;
+    
+    -- Verify access permissions (unless super admin)
     IF current_profile.role != 'super_admin' THEN
-        IF NOT EXISTS (
-            SELECT 1 FROM profiles 
-            WHERE id = p_coach_id 
-            AND tenant_id = current_profile.tenant_id
-        ) THEN
+        IF current_profile.role != 'tenant_admin' OR target_tenant_id != current_profile.tenant_id THEN
             RETURN jsonb_build_object('success', false, 'error', 'Coach not found or access denied');
         END IF;
     END IF;
@@ -276,7 +317,7 @@ BEGIN
         all_day
     ) VALUES (
         p_coach_id,
-        current_profile.tenant_id,
+        target_tenant_id,
         p_exception_date,
         p_start_time,
         p_end_time,
@@ -295,7 +336,8 @@ BEGIN
     RETURN jsonb_build_object(
         'success', true,
         'exception_id', exception_id,
-        'message', 'Exception added successfully'
+        'message', 'Exception added successfully',
+        'tenant_id', target_tenant_id
     );
     
 EXCEPTION
@@ -307,7 +349,7 @@ EXCEPTION
 END;
 $$;
 
--- Function to get available time slots for a coach on a specific date
+-- Fix get_coach_available_slots function to handle super admin with NULL tenant_id
 CREATE OR REPLACE FUNCTION get_coach_available_slots(
     p_coach_id UUID,
     p_date DATE,
@@ -329,13 +371,30 @@ DECLARE
     slot_time TIME;
     buffer_minutes INTEGER;
     is_slot_available BOOLEAN;
+    coach_profile RECORD;
+    current_user_id UUID;
 BEGIN
+    -- Get current user for debugging
+    current_user_id := auth.uid();
+    
     -- Don't allow booking in the past
     IF p_date < CURRENT_DATE THEN
         RETURN jsonb_build_object(
             'success', true,
             'slots', '[]'::jsonb,
             'message', 'No slots available for past dates'
+        );
+    END IF;
+    
+    -- Get coach profile for debugging
+    SELECT * INTO coach_profile
+    FROM profiles 
+    WHERE id = p_coach_id;
+    
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Coach profile not found'
         );
     END IF;
     
@@ -423,12 +482,37 @@ BEGIN
         END LOOP;
     END LOOP;
     
+    -- Return results with debug info
     RETURN jsonb_build_object(
         'success', true,
         'slots', available_slots,
         'date', p_date,
-        'coach_id', p_coach_id
+        'coach_id', p_coach_id,
+        'day_of_week', day_of_week,
+        'debug_info', jsonb_build_object(
+            'coach_role', coach_profile.role,
+            'coach_tenant_id', coach_profile.tenant_id,
+            'current_user', current_user_id,
+            'availability_count', (
+                SELECT COUNT(*) 
+                FROM coach_availability 
+                WHERE coach_id = p_coach_id 
+                AND day_of_week = day_of_week
+            )
+        )
     );
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', SQLERRM,
+            'debug_info', jsonb_build_object(
+                'coach_id', p_coach_id,
+                'date', p_date,
+                'current_user', auth.uid()
+            )
+        );
 END;
 $$;
 

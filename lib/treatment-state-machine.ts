@@ -42,25 +42,69 @@ export interface TreatmentContext {
 export interface ProcessingResult {
   canContinue: boolean;
   nextStep?: string;
+  scriptedResponse?: string;
+  needsLinguisticProcessing?: boolean;
+  requiresRetry?: boolean;
   reason?: string;
   triggeredAI?: boolean;
-  scriptedResponse?: string;
-  needsLinguisticProcessing?: boolean; // Flag for the 2 specific linguistic processing cases
   needsAIAssistance?: {
     trigger: AITrigger;
     context: string;
     userInput: string;
   };
+  metadata?: {
+    phase: string;
+    step: string;
+    userInput: string;
+  };
+}
+
+// NEW: Response caching interfaces for performance optimization
+interface CachedResponse {
+  response: string;
+  timestamp: number;
+  stepId: string;
+  contextHash: string; // Simple hash of relevant context
+}
+
+interface ResponseCache {
+  cache: Map<string, CachedResponse>;
+  hitCount: number;
+  missCount: number;
+  preloadedResponses: Set<string>;
+}
+
+// NEW: Performance metrics tracking
+interface PerformanceMetrics {
+  cacheHitRate: number;
+  averageResponseTime: number;
+  preloadedResponsesUsed: number;
+  totalResponses: number;
 }
 
 export class TreatmentStateMachine {
   private phases: Map<string, TreatmentPhase>;
   private contexts: Map<string, TreatmentContext>;
 
+  // NEW: Response caching system for performance optimization
+  private responseCache: ResponseCache;
+  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  private readonly MAX_CACHE_SIZE = 100; // Prevent memory bloat
+
   constructor() {
     this.phases = new Map();
     this.contexts = new Map();
     this.initializePhases();
+    
+    // NEW: Initialize response caching system
+    this.responseCache = {
+      cache: new Map(),
+      hitCount: 0,
+      missCount: 0,
+      preloadedResponses: new Set()
+    };
+    
+    console.log('🚀 RESPONSE_CACHE: Treatment State Machine initialized with response caching');
   }
 
   /**
@@ -205,21 +249,26 @@ export class TreatmentStateMachine {
           const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, treatmentContext);
           
           console.log(`🔍 PROCESS_INPUT: Auto-progression final response="${actualResponse}"`);
-          // Save the updated context back to the contexts map
-          this.contexts.set(treatmentContext.sessionId, treatmentContext);
-          console.log(`🔍 PROCESS_INPUT: Auto-progression SAVED context for session ${treatmentContext.sessionId}`);
-          
-          // Persist context to database
-          this.saveContextToDatabase(treatmentContext).catch(error => 
-            console.error('Failed to save context to database:', error)
-          );
-          
-          return {
-            canContinue: true,
-            nextStep: nextStepId,
-            scriptedResponse: actualResponse,
-            needsLinguisticProcessing
-          };
+                  // Save the updated context back to the contexts map
+        this.contexts.set(treatmentContext.sessionId, treatmentContext);
+        console.log(`🔍 PROCESS_INPUT: Auto-progression SAVED context for session ${treatmentContext.sessionId}`);
+        
+        // Persist context to database
+        this.saveContextToDatabase(treatmentContext).catch(error => 
+          console.error('Failed to save context to database:', error)
+        );
+        
+        // NEW: Pre-load next likely responses in background
+        setTimeout(() => {
+          this.preloadNextResponses(treatmentContext.sessionId);
+        }, 100); // Small delay to avoid blocking current response
+        
+        return {
+          canContinue: true,
+          nextStep: nextStepId,
+          scriptedResponse: actualResponse,
+          needsLinguisticProcessing
+        };
         } else {
           console.error(`❌ PROCESS_INPUT: Auto-progression step '${nextStepId}' not found in phase '${treatmentContext.currentPhase}'`);
           console.error(`❌ PROCESS_INPUT: Available steps:`, updatedPhase.steps.map(s => s.id));
@@ -268,6 +317,11 @@ export class TreatmentStateMachine {
         this.saveContextToDatabase(treatmentContext).catch(error => 
           console.error('Failed to save context to database:', error)
         );
+        
+        // NEW: Pre-load next likely responses in background
+        setTimeout(() => {
+          this.preloadNextResponses(treatmentContext.sessionId);
+        }, 100); // Small delay to avoid blocking current response
         
         return {
           canContinue: true,
@@ -348,17 +402,199 @@ export class TreatmentStateMachine {
 
   /**
    * Get instant scripted response - <200ms performance target
+   * NEW: Enhanced with caching for even faster responses
    */
   private getScriptedResponse(step: TreatmentStep, context: TreatmentContext, currentUserInput?: string): string {
+    const startTime = performance.now();
+    
+    // NEW: Try cache first for static responses
+    if (typeof step.scriptedResponse === 'string') {
+      const cacheKey = `static_${step.id}`;
+      const cached = this.getCachedResponse(cacheKey);
+      if (cached) {
+        this.responseCache.hitCount++;
+        console.log(`🚀 CACHE_HIT: Static response for step "${step.id}" (${Math.round(performance.now() - startTime)}ms)`);
+        return cached;
+      }
+    }
+    
+    // Generate response (existing logic)
+    let response: string;
     if (typeof step.scriptedResponse === 'function') {
       // Use current user input if provided, otherwise fall back to previous step response
       const userInput = currentUserInput || (() => {
         const previousStepId = this.getPreviousStep(step.id, context.currentPhase);
         return previousStepId ? context.userResponses[previousStepId] : undefined;
       })();
-      return step.scriptedResponse(userInput, context);
+      
+      // NEW: Try cache for dynamic responses with context hash
+      const contextHash = this.generateContextHash(step.id, userInput, context);
+      const cacheKey = `dynamic_${step.id}_${contextHash}`;
+      const cached = this.getCachedResponse(cacheKey);
+      if (cached) {
+        this.responseCache.hitCount++;
+        console.log(`🚀 CACHE_HIT: Dynamic response for step "${step.id}" (${Math.round(performance.now() - startTime)}ms)`);
+        return cached;
+      }
+      
+      response = step.scriptedResponse(userInput, context);
+      
+      // NEW: Cache the dynamic response
+      this.setCachedResponse(cacheKey, response, step.id);
+    } else {
+      response = step.scriptedResponse;
+      
+      // NEW: Cache the static response
+      const cacheKey = `static_${step.id}`;
+      this.setCachedResponse(cacheKey, response, step.id);
     }
-    return step.scriptedResponse;
+    
+    this.responseCache.missCount++;
+    const responseTime = Math.round(performance.now() - startTime);
+    console.log(`🚀 CACHE_MISS: Generated response for step "${step.id}" (${responseTime}ms)`);
+    
+    return response;
+  }
+
+  /**
+   * NEW: Get cached response if valid
+   */
+  private getCachedResponse(cacheKey: string): string | null {
+    const cached = this.responseCache.cache.get(cacheKey);
+    if (!cached) return null;
+    
+    // Check if cache entry is still valid
+    if (Date.now() - cached.timestamp > this.CACHE_TTL_MS) {
+      this.responseCache.cache.delete(cacheKey);
+      return null;
+    }
+    
+    return cached.response;
+  }
+
+  /**
+   * NEW: Set cached response
+   */
+  private setCachedResponse(cacheKey: string, response: string, stepId: string): void {
+    // Prevent cache bloat
+    if (this.responseCache.cache.size >= this.MAX_CACHE_SIZE) {
+      // Remove oldest entries
+      const entries = Array.from(this.responseCache.cache.entries());
+      entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toRemove = entries.slice(0, 10); // Remove oldest 10 entries
+      toRemove.forEach(([key]) => this.responseCache.cache.delete(key));
+    }
+    
+    this.responseCache.cache.set(cacheKey, {
+      response,
+      timestamp: Date.now(),
+      stepId,
+      contextHash: cacheKey
+    });
+  }
+
+  /**
+   * NEW: Generate simple hash for context-dependent responses
+   */
+  private generateContextHash(stepId: string, userInput: string | undefined, context: TreatmentContext): string {
+    const relevantData = {
+      stepId,
+      userInput: userInput || '',
+      workType: context.metadata.workType,
+      selectedMethod: context.metadata.selectedMethod,
+      currentPhase: context.currentPhase,
+      // Only include relevant metadata that affects response generation
+      problemStatement: context.problemStatement,
+      currentBelief: context.metadata.currentBelief,
+      desiredFeeling: context.metadata.desiredFeeling
+    };
+    
+    // Simple hash - could be improved with actual hash function if needed
+    return btoa(JSON.stringify(relevantData)).substring(0, 16);
+  }
+
+  /**
+   * NEW: Pre-load likely next responses in background
+   */
+  public preloadNextResponses(sessionId: string): void {
+    try {
+      const context = this.contexts.get(sessionId);
+      if (!context) return;
+      
+      const currentPhase = this.phases.get(context.currentPhase);
+      if (!currentPhase) return;
+      
+      const currentStep = currentPhase.steps.find(s => s.id === context.currentStep);
+      if (!currentStep) return;
+      
+      // Predict next 2-3 most likely steps
+      const likelyNextSteps = this.predictNextSteps(currentStep, context);
+      
+      // Pre-generate responses for likely steps
+      likelyNextSteps.forEach(stepId => {
+        const step = currentPhase.steps.find(s => s.id === stepId);
+        if (step && typeof step.scriptedResponse === 'string') {
+          // Pre-cache static responses
+          const cacheKey = `static_${step.id}`;
+          if (!this.responseCache.cache.has(cacheKey)) {
+            this.setCachedResponse(cacheKey, step.scriptedResponse, step.id);
+            this.responseCache.preloadedResponses.add(stepId);
+            console.log(`🚀 PRELOAD: Cached static response for step "${stepId}"`);
+          }
+        }
+      });
+      
+    } catch (error) {
+      console.warn('🚀 PRELOAD: Error pre-loading responses:', error);
+    }
+  }
+
+  /**
+   * NEW: Predict most likely next steps based on current context
+   */
+  private predictNextSteps(currentStep: TreatmentStep, context: TreatmentContext): string[] {
+    const predictions: string[] = [];
+    
+    // Use existing nextStep if defined
+    if (currentStep.nextStep) {
+      predictions.push(currentStep.nextStep);
+    }
+    
+    // Add phase-specific predictions based on common flows
+    switch (context.currentPhase) {
+      case 'introduction':
+        if (context.currentStep === 'mind_shifting_explanation') {
+          // Most common flows after problem explanation
+          predictions.push('work_type_description', 'goal_description', 'negative_experience_description');
+        }
+        break;
+      
+      case 'problem_shifting':
+        // Sequential flow is predictable
+        const problemSteps = ['problem_shifting_intro', 'body_sensation_check', 'feel_solution_state'];
+        const currentIndex = problemSteps.indexOf(context.currentStep);
+        if (currentIndex >= 0 && currentIndex < problemSteps.length - 1) {
+          predictions.push(problemSteps[currentIndex + 1]);
+        }
+        break;
+        
+      // Add more phase-specific predictions as needed
+    }
+    
+    return predictions.slice(0, 3); // Limit to top 3 predictions
+  }
+
+  /**
+   * NEW: Get performance metrics for monitoring
+   */
+  public getPerformanceMetrics(): PerformanceMetrics {
+    const total = this.responseCache.hitCount + this.responseCache.missCount;
+    return {
+      cacheHitRate: total > 0 ? (this.responseCache.hitCount / total) * 100 : 0,
+      averageResponseTime: 0, // Could be enhanced to track this
+      preloadedResponsesUsed: this.responseCache.preloadedResponses.size,
+      totalResponses: total
+    };
   }
 
   /**

@@ -158,6 +158,11 @@ async function handleStartSession(sessionId: string, userId: string) {
     // Save the initial welcome interaction to database
     await saveInteractionToDatabase(sessionId, 'start', finalResponse);
 
+    // NEW: Add performance metrics to response
+    const perfMetrics = treatmentMachine.getPerformanceMetrics();
+    (finalResponse as any).performanceMetrics = perfMetrics;
+    console.log(`🚀 PERFORMANCE: Cache hit rate: ${perfMetrics.cacheHitRate.toFixed(1)}%, Preloaded responses: ${perfMetrics.preloadedResponsesUsed}`);
+
     return NextResponse.json(finalResponse);
   } catch (error) {
     console.error('Start session error:', error);
@@ -324,6 +329,11 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
 
     // Update session context in database
     await updateSessionContextInDatabase(sessionId, finalResponse.currentStep, finalResponse.usedAI, finalResponse.responseTime);
+
+    // NEW: Add performance metrics to response
+    const perfMetrics = treatmentMachine.getPerformanceMetrics();
+    (finalResponse as any).performanceMetrics = perfMetrics;
+    console.log(`🚀 PERFORMANCE: Cache hit rate: ${perfMetrics.cacheHitRate.toFixed(1)}%, Preloaded responses: ${perfMetrics.preloadedResponsesUsed}`);
 
     return NextResponse.json(finalResponse);
 
