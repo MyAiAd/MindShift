@@ -39,10 +39,28 @@ export async function GET(request: NextRequest) {
 
     if (statsError) {
       console.error('Error fetching session stats:', statsError);
-      return NextResponse.json(
-        { error: 'Failed to fetch session statistics' },
-        { status: 500 }
-      );
+      console.error('Stats error details:', {
+        message: statsError.message,
+        code: statsError.code,
+        details: statsError.details,
+        hint: statsError.hint
+      });
+      
+      // Return default stats instead of failing completely
+      const defaultStats = {
+        total_sessions: 0,
+        upcoming_sessions: 0,
+        completed_sessions: 0,
+        cancelled_sessions: 0,
+        total_hours_this_month: 0,
+        available_slots: 0,
+        treatment_sessions: 0,
+        active_treatment_sessions: 0,
+        completed_treatment_sessions: 0,
+        total_treatment_hours_this_month: 0
+      };
+      
+      return NextResponse.json({ stats: defaultStats });
     }
 
     // The function returns an array with one row, extract the values
@@ -52,7 +70,11 @@ export async function GET(request: NextRequest) {
       completed_sessions: 0,
       cancelled_sessions: 0,
       total_hours_this_month: 0,
-      available_slots: 0
+      available_slots: 0,
+      treatment_sessions: 0,
+      active_treatment_sessions: 0,
+      completed_treatment_sessions: 0,
+      total_treatment_hours_this_month: 0
     };
 
     return NextResponse.json({ stats });

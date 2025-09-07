@@ -180,11 +180,26 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
 
     // Filter coaches by their specialties
     return coaches.filter(coach => {
-      const settings = coach.settings ? JSON.parse(coach.settings) : {};
-      const specialties = settings.specialties || [];
-      
-      // Check if coach specializes in the selected session type
-      return specialties.includes(formData.title);
+      try {
+        // Handle both string and object settings
+        let settings: any = {};
+        if (coach.settings) {
+          if (typeof coach.settings === 'string') {
+            settings = JSON.parse(coach.settings);
+          } else if (typeof coach.settings === 'object') {
+            settings = coach.settings;
+          }
+        }
+        
+        const specialties = settings?.specialties || [];
+        
+        // Check if coach specializes in the selected session type
+        return Array.isArray(specialties) && specialties.includes(formData.title);
+      } catch (error) {
+        console.error('Error parsing coach settings:', error, coach);
+        // If parsing fails, include the coach to be safe
+        return true;
+      }
     });
   };
 
