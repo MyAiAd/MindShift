@@ -1043,16 +1043,18 @@ export class TreatmentStateMachine {
             // Check if we're already in problem method selection mode
             if (context.metadata.workType === 'problem' && !context.metadata.selectedMethod) {
               // Handle method selection for problems - only respond to method names (frontend sends these)
-              if (input.includes('problem shifting')) {
+              // Use toLowerCase() for case-insensitive matching
+              const lowerInput = input.toLowerCase();
+              if (lowerInput.includes('problem shifting')) {
                 context.metadata.selectedMethod = 'problem_shifting';
                 return "Great! We'll use Problem Shifting.";
-              } else if (input.includes('identity shifting')) {
+              } else if (lowerInput.includes('identity shifting')) {
                 context.metadata.selectedMethod = 'identity_shifting';
                 return "Great! We'll use Identity Shifting.";
-              } else if (input.includes('belief shifting')) {
+              } else if (lowerInput.includes('belief shifting')) {
                 context.metadata.selectedMethod = 'belief_shifting';
                 return "Great! We'll use Belief Shifting.";
-              } else if (input.includes('blockage shifting')) {
+              } else if (lowerInput.includes('blockage shifting')) {
                 context.metadata.selectedMethod = 'blockage_shifting';
                 return "Great! We'll use Blockage Shifting.";
               } else {
