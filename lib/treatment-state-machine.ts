@@ -1125,8 +1125,9 @@ export class TreatmentStateMachine {
             const workType = context.metadata.workType;
             
             if (workType === 'problem') {
-              // If no user input, show the method selection options
-              if (!userInput) {
+              // If no user input OR if this is the first time on this step, show the method selection options
+              if (!userInput || !context.metadata.methodSelectionShown) {
+                context.metadata.methodSelectionShown = true; // Mark that we've shown the options
                 return "Great! For problems, you can choose from several methods:\n\n1. Problem Shifting (most common)\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting\n\nPlease choose 1, 2, 3, or 4, or say the method name.";
               }
               
