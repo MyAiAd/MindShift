@@ -166,8 +166,47 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
       setFormData(prev => ({ 
         ...prev, 
         coachId: '',
+        meetingType: 'video', // Reset to default meeting type
+        meetingLink: '',
         description: `${value} session` 
       }));
+    }
+
+    // Reset meeting type when coach changes to match their preferences
+    if (field === 'coachId' && value) {
+      const selectedCoach = coaches.find(coach => coach.id === value);
+      if (selectedCoach) {
+        try {
+          let settings: any = {};
+          if (selectedCoach.settings) {
+            if (typeof selectedCoach.settings === 'string') {
+              settings = JSON.parse(selectedCoach.settings);
+            } else if (typeof selectedCoach.settings === 'object') {
+              settings = selectedCoach.settings;
+            }
+          }
+          
+          const preferredMeetingTypes = settings?.preferred_meeting_types || [];
+          
+          // Set to coach's first preferred meeting type if available
+          if (Array.isArray(preferredMeetingTypes) && preferredMeetingTypes.length > 0) {
+            // Check if current meeting type is still valid for this coach
+            const currentMeetingTypeValid = preferredMeetingTypes.includes(formData.meetingType);
+            const newMeetingType = currentMeetingTypeValid ? formData.meetingType : preferredMeetingTypes[0];
+            
+            setFormData(prev => ({ 
+              ...prev, 
+              meetingType: newMeetingType,
+              meetingLink: newMeetingType === 'zoom' ? 'https://zoom.us/j/' : 
+                         newMeetingType === 'google_meet' ? 'https://meet.google.com/' :
+                         newMeetingType === 'teams' ? 'https://teams.microsoft.com/' : '',
+              description: formData.title ? `${formData.title} session with ${selectedCoach.first_name} ${selectedCoach.last_name}` : formData.description
+            }));
+          }
+        } catch (error) {
+          console.error('Error parsing coach preferences for meeting type reset:', error);
+        }
+      }
     }
   };
 
@@ -204,6 +243,47 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
   };
 
   const filteredCoaches = getFilteredCoaches();
+
+  // Filter meeting types based on selected coach's preferences
+  const getFilteredMeetingTypes = () => {
+    if (!formData.coachId) {
+      // If no coach selected, show all meeting types
+      return meetingTypes;
+    }
+
+    const selectedCoach = coaches.find(coach => coach.id === formData.coachId);
+    if (!selectedCoach) {
+      return meetingTypes;
+    }
+
+    try {
+      // Handle both string and object settings
+      let settings: any = {};
+      if (selectedCoach.settings) {
+        if (typeof selectedCoach.settings === 'string') {
+          settings = JSON.parse(selectedCoach.settings);
+        } else if (typeof selectedCoach.settings === 'object') {
+          settings = selectedCoach.settings;
+        }
+      }
+      
+      const preferredMeetingTypes = settings?.preferred_meeting_types || [];
+      
+      // Filter meeting types to only show coach's preferences
+      if (Array.isArray(preferredMeetingTypes) && preferredMeetingTypes.length > 0) {
+        return meetingTypes.filter(type => preferredMeetingTypes.includes(type.value));
+      }
+      
+      // If no preferences set, show all meeting types
+      return meetingTypes;
+    } catch (error) {
+      console.error('Error parsing coach meeting preferences:', error, selectedCoach);
+      // If parsing fails, show all meeting types to be safe
+      return meetingTypes;
+    }
+  };
+
+  const filteredMeetingTypes = getFilteredMeetingTypes();
 
   const validateForm = (): string | null => {
     if (!formData.title.trim()) return 'Session title is required';
@@ -459,9 +539,14 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Meeting Type *
+                {formData.coachId && filteredMeetingTypes.length < meetingTypes.length && (
+                  <span className="ml-2 text-xs text-green-600 dark:text-green-400">
+                    (Coach's preferred options)
+                  </span>
+                )}
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {meetingTypes.map(type => {
+                {filteredMeetingTypes.map(type => {
                   const Icon = type.icon;
                   return (
                     <button
@@ -481,6 +566,11 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
                   );
                 })}
               </div>
+              {formData.coachId && filteredMeetingTypes.length === 0 && (
+                <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
+                  This coach has no meeting type preferences set. Please contact support.
+                </p>
+              )}
             </div>
 
             {/* Meeting Link */}
