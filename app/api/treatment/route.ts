@@ -82,6 +82,9 @@ export async function POST(request: NextRequest) {
         }
         return await handleContinueSession(sessionId, userInput, userId);
       
+      case 'resume':
+        return await handleResumeSession(sessionId, userId);
+      
       case 'status':
         return await handleGetStatus(sessionId, userId);
       
@@ -139,7 +142,7 @@ async function handleStartSession(sessionId: string, userId: string) {
     // Ensure context is loaded from database for future interactions
     await treatmentMachine.getOrCreateContextAsync(sessionId, { userId });
 
-    return NextResponse.json({
+    const finalResponse = {
       success: true,
       sessionId,
       message: result.scriptedResponse,
@@ -150,7 +153,12 @@ async function handleStartSession(sessionId: string, userId: string) {
         phase: 'intro',
         step: 'welcome'
       }
-    });
+    };
+
+    // Save the initial welcome interaction to database
+    await saveInteractionToDatabase(sessionId, 'start', finalResponse);
+
+    return NextResponse.json(finalResponse);
   } catch (error) {
     console.error('Start session error:', error);
     return NextResponse.json(
@@ -325,6 +333,139 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       { error: 'Failed to process input', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Resume existing treatment session by loading from database
+ */
+async function handleResumeSession(sessionId: string, userId: string) {
+  try {
+    console.log('Treatment API: Resuming session:', { sessionId, userId });
+    
+    // Load context from database via state machine
+    const context = await treatmentMachine.getOrCreateContextAsync(sessionId, { userId });
+    console.log('Treatment API: Context loaded:', { 
+      currentStep: context.currentStep, 
+      currentPhase: context.currentPhase,
+      hasUserResponses: Object.keys(context.userResponses).length > 0
+    });
+    
+    // Get session data from database to check if it exists
+    const supabase = createServerClient();
+    const { data: session, error } = await supabase
+      .from('treatment_sessions')
+      .select('*')
+      .eq('session_id', sessionId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !session) {
+      // Session doesn't exist in database, treat as new session
+      console.log('Treatment API: No existing session found, starting new session');
+      return await handleStartSession(sessionId, userId);
+    }
+
+    // Get conversation history from treatment_interactions
+    const { data: interactions, error: interactionsError } = await supabase
+      .from('treatment_interactions')
+      .select('user_input, response_message, used_ai, response_time, created_at')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (interactionsError) {
+      console.error('Treatment API: Error loading interactions:', interactionsError);
+    }
+
+    // Build message history
+    const messages = [];
+    
+    if (interactions && interactions.length > 0) {
+      // Each interaction represents one exchange (user input + system response)
+      // The first interaction should be the welcome message (no user_input)
+      for (let i = 0; i < interactions.length; i++) {
+        const interaction = interactions[i];
+        
+        // If this interaction has user input, add it first
+        if (interaction.user_input && interaction.user_input.trim() !== 'start') {
+          messages.push({
+            id: `user-${i}`,
+            content: interaction.user_input,
+            isUser: true,
+            timestamp: new Date(interaction.created_at)
+          });
+        }
+
+        // Always add the system response
+        messages.push({
+          id: `system-${i}`,
+          content: interaction.response_message,
+          isUser: false,
+          timestamp: new Date(interaction.created_at),
+          responseTime: interaction.response_time,
+          usedAI: interaction.used_ai
+        });
+      }
+    }
+
+    // Get the current step's scripted response to show where we are
+    let currentMessage = 'Please continue with your session.';
+    try {
+      const currentPhase = treatmentMachine.getPhaseSteps(context.currentPhase);
+      const currentStep = currentPhase?.find(step => step.id === context.currentStep);
+      
+      if (currentStep && typeof currentStep.scriptedResponse === 'function') {
+        // For function-based responses, we need to call it with the context
+        currentMessage = currentStep.scriptedResponse('', context);
+      } else if (currentStep && typeof currentStep.scriptedResponse === 'string') {
+        currentMessage = currentStep.scriptedResponse;
+      }
+    } catch (error) {
+      console.error('Error getting current step message:', error);
+      // Use default message
+    }
+
+    // Add current step message if we don't have any recent messages or if the last message is old
+    const shouldAddCurrentMessage = messages.length === 0 || 
+      (messages.length > 0 && new Date().getTime() - new Date(messages[messages.length - 1].timestamp).getTime() > 60000); // 1 minute
+
+    if (shouldAddCurrentMessage) {
+      messages.push({
+        id: 'current-step',
+        content: currentMessage,
+        isUser: false,
+        timestamp: new Date(),
+        responseTime: 0,
+        usedAI: false
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      sessionId,
+      currentStep: context.currentStep,
+      currentPhase: context.currentPhase,
+      messages: messages,
+      isExistingSession: true,
+      session: {
+        status: session.status,
+        problemStatement: context.problemStatement,
+        metadata: context.metadata,
+        startTime: session.created_at,
+        duration: session.duration_minutes
+      },
+      performance: {
+        avgResponseTime: session.avg_response_time,
+        scriptedResponses: session.scripted_responses,
+        aiResponses: session.ai_responses
+      }
+    });
+
+  } catch (error) {
+    console.error('Resume session error:', error);
+    // Fallback to starting a new session if resume fails
+    console.log('Treatment API: Resume failed, falling back to new session');
+    return await handleStartSession(sessionId, userId);
   }
 }
 

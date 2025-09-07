@@ -92,16 +92,87 @@ export default function TreatmentSession({
 
   // Start session on mount
   useEffect(() => {
-    startSession();
+    initializeSession();
   }, []);
 
-  const startSession = async () => {
+  const initializeSession = async () => {
     setIsLoading(true);
     setHasError(false);
     setErrorMessage('');
     setSelectedWorkType(null); // Reset work type selection
     
     try {
+      // First try to resume existing session
+      console.log('🔄 Attempting to resume existing session:', sessionId);
+      const resumeResponse = await fetch('/api/treatment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          userId,
+          action: 'resume'
+        })
+      });
+
+      if (!resumeResponse.ok) {
+        throw new Error(`HTTP error! status: ${resumeResponse.status}`);
+      }
+
+      const resumeData = await resumeResponse.json();
+      
+      if (resumeData.success) {
+        console.log('✅ Successfully resumed existing session');
+        
+        // Load existing messages and state
+        if (resumeData.messages && resumeData.messages.length > 0) {
+          setMessages(resumeData.messages);
+        }
+        
+        setCurrentStep(resumeData.currentStep);
+        setIsSessionActive(true);
+        
+        // Update stats if available
+        if (resumeData.performance) {
+          setLastResponseTime(resumeData.performance.avgResponseTime || 0);
+          updateStats({
+            responseTime: resumeData.performance.avgResponseTime || 0,
+            usedAI: false // This will be updated with actual usage
+          });
+        }
+
+        // Global voice: Auto-speak the last message if voice is enabled
+        if (voice.isVoiceOutputEnabled && resumeData.messages && resumeData.messages.length > 0) {
+          const lastMessage = resumeData.messages[resumeData.messages.length - 1];
+          if (!lastMessage.isUser) {
+            voice.speakGlobally(lastMessage.content);
+          }
+        }
+
+        // Save state to history
+        setTimeout(() => {
+          saveToHistory();
+        }, 1000);
+        
+        return; // Successfully resumed, exit function
+      }
+      
+      // If resume failed or returned no session, fall back to starting new session
+      console.log('⚠️ Resume failed or no existing session, starting new session');
+      await startNewSession();
+      
+    } catch (error) {
+      console.error('Resume session error:', error);
+      // Fallback to starting new session
+      console.log('⚠️ Resume error, falling back to new session');
+      await startNewSession();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const startNewSession = async () => {
+    try {
+      console.log('🆕 Starting new session');
       const response = await fetch('/api/treatment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -152,9 +223,12 @@ export default function TreatmentSession({
       setErrorMessage(errorMsg);
       setHasError(true);
       onError?.(errorMsg);
-    } finally {
-      setIsLoading(false);
     }
+  };
+
+  const startSession = async () => {
+    // Keep this method for backward compatibility, but redirect to initializeSession
+    await initializeSession();
   };
 
   const sendMessage = async () => {
