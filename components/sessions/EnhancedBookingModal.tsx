@@ -10,7 +10,7 @@ interface Coach {
   last_name: string;
   email: string;
   role: string;
-  settings?: string; // JSON string containing specialties and preferences
+  settings?: string | Record<string, any>; // JSON string or object containing specialties and preferences
 }
 
 interface AvailableSlot {
@@ -148,7 +148,10 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
           
           if (coach.settings) {
             try {
-              const parsed = JSON.parse(coach.settings);
+              // Handle both JSON string and object formats
+              const parsed = typeof coach.settings === 'string' 
+                ? JSON.parse(coach.settings) 
+                : coach.settings;
               console.log(`✅ Parsed settings for ${coach.first_name}:`, parsed);
             } catch (e) {
               console.error(`❌ Failed to parse settings for ${coach.first_name}:`, e);
@@ -213,7 +216,8 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
     const filtered = coaches.filter(coach => {
       console.log(`🔍 Checking coach ${coach.first_name} ${coach.last_name}:`, {
         hasSettings: !!coach.settings,
-        settings: coach.settings
+        settings: coach.settings,
+        settingsType: typeof coach.settings
       });
       
       if (!coach.settings) {
@@ -222,7 +226,11 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
       }
       
       try {
-        const settings = JSON.parse(coach.settings);
+        // Handle both JSON string and object formats
+        const settings = typeof coach.settings === 'string' 
+          ? JSON.parse(coach.settings) 
+          : coach.settings;
+          
         const specialties = settings.specialties || [];
         const matches = specialties.includes(formData.title);
         
@@ -253,7 +261,11 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
     if (!selectedCoach?.settings) return meetingTypes;
 
     try {
-      const settings = JSON.parse(selectedCoach.settings);
+      // Handle both JSON string and object formats
+      const settings = typeof selectedCoach.settings === 'string' 
+        ? JSON.parse(selectedCoach.settings) 
+        : selectedCoach.settings;
+        
       const preferredTypes = settings.preferred_meeting_types || [];
       
       if (preferredTypes.length === 0) return meetingTypes;
@@ -281,7 +293,11 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
       const currentCoach = coaches.find(c => c.id === formData.coachId);
       if (currentCoach && value && value !== 'Custom Session') {
         try {
-          const settings = JSON.parse(currentCoach.settings || '{}');
+          // Handle both JSON string and object formats
+          const settings = typeof currentCoach.settings === 'string' 
+            ? JSON.parse(currentCoach.settings || '{}') 
+            : (currentCoach.settings || {});
+            
           const specialties = settings.specialties || [];
           if (!specialties.includes(value)) {
             // Current coach doesn't support new session type, reset coach and dependent fields
@@ -313,7 +329,11 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
       
       if (selectedCoach?.settings) {
         try {
-          const settings = JSON.parse(selectedCoach.settings);
+          // Handle both JSON string and object formats
+          const settings = typeof selectedCoach.settings === 'string' 
+            ? JSON.parse(selectedCoach.settings) 
+            : selectedCoach.settings;
+            
           const preferredTypes = settings.preferred_meeting_types || [];
           
           // If coach has preferred meeting types and current selection isn't in them
