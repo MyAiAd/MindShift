@@ -185,6 +185,36 @@ export default function SessionsPage() {
     }
   };
 
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!confirm('Are you sure you want to delete this treatment session? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/sessions/treatment', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+
+      if (response.ok) {
+        // Remove the session from the local state
+        setTreatmentSessions(prev => prev.filter(session => session.session_id !== sessionId));
+        // Refresh stats
+        const statsResponse = await fetch('/api/sessions/stats');
+        const statsData = await statsResponse.json();
+        if (statsData.stats) {
+          setStats(statsData.stats);
+        }
+      } else {
+        throw new Error('Failed to delete session');
+      }
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      alert('Failed to delete session. Please try again.');
+    }
+  };
+
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -425,12 +455,20 @@ export default function SessionsPage() {
                     <div className="flex items-center space-x-3">
                       {getTreatmentStatusBadge(session.status)}
                       {session.status === 'active' && (
-                        <button 
-                          onClick={() => router.push(`/dashboard/sessions/treatment?sessionId=${session.session_id}`)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm inline-flex items-center"
-                        >
-                          Continue Session
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <button 
+                            onClick={() => router.push(`/dashboard/sessions/treatment?sessionId=${session.session_id}`)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm inline-flex items-center"
+                          >
+                            Continue
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteSession(session.session_id)}
+                            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm inline-flex items-center"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       )}
                       {session.status === 'completed' && (
                         <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
