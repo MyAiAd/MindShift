@@ -4589,34 +4589,34 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         const methodChoice = context.userResponses[context.currentStep]?.toLowerCase() || '';
         
         if (methodChoice.includes('problem shifting')) {
-          context.currentPhase = 'problem_shifting';
+          context.currentPhase = 'work_type_selection';
           context.metadata.selectedMethod = 'problem_shifting';
-          return 'problem_shifting_intro';
+          return 'work_type_description';
         } else if (methodChoice.includes('blockage shifting')) {
-          context.currentPhase = 'blockage_shifting';
+          context.currentPhase = 'work_type_selection';
           context.metadata.selectedMethod = 'blockage_shifting';
-          return 'blockage_shifting_intro';
+          return 'work_type_description';
         } else if (methodChoice.includes('identity shifting')) {
-          context.currentPhase = 'identity_shifting';
+          context.currentPhase = 'work_type_selection';
           context.metadata.selectedMethod = 'identity_shifting';
-          return 'identity_shifting_intro';
+          return 'work_type_description';
         } else if (methodChoice.includes('reality shifting')) {
           context.currentPhase = 'reality_shifting';
           context.metadata.selectedMethod = 'reality_shifting';
           return 'reality_goal_capture';
         } else if (methodChoice.includes('trauma shifting')) {
-          context.currentPhase = 'trauma_shifting';
+          context.currentPhase = 'work_type_selection';
           context.metadata.selectedMethod = 'trauma_shifting';
-          return 'trauma_shifting_intro';
+          return 'work_type_description';
         } else if (methodChoice.includes('belief shifting')) {
-          context.currentPhase = 'belief_shifting';
+          context.currentPhase = 'work_type_selection';
           context.metadata.selectedMethod = 'belief_shifting';
-          return 'belief_shifting_intro';
+          return 'work_type_description';
         } else {
           // Fallback to Problem Shifting (all methods now implemented)
-          context.currentPhase = 'problem_shifting';
+          context.currentPhase = 'work_type_selection';
           context.metadata.selectedMethod = 'problem_shifting';
-          return 'problem_shifting_intro';
+          return 'work_type_description';
         }
 
       case 'method_selection':
