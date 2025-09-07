@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/database-server';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // POST - Handle coach invitation validation and acceptance
 export async function POST(request: NextRequest) {
   try {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/database';
 import { 
@@ -31,7 +31,7 @@ interface FormData {
   confirmPassword: string;
 }
 
-export default function CoachSignupPage() {
+function CoachSignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -414,5 +414,20 @@ export default function CoachSignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CoachSignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CoachSignupContent />
+    </Suspense>
   );
 } 
