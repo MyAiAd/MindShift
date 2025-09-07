@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity, Zap } from 'lucide-react';
-import BookingModal from '@/components/sessions/BookingModal';
+import EnhancedBookingModal from '@/components/sessions/EnhancedBookingModal';
 
 interface CoachingSession {
   id: string;
@@ -555,7 +555,7 @@ export default function SessionsPage() {
       </div>
 
       {/* Book Session Modal */}
-      <BookingModal
+      <EnhancedBookingModal
         isOpen={showBookModal}
         onClose={() => setShowBookModal(false)}
         onBookingComplete={handleBookingComplete}

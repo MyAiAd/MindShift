@@ -12,9 +12,9 @@ import {
   Video, 
   Phone, 
   MapPin,
-  Award,
-  Clock
+  Award
 } from 'lucide-react';
+import AvailabilityCalendar from '@/components/coach/AvailabilityCalendar';
 
 interface CoachProfile {
   id: string;
@@ -399,26 +399,12 @@ export default function CoachProfilePage() {
           </div>
         </div>
 
-        {/* Availability Notes */}
+        {/* Availability Calendar */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Clock className="h-5 w-5 text-indigo-600" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Availability Notes</h2>
-          </div>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
-            Share any specific availability preferences or scheduling notes.
-          </p>
-          <textarea
-            rows={2}
-            value={formData.availabilityNotes}
-            onChange={(e) => handleInputChange('availabilityNotes', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-            placeholder="e.g., Available weekdays 9 AM - 5 PM EST, prefer 24-hour advance notice..."
-            maxLength={200}
+          <AvailabilityCalendar 
+            coachId={coachProfile?.id} 
+            readOnly={!hasCoachPermissions}
           />
-          <div className="text-right text-xs text-gray-500 mt-1">
-            {formData.availabilityNotes.length}/200 characters
-          </div>
         </div>
 
         {/* Save Button */}
