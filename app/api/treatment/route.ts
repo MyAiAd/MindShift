@@ -335,6 +335,20 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
     (finalResponse as any).performanceMetrics = perfMetrics;
     console.log(`🚀 PERFORMANCE: Cache hit rate: ${perfMetrics.cacheHitRate.toFixed(1)}%, Preloaded responses: ${perfMetrics.preloadedResponsesUsed}`);
 
+    // NEW: Add debug information for Identity Shifting tracking
+    if (finalResponse.currentStep?.includes('identity')) {
+      const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+      const debugInfo = {
+        Problem_Statement: treatmentContext?.problemStatement || treatmentContext?.metadata?.problemStatement || 'NOT_SET',
+        Chosen_Identity: treatmentContext?.metadata?.identityResponse?.value || treatmentContext?.metadata?.currentIdentity || 'NOT_SET',
+        Identity_Type: treatmentContext?.metadata?.identityResponse?.type || 'FALLBACK',
+        Current_Step: finalResponse.currentStep,
+        Current_Phase: treatmentContext?.currentPhase || 'UNKNOWN'
+      };
+      (finalResponse as any).debugInfo = debugInfo;
+      console.log('🔍 IDENTITY_DEBUG:', debugInfo);
+    }
+
     return NextResponse.json(finalResponse);
 
   } catch (error) {
