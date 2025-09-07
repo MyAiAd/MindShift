@@ -147,17 +147,10 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
     setError(null);
     setSuccess(null);
 
-    // Auto-generate meeting link for certain meeting types
+    // Meeting type selection - no link generation needed (coach provides links)
     if (field === 'meetingType') {
-      let meetingLink = '';
-      if (value === 'zoom') {
-        meetingLink = 'https://zoom.us/j/'; // Placeholder - would integrate with Zoom API
-      } else if (value === 'google_meet') {
-        meetingLink = 'https://meet.google.com/'; // Placeholder - would integrate with Google Meet API
-      } else if (value === 'teams') {
-        meetingLink = 'https://teams.microsoft.com/'; // Placeholder - would integrate with Teams API
-      }
-      setFormData(prev => ({ ...prev, meetingLink }));
+      // Just update the meeting type, coach will provide the link later
+      setFormData(prev => ({ ...prev, meetingType: value }));
     }
 
     // Reset coach selection when session type changes
@@ -167,7 +160,7 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
         ...prev, 
         coachId: '',
         meetingType: 'video', // Reset to default meeting type
-        meetingLink: '',
+        meetingLink: '', // Coach will provide link later
         description: `${value} session` 
       }));
     }
@@ -197,9 +190,7 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
             setFormData(prev => ({ 
               ...prev, 
               meetingType: newMeetingType,
-              meetingLink: newMeetingType === 'zoom' ? 'https://zoom.us/j/' : 
-                         newMeetingType === 'google_meet' ? 'https://meet.google.com/' :
-                         newMeetingType === 'teams' ? 'https://teams.microsoft.com/' : '',
+              meetingLink: '', // Coach will provide the link later
               description: formData.title ? `${formData.title} session with ${selectedCoach.first_name} ${selectedCoach.last_name}` : formData.description
             }));
           }
@@ -290,9 +281,6 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
     if (!formData.coachId) return 'Please select a coach';
     if (!formData.scheduledAt) return 'Please select a date and time';
     if (formData.durationMinutes < 15) return 'Session must be at least 15 minutes';
-    if (['video', 'zoom', 'google_meet', 'teams'].includes(formData.meetingType) && !formData.meetingLink.trim()) {
-      return 'Meeting link is required for online sessions';
-    }
     
     // Check if scheduled time is in the future
     const scheduledDate = new Date(formData.scheduledAt);
@@ -326,7 +314,7 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
           clientId: user?.id, // Current user is the client
           scheduledAt: formData.scheduledAt,
           durationMinutes: formData.durationMinutes,
-          meetingLink: formData.meetingLink || null,
+          meetingLink: null, // Coach will provide the meeting link later
           meetingType: formData.meetingType
         })
       });
@@ -573,24 +561,20 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
               )}
             </div>
 
-            {/* Meeting Link */}
+            {/* Meeting Connection Info */}
             {['video', 'zoom', 'google_meet', 'teams'].includes(formData.meetingType) && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Meeting Link *
-                </label>
-                <input
-                  type="url"
-                  value={formData.meetingLink}
-                  onChange={(e) => handleInputChange('meetingLink', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="https://..."
-                  required
-                  disabled={submitting}
-                />
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Enter the meeting link or we'll help generate one for you
-                </p>
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <Video className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                      Online Meeting Setup
+                    </h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                      We will send you the connection details as soon as they are ready.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
