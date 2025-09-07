@@ -1506,7 +1506,7 @@ export class TreatmentStateMachine {
       steps: [
         {
           id: 'choose_method',
-          scriptedResponse: "Please select your preferred Mind Shifting method.\n\n",
+          scriptedResponse: "METHOD_SELECTION_NEEDED",
           expectedResponseType: 'open',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
