@@ -1015,11 +1015,12 @@ export class TreatmentStateMachine {
             
             // Handle initial work type selection FIRST (reset state for fresh selection)
             // Use more specific checks to avoid conflicts with method names
+            console.log(`🔍 WORK_TYPE_CHECK: input="${input}", contains '1': ${input.includes('1')}, contains 'problem': ${input.includes('problem')}, contains 'shifting': ${input.includes('shifting')}`);
             if (input.includes('1') || (input.includes('problem') && !input.includes('shifting'))) {
               // Reset all work type metadata for fresh selection
               context.metadata.workType = 'problem';
               context.metadata.selectedMethod = undefined;
-              console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'problem'`);
+              console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'problem', returning PROBLEM_SELECTION_CONFIRMED`);
               // For problems, show method selection (UI will show buttons, this is for backend logic)
               return "PROBLEM_SELECTION_CONFIRMED";
             } else if (input.includes('2') || (input.includes('goal') && !input.includes('shifting'))) {
@@ -1041,11 +1042,14 @@ export class TreatmentStateMachine {
 
             
             // Check if we're already in problem method selection mode
+            console.log(`🔍 METHOD_SELECTION_CHECK: workType="${context.metadata.workType}", selectedMethod="${context.metadata.selectedMethod}", input="${input}"`);
             if (context.metadata.workType === 'problem' && !context.metadata.selectedMethod) {
               // Handle method selection for problems - only respond to method names (frontend sends these)
               // Use toLowerCase() for case-insensitive matching
               const lowerInput = input.toLowerCase();
+              console.log(`🔍 METHOD_SELECTION_MATCHING: lowerInput="${lowerInput}"`);
               if (lowerInput.includes('problem shifting')) {
+                console.log(`🔍 METHOD_SELECTION: Matched problem shifting, setting selectedMethod`);
                 context.metadata.selectedMethod = 'problem_shifting';
                 return "Great! We'll use Problem Shifting.";
               } else if (lowerInput.includes('identity shifting')) {

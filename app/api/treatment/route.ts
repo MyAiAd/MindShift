@@ -353,12 +353,24 @@ async function handleResumeSession(sessionId: string, userId: string) {
   try {
     console.log('Treatment API: Resuming session:', { sessionId, userId });
     
+    // NEW: Check if this is a very recent session (likely fresh)
+    const sessionTimestamp = sessionId.match(/session-(\d+)-/)?.[1];
+    const sessionAge = sessionTimestamp ? Date.now() - parseInt(sessionTimestamp) : Infinity;
+    const isVeryRecentSession = sessionAge < 30000; // Less than 30 seconds = definitely fresh
+    
+    if (isVeryRecentSession) {
+      console.log('Treatment API: Session is very recent, treating as new session');
+      return await handleStartSession(sessionId, userId);
+    }
+    
     // Load context from database via state machine
     const context = await treatmentMachine.getOrCreateContextAsync(sessionId, { userId });
     console.log('Treatment API: Context loaded:', { 
       currentStep: context.currentStep, 
       currentPhase: context.currentPhase,
-      hasUserResponses: Object.keys(context.userResponses).length > 0
+      hasUserResponses: Object.keys(context.userResponses).length > 0,
+      workType: context.metadata?.workType,
+      selectedMethod: context.metadata?.selectedMethod
     });
     
     // Get session data from database to check if it exists

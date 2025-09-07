@@ -115,6 +115,17 @@ export default function TreatmentSession({
     setSelectedWorkType(null); // Reset work type selection
     
     try {
+      // NEW: For fresh sessions (based on timestamp), start new instead of resuming
+      const sessionTimestamp = sessionId.match(/session-(\d+)-/)?.[1];
+      const sessionAge = sessionTimestamp ? Date.now() - parseInt(sessionTimestamp) : Infinity;
+      const isRecentSession = sessionAge < 60000; // Less than 1 minute old = likely fresh
+      
+      if (!isRecentSession) {
+        console.log('🆕 Session is old or invalid, starting fresh session');
+        await startNewSession();
+        return;
+      }
+      
       // First try to resume existing session
       console.log('🔄 Attempting to resume existing session:', sessionId);
       const resumeResponse = await fetch('/api/treatment', {
