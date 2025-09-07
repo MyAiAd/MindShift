@@ -69,7 +69,7 @@ export class AIAssistanceManager {
     'reality_shifting_intro',  // Reality Shifting: Ensure input is stated as a goal
     'reality_goal_capture',    // Reality Shifting: Ensure input is stated as a goal
     'blockage_shifting_intro', // Blockage Shifting: Ensure input is stated as a problem  
-    'identity_shifting_intro', // Identity Shifting: Ensure input is stated as a problem
+    // 'identity_shifting_intro' REMOVED - should store identity response directly, not process with AI
     'trauma_shifting_intro',   // Trauma Shifting: Ensure input is stated as a negative experience
     'belief_shifting_intro'    // Belief Shifting: Ensure input is stated as a problem
   ];

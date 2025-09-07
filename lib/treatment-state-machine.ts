@@ -392,7 +392,7 @@ export class TreatmentStateMachine {
       'problem_shifting_intro',  // Ensure problem is stated as a problem
       'reality_shifting_intro',  // Ensure goal is stated as a goal  
       'blockage_shifting_intro', // Ensure problem is stated as a problem
-      'identity_shifting_intro', // Ensure problem is stated as a problem
+      // 'identity_shifting_intro' REMOVED - should store identity response directly, not process with AI
       'trauma_shifting_intro',   // Ensure input is stated as a negative experience
       'belief_shifting_intro'    // Ensure problem is stated as a problem
     ];
