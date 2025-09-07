@@ -4341,6 +4341,33 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         console.log(`🔍 MIND_SHIFTING_DETERMINE: lastResponse="${lastResponse}", workType="${context.metadata.workType}", selectedMethod="${context.metadata.selectedMethod}"`);
         console.log(`🔍 MIND_SHIFTING_DETERMINE: Full metadata:`, JSON.stringify(context.metadata, null, 2));
         
+        // Handle work type selection based on user input
+        if (lastResponse.includes('1') || (lastResponse.includes('problem') && !lastResponse.includes('shifting'))) {
+          // Reset all work type metadata for fresh selection
+          context.metadata.workType = 'problem';
+          context.metadata.selectedMethod = undefined;
+          console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'problem'`);
+          return 'work_type_description'; // Go to problem description step
+        } else if (lastResponse.includes('2') || (lastResponse.includes('goal') && !lastResponse.includes('shifting'))) {
+          // Reset all work type metadata for fresh selection
+          context.metadata.workType = 'goal';
+          context.metadata.selectedMethod = undefined;
+          console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'goal'`);
+          context.currentPhase = 'introduction';
+          return 'goal_description';
+        } else if (lastResponse.includes('3') || (lastResponse.includes('negative') && !lastResponse.includes('shifting')) || (lastResponse.includes('experience') && !lastResponse.includes('shifting'))) {
+          // Reset all work type metadata for fresh selection
+          context.metadata.workType = 'negative_experience';
+          context.metadata.selectedMethod = undefined;
+          console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'negative_experience'`);
+          context.currentPhase = 'introduction';
+          return 'negative_experience_description';
+        }
+        
+        // If no valid selection, stay on current step
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: No valid work type selected, staying on mind_shifting_explanation`);
+        return 'mind_shifting_explanation';
+        
         const selectedWorkType = context.metadata.workType;
         const selectedMethod = context.metadata.selectedMethod;
         console.log(`🔍 MIND_SHIFTING_DETERMINE: selectedWorkType="${selectedWorkType}", selectedMethod="${selectedMethod}"`);  
