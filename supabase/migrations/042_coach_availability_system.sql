@@ -318,7 +318,7 @@ DECLARE
     available_slots JSONB := '[]'::jsonb;
     slot_start TIME;
     slot_end TIME;
-    current_time TIME;
+    slot_time TIME;
     buffer_minutes INTEGER;
     is_slot_available BOOLEAN;
 BEGIN
@@ -359,12 +359,12 @@ BEGIN
         ORDER BY start_time
     LOOP
         buffer_minutes := COALESCE(availability_record.buffer_minutes, 15);
-        current_time := availability_record.start_time;
+        slot_time := availability_record.start_time;
         
         -- Generate slots within this availability window
-        WHILE current_time + (p_duration_minutes || ' minutes')::INTERVAL <= availability_record.end_time LOOP
-            slot_start := current_time;
-            slot_end := current_time + (p_duration_minutes || ' minutes')::INTERVAL;
+        WHILE slot_time + (p_duration_minutes || ' minutes')::INTERVAL <= availability_record.end_time LOOP
+            slot_start := slot_time;
+            slot_end := slot_time + (p_duration_minutes || ' minutes')::INTERVAL;
             is_slot_available := TRUE;
             
             -- Check for specific time exceptions
@@ -411,7 +411,7 @@ BEGIN
             END IF;
             
             -- Move to next slot (duration + buffer)
-            current_time := current_time + ((p_duration_minutes + buffer_minutes) || ' minutes')::INTERVAL;
+            slot_time := slot_time + ((p_duration_minutes + buffer_minutes) || ' minutes')::INTERVAL;
         END LOOP;
     END LOOP;
     
