@@ -4445,17 +4445,23 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         
         if (descWorkType === 'problem' && descSelectedMethod) {
           if (descSelectedMethod === 'identity_shifting') {
+            context.currentPhase = 'identity_shifting';
             return 'identity_shifting_intro';
           } else if (descSelectedMethod === 'problem_shifting') {
+            context.currentPhase = 'problem_shifting';
             return 'problem_shifting_intro';
           } else if (descSelectedMethod === 'belief_shifting') {
+            context.currentPhase = 'belief_shifting';
             return 'belief_shifting_intro';
           } else if (descSelectedMethod === 'blockage_shifting') {
+            context.currentPhase = 'blockage_shifting';
             return 'blockage_shifting_intro';
           }
         } else if (descWorkType === 'goal') {
+          context.currentPhase = 'reality_shifting';
           return 'reality_shifting_intro';
         } else if (descWorkType === 'negative_experience') {
+          context.currentPhase = 'trauma_shifting';
           return 'trauma_shifting_intro';
         }
         
