@@ -101,8 +101,7 @@ export async function PUT(request: NextRequest) {
       'Performance Coaching',
       'Life Transition Support',
       'Mindfulness Training',
-      'Custom Session',
-      'General Coaching'
+      'Custom Session'
     ];
 
     if (specialties && Array.isArray(specialties)) {

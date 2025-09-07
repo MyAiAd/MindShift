@@ -554,7 +554,7 @@ BEGIN
         'Smith',
         'manager',
         true,
-        '{"specialties": ["Custom Session", "General Coaching"], "preferred_meeting_types": ["video", "zoom", "google_meet", "teams", "phone", "in_person"], "bio": "Senior coaching manager with expertise across all coaching modalities and meeting formats."}',
+        '{"specialties": ["Custom Session"], "preferred_meeting_types": ["video", "zoom", "google_meet", "teams", "phone", "in_person"], "bio": "Senior coaching manager with expertise across all coaching modalities and meeting formats."}',
         NOW(),
         NOW()
     ) ON CONFLICT (id) DO UPDATE SET
