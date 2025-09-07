@@ -4347,20 +4347,21 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           context.metadata.workType = 'problem';
           context.metadata.selectedMethod = undefined;
           console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'problem'`);
-          return 'work_type_description'; // Go to problem description step
+          // For problems, go to method selection first
+          return 'method_selection';
         } else if (lastResponse.includes('2') || (lastResponse.includes('goal') && !lastResponse.includes('shifting'))) {
           // Reset all work type metadata for fresh selection
           context.metadata.workType = 'goal';
           context.metadata.selectedMethod = undefined;
           console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'goal'`);
-          context.currentPhase = 'introduction';
+          // Stay in introduction phase for goal description
           return 'goal_description';
         } else if (lastResponse.includes('3') || (lastResponse.includes('negative') && !lastResponse.includes('shifting')) || (lastResponse.includes('experience') && !lastResponse.includes('shifting'))) {
           // Reset all work type metadata for fresh selection
           context.metadata.workType = 'negative_experience';
           context.metadata.selectedMethod = undefined;
           console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'negative_experience'`);
-          context.currentPhase = 'introduction';
+          // Stay in introduction phase for negative experience description
           return 'negative_experience_description';
         }
         
