@@ -18,7 +18,8 @@ import {
   X,
   CreditCard,
   Database,
-  Shield
+  Shield,
+  UserCheck
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -89,6 +90,7 @@ export default function DashboardLayout({
               <button
                 className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
                 onClick={() => setSidebarOpen(false)}
+                title="Close sidebar"
               >
                 <X className="h-6 w-6 text-white" />
               </button>
@@ -110,6 +112,7 @@ export default function DashboardLayout({
             <button
               className="h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
               onClick={() => setSidebarOpen(true)}
+              title="Open sidebar"
             >
               <Menu className="h-6 w-6" />
             </button>
@@ -180,6 +183,32 @@ function SidebarContent({
               </Link>
             );
           })}
+
+          {/* Coach Navigation */}
+          {profile?.role && ['coach', 'manager', 'tenant_admin'].includes(profile.role) && (
+            <div className="pt-6">
+              <div className="px-3 pb-2">
+                <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                  Coaching
+                </p>
+              </div>
+              <div className="space-y-1">
+                <Link
+                  href="/dashboard/coach/profile"
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname === '/dashboard/coach/profile'
+                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-700 dark:border-indigo-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  <UserCheck className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname === '/dashboard/coach/profile' ? 'text-indigo-700 dark:text-indigo-300' : ''
+                  }`} />
+                  Coach Profile
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Admin Navigation */}
           {profile?.role && ['tenant_admin', 'super_admin'].includes(profile.role) && (
