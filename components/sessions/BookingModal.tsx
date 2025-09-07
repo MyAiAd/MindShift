@@ -262,10 +262,17 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
       
       // Filter meeting types to only show coach's preferences
       if (Array.isArray(preferredMeetingTypes) && preferredMeetingTypes.length > 0) {
-        return meetingTypes.filter(type => preferredMeetingTypes.includes(type.value));
+        const filtered = meetingTypes.filter(type => preferredMeetingTypes.includes(type.value));
+        console.log('Filtering meeting types for coach:', selectedCoach.first_name, {
+          preferredMeetingTypes,
+          filteredCount: filtered.length,
+          allCount: meetingTypes.length
+        });
+        return filtered;
       }
       
       // If no preferences set, show all meeting types
+      console.log('No meeting type preferences for coach, showing all types');
       return meetingTypes;
     } catch (error) {
       console.error('Error parsing coach meeting preferences:', error, selectedCoach);
@@ -275,6 +282,23 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
   };
 
   const filteredMeetingTypes = getFilteredMeetingTypes();
+
+  // Ensure current meeting type is valid for filtered options
+  useEffect(() => {
+    if (formData.coachId && filteredMeetingTypes.length > 0) {
+      const currentTypeValid = filteredMeetingTypes.some(type => type.value === formData.meetingType);
+      if (!currentTypeValid) {
+        // Current meeting type not available for this coach, switch to first available
+        const firstAvailable = filteredMeetingTypes[0];
+        if (firstAvailable) {
+                   setFormData(prev => ({
+           ...prev,
+           meetingType: firstAvailable.value as BookingForm['meetingType']
+         }));
+        }
+      }
+    }
+  }, [formData.coachId, filteredMeetingTypes.length]);
 
   const validateForm = (): string | null => {
     if (!formData.title.trim()) return 'Session title is required';
