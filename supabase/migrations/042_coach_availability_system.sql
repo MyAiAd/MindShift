@@ -127,6 +127,7 @@ AS $$
 DECLARE
     current_user_id UUID;
     current_profile RECORD;
+    coach_profile RECORD;
     schedule_item JSONB;
 BEGIN
     -- Get current user ID
@@ -150,14 +151,23 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'Insufficient permissions');
     END IF;
     
-    -- Verify coach exists and belongs to same tenant (unless super admin)
+    -- Get coach profile to determine tenant_id
+    SELECT * INTO coach_profile
+    FROM profiles 
+    WHERE id = p_coach_id;
+    
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Coach not found');
+    END IF;
+    
+    -- Verify coach has coaching permissions
+    IF coach_profile.role NOT IN ('coach', 'manager', 'tenant_admin', 'super_admin') THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Selected user is not a coach');
+    END IF;
+    
+    -- Verify access permissions (unless super admin)
     IF current_profile.role != 'super_admin' THEN
-        IF NOT EXISTS (
-            SELECT 1 FROM profiles 
-            WHERE id = p_coach_id 
-            AND tenant_id = current_profile.tenant_id
-            AND role IN ('coach', 'manager', 'tenant_admin', 'super_admin')
-        ) THEN
+        IF current_profile.role != 'tenant_admin' OR coach_profile.tenant_id != current_profile.tenant_id THEN
             RETURN jsonb_build_object('success', false, 'error', 'Coach not found or access denied');
         END IF;
     END IF;
@@ -179,7 +189,7 @@ BEGIN
             buffer_minutes
         ) VALUES (
             p_coach_id,
-            current_profile.tenant_id,
+            coach_profile.tenant_id,
             (schedule_item->>'day_of_week')::INTEGER,
             (schedule_item->>'start_time')::TIME,
             (schedule_item->>'end_time')::TIME,

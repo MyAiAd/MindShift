@@ -44,6 +44,7 @@ const availableSpecialties = [
   'Performance Coaching',
   'Life Transition Support',
   'Mindfulness Training',
+  'General Coaching',
   'Custom Session'
 ];
 
