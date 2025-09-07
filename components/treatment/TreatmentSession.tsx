@@ -18,6 +18,7 @@ interface TreatmentMessage {
 interface TreatmentSessionProps {
   sessionId: string;
   userId: string;
+  shouldResume?: boolean;
   onComplete?: (sessionData: any) => void;
   onError?: (error: string) => void;
 }
@@ -47,6 +48,7 @@ interface StepHistoryEntry {
 export default function TreatmentSession({ 
   sessionId, 
   userId, 
+  shouldResume = false,
   onComplete, 
   onError 
 }: TreatmentSessionProps) {
@@ -115,19 +117,15 @@ export default function TreatmentSession({
     setSelectedWorkType(null); // Reset work type selection
     
     try {
-      // NEW: For fresh sessions (based on timestamp), start new instead of resuming
-      const sessionTimestamp = sessionId.match(/session-(\d+)-/)?.[1];
-      const sessionAge = sessionTimestamp ? Date.now() - parseInt(sessionTimestamp) : Infinity;
-      const isRecentSession = sessionAge < 60000; // Less than 1 minute old = likely fresh
-      
-      if (!isRecentSession) {
-        console.log('🆕 Session is old or invalid, starting fresh session');
+      // NEW: Check shouldResume flag - only resume if explicitly requested
+      if (!shouldResume) {
+        console.log('🆕 No resume flag detected, starting fresh session');
         await startNewSession();
         return;
       }
       
-      // First try to resume existing session
-      console.log('🔄 Attempting to resume existing session:', sessionId);
+      // First try to resume existing session (only when shouldResume=true)
+      console.log('🔄 Resume flag detected, attempting to resume existing session:', sessionId);
       const resumeResponse = await fetch('/api/treatment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -479,7 +479,7 @@ export default function SessionsPage() {
                       {session.status === 'active' && (
                         <div className="flex items-center space-x-2">
                           <button 
-                            onClick={() => router.push(`/dashboard/sessions/treatment?sessionId=${session.session_id}`)}
+                            onClick={() => router.push(`/dashboard/sessions/treatment?sessionId=${session.session_id}&resume=true`)}
                             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm inline-flex items-center"
                           >
                             Continue
