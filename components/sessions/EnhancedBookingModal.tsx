@@ -185,17 +185,20 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
       return coaches;
     }
 
-    return coaches.filter(coach => {
-      if (!coach.settings) return true;
+    const filtered = coaches.filter(coach => {
+      if (!coach.settings) return true; // Include coaches without settings
       
       try {
         const settings = JSON.parse(coach.settings);
         const specialties = settings.specialties || [];
         return specialties.includes(formData.title);
       } catch {
-        return true;
+        return true; // Include coaches with malformed settings as fallback
       }
     });
+
+    // Ensure we always have at least some coaches available
+    return filtered.length > 0 ? filtered : coaches;
   };
 
   const getFilteredMeetingTypes = () => {
@@ -210,8 +213,11 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
       
       if (preferredTypes.length === 0) return meetingTypes;
       
-      return meetingTypes.filter(type => preferredTypes.includes(type.value));
+      // Filter meeting types and ensure we have at least one valid option
+      const filtered = meetingTypes.filter(type => preferredTypes.includes(type.value));
+      return filtered.length > 0 ? filtered : meetingTypes;
     } catch {
+      // If JSON parsing fails, return all meeting types as fallback
       return meetingTypes;
     }
   };
@@ -224,10 +230,66 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
     setError(null);
     setSuccess(null);
 
-    // Reset dependent fields
-    if (field === 'coachId') {
-      setFormData(prev => ({ ...prev, selectedSlot: '' }));
+    // Reset dependent fields when parent selections change
+    if (field === 'title') {
+      // When session type changes, reset coach and dependent fields if current coach doesn't support new type
+      const currentCoach = coaches.find(c => c.id === formData.coachId);
+      if (currentCoach && value && value !== 'Custom Session') {
+        try {
+          const settings = JSON.parse(currentCoach.settings || '{}');
+          const specialties = settings.specialties || [];
+          if (!specialties.includes(value)) {
+            // Current coach doesn't support new session type, reset coach and dependent fields
+            setFormData(prev => ({ 
+              ...prev, 
+              [field]: value,
+              coachId: '',
+              selectedSlot: '',
+              meetingType: 'video'
+            }));
+            return;
+          }
+        } catch {
+          // If settings parsing fails, keep current coach but reset meeting type
+          setFormData(prev => ({ 
+            ...prev, 
+            [field]: value,
+            meetingType: 'video'
+          }));
+          return;
+        }
+      }
     }
+    
+    if (field === 'coachId') {
+      // When coach changes, reset time slot and potentially meeting type
+      const selectedCoach = coaches.find(c => c.id === value);
+      let newMeetingType = formData.meetingType;
+      
+      if (selectedCoach?.settings) {
+        try {
+          const settings = JSON.parse(selectedCoach.settings);
+          const preferredTypes = settings.preferred_meeting_types || [];
+          
+          // If coach has preferred meeting types and current selection isn't in them
+          if (preferredTypes.length > 0 && !preferredTypes.includes(formData.meetingType)) {
+            // Auto-select the first preferred meeting type
+            newMeetingType = preferredTypes[0];
+          }
+        } catch {
+          // If settings parsing fails, keep current meeting type
+        }
+      }
+      
+      setFormData(prev => ({ 
+        ...prev, 
+        [field]: value,
+        selectedSlot: '', 
+        meetingType: newMeetingType
+      }));
+      return;
+    }
+    
     if (field === 'selectedDate') {
       setFormData(prev => ({ ...prev, selectedSlot: '' }));
     }
