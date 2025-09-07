@@ -85,11 +85,10 @@ BEGIN
             'timezone', timezone,
             'is_available', is_available,
             'buffer_minutes', buffer_minutes
-        )
+        ) ORDER BY day_of_week, start_time
     ) INTO availability_data
     FROM coach_availability
-    WHERE coach_id = p_coach_id
-    ORDER BY day_of_week, start_time;
+    WHERE coach_id = p_coach_id;
     
     -- Get exceptions for next 90 days
     SELECT jsonb_agg(
@@ -101,13 +100,12 @@ BEGIN
             'is_available', is_available,
             'reason', reason,
             'all_day', all_day
-        )
+        ) ORDER BY exception_date, start_time
     ) INTO exceptions_data
     FROM coach_availability_exceptions
     WHERE coach_id = p_coach_id
     AND exception_date >= CURRENT_DATE
-    AND exception_date <= CURRENT_DATE + INTERVAL '90 days'
-    ORDER BY exception_date, start_time;
+    AND exception_date <= CURRENT_DATE + INTERVAL '90 days';
     
     RETURN jsonb_build_object(
         'weekly_schedule', COALESCE(availability_data, '[]'::jsonb),
