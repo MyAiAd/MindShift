@@ -182,12 +182,19 @@ export default function AvailabilityCalendar({
         }
       }
 
+      // Convert times from HH:MM:SS to HH:MM format for API compatibility
+      const formattedSchedule = availability.weekly_schedule.map(slot => ({
+        ...slot,
+        start_time: slot.start_time.substring(0, 5), // "09:00:00" -> "09:00"
+        end_time: slot.end_time.substring(0, 5)       // "17:00:00" -> "17:00"
+      }));
+
       const response = await fetch('/api/availability', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           coachId,
-          weeklySchedule: availability.weekly_schedule,
+          weeklySchedule: formattedSchedule,
           timezone
         })
       });
