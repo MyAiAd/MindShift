@@ -4348,8 +4348,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           context.metadata.workType = 'problem';
           context.metadata.selectedMethod = undefined;
           console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'problem'`);
-          // For problems, go to method selection first
-          return 'method_selection';
+          // For problems, go to method selection phase and step
+          context.currentPhase = 'method_selection';
+          return 'choose_method';
         } else if (lastResponse.includes('2') || (lastResponse.includes('goal') && !lastResponse.includes('shifting'))) {
           // Reset all work type metadata for fresh selection
           context.metadata.workType = 'goal';
