@@ -53,14 +53,19 @@ export async function GET(request: NextRequest) {
     if (availabilityError) {
       console.error('Error fetching availability:', availabilityError);
       return NextResponse.json(
-        { error: 'Failed to fetch availability' },
+        { 
+          error: 'Failed to fetch availability',
+          details: availabilityError.message,
+          code: availabilityError.code,
+          hint: availabilityError.hint
+        },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      availability: availabilityData,
+      availability: availabilityData || { weekly_schedule: [], exceptions: [] },
       coachId
     });
 
