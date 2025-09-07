@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user has coach permissions
-    if (!['coach', 'manager', 'tenant_admin'].includes(profile.role)) {
+    if (!['coach', 'manager', 'tenant_admin', 'super_admin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Coach permissions required' }, { status: 403 });
     }
 
@@ -78,7 +78,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check if user has coach permissions
-    if (!['coach', 'manager', 'tenant_admin'].includes(profile.role)) {
+    if (!['coach', 'manager', 'tenant_admin', 'super_admin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Coach permissions required' }, { status: 403 });
     }
 

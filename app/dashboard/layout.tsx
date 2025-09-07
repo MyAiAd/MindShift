@@ -185,7 +185,7 @@ function SidebarContent({
           })}
 
           {/* Coach Navigation */}
-          {profile?.role && ['coach', 'manager', 'tenant_admin'].includes(profile.role) && (
+          {profile?.role && ['coach', 'manager', 'tenant_admin', 'super_admin'].includes(profile.role) && (
             <div className="pt-6">
               <div className="px-3 pb-2">
                 <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">

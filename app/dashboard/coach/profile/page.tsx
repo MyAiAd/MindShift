@@ -76,7 +76,7 @@ export default function CoachProfilePage() {
   });
 
   // Check if user has coach permissions
-  const hasCoachPermissions = profile && ['coach', 'manager', 'tenant_admin'].includes(profile.role || '');
+  const hasCoachPermissions = profile && ['coach', 'manager', 'tenant_admin', 'super_admin'].includes(profile.role || '');
 
   useEffect(() => {
     if (user && hasCoachPermissions) {
@@ -249,6 +249,7 @@ export default function CoachProfilePage() {
                 type="text"
                 value={coachProfile?.firstName || ''}
                 disabled
+                aria-label="First Name (read-only)"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
               />
               <p className="text-xs text-gray-500 mt-1">Update in main settings</p>
@@ -261,6 +262,7 @@ export default function CoachProfilePage() {
                 type="text"
                 value={coachProfile?.lastName || ''}
                 disabled
+                aria-label="Last Name (read-only)"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
               />
               <p className="text-xs text-gray-500 mt-1">Update in main settings</p>
