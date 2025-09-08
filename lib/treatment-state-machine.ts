@@ -2378,6 +2378,32 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself.' }
           ],
+          nextStep: 'identity_dissolve_step_f',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_dissolve_step_f',
+          scriptedResponse: (userInput, context) => {
+            // Use the properly labeled identity response
+            const identityData = context.metadata.identityResponse;
+            let identity = 'that identity';
+            
+            if (identityData && identityData.type === 'IDENTITY') {
+              identity = identityData.value;
+            } else {
+              // Fallback to currentIdentity for backward compatibility
+              identity = context.metadata.currentIdentity || 'that identity';
+            }
+            
+            return `Can you still feel yourself being '${identity}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please answer yes or no.' }
+          ],
           nextStep: 'identity_step_3_intro',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
@@ -5005,6 +5031,21 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           console.log(`🔍 IDENTITY_SHIFTING_INTRO: Identity not stored yet, staying on intro step`);
           return 'identity_shifting_intro';
         }
+
+      case 'identity_dissolve_step_f':
+        // Step F: "Can you still feel yourself being [IDENTITY]?"
+        if (lastResponse.includes('no')) {
+          // If NO, proceed to CHECK IDENTITY section
+          console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: User said NO, proceeding to identity check`);
+          return 'identity_step_3_intro';
+        } else if (lastResponse.includes('yes')) {
+          // If YES, they can still feel the identity - cycle back to step A
+          console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: User said YES, cycling back to dissolve step A`);
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          return 'identity_dissolve_step_a';
+        }
+        // If unclear response, stay on current step
+        return 'identity_dissolve_step_f';
         
       case 'confirm_identity_problem':
         // If confirmed, go back to identity shifting
