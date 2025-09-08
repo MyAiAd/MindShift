@@ -434,37 +434,8 @@ async function handleResumeSession(sessionId: string, userId: string) {
       }
     }
 
-    // Get the current step's scripted response to show where we are
-    let currentMessage = 'Please continue with your session.';
-    try {
-      const currentPhase = treatmentMachine.getPhaseSteps(context.currentPhase);
-      const currentStep = currentPhase?.find(step => step.id === context.currentStep);
-      
-      if (currentStep && typeof currentStep.scriptedResponse === 'function') {
-        // For function-based responses, we need to call it with the context
-        currentMessage = currentStep.scriptedResponse('', context);
-      } else if (currentStep && typeof currentStep.scriptedResponse === 'string') {
-        currentMessage = currentStep.scriptedResponse;
-      }
-    } catch (error) {
-      console.error('Error getting current step message:', error);
-      // Use default message
-    }
-
-    // Add current step message if we don't have any recent messages or if the last message is old
-    const shouldAddCurrentMessage = messages.length === 0 || 
-      (messages.length > 0 && new Date().getTime() - new Date(messages[messages.length - 1].timestamp).getTime() > 60000); // 1 minute
-
-    if (shouldAddCurrentMessage) {
-      messages.push({
-        id: 'current-step',
-        content: currentMessage,
-        isUser: false,
-        timestamp: new Date(),
-        responseTime: 0,
-        usedAI: false
-      });
-    }
+    // Resume sessions should show conversation exactly as it was left
+    // No additional messages are added to preserve the exact state
 
     return NextResponse.json({
       success: true,
