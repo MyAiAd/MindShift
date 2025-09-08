@@ -5705,6 +5705,22 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
   private processIdentityResponse(userInput: string): string {
     const input = userInput.toLowerCase().trim();
     
+    // Handle patterns like "an angry one", "a sad one", "the frustrated one"
+    const onePattern = /^(a|an|the)\s+(\w+)\s+one$/i;
+    const match = input.match(onePattern);
+    if (match) {
+      const adjective = match[2];
+      return `${adjective} person`;
+    }
+    
+    // Handle patterns like "an angry person", "a sad person" - extract the adjective
+    const personPattern = /^(a|an|the)\s+(\w+)\s+person$/i;
+    const personMatch = input.match(personPattern);
+    if (personMatch) {
+      const adjective = personMatch[2];
+      return `${adjective} person`;
+    }
+    
     // Common emotions that should become "X person"
     const emotionToIdentity: { [key: string]: string } = {
       'hurt': 'hurt person',
