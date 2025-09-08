@@ -455,13 +455,12 @@ export default function TreatmentSession({
         }
       }
       
-      // Handle yes/no responses for all applicable steps
+      // Handle yes/no responses for steps matching the flowchart exactly
       const yesNoSteps = [
-        'future_problem_check',
-        'identity_step_3_intro',
-        'identity_check',
-        'identity_future_check',
-        'identity_problem_check'
+        'future_problem_check',           // General future problem check
+        'identity_step_3_intro',          // Step 4: Check Identity (future identity check)
+        'identity_problem_check',         // Step 5: Check Problem
+        'digging_deeper_start'            // Step 6: Dig Deeper (optional)
       ];
       
       if (yesNoSteps.includes(currentStep)) {
@@ -764,13 +763,12 @@ export default function TreatmentSession({
 
   // Helper function to determine if we should show the future_problem_check buttons (Yes/No/Maybe)
   const shouldShowFutureProblemCheckButtons = () => {
-    // Show for yes/no steps in identity shifting and future problem check
+    // Show for yes/no steps matching the flowchart exactly
     const yesNoSteps = [
-      'future_problem_check',
-      'identity_step_3_intro',
-      'identity_check',
-      'identity_future_check',
-      'identity_problem_check'
+      'future_problem_check',           // General future problem check
+      'identity_step_3_intro',          // Step 4: Check Identity (future identity check)
+      'identity_problem_check',         // Step 5: Check Problem
+      'digging_deeper_start'            // Step 6: Dig Deeper (optional)
     ];
     
     if (!yesNoSteps.includes(currentStep)) return false;
