@@ -268,6 +268,8 @@ export default function TreatmentSession({
       return;
     }
 
+    console.log('🔍 DEBUG: sendMessageWithContent called with:', content, 'from stack:', new Error().stack?.split('\n')[2]?.trim());
+
     const userMessage: TreatmentMessage = {
       id: Date.now().toString(),
       content: content,
@@ -419,6 +421,7 @@ export default function TreatmentSession({
   const voice = useGlobalVoice({
     onVoiceTranscript: (transcript) => {
       console.log('🎤 TreatmentSession received transcript:', transcript, 'for step:', currentStep);
+      console.log('🔍 DEBUG: Voice transcript from stack:', new Error().stack?.split('\n')[2]?.trim());
       // Smart routing based on current UI context
       if (currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') {
         if (transcript === 'yes' || transcript === 'no') {
@@ -435,6 +438,15 @@ export default function TreatmentSession({
         }
         // Handle method selection by name (only for problem-clearing methods)
         if (['problem shifting', 'identity shifting', 'belief shifting', 'blockage shifting'].includes(transcript.toLowerCase())) {
+          handleMethodSelection(transcript);
+          return;
+        }
+      }
+      
+      // Handle method selection ONLY when we're actually on the method selection step
+      if (currentStep === 'choose_method') {
+        // Handle method selection by name or number
+        if (['1', '2', '3', '4', '5', '6', 'problem shifting', 'identity shifting', 'belief shifting', 'blockage shifting', 'reality shifting', 'trauma shifting'].includes(transcript.toLowerCase())) {
           handleMethodSelection(transcript);
           return;
         }
@@ -501,6 +513,7 @@ export default function TreatmentSession({
   };
 
   const handleMethodSelection = async (method: string) => {
+    console.log('🔍 DEBUG: handleMethodSelection called with:', method, 'from stack:', new Error().stack?.split('\n')[2]?.trim());
     await sendMessageWithContent(method);
   };
 
