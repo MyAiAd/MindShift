@@ -2378,7 +2378,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself.' }
           ],
-          nextStep: 'identity_check',
+          nextStep: 'identity_step_3_intro',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
@@ -2387,15 +2387,27 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_step_3_intro',
           scriptedResponse: (userInput, context) => {
-            const identity = context.metadata.currentIdentity || 'that identity';
-            return `Step 3: We're now going to check if the identity of '${identity}' is still there.`;
+            // Use the properly labeled identity response
+            const identityData = context.metadata.identityResponse;
+            let identity = 'that identity';
+            
+            if (identityData && identityData.type === 'IDENTITY') {
+              identity = identityData.value;
+            } else {
+              // Fallback to currentIdentity for backward compatibility
+              identity = context.metadata.currentIdentity || 'that identity';
+            }
+            
+            return `Do you think you might feel yourself being '${identity}' in the future? Is there any scenario in which you might still feel yourself being '${identity}'?`;
           },
-          expectedResponseType: 'open',
+          expectedResponseType: 'yesno',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please continue.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
           nextStep: 'identity_check',
-          aiTriggers: []
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
         },
 
         {
@@ -2420,7 +2432,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'identity_future_check',
+          nextStep: 'identity_problem_check',
           aiTriggers: [] // REMOVED: identity_check should be purely scripted, no AI assistance
         },
 
