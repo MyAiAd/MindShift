@@ -574,23 +574,26 @@ Task: Use the user's exact identity words in the template without changing or in
 
 Template: "Feel yourself being [user's exact words]... what does it feel like?"
 
-CRITICAL RULES:
+🚨 ABSOLUTELY CRITICAL RULES - DO NOT VIOLATE THESE:
 1. Use the user's COMPLETE and EXACT words - do NOT drop any words, especially nouns like "person", "man", "woman", etc.
 2. ONLY remove these specific prefixes if present: "someone who is", "a person who is", "I am a", "I am"
-3. NEVER remove descriptive nouns like "person", "man", "woman", "child", "victim", etc.
+3. NEVER EVER remove descriptive nouns like "person", "man", "woman", "child", "victim", etc.
 4. Preserve ALL adjectives and descriptive words exactly as given
 5. Return only the response using their exact words, nothing else
 
-Examples:
+🔥 SPECIFIC EXAMPLES - FOLLOW THESE EXACTLY:
 - User: "hurt person" → "Feel yourself being a hurt person... what does it feel like?"
 - User: "angry person" → "Feel yourself being an angry person... what does it feel like?"
-- User: "someone who is always stressed" → "Feel yourself being always stressed... what does it feel like?"
-- User: "a person who can't control their future" → "Feel yourself being someone who can't control their future... what does it feel like?"
-- User: "I am powerless" → "Feel yourself being powerless... what does it feel like?"
+- User: "bad person" → "Feel yourself being a bad person... what does it feel like?"
 - User: "victim" → "Feel yourself being a victim... what does it feel like?"
 - User: "bad mother" → "Feel yourself being a bad mother... what does it feel like?"
 
-IMPORTANT: If the user says "hurt person", use "a hurt person" - do NOT drop the word "person"!
+⚠️ WRONG EXAMPLES - DO NOT DO THIS:
+- User: "hurt person" → ❌ "Feel yourself being hurt... what does it feel like?" (WRONG - dropped "person")
+- User: "angry person" → ❌ "Feel yourself being angry... what does it feel like?" (WRONG - dropped "person")
+
+🎯 YOUR EXACT TASK:
+If the user said "${userInput}", you must include ALL words from "${userInput}" in your response.
 
 Use the user's exact words in the template now:`;
     } else if (stepId === 'identity_dissolve_step_b') {
@@ -629,23 +632,26 @@ Task: Extract the core trauma identity from the user's response and use it natur
 
 Template: "Feel yourself being [user's exact words]... what does it feel like?"
 
-CRITICAL RULES:
+🚨 ABSOLUTELY CRITICAL RULES - DO NOT VIOLATE THESE:
 1. Use the user's COMPLETE and EXACT words - do NOT drop any words, especially nouns like "person", "man", "woman", "child", etc.
 2. ONLY remove these specific prefixes if present: "someone who is", "a person who is", "I am a", "I am"
-3. NEVER remove descriptive nouns like "person", "man", "woman", "child", "victim", etc.
+3. NEVER EVER remove descriptive nouns like "person", "man", "woman", "child", "victim", etc.
 4. Preserve ALL adjectives and descriptive words exactly as given
 5. Return only the response using their exact words, nothing else
 
-Examples:
+🔥 SPECIFIC EXAMPLES - FOLLOW THESE EXACTLY:
 - User: "hurt person" → "Feel yourself being a hurt person... what does it feel like?"
 - User: "damaged child" → "Feel yourself being a damaged child... what does it feel like?"
-- User: "someone who is angry and hurt" → "Feel yourself being angry and hurt... what does it feel like?"
-- User: "a person who can't trust anyone" → "Feel yourself being someone who can't trust anyone... what does it feel like?"
-- User: "I am a victim" → "Feel yourself being a victim... what does it feel like?"
-- User: "powerless" → "Feel yourself being powerless... what does it feel like?"
-- User: "abandoned and alone" → "Feel yourself being abandoned and alone... what does it feel like?"
+- User: "angry person" → "Feel yourself being an angry person... what does it feel like?"
+- User: "victim" → "Feel yourself being a victim... what does it feel like?"
+- User: "abandoned child" → "Feel yourself being an abandoned child... what does it feel like?"
 
-IMPORTANT: If the user says "hurt person", use "a hurt person" - do NOT drop the word "person"!
+⚠️ WRONG EXAMPLES - DO NOT DO THIS:
+- User: "hurt person" → ❌ "Feel yourself being hurt... what does it feel like?" (WRONG - dropped "person")
+- User: "damaged child" → ❌ "Feel yourself being damaged... what does it feel like?" (WRONG - dropped "child")
+
+🎯 YOUR EXACT TASK:
+If the user said "${userInput}", you must include ALL words from "${userInput}" in your response.
 
 Extract the core trauma identity and apply the template now:`;
     } else if (stepId === 'trauma_dissolve_step_b') {
