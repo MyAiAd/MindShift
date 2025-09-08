@@ -4540,6 +4540,50 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
     // Handle special flow logic based on current step
     console.log(`🔍 DETERMINE_NEXT_STEP: *** SWITCH STATEMENT *** - context.currentStep="${context.currentStep}"`);
     switch (context.currentStep) {
+      case 'choose_method':
+        console.log(`🔍 CHOOSE_METHOD_DETERMINE: lastResponse="${lastResponse}", processing choose_method step`);
+        // Route to different methods based on user choice
+        const chosenMethod = context.userResponses[context.currentStep]?.toLowerCase() || '';
+        console.log(`🔍 CHOOSE_METHOD_DETERMINE: chosenMethod="${chosenMethod}"`);
+        
+        if (chosenMethod.includes('problem shifting')) {
+          context.currentPhase = 'work_type_selection';
+          context.metadata.selectedMethod = 'problem_shifting';
+          console.log(`🔍 CHOOSE_METHOD_DETERMINE: Selected Problem Shifting, returning work_type_description`);
+          return 'work_type_description';
+        } else if (chosenMethod.includes('blockage shifting')) {
+          context.currentPhase = 'work_type_selection';
+          context.metadata.selectedMethod = 'blockage_shifting';
+          console.log(`🔍 CHOOSE_METHOD_DETERMINE: Selected Blockage Shifting, returning work_type_description`);
+          return 'work_type_description';
+        } else if (chosenMethod.includes('identity shifting')) {
+          context.currentPhase = 'work_type_selection';
+          context.metadata.selectedMethod = 'identity_shifting';
+          console.log(`🔍 CHOOSE_METHOD_DETERMINE: Selected Identity Shifting, returning work_type_description`);
+          return 'work_type_description';
+        } else if (chosenMethod.includes('reality shifting')) {
+          context.currentPhase = 'reality_shifting';
+          context.metadata.selectedMethod = 'reality_shifting';
+          console.log(`🔍 CHOOSE_METHOD_DETERMINE: Selected Reality Shifting, returning reality_goal_capture`);
+          return 'reality_goal_capture';
+        } else if (chosenMethod.includes('trauma shifting')) {
+          context.currentPhase = 'work_type_selection';
+          context.metadata.selectedMethod = 'trauma_shifting';
+          console.log(`🔍 CHOOSE_METHOD_DETERMINE: Selected Trauma Shifting, returning work_type_description`);
+          return 'work_type_description';
+        } else if (chosenMethod.includes('belief shifting')) {
+          context.currentPhase = 'work_type_selection';
+          context.metadata.selectedMethod = 'belief_shifting';
+          console.log(`🔍 CHOOSE_METHOD_DETERMINE: Selected Belief Shifting, returning work_type_description`);
+          return 'work_type_description';
+        } else {
+          // Fallback to Problem Shifting (all methods now implemented)
+          context.currentPhase = 'work_type_selection';
+          context.metadata.selectedMethod = 'problem_shifting';
+          console.log(`🔍 CHOOSE_METHOD_DETERMINE: No valid selection, fallback to Problem Shifting, returning work_type_description`);
+          return 'work_type_description';
+        }
+
       case 'mind_shifting_explanation':
         console.log(`🔍 MIND_SHIFTING_DETERMINE: lastResponse="${lastResponse}", workType="${context.metadata.workType}", selectedMethod="${context.metadata.selectedMethod}"`);
         console.log(`🔍 MIND_SHIFTING_DETERMINE: Full metadata:`, JSON.stringify(context.metadata, null, 2));
