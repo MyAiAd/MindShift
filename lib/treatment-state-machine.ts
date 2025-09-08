@@ -891,39 +891,21 @@ export class TreatmentStateMachine {
     if (step.id === 'work_type_description' && context?.metadata?.workType === 'problem') {
       console.log(`🔍 WORK_TYPE_DESCRIPTION: Checking problem statement input "${userInput}" (lowercase: "${lowerInput}")`);
       
-      // Check if user stated it as a goal instead of problem
-      // Improved logic to avoid false positives with "get" in problem contexts
-      const goalIndicators = ['want to', 'want', 'wish to', 'hope to', 'plan to', 'goal', 'achieve', 'become', 'have', 'need to', 'would like to'];
+      // Enhanced goal detection with better context awareness
+      const result = this.detectGoalLanguageInProblemContext(lowerInput, userInput);
       
-      // Special handling for "get" - only flag as goal if used in positive/aspirational context
-      const hasBasicGoalLanguage = goalIndicators.some(indicator => lowerInput.includes(indicator));
-      const hasGetInGoalContext = lowerInput.includes('get') && (
-        lowerInput.includes('get better') || 
-        lowerInput.includes('get rid of') ||
-        lowerInput.includes('get over') ||
-        lowerInput.includes('get help') ||
-        lowerInput.includes('get to') ||
-        lowerInput.includes('get more') ||
-        lowerInput.match(/\bget\s+(a|an|some|the)\s+\w+/) // "get a job", "get the promotion", etc.
-      );
-      
-      const hasGoalLanguage = hasBasicGoalLanguage || hasGetInGoalContext;
-      
-      console.log(`🔍 WORK_TYPE_DESCRIPTION: Goal indicators check - hasGoalLanguage: ${hasGoalLanguage}`);
-      if (hasGoalLanguage) {
-        const matchedIndicator = goalIndicators.find(indicator => lowerInput.includes(indicator));
-        console.log(`🔍 WORK_TYPE_DESCRIPTION: Matched goal indicator: "${matchedIndicator}"`);
+      console.log(`🔍 WORK_TYPE_DESCRIPTION: Goal indicators check - hasGoalLanguage: ${result.hasGoalLanguage}`);
+      if (result.hasGoalLanguage) {
+        console.log(`🔍 WORK_TYPE_DESCRIPTION: Matched goal indicator: "${result.matchedIndicator}" (confidence: ${result.confidence})`);
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_goal' };
       }
       
-      // Check if user stated it as a question
-      const questionIndicators = ['how can', 'how do', 'what should', 'why do', 'when will', 'where can', 'should i', 'how do i', 'what can i'];
-      const hasQuestionLanguage = questionIndicators.some(indicator => lowerInput.includes(indicator)) || trimmed.endsWith('?');
+      // Enhanced question detection
+      const questionResult = this.detectQuestionLanguage(lowerInput, userInput);
       
-      console.log(`🔍 WORK_TYPE_DESCRIPTION: Question indicators check - hasQuestionLanguage: ${hasQuestionLanguage}`);
-      if (hasQuestionLanguage) {
-        const matchedIndicator = questionIndicators.find(indicator => lowerInput.includes(indicator)) || (trimmed.endsWith('?') ? 'ends with ?' : '');
-        console.log(`🔍 WORK_TYPE_DESCRIPTION: Matched question indicator: "${matchedIndicator}"`);
+      console.log(`🔍 WORK_TYPE_DESCRIPTION: Question indicators check - hasQuestionLanguage: ${questionResult.hasQuestionLanguage}`);
+      if (questionResult.hasQuestionLanguage) {
+        console.log(`🔍 WORK_TYPE_DESCRIPTION: Matched question indicator: "${questionResult.matchedIndicator}" (confidence: ${questionResult.confidence})`);
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
       }
       
@@ -1024,6 +1006,166 @@ export class TreatmentStateMachine {
     }
     
     return null;
+  }
+
+  /**
+   * Enhanced goal language detection with context awareness and confidence scoring
+   */
+  private detectGoalLanguageInProblemContext(lowerInput: string, originalInput: string): {
+    hasGoalLanguage: boolean;
+    matchedIndicator: string;
+    confidence: number;
+  } {
+    // Define goal indicators with confidence weights
+    const goalPatterns = [
+      // High confidence - clear goal language
+      { patterns: ['want to', 'wish to', 'hope to', 'plan to', 'would like to'], weight: 0.9, type: 'explicit_goal' },
+      { patterns: ['goal', 'achieve', 'accomplish'], weight: 0.9, type: 'explicit_goal' },
+      
+      // Medium confidence - context dependent
+      { patterns: ['become'], weight: 0.7, type: 'aspirational' },
+      { patterns: ['need to', 'have to'], weight: 0.6, type: 'necessity' },
+      { patterns: ['want', 'need'], weight: 0.5, type: 'desire' },
+      
+      // Lower confidence - highly context dependent
+      { patterns: ['have'], weight: 0.3, type: 'possession' },
+    ];
+
+    // Special handling for "get" - context matters a lot
+    const getPatterns = [
+      // Goal contexts for "get"
+      { patterns: ['get better', 'get help', 'get more', 'get to'], weight: 0.8, type: 'positive_get' },
+      { patterns: ['get a job', 'get the promotion', 'get married'], weight: 0.9, type: 'achievement_get' },
+      
+      // Problem contexts for "get" (should NOT trigger goal detection)
+      { patterns: ['get mad', 'get angry', 'get upset', 'get frustrated', 'get anxious', 'get depressed'], weight: -1.0, type: 'negative_get' },
+      { patterns: ['get rid of', 'get over'], weight: 0.8, type: 'resolution_get' }, // These are actually goals
+    ];
+
+    let maxConfidence = 0;
+    let matchedIndicator = '';
+    let matchedType = '';
+
+    // Check standard goal patterns
+    for (const patternGroup of goalPatterns) {
+      for (const pattern of patternGroup.patterns) {
+        if (lowerInput.includes(pattern)) {
+          // Context-aware confidence adjustment
+          let adjustedWeight = patternGroup.weight;
+          
+          // Reduce confidence if in negative context
+          if (this.isInNegativeContext(lowerInput, pattern)) {
+            adjustedWeight *= 0.5;
+          }
+          
+          // Increase confidence if in positive/aspirational context  
+          if (this.isInPositiveContext(lowerInput, pattern)) {
+            adjustedWeight *= 1.2;
+          }
+          
+          if (adjustedWeight > maxConfidence) {
+            maxConfidence = adjustedWeight;
+            matchedIndicator = pattern;
+            matchedType = patternGroup.type;
+          }
+        }
+      }
+    }
+
+    // Check "get" patterns separately
+    for (const getGroup of getPatterns) {
+      for (const pattern of getGroup.patterns) {
+        if (lowerInput.includes(pattern)) {
+          if (getGroup.weight > maxConfidence) {
+            maxConfidence = getGroup.weight;
+            matchedIndicator = pattern;
+            matchedType = getGroup.type;
+          }
+        }
+      }
+    }
+
+    // Threshold for triggering AI assistance
+    const threshold = 0.6;
+    const hasGoalLanguage = maxConfidence >= threshold;
+
+    return {
+      hasGoalLanguage,
+      matchedIndicator,
+      confidence: maxConfidence
+    };
+  }
+
+  /**
+   * Enhanced question detection with context awareness
+   */
+  private detectQuestionLanguage(lowerInput: string, originalInput: string): {
+    hasQuestionLanguage: boolean;
+    matchedIndicator: string;
+    confidence: number;
+  } {
+    const questionPatterns = [
+      // High confidence question indicators
+      { patterns: ['how can i', 'how do i', 'what should i', 'should i'], weight: 0.9 },
+      { patterns: ['how can', 'how do', 'what should', 'why do', 'when will', 'where can'], weight: 0.8 },
+      
+      // Question mark
+      { patterns: ['?'], weight: 0.7 },
+    ];
+
+    let maxConfidence = 0;
+    let matchedIndicator = '';
+
+    for (const patternGroup of questionPatterns) {
+      for (const pattern of patternGroup.patterns) {
+        if (pattern === '?' ? originalInput.trim().endsWith('?') : lowerInput.includes(pattern)) {
+          if (patternGroup.weight > maxConfidence) {
+            maxConfidence = patternGroup.weight;
+            matchedIndicator = pattern === '?' ? 'ends with ?' : pattern;
+          }
+        }
+      }
+    }
+
+    const threshold = 0.6;
+    const hasQuestionLanguage = maxConfidence >= threshold;
+
+    return {
+      hasQuestionLanguage,
+      matchedIndicator,
+      confidence: maxConfidence
+    };
+  }
+
+  /**
+   * Helper method to detect if a pattern is in negative context
+   */
+  private isInNegativeContext(input: string, pattern: string): boolean {
+    const negativeWords = ['not', 'never', 'can\'t', 'cannot', 'won\'t', 'don\'t', 'doesn\'t', 'shouldn\'t', 'couldn\'t'];
+    const patternIndex = input.indexOf(pattern);
+    if (patternIndex === -1) return false;
+    
+    // Check words before the pattern
+    const beforePattern = input.substring(0, patternIndex);
+    const wordsBeforePattern = beforePattern.split(' ').slice(-3); // Check last 3 words
+    
+    return negativeWords.some(negWord => wordsBeforePattern.includes(negWord));
+  }
+
+  /**
+   * Helper method to detect if a pattern is in positive/aspirational context
+   */
+  private isInPositiveContext(input: string, pattern: string): boolean {
+    const positiveWords = ['really', 'truly', 'definitely', 'absolutely', 'desperately', 'badly'];
+    const patternIndex = input.indexOf(pattern);
+    if (patternIndex === -1) return false;
+    
+    // Check words around the pattern
+    const beforePattern = input.substring(0, patternIndex);
+    const afterPattern = input.substring(patternIndex + pattern.length);
+    const contextWords = [...beforePattern.split(' ').slice(-2), ...afterPattern.split(' ').slice(0, 2)];
+    
+    return positiveWords.some(posWord => contextWords.includes(posWord));
   }
 
   /**

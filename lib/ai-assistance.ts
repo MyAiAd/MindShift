@@ -574,19 +574,23 @@ Task: Use the user's exact identity words in the template without changing or in
 
 Template: "Feel yourself being [user's exact words]... what does it feel like?"
 
-Rules:
-1. Use the user's exact words - do NOT change, interpret, or paraphrase them
-2. Only remove unnecessary phrases like "someone who is", "a person who", "I am" if present
-3. Preserve the user's exact adjectives and descriptive words (e.g., "not nice" stays "not nice", not "unkind")
-4. Use the correct template ending "what does it feel like?" not "what do you want?"
+CRITICAL RULES:
+1. Use the user's COMPLETE and EXACT words - do NOT drop any words, especially nouns like "person", "man", "woman", etc.
+2. ONLY remove these specific prefixes if present: "someone who is", "a person who is", "I am a", "I am"
+3. NEVER remove descriptive nouns like "person", "man", "woman", "child", "victim", etc.
+4. Preserve ALL adjectives and descriptive words exactly as given
 5. Return only the response using their exact words, nothing else
 
 Examples:
+- User: "hurt person" → "Feel yourself being a hurt person... what does it feel like?"
+- User: "angry person" → "Feel yourself being an angry person... what does it feel like?"
 - User: "someone who is always stressed" → "Feel yourself being always stressed... what does it feel like?"
 - User: "a person who can't control their future" → "Feel yourself being someone who can't control their future... what does it feel like?"
 - User: "I am powerless" → "Feel yourself being powerless... what does it feel like?"
-- User: "not nice" → "Feel yourself being not nice... what does it feel like?"
 - User: "victim" → "Feel yourself being a victim... what does it feel like?"
+- User: "bad mother" → "Feel yourself being a bad mother... what does it feel like?"
+
+IMPORTANT: If the user says "hurt person", use "a hurt person" - do NOT drop the word "person"!
 
 Use the user's exact words in the template now:`;
     } else if (stepId === 'identity_dissolve_step_b') {
@@ -625,19 +629,23 @@ Task: Extract the core trauma identity from the user's response and use it natur
 
 Template: "Feel yourself being [user's exact words]... what does it feel like?"
 
-Rules:
-1. Use the user's exact words - do NOT change, interpret, or paraphrase them
-2. Only remove unnecessary phrases like "someone who is", "a person who", "I am" if present
-3. Preserve the user's exact adjectives and descriptive words
-4. Use the correct template ending "what does it feel like?" not "what do you want?"
+CRITICAL RULES:
+1. Use the user's COMPLETE and EXACT words - do NOT drop any words, especially nouns like "person", "man", "woman", "child", etc.
+2. ONLY remove these specific prefixes if present: "someone who is", "a person who is", "I am a", "I am"
+3. NEVER remove descriptive nouns like "person", "man", "woman", "child", "victim", etc.
+4. Preserve ALL adjectives and descriptive words exactly as given
 5. Return only the response using their exact words, nothing else
 
 Examples:
+- User: "hurt person" → "Feel yourself being a hurt person... what does it feel like?"
+- User: "damaged child" → "Feel yourself being a damaged child... what does it feel like?"
 - User: "someone who is angry and hurt" → "Feel yourself being angry and hurt... what does it feel like?"
 - User: "a person who can't trust anyone" → "Feel yourself being someone who can't trust anyone... what does it feel like?"
 - User: "I am a victim" → "Feel yourself being a victim... what does it feel like?"
 - User: "powerless" → "Feel yourself being powerless... what does it feel like?"
 - User: "abandoned and alone" → "Feel yourself being abandoned and alone... what does it feel like?"
+
+IMPORTANT: If the user says "hurt person", use "a hurt person" - do NOT drop the word "person"!
 
 Extract the core trauma identity and apply the template now:`;
     } else if (stepId === 'trauma_dissolve_step_b') {
