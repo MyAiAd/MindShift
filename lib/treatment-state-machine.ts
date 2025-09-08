@@ -5078,16 +5078,20 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         
       case 'digging_method_selection':
         // This step routes to appropriate treatment method based on user choice
-        // Route to the proper intro steps of each treatment method
+        // We need to change the phase here and route to the proper intro steps
         const diggingSelectedMethod = context.metadata?.selectedMethod;
         if (diggingSelectedMethod === 'problem_shifting') {
+          context.currentPhase = 'problem_shifting';
           return 'problem_shifting_intro';
         } else if (diggingSelectedMethod === 'identity_shifting') {
+          context.currentPhase = 'identity_shifting';
           return 'identity_shifting_intro';
         } else if (diggingSelectedMethod === 'belief_shifting') {
+          context.currentPhase = 'belief_shifting';
           return 'belief_shifting_intro';
         }
         // Default fallback
+        context.currentPhase = 'problem_shifting';
         return 'problem_shifting_intro';
         
       // Handle all scenario check steps
