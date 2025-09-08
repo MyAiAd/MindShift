@@ -5079,7 +5079,17 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       case 'digging_method_selection':
         // This step routes to appropriate treatment method based on user choice
         // We need to change the phase here and route to the proper intro steps
+        // Also update the problem statement to use the new problem from digging deeper
         const diggingSelectedMethod = context.metadata?.selectedMethod;
+        
+        // Update problem statement to use the new problem from digging deeper flow
+        const newDiggingProblem = context.metadata?.newDiggingProblem || context.metadata?.currentDiggingProblem;
+        if (newDiggingProblem) {
+          context.problemStatement = newDiggingProblem;
+          context.metadata.currentDiggingProblem = newDiggingProblem;
+          console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: Updated problemStatement to: "${newDiggingProblem}"`);
+        }
+        
         if (diggingSelectedMethod === 'problem_shifting') {
           context.currentPhase = 'problem_shifting';
           return 'problem_shifting_intro';
