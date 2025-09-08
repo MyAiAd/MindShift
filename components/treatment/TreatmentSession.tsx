@@ -460,7 +460,14 @@ export default function TreatmentSession({
         'future_problem_check',           // General future problem check
         'identity_step_3_intro',          // Step 4: Check Identity (future identity check)
         'identity_problem_check',         // Step 5: Check Problem
-        'digging_deeper_start'            // Step 6: Dig Deeper (optional)
+        // Dig Deeper section - all yes/no steps across all modalities
+        'digging_deeper_start',           // Initial dig deeper question
+        'scenario_check_1',               // Scenario check 1
+        'scenario_check_2',               // Scenario check 2  
+        'scenario_check_3',               // Scenario check 3
+        'anything_else_check_1',          // Anything else check 1
+        'anything_else_check_2',          // Anything else check 2
+        'anything_else_check_3'           // Anything else check 3
       ];
       
       if (yesNoSteps.includes(currentStep)) {
@@ -768,7 +775,14 @@ export default function TreatmentSession({
       'future_problem_check',           // General future problem check
       'identity_step_3_intro',          // Step 4: Check Identity (future identity check)
       'identity_problem_check',         // Step 5: Check Problem
-      'digging_deeper_start'            // Step 6: Dig Deeper (optional)
+      // Dig Deeper section - all yes/no steps across all modalities
+      'digging_deeper_start',           // Initial dig deeper question
+      'scenario_check_1',               // Scenario check 1
+      'scenario_check_2',               // Scenario check 2  
+      'scenario_check_3',               // Scenario check 3
+      'anything_else_check_1',          // Anything else check 1
+      'anything_else_check_2',          // Anything else check 2
+      'anything_else_check_3'           // Anything else check 3
     ];
     
     if (!yesNoSteps.includes(currentStep)) return false;
