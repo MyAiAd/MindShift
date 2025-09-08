@@ -2033,6 +2033,12 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || originalProblem;
             console.log(`🔍 IDENTITY_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}"`);
             
+            // ENHANCED DEBUG: Track what userInput we're receiving
+            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Called with userInput: "${userInput || 'NONE'}"`);
+            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Current step in context: "${context.currentStep}"`);
+            console.log(`🔍 IDENTITY_SHIFTING_INTRO: User responses keys:`, Object.keys(context.userResponses));
+            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Latest user response:`, context.userResponses[context.currentStep] || 'NONE');
+            
             // Only store identity if this is actually a user's identity response, not the problem statement
             if (userInput && userInput.trim() && userInput.trim() !== cleanProblemStatement) {
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: RAW userInput received: "${userInput}"`);
@@ -2056,9 +2062,15 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               // Keep currentIdentity for backward compatibility
               context.metadata.currentIdentity = processedIdentity;
               
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Stored identity response:`, context.metadata.identityResponse);
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ✅ STORED identity response:`, context.metadata.identityResponse);
             } else if (userInput && userInput.trim() === cleanProblemStatement) {
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Skipping storage - userInput is problem statement, not identity response`);
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ❌ SKIPPED storage - userInput is problem statement, not identity response`);
+            } else if (userInput && userInput.trim()) {
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ❓ SKIPPED storage - userInput present but doesn't match problem statement`);
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: userInput: "${userInput.trim()}"`);
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: cleanProblemStatement: "${cleanProblemStatement}"`);
+            } else {
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ⏸️  NO userInput - showing question only`);
             }
             
             return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
