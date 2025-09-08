@@ -230,6 +230,15 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
                         userInput;
           console.log('Treatment API: Using problem statement for intro step processing:', textToProcess);
         }
+        // For identity dissolve steps, use the processed identity from context, not raw user input
+        else if (['identity_dissolve_step_a', 'trauma_dissolve_step_a'].includes(result.nextStep || '')) {
+          const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+          // Use the processed identity from identityResponse, not the raw user input
+          textToProcess = treatmentContext?.metadata?.identityResponse?.value || 
+                        treatmentContext?.metadata?.currentIdentity || 
+                        userInput;
+          console.log('Treatment API: Using processed identity for dissolve step processing:', textToProcess);
+        }
         
         const linguisticResult = await aiAssistance.processLinguisticInterpretation(
           result.scriptedResponse,
