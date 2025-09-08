@@ -455,7 +455,16 @@ export default function TreatmentSession({
         }
       }
       
-      if (currentStep === 'future_problem_check') {
+      // Handle yes/no responses for all applicable steps
+      const yesNoSteps = [
+        'future_problem_check',
+        'identity_step_3_intro',
+        'identity_check',
+        'identity_future_check',
+        'identity_problem_check'
+      ];
+      
+      if (yesNoSteps.includes(currentStep)) {
         if (['yes', 'no', 'maybe'].includes(transcript)) {
           handleYesNoMaybeResponse(transcript as 'yes' | 'no' | 'maybe');
           return;
@@ -755,8 +764,16 @@ export default function TreatmentSession({
 
   // Helper function to determine if we should show the future_problem_check buttons (Yes/No/Maybe)
   const shouldShowFutureProblemCheckButtons = () => {
-    // Only show for future_problem_check step
-    if (currentStep !== 'future_problem_check') return false;
+    // Show for yes/no steps in identity shifting and future problem check
+    const yesNoSteps = [
+      'future_problem_check',
+      'identity_step_3_intro',
+      'identity_check',
+      'identity_future_check',
+      'identity_problem_check'
+    ];
+    
+    if (!yesNoSteps.includes(currentStep)) return false;
     
     // Don't show if AI is asking clarifying questions
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
