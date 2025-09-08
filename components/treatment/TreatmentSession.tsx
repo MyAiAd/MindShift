@@ -924,7 +924,7 @@ export default function TreatmentSession({
       )}
 
       {/* Messages Area - No longer scrollable, uses page scroll instead */}
-      <div className="px-4 py-3 space-y-3 pb-40">
+      <div className={`px-4 py-3 space-y-3 ${currentStep === 'digging_method_selection' ? 'pb-56' : 'pb-40'}`}>
         {messages.map((message) => (
           <div
             key={message.id}
