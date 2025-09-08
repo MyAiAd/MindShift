@@ -3643,8 +3643,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             // If this is the first time showing this step (coming from restate_problem_future), 
             // store the problem and show the selection message
             if (!context.metadata.currentDiggingProblem && input && input !== 'METHOD_SELECTION_NEEDED') {
-              // Store the new problem statement for clearing
-              const newProblem = input;
+              // Use the new problem statement that was stored in restate_problem_future step
+              const newProblem = context.metadata.newDiggingProblem || input;
               context.metadata.currentDiggingProblem = newProblem;
               context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
               context.metadata.returnToDiggingStep = 'scenario_check_1'; // Where to return after clearing
@@ -3653,6 +3653,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
               // CRITICAL: Set work type to 'problem' to ensure proper method selection
               context.metadata.workType = 'problem';
               console.log(`🔍 DIGGING_METHOD_SELECTION: Stored new problem: "${newProblem}"`);
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Using newDiggingProblem: "${context.metadata.newDiggingProblem}"`);
               console.log(`🔍 DIGGING_METHOD_SELECTION: Set workType to 'problem' for method selection`);
               
               return `We need to clear this problem. Which method would you like to use?`;
