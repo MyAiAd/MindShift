@@ -428,19 +428,29 @@ export class TreatmentStateMachine {
       })();
       
       // NEW: Try cache for dynamic responses with context hash
-      const contextHash = this.generateContextHash(step.id, userInput, context);
-      const cacheKey = `dynamic_${step.id}_${contextHash}`;
-      const cached = this.getCachedResponse(cacheKey);
-      if (cached) {
-        this.responseCache.hitCount++;
-        console.log(`🚀 CACHE_HIT: Dynamic response for step "${step.id}" (${Math.round(performance.now() - startTime)}ms)`);
-        return cached;
+      // CRITICAL FIX: Don't use cache for identity_shifting_intro when processing user input
+      const shouldSkipCache = step.id === 'identity_shifting_intro' && userInput && userInput.trim();
+      let cacheKey: string | undefined;
+      
+      if (!shouldSkipCache) {
+        const contextHash = this.generateContextHash(step.id, userInput, context);
+        cacheKey = `dynamic_${step.id}_${contextHash}`;
+        const cached = this.getCachedResponse(cacheKey);
+        if (cached) {
+          this.responseCache.hitCount++;
+          console.log(`🚀 CACHE_HIT: Dynamic response for step "${step.id}" (${Math.round(performance.now() - startTime)}ms)`);
+          return cached;
+        }
+      } else {
+        console.log(`🚀 CACHE_SKIP: Skipping cache for identity_shifting_intro with userInput to process identity response`);
       }
       
       response = step.scriptedResponse(userInput, context);
       
-      // NEW: Cache the dynamic response
-      this.setCachedResponse(cacheKey, response, step.id);
+      // NEW: Cache the dynamic response (only if we have a cacheKey)
+      if (cacheKey) {
+        this.setCachedResponse(cacheKey, response, step.id);
+      }
     } else {
       response = step.scriptedResponse;
       
