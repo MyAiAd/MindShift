@@ -105,6 +105,9 @@ export class TreatmentStateMachine {
     };
     
     console.log('🚀 RESPONSE_CACHE: Treatment State Machine initialized with response caching');
+    
+    // Clear any existing identity-related cache entries to fix caching bug
+    this.clearIdentityCache();
   }
 
   /**
@@ -516,7 +519,10 @@ export class TreatmentStateMachine {
       // Only include relevant metadata that affects response generation
       problemStatement: context.problemStatement,
       currentBelief: context.metadata.currentBelief,
-      desiredFeeling: context.metadata.desiredFeeling
+      desiredFeeling: context.metadata.desiredFeeling,
+      // Identity Shifting specific metadata for proper cache differentiation
+      identityResponse: context.metadata.identityResponse,
+      currentIdentity: context.metadata.currentIdentity
     };
     
     // Simple hash - could be improved with actual hash function if needed
@@ -605,6 +611,30 @@ export class TreatmentStateMachine {
       preloadedResponsesUsed: this.responseCache.preloadedResponses.size,
       totalResponses: total
     };
+  }
+
+  /**
+   * Clear identity-related cached responses to fix incorrect caching
+   */
+  public clearIdentityCache(): void {
+    const identitySteps = [
+      'identity_dissolve_step_a',
+      'identity_dissolve_step_b', 
+      'identity_dissolve_step_c',
+      'identity_dissolve_step_d',
+      'identity_dissolve_step_e'
+    ];
+    
+    let clearedCount = 0;
+    this.responseCache.cache.forEach((_, key) => {
+      const hasIdentityStep = identitySteps.some(step => key.includes(step));
+      if (hasIdentityStep) {
+        this.responseCache.cache.delete(key);
+        clearedCount++;
+      }
+    });
+    
+    console.log(`🧹 CACHE_CLEAR: Cleared ${clearedCount} identity-related cache entries`);
   }
 
   /**
