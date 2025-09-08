@@ -423,7 +423,7 @@ export default function TreatmentSession({
       console.log('🎤 TreatmentSession received transcript:', transcript, 'for step:', currentStep);
       console.log('🔍 DEBUG: Voice transcript from stack:', new Error().stack?.split('\n')[2]?.trim());
       // Smart routing based on current UI context
-      if (currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'identity_dissolve_step_f' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') {
+      if (currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'identity_dissolve_step_f' || currentStep === 'identity_step_3_intro' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') {
         if (transcript === 'yes' || transcript === 'no') {
           handleYesNoResponse(transcript as 'yes' | 'no');
           return;
@@ -786,7 +786,6 @@ export default function TreatmentSession({
     // Show for yes/no steps matching the flowchart exactly
     const yesNoSteps = [
       'future_problem_check',           // General future problem check
-      'identity_step_3_intro',          // Step 4: Check Identity (future identity check)
       'identity_problem_check',         // Step 5: Check Problem
       // Dig Deeper section - all yes/no steps across all modalities
       'digging_deeper_start',           // Initial dig deeper question
@@ -1025,7 +1024,7 @@ export default function TreatmentSession({
       {isSessionActive && (
         <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 px-4 py-3 shadow-lg z-30">
           <div className="max-w-4xl mx-auto flex justify-end">
-            {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'identity_dissolve_step_f' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'trauma_shifting_intro' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') ? (
+            {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'identity_dissolve_step_f' || currentStep === 'identity_step_3_intro' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'trauma_shifting_intro' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem') ? (
               /* Yes/No Button Interface */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Button Interface */}
