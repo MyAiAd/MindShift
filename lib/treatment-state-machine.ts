@@ -4741,8 +4741,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         break;
 
       case 'identity_shifting_intro':
-        // Identity Shifting intro completed, move to first dissolve step
-        return 'identity_dissolve_step_a';
+        // Only move to next step if identity has been stored
+        if (context.metadata.identityResponse && context.metadata.identityResponse.type === 'IDENTITY') {
+          console.log(`🔍 IDENTITY_SHIFTING_INTRO: Identity stored, moving to dissolve step A`);
+          return 'identity_dissolve_step_a';
+        } else {
+          console.log(`🔍 IDENTITY_SHIFTING_INTRO: Identity not stored yet, staying on intro step`);
+          return 'identity_shifting_intro';
+        }
         
       case 'confirm_identity_problem':
         // If confirmed, go back to identity shifting
