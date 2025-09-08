@@ -5084,11 +5084,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         const diggingSelectedMethod = context.metadata?.selectedMethod;
         
         // Update problem statement to use the new problem from digging deeper flow
-        const newDiggingProblem = context.metadata?.newDiggingProblem || context.metadata?.currentDiggingProblem;
+        // Get the problem statement from user responses first, then fall back to metadata
+        const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'];
+        const newDiggingProblem = newProblemFromUserResponse || context.metadata?.newDiggingProblem || context.metadata?.currentDiggingProblem;
         if (newDiggingProblem) {
           context.problemStatement = newDiggingProblem;
           context.metadata.currentDiggingProblem = newDiggingProblem;
           console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: Updated problemStatement to: "${newDiggingProblem}"`);
+          console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: Source - userResponse: "${newProblemFromUserResponse}", metadata: "${context.metadata?.newDiggingProblem}"`);
         }
         
         if (diggingSelectedMethod === 'problem_shifting') {
