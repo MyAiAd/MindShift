@@ -12,10 +12,11 @@ function TreatmentSessionContent() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string>('');
+  const [shouldResume, setShouldResume] = useState<boolean>(false);
 
   useEffect(() => {
     const id = searchParams.get('sessionId');
-    const shouldResume = searchParams.get('resume') === 'true';
+    const resumeFlag = searchParams.get('resume') === 'true';
     
     if (!id) {
       // Generate a new session ID if none provided
@@ -23,9 +24,10 @@ function TreatmentSessionContent() {
       router.replace(`/dashboard/sessions/treatment?sessionId=${newSessionId}`);
     } else {
       setSessionId(id);
+      setShouldResume(resumeFlag);
       
       // Clean up the URL by removing the resume parameter after we've captured it
-      if (shouldResume) {
+      if (resumeFlag) {
         const newUrl = `/dashboard/sessions/treatment?sessionId=${id}`;
         window.history.replaceState({}, '', newUrl);
       }
@@ -118,7 +120,7 @@ function TreatmentSessionContent() {
         <TreatmentSession
           sessionId={sessionId}
           userId={user.id}
-          shouldResume={searchParams.get('resume') === 'true'}
+          shouldResume={shouldResume}
           onComplete={handleSessionComplete}
           onError={handleSessionError}
         />
