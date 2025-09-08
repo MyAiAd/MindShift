@@ -2036,12 +2036,23 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             // If we have user input, process and store the identity
             if (userInput && userInput.trim()) {
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: RAW userInput received: "${userInput}"`);
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Problem statement for reference: "${cleanProblemStatement}"`);
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Current context metadata:`, JSON.stringify(context.metadata, null, 2));
+              
               const processedIdentity = this.processIdentityResponse(userInput.trim());
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: Processing identity "${userInput}" -> "${processedIdentity}"`);
               
               // Check if user said "me" - need clarification
               if (userInput.toLowerCase().trim() === 'me') {
                 return "What kind of me?";
+              }
+              
+              // CRITICAL DEBUG: Check if userInput is actually the problem statement
+              if (userInput.trim().toLowerCase() === cleanProblemStatement.toLowerCase()) {
+                console.error(`🚨 IDENTITY_SHIFTING_INTRO: ERROR - userInput is the problem statement, not the identity response!`);
+                console.error(`🚨 IDENTITY_SHIFTING_INTRO: userInput: "${userInput}"`);
+                console.error(`🚨 IDENTITY_SHIFTING_INTRO: cleanProblemStatement: "${cleanProblemStatement}"`);
+                console.error(`🚨 IDENTITY_SHIFTING_INTRO: This should be the user's identity response like 'an angry person'`);
               }
               
               // Store the processed identity with proper labeling
