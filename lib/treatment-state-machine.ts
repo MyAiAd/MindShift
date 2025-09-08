@@ -3599,7 +3599,12 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'future_problem_check',
-          scriptedResponse: "Do you feel the problem will come back in the future?",
+          scriptedResponse: (userInput, context) => {
+            const problemStatement = context.problemStatement || 
+                                   context.userResponses?.['mind_shifting_explanation'] || 
+                                   'the problem';
+            return `Do you feel the problem '${problemStatement}' will come back in the future?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
