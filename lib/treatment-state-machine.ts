@@ -2033,11 +2033,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || originalProblem;
             console.log(`🔍 IDENTITY_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}"`);
             
-            // If we have user input, process and store the identity
-            if (userInput && userInput.trim()) {
+            // Only store identity if this is actually a user's identity response, not the problem statement
+            if (userInput && userInput.trim() && userInput.trim() !== cleanProblemStatement) {
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: RAW userInput received: "${userInput}"`);
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: Problem statement for reference: "${cleanProblemStatement}"`);
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Current context metadata:`, JSON.stringify(context.metadata, null, 2));
               
               const processedIdentity = this.processIdentityResponse(userInput.trim());
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: Processing identity "${userInput}" -> "${processedIdentity}"`);
@@ -2045,14 +2044,6 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               // Check if user said "me" - need clarification
               if (userInput.toLowerCase().trim() === 'me') {
                 return "What kind of me?";
-              }
-              
-              // CRITICAL DEBUG: Check if userInput is actually the problem statement
-              if (userInput.trim().toLowerCase() === cleanProblemStatement.toLowerCase()) {
-                console.error(`🚨 IDENTITY_SHIFTING_INTRO: ERROR - userInput is the problem statement, not the identity response!`);
-                console.error(`🚨 IDENTITY_SHIFTING_INTRO: userInput: "${userInput}"`);
-                console.error(`🚨 IDENTITY_SHIFTING_INTRO: cleanProblemStatement: "${cleanProblemStatement}"`);
-                console.error(`🚨 IDENTITY_SHIFTING_INTRO: This should be the user's identity response like 'an angry person'`);
               }
               
               // Store the processed identity with proper labeling
@@ -2066,6 +2057,8 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               context.metadata.currentIdentity = processedIdentity;
               
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: Stored identity response:`, context.metadata.identityResponse);
+            } else if (userInput && userInput.trim() === cleanProblemStatement) {
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Skipping storage - userInput is problem statement, not identity response`);
             }
             
             return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
