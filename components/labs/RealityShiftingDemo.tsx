@@ -24,7 +24,7 @@ const REALITY_SHIFTING_STEPS: RealityShiftingStep[] = [
   {
     id: 'reality_goal_capture',
     title: 'Goal Statement',
-    script: 'What do you want?',
+    script: 'Tell me what your goal is in a few words.',
     expectedResponseType: 'goal',
     nextStep: 'goal_deadline_check'
   },
@@ -71,11 +71,11 @@ const REALITY_SHIFTING_STEPS: RealityShiftingStep[] = [
     title: 'Reality Shifting Introduction',
     script: (userInput: string, context: any) => {
       const goalStatement = context?.goalStatement || 'your goal';
-      return `Close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. If ever you feel your goal has changed just let me know.
+      return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up is an emotion, a body sensation, a thought or a mental image. If ever you feel your goal has changed just let me know.
 
 We're going to work with your goal of '${goalStatement}'.
 
-Feel that '${goalStatement}' is coming to you... what does it feel like?`;
+Close your eyes. Feel that '${goalStatement}' is coming to you... what does it feel like?`;
     },
     expectedResponseType: 'feeling',
     nextStep: 'reality_step_a2'
@@ -84,8 +84,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
     id: 'reality_step_a2',
     title: 'Reality Step A2',
     script: (userInput: string, context: any) => {
-      const originalFeeling = context?.userResponses?.['reality_shifting_intro'] || userInput || 'that';
-      return `Feel ${originalFeeling}... what does ${originalFeeling} feel like?`;
+      const lastResponse = userInput || context?.userResponses?.['reality_shifting_intro'] || 'that';
+      return `Close your eyes. Feel ${lastResponse}... what does it feel like?`;
     },
     expectedResponseType: 'feeling',
     nextStep: 'reality_step_a3'
@@ -94,18 +94,79 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
     id: 'reality_step_a3',
     title: 'Reality Step A3',
     script: (userInput: string, context: any) => {
-      const originalFeeling = context?.userResponses?.['reality_shifting_intro'] || userInput || 'that';
-      return `Feel ${originalFeeling}... what happens in yourself when you feel ${originalFeeling}?`;
+      const lastResponse = userInput || context?.userResponses?.['reality_step_a2'] || 'that';
+      return `Close your eyes. Feel ${lastResponse}... what happens in yourself when you feel ${lastResponse}?`;
     },
     expectedResponseType: 'open',
-    nextStep: 'reality_step_b'
+    nextStep: 'reality_step_b1'
   },
   {
-    id: 'reality_step_b',
-    title: 'Reality Step B',
+    id: 'reality_step_b1',
+    title: 'Reality Step B1',
     script: (userInput: string, context: any) => {
       const goalStatement = context?.goalStatement || 'your goal';
-      return `Is it possible that '${goalStatement}' will not come to you?`;
+      return `Close your eyes. Why might you not achieve ${goalStatement}?`;
+    },
+    expectedResponseType: 'open',
+    nextStep: 'reality_step_b2'
+  },
+  {
+    id: 'reality_step_b2',
+    title: 'Reality Step B2',
+    script: (userInput: string, context: any) => {
+      const reason = userInput || context?.userResponses?.['reality_step_b1'] || 'that reason';
+      return `Close your eyes. Feel ${reason}... what does it feel like?`;
+    },
+    expectedResponseType: 'feeling',
+    nextStep: 'reality_step_b3'
+  },
+  {
+    id: 'reality_step_b3',
+    title: 'Reality Step B3',
+    script: (userInput: string, context: any) => {
+      const lastResponse = userInput || context?.userResponses?.['reality_step_b2'] || 'that problem';
+      return `Close your eyes. What would it feel like to not have ${lastResponse}?`;
+    },
+    expectedResponseType: 'feeling',
+    nextStep: 'reality_step_b4'
+  },
+  {
+    id: 'reality_step_b4',
+    title: 'Reality Step B4',
+    script: (userInput: string, context: any) => {
+      const lastResponse = userInput || context?.userResponses?.['reality_step_b3'] || 'that';
+      return `Close your eyes. Feel ${lastResponse}... what does ${lastResponse} feel like?`;
+    },
+    expectedResponseType: 'feeling',
+    nextStep: 'reality_cycle_check'
+  },
+  {
+    id: 'reality_cycle_check',
+    title: 'Cycle Check',
+    script: (userInput: string, context: any) => {
+      // This is an internal step to determine if we should cycle back to A or continue to checking
+      const goalStatement = context?.goalStatement || 'your goal';
+      return `Close your eyes. Why might you not achieve ${goalStatement}?`;
+    },
+    expectedResponseType: 'open',
+    nextStep: 'reality_checking'
+  },
+  {
+    id: 'reality_checking',
+    title: 'Reality Checking',
+    script: (userInput: string, context: any) => {
+      const goalStatement = context?.goalStatement || 'your goal';
+      return `How certain are you between 0% and 100% that you will achieve ${goalStatement}?`;
+    },
+    expectedResponseType: 'open',
+    nextStep: 'reality_doubt_check'
+  },
+  {
+    id: 'reality_doubt_check',
+    title: 'Reality Doubt Check',
+    script: (userInput: string, context: any) => {
+      const goalStatement = context?.goalStatement || 'your goal';
+      return `Are there any doubts left in your mind that you will achieve ${goalStatement}?`;
     },
     expectedResponseType: 'yesno',
     nextStep: 'session_complete'
@@ -127,7 +188,9 @@ export default function RealityShiftingDemo() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [sessionContext, setSessionContext] = useState<any>({
     goalStatement: '',
-    userResponses: {}
+    userResponses: {},
+    cycleCount: 0,
+    isInCycleMode: false
   });
   
   const recognitionRef = useRef<any>(null);
@@ -433,8 +496,53 @@ export default function RealityShiftingDemo() {
     setSessionContext(newContext);
     addMessage(transcript, true, currentStepFromRef.id);
 
-    // Move to next step if available
+    // Handle cycling logic for Reality Shifting A-B pattern
     const currentIndex = currentStepIndexRef.current;
+    
+    // Special handling for cycle check step
+    if (currentStepFromRef.id === 'reality_cycle_check') {
+      const trimmedResponse = transcript.trim().toLowerCase();
+      
+      // Check if user said "no reason" or similar negative response
+      const noReasonIndicators = ['no reason', 'no', 'nothing', 'none', 'not really', 'nope', 'no reasons'];
+      const hasNoReason = noReasonIndicators.some(indicator => trimmedResponse.includes(indicator));
+      
+      if (hasNoReason) {
+        // User said no reason - proceed to checking phase
+        console.log(`🎯 REALITY_DEMO: CYCLE END: User said no reason, proceeding to checking`);
+        const checkingStepIndex = REALITY_SHIFTING_STEPS.findIndex(step => step.id === 'reality_checking');
+        if (checkingStepIndex !== -1) {
+          setCurrentStepIndex(checkingStepIndex);
+          const nextStep = REALITY_SHIFTING_STEPS[checkingStepIndex];
+          const nextResponse = getScriptedResponse(nextStep, transcript, newContext);
+          addMessage(nextResponse, false, nextStep.id);
+          speakText(nextResponse);
+          return;
+        }
+      } else {
+        // User gave a reason - cycle back to A section
+        console.log(`🎯 REALITY_DEMO: CYCLING: User gave reason "${transcript}", cycling back to A section`);
+        newContext.cycleCount = (newContext.cycleCount || 0) + 1;
+        newContext.isInCycleMode = true;
+        
+        // Go back to reality_step_a2 (Feel that GOAL is coming to you)
+        const a1StepIndex = REALITY_SHIFTING_STEPS.findIndex(step => step.id === 'reality_shifting_intro');
+        if (a1StepIndex !== -1) {
+          setCurrentStepIndex(a1StepIndex);
+          setSessionContext(newContext);
+          
+          // Create modified A1 response for cycling
+          const goalStatement = newContext.goalStatement || 'your goal';
+          const cyclingResponse = `Close your eyes. Feel that '${goalStatement}' is coming to you... what does it feel like?`;
+          
+          addMessage(cyclingResponse, false, 'reality_shifting_intro');
+          speakText(cyclingResponse);
+          return;
+        }
+      }
+    }
+    
+    // Regular step progression
     if (currentIndex < REALITY_SHIFTING_STEPS.length - 1) {
       const nextIndex = currentIndex + 1;
       console.log(`🎯 REALITY_DEMO: ADVANCING: From step ${currentIndex + 1} to step ${nextIndex + 1}`);
@@ -599,7 +707,9 @@ export default function RealityShiftingDemo() {
     setCurrentStepIndex(0);
     setSessionContext({
       goalStatement: '',
-      userResponses: {}
+      userResponses: {},
+      cycleCount: 0,
+      isInCycleMode: false
     });
 
     const initialResponse = getScriptedResponse(currentStep);
@@ -639,7 +749,9 @@ export default function RealityShiftingDemo() {
     setCurrentStepIndex(0);
     setSessionContext({
       goalStatement: '',
-      userResponses: {}
+      userResponses: {},
+      cycleCount: 0,
+      isInCycleMode: false
     });
   };
 
@@ -686,6 +798,11 @@ export default function RealityShiftingDemo() {
           <p className="text-sm text-green-700 dark:text-green-300">
             Goal: "{sessionContext.goalStatement}"
           </p>
+          {sessionContext.isInCycleMode && sessionContext.cycleCount > 0 && (
+            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              A-B Cycle #{sessionContext.cycleCount} - Alternating between sections until no reason found
+            </p>
+          )}
         </div>
       )}
 
