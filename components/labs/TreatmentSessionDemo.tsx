@@ -454,19 +454,73 @@ export default function TreatmentSessionDemo({
   };
 
   // Handle work type selection
-  const handleWorkTypeSelection = (workType: string) => {
+  const handleWorkTypeSelection = async (workType: string) => {
+    console.log('🎯 DEMO: handleWorkTypeSelection called with:', workType);
+    setClickedButton(workType);
+    
+    // Set the selected work type for UI state management
     setSelectedWorkType(workType);
     
-    const workTypeMessage = workType === 'PROBLEM' ? 
-      'I want to work on a problem' :
-      workType === 'GOAL' ?
-      'I want to work on a goal' :
-      'I want to work on a negative experience';
+    // Send the numeric selection to the API (same as main TreatmentSession)
+    const numericSelection = workType === 'PROBLEM' ? '1' : 
+                            workType === 'GOAL' ? '2' : '3';
+    
+    const userMessage: TreatmentMessage = {
+      id: Date.now().toString(),
+      content: numericSelection,
+      isUser: true,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      const requestBody = {
+        sessionId,
+        userId: actualUserId,
+        userInput: numericSelection,
+        action: 'continue'
+      };
       
-    // Send the work type selection as if it was typed
-    const event = new Event('submit') as any;
-    setInputValue(workTypeMessage);
-    setTimeout(() => handleSubmit(event), 100);
+      const response = await fetch('/api/treatment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('🎯 DEMO: Work type selection response:', data);
+      
+      if (data.success) {
+        if (data.message && !data.message.includes('_SELECTED') && !data.message.includes('_CONFIRMED')) {
+          const aiMessage: TreatmentMessage = {
+            id: (Date.now() + 1).toString(),
+            content: data.message,
+            isUser: false,
+            timestamp: new Date(),
+            responseTime: 0,
+            usedAI: data.usedAI || false
+          };
+
+          setMessages(prev => [...prev, aiMessage]);
+        }
+        
+        setCurrentStep(data.currentStep || currentStep);
+      }
+      
+      setIsLoading(false);
+      setClickedButton(null);
+    } catch (error) {
+      console.error('Work type selection error:', error);
+      setError('Error processing work type selection');
+      setIsLoading(false);
+      setClickedButton(null);
+    }
   };
 
   // Check if we should show Yes/No buttons
@@ -491,7 +545,7 @@ export default function TreatmentSessionDemo({
 
   // Check if we should show work type selection
   const shouldShowWorkTypeSelection = () => {
-    return currentStep === 'work_type_selection' && !selectedWorkType;
+    return (currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection') && !selectedWorkType;
   };
 
   // Handle undo functionality
