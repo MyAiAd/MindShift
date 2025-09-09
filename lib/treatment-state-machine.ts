@@ -3609,7 +3609,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             const belief = context.metadata.currentBelief || 'that belief';
             // Create opposite belief (simplified approach)
             const oppositeBelief = belief.toLowerCase().includes('not') ? belief.replace(/not\s+/gi, '') : `not ${belief}`;
-            return `Do you now believe '${oppositeBelief}'?`;
+            return `Do you now know '${oppositeBelief}'?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
