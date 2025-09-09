@@ -435,7 +435,10 @@ export class TreatmentStateMachine {
       const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem)) ||
                             (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'problem_shifting_intro' && context.metadata?.currentDiggingProblem) ||
-                            (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem);
+                            (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
+                            (step.id === 'blockage_check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
+                            (step.id === 'identity_problem_check' && context.metadata?.currentDiggingProblem) ||
+                            (step.id === 'belief_problem_check' && context.metadata?.currentDiggingProblem);
       let cacheKey: string | undefined;
       
       if (!shouldSkipCache) {
@@ -448,14 +451,21 @@ export class TreatmentStateMachine {
           return cached;
         }
       } else {
+        const diggingProblem = context.metadata?.currentDiggingProblem;
         if (step.id === 'identity_shifting_intro') {
-          console.log(`🚀 CACHE_SKIP: Skipping cache for identity_shifting_intro - userInput: ${!!userInput?.trim()}, digging: ${!!context.metadata?.currentDiggingProblem}`);
+          console.log(`🚀 CACHE_SKIP: Skipping cache for identity_shifting_intro - userInput: ${!!userInput?.trim()}, digging: ${!!diggingProblem}`);
         } else if (step.id === 'belief_shifting_intro') {
-          console.log(`🚀 CACHE_SKIP: Skipping cache for belief_shifting_intro in digging deeper mode (currentDiggingProblem: ${context.metadata?.currentDiggingProblem})`);
+          console.log(`🚀 CACHE_SKIP: Skipping cache for belief_shifting_intro in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
         } else if (step.id === 'problem_shifting_intro') {
-          console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro in digging deeper mode (currentDiggingProblem: ${context.metadata?.currentDiggingProblem})`);
+          console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
         } else if (step.id === 'check_if_still_problem') {
-          console.log(`🚀 CACHE_SKIP: Skipping cache for check_if_still_problem in digging deeper mode (currentDiggingProblem: ${context.metadata?.currentDiggingProblem})`);
+          console.log(`🚀 CACHE_SKIP: Skipping cache for check_if_still_problem in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
+        } else if (step.id === 'blockage_check_if_still_problem') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for blockage_check_if_still_problem in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
+        } else if (step.id === 'identity_problem_check') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for identity_problem_check in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
+        } else if (step.id === 'belief_problem_check') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for belief_problem_check in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
         }
       }
       
@@ -2514,7 +2524,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_problem_check',
           scriptedResponse: (userInput, context) => {
-            const cleanProblemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            // Get the problem statement - prioritize digging deeper restated problem
+            const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+            const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            console.log(`🔍 IDENTITY_PROBLEM_CHECK: Using problem statement: "${cleanProblemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
             return `Feel '${cleanProblemStatement}'... does it still feel like a problem?`;
           },
           expectedResponseType: 'yesno',
@@ -3679,7 +3692,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'belief_problem_check',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            // Get the problem statement - prioritize digging deeper restated problem
+            const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+            const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            console.log(`🔍 BELIEF_PROBLEM_CHECK: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
             return `Feel '${problemStatement}'... does it still feel like a problem?`;
           },
           expectedResponseType: 'yesno',
