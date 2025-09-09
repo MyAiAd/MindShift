@@ -431,10 +431,11 @@ export class TreatmentStateMachine {
       })();
       
       // NEW: Try cache for dynamic responses with context hash
-      // CRITICAL FIX: Don't use cache for intro steps in digging deeper mode (need to skip lengthy instructions)
+      // CRITICAL FIX: Don't use cache for steps in digging deeper mode (need correct problem statement)
       const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem)) ||
                             (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem) ||
-                            (step.id === 'problem_shifting_intro' && context.metadata?.currentDiggingProblem);
+                            (step.id === 'problem_shifting_intro' && context.metadata?.currentDiggingProblem) ||
+                            (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem);
       let cacheKey: string | undefined;
       
       if (!shouldSkipCache) {
@@ -453,6 +454,8 @@ export class TreatmentStateMachine {
           console.log(`🚀 CACHE_SKIP: Skipping cache for belief_shifting_intro in digging deeper mode (currentDiggingProblem: ${context.metadata?.currentDiggingProblem})`);
         } else if (step.id === 'problem_shifting_intro') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro in digging deeper mode (currentDiggingProblem: ${context.metadata?.currentDiggingProblem})`);
+        } else if (step.id === 'check_if_still_problem') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for check_if_still_problem in digging deeper mode (currentDiggingProblem: ${context.metadata?.currentDiggingProblem})`);
         }
       }
       
@@ -1823,8 +1826,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'check_if_still_problem',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            // Get the problem statement - prioritize digging deeper restated problem
+            const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+            const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            console.log(`🔍 CHECK_IF_STILL_PROBLEM: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
             return `Feel the problem '${problemStatement}'... does it still feel like a problem?`;
           },
           expectedResponseType: 'yesno',
