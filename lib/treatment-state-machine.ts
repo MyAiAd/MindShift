@@ -5034,18 +5034,19 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
       case 'identity_dissolve_step_f':
         // Step F: "Can you still feel yourself being [IDENTITY]?"
-        if (lastResponse.includes('no')) {
+        if (lastResponse.includes('no') || lastResponse.includes('2')) {
           // If NO, proceed to CHECK IDENTITY section
           console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: User said NO, proceeding to identity check`);
           return 'identity_step_3_intro';
-        } else if (lastResponse.includes('yes')) {
+        } else if (lastResponse.includes('yes') || lastResponse.includes('1')) {
           // If YES, they can still feel the identity - cycle back to step A
           console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: User said YES, cycling back to dissolve step A`);
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
           return 'identity_dissolve_step_a';
         }
-        // If unclear response, stay on current step
-        return 'identity_dissolve_step_f';
+        // If unclear response, default to proceeding (assume NO to avoid loops)
+        console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: Unclear response "${lastResponse}", defaulting to identity check to avoid loop`);
+        return 'identity_step_3_intro';
         
       case 'confirm_identity_problem':
         // If confirmed, go back to identity shifting
