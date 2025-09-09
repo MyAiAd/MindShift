@@ -1509,8 +1509,8 @@ export default function TreatmentSession({
                 </div>
                 </div>
               </div>
-            ) : shouldShowChooseMethodButtons() ? (
-              /* Method Selection Interface for choose_method step */
+            ) : false && shouldShowChooseMethodButtons() ? (
+              /* COMMENTED OUT: Method Selection Interface for choose_method step - Now handled by modality components */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Method Selection */}
                 <div className="flex items-center">
@@ -1946,7 +1946,7 @@ export default function TreatmentSession({
               'Select your answer using the buttons above'
             ) : shouldShowFutureProblemCheckButtons() ? (
               'Select your answer using the buttons above'
-            ) : shouldShowChooseMethodButtons() ? (
+            ) : false && shouldShowChooseMethodButtons() ? (
               'Select your preferred Mind Shifting method using the buttons above'
             ) : shouldShowDiggingMethodButtons() ? (
               'Select your preferred method to clear this problem using the buttons above'
