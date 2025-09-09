@@ -1507,8 +1507,8 @@ export default function TreatmentSession({
                 </div>
                 </div>
               </div>
-            ) : shouldShowDiggingDeeperButtons() ? (
-              /* Yes/No Button Interface for Digging Deeper */
+            ) : false && shouldShowDiggingDeeperButtons() ? (
+              /* COMMENTED OUT: Yes/No Button Interface for Digging Deeper - Now handled by modality components */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Digging Deeper Interface */}
                 <div className="flex items-center">
@@ -1581,8 +1581,8 @@ export default function TreatmentSession({
                 </div>
                 </div>
               </div>
-            ) : shouldShowFutureProblemCheckButtons() ? (
-              /* Yes/No/Maybe Button Interface for Future Problem Check */
+            ) : false && shouldShowFutureProblemCheckButtons() ? (
+              /* COMMENTED OUT: Yes/No/Maybe Button Interface for Future Problem Check - Now handled by modality components */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Future Problem Check Interface */}
                 <div className="flex items-center">
@@ -1812,8 +1812,8 @@ export default function TreatmentSession({
                   </div>
                 </div>
               </div>
-            ) : shouldShowDiggingMethodButtons() ? (
-              /* Digging Method Selection Interface for digging_method_selection step */
+            ) : false && shouldShowDiggingMethodButtons() ? (
+              /* COMMENTED OUT: Digging Method Selection Interface for digging_method_selection step - Now handled by modality components */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Digging Method Selection */}
                 <div className="flex items-center">
@@ -2097,13 +2097,13 @@ export default function TreatmentSession({
           <div className="max-w-4xl mx-auto mt-2 text-xs text-gray-500 text-center">
             {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem' || currentStep === 'goal_deadline_check' || currentStep === 'goal_confirmation') ? (
               'Select your answer using the buttons above'
-            ) : shouldShowDiggingDeeperButtons() ? (
+            ) : false && shouldShowDiggingDeeperButtons() ? (
               'Select your answer using the buttons above'
-            ) : shouldShowFutureProblemCheckButtons() ? (
+            ) : false && shouldShowFutureProblemCheckButtons() ? (
               'Select your answer using the buttons above'
             ) : false && shouldShowChooseMethodButtons() ? (
               'Select your preferred Mind Shifting method using the buttons above'
-            ) : shouldShowDiggingMethodButtons() ? (
+            ) : false && shouldShowDiggingMethodButtons() ? (
               'Select your preferred method to clear this problem using the buttons above'
             ) : currentStep === 'mind_shifting_explanation' ? (
               selectedWorkType === 'PROBLEM' 
