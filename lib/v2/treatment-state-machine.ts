@@ -1239,15 +1239,19 @@ export class TreatmentStateMachine {
               if (lowerInput.includes('problem shifting')) {
                 console.log(`🔍 METHOD_SELECTION: Matched problem shifting, setting selectedMethod`);
                 context.metadata.selectedMethod = 'problem_shifting';
+                context.metadata.workType = 'problem'; // BUGFIX: Set workType for validation
                 return "Great! We'll use Problem Shifting.";
               } else if (lowerInput.includes('identity shifting')) {
                 context.metadata.selectedMethod = 'identity_shifting';
+                context.metadata.workType = 'problem'; // BUGFIX: Set workType for validation
                 return "Great! We'll use Identity Shifting.";
               } else if (lowerInput.includes('belief shifting')) {
                 context.metadata.selectedMethod = 'belief_shifting';
+                context.metadata.workType = 'problem'; // BUGFIX: Set workType for validation
                 return "Great! We'll use Belief Shifting.";
               } else if (lowerInput.includes('blockage shifting')) {
                 context.metadata.selectedMethod = 'blockage_shifting';
+                context.metadata.workType = 'problem'; // BUGFIX: Set workType for validation
                 return "Great! We'll use Blockage Shifting.";
               } else {
                 // If we get here with work type 'problem' but no method selected,
@@ -1324,18 +1328,22 @@ export class TreatmentStateMachine {
               
               if (input.includes('1') || input.includes('problem shifting')) {
                 context.metadata.selectedMethod = 'problem_shifting';
+                context.metadata.workType = 'problem'; // BUGFIX: Set workType for validation
                 context.currentPhase = 'work_type_selection';
                 return "Great! We'll use Problem Shifting.";
               } else if (input.includes('2') || input.includes('identity shifting')) {
                 context.metadata.selectedMethod = 'identity_shifting';
+                context.metadata.workType = 'problem'; // BUGFIX: Set workType for validation
                 context.currentPhase = 'work_type_selection';
                 return "Great! We'll use Identity Shifting.";
               } else if (input.includes('3') || input.includes('belief shifting')) {
                 context.metadata.selectedMethod = 'belief_shifting';
+                context.metadata.workType = 'problem'; // BUGFIX: Set workType for validation
                 context.currentPhase = 'work_type_selection';
                 return "Great! We'll use Belief Shifting.";
               } else if (input.includes('4') || input.includes('blockage shifting')) {
                 context.metadata.selectedMethod = 'blockage_shifting';
+                context.metadata.workType = 'problem'; // BUGFIX: Set workType for validation
                 context.currentPhase = 'work_type_selection';
                 return "Great! We'll use Blockage Shifting.";
               } else {
