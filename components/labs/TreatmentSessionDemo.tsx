@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2 } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
+import { useAuth } from '@/lib/auth';
 
 interface TreatmentMessage {
   id: string;
@@ -47,11 +48,15 @@ interface StepHistoryEntry {
 
 export default function TreatmentSessionDemo({ 
   sessionId = `demo-${Date.now()}`, 
-  userId = 'demo-user', 
+  userId, 
   shouldResume = false,
   onComplete, 
   onError 
 }: TreatmentSessionDemoProps) {
+  
+  // Get authenticated user
+  const { user, profile, loading: authLoading } = useAuth();
+  const actualUserId = userId || user?.id;
   
   // State management
   const [messages, setMessages] = useState<TreatmentMessage[]>([]);
@@ -99,6 +104,12 @@ export default function TreatmentSessionDemo({
 
   // Initialize demo session using real API
   const initializeSession = async () => {
+    // Check if user is authenticated
+    if (!actualUserId) {
+      setError('Please sign in to use the treatment session demo.');
+      return;
+    }
+    
     setIsSessionActive(true);
     setError('');
     setSessionComplete(false);
@@ -108,7 +119,7 @@ export default function TreatmentSessionDemo({
       // Start new session using real API (same as original)
       const requestBody = {
         sessionId,
-        userId,
+        userId: actualUserId,
         action: 'start'
       };
       
@@ -160,7 +171,7 @@ export default function TreatmentSessionDemo({
   // Handle message submission using real API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || isLoading || !isSessionActive) return;
+    if (!inputValue.trim() || isLoading || !isSessionActive || !actualUserId) return;
 
     const startTime = performance.now();
     const userMessage: TreatmentMessage = {
@@ -191,7 +202,7 @@ export default function TreatmentSessionDemo({
       // Use real API call (same as original TreatmentSession)
       const requestBody = {
         sessionId,
-        userId,
+        userId: actualUserId,
         userInput: userMessage.content,
         action: 'continue'
       };
@@ -346,7 +357,24 @@ export default function TreatmentSessionDemo({
 
       {/* Content Area */}
       <div className="p-4">
-        {!isSessionActive && !sessionComplete ? (
+        {authLoading ? (
+          // Loading authentication state
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-500 dark:text-gray-400">Checking authentication...</p>
+          </div>
+        ) : !actualUserId ? (
+          // Not authenticated
+          <div className="text-center py-8">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-400" />
+            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              Authentication Required
+            </h4>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
+              Please sign in to use the treatment session demo.
+            </p>
+          </div>
+        ) : !isSessionActive && !sessionComplete ? (
           // Start Session View
           <div className="text-center py-8">
             <Brain className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
