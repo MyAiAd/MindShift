@@ -556,10 +556,11 @@ export default function TreatmentSessionDemo({
   // Check if we should show work type selection
   const shouldShowWorkTypeSelection = () => {
     // Don't show work type selection if we're past the initial explanation
+    // Be specific about which steps to exclude - don't use broad patterns that catch 'mind_shifting_explanation'
     if (currentStep === 'work_type_description' || 
         currentStep === 'method_selection' ||
         currentStep.includes('_intro') ||
-        currentStep.includes('_shifting')) {
+        (currentStep.includes('_shifting') && currentStep !== 'mind_shifting_explanation')) {
       console.log('🔍 DEBUG: Not showing work type selection - past initial steps. currentStep:', currentStep);
       return false;
     }
