@@ -920,6 +920,16 @@ export default function TreatmentSession({
       'trauma_dig_deeper',
       'trauma_shifting_intro',
       
+      // Digging Deeper steps (handled by modality digging components)
+      'digging_deeper_start',
+      'scenario_check_1',
+      'scenario_check_2',
+      'scenario_check_3',
+      'anything_else_check_1',
+      'anything_else_check_2',
+      'anything_else_check_3',
+      'digging_method_selection',
+      
       // Method selection step (handled by Problem Shifting when PROBLEM selected)
       'choose_method'
     ];
