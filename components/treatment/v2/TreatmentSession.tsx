@@ -1874,8 +1874,8 @@ export default function TreatmentSession({
                   )}
                 </div>
               </div>
-            ) : (
-              /* Regular Text Input Interface */
+            ) : currentStep !== 'choose_method' ? (
+              /* Regular Text Input Interface - Only show when NOT in method selection */
               <div className="flex space-x-2 max-w-4xl w-full">
                 {/* Undo Button - Positioned to the left of voice indicator */}
                 <div className="flex items-center">
@@ -1936,7 +1936,7 @@ export default function TreatmentSession({
                   <span>Send</span>
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
           
           <div className="max-w-4xl mx-auto mt-2 text-xs text-gray-500 text-center">
