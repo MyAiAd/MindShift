@@ -3468,7 +3468,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           id: 'belief_step_a',
           scriptedResponse: (userInput, context) => {
             // Store the belief for use throughout the process
+            console.log('🔍 BELIEF_DEBUG belief_step_a - userInput:', userInput);
+            console.log('🔍 BELIEF_DEBUG belief_step_a - context.metadata before:', JSON.stringify(context.metadata, null, 2));
             context.metadata.currentBelief = userInput || context.metadata.currentBelief || 'that belief';
+            console.log('🔍 BELIEF_DEBUG belief_step_a - context.metadata after:', JSON.stringify(context.metadata, null, 2));
             const belief = context.metadata.currentBelief;
             return `Feel yourself believing '${belief}'... what does it feel like?`;
           },
@@ -3542,7 +3545,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'belief_step_f',
           scriptedResponse: (userInput, context) => {
+            console.log('🔍 BELIEF_DEBUG belief_step_f - context.metadata:', JSON.stringify(context.metadata, null, 2));
             const belief = context.metadata.currentBelief || 'that belief';
+            console.log('🔍 BELIEF_DEBUG belief_step_f - retrieved belief:', belief);
             return `Do you still believe '${belief}'?`;
           },
           expectedResponseType: 'yesno',
@@ -3606,9 +3611,12 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'belief_check_4',
           scriptedResponse: (userInput, context) => {
+            console.log('🔍 BELIEF_DEBUG belief_check_4 - context.metadata:', JSON.stringify(context.metadata, null, 2));
             const belief = context.metadata.currentBelief || 'that belief';
+            console.log('🔍 BELIEF_DEBUG belief_check_4 - retrieved belief:', belief);
             // Create opposite belief (simplified approach)
             const oppositeBelief = belief.toLowerCase().includes('not') ? belief.replace(/not\s+/gi, '') : `not ${belief}`;
+            console.log('🔍 BELIEF_DEBUG belief_check_4 - opposite belief:', oppositeBelief);
             return `Do you now know '${oppositeBelief}'?`;
           },
           expectedResponseType: 'yesno',
