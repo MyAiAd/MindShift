@@ -82,7 +82,7 @@ export default function TreatmentSessionDemo({
   const [canUndo, setCanUndo] = useState(false);
 
   // Global voice integration
-  const { isEnabled: isVoiceEnabled } = useGlobalVoice();
+  const { isVoiceInputEnabled } = useGlobalVoice({});
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
