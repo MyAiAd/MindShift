@@ -1729,11 +1729,13 @@ export class TreatmentStateMachine {
             console.log(`🔍 PROBLEM_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}" (digging: "${diggingProblem}")`);
             console.log(`🔍 PROBLEM_SHIFTING_INTRO: Available sources - metadata.problemStatement: "${context?.metadata?.problemStatement}", problemStatement: "${context?.problemStatement}", userInput: "${userInput}"`);
             
-            // Check if we should skip intro instructions (when cycling back from check_if_still_problem)
-            if (context?.metadata?.skipIntroInstructions) {
-              // Clear both flags and return only the problem feeling question
+            // Check if we should skip intro instructions (when cycling back from check_if_still_problem OR coming from digging deeper)
+            const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+            if (context?.metadata?.skipIntroInstructions || isFromDigging) {
+              // Clear flags and return only the problem feeling question
               context.metadata.skipIntroInstructions = false;
               context.metadata.skipLinguisticProcessing = false;
+              console.log(`🔍 PROBLEM_SHIFTING_INTRO: Skipping lengthy instructions - isFromDigging: ${!!isFromDigging}, skipFlag: ${!!context?.metadata?.skipIntroInstructions}`);
               return `Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             }
             
@@ -2270,10 +2272,11 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             }
             
             // Check if we're coming from digging deeper (shorter instructions)
-            const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.skipIntroInstructions;
+            const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem || context?.metadata?.skipIntroInstructions;
             
             if (isFromDigging) {
               // Short version for digging deeper - user has already seen full instructions
+              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Skipping lengthy instructions - isFromDigging: ${!!isFromDigging}`);
               return `Feel the problem '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
             } else {
               // Full version for first-time users
@@ -3480,10 +3483,11 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
             console.log('🔍 BELIEF_DEBUG belief_shifting_intro - final problemStatement:', problemStatement);
             // Check if we're coming from digging deeper (shorter instructions)
-            const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.skipIntroInstructions;
+            const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem || context?.metadata?.skipIntroInstructions;
             
             if (isFromDigging) {
               // Short version for digging deeper - user has already seen full instructions
+              console.log(`🔍 BELIEF_SHIFTING_INTRO: Skipping lengthy instructions - isFromDigging: ${!!isFromDigging}`);
               return `Feel the problem '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem?`;
             } else {
               // Full version for first-time users
