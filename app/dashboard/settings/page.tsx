@@ -8,7 +8,7 @@ import { useNotifications } from '@/services/notification/notification.service';
 import { AccessibilityService } from '@/services/accessibility/accessibility.service';
 import { GDPRService } from '@/services/gdpr/gdpr.service';
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
-import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker } from 'lucide-react';
+import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker, Brain } from 'lucide-react';
 import UnifiedTreatmentDemo from '@/components/labs/SimpleProblemShiftingDemo';
 import VoiceTreatmentDemo from '@/components/labs/VoiceTreatmentDemo';
 import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
