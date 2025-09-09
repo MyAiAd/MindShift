@@ -1288,6 +1288,10 @@ export class TreatmentStateMachine {
               // User has provided problem description, store it and proceed directly to treatment intro
               context.metadata.problemStatement = userInput;
               context.problemStatement = userInput; // Keep for compatibility
+              // Store the original problem statement for digging deeper questions
+              if (!context.metadata.originalProblemStatement) {
+                context.metadata.originalProblemStatement = userInput;
+              }
               // Skip confirmation and routing - go directly to treatment intro
               if (context.metadata.selectedMethod === 'problem_shifting') {
                 context.currentStep = 'problem_shifting_intro';
@@ -1310,7 +1314,11 @@ export class TreatmentStateMachine {
             if (context.metadata.workType === 'goal' && !context.metadata.selectedMethod) {
               // User has provided goal description, store it and proceed directly to reality shifting
               context.metadata.goalStatement = userInput;
-              context.problemStatement = userInput; // Keep for compatibility  
+              context.problemStatement = userInput; // Keep for compatibility
+              // Store the original goal statement for digging deeper questions
+              if (!context.metadata.originalProblemStatement) {
+                context.metadata.originalProblemStatement = userInput;
+              }  
               context.currentStep = 'reality_goal_capture';
               context.currentPhase = 'reality_shifting';
               context.metadata.selectedMethod = 'reality_shifting';
@@ -3968,7 +3976,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'scenario_check_1',
-          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
+            return `Is there any scenario in which the problem '${originalProblem}' would still be a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4042,7 +4053,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'scenario_check_2',
-          scriptedResponse: "Is there any other scenario in which this would still be a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
+            return `Is there any other scenario in which the problem '${originalProblem}' would still be a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4116,7 +4130,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'scenario_check_3',
-          scriptedResponse: "Is there any other scenario in which this would still be a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
+            return `Is there any other scenario in which the problem '${originalProblem}' would still be a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4190,7 +4207,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'anything_else_check_1',
-          scriptedResponse: "Is there anything else about this that is still a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
+            return `Is there anything else about '${originalProblem}' that is still a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4264,7 +4284,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'anything_else_check_2',
-          scriptedResponse: "Is there anything else about this that is still a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
+            return `Is there anything else about '${originalProblem}' that is still a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4338,7 +4361,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'anything_else_check_3',
-          scriptedResponse: "Is there anything else about this that is still a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
+            return `Is there anything else about '${originalProblem}' that is still a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4810,6 +4836,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           console.log(`🔍 WORK_TYPE_DESCRIPTION_DETERMINE: Storing user problem statement: "${userProblemStatement}"`);
           context.metadata.problemStatement = userProblemStatement;
           context.problemStatement = userProblemStatement; // Keep for compatibility
+          // Store the original problem statement for digging deeper questions
+          if (!context.metadata.originalProblemStatement) {
+            context.metadata.originalProblemStatement = userProblemStatement;
+          }
           console.log(`🔍 WORK_TYPE_DESCRIPTION_DETERMINE: Stored - metadata: "${context.metadata.problemStatement}", context: "${context.problemStatement}"`);
         }
         
@@ -4893,6 +4923,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         context.problemStatement = lastResponse;
         context.metadata.problemStatement = lastResponse;
         context.metadata.currentGoal = lastResponse;
+        // Store the original problem statement for digging deeper questions
+        if (!context.metadata.originalProblemStatement) {
+          context.metadata.originalProblemStatement = lastResponse;
+        }
         context.currentPhase = 'reality_shifting';
         context.metadata.selectedMethod = 'reality_shifting';
         console.log(`🔍 GOAL_DESCRIPTION: Stored goal: "${lastResponse}"`);
@@ -4928,6 +4962,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: *** CASE TRIGGERED *** - lastResponse="${lastResponse}"`);
         context.problemStatement = lastResponse;
         context.metadata.problemStatement = lastResponse;
+        // Store the original problem statement for digging deeper questions
+        if (!context.metadata.originalProblemStatement) {
+          context.metadata.originalProblemStatement = lastResponse;
+        }
         context.currentPhase = 'trauma_shifting';
         context.metadata.selectedMethod = 'trauma_shifting';
         console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Stored description: "${lastResponse}"`);
