@@ -431,7 +431,7 @@ export class TreatmentStateMachine {
       })();
       
       // NEW: Try cache for dynamic responses with context hash
-      // CRITICAL FIX: Don't use cache for steps in digging deeper mode (need correct problem statement)
+      // CRITICAL FIX: Don't use cache for steps that depend on user input or digging context
       const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem)) ||
                             (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'problem_shifting_intro' && context.metadata?.currentDiggingProblem) ||
@@ -440,7 +440,11 @@ export class TreatmentStateMachine {
                             (step.id === 'identity_problem_check' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'belief_problem_check' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'what_needs_to_happen_step' && context.metadata?.currentDiggingProblem) ||
-                            (step.id === 'future_problem_check' && context.metadata?.currentDiggingProblem);
+                            (step.id === 'future_problem_check' && context.metadata?.currentDiggingProblem) ||
+                            // Steps that use user input directly and should never be cached
+                            (step.id === 'feel_good_state' && userInput?.trim()) ||
+                            (step.id === 'what_happens_step' && userInput?.trim()) ||
+                            (step.id === 'body_sensation_check' && userInput?.trim());
       let cacheKey: string | undefined;
       
       if (!shouldSkipCache) {
