@@ -545,6 +545,7 @@ export class TreatmentStateMachine {
       currentPhase: context.currentPhase,
       // Only include relevant metadata that affects response generation
       problemStatement: context.problemStatement,
+      originalProblemStatement: context.metadata.originalProblemStatement, // For digging deeper questions
       currentBelief: context.metadata.currentBelief,
       desiredFeeling: context.metadata.desiredFeeling,
       // Identity Shifting specific metadata for proper cache differentiation
