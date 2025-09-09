@@ -3450,8 +3450,12 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           id: 'belief_shifting_intro',
           scriptedResponse: (userInput, context) => {
             // Get the problem statement - prioritize digging deeper restated problem
+            console.log('🔍 BELIEF_DEBUG belief_shifting_intro - context.metadata:', JSON.stringify(context.metadata, null, 2));
             const diggingProblem = context?.metadata?.currentDiggingProblem;
+            console.log('🔍 BELIEF_DEBUG belief_shifting_intro - diggingProblem:', diggingProblem);
+            console.log('🔍 BELIEF_DEBUG belief_shifting_intro - context.problemStatement:', context?.problemStatement);
             const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            console.log('🔍 BELIEF_DEBUG belief_shifting_intro - final problemStatement:', problemStatement);
             return `Please close your eyes and keep them closed throughout the process.\n\nFeel the problem that '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem that '${problemStatement}'?`;
           },
           expectedResponseType: 'open',
@@ -3806,11 +3810,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           id: 'restate_problem_future',
           scriptedResponse: (userInput, context) => {
             // Store the new problem statement when user provides it
+            console.log('🔍 BELIEF_DEBUG restate_problem_future - userInput:', userInput);
+            console.log('🔍 BELIEF_DEBUG restate_problem_future - context.metadata before:', JSON.stringify(context.metadata, null, 2));
             if (userInput && userInput.trim()) {
               console.log(`🔍 RESTATE_PROBLEM_FUTURE: Storing new problem: "${userInput}"`);
               context.metadata.newDiggingProblem = userInput.trim();
               console.log(`🔍 RESTATE_PROBLEM_FUTURE: Next step should be digging_method_selection`);
             }
+            console.log('🔍 BELIEF_DEBUG restate_problem_future - context.metadata after:', JSON.stringify(context.metadata, null, 2));
             return "How would you state the problem in a few words?";
           },
           expectedResponseType: 'problem',
@@ -3827,6 +3834,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           id: 'digging_method_selection',
           scriptedResponse: (userInput, context) => {
             const input = userInput || '';
+            console.log('🔍 BELIEF_DEBUG digging_method_selection - userInput:', userInput);
+            console.log('🔍 BELIEF_DEBUG digging_method_selection - context.metadata before:', JSON.stringify(context.metadata, null, 2));
+            console.log('🔍 BELIEF_DEBUG digging_method_selection - context.problemStatement before:', context.problemStatement);
             
             // If this is the first time showing this step (coming from restate_problem_future), 
             // store the problem and show the selection message
@@ -3843,6 +3853,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
               console.log(`🔍 DIGGING_METHOD_SELECTION: Stored new problem: "${newProblem}"`);
               console.log(`🔍 DIGGING_METHOD_SELECTION: Using newDiggingProblem: "${context.metadata.newDiggingProblem}"`);
               console.log(`🔍 DIGGING_METHOD_SELECTION: Set workType to 'problem' for method selection`);
+              console.log('🔍 BELIEF_DEBUG digging_method_selection - context.metadata after storing:', JSON.stringify(context.metadata, null, 2));
+              console.log('🔍 BELIEF_DEBUG digging_method_selection - context.problemStatement after storing:', context.problemStatement);
               
               return `We need to clear this problem. Which method would you like to use?`;
             }
