@@ -5,45 +5,48 @@ import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2 } fro
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 
-interface TreatmentMessage {
-  id: string;
-  content: string;
-  isUser: boolean;
-  timestamp: Date;
-  responseTime?: number;
-  usedAI?: boolean;
-  metadata?: any;
-}
+// Import shared types
+import { 
+  TreatmentMessage, 
+  TreatmentSessionProps, 
+  SessionStats, 
+  PerformanceMetrics, 
+  StepHistoryEntry 
+} from './shared/types';
 
-interface TreatmentSessionProps {
-  sessionId: string;
-  userId: string;
-  shouldResume?: boolean;
-  onComplete?: (sessionData: any) => void;
-  onError?: (error: string) => void;
-}
+// Import modality components
+import ProblemShifting from './modalities/ProblemShifting/ProblemShifting';
+import ProblemShiftingDigging from './modalities/ProblemShifting/ProblemShiftingDigging';
+import ProblemShiftingIntegration from './modalities/ProblemShifting/ProblemShiftingIntegration';
+import ProblemShiftingGuardrails from './modalities/ProblemShifting/ProblemShiftingGuardrails';
 
-interface SessionStats {
-  totalResponses: number;
-  avgResponseTime: number;
-  aiUsagePercent: number;
-}
+import IdentityShifting from './modalities/IdentityShifting/IdentityShifting';
+import IdentityShiftingDigging from './modalities/IdentityShifting/IdentityShiftingDigging';
+import IdentityShiftingIntegration from './modalities/IdentityShifting/IdentityShiftingIntegration';
+import IdentityShiftingGuardrails from './modalities/IdentityShifting/IdentityShiftingGuardrails';
 
-// NEW: Performance metrics from response caching
-interface PerformanceMetrics {
-  cacheHitRate: number;
-  averageResponseTime: number;
-  preloadedResponsesUsed: number;
-  totalResponses: number;
-}
+import BeliefShifting from './modalities/BeliefShifting/BeliefShifting';
+import BeliefShiftingDigging from './modalities/BeliefShifting/BeliefShiftingDigging';
+import BeliefShiftingIntegration from './modalities/BeliefShifting/BeliefShiftingIntegration';
+import BeliefShiftingGuardrails from './modalities/BeliefShifting/BeliefShiftingGuardrails';
 
-interface StepHistoryEntry {
-  messages: TreatmentMessage[];
-  currentStep: string;
-  userInput: string;
-  sessionStats: SessionStats;
-  timestamp: number;
-}
+import BlockageShifting from './modalities/BlockageShifting/BlockageShifting';
+import BlockageShiftingDigging from './modalities/BlockageShifting/BlockageShiftingDigging';
+import BlockageShiftingIntegration from './modalities/BlockageShifting/BlockageShiftingIntegration';
+import BlockageShiftingGuardrails from './modalities/BlockageShifting/BlockageShiftingGuardrails';
+
+import RealityShifting from './modalities/RealityShifting/RealityShifting';
+import RealityShiftingDigging from './modalities/RealityShifting/RealityShiftingDigging';
+import RealityShiftingIntegration from './modalities/RealityShifting/RealityShiftingIntegration';
+import RealityShiftingGuardrails from './modalities/RealityShifting/RealityShiftingGuardrails';
+
+import TraumaShifting from './modalities/TraumaShifting/TraumaShifting';
+import TraumaShiftingDigging from './modalities/TraumaShifting/TraumaShiftingDigging';
+import TraumaShiftingIntegration from './modalities/TraumaShifting/TraumaShiftingIntegration';
+import TraumaShiftingGuardrails from './modalities/TraumaShifting/TraumaShiftingGuardrails';
+
+// MOVED: All interfaces moved to ./shared/types.ts for modular architecture
+// This allows each modality to use the same type definitions
 
 export default function TreatmentSession({ 
   sessionId, 
@@ -1026,11 +1029,256 @@ export default function TreatmentSession({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Guardrails Components - Run validation checks for all modalities */}
+      <ProblemShiftingGuardrails 
+        currentStep={currentStep} 
+        messages={messages} 
+        lastBotMessage={messages.filter(m => !m.isUser).pop()} 
+      />
+      <IdentityShiftingGuardrails 
+        currentStep={currentStep} 
+        messages={messages} 
+        lastBotMessage={messages.filter(m => !m.isUser).pop()} 
+      />
+      <BeliefShiftingGuardrails 
+        currentStep={currentStep} 
+        messages={messages} 
+        lastBotMessage={messages.filter(m => !m.isUser).pop()} 
+      />
+      <BlockageShiftingGuardrails 
+        currentStep={currentStep} 
+        messages={messages} 
+        lastBotMessage={messages.filter(m => !m.isUser).pop()} 
+      />
+      <RealityShiftingGuardrails 
+        currentStep={currentStep} 
+        messages={messages} 
+        lastBotMessage={messages.filter(m => !m.isUser).pop()} 
+      />
+      <TraumaShiftingGuardrails 
+        currentStep={currentStep} 
+        messages={messages} 
+        lastBotMessage={messages.filter(m => !m.isUser).pop()} 
+      />
+
       {/* Fixed Input Area at Bottom */}
       {isSessionActive && (
         <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 px-4 py-3 shadow-lg z-30">
           <div className="max-w-4xl mx-auto flex justify-end">
-            {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'identity_dissolve_step_f' || currentStep === 'identity_step_3_intro' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'reality_certainty_check' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'trauma_shifting_intro' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem' || currentStep === 'goal_deadline_check' || currentStep === 'goal_confirmation') ? (
+            {/* MODULAR APPROACH: Try each modality component in order */}
+            <ProblemShifting 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+            />
+            <ProblemShiftingDigging 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+              modalityType="problem"
+            />
+            <IdentityShifting 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+            />
+            <IdentityShiftingDigging 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+              modalityType="identity"
+            />
+            <BeliefShifting 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+            />
+            <BeliefShiftingDigging 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+              modalityType="belief"
+            />
+            <BlockageShifting 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+            />
+            <BlockageShiftingDigging 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+              modalityType="blockage"
+            />
+            <RealityShifting 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+            />
+            <RealityShiftingDigging 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+              modalityType="reality"
+            />
+            <TraumaShifting 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+            />
+            <TraumaShiftingDigging 
+              sessionId={sessionId}
+              userId={userId}
+              messages={messages}
+              currentStep={currentStep}
+              isLoading={isLoading}
+              sessionStats={sessionStats}
+              performanceMetrics={performanceMetrics}
+              stepHistory={stepHistory}
+              voice={voice}
+              onSendMessage={sendMessageWithContent}
+              onUndo={handleUndo}
+              userInput={userInput}
+              setUserInput={setUserInput}
+              selectedWorkType={selectedWorkType}
+              clickedButton={clickedButton}
+              modalityType="trauma"
+            />
+                         {/* FALLBACK: Original monolithic logic (will be commented out as modalities are completed) */}
+             {/* COMMENTED OUT: Problem Shifting and Identity Shifting now handled by modality components above */}
+             {false && (currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'identity_dissolve_step_f' || currentStep === 'identity_step_3_intro' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'reality_certainty_check' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'trauma_shifting_intro' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem' || currentStep === 'goal_deadline_check' || currentStep === 'goal_confirmation') ? (
               /* Yes/No Button Interface */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Button Interface */}
