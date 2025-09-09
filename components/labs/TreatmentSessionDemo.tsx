@@ -283,7 +283,16 @@ export default function TreatmentSessionDemo({
           setMessages(prev => [...prev, aiMessage]);
         }
         
-        setCurrentStep(data.currentStep || currentStep);
+        // TEMPORARY FIX: Apply the same step correction logic as in handleMethodSelection
+        let finalCurrentStep = data.currentStep || currentStep;
+        if (data.currentStep === 'mind_shifting_explanation' && selectedWorkType === 'PROBLEM') {
+          // If we're getting mind_shifting_explanation but we've already selected a work type,
+          // we should be in work_type_description step
+          console.log('🔧 TEMP_FIX: Correcting currentStep from mind_shifting_explanation to work_type_description in handleSubmit');
+          finalCurrentStep = 'work_type_description';
+        }
+        
+        setCurrentStep(finalCurrentStep);
         setIsLoading(false);
 
         // Update stats
@@ -373,7 +382,15 @@ export default function TreatmentSessionDemo({
         };
 
         setMessages(prev => [...prev, aiMessage]);
-        setCurrentStep(data.currentStep || currentStep);
+        
+        // TEMPORARY FIX: Apply the same step correction logic 
+        let finalCurrentStep = data.currentStep || currentStep;
+        if (data.currentStep === 'mind_shifting_explanation' && selectedWorkType === 'PROBLEM') {
+          console.log('🔧 TEMP_FIX: Correcting currentStep from mind_shifting_explanation to work_type_description in handleYesNoResponse');
+          finalCurrentStep = 'work_type_description';
+        }
+        
+        setCurrentStep(finalCurrentStep);
       }
       
       setIsLoading(false);
