@@ -438,7 +438,9 @@ export class TreatmentStateMachine {
                             (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'blockage_check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'identity_problem_check' && context.metadata?.currentDiggingProblem) ||
-                            (step.id === 'belief_problem_check' && context.metadata?.currentDiggingProblem);
+                            (step.id === 'belief_problem_check' && context.metadata?.currentDiggingProblem) ||
+                            (step.id === 'what_needs_to_happen_step' && context.metadata?.currentDiggingProblem) ||
+                            (step.id === 'future_problem_check' && context.metadata?.currentDiggingProblem);
       let cacheKey: string | undefined;
       
       if (!shouldSkipCache) {
@@ -1784,8 +1786,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'what_needs_to_happen_step',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            // Get the problem statement - prioritize digging deeper restated problem
+            const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+            const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            console.log(`🔍 WHAT_NEEDS_TO_HAPPEN_STEP: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
             return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
           },
           expectedResponseType: 'open',
@@ -3851,9 +3855,12 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'future_problem_check',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context.problemStatement || 
+            // Get the problem statement - prioritize digging deeper restated problem
+            const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+            const problemStatement = diggingProblem || context.problemStatement || 
                                    context.userResponses?.['mind_shifting_explanation'] || 
                                    'the problem';
+            console.log(`🔍 FUTURE_PROBLEM_CHECK: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
             return `Do you feel the problem '${problemStatement}' will come back in the future?`;
           },
           expectedResponseType: 'yesno',
