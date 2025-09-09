@@ -97,36 +97,72 @@ export default function TreatmentSessionDemo({
     scrollToBottom();
   }, [messages]);
 
-  // Initialize demo session
-  const initializeSession = () => {
+  // Initialize demo session using real API
+  const initializeSession = async () => {
     setIsSessionActive(true);
     setError('');
     setSessionComplete(false);
+    setIsLoading(true);
     
-    // Add welcome message
-    const welcomeMessage: TreatmentMessage = {
-      id: '1',
-      content: 'Welcome to the Treatment Session Demo! Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. Please tell me what problem you want to work on in a few words.',
-      isUser: false,
-      timestamp: new Date(),
-      responseTime: 0,
-      usedAI: false
-    };
-    
-    setMessages([welcomeMessage]);
-    setCurrentStep('problem_capture');
-    
-    // Focus input
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
+    try {
+      // Start new session using real API (same as original)
+      const requestBody = {
+        sessionId,
+        userId,
+        action: 'start'
+      };
+      
+      console.log('📤 DEMO Session Init Request:', requestBody);
+      
+      const response = await fetch('/api/treatment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('📤 DEMO Session Init Response:', data);
+      
+      if (data.success) {
+        // Add welcome message from API
+        const welcomeMessage: TreatmentMessage = {
+          id: '1',
+          content: data.message || 'Welcome to the Treatment Session Demo! Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. Please tell me what problem you want to work on in a few words.',
+          isUser: false,
+          timestamp: new Date(),
+          responseTime: 0,
+          usedAI: false
+        };
+        
+        setMessages([welcomeMessage]);
+        setCurrentStep(data.currentStep || 'problem_capture');
+        setIsLoading(false);
+        
+        // Focus input
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
+      } else {
+        throw new Error(data.error || 'Failed to initialize session');
+      }
+    } catch (error) {
+      console.error('Session initialization error:', error);
+      setError('Failed to initialize session. Please try again.');
+      setIsLoading(false);
+      setIsSessionActive(false);
+    }
   };
 
-  // Handle message submission
+  // Handle message submission using real API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading || !isSessionActive) return;
 
+    const startTime = performance.now();
     const userMessage: TreatmentMessage = {
       id: Date.now().toString(),
       content: inputValue.trim(),
@@ -152,99 +188,89 @@ export default function TreatmentSessionDemo({
     setCanUndo(true);
 
     try {
-      // Simulate API call with demo responses
-      const response = await simulateTreatmentResponse(inputValue.trim(), currentStep);
+      // Use real API call (same as original TreatmentSession)
+      const requestBody = {
+        sessionId,
+        userId,
+        userInput: userMessage.content,
+        action: 'continue'
+      };
       
-      setTimeout(() => {
+      console.log('📤 DEMO API Request body:', requestBody);
+      
+      const response = await fetch('/api/treatment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('📤 DEMO API Response data:', data);
+      
+      const endTime = performance.now();
+      const responseTime = Math.round(endTime - startTime);
+      
+      if (data.success) {
+        // Add AI response message
         const aiMessage: TreatmentMessage = {
           id: (Date.now() + 1).toString(),
-          content: response.content,
+          content: data.message,
           isUser: false,
           timestamp: new Date(),
-          responseTime: response.responseTime,
-          usedAI: response.usedAI
+          responseTime: responseTime,
+          usedAI: data.usedAI || false,
+          metadata: data.metadata
         };
 
         setMessages(prev => [...prev, aiMessage]);
-        setCurrentStep(response.nextStep);
+        setCurrentStep(data.currentStep || currentStep);
         setIsLoading(false);
 
         // Update stats
         setSessionStats(prev => ({
           totalResponses: prev.totalResponses + 1,
-          avgResponseTime: ((prev.avgResponseTime * prev.totalResponses) + response.responseTime) / (prev.totalResponses + 1),
-          aiUsagePercent: response.usedAI ? 
+          avgResponseTime: ((prev.avgResponseTime * prev.totalResponses) + responseTime) / (prev.totalResponses + 1),
+          aiUsagePercent: data.usedAI ? 
             ((prev.aiUsagePercent * prev.totalResponses) + 100) / (prev.totalResponses + 1) :
             (prev.aiUsagePercent * prev.totalResponses) / (prev.totalResponses + 1)
         }));
 
         // Check if session is complete
-        if (response.sessionComplete) {
+        if (data.sessionComplete) {
           setSessionComplete(true);
           setIsSessionActive(false);
-          onComplete?.(response);
+          onComplete?.(data);
         }
-      }, response.responseTime);
+      } else {
+        throw new Error(data.error || 'Treatment API returned error');
+      }
 
     } catch (error) {
-      console.error('Demo error:', error);
-      setError('Demo error occurred');
+      console.error('Treatment API error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Network error occurred';
+      
+      // Add an error message to the chat
+      const errorMessage: TreatmentMessage = {
+        id: (Date.now() + 2).toString(),
+        content: `Sorry, there was an error processing your message: ${errorMsg}. Please try again.`,
+        isUser: false,
+        timestamp: new Date(),
+        responseTime: 0,
+        usedAI: false
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      setError(errorMsg);
       setIsLoading(false);
-      onError?.('Demo error occurred');
+      onError?.(errorMsg);
     }
   };
 
-  // Simulate treatment responses (demo version)
-  const simulateTreatmentResponse = async (input: string, step: string) => {
-    const responses = {
-      problem_capture: {
-        content: `I heard you say '${input}'. Is that correct?`,
-        nextStep: 'problem_confirmation',
-        responseTime: 150,
-        usedAI: false,
-        sessionComplete: false
-      },
-      problem_confirmation: {
-        content: input.toLowerCase().includes('yes') || input.toLowerCase().includes('correct') ?
-          `Please close your eyes and keep them closed throughout the process. Feel the problem '${input}'... what does it feel like?` :
-          'Please tell me what problem you want to work on.',
-        nextStep: input.toLowerCase().includes('yes') ? 'feeling_exploration' : 'problem_capture',
-        responseTime: 120,
-        usedAI: false,
-        sessionComplete: false
-      },
-      feeling_exploration: {
-        content: `Feel '${input}'... what happens in yourself when you feel '${input}'?`,
-        nextStep: 'body_sensation',
-        responseTime: 140,
-        usedAI: false,
-        sessionComplete: false
-      },
-      body_sensation: {
-        content: 'What needs to happen for the problem to not be a problem?',
-        nextStep: 'solution_exploration',
-        responseTime: 130,
-        usedAI: false,
-        sessionComplete: false
-      },
-      solution_exploration: {
-        content: `Feel '${input}'... what does that feel like?`,
-        nextStep: 'integration',
-        responseTime: 160,
-        usedAI: false,
-        sessionComplete: false
-      },
-      integration: {
-        content: 'Excellent work! The treatment session is now complete. You have successfully processed and shifted your problem. How do you feel now?',
-        nextStep: 'complete',
-        responseTime: 180,
-        usedAI: false,
-        sessionComplete: true
-      }
-    };
 
-    return responses[step as keyof typeof responses] || responses.problem_capture;
-  };
 
   // Handle undo functionality
   const handleUndo = () => {
@@ -269,10 +295,17 @@ export default function TreatmentSessionDemo({
     setError('');
     setStepHistory([]);
     setCanUndo(false);
+    setIsLoading(false);
     setSessionStats({
       totalResponses: 0,
       avgResponseTime: 0,
       aiUsagePercent: 0
+    });
+    setPerformanceMetrics({
+      cacheHitRate: 0,
+      averageResponseTime: 0,
+      preloadedResponsesUsed: 0,
+      totalResponses: 0
     });
   };
 
