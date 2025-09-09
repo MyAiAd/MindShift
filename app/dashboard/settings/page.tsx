@@ -123,9 +123,9 @@ export default function SettingsPage() {
 
   // Labs toggle states
   const [labsToggles, setLabsToggles] = useState({
-    voiceTreatmentDemo: true,
-    unifiedTreatmentDemo: true,
-    newExperimentalDemo: false
+    voiceTreatmentDemo: false,
+    unifiedTreatmentDemo: false,
+    newExperimentalDemo: true
   });
 
   // Load notification preferences on component mount
