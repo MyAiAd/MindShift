@@ -431,10 +431,8 @@ export class TreatmentStateMachine {
       })();
       
       // NEW: Try cache for dynamic responses with context hash
-      // CRITICAL FIX: Don't use cache for identity_shifting_intro when processing user input
-      // CRITICAL FIX: Don't use cache for belief_shifting_intro in digging deeper mode (problem statement changes)
-      // CRITICAL FIX: Don't use cache for problem_shifting_intro in digging deeper mode (need to skip lengthy instructions)
-      const shouldSkipCache = (step.id === 'identity_shifting_intro' && userInput && userInput.trim()) ||
+      // CRITICAL FIX: Don't use cache for intro steps in digging deeper mode (need to skip lengthy instructions)
+      const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem)) ||
                             (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'problem_shifting_intro' && context.metadata?.currentDiggingProblem);
       let cacheKey: string | undefined;
@@ -450,7 +448,7 @@ export class TreatmentStateMachine {
         }
       } else {
         if (step.id === 'identity_shifting_intro') {
-          console.log(`🚀 CACHE_SKIP: Skipping cache for identity_shifting_intro with userInput to process identity response`);
+          console.log(`🚀 CACHE_SKIP: Skipping cache for identity_shifting_intro - userInput: ${!!userInput?.trim()}, digging: ${!!context.metadata?.currentDiggingProblem}`);
         } else if (step.id === 'belief_shifting_intro') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for belief_shifting_intro in digging deeper mode (currentDiggingProblem: ${context.metadata?.currentDiggingProblem})`);
         } else if (step.id === 'problem_shifting_intro') {
