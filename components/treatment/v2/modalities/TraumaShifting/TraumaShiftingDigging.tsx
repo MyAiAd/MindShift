@@ -3,7 +3,26 @@
 import React from 'react';
 import { DiggingDeeperProps } from '../../shared/types';
 
-export default function TraumaShiftingDigging({ modalityType, currentStep }: DiggingDeeperProps) {
+export default function TraumaShiftingDigging({
+  sessionId,
+  userId,
+  messages,
+  currentStep,
+  isLoading,
+  sessionStats,
+  performanceMetrics,
+  stepHistory,
+  voice,
+  onSendMessage,
+  onUndo,
+  userInput,
+  setUserInput,
+  selectedWorkType,
+  clickedButton,
+  modalityType
+}: DiggingDeeperProps) {
+
+  // Trauma Shifting specific digging deeper steps
   const traumaDiggingSteps = [
     'trauma_digging_deeper_start',
     'trauma_scenario_check_1',

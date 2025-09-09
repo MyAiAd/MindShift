@@ -3,7 +3,25 @@
 import React from 'react';
 import { DiggingDeeperProps } from '../../shared/types';
 
-export default function RealityShiftingDigging({ modalityType, currentStep }: DiggingDeeperProps) {
+export default function RealityShiftingDigging({
+  sessionId,
+  userId,
+  messages,
+  currentStep,
+  isLoading,
+  sessionStats,
+  performanceMetrics,
+  stepHistory,
+  voice,
+  onSendMessage,
+  onUndo,
+  userInput,
+  setUserInput,
+  selectedWorkType,
+  clickedButton,
+  modalityType
+}: DiggingDeeperProps) {
+
   // Reality Shifting doesn't typically use digging deeper (goals are more straightforward)
   const realityDiggingSteps = ['reality_digging_deeper_start'];
   
