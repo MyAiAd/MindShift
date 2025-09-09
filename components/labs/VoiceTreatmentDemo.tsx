@@ -113,6 +113,11 @@ export default function VoiceTreatmentDemo() {
   const [stateMachineDemo, setStateMachineDemo] = useState<TreatmentStateMachineDemo | null>(null);
   const [conversationItems, setConversationItems] = useState<Map<string, any>>(new Map());
   
+  // NEW: Method selection state tracking
+  const [currentStep, setCurrentStep] = useState<string>('');
+  const [selectedWorkType, setSelectedWorkType] = useState<string>('');
+  const [needsMethodSelection, setNeedsMethodSelection] = useState<boolean>(false);
+  
   const sessionRef = useRef<VoiceSession>({
     pc: null,
     audioEl: null,
@@ -805,6 +810,95 @@ export default function VoiceTreatmentDemo() {
     updatePerformanceMetrics(totalTime, false);
   };
 
+  // NEW: Method selection handler (copied from main TreatmentSession)
+  const handleMethodSelection = async (method: string) => {
+    console.log('🎯 VOICE_DEMO: handleMethodSelection called with:', method);
+    
+    if (!stateMachineDemo) {
+      console.error('🎯 VOICE_DEMO: State machine not initialized for method selection');
+      return;
+    }
+    
+    try {
+      setInteractionStateWithMessage('processing', 'Processing method selection...');
+      
+      // Process method selection with state machine
+      const result = await stateMachineDemo.processUserInput(method, undefined, true);
+      console.log('🎯 VOICE_DEMO: Method selection result:', result);
+      
+      if (result.scriptedResponse && !result.scriptedResponse.startsWith('SKIP_') && !result.scriptedResponse.endsWith('_SELECTED')) {
+        await createScriptedVoiceResponse(result.scriptedResponse, method, `method_selection_${selectedModality}`);
+        setNeedsMethodSelection(false); // Hide method selection UI
+      }
+      
+      // Update current step if provided
+      if (result.nextStep) {
+        setCurrentStep(result.nextStep);
+      }
+      
+    } catch (error) {
+      console.error('🎯 VOICE_DEMO: Method selection error:', error);
+      const errorResponse = "I apologize, let me help you select a method. Please choose 1 for Problem Shifting, 2 for Identity Shifting, 3 for Belief Shifting, or 4 for Blockage Shifting.";
+      await createScriptedVoiceResponse(errorResponse, method, 'method_selection_error');
+    }
+  };
+
+  // NEW: Enhanced work type selection handler
+  const handleWorkTypeSelection = async (workType: string) => {
+    console.log('🎯 VOICE_DEMO: handleWorkTypeSelection called with:', workType);
+    
+    if (!stateMachineDemo) {
+      console.error('🎯 VOICE_DEMO: State machine not initialized for work type selection');
+      return;
+    }
+    
+    try {
+      setInteractionStateWithMessage('processing', 'Processing work type selection...');
+      
+      // Set selected work type for UI state management
+      setSelectedWorkType(workType);
+      
+      // Convert work type to numeric selection
+      const numericSelection = workType === 'PROBLEM' ? '1' : 
+                              workType === 'GOAL' ? '2' : '3';
+      
+      // Add user message to UI
+      addMessage(numericSelection, true, true);
+      updateContextFromTranscript(numericSelection);
+      
+      // Process with state machine
+      const result = await stateMachineDemo.processUserInput(numericSelection, undefined, true);
+      console.log('🎯 VOICE_DEMO: Work type selection result:', result);
+      
+      // Check if we need method selection
+      if (result.scriptedResponse === 'METHOD_SELECTION_NEEDED') {
+        console.log('🎯 VOICE_DEMO: Method selection needed, showing method selection UI');
+        setNeedsMethodSelection(true);
+        setCurrentStep('method_selection');
+        
+        // Provide voice instruction for method selection
+        const methodSelectionResponse = "Great! You've chosen to work on a problem. Now please choose your method: Say 1 for Problem Shifting, 2 for Identity Shifting, 3 for Belief Shifting, or 4 for Blockage Shifting.";
+        await createScriptedVoiceResponse(methodSelectionResponse, numericSelection, 'method_selection_prompt');
+        return;
+      }
+      
+      // Handle other responses normally
+      if (result.scriptedResponse && !result.scriptedResponse.startsWith('SKIP_') && !result.scriptedResponse.endsWith('_CONFIRMED')) {
+        await createScriptedVoiceResponse(result.scriptedResponse, numericSelection, `worktype_${workType.toLowerCase()}`);
+      }
+      
+      // Update current step if provided
+      if (result.nextStep) {
+        setCurrentStep(result.nextStep);
+      }
+      
+    } catch (error) {
+      console.error('🎯 VOICE_DEMO: Work type selection error:', error);
+      const errorResponse = "I apologize, let me help you select what to work on. Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
+      await createScriptedVoiceResponse(errorResponse, workType, 'worktype_selection_error');
+    }
+  };
+
   // ENHANCED: Transcript processing with comprehensive validation and guardrails
   const processTranscriptWithStateMachine = async (transcript: string) => {
     if (!stateMachineDemo) {
@@ -822,6 +916,43 @@ export default function VoiceTreatmentDemo() {
     }
     
     console.log(`🔍 VOICE_DEBUG: Processing transcript: "${transcript}"`);
+    
+    // NEW: Handle method selection via voice
+    if (needsMethodSelection || currentStep === 'method_selection') {
+      console.log(`🔍 VOICE_DEBUG: Processing method selection via voice: "${transcript}"`);
+      
+      // Handle numeric method selection
+      if (transcript.includes('1') || transcript.toLowerCase().includes('problem shifting')) {
+        await handleMethodSelection('1');
+        return 'Method selection processed';
+      } else if (transcript.includes('2') || transcript.toLowerCase().includes('identity shifting')) {
+        await handleMethodSelection('2');
+        return 'Method selection processed';
+      } else if (transcript.includes('3') || transcript.toLowerCase().includes('belief shifting')) {
+        await handleMethodSelection('3');
+        return 'Method selection processed';
+      } else if (transcript.includes('4') || transcript.toLowerCase().includes('blockage shifting')) {
+        await handleMethodSelection('4');
+        return 'Method selection processed';
+      } else {
+        // Invalid method selection, ask again
+        const clarificationResponse = "I didn't understand your method selection. Please say 1 for Problem Shifting, 2 for Identity Shifting, 3 for Belief Shifting, or 4 for Blockage Shifting.";
+        await createScriptedVoiceResponse(clarificationResponse, transcript, 'method_selection_clarification');
+        return clarificationResponse;
+      }
+    }
+    
+    // NEW: Handle work type selection via voice (for initial selection)
+    if (!selectedWorkType && (transcript.includes('1') || transcript.toLowerCase().includes('problem'))) {
+      await handleWorkTypeSelection('PROBLEM');
+      return 'Work type selection processed';
+    } else if (!selectedWorkType && (transcript.includes('2') || transcript.toLowerCase().includes('goal'))) {
+      await handleWorkTypeSelection('GOAL');
+      return 'Work type selection processed';
+    } else if (!selectedWorkType && (transcript.includes('3') || transcript.toLowerCase().includes('experience') || transcript.toLowerCase().includes('negative'))) {
+      await handleWorkTypeSelection('EXPERIENCE');
+      return 'Work type selection processed';
+    }
     
     try {
       const result = await stateMachineDemo!.processUserInput(transcript, undefined, true);
@@ -1339,6 +1470,11 @@ export default function VoiceTreatmentDemo() {
     });
     setInteractionStateWithMessage('idle', 'Demo reset');
     
+    // NEW: Reset method selection state
+    setCurrentStep('');
+    setSelectedWorkType('');
+    setNeedsMethodSelection(false);
+    
     // NEW: Clean up cached audio URLs to prevent memory leaks
     responseCache.responses.forEach(cached => {
       if (cached.audioUrl) {
@@ -1395,25 +1531,34 @@ export default function VoiceTreatmentDemo() {
       )}
 
       {/* Prominent State Overlay */}
-      {isConnected && interactionState !== 'idle' && (
+      {isConnected && (interactionState !== 'idle' || needsMethodSelection) && (
         <div className={`absolute inset-0 rounded-lg transition-all duration-300 ${
+          needsMethodSelection ? 'bg-purple-50/30 dark:bg-purple-900/10' :
           !stateInfo.canSpeak ? 'bg-black/20 backdrop-blur-sm' : 'bg-green-50/30 dark:bg-green-900/10'
         } z-10 flex items-center justify-center`}>
           <div className={`px-8 py-6 rounded-xl shadow-lg border-2 ${
-            stateInfo.canSpeak 
+            needsMethodSelection 
+              ? 'bg-purple-100 border-purple-300 dark:bg-purple-900/40 dark:border-purple-600'
+              : stateInfo.canSpeak 
               ? 'bg-green-100 border-green-300 dark:bg-green-900/40 dark:border-green-600' 
               : 'bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-600'
           }`}>
             <div className="text-center">
-              <div className="text-4xl mb-3">{stateInfo.icon}</div>
+              <div className="text-4xl mb-3">{needsMethodSelection ? '🎯' : stateInfo.icon}</div>
               <div className={`text-xl font-semibold mb-2 ${
-                stateInfo.canSpeak 
+                needsMethodSelection 
+                  ? 'text-purple-800 dark:text-purple-200'
+                  : stateInfo.canSpeak 
                   ? 'text-green-800 dark:text-green-200' 
                   : 'text-gray-800 dark:text-gray-200'
               }`}>
-                {stateMessage}
+                {needsMethodSelection ? 'Choose Your Method' : stateMessage}
               </div>
-              {stateInfo.canSpeak ? (
+              {needsMethodSelection ? (
+                <div className="text-sm text-purple-700 dark:text-purple-300">
+                  Say "1", "2", "3", or "4" or use the buttons below
+                </div>
+              ) : stateInfo.canSpeak ? (
                 <div className="text-sm text-green-700 dark:text-green-300">
                   {isBrowserListening ? (
                     <div className="flex items-center justify-center space-x-2">
@@ -1510,6 +1655,20 @@ export default function VoiceTreatmentDemo() {
           </div>
         )}
       </div>
+
+      {/* Session Status Display */}
+      {selectedWorkType && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+          <h5 className="font-medium text-blue-900 dark:text-blue-200 mb-1">
+            Session Status:
+          </h5>
+          <div className="text-sm text-blue-700 dark:text-blue-300">
+            <div>Work Type: {selectedWorkType}</div>
+            {currentStep && <div>Current Step: {currentStep.replace(/_/g, ' ')}</div>}
+            {needsMethodSelection && <div className="text-purple-600 dark:text-purple-400 font-medium">⏳ Waiting for method selection</div>}
+          </div>
+        </div>
+      )}
 
       {/* Working On Display */}
       {(demoContext.problemStatement || demoContext.goalStatement || demoContext.experienceStatement) && (
@@ -1678,6 +1837,48 @@ export default function VoiceTreatmentDemo() {
                 : "Please wait while the AI processes or responds"
               }
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* NEW: Method Selection Interface (fallback UI) */}
+      {needsMethodSelection && (
+        <div className="mb-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-md">
+          <h5 className="font-medium text-purple-900 dark:text-purple-200 mb-3">
+            Choose Your Method (Voice or Click):
+          </h5>
+          <p className="text-sm text-purple-700 dark:text-purple-300 mb-4">
+            Say the number or method name, or click a button below:
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handleMethodSelection('1')}
+              className="p-3 text-left bg-white dark:bg-gray-800 border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+            >
+              <div className="font-medium text-purple-900 dark:text-purple-200">1. Problem Shifting</div>
+              <div className="text-xs text-purple-600 dark:text-purple-400">Transform problems into solutions</div>
+            </button>
+            <button
+              onClick={() => handleMethodSelection('2')}
+              className="p-3 text-left bg-white dark:bg-gray-800 border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+            >
+              <div className="font-medium text-purple-900 dark:text-purple-200">2. Identity Shifting</div>
+              <div className="text-xs text-purple-600 dark:text-purple-400">Transform your sense of self</div>
+            </button>
+            <button
+              onClick={() => handleMethodSelection('3')}
+              className="p-3 text-left bg-white dark:bg-gray-800 border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+            >
+              <div className="font-medium text-purple-900 dark:text-purple-200">3. Belief Shifting</div>
+              <div className="text-xs text-purple-600 dark:text-purple-400">Change limiting beliefs</div>
+            </button>
+            <button
+              onClick={() => handleMethodSelection('4')}
+              className="p-3 text-left bg-white dark:bg-gray-800 border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+            >
+              <div className="font-medium text-purple-900 dark:text-purple-200">4. Blockage Shifting</div>
+              <div className="text-xs text-purple-600 dark:text-purple-400">Remove internal obstacles</div>
+            </button>
           </div>
         </div>
       )}
