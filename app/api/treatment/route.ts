@@ -274,6 +274,12 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 
+      console.log('Treatment API: Final response construction', {
+        nextStep: result.nextStep,
+        currentStepBefore: treatmentMachine.getContextForUndo(sessionId)?.currentStep,
+        message: finalMessage
+      });
+
       finalResponse = {
         ...finalResponse,
         message: finalMessage,
