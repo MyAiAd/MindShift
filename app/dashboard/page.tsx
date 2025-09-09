@@ -293,17 +293,7 @@ export default function DashboardPage() {
               </div>
             </Link>
             
-            <Link href="/dashboard/sessions/treatment-v2" className="w-full text-left p-3 rounded-lg border-2 border-orange-300 bg-orange-50 hover:bg-orange-100 transition-colors block">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Brain className="h-4 w-4 text-orange-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-orange-900">🧪 Treatment V2 (TEST)</p>
-                  <p className="text-sm text-orange-700">Test the new modular treatment system</p>
-                </div>
-              </div>
-            </Link>
+
             
             <FeatureGuard 
               featureKey="advanced_analytics"

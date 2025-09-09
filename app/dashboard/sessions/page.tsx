@@ -472,7 +472,7 @@ export default function SessionsPage() {
           <button 
             onClick={() => {
               const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              router.push(`/dashboard/sessions/treatment?sessionId=${sessionId}`);
+              router.push(`/dashboard/sessions/treatment-v2?sessionId=${sessionId}`);
             }}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full mt-auto"
           >
@@ -677,7 +677,7 @@ export default function SessionsPage() {
                       {session.status === 'active' && (
                         <div className="flex items-center space-x-2">
                           <button 
-                            onClick={() => router.push(`/dashboard/sessions/treatment?sessionId=${session.session_id}&resume=true`)}
+                            onClick={() => router.push(`/dashboard/sessions/treatment-v2?sessionId=${session.session_id}&resume=true`)}
                             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm inline-flex items-center"
                           >
                             Continue
