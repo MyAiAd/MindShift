@@ -4056,7 +4056,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           id: 'scenario_check_2',
           scriptedResponse: (userInput, context) => {
             const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
-            return `Is there any other scenario in which the problem '${originalProblem}' would still be a problem for you?`;
+            return `Is there a second scenario in which the problem '${originalProblem}' would still be a problem for you?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
@@ -4133,7 +4133,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           id: 'scenario_check_3',
           scriptedResponse: (userInput, context) => {
             const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
-            return `Is there any other scenario in which the problem '${originalProblem}' would still be a problem for you?`;
+            return `Is there a third scenario in which the problem '${originalProblem}' would still be a problem for you?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
