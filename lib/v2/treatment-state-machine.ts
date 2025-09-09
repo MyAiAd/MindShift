@@ -2269,7 +2269,16 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               console.log(`🔍 IDENTITY_SHIFTING_INTRO: ⏸️  NO userInput - showing question only`);
             }
             
-            return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
+            // Check if we're coming from digging deeper (shorter instructions)
+            const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.skipIntroInstructions;
+            
+            if (isFromDigging) {
+              // Short version for digging deeper - user has already seen full instructions
+              return `Feel the problem '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
+            } else {
+              // Full version for first-time users
+              return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
+            }
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -3470,7 +3479,16 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             console.log('🔍 BELIEF_DEBUG belief_shifting_intro - context.problemStatement:', context?.problemStatement);
             const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
             console.log('🔍 BELIEF_DEBUG belief_shifting_intro - final problemStatement:', problemStatement);
-            return `Please close your eyes and keep them closed throughout the process.\n\nFeel the problem that '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem that '${problemStatement}'?`;
+            // Check if we're coming from digging deeper (shorter instructions)
+            const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.skipIntroInstructions;
+            
+            if (isFromDigging) {
+              // Short version for digging deeper - user has already seen full instructions
+              return `Feel the problem '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem?`;
+            } else {
+              // Full version for first-time users
+              return `Please close your eyes and keep them closed throughout the process.\n\nFeel the problem that '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem that '${problemStatement}'?`;
+            }
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -3884,16 +3902,19 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             if (input.toLowerCase().includes('problem shifting') || input === '1') {
               context.currentPhase = 'problem_shifting';
               context.metadata.selectedMethod = 'problem_shifting';
+              context.metadata.skipIntroInstructions = true; // Skip lengthy instructions for digging deeper
               console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Problem Shifting for digging deeper`);
               return "PROBLEM_SHIFTING_SELECTED";
             } else if (input.toLowerCase().includes('identity shifting') || input === '2') {
               context.currentPhase = 'identity_shifting';
               context.metadata.selectedMethod = 'identity_shifting';
+              context.metadata.skipIntroInstructions = true; // Skip lengthy instructions for digging deeper
               console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Identity Shifting for digging deeper`);
               return "IDENTITY_SHIFTING_SELECTED";
             } else if (input.toLowerCase().includes('belief shifting') || input === '3') {
               context.currentPhase = 'belief_shifting';
               context.metadata.selectedMethod = 'belief_shifting';
+              context.metadata.skipIntroInstructions = true; // Skip lengthy instructions for digging deeper
               console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Belief Shifting for digging deeper`);
               return "BELIEF_SHIFTING_SELECTED";
             } else {
