@@ -249,6 +249,9 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         const shouldSkipAI = treatmentContext?.metadata?.skipIntroInstructions && 
                             ['problem_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '');
         
+        console.log('Treatment API: Skip AI check - skipIntroInstructions:', treatmentContext?.metadata?.skipIntroInstructions, 'nextStep:', result.nextStep, 'shouldSkipAI:', shouldSkipAI);
+        console.log('Treatment API: Full metadata:', JSON.stringify(treatmentContext?.metadata, null, 2));
+        
         if (shouldSkipAI) {
           console.log('Treatment API: Skipping AI processing for digging deeper intro step - using short scripted response');
           finalMessage = result.scriptedResponse; // Use the short scripted response directly
@@ -1077,15 +1080,20 @@ async function updateSessionContextInDatabase(
     // Save user response to treatment_progress if we have one
     const userResponse = context.userResponses[context.currentStep];
     if (userResponse) {
-      await supabase
-        .from('treatment_progress')
-        .upsert({
-          session_id: sessionId,
-          phase_id: context.currentPhase,
-          step_id: context.currentStep,
-          user_response: userResponse,
-          completed_at: new Date().toISOString()
-        });
+      try {
+        await supabase
+          .from('treatment_progress')
+          .upsert({
+            session_id: sessionId,
+            phase_id: context.currentPhase,
+            step_id: context.currentStep,
+            user_response: userResponse,
+            completed_at: new Date().toISOString()
+          });
+      } catch (progressError) {
+        console.error('Error saving progress data:', progressError);
+        // Continue execution - progress saving failure shouldn't break treatment
+      }
     }
   } catch (error) {
     console.error('Database context update error:', error);
