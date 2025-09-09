@@ -286,10 +286,16 @@ export default function TreatmentSessionDemo({
         // TEMPORARY FIX: Apply the same step correction logic as in handleMethodSelection
         let finalCurrentStep = data.currentStep || currentStep;
         if (data.currentStep === 'mind_shifting_explanation' && selectedWorkType === 'PROBLEM') {
-          // If we're getting mind_shifting_explanation but we've already selected a work type,
-          // we should be in work_type_description step
-          console.log('🔧 TEMP_FIX: Correcting currentStep from mind_shifting_explanation to work_type_description in handleSubmit');
-          finalCurrentStep = 'work_type_description';
+          // Check if we just got PROBLEM_SELECTION_CONFIRMED, which means we should proceed to treatment
+          if (data.message === 'PROBLEM_SELECTION_CONFIRMED') {
+            console.log('🔧 TEMP_FIX: Problem confirmed, should proceed to treatment intro step');
+            finalCurrentStep = 'problem_shifting_intro'; // Move to actual treatment
+          } else {
+            // If we're getting mind_shifting_explanation but we've already selected a work type,
+            // we should be in work_type_description step
+            console.log('🔧 TEMP_FIX: Correcting currentStep from mind_shifting_explanation to work_type_description in handleSubmit');
+            finalCurrentStep = 'work_type_description';
+          }
         }
         
         setCurrentStep(finalCurrentStep);
@@ -608,6 +614,18 @@ export default function TreatmentSessionDemo({
     return currentStep === 'work_type_description' && selectedWorkType === 'PROBLEM';
   };
 
+  // Check if we're in a treatment step
+  const isInTreatmentStep = () => {
+    return currentStep.includes('_intro') || 
+           currentStep.includes('_shifting') || 
+           currentStep.includes('problem_shifting') ||
+           currentStep.includes('identity_shifting') ||
+           currentStep.includes('belief_shifting') ||
+           currentStep.includes('blockage_shifting') ||
+           currentStep.includes('reality_shifting') ||
+           currentStep.includes('trauma_shifting');
+  };
+
   // Handle undo functionality
   const handleUndo = () => {
     if (stepHistory.length === 0) return;
@@ -919,6 +937,21 @@ export default function TreatmentSessionDemo({
                   </div>
                   <p className="text-sm text-blue-700 dark:text-blue-300">
                     Please tell me what the problem is in a few words. Be specific and concise.
+                  </p>
+                </div>
+              )}
+
+              {/* Treatment Phase Indicator */}
+              {isInTreatmentStep() && (
+                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <h5 className="font-medium text-green-900 dark:text-green-200">
+                      Treatment In Progress
+                    </h5>
+                  </div>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Follow the guided treatment process. Respond to each question as it appears.
                   </p>
                 </div>
               )}
