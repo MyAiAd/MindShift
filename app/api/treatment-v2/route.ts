@@ -246,10 +246,11 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         
         // Check if we should skip AI processing for digging deeper intro steps
         const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
-        const shouldSkipAI = treatmentContext?.metadata?.skipIntroInstructions && 
-                            ['problem_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '');
+        const isDiggingContext = treatmentContext?.metadata?.currentDiggingProblem || treatmentContext?.metadata?.newDiggingProblem;
+        const isIntroStep = ['problem_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '');
+        const shouldSkipAI = isDiggingContext && isIntroStep;
         
-        console.log('Treatment API: Skip AI check - skipIntroInstructions:', treatmentContext?.metadata?.skipIntroInstructions, 'nextStep:', result.nextStep, 'shouldSkipAI:', shouldSkipAI);
+        console.log('Treatment API: Skip AI check - currentDiggingProblem:', treatmentContext?.metadata?.currentDiggingProblem, 'isIntroStep:', isIntroStep, 'shouldSkipAI:', shouldSkipAI);
         console.log('Treatment API: Full metadata:', JSON.stringify(treatmentContext?.metadata, null, 2));
         
         if (shouldSkipAI) {
