@@ -560,10 +560,20 @@ export default function TreatmentSessionDemo({
         currentStep === 'method_selection' ||
         currentStep.includes('_intro') ||
         currentStep.includes('_shifting')) {
+      console.log('🔍 DEBUG: Not showing work type selection - past initial steps. currentStep:', currentStep);
       return false;
     }
     
-    return (currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection') && !selectedWorkType;
+    const shouldShow = (currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection') && !selectedWorkType;
+    console.log('🔍 DEBUG: shouldShowWorkTypeSelection -', {
+      currentStep,
+      selectedWorkType,
+      shouldShow,
+      stepMatch: (currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection'),
+      noWorkTypeSelected: !selectedWorkType
+    });
+    
+    return shouldShow;
   };
 
   // Check if we should show problem description prompt
