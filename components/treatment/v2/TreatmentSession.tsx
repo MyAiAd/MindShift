@@ -881,6 +881,52 @@ export default function TreatmentSession({
     return 'Slow';
   };
 
+  // Helper function to determine if current step is handled by modality components
+  const isStepHandledByModality = (): boolean => {
+    const modalityHandledSteps = [
+      // Problem Shifting steps
+      'check_if_still_problem',
+      'future_problem_check',
+      
+      // Identity Shifting steps
+      'identity_check',
+      'identity_problem_check',
+      'confirm_identity_problem',
+      'identity_dissolve_step_f',
+      'identity_step_3_intro',
+      
+      // Belief Shifting steps
+      'belief_step_f',
+      'belief_check_1',
+      'belief_check_2',
+      'belief_check_3',
+      'belief_check_4',
+      'belief_problem_check',
+      'confirm_belief_problem',
+      
+      // Blockage Shifting steps
+      'blockage_check_if_still_problem',
+      
+      // Reality Shifting steps (goals)
+      'reality_step_b',
+      'reality_doubts_check',
+      'reality_certainty_check',
+      'goal_deadline_check',
+      'goal_confirmation',
+      
+      // Trauma Shifting steps (negative experiences)
+      'trauma_identity_check',
+      'trauma_experience_check',
+      'trauma_dig_deeper',
+      'trauma_shifting_intro',
+      
+      // Method selection step (handled by Problem Shifting when PROBLEM selected)
+      'choose_method'
+    ];
+    
+    return modalityHandledSteps.includes(currentStep);
+  };
+
   // If there's an error starting the session, show error state
   if (hasError && !isSessionActive && messages.length === 0) {
     return (
@@ -1874,8 +1920,8 @@ export default function TreatmentSession({
                   )}
                 </div>
               </div>
-            ) : currentStep !== 'choose_method' ? (
-              /* Regular Text Input Interface - Only show when NOT in method selection */
+            ) : currentStep !== 'choose_method' && !isStepHandledByModality() ? (
+              /* Regular Text Input Interface - Only show when NOT handled by modality components */
               <div className="flex space-x-2 max-w-4xl w-full">
                 {/* Undo Button - Positioned to the left of voice indicator */}
                 <div className="flex items-center">
