@@ -3867,15 +3867,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'future_problem_check',
-          scriptedResponse: (userInput, context) => {
-            // Get the problem statement - prioritize digging deeper restated problem
-            const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
-            const problemStatement = diggingProblem || context.problemStatement || 
-                                   context.userResponses?.['mind_shifting_explanation'] || 
-                                   'the problem';
-            console.log(`🔍 FUTURE_PROBLEM_CHECK: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
-            return `Do you feel the problem '${problemStatement}' will come back in the future?`;
-          },
+          scriptedResponse: "Do you feel the problem will come back in the future?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -3977,10 +3969,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'scenario_check_1',
-          scriptedResponse: (userInput, context) => {
-            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
-            return `Is there any scenario in which the problem '${originalProblem}' would still be a problem for you?`;
-          },
+          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4054,10 +4043,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'scenario_check_2',
-          scriptedResponse: (userInput, context) => {
-            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
-            return `Is there a second scenario in which the problem '${originalProblem}' would still be a problem for you?`;
-          },
+          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4131,10 +4117,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'scenario_check_3',
-          scriptedResponse: (userInput, context) => {
-            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
-            return `Is there a third scenario in which the problem '${originalProblem}' would still be a problem for you?`;
-          },
+          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4208,10 +4191,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'anything_else_check_1',
-          scriptedResponse: (userInput, context) => {
-            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
-            return `Is there anything else about '${originalProblem}' that is still a problem for you?`;
-          },
+          scriptedResponse: "Is there anything else about this that's still a problem for you?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4285,10 +4265,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'anything_else_check_2',
-          scriptedResponse: (userInput, context) => {
-            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
-            return `Is there anything else about '${originalProblem}' that is still a problem for you?`;
-          },
+          scriptedResponse: "Is there anything else about this that's still a problem for you?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4362,10 +4339,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'anything_else_check_3',
-          scriptedResponse: (userInput, context) => {
-            const originalProblem = context?.metadata?.originalProblemStatement || 'the original problem';
-            return `Is there anything else about '${originalProblem}' that is still a problem for you?`;
-          },
+          scriptedResponse: "Is there anything else about this that's still a problem for you?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
