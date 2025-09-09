@@ -90,6 +90,9 @@ export default function ProblemShifting({
     // Only show for choose_method step
     if (currentStep !== 'choose_method') return false;
     
+    // CRITICAL: Only show if PROBLEM work type was selected
+    if (selectedWorkType !== 'PROBLEM') return false;
+    
     // Don't show if AI is asking clarifying questions
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (lastBotMessage?.usedAI) return false;

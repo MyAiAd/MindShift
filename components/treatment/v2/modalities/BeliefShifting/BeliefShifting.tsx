@@ -55,32 +55,9 @@ export default function BeliefShifting({
 
   // Helper function to determine if we should show the choose_method buttons for Belief Shifting
   const shouldShowChooseMethodButtons = () => {
-    // Only show for choose_method step
-    if (currentStep !== 'choose_method') return false;
-    
-    // Don't show if AI is asking clarifying questions
-    const lastBotMessage = messages.filter(m => !m.isUser).pop();
-    if (lastBotMessage?.usedAI) return false;
-    
-    // Check if the last bot message contains clarifying question patterns
-    if (lastBotMessage) {
-      const clarifyingIndicators = [
-        "Which specific", // AI clarification questions
-        "Please choose one to focus on", // AI focus requests
-        "What is bothering you the most", // AI specificity requests
-        "Please tell me what", // Other AI requests for clarification
-        "Can you be more specific", // AI asking for specificity
-        "What aspect of", // AI asking for aspect clarification
-        "Please describe", // AI asking for description
-        "Tell me more about", // AI asking for more details
-      ];
-      
-      if (clarifyingIndicators.some(indicator => lastBotMessage.content.includes(indicator))) {
-        return false; // Don't show buttons, show text input instead
-      }
-    }
-    
-    return true;
+    // Belief Shifting should NOT show method selection buttons on choose_method step
+    // That step is only for problem-clearing methods when PROBLEM work type is selected
+    return false;
   };
 
   // Render Belief Shifting specific Yes/No UI
