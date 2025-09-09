@@ -555,7 +555,20 @@ export default function TreatmentSessionDemo({
 
   // Check if we should show work type selection
   const shouldShowWorkTypeSelection = () => {
+    // Don't show work type selection if we're past the initial explanation
+    if (currentStep === 'work_type_description' || 
+        currentStep === 'method_selection' ||
+        currentStep.includes('_intro') ||
+        currentStep.includes('_shifting')) {
+      return false;
+    }
+    
     return (currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection') && !selectedWorkType;
+  };
+
+  // Check if we should show problem description prompt
+  const shouldShowProblemDescriptionPrompt = () => {
+    return currentStep === 'work_type_description' && selectedWorkType === 'PROBLEM';
   };
 
   // Handle undo functionality
@@ -855,6 +868,21 @@ export default function TreatmentSessionDemo({
                       </button>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Problem Description Prompt */}
+              {shouldShowProblemDescriptionPrompt() && (
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <h5 className="font-medium text-blue-900 dark:text-blue-200">
+                      Describe Your Problem
+                    </h5>
+                  </div>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Please tell me what the problem is in a few words. Be specific and concise.
+                  </p>
                 </div>
               )}
 
