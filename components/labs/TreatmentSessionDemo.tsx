@@ -451,7 +451,20 @@ export default function TreatmentSessionDemo({
         const methodLower = method.toLowerCase().replace(' ', '_');
         setSessionMethod(methodLower);
         
-        if (data.message && !data.message.includes('_SELECTED')) {
+        console.log('🔍 DEBUG: Setting currentStep from', currentStep, 'to', data.currentStep);
+        
+        // TEMPORARY FIX: Check for problematic step transition BEFORE adding message
+        let finalCurrentStep = data.currentStep || currentStep;
+        let shouldSkipMessage = false;
+        
+        if (currentStep === 'method_selection' && data.currentStep === 'mind_shifting_explanation' && selectedWorkType === 'PROBLEM') {
+          console.log('🔧 TEMP_FIX: Forcing currentStep from mind_shifting_explanation to work_type_description');
+          finalCurrentStep = 'work_type_description';
+          shouldSkipMessage = true; // Skip the intro message that would cause duplication
+        }
+        
+        // Only add message if it's not being skipped by temp fix
+        if (data.message && !data.message.includes('_SELECTED') && !shouldSkipMessage) {
           const aiMessage: TreatmentMessage = {
             id: (Date.now() + 1).toString(),
             content: data.message,
@@ -462,16 +475,6 @@ export default function TreatmentSessionDemo({
           };
 
           setMessages(prev => [...prev, aiMessage]);
-        }
-        
-        console.log('🔍 DEBUG: Setting currentStep from', currentStep, 'to', data.currentStep);
-        
-        // TEMPORARY FIX: If we're in method_selection and the response goes back to mind_shifting_explanation,
-        // force it to work_type_description instead
-        let finalCurrentStep = data.currentStep || currentStep;
-        if (currentStep === 'method_selection' && data.currentStep === 'mind_shifting_explanation' && selectedWorkType === 'PROBLEM') {
-          console.log('🔧 TEMP_FIX: Forcing currentStep from mind_shifting_explanation to work_type_description');
-          finalCurrentStep = 'work_type_description';
         }
         
         setCurrentStep(finalCurrentStep);
