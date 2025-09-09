@@ -497,7 +497,12 @@ export default function TreatmentSessionDemo({
       console.log('🎯 DEMO: Work type selection response:', data);
       
       if (data.success) {
-        if (data.message && !data.message.includes('_SELECTED') && !data.message.includes('_CONFIRMED')) {
+        // Handle METHOD_SELECTION_NEEDED response
+        if (data.message === 'METHOD_SELECTION_NEEDED') {
+          console.log('🎯 DEMO: Method selection needed, setting currentStep to method_selection');
+          setCurrentStep('method_selection');
+          // Don't add METHOD_SELECTION_NEEDED as a message to UI
+        } else if (data.message && !data.message.includes('_SELECTED') && !data.message.includes('_CONFIRMED')) {
           const aiMessage: TreatmentMessage = {
             id: (Date.now() + 1).toString(),
             content: data.message,
@@ -510,7 +515,10 @@ export default function TreatmentSessionDemo({
           setMessages(prev => [...prev, aiMessage]);
         }
         
-        setCurrentStep(data.currentStep || currentStep);
+        // Update current step from response, but prioritize our METHOD_SELECTION_NEEDED handling
+        if (data.message !== 'METHOD_SELECTION_NEEDED') {
+          setCurrentStep(data.currentStep || currentStep);
+        }
       }
       
       setIsLoading(false);
