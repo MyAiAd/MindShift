@@ -11,6 +11,7 @@ import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
 import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker, Brain } from 'lucide-react';
 import UnifiedTreatmentDemo from '@/components/labs/SimpleProblemShiftingDemo';
 import VoiceTreatmentDemo from '@/components/labs/VoiceTreatmentDemo';
+import TreatmentSessionDemo from '@/components/labs/TreatmentSessionDemo';
 import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
 import BeliefShiftingDemo from '@/components/labs/BeliefShiftingDemo';
 import IdentityShiftingDemo from '@/components/labs/IdentityShiftingDemo';
@@ -1197,14 +1198,14 @@ export default function SettingsPage() {
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-gray-900 dark:text-white">New Experimental Demo</h4>
+                    <h4 className="text-md font-medium text-gray-900 dark:text-white">Treatment Sessions Demo</h4>
                     <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full">
-                      Coming Soon
+                      Full Session
                     </span>
                   </div>
                   <button
                     onClick={() => handleLabsToggle('newExperimentalDemo')}
-                    aria-label={`${labsToggles.newExperimentalDemo ? 'Disable' : 'Enable'} New Experimental Demo`}
+                    aria-label={`${labsToggles.newExperimentalDemo ? 'Disable' : 'Enable'} Treatment Sessions Demo`}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
                       labsToggles.newExperimentalDemo
                         ? 'bg-indigo-600'
@@ -1218,18 +1219,7 @@ export default function SettingsPage() {
                     />
                   </button>
                 </div>
-                {labsToggles.newExperimentalDemo && (
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 text-center">
-                    <div className="text-gray-500 dark:text-gray-400">
-                      <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <h5 className="text-lg font-medium mb-2">New Demo Area</h5>
-                      <p className="text-sm">
-                        This space is reserved for a new experimental feature. 
-                        Implementation details and functionality will be added here.
-                      </p>
-                    </div>
-                  </div>
-                )}
+                {labsToggles.newExperimentalDemo && <TreatmentSessionDemo />}
               </div>
               
               {/* Individual treatment modality demos - temporarily hidden for company review */}
