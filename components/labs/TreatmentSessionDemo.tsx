@@ -421,6 +421,7 @@ export default function TreatmentSessionDemo({
       }
 
       const data = await response.json();
+      console.log('🔍 DEBUG: Method selection response:', data);
       
       if (data.success) {
         // Update session method
@@ -440,6 +441,7 @@ export default function TreatmentSessionDemo({
           setMessages(prev => [...prev, aiMessage]);
         }
         
+        console.log('🔍 DEBUG: Setting currentStep from', currentStep, 'to', data.currentStep);
         setCurrentStep(data.currentStep || currentStep);
       }
       
