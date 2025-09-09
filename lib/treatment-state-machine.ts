@@ -432,7 +432,9 @@ export class TreatmentStateMachine {
       
       // NEW: Try cache for dynamic responses with context hash
       // CRITICAL FIX: Don't use cache for identity_shifting_intro when processing user input
-      const shouldSkipCache = step.id === 'identity_shifting_intro' && userInput && userInput.trim();
+      // CRITICAL FIX: Don't use cache for belief_shifting_intro in digging deeper mode (problem statement changes)
+      const shouldSkipCache = (step.id === 'identity_shifting_intro' && userInput && userInput.trim()) ||
+                            (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem);
       let cacheKey: string | undefined;
       
       if (!shouldSkipCache) {
@@ -445,7 +447,11 @@ export class TreatmentStateMachine {
           return cached;
         }
       } else {
-        console.log(`🚀 CACHE_SKIP: Skipping cache for identity_shifting_intro with userInput to process identity response`);
+        if (step.id === 'identity_shifting_intro') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for identity_shifting_intro with userInput to process identity response`);
+        } else if (step.id === 'belief_shifting_intro') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for belief_shifting_intro in digging deeper mode (currentDiggingProblem: ${context.metadata?.currentDiggingProblem})`);
+        }
       }
       
       response = step.scriptedResponse(userInput, context);
