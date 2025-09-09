@@ -224,11 +224,15 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
              'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
           // Get the stored problem statement that the intro step will use
           const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
-          textToProcess = treatmentContext?.problemStatement || 
+          // PRIORITIZE: Use new digging problem if available, then fall back to original problem
+          textToProcess = treatmentContext?.metadata?.currentDiggingProblem || 
+                        treatmentContext?.metadata?.newDiggingProblem ||
+                        treatmentContext?.problemStatement || 
                         treatmentContext?.userResponses?.['restate_selected_problem'] || 
                         treatmentContext?.userResponses?.['mind_shifting_explanation'] || 
                         userInput;
           console.log('Treatment API: Using problem statement for intro step processing:', textToProcess);
+          console.log('Treatment API: Available sources - currentDiggingProblem:', treatmentContext?.metadata?.currentDiggingProblem, 'newDiggingProblem:', treatmentContext?.metadata?.newDiggingProblem);
         }
         // For identity dissolve steps, use the processed identity from context, not raw user input
         else if (['identity_dissolve_step_a', 'trauma_dissolve_step_a'].includes(result.nextStep || '')) {
@@ -240,34 +244,44 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
           console.log('Treatment API: Using processed identity for dissolve step processing:', textToProcess);
         }
         
-        const linguisticResult = await aiAssistance.processLinguisticInterpretation(
-          result.scriptedResponse,
-          textToProcess,
-          result.nextStep || 'unknown',
-          sessionId
-        );
+        // Check if we should skip AI processing for digging deeper intro steps
+        const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+        const shouldSkipAI = treatmentContext?.metadata?.skipIntroInstructions && 
+                            ['problem_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '');
         
-        if (linguisticResult.success) {
-          // For feel_solution_state, integrate the AI result back into the template
-          if (result.nextStep === 'feel_solution_state') {
-            finalMessage = `What would you feel like if you already ${linguisticResult.improvedResponse}?`;
-          } 
-          // For intro steps, replace the problem statement in the original scripted response
-          else if (['problem_shifting_intro', 'reality_shifting_intro', 'blockage_shifting_intro', 
-                   'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
-            // Replace the original problem statement in the scripted response with the AI-processed version
-            finalMessage = result.scriptedResponse.replace(new RegExp(`'${textToProcess.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`, 'g'), `'${linguisticResult.improvedResponse}'`);
-            console.log('Treatment API: Replaced problem statement in intro step with AI-processed version');
-          } else {
-            // For other steps (like body_sensation_check), use the full AI response
-            finalMessage = linguisticResult.improvedResponse;
-          }
-          usedAI = true;
-          aiCost = linguisticResult.cost;
-          aiTokens = linguisticResult.tokens;
-          console.log('Treatment API: Linguistic processing successful');
+        if (shouldSkipAI) {
+          console.log('Treatment API: Skipping AI processing for digging deeper intro step - using short scripted response');
+          finalMessage = result.scriptedResponse; // Use the short scripted response directly
         } else {
-          console.log('Treatment API: Linguistic processing failed, using scripted response');
+          const linguisticResult = await aiAssistance.processLinguisticInterpretation(
+            result.scriptedResponse,
+            textToProcess,
+            result.nextStep || 'unknown',
+            sessionId
+          );
+          
+          if (linguisticResult.success) {
+            // For feel_solution_state, integrate the AI result back into the template
+            if (result.nextStep === 'feel_solution_state') {
+              finalMessage = `What would you feel like if you already ${linguisticResult.improvedResponse}?`;
+            } 
+            // For intro steps, replace the problem statement in the original scripted response
+            else if (['problem_shifting_intro', 'reality_shifting_intro', 'blockage_shifting_intro', 
+                     'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
+              // Replace the original problem statement in the scripted response with the AI-processed version
+              finalMessage = result.scriptedResponse.replace(new RegExp(`'${textToProcess.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`, 'g'), `'${linguisticResult.improvedResponse}'`);
+              console.log('Treatment API: Replaced problem statement in intro step with AI-processed version');
+            } else {
+              // For other steps (like body_sensation_check), use the full AI response
+              finalMessage = linguisticResult.improvedResponse;
+            }
+            usedAI = true;
+            aiCost = linguisticResult.cost;
+            aiTokens = linguisticResult.tokens;
+            console.log('Treatment API: Linguistic processing successful');
+          } else {
+            console.log('Treatment API: Linguistic processing failed, using scripted response');
+          }
         }
       }
 
