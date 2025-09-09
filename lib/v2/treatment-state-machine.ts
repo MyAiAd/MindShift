@@ -1,4 +1,4 @@
-import { createServerClient } from './database-server';
+import { createServerClient } from '../database-server';
 
 export interface TreatmentPhase {
   name: string;
