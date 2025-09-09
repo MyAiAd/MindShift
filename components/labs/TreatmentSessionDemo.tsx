@@ -442,7 +442,16 @@ export default function TreatmentSessionDemo({
         }
         
         console.log('🔍 DEBUG: Setting currentStep from', currentStep, 'to', data.currentStep);
-        setCurrentStep(data.currentStep || currentStep);
+        
+        // TEMPORARY FIX: If we're in method_selection and the response goes back to mind_shifting_explanation,
+        // force it to work_type_description instead
+        let finalCurrentStep = data.currentStep || currentStep;
+        if (currentStep === 'method_selection' && data.currentStep === 'mind_shifting_explanation' && selectedWorkType === 'PROBLEM') {
+          console.log('🔧 TEMP_FIX: Forcing currentStep from mind_shifting_explanation to work_type_description');
+          finalCurrentStep = 'work_type_description';
+        }
+        
+        setCurrentStep(finalCurrentStep);
       }
       
       setIsLoading(false);
