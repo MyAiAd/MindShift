@@ -4221,7 +4221,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             const newProblem = context?.userResponses?.['restate_anything_else_problem_1'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
-            context.metadata.returnToDiggingStep = 'anything_else_check_2'; // Where to return after clearing
+            context.metadata.returnToDiggingStep = 'route_to_integration'; // Where to return after clearing
             
             // Route to appropriate method based on original method used
             const originalMethod = context.metadata.selectedMethod;
@@ -5524,7 +5524,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'restate_anything_else_problem_1';
         }
         if (lastResponse.includes('no')) {
-          return 'anything_else_check_2';
+          return 'route_to_integration';
         }
         break;
         
@@ -5532,13 +5532,13 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         return 'clear_anything_else_problem_1';
         
       case 'clear_anything_else_problem_1':
-        // After clearing, return to next anything else check
+        // After clearing, go to integration (end of digging deeper)
         const returnStepAE1 = context.metadata?.returnToDiggingStep;
         if (returnStepAE1) {
           context.currentPhase = 'digging_deeper';
           return returnStepAE1;
         }
-        return 'anything_else_check_2';
+        return 'route_to_integration';
         
       case 'anything_else_check_2':
         if (lastResponse.includes('yes')) {
