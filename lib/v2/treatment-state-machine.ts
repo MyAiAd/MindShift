@@ -360,7 +360,7 @@ export class TreatmentStateMachine {
     const realityShiftingSteps = [
       // REMOVED: 'reality_step_a2' - Use exact scripted response from flowchart
       // REMOVED: 'reality_feel_reason' - Use user's exact words to preserve their agency
-      'reality_feel_reason_2',  // "Feel that 'feeling'... what can you feel now?"
+      // REMOVED: 'reality_feel_reason_2' - Use exact scripted response from flowchart
       'reality_feel_reason_3'   // "Feel that 'feeling'... what's the first thing you notice about it?"
     ];
     
