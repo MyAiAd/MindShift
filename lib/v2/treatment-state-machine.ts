@@ -2817,12 +2817,15 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself.' }
           ],
-          nextStep: 'reality_step_b',
+          nextStep: 'reality_why_not_possible',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
 
+        // REMOVED: reality_step_b - Skip "Is it possible that goal will not come to you?" 
+        // and go directly to "Why might you not achieve your goal?" as per flowchart
+        /*
         {
           id: 'reality_step_b',
           scriptedResponse: (userInput, context) => {
@@ -2838,11 +2841,15 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             { condition: 'needsClarification', action: 'clarify' }
           ]
         },
+        */
 
         {
           id: 'reality_why_not_possible',
           scriptedResponse: (userInput, context) => {
-            const goalStatement = context?.metadata?.currentGoal || 'your goal';
+            // Use the goal statement with deadline if available, otherwise use basic goal statement
+            const goalWithDeadline = context?.metadata?.goalWithDeadline;
+            const basicGoal = context?.metadata?.currentGoal || 'your goal';
+            const goalStatement = goalWithDeadline || basicGoal;
             return `Why might you not achieve your goal of '${goalStatement}'?`;
           },
           expectedResponseType: 'open',
@@ -5141,6 +5148,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         }
         break;
         
+      // REMOVED: reality_step_b case - Skip yes/no question and go directly to "Why might you not achieve goal?"
+      /*
       case 'reality_step_b':
         // Reality Shifting: Check if goal might not come
         if (lastResponse.includes('yes')) {
@@ -5152,6 +5161,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'reality_checking_questions';
         }
         break;
+      */
         
       case 'reality_checking_questions':
         // Reality Shifting: Handle certainty percentage and doubt
