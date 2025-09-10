@@ -358,8 +358,8 @@ export class TreatmentStateMachine {
     
     // Reality Shifting steps that need linguistic processing
     const realityShiftingSteps = [
-      'reality_step_a2',        // "Feel that 'feeling'... what can you feel now?"
-      'reality_feel_reason',    // "Feel 'that reason'... what does it feel like?"
+      // REMOVED: 'reality_step_a2' - Use exact scripted response from flowchart
+      // REMOVED: 'reality_feel_reason' - Use user's exact words to preserve their agency
       'reality_feel_reason_2',  // "Feel that 'feeling'... what can you feel now?"
       'reality_feel_reason_3'   // "Feel that 'feeling'... what's the first thing you notice about it?"
     ];
