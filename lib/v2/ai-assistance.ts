@@ -51,7 +51,7 @@ export class AIAssistanceManager {
     'body_sensation_check',    // Problem Shifting: "Feel [contextualized emotion]... what happens in yourself when you feel [contextualized emotion]?"
     'feel_solution_state',     // Problem Shifting: "What would you feel like if '[contextualized user response]' had already happened?"
     'reality_step_a2',         // Reality Shifting: "Feel [contextualized emotion]... what can you feel now?"
-    'reality_feel_reason',     // Reality Shifting: "Feel [contextualized reason]... what does it feel like?"
+    // REMOVED: 'reality_feel_reason' - Use user's exact words to preserve their agency
     'reality_feel_reason_2',   // Reality Shifting: "Feel [contextualized emotion]... what can you feel now?"
     'reality_feel_reason_3',   // Reality Shifting: "Feel [contextualized emotion]... what's the first thing you notice about it?"
     'blockage_step_b',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
@@ -436,6 +436,8 @@ Examples:
 - User: "nervous" → "Feel nervous... what can you feel now?"
 
 Extract the core emotion and apply the template now:`;
+    // REMOVED: reality_feel_reason AI processing - Use user's exact words instead
+    /*
     } else if (stepId === 'reality_feel_reason') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's reason response.
 
@@ -460,6 +462,7 @@ Examples:
 - User: "failure" → "Feel failure... what does it feel like?"
 
 Extract the core reason and apply the template now:`;
+    */
     } else if (stepId === 'reality_feel_reason_3') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
 
