@@ -3999,7 +3999,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             const newProblem = context?.userResponses?.['restate_scenario_problem_1'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 2) + 1;
-            context.metadata.returnToDiggingStep = 'scenario_check_2'; // Where to return after clearing
+            context.metadata.returnToDiggingStep = 'anything_else_check_1'; // Where to return after clearing
             
             // Route to appropriate method based on original method used
             const originalMethod = context.metadata.selectedMethod;
@@ -5460,7 +5460,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'restate_scenario_problem_1';
         }
         if (lastResponse.includes('no')) {
-          return 'scenario_check_2';
+          return 'anything_else_check_1';
         }
         break;
         
@@ -5468,13 +5468,13 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         return 'clear_scenario_problem_1';
         
       case 'clear_scenario_problem_1':
-        // After clearing, return to next scenario check
+        // After clearing, return to anything else check (question 3 in flowchart)
         const returnStep1 = context.metadata?.returnToDiggingStep;
         if (returnStep1) {
           context.currentPhase = 'digging_deeper';
           return returnStep1;
         }
-        return 'scenario_check_2';
+        return 'anything_else_check_1';
         
       case 'scenario_check_2':
         if (lastResponse.includes('yes')) {
