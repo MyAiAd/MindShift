@@ -4043,7 +4043,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'scenario_check_2',
-          scriptedResponse: "Is there any other scenario in which this would still be a problem for you?",
+          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -4117,7 +4117,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
         {
           id: 'scenario_check_3',
-          scriptedResponse: "Is there any third scenario in which this would still be a problem for you?",
+          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
