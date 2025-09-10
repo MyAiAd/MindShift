@@ -2792,9 +2792,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'reality_step_a2',
           scriptedResponse: (userInput, context) => {
-            // Get the original feeling from reality_shifting_intro step
-            const originalFeeling = context?.userResponses?.['reality_shifting_intro'] || userInput || 'that';
-            return `Feel ${originalFeeling}... what does ${originalFeeling} feel like?`;
+            // Use the LAST RESPONSE (from previous step) as per flowchart
+            const lastResponse = userInput || 'that';
+            return `Feel ${lastResponse}... what does ${lastResponse} feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
@@ -2809,9 +2809,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'reality_step_a3',
           scriptedResponse: (userInput, context) => {
-            // Get the original feeling from reality_shifting_intro step
-            const originalFeeling = context?.userResponses?.['reality_shifting_intro'] || userInput || 'that';
-            return `Feel ${originalFeeling}... what happens in yourself when you feel ${originalFeeling}?`;
+            // Use the LAST RESPONSE (from previous step A2) as per flowchart
+            const lastResponse = userInput || 'that';
+            return `Feel ${lastResponse}... what happens in yourself when you feel ${lastResponse}?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -2897,9 +2897,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'reality_feel_reason_3',
           scriptedResponse: (userInput, context) => {
-            // Get the response from reality_feel_reason_2 (what it would feel like to not have the problem)
-            const goodFeeling = context?.userResponses?.['reality_feel_reason_2'] || userInput || 'good';
-            return `Feel '${goodFeeling}'... what does '${goodFeeling}' feel like?`;
+            // Use the LAST RESPONSE (from previous step B3) as per flowchart
+            const lastResponse = userInput || 'that';
+            return `Feel ${lastResponse}... what does ${lastResponse} feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
