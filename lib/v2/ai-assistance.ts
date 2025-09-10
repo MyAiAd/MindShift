@@ -50,7 +50,7 @@ export class AIAssistanceManager {
   private readonly AI_LINGUISTIC_STEPS = [
     'body_sensation_check',    // Problem Shifting: "Feel [contextualized emotion]... what happens in yourself when you feel [contextualized emotion]?"
     'feel_solution_state',     // Problem Shifting: "What would you feel like if '[contextualized user response]' had already happened?"
-    'reality_step_a2',         // Reality Shifting: "Feel [contextualized emotion]... what can you feel now?"
+    // REMOVED: 'reality_step_a2' - Use user's exact words to preserve their agency
     // REMOVED: 'reality_feel_reason' - Use user's exact words to preserve their agency
     'reality_feel_reason_2',   // Reality Shifting: "Feel [contextualized emotion]... what can you feel now?"
     'reality_feel_reason_3',   // Reality Shifting: "Feel [contextualized emotion]... what's the first thing you notice about it?"
@@ -412,7 +412,8 @@ Examples:
 - User: "feel confident" → "felt confident"
 
 Transform the user's response now:`;
-    } else if (stepId === 'reality_step_a2' || stepId === 'reality_feel_reason_2') {
+    // REMOVED: reality_step_a2 AI processing - Use user's exact words instead
+    } else if (stepId === 'reality_feel_reason_2') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
 
 User's response: "${userInput}"
