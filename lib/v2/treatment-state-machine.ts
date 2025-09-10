@@ -4221,7 +4221,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             const newProblem = context?.userResponses?.['restate_anything_else_problem_1'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
-            context.metadata.returnToDiggingStep = 'route_to_integration'; // Where to return after clearing
+            context.metadata.returnToDiggingStep = 'integration_start'; // Where to return after clearing
             
             // Route to appropriate method based on original method used
             const originalMethod = context.metadata.selectedMethod;
@@ -4352,34 +4352,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         {
           id: 'route_to_integration',
-          scriptedResponse: (userInput, context) => {
-            // Mark that multiple problems were worked on
-            context.metadata.multipleProblems = true;
-            
-            // Route to appropriate integration questions based on original method
-            const originalMethod = context.metadata.selectedMethod;
-            
-            if (originalMethod === 'problem_shifting') {
-              context.currentPhase = 'problem_shifting';
-              return 'ROUTE_TO_PROBLEM_INTEGRATION';
-            } else if (originalMethod === 'identity_shifting') {
-              context.currentPhase = 'identity_shifting';
-              return 'ROUTE_TO_IDENTITY_INTEGRATION';
-            } else if (originalMethod === 'belief_shifting') {
-              context.currentPhase = 'belief_shifting';
-              return 'ROUTE_TO_BELIEF_INTEGRATION';
-            } else if (originalMethod === 'blockage_shifting') {
-              context.currentPhase = 'blockage_shifting';
-              return 'ROUTE_TO_BLOCKAGE_INTEGRATION';
-            } else if (originalMethod === 'trauma_shifting') {
-              context.currentPhase = 'trauma_shifting';
-              return 'ROUTE_TO_TRAUMA_INTEGRATION';
-            } else {
-              // Default to problem shifting integration
-              context.currentPhase = 'problem_shifting';
-              return 'ROUTE_TO_PROBLEM_INTEGRATION';
-            }
-          },
+          scriptedResponse: "ROUTE_TO_INTEGRATION", // This should trigger special handling
           expectedResponseType: 'open',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please continue.' }
@@ -5524,7 +5497,10 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'restate_anything_else_problem_1';
         }
         if (lastResponse.includes('no')) {
-          return 'route_to_integration';
+          // Mark that multiple problems were worked on and go to integration
+          context.metadata.multipleProblems = true;
+          context.currentPhase = 'integration';
+          return 'integration_start';
         }
         break;
         
@@ -5538,7 +5514,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           context.currentPhase = 'digging_deeper';
           return returnStepAE1;
         }
-        return 'route_to_integration';
+        context.metadata.multipleProblems = true;
+        context.currentPhase = 'integration';
+        return 'integration_start';
         
       case 'anything_else_check_2':
         if (lastResponse.includes('yes')) {
