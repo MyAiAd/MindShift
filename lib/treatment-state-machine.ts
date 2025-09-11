@@ -3288,14 +3288,30 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           id: 'trauma_identity_check',
           scriptedResponse: (userInput, context) => {
             const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
-            return `Can you still feel yourself being '${identity}'?`;
+            return `Can you still feel yourself being ${identity}?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'trauma_future_identity_check',
+          aiTriggers: [] // REMOVED: trauma_identity_check should be purely scripted, no AI assistance
+        },
+
+        {
+          id: 'trauma_future_identity_check',
+          scriptedResponse: (userInput, context) => {
+            const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
+            return `Do you think you can ever feel yourself being ${identity} in the future? Is there any scenario in which you might still feel yourself being ${identity}?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
           nextStep: 'trauma_experience_check',
-          aiTriggers: [] // REMOVED: trauma_identity_check should be purely scripted, no AI assistance
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
         },
 
         {
@@ -5225,7 +5241,20 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'trauma_dissolve_step_a';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer feeling identity - proceed to experience check
+          // No longer feeling identity - proceed to future identity check (Step 5)
+          return 'trauma_future_identity_check';
+        }
+        break;
+        
+      case 'trauma_future_identity_check':
+        // Trauma Shifting: Check if might feel identity in future scenarios
+        if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
+          // Might feel identity in future - repeat Steps 3-5 with new identity
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          return 'trauma_dissolve_step_c'; // Ask "What are you when you're not being X?"
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
+          // Won't feel identity in future - proceed to experience check (Step 6)
           return 'trauma_experience_check';
         }
         break;
