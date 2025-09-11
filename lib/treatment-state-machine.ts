@@ -2064,8 +2064,8 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             const seemsResolved = noProblemIndicators.some(indicator => response.includes(indicator));
             
             if (seemsResolved) {
-              // This should trigger immediate transition to dig deeper
-              return 'Would you like to dig deeper in this area?';
+              // Signal that we should transition immediately - this message won't be shown
+              return 'TRANSITION_TO_DIG_DEEPER';
             }
             
             return `Feel '${userInput || 'that problem'}'... what does it feel like?`;

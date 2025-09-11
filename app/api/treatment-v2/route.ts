@@ -212,6 +212,18 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
     console.log('Treatment API: Checking if can continue...', { canContinue: result.canContinue, hasScriptedResponse: !!result.scriptedResponse });
     if (result.canContinue && result.scriptedResponse) {
       console.log('Treatment API: Processing successful result...');
+      
+      // Handle special transition signals
+      if (result.scriptedResponse === 'TRANSITION_TO_DIG_DEEPER') {
+        console.log('Treatment API: Detected transition signal, processing next step immediately');
+        // Process the next step immediately without showing the transition message
+        const nextResult = await treatmentMachine.processUserInput(sessionId, userInput || '', { userId });
+        if (nextResult.canContinue && nextResult.scriptedResponse) {
+          result = nextResult; // Use the next step's result
+          console.log('Treatment API: Using next step result:', result);
+        }
+      }
+      
       let finalMessage = result.scriptedResponse;
       let usedAI = false;
       let aiCost = 0;
@@ -261,7 +273,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
           finalMessage = result.scriptedResponse; // Use the short scripted response directly
         } else {
           const linguisticResult = await aiAssistance.processLinguisticInterpretation(
-            result.scriptedResponse,
+            result.scriptedResponse || '',
             textToProcess,
             result.nextStep || 'unknown',
             sessionId
@@ -276,7 +288,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
             else if (['problem_shifting_intro', 'reality_shifting_intro', 'blockage_shifting_intro', 
                      'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
               // Replace the original problem statement in the scripted response with the AI-processed version
-              finalMessage = result.scriptedResponse.replace(new RegExp(`'${textToProcess.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`, 'g'), `'${linguisticResult.improvedResponse}'`);
+              finalMessage = (result.scriptedResponse || '').replace(new RegExp(`'${textToProcess.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`, 'g'), `'${linguisticResult.improvedResponse}'`);
               console.log('Treatment API: Replaced problem statement in intro step with AI-processed version');
             } else {
               // For other steps (like body_sensation_check), use the full AI response
