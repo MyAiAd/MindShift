@@ -5060,7 +5060,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear', 'no', 'not'];
         const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator));
         
-        if (seemsResolved) {
+        // Check if user is responding to dig deeper question (yes/no)
+        const isDigDeeperResponse = lastResponse.includes('yes') || lastResponse.includes('no');
+        
+        if (isDigDeeperResponse) {
+          // User is responding to "Would you like to dig deeper in this area?"
+          context.currentPhase = 'digging_deeper';
+          return 'digging_deeper_start';
+        } else if (seemsResolved) {
           // Problem seems resolved - check if we're in digging deeper flow
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
