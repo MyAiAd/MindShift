@@ -3438,6 +3438,22 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         {
           id: 'trauma_dig_deeper',
+          scriptedResponse: (userInput, context) => {
+            const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this incident';
+            return `Do you feel you might feel bad about ${negativeExperience} again in the future?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'trauma_dig_deeper_2',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_dig_deeper_2',
           scriptedResponse: () => {
             return `Is there anything else about this that is still a problem for you?`;
           },
@@ -5423,6 +5439,18 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         break;
         
       case 'trauma_dig_deeper':
+        // Trauma Shifting: Check if might feel bad about this incident in future
+        if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
+          // Might feel bad in future - ask about other problems
+          return 'trauma_dig_deeper_2';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
+          // Won't feel bad in future - ask about other problems
+          return 'trauma_dig_deeper_2';
+        }
+        break;
+        
+      case 'trauma_dig_deeper_2':
         // Trauma Shifting: Check if anything else is a problem
         if (lastResponse.includes('yes')) {
           // Yes, something else is a problem - ask them to define it in a few words first
