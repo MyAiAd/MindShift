@@ -918,8 +918,11 @@ export default function TreatmentSession({
       
       // Trauma Shifting steps (negative experiences)
       'trauma_identity_check',
+      'trauma_future_identity_check',
+      'trauma_future_scenario_check',
       'trauma_experience_check',
       'trauma_dig_deeper',
+      'trauma_dig_deeper_2',
       'trauma_shifting_intro',
       
       // Digging Deeper steps (handled by modality digging components)
