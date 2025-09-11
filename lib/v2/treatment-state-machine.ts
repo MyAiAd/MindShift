@@ -2901,7 +2901,26 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
           ],
-          nextStep: 'reality_shifting_intro', // Loop back to Column A as per flowchart
+          nextStep: 'reality_column_a_restart', // Loop back to top of Column A only
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'reality_column_a_restart',
+          scriptedResponse: (userInput, context) => {
+            // A1: Just the goal feeling question without full intro
+            const goalWithDeadline = context?.metadata?.goalWithDeadline;
+            const basicGoal = context?.metadata?.currentGoal || 'your goal';
+            const goalStatement = goalWithDeadline || basicGoal;
+            return `Feel that '${goalStatement}' is coming to you... what does it feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
+          ],
+          nextStep: 'reality_step_a2',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]

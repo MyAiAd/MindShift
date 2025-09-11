@@ -66,7 +66,7 @@ export class AIAssistanceManager {
     // 'trauma_identity_check' removed - should use stored originalProblemIdentity, not AI processing
     // Intro steps that need user input contextualisation
     'problem_shifting_intro',  // Problem Shifting: Ensure input is stated as a problem
-    'reality_shifting_intro',  // Reality Shifting: Ensure input is stated as a goal
+    // REMOVED: 'reality_shifting_intro' - Use pure scripted response per flowchart
     'reality_goal_capture',    // Reality Shifting: Ensure input is stated as a goal
     'blockage_shifting_intro', // Blockage Shifting: Ensure input is stated as a problem  
     // 'identity_shifting_intro' REMOVED - should store identity response directly, not process with AI
