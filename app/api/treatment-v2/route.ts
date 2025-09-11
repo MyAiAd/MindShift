@@ -129,6 +129,9 @@ async function handleStartSession(sessionId: string, userId: string) {
   try {
     console.log('Treatment API: Starting session:', { sessionId, userId });
     
+    // IMPORTANT: Clear any existing context for fresh start
+    await treatmentMachine.clearContext(sessionId);
+    
     // Process initial welcome step with state machine
     const result = await treatmentMachine.processUserInput(sessionId, 'start', { userId });
     console.log('Treatment API: State machine result:', result);

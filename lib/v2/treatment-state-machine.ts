@@ -4638,6 +4638,20 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
     return newContext;
   }
 
+  /**
+   * Clear context for fresh session start
+   */
+  public async clearContext(sessionId: string): Promise<void> {
+    console.log(`🗑️ CLEAR_CONTEXT: Clearing context for session ${sessionId}`);
+    
+    // Remove from memory
+    this.contexts.delete(sessionId);
+    
+    // Clear from database (optional - you might want to keep for analytics)
+    // For now, we'll just clear from memory to ensure fresh start
+    console.log(`🗑️ CLEAR_CONTEXT: Context cleared for session ${sessionId}`);
+  }
+
   private determineNextStep(currentStep: TreatmentStep, context: TreatmentContext): string | null {
     const lastResponse = context.userResponses[context.currentStep]?.toLowerCase() || '';
     
