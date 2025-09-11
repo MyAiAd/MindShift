@@ -5074,17 +5074,21 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         // Check if the response indicates no problem left
         const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear', 'no', 'not'];
         const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator));
+        console.log(`🔍 BLOCKAGE_CHECK: lastResponse="${lastResponse}", seemsResolved=${seemsResolved}, noProblemIndicators matched:`, noProblemIndicators.filter(indicator => lastResponse.includes(indicator)));
         
         if (seemsResolved) {
           // Problem seems resolved - immediately transition to dig deeper
+          console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Problem resolved, transitioning to dig deeper`);
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
             // We're clearing a problem from digging deeper - return to that step
+            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Returning to digging step: ${returnStep}`);
             context.currentPhase = 'digging_deeper';
             context.metadata.returnToDiggingStep = undefined; // Clear the return step
             return returnStep;
           } else {
             // Regular flow - move to digging deeper start immediately
+            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Regular flow - setting phase to digging_deeper and returning digging_deeper_start`);
             context.currentPhase = 'digging_deeper';
             return 'digging_deeper_start';
           }
