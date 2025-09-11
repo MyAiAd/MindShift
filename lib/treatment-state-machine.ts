@@ -2067,7 +2067,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               return 'Great! It sounds like the problem has shifted. Let me check - do you feel the problem will come back in the future?';
             }
             
-            return `I can see there's still something there. Let's continue the process. Feel '${userInput || 'that problem'}'... what does it feel like?`;
+            return `Feel '${userInput || 'that problem'}'... what does it feel like?`;
           },
           expectedResponseType: 'open',
           validationRules: [
