@@ -624,6 +624,7 @@ Template: "Feel yourself being [user's exact words]... what does it feel like?"
 
 🔥 SPECIFIC EXAMPLES - FOLLOW THESE EXACTLY:
 - User: "hurt person" → "Feel yourself being a hurt person... what does it feel like?"
+- User: "desperate person" → "Feel yourself being a desperate person... what does it feel like?"
 - User: "damaged child" → "Feel yourself being a damaged child... what does it feel like?"
 - User: "angry person" → "Feel yourself being an angry person... what does it feel like?"
 - User: "victim" → "Feel yourself being a victim... what does it feel like?"

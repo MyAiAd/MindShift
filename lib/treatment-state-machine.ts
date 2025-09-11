@@ -3198,13 +3198,16 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             
             // Store the identity from the identity step if we don't have it yet
             if (!context.metadata.currentTraumaIdentity && traumaIdentityResponse) {
-              context.metadata.currentTraumaIdentity = traumaIdentityResponse.trim();
-              context.metadata.originalTraumaIdentity = traumaIdentityResponse.trim(); // Store original for trauma_identity_check
+              // CRITICAL FIX: Process the trauma identity response to add "person" suffix like Identity Shifting does
+              const processedTraumaIdentity = this.processIdentityResponse(traumaIdentityResponse.trim());
+              context.metadata.currentTraumaIdentity = processedTraumaIdentity;
+              context.metadata.originalTraumaIdentity = processedTraumaIdentity; // Store processed version for trauma_identity_check
+              console.log(`🔍 TRAUMA_DISSOLVE_STEP_A: Processing trauma identity "${traumaIdentityResponse}" -> "${processedTraumaIdentity}"`);
             }
             
             // Use the stored identity, don't overwrite with current userInput
             const identity = context.metadata.currentTraumaIdentity || 'that identity';
-            return `Feel yourself being '${identity}'... what does it feel like?`;
+            return `Feel yourself being ${identity}... what does it feel like?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -5854,6 +5857,15 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       'overwhelmed': 'overwhelmed person',
       'helpless': 'helpless person',
       'powerless': 'powerless person',
+      'desperate': 'desperate person',
+      'abandoned': 'abandoned person',
+      'rejected': 'rejected person',
+      'betrayed': 'betrayed person',
+      'worthless': 'worthless person',
+      'ashamed': 'ashamed person',
+      'guilty': 'guilty person',
+      'broken': 'broken person',
+      'damaged': 'damaged person',
       'weak': 'weak person',
       'strong': 'strong person',
       'confident': 'confident person',
