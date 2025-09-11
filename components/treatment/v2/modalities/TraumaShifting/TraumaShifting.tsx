@@ -37,9 +37,12 @@ export default function TraumaShifting({
   // Trauma Shifting specific step checks (for negative experiences)
   const isTraumaShiftingYesNoStep = () => {
     const traumaShiftingYesNoSteps = [
-      'trauma_identity_check',          // Trauma identity check
-      'trauma_experience_check',        // Trauma experience check
-      'trauma_dig_deeper',              // Trauma dig deeper
+      'trauma_identity_check',          // Trauma Step 4: Can you still feel yourself being X?
+      'trauma_future_identity_check',   // Trauma Step 5A: Do you think you can ever feel yourself being X in the future?
+      'trauma_future_scenario_check',   // Trauma Step 5B: Is there any scenario in which you might still feel yourself being X?
+      'trauma_experience_check',        // Trauma Step 6: Does it still feel like a problem?
+      'trauma_dig_deeper',              // Trauma Step 7A: Do you feel you might feel bad about this incident again in the future?
+      'trauma_dig_deeper_2',            // Trauma Step 7B: Is there anything else about this that's still a problem?
       'trauma_shifting_intro',          // Trauma shifting intro
     ];
     return traumaShiftingYesNoSteps.includes(currentStep);
