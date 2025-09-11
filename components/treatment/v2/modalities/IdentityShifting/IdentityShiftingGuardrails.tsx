@@ -17,7 +17,8 @@ export default function IdentityShiftingGuardrails({
       'identity_problem_check',
       'confirm_identity_problem',
       'identity_dissolve_step_f',
-      'identity_step_3_intro',
+              'identity_future_check',
+        'identity_scenario_check',
       'identity_description',
       'identity_analysis'
     ];

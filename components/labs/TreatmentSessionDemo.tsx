@@ -573,7 +573,8 @@ export default function TreatmentSessionDemo({
     const yesNoSteps = [
       'problem_confirmation',
       'future_problem_check',
-      'identity_step_3_intro',
+              'identity_future_check',
+        'identity_scenario_check',
       'identity_problem_check',
       'reality_step_b',
       'reality_doubts_check',
