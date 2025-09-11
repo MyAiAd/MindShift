@@ -2582,7 +2582,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           id: 'integration_awareness_1',
           scriptedResponse: (userInput, context) => {
             const subject = this.getIntegrationSubject(context, 'problem');
-            return `Integration Questions - AWARENESS Section:\n\nHow do you feel about '${subject}' now?`;
+            return `How do you feel about '${subject}' now?`;
           },
           expectedResponseType: 'open',
           validationRules: [
