@@ -1605,8 +1605,8 @@ export default function TreatmentSession({
                 </div>
                 </div>
               </div>
-            ) : false && shouldShowFutureProblemCheckButtons() ? (
-              /* COMMENTED OUT: Yes/No/Maybe Button Interface for Future Problem Check - Now handled by modality components */
+            ) : shouldShowFutureProblemCheckButtons() ? (
+              /* Yes/No/Maybe Button Interface for Future Problem Check */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button for Future Problem Check Interface */}
                 <div className="flex items-center">
@@ -2123,7 +2123,7 @@ export default function TreatmentSession({
               'Select your answer using the buttons above'
             ) : false && shouldShowDiggingDeeperButtons() ? (
               'Select your answer using the buttons above'
-            ) : false && shouldShowFutureProblemCheckButtons() ? (
+            ) : shouldShowFutureProblemCheckButtons() ? (
               'Select your answer using the buttons above'
             ) : false && shouldShowChooseMethodButtons() ? (
               'Select your preferred Mind Shifting method using the buttons above'
