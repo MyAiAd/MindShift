@@ -2478,7 +2478,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         },
 
         {
-          id: 'identity_step_3_intro',
+          id: 'identity_future_check',
           scriptedResponse: (userInput, context) => {
             // Use the properly labeled identity response
             const identityData = context.metadata.identityResponse;
@@ -2491,7 +2491,33 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               identity = context.metadata.currentIdentity || 'that identity';
             }
             
-            return `Do you think you might feel yourself being '${identity}' in the future? Is there any scenario in which you might still feel yourself being '${identity}'?`;
+            return `Do you think you might feel yourself being '${identity}' in the future?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'identity_scenario_check',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_scenario_check',
+          scriptedResponse: (userInput, context) => {
+            // Use the properly labeled identity response
+            const identityData = context.metadata.identityResponse;
+            let identity = 'that identity';
+            
+            if (identityData && identityData.type === 'IDENTITY') {
+              identity = identityData.value;
+            } else {
+              // Fallback to currentIdentity for backward compatibility
+              identity = context.metadata.currentIdentity || 'that identity';
+            }
+            
+            return `Is there any scenario in which you might still feel yourself being '${identity}'?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
@@ -2529,21 +2555,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           aiTriggers: [] // REMOVED: identity_check should be purely scripted, no AI assistance
         },
 
-        {
-          id: 'identity_future_check',
-          scriptedResponse: (userInput, context) => {
-            const identity = context.metadata.originalProblemIdentity || context.metadata.currentIdentity || 'that identity';
-            return `Do you think you might feel yourself being '${identity}' in the future? Is there any scenario in which you might still feel yourself being '${identity}'?`;
-          },
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
-          ],
-          nextStep: 'identity_problem_check',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
-        },
+
 
         {
           id: 'identity_problem_check',
@@ -5226,9 +5238,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       case 'identity_dissolve_step_f':
         // Step F: "Can you still feel yourself being [IDENTITY]?"
         if (lastResponse.includes('no') || lastResponse.includes('2')) {
-          // If NO, proceed to CHECK IDENTITY section
-          console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: User said NO, proceeding to identity check`);
-          return 'identity_step_3_intro';
+          // If NO, proceed to CHECK IDENTITY section (first question)
+          console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: User said NO, proceeding to future identity check`);
+          return 'identity_future_check';
         } else if (lastResponse.includes('yes') || lastResponse.includes('1')) {
           // If YES, they can still feel the identity - cycle back to step A
           console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: User said YES, cycling back to dissolve step A`);
@@ -5236,8 +5248,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'identity_dissolve_step_a';
         }
         // If unclear response, default to proceeding (assume NO to avoid loops)
-        console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: Unclear response "${lastResponse}", defaulting to identity check to avoid loop`);
-        return 'identity_step_3_intro';
+        console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: Unclear response "${lastResponse}", defaulting to future identity check to avoid loop`);
+        return 'identity_future_check';
         
       case 'confirm_identity_problem':
         // If confirmed, go back to identity shifting
@@ -5250,6 +5262,36 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           return 'restate_identity_problem';
         }
         break;
+
+      case 'identity_future_check':
+        // First identity check question: "Do you think you might feel yourself being [IDENTITY] in the future?"
+        if (lastResponse.includes('yes') || lastResponse.includes('1')) {
+          // YES - skip to problem check (they might feel the identity in future)
+          console.log(`🔍 IDENTITY_FUTURE_CHECK: User said YES, skipping to problem check`);
+          return 'identity_problem_check';
+        } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
+          // NO - proceed to scenario check
+          console.log(`🔍 IDENTITY_FUTURE_CHECK: User said NO, proceeding to scenario check`);
+          return 'identity_scenario_check';
+        }
+        // Default to scenario check
+        console.log(`🔍 IDENTITY_FUTURE_CHECK: Unclear response, proceeding to scenario check`);
+        return 'identity_scenario_check';
+
+      case 'identity_scenario_check':
+        // Second identity check question: "Is there any scenario in which you might still feel yourself being [IDENTITY]?"
+        if (lastResponse.includes('yes') || lastResponse.includes('1')) {
+          // YES - proceed to problem check (they found a scenario)
+          console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said YES, proceeding to problem check`);
+          return 'identity_problem_check';
+        } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
+          // NO - identity is fully resolved, skip to final integration
+          console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said NO, identity fully resolved - proceeding to integration`);
+          return 'integration_questions';
+        }
+        // Default to problem check
+        console.log(`🔍 IDENTITY_SCENARIO_CHECK: Unclear response, proceeding to problem check`);
+        return 'identity_problem_check';
         
       // REMOVED: reality_step_b case - Skip yes/no question and go directly to "Why might you not achieve goal?"
       /*
@@ -6039,6 +6081,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
    */
   private processIdentityResponse(userInput: string): string {
     const input = userInput.toLowerCase().trim();
+    const originalInput = userInput.trim(); // Preserve original casing
     
     // Handle patterns like "an angry one", "a sad one", "the frustrated one"
     const onePattern = /^(a|an|the)\s+(\w+)\s+one$/i;
@@ -6056,53 +6099,35 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       return `${adjective} person`;
     }
     
-    // Common emotions that should become "X person"
-    const emotionToIdentity: { [key: string]: string } = {
-      'hurt': 'hurt person',
-      'scared': 'scared person', 
-      'angry': 'angry person',
-      'sad': 'sad person',
-      'frustrated': 'frustrated person',
-      'anxious': 'anxious person',
-      'worried': 'worried person',
-      'stressed': 'stressed person',
-      'overwhelmed': 'overwhelmed person',
-      'helpless': 'helpless person',
-      'powerless': 'powerless person',
-      'desperate': 'desperate person',
-      'abandoned': 'abandoned person',
-      'rejected': 'rejected person',
-      'betrayed': 'betrayed person',
-      'worthless': 'worthless person',
-      'ashamed': 'ashamed person',
-      'guilty': 'guilty person',
-      'broken': 'broken person',
-      'damaged': 'damaged person',
-      'weak': 'weak person',
-      'strong': 'strong person',
-      'confident': 'confident person',
-      'happy': 'happy person',
-      'peaceful': 'peaceful person',
-      'calm': 'calm person'
-    };
+    // If it already contains identity markers, use as-is (preserve user's exact language)
+    const identityMarkers = ['person', 'people', 'man', 'woman', 'child', 'kid', 'adult', 'parent', 'mother', 'father', 'mom', 'dad', 'friend', 'partner', 'spouse', 'husband', 'wife', 'someone', 'somebody', 'individual', 'victim', 'survivor', 'one who', 'type of'];
+    const hasIdentityMarker = identityMarkers.some(marker => input.includes(marker));
     
-    // Check if it's a simple emotion that needs "person" added
-    if (emotionToIdentity[input]) {
-      return emotionToIdentity[input];
+    if (hasIdentityMarker) {
+      return originalInput; // Preserve original casing and exact words
     }
     
-    // If it already contains "person", "me", or other identity words, use as-is
-    if (input.includes('person') || input.includes('me') || input.includes('someone') || input.includes('individual')) {
-      return userInput; // Preserve original casing
+    // For single words without identity markers, add "person"
+    const wordCount = input.split(' ').length;
+    if (wordCount === 1) {
+      return `${originalInput} person`;
     }
     
-    // If it's an adjective without "person", add "person"
-    const singleWords = ['lazy', 'tired', 'energetic', 'motivated', 'lost', 'found', 'broken', 'whole', 'empty', 'full'];
-    if (singleWords.includes(input) || (input.split(' ').length === 1 && !input.includes('victim'))) {
-      return `${userInput} person`;
+    // For multi-word phrases without identity markers, check if they're descriptive
+    // If they seem like identity descriptions, add "person"
+    const descriptivePatterns = [
+      /^(very|really|quite|so|too)\s+\w+$/i, // "very sad", "really angry"
+      /^\w+\s+(and|or)\s+\w+$/i, // "sad and angry", "hurt or angry"
+      /^not\s+\w+$/i, // "not good", "not strong"
+      /^like\s+/i // "like a failure" - keep as-is
+    ];
+    
+    const matchesDescriptivePattern = descriptivePatterns.some(pattern => input.match(pattern));
+    if (matchesDescriptivePattern && !input.startsWith('like')) {
+      return `${originalInput} person`;
     }
     
-    // Return as-is for more complex responses
-    return userInput;
+    // Return as-is for complex responses or phrases starting with "like"
+    return originalInput;
   }
 } 

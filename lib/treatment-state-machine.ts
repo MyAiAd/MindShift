@@ -5916,6 +5916,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
    */
   private processIdentityResponse(userInput: string): string {
     const input = userInput.toLowerCase().trim();
+    const originalInput = userInput.trim(); // Preserve original casing
     
     // Handle patterns like "an angry one", "a sad one", "the frustrated one"
     const onePattern = /^(a|an|the)\s+(\w+)\s+one$/i;
@@ -5933,53 +5934,35 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       return `${adjective} person`;
     }
     
-    // Common emotions that should become "X person"
-    const emotionToIdentity: { [key: string]: string } = {
-      'hurt': 'hurt person',
-      'scared': 'scared person', 
-      'angry': 'angry person',
-      'sad': 'sad person',
-      'frustrated': 'frustrated person',
-      'anxious': 'anxious person',
-      'worried': 'worried person',
-      'stressed': 'stressed person',
-      'overwhelmed': 'overwhelmed person',
-      'helpless': 'helpless person',
-      'powerless': 'powerless person',
-      'desperate': 'desperate person',
-      'abandoned': 'abandoned person',
-      'rejected': 'rejected person',
-      'betrayed': 'betrayed person',
-      'worthless': 'worthless person',
-      'ashamed': 'ashamed person',
-      'guilty': 'guilty person',
-      'broken': 'broken person',
-      'damaged': 'damaged person',
-      'weak': 'weak person',
-      'strong': 'strong person',
-      'confident': 'confident person',
-      'happy': 'happy person',
-      'peaceful': 'peaceful person',
-      'calm': 'calm person'
-    };
+    // If it already contains identity markers, use as-is (preserve user's exact language)
+    const identityMarkers = ['person', 'people', 'man', 'woman', 'child', 'kid', 'adult', 'parent', 'mother', 'father', 'mom', 'dad', 'friend', 'partner', 'spouse', 'husband', 'wife', 'someone', 'somebody', 'individual', 'victim', 'survivor', 'one who', 'type of'];
+    const hasIdentityMarker = identityMarkers.some(marker => input.includes(marker));
     
-    // Check if it's a simple emotion that needs "person" added
-    if (emotionToIdentity[input]) {
-      return emotionToIdentity[input];
+    if (hasIdentityMarker) {
+      return originalInput; // Preserve original casing and exact words
     }
     
-    // If it already contains "person", "me", or other identity words, use as-is
-    if (input.includes('person') || input.includes('me') || input.includes('someone') || input.includes('individual')) {
-      return userInput; // Preserve original casing
+    // For single words without identity markers, add "person"
+    const wordCount = input.split(' ').length;
+    if (wordCount === 1) {
+      return `${originalInput} person`;
     }
     
-    // If it's an adjective without "person", add "person"
-    const singleWords = ['lazy', 'tired', 'energetic', 'motivated', 'lost', 'found', 'broken', 'whole', 'empty', 'full'];
-    if (singleWords.includes(input) || (input.split(' ').length === 1 && !input.includes('victim'))) {
-      return `${userInput} person`;
+    // For multi-word phrases without identity markers, check if they're descriptive
+    // If they seem like identity descriptions, add "person"
+    const descriptivePatterns = [
+      /^(very|really|quite|so|too)\s+\w+$/i, // "very sad", "really angry"
+      /^\w+\s+(and|or)\s+\w+$/i, // "sad and angry", "hurt or angry"
+      /^not\s+\w+$/i, // "not good", "not strong"
+      /^like\s+/i // "like a failure" - keep as-is
+    ];
+    
+    const matchesDescriptivePattern = descriptivePatterns.some(pattern => input.match(pattern));
+    if (matchesDescriptivePattern && !input.startsWith('like')) {
+      return `${originalInput} person`;
     }
     
-    // Return as-is for more complex responses
-    return userInput;
+    // Return as-is for complex responses or phrases starting with "like"
+    return originalInput;
   }
 } 
