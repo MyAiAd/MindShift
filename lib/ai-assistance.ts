@@ -54,7 +54,7 @@ export class AIAssistanceManager {
     'reality_feel_reason',     // Reality Shifting: "Feel [contextualized reason]... what does it feel like?"
     'reality_feel_reason_2',   // Reality Shifting: "Feel [contextualized emotion]... what can you feel now?"
     'reality_feel_reason_3',   // Reality Shifting: "Feel [contextualized emotion]... what's the first thing you notice about it?"
-    'blockage_step_b',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+    // REMOVED: 'blockage_step_b' - Use user's exact words to preserve their agency
     'blockage_step_d',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'belief_step_b',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'belief_step_e',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
@@ -484,7 +484,7 @@ Examples:
 - User: "stuck" → "Feel stuck... what's the first thing you notice about it?"
 
 Extract the core emotion and apply the template now:`;
-    } else if (stepId === 'blockage_step_b' || stepId === 'blockage_step_d') {
+    } else if (stepId === 'blockage_step_d') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
 
 User's response: "${userInput}"
