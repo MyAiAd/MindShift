@@ -2064,8 +2064,8 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             const seemsResolved = noProblemIndicators.some(indicator => response.includes(indicator));
             
             if (seemsResolved) {
-              // This response won't be shown since processStep will transition immediately
-              return 'Problem resolved - transitioning to dig deeper';
+              // This should trigger immediate transition to dig deeper
+              return 'Would you like to dig deeper in this area?';
             }
             
             return `Feel '${userInput || 'that problem'}'... what does it feel like?`;
@@ -2074,7 +2074,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please tell me how you feel or if there is still a problem.' }
           ],
-          nextStep: 'digging_deeper_start', // This will be handled by the state machine logic
+          nextStep: undefined, // Dynamic routing handled by processStep logic
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
