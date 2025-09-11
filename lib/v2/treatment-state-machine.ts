@@ -2702,16 +2702,42 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'integration_action_4',
           scriptedResponse: (userInput, context) => {
-            return `What is the first action that you can commit to now that will help you to realise your intention?... when will you do this?`;
+            return `What is the first action that you can commit to now that will help you to realise your intention?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please share your first action and when you will do it.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please share your first action.' }
           ],
-          nextStep: undefined, // End of Identity Shifting process
+          nextStep: 'integration_action_5',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
+        },
+
+        {
+          id: 'integration_action_5',
+          scriptedResponse: (userInput, context) => {
+            return `When will you do this?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share when you will do this.' }
+          ],
+          nextStep: 'identity_session_complete',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_session_complete',
+          scriptedResponse: "Thank you for doing this Mind Shifting session. The process is now complete. How do you feel overall about the work we've done today?",
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please share how you feel about the session.' }
+          ],
+          nextStep: undefined,
+          aiTriggers: []
         }
       ]
     });
@@ -5776,6 +5802,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         break;
         
       case 'session_complete':
+      case 'identity_session_complete':
         // Session is finished
         return null;
         
@@ -5839,6 +5866,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
     // Check if this is truly session completion or just a phase transition
     if (context.currentStep === 'session_complete' || 
         context.currentStep === 'reality_session_complete' ||
+        context.currentStep === 'identity_session_complete' ||
         context.currentStep?.includes('session_complete')) {
       return {
         canContinue: false,
