@@ -5287,7 +5287,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
           // NO - identity is fully resolved, skip to final integration
           console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said NO, identity fully resolved - proceeding to integration`);
-          return 'integration_questions';
+          return 'integration_awareness_1';
         }
         // Default to problem check
         console.log(`🔍 IDENTITY_SCENARIO_CHECK: Unclear response, proceeding to problem check`);
