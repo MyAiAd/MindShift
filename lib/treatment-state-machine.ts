@@ -119,6 +119,9 @@ export class TreatmentStateMachine {
     context?: Partial<TreatmentContext>,
     bypassValidation?: boolean
   ): Promise<ProcessingResult> {
+    // CRITICAL FIX: Ensure context is loaded from database before processing
+    await this.getOrCreateContextAsync(sessionId, context);
+    
     // Special handling for session initialization
     if (userInput === 'start') {
           const treatmentContext = this.getOrCreateContext(sessionId, context);
