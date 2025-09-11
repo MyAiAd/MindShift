@@ -2111,7 +2111,8 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             const seemsResolved = noProblemIndicators.some(indicator => response.includes(indicator));
             
             if (seemsResolved) {
-              return 'Would you like to dig deeper in this area?';
+              // This response won't be shown since processStep will transition immediately
+              return 'Problem resolved - transitioning to dig deeper';
             }
             
             return `Feel '${userInput || 'that problem'}'... what does it feel like?`;
@@ -5074,15 +5075,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear', 'no', 'not'];
         const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator));
         
-        // Check if user is responding to dig deeper question (yes/no)
-        const isDigDeeperResponse = lastResponse.includes('yes') || lastResponse.includes('no');
-        
-        if (isDigDeeperResponse) {
-          // User is responding to "Would you like to dig deeper in this area?"
-          context.currentPhase = 'digging_deeper';
-          return 'digging_deeper_start';
-        } else if (seemsResolved) {
-          // Problem seems resolved - check if we're in digging deeper flow
+        if (seemsResolved) {
+          // Problem seems resolved - immediately transition to dig deeper
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
             // We're clearing a problem from digging deeper - return to that step
@@ -5090,7 +5084,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             context.metadata.returnToDiggingStep = undefined; // Clear the return step
             return returnStep;
           } else {
-            // Regular flow - move to digging deeper start
+            // Regular flow - move to digging deeper start immediately
             context.currentPhase = 'digging_deeper';
             return 'digging_deeper_start';
           }
