@@ -2064,12 +2064,12 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             const seemsResolved = noProblemIndicators.some(indicator => response.includes(indicator));
             
             if (seemsResolved) {
-              return 'Great! It sounds like the problem has shifted. Let me check - do you feel the problem will come back in the future?';
+              return 'Would you like to dig deeper in this area?';
             }
             
             return `Feel '${userInput || 'that problem'}'... what does it feel like?`;
           },
-          expectedResponseType: 'open',
+          expectedResponseType: 'open', // Can be feeling description or yes/no for dig deeper
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please tell me how you feel or if there is still a problem.' }
           ],
