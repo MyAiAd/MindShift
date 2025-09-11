@@ -55,7 +55,7 @@ export class AIAssistanceManager {
     // REMOVED: 'reality_feel_reason_2' - Use exact scripted response from flowchart
     // REMOVED: 'reality_feel_reason_3' - Use exact scripted response from flowchart
     // REMOVED: 'blockage_step_b' - Use user's exact words to preserve their agency
-    'blockage_step_d',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+    // REMOVED: 'blockage_step_d' - Use user's exact words to preserve their agency
     'belief_step_b',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'belief_step_e',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'identity_dissolve_step_a', // Identity Shifting: "Feel yourself being [identity]... what does it feel like?"
@@ -491,31 +491,7 @@ Examples:
 - User: "stuck" → "Feel stuck... what's the first thing you notice about it?"
 
 Extract the core emotion and apply the template now:`;
-    } else if (stepId === 'blockage_step_d') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
-
-User's response: "${userInput}"
-Current scripted response: "${scriptedResponse}"
-
-Task: Extract the core emotion/feeling from the user's response and use it in the template.
-
-Template: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
-
-Rules:
-1. Extract the core emotional word from the user's response
-2. Remove unnecessary words like "like I am", "I feel", "it's", etc.
-3. Use only the core emotion in both places in the template
-4. Keep the exact template structure
-5. Return only the rephrased response, nothing else
-
-Examples:
-- User: "like I am anxious" → "Feel anxious... what does anxious feel like?"
-- User: "I feel overwhelmed" → "Feel overwhelmed... what does overwhelmed feel like?"
-- User: "it's heavy and dark" → "Feel heavy... what does heavy feel like?"
-- User: "stuck" → "Feel stuck... what does stuck feel like?"
-- User: "frustrated and angry" → "Feel frustrated... what does frustrated feel like?"
-
-Extract the core emotion and apply the template now:`;
+    // REMOVED: blockage_step_d AI processing - Use user's exact words to preserve their agency
     } else if (stepId === 'belief_step_b' || stepId === 'belief_step_e') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
 

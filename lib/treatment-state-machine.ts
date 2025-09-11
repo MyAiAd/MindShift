@@ -365,9 +365,9 @@ export class TreatmentStateMachine {
     ];
     
     // Blockage Shifting steps that need linguistic processing
-    const blockageShiftingSteps = [
+    const blockageShiftingSteps: string[] = [
       // REMOVED: 'blockage_step_b' - Use user's exact words to preserve their agency
-      'blockage_step_d'         // "Feel 'that feeling'... what does 'that feeling' feel like?"
+      // REMOVED: 'blockage_step_d' - Use user's exact words to preserve their agency
     ];
     
     // Belief Shifting steps that need linguistic processing
