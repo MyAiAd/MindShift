@@ -2657,7 +2657,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'integration_action_1',
           scriptedResponse: (userInput, context) => {
-            return `Integration Questions - ACTION Section:\n\nWhat needs to happen for you to realise your intention?... What else needs to happen for you to realise your intention? (Until they are clear on their plan of action)`;
+            return `What needs to happen for you to realise your intention?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -2672,11 +2672,11 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'integration_action_2',
           scriptedResponse: (userInput, context) => {
-            return `What is the one thing you can do that will make everything else easier or unnecessary?`;
+            return `What else needs to happen for you to realise your intention?`;
           },
           expectedResponseType: 'open',
           validationRules: [
-            { type: 'minLength', value: 2, errorMessage: 'Please share the one thing you can do.' }
+            { type: 'minLength', value: 2, errorMessage: 'Please share what else needs to happen.' }
           ],
           nextStep: 'integration_action_3',
           aiTriggers: [
@@ -2686,6 +2686,21 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
 
         {
           id: 'integration_action_3',
+          scriptedResponse: (userInput, context) => {
+            return `What is the one thing you can do that will make everything else easier or unnecessary?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please share the one thing you can do.' }
+          ],
+          nextStep: 'integration_action_4',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'integration_action_4',
           scriptedResponse: (userInput, context) => {
             return `What is the first action that you can commit to now that will help you to realise your intention?... when will you do this?`;
           },
