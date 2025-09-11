@@ -440,7 +440,14 @@ export class TreatmentStateMachine {
                             // Steps that use user input directly and should never be cached
                             (step.id === 'feel_good_state' && userInput?.trim()) ||
                             (step.id === 'what_happens_step' && userInput?.trim()) ||
-                            (step.id === 'body_sensation_check' && userInput?.trim());
+                            (step.id === 'body_sensation_check' && userInput?.trim()) ||
+                            // Reality Shifting A/B loop steps - never cache to prevent cross-iteration conflicts
+                            step.id === 'reality_column_a_restart' ||
+                            step.id === 'reality_step_a2' ||
+                            step.id === 'reality_step_a3' ||
+                            step.id === 'reality_feel_reason' ||
+                            step.id === 'reality_feel_reason_2' ||
+                            step.id === 'reality_feel_reason_3';
       let cacheKey: string | undefined;
       
       if (!shouldSkipCache) {
