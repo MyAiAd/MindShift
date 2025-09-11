@@ -2106,7 +2106,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           id: 'blockage_check_if_still_problem',
           scriptedResponse: (userInput) => {
             // Check if they said "no problem", "nothing", "gone", etc.
-            const noProblemIndicators = ['no problem', 'nothing', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
+            const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
             const response = (userInput || '').toLowerCase();
             const seemsResolved = noProblemIndicators.some(indicator => response.includes(indicator));
             
@@ -5057,7 +5057,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       case 'blockage_check_if_still_problem':
         // Core cycling logic for Blockage Shifting
         // Check if the response indicates no problem left
-        const noProblemIndicators = ['no problem', 'nothing', 'gone', 'resolved', 'fine', 'good', 'better', 'clear', 'no', 'not'];
+        const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear', 'no', 'not'];
         const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator));
         
         if (seemsResolved) {
