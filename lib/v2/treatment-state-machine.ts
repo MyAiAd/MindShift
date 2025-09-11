@@ -5076,7 +5076,15 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator));
         console.log(`🔍 BLOCKAGE_CHECK: lastResponse="${lastResponse}", seemsResolved=${seemsResolved}, noProblemIndicators matched:`, noProblemIndicators.filter(indicator => lastResponse.includes(indicator)));
         
-        if (seemsResolved) {
+        // Check if user is responding to dig deeper question with yes/no
+        const isDigDeeperResponse = lastResponse.includes('yes') || lastResponse.includes('no');
+        
+        if (isDigDeeperResponse) {
+          // User is responding to "Would you like to dig deeper in this area?"
+          console.log(`🔍 BLOCKAGE_CHECK_DIG_DEEPER: User responded ${lastResponse} to dig deeper question`);
+          context.currentPhase = 'digging_deeper';
+          return 'digging_deeper_start';
+        } else if (seemsResolved) {
           // Problem seems resolved - immediately transition to dig deeper
           console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Problem resolved, transitioning to dig deeper`);
           const returnStep = context.metadata?.returnToDiggingStep;
