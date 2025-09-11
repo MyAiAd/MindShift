@@ -53,7 +53,7 @@ export class AIAssistanceManager {
     // REMOVED: 'reality_step_a2' - Use user's exact words to preserve their agency
     // REMOVED: 'reality_feel_reason' - Use user's exact words to preserve their agency
     // REMOVED: 'reality_feel_reason_2' - Use exact scripted response from flowchart
-    'reality_feel_reason_3',   // Reality Shifting: "Feel [contextualized emotion]... what's the first thing you notice about it?"
+    // REMOVED: 'reality_feel_reason_3' - Use exact scripted response from flowchart
     'blockage_step_b',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'blockage_step_d',         // Blockage Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'belief_step_b',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"

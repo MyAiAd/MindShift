@@ -356,13 +356,9 @@ export class TreatmentStateMachine {
     // Problem Shifting steps
     const problemShiftingSteps = ['body_sensation_check', 'feel_solution_state'];
     
-    // Reality Shifting steps that need linguistic processing
-    const realityShiftingSteps = [
-      // REMOVED: 'reality_step_a2' - Use exact scripted response from flowchart
-      // REMOVED: 'reality_feel_reason' - Use user's exact words to preserve their agency
-      // REMOVED: 'reality_feel_reason_2' - Use exact scripted response from flowchart
-      'reality_feel_reason_3'   // "Feel that 'feeling'... what's the first thing you notice about it?"
-    ];
+    // Reality Shifting steps - ALL REMOVED: Now use pure scripted responses per flowchart
+    // Previously included: reality_step_a2, reality_feel_reason, reality_feel_reason_2, reality_feel_reason_3
+    
     
     // Blockage Shifting steps that need linguistic processing
     const blockageShiftingSteps = [
@@ -400,7 +396,7 @@ export class TreatmentStateMachine {
       'belief_shifting_intro'    // Ensure problem is stated as a problem
     ];
     
-    return problemShiftingSteps.includes(stepId) || realityShiftingSteps.includes(stepId) || blockageShiftingSteps.includes(stepId) || beliefShiftingSteps.includes(stepId) || identityShiftingSteps.includes(stepId) || traumaShiftingSteps.includes(stepId) || introSteps.includes(stepId);
+    return problemShiftingSteps.includes(stepId) || blockageShiftingSteps.includes(stepId) || beliefShiftingSteps.includes(stepId) || identityShiftingSteps.includes(stepId) || traumaShiftingSteps.includes(stepId) || introSteps.includes(stepId);
   }
 
   /**
@@ -2856,7 +2852,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me why you might not achieve your goal.' }
           ],
-          nextStep: 'reality_feel_reason',
+          nextStep: undefined, // Use determineNextStep to check for "no reason"
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
@@ -2905,7 +2901,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
           ],
-          nextStep: 'reality_checking_questions',
+          nextStep: 'reality_shifting_intro', // Loop back to Column A as per flowchart
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
@@ -5162,6 +5158,18 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         }
         break;
       */
+      
+      case 'reality_why_not_possible':
+        // B1: Check if user says "no reason" to break the A/B loop
+        if (lastResponse.toLowerCase().includes('no reason') || 
+            lastResponse.toLowerCase().includes('no') && lastResponse.toLowerCase().includes('reason') ||
+            lastResponse.toLowerCase().includes('none') ||
+            lastResponse.toLowerCase().includes('nothing')) {
+          // No reason found - proceed to checking section
+          return 'reality_checking_questions';
+        }
+        // Has a reason - continue with B2 (feel the reason)
+        return 'reality_feel_reason';
         
       case 'reality_checking_questions':
         // Reality Shifting: Handle certainty percentage and doubt
