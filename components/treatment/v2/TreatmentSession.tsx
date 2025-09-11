@@ -475,6 +475,12 @@ export default function TreatmentSession({
         'future_problem_check',           // General future problem check
         'identity_step_3_intro',          // Step 4: Check Identity (future identity check)
         'identity_problem_check',         // Step 5: Check Problem
+        // Trauma Shifting yes/no steps
+        'trauma_identity_check',          // Trauma Step 4: Can you still feel yourself being X?
+        'trauma_future_identity_check',   // Trauma Step 5A: Do you think you can ever feel yourself being X in the future?
+        'trauma_future_scenario_check',   // Trauma Step 5B: Is there any scenario in which you might still feel yourself being X?
+        'trauma_experience_check',        // Trauma Step 6: Does it still feel like a problem?
+        'trauma_dig_deeper',              // Trauma Step 7: Is there anything else about this that's still a problem?
         // Reality Shifting yes/no steps
         'reality_step_b',                 // Reality Shifting B section
         'reality_doubts_check',           // Reality Shifting doubts check
@@ -796,6 +802,12 @@ export default function TreatmentSession({
     const yesNoSteps = [
       'future_problem_check',           // General future problem check
       'identity_problem_check',         // Step 5: Check Problem
+      // Trauma Shifting yes/no steps
+      'trauma_identity_check',          // Trauma Step 4: Can you still feel yourself being X?
+      'trauma_future_identity_check',   // Trauma Step 5A: Do you think you can ever feel yourself being X in the future?
+      'trauma_future_scenario_check',   // Trauma Step 5B: Is there any scenario in which you might still feel yourself being X?
+      'trauma_experience_check',        // Trauma Step 6: Does it still feel like a problem?
+      'trauma_dig_deeper',              // Trauma Step 7: Is there anything else about this that's still a problem?
       // Dig Deeper section - all yes/no steps across all modalities
       'digging_deeper_start',           // Initial dig deeper question
       'scenario_check_1',               // Scenario check 1
