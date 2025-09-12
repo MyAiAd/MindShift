@@ -492,7 +492,7 @@ Examples:
 
 Extract the core emotion and apply the template now:`;
     // REMOVED: blockage_step_d AI processing - Use user's exact words to preserve their agency
-    } else if (stepId === 'belief_step_b' || stepId === 'belief_step_e') {
+    } else if (stepId === 'belief_step_e') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
 
 User's response: "${userInput}"
