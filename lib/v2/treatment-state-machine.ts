@@ -2872,8 +2872,6 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             context.metadata.currentGoal = basicGoal; // Keep basic goal for other references
             return `Close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. If ever you feel your goal has changed just let me know.
 
-We're going to work with your goal of '${goalStatement}'.
-
 Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
