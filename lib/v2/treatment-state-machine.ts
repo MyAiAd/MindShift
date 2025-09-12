@@ -108,6 +108,9 @@ export class TreatmentStateMachine {
     
     // Clear any existing identity-related cache entries to fix caching bug
     this.clearIdentityCache();
+    
+    // Clear any existing goal-related cache entries to fix goal caching bug
+    this.clearGoalCache();
   }
 
   /**
@@ -444,6 +447,8 @@ export class TreatmentStateMachine {
                             (step.id === 'feel_good_state' && userInput?.trim()) ||
                             (step.id === 'what_happens_step' && userInput?.trim()) ||
                             (step.id === 'body_sensation_check' && userInput?.trim()) ||
+                            // Goal-related steps that depend on dynamic goal context - never cache to prevent cross-session conflicts
+                            step.id === 'goal_confirmation' ||
                             // Reality Shifting A/B loop steps - never cache to prevent cross-iteration conflicts
                             step.id === 'reality_column_a_restart' ||
                             step.id === 'reality_step_a2' ||
@@ -478,6 +483,8 @@ export class TreatmentStateMachine {
           console.log(`🚀 CACHE_SKIP: Skipping cache for identity_problem_check in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
         } else if (step.id === 'belief_problem_check') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for belief_problem_check in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
+        } else if (step.id === 'goal_confirmation') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for goal_confirmation to prevent cross-session goal conflicts (currentGoal: ${context.metadata?.currentGoal})`);
         }
       }
       
@@ -554,6 +561,9 @@ export class TreatmentStateMachine {
       originalProblemStatement: context.metadata.originalProblemStatement, // For digging deeper questions
       currentBelief: context.metadata.currentBelief,
       desiredFeeling: context.metadata.desiredFeeling,
+      // Goal-related metadata for proper cache differentiation
+      currentGoal: context.metadata.currentGoal,
+      goalWithDeadline: context.metadata.goalWithDeadline,
       // Identity Shifting specific metadata for proper cache differentiation
       identityResponse: context.metadata.identityResponse,
       currentIdentity: context.metadata.currentIdentity
@@ -669,6 +679,30 @@ export class TreatmentStateMachine {
     });
     
     console.log(`🧹 CACHE_CLEAR: Cleared ${clearedCount} identity-related cache entries`);
+  }
+
+  /**
+   * Clear goal-related cached responses to fix incorrect goal caching
+   */
+  public clearGoalCache(): void {
+    const goalSteps = [
+      'goal_confirmation',
+      'goal_description',
+      'goal_deadline_check',
+      'goal_deadline_date',
+      'goal_certainty'
+    ];
+    
+    let clearedCount = 0;
+    this.responseCache.cache.forEach((_, key) => {
+      const hasGoalStep = goalSteps.some(step => key.includes(step));
+      if (hasGoalStep) {
+        this.responseCache.cache.delete(key);
+        clearedCount++;
+      }
+    });
+    
+    console.log(`🧹 CACHE_CLEAR: Cleared ${clearedCount} goal-related cache entries`);
   }
 
   /**
@@ -4684,6 +4718,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
     this.contexts.set(sessionId, newContext);
     
+    // Clear goal-related cache for new sessions to prevent stale goal data
+    this.clearGoalCache();
+    
     // Save new context to database
     await this.saveContextToDatabase(newContext);
     
@@ -5978,7 +6015,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
     try {
       const supabase = createServerClient();
 
-      // Update session data
+      // Update session data with proper upsert handling
       const { error: sessionError } = await supabase
         .from('treatment_sessions')
         .upsert({
@@ -5989,6 +6026,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           problem_statement: context.problemStatement,
           metadata: context.metadata,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'session_id'
         });
 
       if (sessionError) {
