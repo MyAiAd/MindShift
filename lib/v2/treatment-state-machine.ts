@@ -4407,39 +4407,11 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 6) + 1;
             context.metadata.returnToDiggingStep = 'anything_else_check_3'; // Where to return after clearing
+            context.metadata.workType = 'problem'; // Set work type for method selection
             
-            // Route to appropriate method based on original method used
-            const originalMethod = context.metadata.selectedMethod;
-            if (originalMethod === 'problem_shifting') {
-              context.currentPhase = 'problem_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this problem using Problem Shifting. Feel the problem '${newProblem}'... what does it feel like?`;
-            } else if (originalMethod === 'identity_shifting') {
-              context.currentPhase = 'identity_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this problem using Identity Shifting. Feel the problem of '${newProblem}' - what kind of person are you being when you're experiencing this problem?`;
-            } else if (originalMethod === 'belief_shifting') {
-              context.currentPhase = 'belief_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this problem using Belief Shifting. Feel the problem that '${newProblem}'... what do you believe about yourself that's causing you to experience this problem?`;
-            } else if (originalMethod === 'blockage_shifting') {
-              context.currentPhase = 'blockage_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this problem using Blockage Shifting. Feel '${newProblem}'... what does it feel like?`;
-            } else if (originalMethod === 'reality_shifting') {
-              context.currentPhase = 'reality_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this using Reality Shifting. What do you want instead of '${newProblem}'?`;
-            } else if (originalMethod === 'trauma_shifting') {
-              context.currentPhase = 'trauma_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this using Trauma Shifting. Will you be comfortable recalling the worst part of '${newProblem}' and freezing it briefly in your mind?`;
-            } else {
-              // Default to problem shifting
-              context.currentPhase = 'problem_shifting';
-              context.problemStatement = newProblem;
-              return `We need to clear this problem. Feel the problem '${newProblem}'... what does it feel like?`;
-            }
+            // Set the problem statement for the method selection
+            context.problemStatement = newProblem;
+            return "METHOD_SELECTION_NEEDED"; // Signal to show method selection
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -5745,13 +5717,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         return 'clear_anything_else_problem_2';
         
       case 'clear_anything_else_problem_2':
-        // After clearing, return to next anything else check
-        const returnStepAE2 = context.metadata?.returnToDiggingStep;
-        if (returnStepAE2) {
-          context.currentPhase = 'digging_deeper';
-          return returnStepAE2;
-        }
-        return 'anything_else_check_3';
+        // Route to method selection for clearing the new problem
+        context.currentPhase = 'digging_deeper';
+        return 'digging_method_selection';
         
       case 'anything_else_check_3':
         if (lastResponse.includes('yes')) {
