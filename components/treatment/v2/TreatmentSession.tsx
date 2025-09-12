@@ -473,7 +473,7 @@ export default function TreatmentSession({
       
       // Handle yes/no responses for steps matching the flowchart exactly
       const yesNoSteps = [
-        'future_problem_check',           // General future problem check
+        // NOTE: future_problem_check is now handled by ProblemShifting modality component
         'identity_future_check',          // Step 4: Check Identity (future identity check)
         'identity_scenario_check',        // Step 4b: Check Identity (scenario check)
         'identity_problem_check',         // Step 5: Check Problem
@@ -796,7 +796,7 @@ export default function TreatmentSession({
   const shouldShowFutureProblemCheckButtons = () => {
     // Show for yes/no steps matching the flowchart exactly
     const yesNoSteps = [
-      'future_problem_check',           // General future problem check
+      // NOTE: future_problem_check is now handled by ProblemShifting modality component
       'identity_problem_check',         // Step 5: Check Problem
       // NOTE: Trauma Shifting yes/no steps are now handled by TraumaShifting component
       // NOTE: digging_deeper_start is now handled by modality digging components
@@ -887,8 +887,8 @@ export default function TreatmentSession({
   const isStepHandledByModality = (): boolean => {
     const modalityHandledSteps = [
       // Problem Shifting steps
-      'check_if_still_problem',
-      'future_problem_check',
+      'check_if_still_problem',         // Main problem check
+      'future_problem_check',           // Future problem check
       
       // Identity Shifting steps
       'identity_check',
