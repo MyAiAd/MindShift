@@ -370,9 +370,9 @@ export class TreatmentStateMachine {
     ];
     
     // Belief Shifting steps that need linguistic processing
-    const beliefShiftingSteps = [
+    const beliefShiftingSteps: string[] = [
       // REMOVED: 'belief_step_b' - Use scripted response with user's exact words
-      'belief_step_e'           // "Feel 'that feeling'... what does 'that feeling' feel like?"
+      // REMOVED: 'belief_step_e' - Use scripted response with user's exact words to preserve agency
     ];
     
     // Identity Shifting steps that need linguistic processing

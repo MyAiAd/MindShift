@@ -57,7 +57,7 @@ export class AIAssistanceManager {
     // REMOVED: 'blockage_step_b' - Use user's exact words to preserve their agency
     // REMOVED: 'blockage_step_d' - Use user's exact words to preserve their agency
     // REMOVED: 'belief_step_b' - Use scripted response with user's exact words
-    'belief_step_e',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
+    // REMOVED: 'belief_step_e' - Use scripted response with user's exact words to preserve agency
     'identity_dissolve_step_a', // Identity Shifting: "Feel yourself being [identity]... what does it feel like?"
     'identity_dissolve_step_b', // Identity Shifting: "Feel [last response]... what happens in yourself when you feel [last response]?"
     // 'identity_check' removed - should use stored originalProblemIdentity, not AI processing
@@ -492,7 +492,8 @@ Examples:
 
 Extract the core emotion and apply the template now:`;
     // REMOVED: blockage_step_d AI processing - Use user's exact words to preserve their agency
-    } else if (stepId === 'belief_step_e') {
+    // REMOVED: belief_step_e AI processing - Use user's exact words to preserve their agency
+    } else if (false && stepId === 'belief_step_e') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's feeling response.
 
 User's response: "${userInput}"
