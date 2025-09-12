@@ -188,7 +188,7 @@ export default function SessionsPage() {
     }
   };
 
-  const handleDeleteSession = async (sessionId: string) => {
+  const handleDeleteTreatmentSession = async (sessionId: string) => {
     if (!confirm('Are you sure you want to delete this treatment session? This action cannot be undone.')) {
       return;
     }
@@ -203,6 +203,36 @@ export default function SessionsPage() {
       if (response.ok) {
         // Remove the session from the local state
         setTreatmentSessions(prev => prev.filter(session => session.session_id !== sessionId));
+        // Refresh stats
+        const statsResponse = await fetch('/api/sessions/stats');
+        const statsData = await statsResponse.json();
+        if (statsData.stats) {
+          setStats(statsData.stats);
+        }
+      } else {
+        throw new Error('Failed to delete session');
+      }
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      alert('Failed to delete session. Please try again.');
+    }
+  };
+
+  const handleDeleteCoachingSession = async (sessionId: string) => {
+    if (!confirm('Are you sure you want to delete this coaching session? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+
+      if (response.ok) {
+        // Remove the session from the local state
+        setSessions(prev => prev.filter(session => session.id !== sessionId));
         // Refresh stats
         const statsResponse = await fetch('/api/sessions/stats');
         const statsData = await statsResponse.json();
@@ -287,24 +317,49 @@ export default function SessionsPage() {
 
       const results = await Promise.allSettled(deletePromises);
       
-      // Check for any failures
-      const failures = results.filter(result => result.status === 'rejected');
+      // Check for any failures and process successful responses
+      const failures: string[] = [];
+      const successfulCoachingDeletes: string[] = [];
+      const successfulTreatmentDeletes: string[] = [];
+
+      // Process coaching session results
+      coachingSessions.forEach((sessionId, index) => {
+        const result = results[index];
+        if (result.status === 'fulfilled') {
+          // Check if the response was successful
+          const response = result.value as Response;
+          if (response.ok) {
+            successfulCoachingDeletes.push(sessionId);
+          } else {
+            failures.push(`Coaching session ${sessionId}`);
+          }
+        } else {
+          failures.push(`Coaching session ${sessionId}`);
+        }
+      });
+
+      // Process treatment session results
+      treatmentSessionIds.forEach((sessionId, index) => {
+        const result = results[coachingSessions.length + index];
+        if (result.status === 'fulfilled') {
+          // Check if the response was successful
+          const response = result.value as Response;
+          if (response.ok) {
+            successfulTreatmentDeletes.push(sessionId);
+          } else {
+            failures.push(`Treatment session ${sessionId}`);
+          }
+        } else {
+          failures.push(`Treatment session ${sessionId}`);
+        }
+      });
+
       if (failures.length > 0) {
         console.error('Some deletions failed:', failures);
         alert(`${failures.length} session${failures.length > 1 ? 's' : ''} failed to delete. Please try again.`);
       }
 
       // Update local state by removing successfully deleted sessions
-      const successfulCoachingDeletes = coachingSessions.filter((_, index) => {
-        const resultIndex = index;
-        return results[resultIndex]?.status === 'fulfilled';
-      });
-
-      const successfulTreatmentDeletes = treatmentSessionIds.filter((_, index) => {
-        const resultIndex = coachingSessions.length + index;
-        return results[resultIndex]?.status === 'fulfilled';
-      });
-
       setSessions(prev => prev.filter(session => !successfulCoachingDeletes.includes(session.id)));
       setTreatmentSessions(prev => prev.filter(session => !successfulTreatmentDeletes.includes(session.session_id)));
       
@@ -616,6 +671,14 @@ export default function SessionsPage() {
                           View Notes
                         </button>
                       )}
+                      {(session.status === 'cancelled' || session.status === 'completed') && (
+                        <button 
+                          onClick={() => handleDeleteCoachingSession(session.id)}
+                          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm inline-flex items-center"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -683,7 +746,7 @@ export default function SessionsPage() {
                             Continue
                           </button>
                           <button 
-                            onClick={() => handleDeleteSession(session.session_id)}
+                            onClick={() => handleDeleteTreatmentSession(session.session_id)}
                             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm inline-flex items-center"
                           >
                             Delete
