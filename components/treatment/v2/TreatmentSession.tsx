@@ -455,12 +455,13 @@ export default function TreatmentSession({
         }
       }
       
-      if (currentStep === 'digging_deeper_start') {
-        if (['yes', 'no'].includes(transcript)) {
-          handleYesNoResponse(transcript as 'yes' | 'no');
-          return;
-        }
-      }
+      // NOTE: digging_deeper_start is now handled by modality digging components
+      // if (currentStep === 'digging_deeper_start') {
+      //   if (['yes', 'no'].includes(transcript)) {
+      //     handleYesNoResponse(transcript as 'yes' | 'no');
+      //     return;
+      //   }
+      // }
       
       if (currentStep === 'digging_method_selection') {
         // Handle digging method selection by name or number
@@ -483,8 +484,7 @@ export default function TreatmentSession({
         'reality_certainty_check',        // Reality Shifting certainty check
         'goal_deadline_check',            // Goal deadline check
         'goal_confirmation',              // Goal confirmation
-        // Dig Deeper section - all yes/no steps across all modalities
-        'digging_deeper_start',           // Initial dig deeper question
+        // NOTE: digging_deeper_start is now handled by modality digging components
         'scenario_check_1',               // Scenario check 1
         'scenario_check_2',               // Scenario check 2  
         'scenario_check_3',               // Scenario check 3
@@ -799,8 +799,7 @@ export default function TreatmentSession({
       'future_problem_check',           // General future problem check
       'identity_problem_check',         // Step 5: Check Problem
       // NOTE: Trauma Shifting yes/no steps are now handled by TraumaShifting component
-      // Dig Deeper section - all yes/no steps across all modalities
-      'digging_deeper_start',           // Initial dig deeper question
+      // NOTE: digging_deeper_start is now handled by modality digging components
       'scenario_check_1',               // Scenario check 1
       'scenario_check_2',               // Scenario check 2  
       'scenario_check_3',               // Scenario check 3
@@ -928,7 +927,7 @@ export default function TreatmentSession({
       'trauma_shifting_intro',
       
       // Digging Deeper steps (handled by modality digging components)
-      'digging_deeper_start',
+      'digging_deeper_start',           // Initial dig deeper question
       'scenario_check_1',
       'scenario_check_2',
       'scenario_check_3',
