@@ -447,8 +447,9 @@ export class TreatmentStateMachine {
                             (step.id === 'feel_good_state' && userInput?.trim()) ||
                             (step.id === 'what_happens_step' && userInput?.trim()) ||
                             (step.id === 'body_sensation_check' && userInput?.trim()) ||
-                            // Goal-related steps that depend on dynamic goal context - never cache to prevent cross-session conflicts
-                            step.id === 'goal_confirmation' ||
+                                        // Goal-related steps that depend on dynamic goal context - never cache to prevent cross-session conflicts
+            step.id === 'goal_confirmation' ||
+            step.id === 'reality_shifting_intro' ||
                             // Reality Shifting A/B loop steps - never cache to prevent cross-iteration conflicts
                             step.id === 'reality_column_a_restart' ||
                             step.id === 'reality_step_a2' ||
@@ -485,6 +486,8 @@ export class TreatmentStateMachine {
           console.log(`🚀 CACHE_SKIP: Skipping cache for belief_problem_check in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
         } else if (step.id === 'goal_confirmation') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for goal_confirmation to prevent cross-session goal conflicts (currentGoal: ${context.metadata?.currentGoal})`);
+        } else if (step.id === 'reality_shifting_intro') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for reality_shifting_intro to prevent cross-session goal conflicts (goalWithDeadline: ${context.metadata?.goalWithDeadline})`);
         }
       }
       
@@ -2826,7 +2829,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           id: 'goal_confirmation',
           scriptedResponse: (userInput, context) => {
             const goalStatement = context?.metadata?.currentGoal || 'your goal';
-            const deadline = userInput || '';
+            const deadline = context?.userResponses?.['goal_deadline_date'] || '';
             const hasDeadline = context?.userResponses?.['goal_deadline_check']?.toLowerCase().includes('yes') || false;
             
             if (hasDeadline && deadline) {
