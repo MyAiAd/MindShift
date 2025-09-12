@@ -485,12 +485,7 @@ export default function TreatmentSession({
         'goal_deadline_check',            // Goal deadline check
         'goal_confirmation',              // Goal confirmation
         // NOTE: digging_deeper_start is now handled by modality digging components
-        'scenario_check_1',               // Scenario check 1
-        'scenario_check_2',               // Scenario check 2  
-        'scenario_check_3',               // Scenario check 3
-        'anything_else_check_1',          // Anything else check 1
-        'anything_else_check_2',          // Anything else check 2
-        'anything_else_check_3'           // Anything else check 3
+        // NOTE: All scenario_check and anything_else_check steps are handled by modality digging components
       ];
       
       if (yesNoSteps.includes(currentStep)) {
@@ -800,12 +795,7 @@ export default function TreatmentSession({
       'identity_problem_check',         // Step 5: Check Problem
       // NOTE: Trauma Shifting yes/no steps are now handled by TraumaShifting component
       // NOTE: digging_deeper_start is now handled by modality digging components
-      'scenario_check_1',               // Scenario check 1
-      'scenario_check_2',               // Scenario check 2  
-      'scenario_check_3',               // Scenario check 3
-      'anything_else_check_1',          // Anything else check 1
-      'anything_else_check_2',          // Anything else check 2
-      'anything_else_check_3'           // Anything else check 3
+      // NOTE: All scenario_check and anything_else_check steps are handled by modality digging components
     ];
     
     if (!yesNoSteps.includes(currentStep)) return false;
