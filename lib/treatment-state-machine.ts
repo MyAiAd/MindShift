@@ -5863,6 +5863,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
               phase_id: context.currentPhase,
               step_id: stepId,
               user_response: response
+            }, {
+              onConflict: 'session_id,phase_id,step_id'
             });
 
           if (progressError) {

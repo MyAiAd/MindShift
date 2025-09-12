@@ -1071,6 +1071,8 @@ async function updateSessionContextInDatabase(
           step_id: context.currentStep,
           user_response: userResponse,
           completed_at: new Date().toISOString()
+        }, {
+          onConflict: 'session_id,phase_id,step_id'
         });
     }
   } catch (error) {
