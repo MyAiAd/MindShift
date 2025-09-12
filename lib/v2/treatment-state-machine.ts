@@ -371,7 +371,7 @@ export class TreatmentStateMachine {
     
     // Belief Shifting steps that need linguistic processing
     const beliefShiftingSteps = [
-      'belief_step_b',          // "Feel 'that feeling'... what does 'that feeling' feel like?"
+      // REMOVED: 'belief_step_b' - Use scripted response with user's exact words
       'belief_step_e'           // "Feel 'that feeling'... what does 'that feeling' feel like?"
     ];
     
