@@ -173,11 +173,16 @@ If this was actually a proper goal statement, respond exactly: "VALID GOAL STATE
       case 'general_emotion':
         return `The user was asked to state a PROBLEM but they said: "${userInput}"
 
-This appears to be a general emotion without specific context (like "I feel sad", "I am angry", "I feel stressed", etc.).
+This appears to be a general emotion without specific context. Examples of general emotions that need more context:
+- "I feel sad" (need to know what about)
+- "I am angry" (need to know what about) 
+- "I feel stressed" (need to know what about)
+- "I am unhappy" (need to know what about)
+- "I feel upset" (need to know what about)
 
 For effective treatment, we need to know what they feel this emotion ABOUT - what specific situation, person, or circumstance is causing this emotional state.
 
-If this is just a general emotion without context, respond exactly: "NEEDS CORRECTION"
+If this is just a general emotion without specific context (like the examples above), respond exactly: "NEEDS CORRECTION"
 
 If this describes a specific problem or situation (not just the emotion), respond exactly: "VALID PROBLEM STATEMENT"`;
 

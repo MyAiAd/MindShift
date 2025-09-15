@@ -168,8 +168,11 @@ export class TreatmentStateMachine {
     treatmentContext.lastActivity = new Date();
 
     // Validate user input FIRST (unless bypassed)
+    console.log(`🚨 MAIN_PROCESSING: About to validate - bypassValidation=${bypassValidation}, step="${currentStep.id}", input="${userInput}"`);
     if (!bypassValidation) {
+      console.log(`🚨 MAIN_PROCESSING: Calling validateUserInput for step "${currentStep.id}" with input "${userInput}"`);
       const validationResult = this.validateUserInput(userInput, currentStep, treatmentContext);
+      console.log(`🚨 MAIN_PROCESSING: Validation result:`, validationResult);
       if (!validationResult.isValid) {
       // Special handling for multiple problems detected
       if (validationResult.error === 'MULTIPLE_PROBLEMS_DETECTED') {
