@@ -724,7 +724,7 @@ export class TreatmentStateMachine {
     const words = trimmed.split(' ').length;
     const lowerInput = trimmed.toLowerCase();
     
-    console.log(`🔍 VALIDATE_USER_INPUT: Called for step "${step.id}" with input "${userInput}"`);
+    console.log(`🚨 VALIDATION_CALLED: step="${step.id}", input="${userInput}", trimmed="${trimmed}", words=${words}`);
     
     // Special validation for introduction phase
     if (step.id === 'mind_shifting_explanation') {
@@ -774,6 +774,7 @@ export class TreatmentStateMachine {
       ];
       
       const hasGeneralEmotionPattern = generalEmotionPatterns.some(pattern => pattern.test(lowerInput));
+      console.log(`🚨 EMOTION_PATTERN_CHECK: input="${lowerInput}", hasGeneralEmotionPattern=${hasGeneralEmotionPattern}`);
       
       if (hasGeneralEmotionPattern) {
         // Store the original emotion for later use
