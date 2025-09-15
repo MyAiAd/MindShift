@@ -655,7 +655,8 @@ async function handleAIValidation(
         usedAI: true,
         aiCost: validationResult.cost,
         aiTokens: validationResult.tokenCount,
-        needsCorrection: false
+        needsCorrection: false,
+        showEmotionConfirmation: false // Clear the flag when proceeding
       };
     }
   } catch (error) {
