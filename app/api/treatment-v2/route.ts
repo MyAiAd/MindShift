@@ -379,7 +379,8 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
           aiCost: validationResponse.aiCost, 
           aiTokens: validationResponse.aiTokens 
         }),
-        requiresRetry: validationResponse.needsCorrection
+        requiresRetry: validationResponse.needsCorrection,
+        showEmotionConfirmation: validationResponse.showEmotionConfirmation || false
       };
 
     } else {
