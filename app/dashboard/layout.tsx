@@ -12,7 +12,6 @@ import {
   TrendingUp, 
   Calendar, 
   Settings, 
-  Building2,
   LogOut,
   Menu,
   X,
@@ -148,7 +147,7 @@ function SidebarContent({
       {/* Logo and tenant info */}
       <div className="flex items-center h-16 flex-shrink-0 px-4 bg-indigo-600 dark:bg-indigo-700">
         <div className="flex items-center space-x-3">
-          <Building2 className="h-8 w-8 text-white" />
+          <img src="/logo.jpg" alt="MindShifting Logo" className="h-8 w-8 rounded" />
           <div>
             <h1 className="text-white font-semibold">
                               {tenant ? tenant.name : 'MindShifting Admin'}

@@ -9,7 +9,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-2">
-              <Brain className="h-8 w-8 text-indigo-600" />
+              <img src="/logo.jpg" alt="MindShifting Logo" className="h-8 w-8 rounded" />
               <span className="text-2xl font-bold text-gray-900">MindShifting</span>
             </div>
             <nav className="hidden md:flex space-x-8">

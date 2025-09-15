@@ -14,10 +14,14 @@ export const metadata: Metadata = {
   description: 'A revolutionary AI-powered platform for mindset transformation and personal growth',
   keywords: 'mindset, personal growth, AI, coaching, transformation',
   authors: [{ name: 'MindShifting' }],
+  manifest: '/site.webmanifest',
   icons: {
-    icon: '/brain.png',
-    shortcut: '/brain.png',
-    apple: '/brain.png',
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
   openGraph: {
     title: 'MindShifting - AI-Powered Mindset Transformation',

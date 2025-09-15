@@ -1,0 +1,21 @@
+{
+  "name": "MindShifting - AI-Powered Mindset Transformation",
+  "short_name": "MindShifting",
+  "description": "A revolutionary AI-powered platform for mindset transformation and personal growth",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#4f46e5",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/"
+} 
