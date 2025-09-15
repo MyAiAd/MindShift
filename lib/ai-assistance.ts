@@ -29,7 +29,7 @@ export interface AIAssistanceResponse {
 
 export interface ValidationAssistanceRequest {
   userInput: string;
-  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion';
+  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion' | 'incomplete_emotion_context';
   context: TreatmentContext;
   currentStep: TreatmentStep;
 }

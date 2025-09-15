@@ -340,7 +340,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
 
     } else if (result.reason && result.reason.startsWith('AI_VALIDATION_NEEDED:')) {
       // NEW: Handle AI validation requests
-              const validationType = result.reason.split(':')[1] as 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion';
+              const validationType = result.reason.split(':')[1] as 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion' | 'incomplete_emotion_context';
       const validationResponse = await handleAIValidation(userInput, validationType, sessionId, userId);
       const endTime = performance.now();
       const responseTime = endTime - startTime;
@@ -519,7 +519,7 @@ async function handleResumeSession(sessionId: string, userId: string) {
  */
 async function handleAIValidation(
   userInput: string,
-  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion',
+  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion' | 'incomplete_emotion_context',
   sessionId: string,
   userId: string
 ) {

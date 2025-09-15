@@ -29,7 +29,7 @@ export interface AIAssistanceResponse {
 
 export interface ValidationAssistanceRequest {
   userInput: string;
-  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion';
+  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion' | 'incomplete_emotion_context';
   context: TreatmentContext;
   currentStep: TreatmentStep;
 }
@@ -98,7 +98,7 @@ export class AIAssistanceManager {
       
       // Parse the AI response to determine if correction is needed
       const needsCorrection = aiResponse.content.toLowerCase().includes('needs correction');
-      const correctionMessage = needsCorrection ? this.extractCorrectionMessage(aiResponse.content, request.validationType, request.userInput) : undefined;
+      const correctionMessage = needsCorrection ? this.extractCorrectionMessage(aiResponse.content, request.validationType, request.userInput, request.context) : undefined;
       
       return {
         needsCorrection,
@@ -181,6 +181,15 @@ If this is just a general emotion without context, respond exactly: "NEEDS CORRE
 
 If this describes a specific problem or situation (not just the emotion), respond exactly: "VALID PROBLEM STATEMENT"`;
 
+      case 'incomplete_emotion_context':
+        return `The user was asked to specify what they are feeling an emotion about, but they gave a very brief response: "${userInput}"
+
+This appears to be incomplete context (1-2 words) rather than a full problem statement.
+
+If this is just partial context that needs to be formed into a complete problem statement, respond exactly: "NEEDS CORRECTION"
+
+If this is actually a complete and clear problem statement, respond exactly: "VALID PROBLEM STATEMENT"`;
+
       default:
         return `Analyze the user input: "${userInput}" and determine if it needs correction. Respond with either "NEEDS CORRECTION: [message]" or "VALID INPUT".`;
     }
@@ -189,7 +198,7 @@ If this describes a specific problem or situation (not just the emotion), respon
   /**
    * NEW: Extract correction message from AI response
    */
-  private extractCorrectionMessage(aiResponse: string, validationType: string, userInput: string): string {
+  private extractCorrectionMessage(aiResponse: string, validationType: string, userInput: string, context?: TreatmentContext): string {
     // Always use the exact messages specified in requirements
     switch (validationType) {
       case 'problem_vs_goal':
@@ -205,10 +214,40 @@ If this describes a specific problem or situation (not just the emotion), respon
       case 'goal_vs_question':
         return 'How would you state that as a goal instead of a question?';
       case 'general_emotion':
-        return `What specifically are you feeling this about?`;
+        // Extract the emotion and create personalized message
+        const emotion = this.extractEmotionFromInput(userInput);
+        return `What specifically are you feeling ${emotion} about? Please tell me what the problem is in a few words.`;
+      case 'incomplete_emotion_context':
+        // Extract original emotion from context if available, or use generic
+        const contextEmotion = context?.metadata?.originalEmotion || 'this way';
+        return `So is your problem statement that you feel ${contextEmotion} about ${userInput}?`;
       default:
         return 'Please rephrase your response.';
     }
+  }
+
+  /**
+   * Extract emotion from user input for personalized correction message
+   */
+  private extractEmotionFromInput(userInput: string): string {
+    const input = userInput.toLowerCase().trim();
+    
+    // Common emotions list for extraction
+    const emotions = [
+      'mad', 'angry', 'sad', 'upset', 'stressed', 'anxious', 'worried', 'depressed', 
+      'frustrated', 'scared', 'nervous', 'happy', 'excited', 'overwhelmed', 'confused', 
+      'lost', 'stuck', 'tired', 'exhausted', 'lonely', 'hurt', 'disappointed', 'ashamed', 
+      'guilty', 'embarrassed', 'helpless', 'hopeless', 'irritated', 'annoyed', 'furious', 
+      'devastated', 'miserable', 'panicked', 'terrified', 'disgusted', 'bitter', 'resentful', 
+      'jealous', 'envious', 'insecure', 'worthless', 'empty', 'numb', 'restless', 'impatient', 
+      'bored', 'content', 'peaceful', 'grateful', 'proud', 'confident', 'optimistic', 
+      'motivated', 'inspired', 'relieved', 'surprised', 'curious', 'playful', 'loving', 
+      'joyful', 'blissful', 'serene', 'calm', 'relaxed'
+    ];
+    
+    // Find the emotion in the input
+    const foundEmotion = emotions.find(emotion => input.includes(emotion));
+    return foundEmotion || 'this way';
   }
 
   /**

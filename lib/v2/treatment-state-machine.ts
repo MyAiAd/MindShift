@@ -776,6 +776,11 @@ export class TreatmentStateMachine {
       const hasGeneralEmotionPattern = generalEmotionPatterns.some(pattern => pattern.test(lowerInput));
       
       if (hasGeneralEmotionPattern) {
+        // Store the original emotion for later use
+        if (context) {
+          const emotion = this.extractEmotionFromInput(lowerInput);
+          context.metadata.originalEmotion = emotion;
+        }
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:general_emotion' };
       }
       
@@ -937,6 +942,12 @@ export class TreatmentStateMachine {
       const emotionWords = ['stressed', 'anxious', 'sad', 'angry', 'worried', 'depressed', 'frustrated', 'upset', 'scared', 'nervous'];
       if (words <= 2 && emotionWords.some(emotion => lowerInput.includes(emotion))) {
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:general_emotion' };
+      }
+      
+      // Check if this is an incomplete response to emotion context question
+      // This happens when user was previously asked about their emotion and gives 1-2 word response
+      if (context?.metadata?.originalEmotion && words <= 2 && !lowerInput.includes('yes') && !lowerInput.includes('no')) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:incomplete_emotion_context' };
       }
     }
 
@@ -6103,6 +6114,30 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       }
       return context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
     }
+  }
+
+  /**
+   * Extract emotion from user input for storing context
+   */
+  private extractEmotionFromInput(userInput: string): string {
+    const input = userInput.toLowerCase().trim();
+    
+    // Common emotions list for extraction
+    const emotions = [
+      'mad', 'angry', 'sad', 'upset', 'stressed', 'anxious', 'worried', 'depressed', 
+      'frustrated', 'scared', 'nervous', 'happy', 'excited', 'overwhelmed', 'confused', 
+      'lost', 'stuck', 'tired', 'exhausted', 'lonely', 'hurt', 'disappointed', 'ashamed', 
+      'guilty', 'embarrassed', 'helpless', 'hopeless', 'irritated', 'annoyed', 'furious', 
+      'devastated', 'miserable', 'panicked', 'terrified', 'disgusted', 'bitter', 'resentful', 
+      'jealous', 'envious', 'insecure', 'worthless', 'empty', 'numb', 'restless', 'impatient', 
+      'bored', 'content', 'peaceful', 'grateful', 'proud', 'confident', 'optimistic', 
+      'motivated', 'inspired', 'relieved', 'surprised', 'curious', 'playful', 'loving', 
+      'joyful', 'blissful', 'serene', 'calm', 'relaxed'
+    ];
+    
+    // Find the emotion in the input
+    const foundEmotion = emotions.find(emotion => input.includes(emotion));
+    return foundEmotion || 'this way';
   }
 
   /**
