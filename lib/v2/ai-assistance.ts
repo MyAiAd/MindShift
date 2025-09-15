@@ -241,7 +241,8 @@ If this is actually a new, more complete problem statement (not just a confirmat
       'jealous', 'envious', 'insecure', 'worthless', 'empty', 'numb', 'restless', 'impatient', 
       'bored', 'content', 'peaceful', 'grateful', 'proud', 'confident', 'optimistic', 
       'motivated', 'inspired', 'relieved', 'surprised', 'curious', 'playful', 'loving', 
-      'joyful', 'blissful', 'serene', 'calm', 'relaxed'
+      'joyful', 'blissful', 'serene', 'calm', 'relaxed', 'unhappy', 'uncomfortable', 'uneasy', 
+      'troubled', 'disturbed', 'distressed'
     ];
     
     // Find the emotion in the input

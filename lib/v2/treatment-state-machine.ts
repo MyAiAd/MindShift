@@ -766,11 +766,11 @@ export class TreatmentStateMachine {
       // Check if user stated only a general emotion without context - FLAG FOR AI VALIDATION
       const generalEmotionPatterns = [
         // Direct "I feel/am [emotion]" patterns
-        /^i\s+(feel|am|feel\s+like)\s+(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed)\.?$/i,
+        /^i\s+(feel|am|feel\s+like)\s+(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed|unhappy|uncomfortable|uneasy|troubled|disturbed|distressed)\.?$/i,
         // Simple emotion words (1-3 words max)
-        /^(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed)\.?$/i,
+        /^(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed|unhappy|uncomfortable|uneasy|troubled|disturbed|distressed)\.?$/i,
         // "Feeling [emotion]" patterns
-        /^feeling\s+(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed)\.?$/i
+        /^feeling\s+(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed|unhappy|uncomfortable|uneasy|troubled|disturbed|distressed)\.?$/i
       ];
       
       const hasGeneralEmotionPattern = generalEmotionPatterns.some(pattern => pattern.test(lowerInput));
@@ -6140,7 +6140,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       'jealous', 'envious', 'insecure', 'worthless', 'empty', 'numb', 'restless', 'impatient', 
       'bored', 'content', 'peaceful', 'grateful', 'proud', 'confident', 'optimistic', 
       'motivated', 'inspired', 'relieved', 'surprised', 'curious', 'playful', 'loving', 
-      'joyful', 'blissful', 'serene', 'calm', 'relaxed'
+      'joyful', 'blissful', 'serene', 'calm', 'relaxed', 'unhappy', 'uncomfortable', 'uneasy', 
+      'troubled', 'disturbed', 'distressed'
     ];
     
     // Find the emotion in the input
