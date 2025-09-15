@@ -546,6 +546,10 @@ async function handleAIValidation(
     const validationResult = await aiAssistance.processValidationAssistance(validationRequest);
     
     if (validationResult.needsCorrection) {
+      // Save context with any metadata that was set during validation (like originalEmotion)
+      await treatmentMachine.saveContextToDatabase(treatmentContext);
+      console.log(`🔍 VALIDATION_CORRECTION: Saved context with metadata:`, treatmentContext.metadata);
+      
       // Return correction message and keep user on same step
       return {
         message: validationResult.correctionMessage || 'Please rephrase your response.',
