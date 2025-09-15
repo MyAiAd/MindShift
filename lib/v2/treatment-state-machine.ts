@@ -780,6 +780,7 @@ export class TreatmentStateMachine {
         if (context) {
           const emotion = this.extractEmotionFromInput(lowerInput);
           context.metadata.originalEmotion = emotion;
+          console.log(`🔍 EMOTION_STORED: Stored originalEmotion="${emotion}" in context metadata`);
         }
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:general_emotion' };
       }
@@ -946,7 +947,9 @@ export class TreatmentStateMachine {
       
       // Check if this is an incomplete response to emotion context question
       // This happens when user was previously asked about their emotion and gives 1-2 word response
+      console.log(`🔍 INCOMPLETE_EMOTION_CHECK: originalEmotion="${context?.metadata?.originalEmotion}", words=${words}, input="${userInput}"`);
       if (context?.metadata?.originalEmotion && words <= 2 && !lowerInput.includes('yes') && !lowerInput.includes('no')) {
+        console.log(`🔍 INCOMPLETE_EMOTION_CHECK: Triggering incomplete emotion context validation`);
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:incomplete_emotion_context' };
       }
     }

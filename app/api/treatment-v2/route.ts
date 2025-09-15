@@ -556,6 +556,8 @@ async function handleAIValidation(
         needsCorrection: true
       };
     } else {
+      // Validation passed - store any metadata that was set during validation
+      console.log(`🔍 VALIDATION_PASSED: Storing metadata from context:`, treatmentContext.metadata);
       // Validation passed - continue with normal flow but store the corrected statement
       if (treatmentContext.currentStep === 'mind_shifting_explanation' && treatmentContext.metadata.selectedMethod) {
         // Store the corrected problem statement before continuing
