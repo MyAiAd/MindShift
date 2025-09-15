@@ -7,6 +7,30 @@ import { createServerClient } from '@/lib/database-server';
 const treatmentMachine = new TreatmentStateMachine();
 const aiAssistance = new AIAssistanceManager();
 
+/**
+ * Extract emotion from user input for storing context
+ */
+function extractEmotionFromInput(userInput: string): string {
+  const input = userInput.toLowerCase().trim();
+  
+  // Common emotions list for extraction
+  const emotions = [
+    'mad', 'angry', 'sad', 'upset', 'stressed', 'anxious', 'worried', 'depressed', 
+    'frustrated', 'scared', 'nervous', 'happy', 'excited', 'overwhelmed', 'confused', 
+    'lost', 'stuck', 'tired', 'exhausted', 'lonely', 'hurt', 'disappointed', 'ashamed', 
+    'guilty', 'embarrassed', 'helpless', 'hopeless', 'irritated', 'annoyed', 'furious', 
+    'devastated', 'miserable', 'panicked', 'terrified', 'disgusted', 'bitter', 'resentful', 
+    'jealous', 'envious', 'insecure', 'worthless', 'empty', 'numb', 'restless', 'impatient', 
+    'bored', 'content', 'peaceful', 'grateful', 'proud', 'confident', 'optimistic', 
+    'motivated', 'inspired', 'relieved', 'surprised', 'curious', 'playful', 'loving', 
+    'joyful', 'blissful', 'serene', 'calm', 'relaxed'
+  ];
+  
+  // Find the emotion in the input
+  const foundEmotion = emotions.find(emotion => input.includes(emotion));
+  return foundEmotion || 'this way';
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Treatment API: POST request received');
@@ -546,6 +570,13 @@ async function handleAIValidation(
     const validationResult = await aiAssistance.processValidationAssistance(validationRequest);
     
     if (validationResult.needsCorrection) {
+      // For general emotion validation, store the emotion for follow-up questions
+      if (validationType === 'general_emotion') {
+        const emotion = extractEmotionFromInput(userInput);
+        treatmentContext.metadata.originalEmotion = emotion;
+        console.log(`🔍 VALIDATION_CORRECTION: Storing originalEmotion="${emotion}" for follow-up`);
+      }
+      
       // Save context with any metadata that was set during validation (like originalEmotion)
       await treatmentMachine.saveContextToDatabase(treatmentContext);
       console.log(`🔍 VALIDATION_CORRECTION: Saved context with metadata:`, treatmentContext.metadata);
