@@ -182,13 +182,11 @@ If this is just a general emotion without context, respond exactly: "NEEDS CORRE
 If this describes a specific problem or situation (not just the emotion), respond exactly: "VALID PROBLEM STATEMENT"`;
 
       case 'incomplete_emotion_context':
-        return `The user was asked to specify what they are feeling an emotion about, but they gave a very brief response: "${userInput}"
+        return `The user was asked to confirm if their problem statement is that they feel an emotion about something, and they responded: "${userInput}"
 
-This appears to be incomplete context (1-2 words) rather than a full problem statement.
+If this is a confirmation response like "yes", "y", "yeah", "correct", "right", "that's right", respond exactly: "NEEDS CORRECTION"
 
-If this is just partial context that needs to be formed into a complete problem statement, respond exactly: "NEEDS CORRECTION"
-
-If this is actually a complete and clear problem statement, respond exactly: "VALID PROBLEM STATEMENT"`;
+If this is actually a new, more complete problem statement (not just a confirmation), respond exactly: "VALID PROBLEM STATEMENT"`;
 
       default:
         return `Analyze the user input: "${userInput}" and determine if it needs correction. Respond with either "NEEDS CORRECTION: [message]" or "VALID INPUT".`;
@@ -218,9 +216,10 @@ If this is actually a complete and clear problem statement, respond exactly: "VA
         const emotion = this.extractEmotionFromInput(userInput);
         return `What specifically are you feeling ${emotion} about? Please tell me what the problem is in a few words.`;
       case 'incomplete_emotion_context':
-        // Extract original emotion from context if available, or use generic
+        // Extract original emotion and context from metadata
         const contextEmotion = context?.metadata?.originalEmotion || 'this way';
-        return `So is your problem statement that you feel ${contextEmotion} about ${userInput}?`;
+        const emotionContext = context?.metadata?.emotionContext || userInput;
+        return `Great! Your problem statement is: "I feel ${contextEmotion} about ${emotionContext}"`;
       default:
         return 'Please rephrase your response.';
     }

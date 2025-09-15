@@ -596,13 +596,13 @@ async function handleAIValidation(
       // Validation passed - store any metadata that was set during validation
       console.log(`🔍 VALIDATION_PASSED: Storing metadata from context:`, treatmentContext.metadata);
       
-      // Special handling for incomplete_emotion_context validation - construct full problem statement
-      if (validationType === 'incomplete_emotion_context' && (userInput.toLowerCase() === 'yes' || userInput.toLowerCase() === 'y')) {
+      // Special handling for incomplete_emotion_context validation - always construct full problem statement
+      if (validationType === 'incomplete_emotion_context') {
         const emotion = treatmentContext.metadata.originalEmotion || 'this way';
         const context = treatmentContext.metadata.emotionContext || userInput;
         const fullProblemStatement = `I feel ${emotion} about ${context}`;
         
-        console.log(`🔍 EMOTION_CONFIRMATION: User confirmed, constructing full problem statement: "${fullProblemStatement}"`);
+        console.log(`🔍 EMOTION_CONFIRMATION: Constructing full problem statement: "${fullProblemStatement}"`);
         treatmentContext.metadata.problemStatement = fullProblemStatement;
         treatmentContext.problemStatement = fullProblemStatement;
         
