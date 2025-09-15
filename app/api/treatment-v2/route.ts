@@ -577,7 +577,11 @@ async function handleAIValidation(
         console.log(`🔍 VALIDATION_CORRECTION: Storing originalEmotion="${emotion}" for follow-up`);
       }
       
-
+      // For incomplete emotion context validation, set flag for Yes/No buttons
+      if (validationType === 'incomplete_emotion_context') {
+        treatmentContext.metadata.showEmotionConfirmation = true;
+        console.log(`🔍 VALIDATION_CORRECTION: Setting showEmotionConfirmation=true for Yes/No buttons`);
+      }
       
       // Save context with any metadata that was set during validation (like originalEmotion)
       await treatmentMachine.saveContextToDatabase(treatmentContext);
@@ -590,25 +594,48 @@ async function handleAIValidation(
         usedAI: true,
         aiCost: validationResult.cost,
         aiTokens: validationResult.tokenCount,
-        needsCorrection: true
+        needsCorrection: true,
+        // Add flag to indicate Yes/No buttons should be shown
+        showEmotionConfirmation: validationType === 'incomplete_emotion_context'
       };
     } else {
       // Validation passed - store any metadata that was set during validation
       console.log(`🔍 VALIDATION_PASSED: Storing metadata from context:`, treatmentContext.metadata);
       
-      // Special handling for incomplete_emotion_context validation - always construct full problem statement
+      // Special handling for incomplete_emotion_context validation
       if (validationType === 'incomplete_emotion_context') {
-        const emotion = treatmentContext.metadata.originalEmotion || 'this way';
-        const context = treatmentContext.metadata.emotionContext || userInput;
-        const fullProblemStatement = `I feel ${emotion} about ${context}`;
-        
-        console.log(`🔍 EMOTION_CONFIRMATION: Constructing full problem statement: "${fullProblemStatement}"`);
-        treatmentContext.metadata.problemStatement = fullProblemStatement;
-        treatmentContext.problemStatement = fullProblemStatement;
-        
-        // Clear the emotion tracking metadata since we've constructed the final statement
-        delete treatmentContext.metadata.originalEmotion;
-        delete treatmentContext.metadata.emotionContext;
+        if (userInput.toLowerCase() === 'yes' || userInput.toLowerCase() === 'y') {
+          // User confirmed - construct full problem statement
+          const emotion = treatmentContext.metadata.originalEmotion || 'this way';
+          const context = treatmentContext.metadata.emotionContext || 'something';
+          const fullProblemStatement = `I feel ${emotion} about ${context}`;
+          
+          console.log(`🔍 EMOTION_CONFIRMATION: User confirmed, constructing full problem statement: "${fullProblemStatement}"`);
+          treatmentContext.metadata.problemStatement = fullProblemStatement;
+          treatmentContext.problemStatement = fullProblemStatement;
+          
+          // Clear the emotion tracking metadata since we've constructed the final statement
+          delete treatmentContext.metadata.originalEmotion;
+          delete treatmentContext.metadata.emotionContext;
+          delete treatmentContext.metadata.showEmotionConfirmation;
+        } else if (userInput.toLowerCase() === 'no' || userInput.toLowerCase() === 'n') {
+          // User said no - ask them to restate the problem
+          console.log(`🔍 EMOTION_CONFIRMATION: User said no, asking for restatement`);
+          // Clear emotion metadata and ask for fresh problem statement
+          delete treatmentContext.metadata.originalEmotion;
+          delete treatmentContext.metadata.emotionContext;
+          delete treatmentContext.metadata.showEmotionConfirmation;
+          
+          // Return a message asking them to restate the problem
+          return {
+            message: "Please tell me what the problem is in a few words.",
+            currentStep: treatmentContext.currentStep,
+            usedAI: false,
+            aiCost: 0,
+            aiTokens: 0,
+            needsCorrection: true
+          };
+        }
       }
       
       // Validation passed - continue with normal flow but store the corrected statement

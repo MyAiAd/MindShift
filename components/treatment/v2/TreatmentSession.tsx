@@ -81,6 +81,7 @@ export default function TreatmentSession({
   const [selectedWorkType, setSelectedWorkType] = useState<string | null>(null);
   const [clickedButton, setClickedButton] = useState<string | null>(null);
   const [sessionMethod, setSessionMethod] = useState<string>('mind_shifting');
+  const [showEmotionConfirmation, setShowEmotionConfirmation] = useState<boolean>(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -379,6 +380,12 @@ export default function TreatmentSession({
         setCurrentStep(data.currentStep);
         setLastResponseTime(data.responseTime);
         updateStats(data);
+        
+        // Handle emotion confirmation flag
+        if (data.showEmotionConfirmation !== undefined) {
+          setShowEmotionConfirmation(data.showEmotionConfirmation);
+          console.log('🔍 UI: Setting showEmotionConfirmation to:', data.showEmotionConfirmation);
+        }
 
         // NEW: Update performance metrics if available
         if (data.performanceMetrics) {
@@ -1134,6 +1141,7 @@ export default function TreatmentSession({
               setUserInput={setUserInput}
               selectedWorkType={selectedWorkType}
               clickedButton={clickedButton}
+              showEmotionConfirmation={showEmotionConfirmation}
             />
             <ProblemShiftingDigging 
               sessionId={sessionId}

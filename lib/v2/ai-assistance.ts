@@ -219,7 +219,7 @@ If this is actually a new, more complete problem statement (not just a confirmat
         // Extract original emotion and context from metadata
         const contextEmotion = context?.metadata?.originalEmotion || 'this way';
         const emotionContext = context?.metadata?.emotionContext || userInput;
-        return `Great! Your problem statement is: "I feel ${contextEmotion} about ${emotionContext}"`;
+        return `So is your problem statement that you feel ${contextEmotion} about ${emotionContext}?`;
       default:
         return 'Please rephrase your response.';
     }
