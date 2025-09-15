@@ -29,7 +29,7 @@ export interface AIAssistanceResponse {
 
 export interface ValidationAssistanceRequest {
   userInput: string;
-  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question';
+  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion';
   context: TreatmentContext;
   currentStep: TreatmentStep;
 }
@@ -170,6 +170,17 @@ Since this is a QUESTION instead of a GOAL, respond exactly: "NEEDS CORRECTION"
 
 If this was actually a proper goal statement, respond exactly: "VALID GOAL STATEMENT"`;
 
+      case 'general_emotion':
+        return `The user was asked to state a PROBLEM but they said: "${userInput}"
+
+This appears to be a general emotion without specific context (like "I feel sad", "I am angry", "I feel stressed", etc.).
+
+For effective treatment, we need to know what they feel this emotion ABOUT - what specific situation, person, or circumstance is causing this emotional state.
+
+If this is just a general emotion without context, respond exactly: "NEEDS CORRECTION"
+
+If this describes a specific problem or situation (not just the emotion), respond exactly: "VALID PROBLEM STATEMENT"`;
+
       default:
         return `Analyze the user input: "${userInput}" and determine if it needs correction. Respond with either "NEEDS CORRECTION: [message]" or "VALID INPUT".`;
     }
@@ -193,6 +204,8 @@ If this was actually a proper goal statement, respond exactly: "VALID GOAL STATE
         return 'How would you state that as a goal instead of a problem?';
       case 'goal_vs_question':
         return 'How would you state that as a goal instead of a question?';
+      case 'general_emotion':
+        return `What specifically are you feeling this about?`;
       default:
         return 'Please rephrase your response.';
     }

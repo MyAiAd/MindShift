@@ -763,11 +763,26 @@ export class TreatmentStateMachine {
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
       }
       
-      // Check if user stated only an emotion
+      // Check if user stated only a general emotion without context - FLAG FOR AI VALIDATION
+      const generalEmotionPatterns = [
+        // Direct "I feel/am [emotion]" patterns
+        /^i\s+(feel|am|feel\s+like)\s+(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed)\.?$/i,
+        // Simple emotion words (1-3 words max)
+        /^(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed)\.?$/i,
+        // "Feeling [emotion]" patterns
+        /^feeling\s+(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed)\.?$/i
+      ];
+      
+      const hasGeneralEmotionPattern = generalEmotionPatterns.some(pattern => pattern.test(lowerInput));
+      
+      if (hasGeneralEmotionPattern) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:general_emotion' };
+      }
+      
+      // Legacy simple emotion check for backwards compatibility (now less likely to trigger due to above patterns)
       const emotionWords = ['stressed', 'anxious', 'sad', 'angry', 'worried', 'depressed', 'frustrated', 'upset', 'scared', 'nervous'];
       if (words <= 2 && emotionWords.some(emotion => lowerInput.includes(emotion))) {
-        const emotion = emotionWords.find(emotion => lowerInput.includes(emotion));
-        return { isValid: false, error: `What are you ${emotion} about?` };
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:general_emotion' };
       }
       
       // Only check for multiple problems if this is NOT trauma shifting
@@ -900,6 +915,28 @@ export class TreatmentStateMachine {
       
       if (hasQuestionLanguage) {
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:problem_vs_question' };
+      }
+      
+      // Check if user stated only a general emotion without context - FLAG FOR AI VALIDATION
+      const generalEmotionPatterns = [
+        // Direct "I feel/am [emotion]" patterns
+        /^i\s+(feel|am|feel\s+like)\s+(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed)\.?$/i,
+        // Simple emotion words (1-3 words max)
+        /^(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed)\.?$/i,
+        // "Feeling [emotion]" patterns
+        /^feeling\s+(mad|angry|sad|upset|stressed|anxious|worried|depressed|frustrated|scared|nervous|happy|excited|overwhelmed|confused|lost|stuck|tired|exhausted|lonely|hurt|disappointed|ashamed|guilty|embarrassed|helpless|hopeless|irritated|annoyed|furious|devastated|miserable|panicked|terrified|disgusted|bitter|resentful|jealous|envious|insecure|worthless|empty|numb|restless|impatient|bored|content|peaceful|grateful|proud|confident|optimistic|motivated|inspired|relieved|surprised|curious|playful|loving|joyful|blissful|serene|calm|relaxed)\.?$/i
+      ];
+      
+      const hasGeneralEmotionPattern = generalEmotionPatterns.some(pattern => pattern.test(lowerInput));
+      
+      if (hasGeneralEmotionPattern) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:general_emotion' };
+      }
+      
+      // Legacy simple emotion check for backwards compatibility
+      const emotionWords = ['stressed', 'anxious', 'sad', 'angry', 'worried', 'depressed', 'frustrated', 'upset', 'scared', 'nervous'];
+      if (words <= 2 && emotionWords.some(emotion => lowerInput.includes(emotion))) {
+        return { isValid: false, error: 'AI_VALIDATION_NEEDED:general_emotion' };
       }
     }
 
@@ -2925,26 +2962,6 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
-
-        // REMOVED: reality_step_b - Skip "Is it possible that goal will not come to you?" 
-        // and go directly to "Why might you not achieve your goal?" as per flowchart
-        /*
-        {
-          id: 'reality_step_b',
-          scriptedResponse: (userInput, context) => {
-            const goalStatement = context?.metadata?.currentGoal || 'your goal';
-            return `Is it possible that '${goalStatement}' will not come to you?`;
-          },
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
-          ],
-          nextStep: 'reality_checking_questions',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
-        },
-        */
 
         {
           id: 'reality_why_not_possible',
@@ -5324,21 +5341,6 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         console.log(`🔍 IDENTITY_SCENARIO_CHECK: Unclear response, proceeding to problem check`);
         return 'identity_problem_check';
         
-      // REMOVED: reality_step_b case - Skip yes/no question and go directly to "Why might you not achieve goal?"
-      /*
-      case 'reality_step_b':
-        // Reality Shifting: Check if goal might not come
-        if (lastResponse.includes('yes')) {
-          // Yes, it's possible it won't come - ask why
-          return 'reality_why_not_possible';
-        }
-        if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No, it's not possible it won't come - proceed to checking questions
-          return 'reality_checking_questions';
-        }
-        break;
-      */
-      
       case 'reality_why_not_possible':
         // B1: Check if user says "no reason" to break the A/B loop
         if (lastResponse.toLowerCase().includes('no reason') || 
