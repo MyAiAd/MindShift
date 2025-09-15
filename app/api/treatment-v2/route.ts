@@ -577,11 +577,7 @@ async function handleAIValidation(
         console.log(`🔍 VALIDATION_CORRECTION: Storing originalEmotion="${emotion}" for follow-up`);
       }
       
-      // For incomplete emotion context validation, store the context for constructing full statement
-      if (validationType === 'incomplete_emotion_context') {
-        treatmentContext.metadata.emotionContext = userInput;
-        console.log(`🔍 VALIDATION_CORRECTION: Storing emotionContext="${userInput}" for confirmation`);
-      }
+
       
       // Save context with any metadata that was set during validation (like originalEmotion)
       await treatmentMachine.saveContextToDatabase(treatmentContext);

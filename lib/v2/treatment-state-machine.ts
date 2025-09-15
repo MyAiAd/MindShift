@@ -950,6 +950,11 @@ export class TreatmentStateMachine {
       console.log(`🔍 INCOMPLETE_EMOTION_CHECK: originalEmotion="${context?.metadata?.originalEmotion}", words=${words}, input="${userInput}"`);
       if (context?.metadata?.originalEmotion && words <= 2 && !lowerInput.includes('yes') && !lowerInput.includes('no')) {
         console.log(`🔍 INCOMPLETE_EMOTION_CHECK: Triggering incomplete emotion context validation`);
+        // Store the emotion context for later use
+        if (context) {
+          context.metadata.emotionContext = userInput;
+          console.log(`🔍 INCOMPLETE_EMOTION_CHECK: Stored emotionContext="${userInput}"`);
+        }
         return { isValid: false, error: 'AI_VALIDATION_NEEDED:incomplete_emotion_context' };
       }
     }
