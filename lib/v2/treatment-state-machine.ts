@@ -436,7 +436,7 @@ export class TreatmentStateMachine {
       // CRITICAL FIX: Don't use cache for steps that depend on user input or digging context
       const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem)) ||
                             (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem) ||
-                            (step.id === 'problem_shifting_intro' && context.metadata?.currentDiggingProblem) ||
+                            step.id === 'problem_shifting_intro' ||
                             (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'blockage_check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'identity_problem_check' && context.metadata?.currentDiggingProblem) ||
@@ -450,6 +450,8 @@ export class TreatmentStateMachine {
                                         // Goal-related steps that depend on dynamic goal context - never cache to prevent cross-session conflicts
             step.id === 'goal_confirmation' ||
             step.id === 'reality_shifting_intro' ||
+            // Work type and problem-related steps that depend on dynamic context
+            step.id === 'work_type_description' ||
                             // Reality Shifting A/B loop steps - never cache to prevent cross-iteration conflicts
                             step.id === 'reality_column_a_restart' ||
                             step.id === 'reality_step_a2' ||
@@ -488,6 +490,10 @@ export class TreatmentStateMachine {
           console.log(`🚀 CACHE_SKIP: Skipping cache for goal_confirmation to prevent cross-session goal conflicts (currentGoal: ${context.metadata?.currentGoal})`);
         } else if (step.id === 'reality_shifting_intro') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for reality_shifting_intro to prevent cross-session goal conflicts (goalWithDeadline: ${context.metadata?.goalWithDeadline})`);
+        } else if (step.id === 'work_type_description') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for work_type_description to prevent cross-session context conflicts (workType: ${context.metadata?.workType}, problemStatement: ${context.metadata?.problemStatement})`);
+        } else if (step.id === 'problem_shifting_intro') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro to prevent cross-session problem conflicts (problemStatement: ${context.metadata?.problemStatement || context.problemStatement})`);
         }
       }
       
@@ -567,6 +573,8 @@ export class TreatmentStateMachine {
       // Goal-related metadata for proper cache differentiation
       currentGoal: context.metadata.currentGoal,
       goalWithDeadline: context.metadata.goalWithDeadline,
+      // Problem-related metadata for proper cache differentiation
+      currentDiggingProblem: context.metadata.currentDiggingProblem,
       // Identity Shifting specific metadata for proper cache differentiation
       identityResponse: context.metadata.identityResponse,
       currentIdentity: context.metadata.currentIdentity
