@@ -577,6 +577,12 @@ async function handleAIValidation(
         console.log(`🔍 VALIDATION_CORRECTION: Storing originalEmotion="${emotion}" for follow-up`);
       }
       
+      // For incomplete emotion context validation, store the context for constructing full statement
+      if (validationType === 'incomplete_emotion_context') {
+        treatmentContext.metadata.emotionContext = userInput;
+        console.log(`🔍 VALIDATION_CORRECTION: Storing emotionContext="${userInput}" for confirmation`);
+      }
+      
       // Save context with any metadata that was set during validation (like originalEmotion)
       await treatmentMachine.saveContextToDatabase(treatmentContext);
       console.log(`🔍 VALIDATION_CORRECTION: Saved context with metadata:`, treatmentContext.metadata);
@@ -593,6 +599,22 @@ async function handleAIValidation(
     } else {
       // Validation passed - store any metadata that was set during validation
       console.log(`🔍 VALIDATION_PASSED: Storing metadata from context:`, treatmentContext.metadata);
+      
+      // Special handling for incomplete_emotion_context validation - construct full problem statement
+      if (validationType === 'incomplete_emotion_context' && (userInput.toLowerCase() === 'yes' || userInput.toLowerCase() === 'y')) {
+        const emotion = treatmentContext.metadata.originalEmotion || 'this way';
+        const context = treatmentContext.metadata.emotionContext || userInput;
+        const fullProblemStatement = `I feel ${emotion} about ${context}`;
+        
+        console.log(`🔍 EMOTION_CONFIRMATION: User confirmed, constructing full problem statement: "${fullProblemStatement}"`);
+        treatmentContext.metadata.problemStatement = fullProblemStatement;
+        treatmentContext.problemStatement = fullProblemStatement;
+        
+        // Clear the emotion tracking metadata since we've constructed the final statement
+        delete treatmentContext.metadata.originalEmotion;
+        delete treatmentContext.metadata.emotionContext;
+      }
+      
       // Validation passed - continue with normal flow but store the corrected statement
       if (treatmentContext.currentStep === 'mind_shifting_explanation' && treatmentContext.metadata.selectedMethod) {
         // Store the corrected problem statement before continuing
