@@ -735,13 +735,18 @@ export default function TreatmentSession({
   const shouldShowMethodSelection = () => {
     // Check if we should show method selection based on current step
     const isInitialMethodSelection = currentStep === 'mind_shifting_explanation';
-    const isDiggingMethodSelection = currentStep === 'method_selection' || 
-                                   currentStep === 'digging_method_selection' ||
+    const isGeneralMethodSelection = currentStep === 'method_selection';
+    
+    // Don't show main method selection for digging_method_selection - that's handled by modality components
+    const isDiggingMethodSelection = currentStep === 'digging_method_selection' ||
                                    currentStep === 'clear_anything_else_problem_1' ||
                                    currentStep === 'clear_anything_else_problem_2';
     
-    // Show method selection for initial selection or digging deeper scenarios
-    if (!isInitialMethodSelection && !isDiggingMethodSelection) return false;
+    // Show method selection for initial selection or general method selection only
+    if (!isInitialMethodSelection && !isGeneralMethodSelection) return false;
+    
+    // Don't show if this is a digging method selection (handled by modality components)
+    if (isDiggingMethodSelection) return false;
     
     // Don't show if we're waiting for problem description or in AI clarification
     if (isMethodSelectedAndWaitingForProblemDescription()) return false;
