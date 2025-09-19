@@ -225,7 +225,8 @@ export class TreatmentStateMachine {
                             currentStepResponse === 'ROUTE_TO_IDENTITY_INTEGRATION' ||
                             currentStepResponse === 'ROUTE_TO_BELIEF_INTEGRATION' ||
                             currentStepResponse === 'ROUTE_TO_BLOCKAGE_INTEGRATION' ||
-                            currentStepResponse === 'ROUTE_TO_TRAUMA_INTEGRATION';
+                            currentStepResponse === 'ROUTE_TO_TRAUMA_INTEGRATION' ||
+                            currentStepResponse === 'METHOD_SELECTION_NEEDED';
     
     if (isInternalSignal) {
       console.log(`🔍 PROCESS_INPUT: Internal signal detected, proceeding to determine next step automatically`);

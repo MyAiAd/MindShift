@@ -733,8 +733,15 @@ export default function TreatmentSession({
 
   // Helper function to determine if we should show method selection UI
   const shouldShowMethodSelection = () => {
-    // Don't show method selection if we're past the initial explanation step
-    if (currentStep !== 'mind_shifting_explanation') return false;
+    // Check if we should show method selection based on current step
+    const isInitialMethodSelection = currentStep === 'mind_shifting_explanation';
+    const isDiggingMethodSelection = currentStep === 'method_selection' || 
+                                   currentStep === 'digging_method_selection' ||
+                                   currentStep === 'clear_anything_else_problem_1' ||
+                                   currentStep === 'clear_anything_else_problem_2';
+    
+    // Show method selection for initial selection or digging deeper scenarios
+    if (!isInitialMethodSelection && !isDiggingMethodSelection) return false;
     
     // Don't show if we're waiting for problem description or in AI clarification
     if (isMethodSelectedAndWaitingForProblemDescription()) return false;
@@ -743,10 +750,12 @@ export default function TreatmentSession({
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (lastBotMessage?.usedAI) return false; // AI is asking clarifying questions
     
-    // Don't show if we have user responses that indicate we're past method selection
-    const userMessages = messages.filter(m => m.isUser);
-    if (userMessages.length >= 2) { // User has made multiple inputs, likely past method selection
-      return false;
+    // For initial method selection, don't show if we have too many user responses
+    if (isInitialMethodSelection) {
+      const userMessages = messages.filter(m => m.isUser);
+      if (userMessages.length >= 2) { // User has made multiple inputs, likely past method selection
+        return false;
+      }
     }
     
     return true;
