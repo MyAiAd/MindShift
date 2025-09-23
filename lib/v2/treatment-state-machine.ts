@@ -3251,12 +3251,18 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           scriptedResponse: (userInput, context) => {
             // Check if we're coming from the second checking question (reality_certainty_check)
             const fromSecondCheck = context?.metadata?.fromSecondCheckingQuestion;
+            console.log(`🔍 REALITY_DOUBT_REASON: fromSecondCheck=${fromSecondCheck}, doubtPercentage=${context?.metadata?.doubtPercentage}`);
+            
             if (fromSecondCheck) {
               // Coming from "Are there any doubts left?" - don't reference old percentage
+              // Clear the old doubt percentage to prevent confusion
+              context.metadata.doubtPercentage = undefined;
+              console.log(`🔍 REALITY_DOUBT_REASON: Using generic doubt message (from second check)`);
               return `What's the reason for the doubt?`;
             } else {
               // Coming from initial certainty percentage - use the calculated doubt percentage
               const doubtPercentage = context?.metadata?.doubtPercentage || '10';
+              console.log(`🔍 REALITY_DOUBT_REASON: Using percentage doubt message: ${doubtPercentage}%`);
               return `What's the reason for the ${doubtPercentage}% doubt?`;
             }
           },
@@ -5600,6 +5606,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           if (lastResponse.includes('yes')) {
             // Yes, there are doubts - ask for the reason and cycle through B2-B4
             context.metadata.fromSecondCheckingQuestion = true;
+            console.log(`🔍 REALITY_CERTAINTY_CHECK: Set fromSecondCheckingQuestion=true, going to reality_doubt_reason`);
             return 'reality_doubt_reason';
           }
           if (lastResponse.includes('no') || lastResponse.includes('not')) {
