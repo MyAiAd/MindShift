@@ -3249,8 +3249,16 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'reality_doubt_reason',
           scriptedResponse: (userInput, context) => {
-            const doubtPercentage = context?.metadata?.doubtPercentage || '10';
-            return `What's the reason for the ${doubtPercentage}% doubt?`;
+            // Check if we're coming from the second checking question (reality_certainty_check)
+            const fromSecondCheck = context?.metadata?.fromSecondCheckingQuestion;
+            if (fromSecondCheck) {
+              // Coming from "Are there any doubts left?" - don't reference old percentage
+              return `What's the reason for the doubt?`;
+            } else {
+              // Coming from initial certainty percentage - use the calculated doubt percentage
+              const doubtPercentage = context?.metadata?.doubtPercentage || '10';
+              return `What's the reason for the ${doubtPercentage}% doubt?`;
+            }
           },
           expectedResponseType: 'open',
           validationRules: [
