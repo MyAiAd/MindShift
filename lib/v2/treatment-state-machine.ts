@@ -2260,11 +2260,13 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'blockage_shifting_intro',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement - use updated problem from cycling if available
-            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            // Get the problem statement - prioritize the most recently updated problem
+            const problemStatement = context?.problemStatement || context?.metadata?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
             
             // On first iteration, include full instructions
             const cycleCount = context?.metadata?.cycleCount || 0;
+            console.log(`🔍 BLOCKAGE_SHIFTING_INTRO: problemStatement="${problemStatement}", cycleCount=${cycleCount}`);
+            
             if (cycleCount === 0) {
               return `Please close your eyes and keep them closed throughout the process. Please give brief answers to my questions and allow the problem to keep changing...we're going to keep going until there is no problem left.\n\nFeel '${problemStatement}'... what does it feel like?`;
             } else {
