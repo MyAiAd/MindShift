@@ -1417,21 +1417,26 @@ export class TreatmentStateMachine {
     * Synthesize goal statement with deadline properly formatted
     */
    private synthesizeGoalWithDeadline(goalStatement: string, deadline: string): string {
-     // Remove the deadline from the goal statement to get the clean goal
+     // If the goal already contains the deadline in the correct format, return as-is
      const lowerGoal = goalStatement.toLowerCase();
      const lowerDeadline = deadline.toLowerCase();
      
-     // Find and remove deadline patterns
+     // Check if goal already ends with "by [deadline]" - if so, return as-is
+     if (lowerGoal.endsWith(`by ${lowerDeadline}`)) {
+       return goalStatement;
+     }
+     
+     // Find and remove deadline patterns to get clean goal
      let cleanGoal = goalStatement;
      
      // Escape special regex characters in deadline
      const escapedDeadline = deadline.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
      
-     // Remove "by [deadline]" patterns
-     cleanGoal = cleanGoal.replace(new RegExp(`\\s*by\\s+${escapedDeadline}`, 'gi'), '');
-     cleanGoal = cleanGoal.replace(new RegExp(`\\s*in\\s+${escapedDeadline}`, 'gi'), '');
-     cleanGoal = cleanGoal.replace(new RegExp(`\\s*within\\s+${escapedDeadline}`, 'gi'), '');
-     cleanGoal = cleanGoal.replace(new RegExp(`\\s*on\\s+${escapedDeadline}`, 'gi'), '');
+     // Remove various deadline patterns (more comprehensive)
+     cleanGoal = cleanGoal.replace(new RegExp(`\\s*by\\s+${escapedDeadline}\\b`, 'gi'), '');
+     cleanGoal = cleanGoal.replace(new RegExp(`\\s*in\\s+${escapedDeadline}\\b`, 'gi'), '');
+     cleanGoal = cleanGoal.replace(new RegExp(`\\s*within\\s+${escapedDeadline}\\b`, 'gi'), '');
+     cleanGoal = cleanGoal.replace(new RegExp(`\\s*on\\s+${escapedDeadline}\\b`, 'gi'), '');
      
      // Remove standalone deadline if it appears at the end
      cleanGoal = cleanGoal.replace(new RegExp(`\\s*${escapedDeadline}\\s*$`, 'gi'), '');
@@ -1440,8 +1445,13 @@ export class TreatmentStateMachine {
      cleanGoal = cleanGoal.replace(/\s+/g, ' ').trim();
      cleanGoal = cleanGoal.replace(/[,\s]+$/, ''); // Remove trailing commas/spaces
      
-     // Reconstruct with proper format
-     return `${cleanGoal} by ${deadline}`;
+     // Only reconstruct if we actually removed something
+     if (cleanGoal !== goalStatement) {
+       return `${cleanGoal} by ${deadline}`;
+     }
+     
+     // If no deadline patterns were found to remove, just append
+     return `${goalStatement} by ${deadline}`;
    }
 
   /**
