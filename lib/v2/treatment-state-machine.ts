@@ -3050,8 +3050,16 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             const hasDeadline = context?.userResponses?.['goal_deadline_check']?.toLowerCase().includes('yes') || false;
             
             if (hasDeadline && deadline) {
-              context.metadata.goalWithDeadline = `${goalStatement} by ${deadline}`;
-              return `OK, so your goal statement including the deadline is '${goalStatement} by ${deadline}', is that right?`;
+              // Check if we already have a synthesized goal with deadline from AI detection
+              const existingSynthesizedGoal = context?.metadata?.goalWithDeadline;
+              if (existingSynthesizedGoal) {
+                // Use the already synthesized goal to avoid duplication
+                return `OK, so your goal statement including the deadline is '${existingSynthesizedGoal}', is that right?`;
+              } else {
+                // Fallback: construct it manually (for cases where user manually entered deadline)
+                context.metadata.goalWithDeadline = `${goalStatement} by ${deadline}`;
+                return `OK, so your goal statement including the deadline is '${goalStatement} by ${deadline}', is that right?`;
+              }
             } else {
               return `OK, so your goal statement is '${goalStatement}', is that right?`;
             }
