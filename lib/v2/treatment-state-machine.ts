@@ -2354,7 +2354,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please tell me what the problem is now.' }
           ],
-          nextStep: 'blockage_check_if_still_problem',
+          nextStep: 'blockage_shifting_intro', // Direct cycle back to step A with new problem
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
@@ -5396,6 +5396,18 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           }
         }
         break;
+        
+      case 'blockage_step_e':
+        // When user answers "What's the problem now?", update problem statement and cycle back to step A
+        const newProblem = context.userResponses[context.currentStep] || lastResponse;
+        if (newProblem) {
+          // Update the problem statement with the new problem
+          context.problemStatement = newProblem;
+          context.metadata.problemStatement = newProblem;
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          console.log(`🔍 BLOCKAGE_STEP_E: Updated problem to "${newProblem}", cycling back to blockage_shifting_intro`);
+        }
+        return 'blockage_shifting_intro';
         
       case 'blockage_check_if_still_problem':
         // Core cycling logic for Blockage Shifting
