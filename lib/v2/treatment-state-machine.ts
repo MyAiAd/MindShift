@@ -4349,8 +4349,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
               context.metadata.skipIntroInstructions = true; // Skip lengthy instructions for digging deeper
               console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Belief Shifting for digging deeper`);
               return "BELIEF_SHIFTING_SELECTED";
+            } else if (input.toLowerCase().includes('blockage shifting') || input === '4') {
+              context.currentPhase = 'blockage_shifting';
+              context.metadata.selectedMethod = 'blockage_shifting';
+              context.metadata.skipIntroInstructions = true; // Skip lengthy instructions for digging deeper
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Blockage Shifting for digging deeper`);
+              return "BLOCKAGE_SHIFTING_SELECTED";
             } else {
-              return "Please choose Problem Shifting, Identity Shifting, or Belief Shifting.";
+              return "Please choose Problem Shifting, Identity Shifting, Belief Shifting, or Blockage Shifting.";
             }
           },
           expectedResponseType: 'selection',
@@ -5871,6 +5877,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         } else if (diggingSelectedMethod === 'belief_shifting') {
           context.currentPhase = 'belief_shifting';
           return 'belief_shifting_intro';
+        } else if (diggingSelectedMethod === 'blockage_shifting') {
+          context.currentPhase = 'blockage_shifting';
+          return 'blockage_shifting_intro';
         }
         // Default fallback
         context.currentPhase = 'problem_shifting';
