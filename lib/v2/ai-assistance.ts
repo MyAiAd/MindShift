@@ -29,7 +29,7 @@ export interface AIAssistanceResponse {
 
 export interface ValidationAssistanceRequest {
   userInput: string;
-  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion' | 'incomplete_emotion_context';
+  validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion' | 'incomplete_emotion_context' | 'goal_deadline_synthesis';
   context: TreatmentContext;
   currentStep: TreatmentStep;
 }
@@ -193,6 +193,25 @@ If this is a confirmation response like "yes", "y", "yeah", "correct", "right", 
 
 If this is actually a new, more complete problem statement (not just a confirmation), respond exactly: "VALID PROBLEM STATEMENT"`;
 
+      case 'goal_deadline_synthesis':
+        return `The user provided a goal statement: "${userInput}"
+
+Your task is to:
+1. Determine if this is a valid GOAL statement (not a problem or question)
+2. Check if it contains a deadline or time reference
+3. If it contains a deadline, extract and synthesize it properly
+
+Respond in this exact format:
+- If it's NOT a valid goal: "NEEDS CORRECTION: [reason]"
+- If it's a valid goal WITHOUT deadline: "VALID GOAL: NO DEADLINE"
+- If it's a valid goal WITH deadline: "VALID GOAL: DEADLINE=[extracted deadline] SYNTHESIZED=[clean goal by deadline]"
+
+Examples:
+- "I want to lose weight by next month" → "VALID GOAL: DEADLINE=next month SYNTHESIZED=lose weight by next month"
+- "get more clients by tomorrow" → "VALID GOAL: DEADLINE=tomorrow SYNTHESIZED=get more clients by tomorrow"
+- "I need to fix my money problems" → "NEEDS CORRECTION: This is a problem, not a goal"
+- "I want to be happier" → "VALID GOAL: NO DEADLINE"`;
+
       default:
         return `Analyze the user input: "${userInput}" and determine if it needs correction. Respond with either "NEEDS CORRECTION: [message]" or "VALID INPUT".`;
     }
@@ -225,6 +244,8 @@ If this is actually a new, more complete problem statement (not just a confirmat
         const contextEmotion = context?.metadata?.originalEmotion || 'this way';
         const emotionContext = context?.metadata?.emotionContext || userInput;
         return `So is your problem statement that you feel ${contextEmotion} about ${emotionContext}?`;
+      case 'goal_deadline_synthesis':
+        return 'How would you state that as a clear goal (what you want to achieve)?';
       default:
         return 'Please rephrase your response.';
     }

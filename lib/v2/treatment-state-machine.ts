@@ -1309,6 +1309,142 @@ export class TreatmentStateMachine {
   }
 
   /**
+   * AI-powered deadline detection in goal statements
+   */
+  private detectDeadlineInGoal(goalStatement: string): {
+    hasDeadline: boolean;
+    deadline?: string;
+    synthesizedGoal?: string;
+    confidence: number;
+  } {
+    const input = goalStatement.toLowerCase().trim();
+    
+    // Define deadline patterns with confidence weights
+    const deadlinePatterns = [
+      // High confidence - explicit time references
+      { patterns: ['by tomorrow', 'by next week', 'by next month', 'by the end of'], weight: 0.95, type: 'explicit_deadline' },
+      { patterns: ['by monday', 'by tuesday', 'by wednesday', 'by thursday', 'by friday', 'by saturday', 'by sunday'], weight: 0.9, type: 'day_deadline' },
+      { patterns: ['by january', 'by february', 'by march', 'by april', 'by may', 'by june', 'by july', 'by august', 'by september', 'by october', 'by november', 'by december'], weight: 0.9, type: 'month_deadline' },
+      
+      // Medium confidence - relative time references
+      { patterns: ['tomorrow', 'next week', 'next month', 'this week', 'this month'], weight: 0.8, type: 'relative_deadline' },
+      { patterns: ['soon', 'quickly', 'asap', 'as soon as possible'], weight: 0.7, type: 'urgency_deadline' },
+      
+      // Lower confidence - vague time references
+      { patterns: ['today', 'now', 'immediately'], weight: 0.6, type: 'immediate_deadline' },
+    ];
+
+    let maxConfidence = 0;
+    let matchedDeadline = '';
+    let matchedType = '';
+
+    // Check for deadline patterns
+    for (const patternGroup of deadlinePatterns) {
+      for (const pattern of patternGroup.patterns) {
+        if (input.includes(pattern)) {
+          if (patternGroup.weight > maxConfidence) {
+            maxConfidence = patternGroup.weight;
+            matchedDeadline = pattern;
+            matchedType = patternGroup.type;
+          }
+        }
+      }
+    }
+
+    // Also check for date patterns (numbers + time units)
+    const datePatterns = [
+      /\b(\d{1,2})\s*(days?|weeks?|months?|years?)\b/i,
+      /\bin\s*(\d{1,2})\s*(days?|weeks?|months?|years?)\b/i,
+      /\bwithin\s*(\d{1,2})\s*(days?|weeks?|months?|years?)\b/i,
+      /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s*(\d{1,2})\b/i,
+      /\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/,
+      /\b(\d{1,2})-(\d{1,2})-(\d{2,4})\b/,
+    ];
+
+    for (const datePattern of datePatterns) {
+      const match = goalStatement.match(datePattern);
+      if (match && maxConfidence < 0.85) {
+        maxConfidence = 0.85;
+        matchedDeadline = match[0];
+        matchedType = 'numeric_deadline';
+      }
+    }
+
+    // Threshold for deadline detection
+    const threshold = 0.6;
+    const hasDeadline = maxConfidence >= threshold;
+
+    if (hasDeadline) {
+      // Extract the deadline and synthesize the goal
+      const deadline = this.extractDeadlineFromGoal(goalStatement, matchedDeadline);
+      const synthesizedGoal = this.synthesizeGoalWithDeadline(goalStatement, deadline);
+      
+      return {
+        hasDeadline: true,
+        deadline,
+        synthesizedGoal,
+        confidence: maxConfidence
+      };
+    }
+
+    return {
+      hasDeadline: false,
+      confidence: maxConfidence
+    };
+  }
+
+  /**
+   * Extract clean deadline from goal statement
+   */
+  private extractDeadlineFromGoal(goalStatement: string, matchedPattern: string): string {
+    // Find the deadline phrase in the original statement (preserving case)
+    const lowerGoal = goalStatement.toLowerCase();
+    const lowerPattern = matchedPattern.toLowerCase();
+    const index = lowerGoal.indexOf(lowerPattern);
+    
+    if (index !== -1) {
+      // Extract the actual deadline phrase from the original statement
+      const deadline = goalStatement.substring(index, index + matchedPattern.length);
+      
+      // Clean up common prefixes
+      return deadline.replace(/^(by |in |within |on )/i, '').trim();
+    }
+    
+    return matchedPattern;
+  }
+
+     /**
+    * Synthesize goal statement with deadline properly formatted
+    */
+   private synthesizeGoalWithDeadline(goalStatement: string, deadline: string): string {
+     // Remove the deadline from the goal statement to get the clean goal
+     const lowerGoal = goalStatement.toLowerCase();
+     const lowerDeadline = deadline.toLowerCase();
+     
+     // Find and remove deadline patterns
+     let cleanGoal = goalStatement;
+     
+     // Escape special regex characters in deadline
+     const escapedDeadline = deadline.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     
+     // Remove "by [deadline]" patterns
+     cleanGoal = cleanGoal.replace(new RegExp(`\\s*by\\s+${escapedDeadline}`, 'gi'), '');
+     cleanGoal = cleanGoal.replace(new RegExp(`\\s*in\\s+${escapedDeadline}`, 'gi'), '');
+     cleanGoal = cleanGoal.replace(new RegExp(`\\s*within\\s+${escapedDeadline}`, 'gi'), '');
+     cleanGoal = cleanGoal.replace(new RegExp(`\\s*on\\s+${escapedDeadline}`, 'gi'), '');
+     
+     // Remove standalone deadline if it appears at the end
+     cleanGoal = cleanGoal.replace(new RegExp(`\\s*${escapedDeadline}\\s*$`, 'gi'), '');
+     
+     // Clean up extra spaces and punctuation
+     cleanGoal = cleanGoal.replace(/\s+/g, ' ').trim();
+     cleanGoal = cleanGoal.replace(/[,\s]+$/, ''); // Remove trailing commas/spaces
+     
+     // Reconstruct with proper format
+     return `${cleanGoal} by ${deadline}`;
+   }
+
+  /**
    * Initialize all treatment phases with exact Mind Shifting protocols
    */
   private initializePhases(): void {
@@ -1512,8 +1648,10 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what you want to achieve.' }
           ],
-          nextStep: undefined, // Will be determined by determineNextStep logic
-          aiTriggers: []
+          nextStep: undefined, // Will be determined by determineNextStep logic with AI assistance
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
         },
         {
           id: 'negative_experience_description',
@@ -5051,7 +5189,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         break;
         
       case 'goal_description':
-        // User provided goal description, store it and go to deadline check  
+        // User provided goal description, store it and check for deadline with AI assistance
         context.problemStatement = lastResponse;
         context.metadata.problemStatement = lastResponse;
         context.metadata.currentGoal = lastResponse;
@@ -5062,7 +5200,21 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         context.currentPhase = 'reality_shifting';
         context.metadata.selectedMethod = 'reality_shifting';
         console.log(`🔍 GOAL_DESCRIPTION: Stored goal: "${lastResponse}"`);
-        return 'goal_deadline_check';
+        
+        // AI assistance: Check if deadline is already mentioned in the goal
+        const hasDeadlineInGoal = this.detectDeadlineInGoal(lastResponse);
+        if (hasDeadlineInGoal.hasDeadline && hasDeadlineInGoal.deadline && hasDeadlineInGoal.synthesizedGoal) {
+          console.log(`🤖 AI_DEADLINE_DETECTION: Deadline detected in goal: "${hasDeadlineInGoal.deadline}"`);
+          // Store the deadline and synthesized goal
+          context.metadata.goalWithDeadline = hasDeadlineInGoal.synthesizedGoal;
+          context.userResponses['goal_deadline_check'] = 'yes'; // Simulate yes response
+          context.userResponses['goal_deadline_date'] = hasDeadlineInGoal.deadline;
+          // Skip deadline questions and go directly to confirmation
+          return 'goal_confirmation';
+        } else {
+          console.log(`🤖 AI_DEADLINE_DETECTION: No deadline detected, proceeding to deadline check`);
+          return 'goal_deadline_check';
+        }
         
       case 'goal_deadline_check':
         // Check if user said yes to deadline
