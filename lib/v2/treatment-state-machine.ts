@@ -1506,7 +1506,7 @@ export class TreatmentStateMachine {
         {
           id: 'goal_description',
           scriptedResponse: (userInput, context) => {
-            return "Please tell me what your goal is in a few words.";
+            return "Please tell me what your goal is in a few words, including any deadline, if there is one.";
           },
           expectedResponseType: 'open',
           validationRules: [
