@@ -41,8 +41,9 @@ export default function BlockageShifting({
 
   // Blockage Shifting specific step checks
   const isBlockageShiftingYesNoStep = () => {
-    const blockageShiftingYesNoSteps = [
-      'blockage_check_if_still_problem', // Main blockage check
+    const blockageShiftingYesNoSteps: string[] = [
+      // NOTE: blockage_check_if_still_problem should use text input for feeling descriptions
+      // It only uses yes/no when system asks "dig deeper" question, which is handled by routing logic
     ];
     return blockageShiftingYesNoSteps.includes(currentStep);
   };
