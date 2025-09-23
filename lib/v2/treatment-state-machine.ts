@@ -5400,8 +5400,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
       case 'blockage_check_if_still_problem':
         // Core cycling logic for Blockage Shifting
         // Check if the response indicates no problem left
-        const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear', 'no', 'not'];
-        const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator));
+        const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
+        const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator)) ||
+          // Check for standalone "no" or "not" responses (not part of problem descriptions)
+          (lastResponse.trim() === 'no') || 
+          (lastResponse.trim() === 'not') ||
+          (lastResponse.trim() === 'no problem') ||
+          (lastResponse.startsWith('no ') && lastResponse.length < 15) || // Short "no" responses
+          (lastResponse.startsWith('not ') && lastResponse.length < 15);  // Short "not" responses
         console.log(`🔍 BLOCKAGE_CHECK: lastResponse="${lastResponse}", seemsResolved=${seemsResolved}, noProblemIndicators matched:`, noProblemIndicators.filter(indicator => lastResponse.includes(indicator)));
         
         // Check if user is responding to dig deeper question with yes/no
