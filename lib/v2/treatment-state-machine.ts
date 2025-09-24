@@ -380,7 +380,6 @@ export class TreatmentStateMachine {
     const beliefShiftingSteps: string[] = [
       // REMOVED: 'belief_step_b' - Use scripted response with user's exact words
       // REMOVED: 'belief_step_e' - Use scripted response with user's exact words to preserve agency
-      'belief_check_4' // Transform negative belief into positive affirmation
     ];
     
     // Identity Shifting steps that need linguistic processing
@@ -4102,10 +4101,12 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             console.log('🔍 BELIEF_DEBUG belief_check_4 - context.metadata:', JSON.stringify(context.metadata, null, 2));
             const belief = context.metadata.currentBelief || 'that belief';
             console.log('🔍 BELIEF_DEBUG belief_check_4 - retrieved belief:', belief);
-            // This will be processed by AI to create a positive affirmation
-            // The AI will receive the original belief and transform it into something like:
-            // "Do you now know that you have the ability to move forward?" instead of "Do you now know 'not that I am stuck'?"
-            return `Do you now know [AI will transform: ${belief}]?`;
+            
+            // Simple word rearrangement to preserve user's exact language while making it grammatically correct
+            const positiveBeliefStatement = this.createPositiveBeliefStatement(belief);
+            console.log('🔍 BELIEF_DEBUG belief_check_4 - positive statement:', positiveBeliefStatement);
+            
+            return `Do you now know ${positiveBeliefStatement}?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
@@ -6454,5 +6455,96 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
     
     // Return as-is for complex responses or phrases starting with "like"
     return originalInput;
+  }
+
+  /**
+   * Create positive belief statement by rearranging words while preserving user's exact language
+   * Examples:
+   * - "that I am stuck" → "that I am not stuck"
+   * - "I can't succeed" → "I can succeed"
+   * - "I'm not good enough" → "I'm good enough"
+   * - "nobody likes me" → "somebody likes me"
+   */
+  private createPositiveBeliefStatement(belief: string): string {
+    let result = belief.trim();
+    
+    // Handle "that I am [negative]" patterns
+    if (result.match(/^that I am /i)) {
+      // If it doesn't already contain "not", add it
+      if (!result.toLowerCase().includes(' not ')) {
+        result = result.replace(/^(that I am )/i, '$1not ');
+      }
+      return result;
+    }
+    
+    // Handle "I am [negative]" patterns
+    if (result.match(/^I am /i)) {
+      if (!result.toLowerCase().includes(' not ')) {
+        result = result.replace(/^(I am )/i, '$1not ');
+      }
+      return result;
+    }
+    
+    // Handle "I can't" → "I can"
+    if (result.match(/I can't/i)) {
+      result = result.replace(/I can't/gi, 'I can');
+      return result;
+    }
+    
+    // Handle "I'm not" → "I'm" (remove the "not")
+    if (result.match(/I'm not /i)) {
+      result = result.replace(/I'm not /gi, "I'm ");
+      return result;
+    }
+    
+    // Handle "I don't" → "I do" or "I"
+    if (result.match(/I don't/i)) {
+      result = result.replace(/I don't /gi, 'I ');
+      return result;
+    }
+    
+    // Handle "nobody" → "somebody"
+    if (result.match(/nobody/i)) {
+      result = result.replace(/nobody/gi, 'somebody');
+      return result;
+    }
+    
+    // Handle "nothing" → "something"
+    if (result.match(/nothing/i)) {
+      result = result.replace(/nothing/gi, 'something');
+      return result;
+    }
+    
+    // Handle "never" → "sometimes" or remove it
+    if (result.match(/never/i)) {
+      result = result.replace(/never /gi, '');
+      return result;
+    }
+    
+    // Handle "always fail" → "don't always fail" or "can succeed"
+    if (result.match(/always fail/i)) {
+      result = result.replace(/always fail/gi, "don't always fail");
+      return result;
+    }
+    
+    // If no specific pattern matched, try to add "not" in a sensible place
+    // For patterns like "that [something negative]"
+    if (result.match(/^that /i) && !result.toLowerCase().includes(' not ')) {
+      result = result.replace(/^(that )/i, '$1I am not ');
+      return result;
+    }
+    
+    // Fallback: if we can't parse it, just add "not" after "I am"
+    if (!result.toLowerCase().includes(' not ')) {
+      // If it starts with "I", try to add "not" appropriately
+      if (result.match(/^I /i)) {
+        result = result.replace(/^(I )/i, '$1am not ');
+      } else {
+        // Last resort: prepend "that I am not"
+        result = `that I am not ${result}`;
+      }
+    }
+    
+    return result;
   }
 } 
