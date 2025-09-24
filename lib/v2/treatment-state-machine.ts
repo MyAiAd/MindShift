@@ -449,10 +449,13 @@ export class TreatmentStateMachine {
                             (step.id === 'belief_problem_check' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'what_needs_to_happen_step' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'future_problem_check' && context.metadata?.currentDiggingProblem) ||
-                            // Steps that use user input directly and should never be cached
-                            (step.id === 'feel_good_state' && userInput?.trim()) ||
-                            (step.id === 'what_happens_step' && userInput?.trim()) ||
-                            (step.id === 'body_sensation_check' && userInput?.trim()) ||
+                                        // Steps that use user input directly and should never be cached
+            (step.id === 'feel_good_state' && userInput?.trim()) ||
+            (step.id === 'what_happens_step' && userInput?.trim()) ||
+            (step.id === 'body_sensation_check' && userInput?.trim()) ||
+            (step.id === 'belief_step_b' && userInput?.trim()) ||
+            (step.id === 'belief_step_d' && userInput?.trim()) ||
+            (step.id === 'belief_step_e' && userInput?.trim()) ||
                                         // Goal-related steps that depend on dynamic goal context - never cache to prevent cross-session conflicts
             step.id === 'goal_confirmation' ||
             step.id === 'reality_shifting_intro' ||
