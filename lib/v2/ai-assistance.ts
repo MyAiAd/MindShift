@@ -71,7 +71,8 @@ export class AIAssistanceManager {
     'blockage_shifting_intro', // Blockage Shifting: Ensure input is stated as a problem  
     // 'identity_shifting_intro' REMOVED - should store identity response directly, not process with AI
     'trauma_shifting_intro',   // Trauma Shifting: Ensure input is stated as a negative experience
-    'belief_shifting_intro'    // Belief Shifting: Ensure input is stated as a problem
+    'belief_shifting_intro',   // Belief Shifting: Ensure input is stated as a problem
+    'belief_check_4'           // Belief Shifting: Transform negative belief into positive affirmation
   ];
 
   /**
@@ -490,6 +491,34 @@ Examples:
 - User: "feel confident" → "felt confident"
 
 Transform the user's response now:`;
+    } else if (stepId === 'belief_check_4') {
+      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to transform a negative belief into a positive, empowering statement that maintains the original intent.
+
+User's original belief: "${userInput}"
+Current scripted response: "${scriptedResponse}"
+
+Task: Transform the negative belief into a positive affirmation that conveys the opposite meaning in a natural, empowering way.
+
+Template: "Do you now know [positive affirmation]?"
+
+Rules:
+1. Convert the negative belief into a positive, empowering statement
+2. Keep the core meaning but flip it to the positive opposite
+3. Make it sound natural and conversational, not robotic
+4. Preserve the user's context and situation
+5. Return ONLY the positive phrase (no quotes), not the full question
+6. The result should feel empowering and affirming
+
+Examples:
+- "that I am stuck" → "that you have the ability to move forward"
+- "I can't succeed" → "that you are capable of success"
+- "I'm not good enough" → "that you are worthy and capable"
+- "I always fail" → "that you can achieve your goals"
+- "nobody likes me" → "that you are likeable and valued"
+- "I'm worthless" → "that you have inherent worth and value"
+- "I can't change" → "that you have the power to transform"
+
+Transform the belief into a positive affirmation now:`;
     // REMOVED: reality_step_a2 AI processing - Use user's exact words instead
     // REMOVED: reality_feel_reason_2 AI processing - Use exact scripted response from flowchart
     /*

@@ -283,6 +283,13 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
                         userInput;
           console.log('Treatment API: Using processed identity for dissolve step processing:', textToProcess);
         }
+        // For belief_check_4, use the stored belief from context, not the current user input (which is "no")
+        else if (result.nextStep === 'belief_check_4') {
+          const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+          // Use the stored belief that needs to be transformed into a positive affirmation
+          textToProcess = treatmentContext?.metadata?.currentBelief || 'that belief';
+          console.log('Treatment API: Using stored belief for belief_check_4 processing:', textToProcess);
+        }
         
         // Check if we should skip AI processing for digging deeper intro steps
         const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
@@ -315,6 +322,11 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
               // Replace the original problem statement in the scripted response with the AI-processed version
               finalMessage = (result.scriptedResponse || '').replace(new RegExp(`'${textToProcess.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`, 'g'), `'${linguisticResult.improvedResponse}'`);
               console.log('Treatment API: Replaced problem statement in intro step with AI-processed version');
+            }
+            // For belief_check_4, integrate the AI-generated positive affirmation into the template
+            else if (result.nextStep === 'belief_check_4') {
+              finalMessage = `Do you now know ${linguisticResult.improvedResponse}?`;
+              console.log('Treatment API: Used AI-generated positive affirmation for belief_check_4');
             } else {
               // For other steps (like body_sensation_check), use the full AI response
               finalMessage = linguisticResult.improvedResponse;

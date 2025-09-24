@@ -380,6 +380,7 @@ export class TreatmentStateMachine {
     const beliefShiftingSteps: string[] = [
       // REMOVED: 'belief_step_b' - Use scripted response with user's exact words
       // REMOVED: 'belief_step_e' - Use scripted response with user's exact words to preserve agency
+      'belief_check_4' // Transform negative belief into positive affirmation
     ];
     
     // Identity Shifting steps that need linguistic processing
@@ -4101,10 +4102,10 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             console.log('🔍 BELIEF_DEBUG belief_check_4 - context.metadata:', JSON.stringify(context.metadata, null, 2));
             const belief = context.metadata.currentBelief || 'that belief';
             console.log('🔍 BELIEF_DEBUG belief_check_4 - retrieved belief:', belief);
-            // Create opposite belief (simplified approach)
-            const oppositeBelief = belief.toLowerCase().includes('not') ? belief.replace(/not\s+/gi, '') : `not ${belief}`;
-            console.log('🔍 BELIEF_DEBUG belief_check_4 - opposite belief:', oppositeBelief);
-            return `Do you now know '${oppositeBelief}'?`;
+            // This will be processed by AI to create a positive affirmation
+            // The AI will receive the original belief and transform it into something like:
+            // "Do you now know that you have the ability to move forward?" instead of "Do you now know 'not that I am stuck'?"
+            return `Do you now know [AI will transform: ${belief}]?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
