@@ -3936,7 +3936,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
               return `Feel the problem '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem?`;
             } else {
               // Full version for first-time users
-              return `Please close your eyes and keep them closed throughout the process.\n\nFeel the problem that '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem that '${problemStatement}'?`;
+              return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.
+
+Feel the problem that '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem that '${problemStatement}'?`;
             }
           },
           expectedResponseType: 'open',
