@@ -4043,8 +4043,11 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           id: 'belief_step_f',
           scriptedResponse: (userInput, context) => {
             console.log('🔍 BELIEF_DEBUG belief_step_f - context.metadata:', JSON.stringify(context.metadata, null, 2));
-            const belief = context.metadata.currentBelief || 'that belief';
+            // SURGICAL FIX: Ensure we use the original belief from belief_shifting_intro, not any feeling responses
+            const originalBelief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief;
+            const belief = originalBelief || 'that belief';
             console.log('🔍 BELIEF_DEBUG belief_step_f - retrieved belief:', belief);
+            console.log('🔍 BELIEF_DEBUG belief_step_f - originalBelief from belief_shifting_intro:', context.userResponses?.['belief_shifting_intro']);
             return `Do you still believe '${belief}'?`;
           },
           expectedResponseType: 'yesno',
