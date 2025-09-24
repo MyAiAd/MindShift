@@ -453,6 +453,7 @@ export class TreatmentStateMachine {
             (step.id === 'feel_good_state' && userInput?.trim()) ||
             (step.id === 'what_happens_step' && userInput?.trim()) ||
             (step.id === 'body_sensation_check' && userInput?.trim()) ||
+            (step.id === 'belief_step_a' && userInput?.trim()) ||
             (step.id === 'belief_step_b' && userInput?.trim()) ||
             (step.id === 'belief_step_d' && userInput?.trim()) ||
             (step.id === 'belief_step_e' && userInput?.trim()) ||
