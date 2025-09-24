@@ -5406,16 +5406,33 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         break;
         
       case 'blockage_step_e':
-        // When user answers "What's the problem now?", update problem statement and cycle back to step A
-        const newProblem = context.userResponses[context.currentStep] || lastResponse;
-        if (newProblem) {
-          // Update the problem statement with the new problem
-          context.problemStatement = newProblem;
-          context.metadata.problemStatement = newProblem;
-          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          console.log(`🔍 BLOCKAGE_STEP_E: Updated problem to "${newProblem}", cycling back to blockage_shifting_intro`);
+        // Check if user indicates no problem left (exit clause)
+        const stepENoProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
+        const stepESeemsResolved = stepENoProblemIndicators.some(indicator => lastResponse.includes(indicator)) ||
+          // Check for standalone "no" or "not" responses (not part of problem descriptions)
+          (lastResponse.trim() === 'no') || 
+          (lastResponse.trim() === 'not') ||
+          (lastResponse.trim() === 'no problem') ||
+          (lastResponse.startsWith('no ') && lastResponse.length < 15) || // Short "no" responses
+          (lastResponse.startsWith('not ') && lastResponse.length < 15);  // Short "not" responses
+        
+        if (stepESeemsResolved) {
+          // Problem seems resolved - move to dig deeper
+          console.log(`🔍 BLOCKAGE_STEP_E: Problem resolved (response: "${lastResponse}"), moving to dig deeper`);
+          context.currentPhase = 'digging_deeper';
+          return 'digging_deeper_start';
+        } else {
+          // Still a problem - update problem statement and cycle back to step A
+          const newProblem = context.userResponses[context.currentStep] || lastResponse;
+          if (newProblem) {
+            // Update the problem statement with the new problem
+            context.problemStatement = newProblem;
+            context.metadata.problemStatement = newProblem;
+            context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+            console.log(`🔍 BLOCKAGE_STEP_E: Updated problem to "${newProblem}", cycling back to blockage_shifting_intro`);
+          }
+          return 'blockage_shifting_intro';
         }
-        return 'blockage_shifting_intro';
         
       case 'blockage_check_if_still_problem':
         // Core cycling logic for Blockage Shifting
