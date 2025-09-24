@@ -3961,7 +3961,13 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             // Store the belief for use throughout the process
             console.log('🔍 BELIEF_DEBUG belief_step_a - userInput:', userInput);
             console.log('🔍 BELIEF_DEBUG belief_step_a - context.metadata before:', JSON.stringify(context.metadata, null, 2));
-            context.metadata.currentBelief = userInput || context.metadata.currentBelief || 'that belief';
+            
+            // Only set belief from userInput on first pass, not when cycling back
+            const isCyclingBack = context.metadata.cycleCount > 0;
+            if (!isCyclingBack) {
+              context.metadata.currentBelief = userInput || context.metadata.currentBelief || 'that belief';
+            }
+            
             console.log('🔍 BELIEF_DEBUG belief_step_a - context.metadata after:', JSON.stringify(context.metadata, null, 2));
             const belief = context.metadata.currentBelief;
             return `Feel yourself believing '${belief}'... what does it feel like?`;
