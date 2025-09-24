@@ -6477,6 +6477,12 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       return result;
     }
     
+    // Handle "that I must" → "that I don't have to"
+    if (result.match(/^that I must/i)) {
+      result = result.replace(/^that I must/gi, "that I don't have to");
+      return result;
+    }
+    
     // Handle "I am [negative]" patterns
     if (result.match(/^I am /i)) {
       if (!result.toLowerCase().includes(' not ')) {
@@ -6488,6 +6494,12 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
     // Handle "I can't" → "I can"
     if (result.match(/I can't/i)) {
       result = result.replace(/I can't/gi, 'I can');
+      return result;
+    }
+    
+    // Handle "I must" → "I don't have to" or "I don't need to"
+    if (result.match(/I must/i)) {
+      result = result.replace(/I must/gi, "I don't have to");
       return result;
     }
     
