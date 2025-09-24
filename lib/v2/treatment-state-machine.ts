@@ -441,7 +441,7 @@ export class TreatmentStateMachine {
       const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem)) ||
                             (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem) ||
                             step.id === 'problem_shifting_intro' ||
-                            (step.id === 'blockage_shifting_intro' && (context.metadata?.cycleCount > 0)) ||
+                            (step.id === 'blockage_shifting_intro' && (context.metadata?.cycleCount > 0 || context.metadata?.currentDiggingProblem)) ||
                             (step.id.startsWith('blockage_step_') && (context.metadata?.cycleCount > 0)) ||
                             (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'blockage_check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
@@ -485,7 +485,7 @@ export class TreatmentStateMachine {
         } else if (step.id === 'problem_shifting_intro') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
         } else if (step.id === 'blockage_shifting_intro') {
-          console.log(`🚀 CACHE_SKIP: Skipping cache for blockage_shifting_intro on subsequent cycle (cycleCount: ${context.metadata?.cycleCount})`);
+          console.log(`🚀 CACHE_SKIP: Skipping cache for blockage_shifting_intro (cycleCount: ${context.metadata?.cycleCount}, digging: ${context.metadata?.currentDiggingProblem})`);
         } else if (step.id.startsWith('blockage_step_')) {
           console.log(`🚀 CACHE_SKIP: Skipping cache for ${step.id} on subsequent cycle (cycleCount: ${context.metadata?.cycleCount})`);
         } else if (step.id === 'check_if_still_problem') {
@@ -2266,17 +2266,24 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'blockage_shifting_intro',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement - prioritize the most recently updated problem
-            const problemStatement = context?.problemStatement || context?.metadata?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            // Get the problem statement - handle digging deeper context
+            const problemStatement = context?.metadata?.currentDiggingProblem || 
+                                   context?.metadata?.newDiggingProblem || 
+                                   context?.problemStatement || 
+                                   context?.metadata?.problemStatement || 
+                                   context?.userResponses?.['restate_selected_problem'] || 
+                                   context?.userResponses?.['mind_shifting_explanation'] || 
+                                   'the problem';
             
-            // On first iteration, include full instructions
+            // Check if we're in digging deeper mode or subsequent cycle
             const cycleCount = context?.metadata?.cycleCount || 0;
-            console.log(`🔍 BLOCKAGE_SHIFTING_INTRO: problemStatement="${problemStatement}", cycleCount=${cycleCount}`);
+            const isDiggingDeeper = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+            console.log(`🔍 BLOCKAGE_SHIFTING_INTRO: problemStatement="${problemStatement}", cycleCount=${cycleCount}, isDiggingDeeper=${!!isDiggingDeeper}`);
             
-            if (cycleCount === 0) {
+            if (cycleCount === 0 && !isDiggingDeeper) {
               return `Please close your eyes and keep them closed throughout the process. Please give brief answers to my questions and allow the problem to keep changing...we're going to keep going until there is no problem left.\n\nFeel '${problemStatement}'... what does it feel like?`;
             } else {
-              // On subsequent cycles, just ask the question
+              // On subsequent cycles or digging deeper, just ask the question
               return `Feel '${problemStatement}'... what does it feel like?`;
             }
           },
