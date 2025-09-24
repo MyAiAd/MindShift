@@ -441,6 +441,7 @@ export class TreatmentStateMachine {
       const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem)) ||
                             (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem) ||
                             step.id === 'problem_shifting_intro' ||
+                            (step.id === 'blockage_shifting_intro' && (context.metadata?.cycleCount > 0)) ||
                             (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'blockage_check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'identity_problem_check' && context.metadata?.currentDiggingProblem) ||
@@ -482,6 +483,8 @@ export class TreatmentStateMachine {
           console.log(`🚀 CACHE_SKIP: Skipping cache for belief_shifting_intro in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
         } else if (step.id === 'problem_shifting_intro') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
+        } else if (step.id === 'blockage_shifting_intro') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for blockage_shifting_intro on subsequent cycle (cycleCount: ${context.metadata?.cycleCount})`);
         } else if (step.id === 'check_if_still_problem') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for check_if_still_problem in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
         } else if (step.id === 'blockage_check_if_still_problem') {
