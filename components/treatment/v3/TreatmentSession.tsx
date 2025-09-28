@@ -468,6 +468,42 @@ export default function TreatmentSession({
     sendMessage(workType);
   };
 
+  // V3: Helper function to determine if we should show method selection buttons
+  const shouldShowMethodSelection = () => {
+    // Check if we're in the method selection step
+    const isMethodSelectionStep = currentStep === 'choose_method';
+    
+    if (!isMethodSelectionStep) return false;
+    
+    // Don't show if we're loading or session isn't active
+    if (isLoading || !isSessionActive) return false;
+    
+    // Check the last bot message to see if it contains the method selection signal
+    const lastBotMessage = messages.filter(m => !m.isUser).pop();
+    if (!lastBotMessage) return false;
+    
+    // Show buttons if the message contains the method selection signal
+    const containsMethodSelection = lastBotMessage.content.includes('METHOD_SELECTION_NEEDED');
+    
+    // Don't show if AI is asking clarifying questions
+    if (lastBotMessage.usedAI) return false;
+    
+    return containsMethodSelection;
+  };
+
+  // V3: Handle method selection button clicks
+  const handleMethodSelection = (method: string) => {
+    setClickedButton(method);
+    // Send the method number instead of the full name to match V3 state machine expectations
+    const methodMap: { [key: string]: string } = {
+      'Problem Shifting': '1',
+      'Identity Shifting': '2', 
+      'Belief Shifting': '3',
+      'Blockage Shifting': '4'
+    };
+    sendMessage(methodMap[method] || method);
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4">
       {/* V3 Header */}
@@ -649,8 +685,72 @@ export default function TreatmentSession({
             </div>
           )}
 
+          {/* V3: Method Selection Buttons */}
+          {shouldShowMethodSelection() && (
+            <div className="mb-4">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Choose a method:
+                </h3>
+              </div>
+              <div className="flex space-x-4 justify-center">
+                <button
+                  onClick={() => handleMethodSelection('Problem Shifting')}
+                  disabled={isLoading}
+                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                    isLoading ? 'opacity-50' : ''
+                  } ${
+                    clickedButton === 'Problem Shifting' ? 'scale-105 bg-blue-700 shadow-lg' : ''
+                  }`}
+                >
+                  <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
+                  <span>Problem Shifting</span>
+                </button>
+                
+                <button
+                  onClick={() => handleMethodSelection('Identity Shifting')}
+                  disabled={isLoading}
+                  className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                    isLoading ? 'opacity-50' : ''
+                  } ${
+                    clickedButton === 'Identity Shifting' ? 'scale-105 bg-green-700 shadow-lg' : ''
+                  }`}
+                >
+                  <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
+                  <span>Identity Shifting</span>
+                </button>
+                
+                <button
+                  onClick={() => handleMethodSelection('Belief Shifting')}
+                  disabled={isLoading}
+                  className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                    isLoading ? 'opacity-50' : ''
+                  } ${
+                    clickedButton === 'Belief Shifting' ? 'scale-105 bg-purple-700 shadow-lg' : ''
+                  }`}
+                >
+                  <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">3</span>
+                  <span>Belief Shifting</span>
+                </button>
+                
+                <button
+                  onClick={() => handleMethodSelection('Blockage Shifting')}
+                  disabled={isLoading}
+                  className={`px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                    isLoading ? 'opacity-50' : ''
+                  } ${
+                    clickedButton === 'Blockage Shifting' ? 'scale-105 bg-red-700 shadow-lg' : ''
+                  }`}
+                >
+                  <span className="bg-red-700 px-2 py-1 rounded text-sm font-bold">4</span>
+                  <span>Blockage Shifting</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* V3: Text Input Form - Hidden when work type buttons are shown */}
-          {!shouldShowWorkTypeSelection() && (
+          {!shouldShowWorkTypeSelection() && !shouldShowMethodSelection() && (
             <form onSubmit={handleSubmit} className="flex space-x-2">
               <input
                 ref={inputRef}
