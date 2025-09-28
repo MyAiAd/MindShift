@@ -1257,7 +1257,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                       Next-generation treatment engine with enhanced state management and improved therapeutic protocols.
                     </p>
-                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span>Enhanced state machine architecture</span>
@@ -1271,9 +1271,25 @@ export default function SettingsPage() {
                         <span>Advanced integration capabilities</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        <span>In active development</span>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>All 6 treatment modalities available</span>
                       </div>
+                    </div>
+                    <div className="flex space-x-3">
+                      <a
+                        href="/dashboard/sessions/treatment-v3"
+                        className="flex-1 px-4 py-2 bg-indigo-600 text-white text-center rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm"
+                      >
+                        Try V3 Treatment
+                      </a>
+                      <a
+                        href="https://github.com/yourusername/mindshifting/tree/main/lib/v3"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 px-4 py-2 bg-gray-600 text-white text-center rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
+                      >
+                        View V3 Code
+                      </a>
                     </div>
                   </div>
                 )}
