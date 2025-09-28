@@ -82,6 +82,8 @@ interface PerformanceMetrics {
   totalResponses: number;
 }
 
+
+
 export class TreatmentStateMachine {
   private phases: Map<string, TreatmentPhase>;
   private contexts: Map<string, TreatmentContext>;
@@ -180,7 +182,7 @@ export class TreatmentStateMachine {
         treatmentContext.currentStep = 'multiple_problems_selection';
         const multipleProblemsStep = currentPhase.steps.find(s => s.id === 'multiple_problems_selection');
         if (multipleProblemsStep) {
-          const scriptedResponse = this.getScriptedResponse(multipleProblemsStep, treatmentContext);
+          const scriptedResponse = await this.getScriptedResponse(multipleProblemsStep, treatmentContext);
           return {
             canContinue: true,
             nextStep: 'multiple_problems_selection',
@@ -213,7 +215,7 @@ export class TreatmentStateMachine {
     }
 
     // Get the current step's response to check for internal signals
-    const currentStepResponse = this.getScriptedResponse(currentStep, treatmentContext, userInput);
+          const currentStepResponse = this.getScriptedResponse(currentStep, treatmentContext, userInput);
     console.log(`🔍 PROCESS_INPUT: currentStepResponse="${currentStepResponse}"`);
     
     // Check if this is an internal confirmation signal that should trigger automatic step progression
@@ -4128,7 +4130,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             const belief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
             console.log('🔍 BELIEF_DEBUG belief_check_4 - retrieved belief:', belief);
             
-            // Simple word rearrangement to preserve user's exact language while making it grammatically correct
+            // Enhanced pattern matching to preserve user's exact language while making it grammatically correct
             const positiveBeliefStatement = this.createPositiveBeliefStatement(belief);
             console.log('🔍 BELIEF_DEBUG belief_check_4 - positive statement:', positiveBeliefStatement);
             
@@ -6484,28 +6486,109 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
   }
 
   /**
-   * Create positive belief statement by rearranging words while preserving user's exact language
+   * Create positive belief statement using enhanced pattern matching
+   * Preserves user's exact language while making minimal changes to negate negative beliefs
    * Examples:
-   * - "that I am stuck" → "that I am not stuck"
+   * - "i wont make it" → "i will make it"
    * - "I can't succeed" → "I can succeed"
    * - "I'm not good enough" → "I'm good enough"
    * - "nobody likes me" → "somebody likes me"
    */
   private createPositiveBeliefStatement(belief: string): string {
-    let result = belief.trim();
+    const trimmedBelief = belief.trim();
+    
+    // Enhanced pattern matching for common belief transformations
+    const result = this.tryEnhancedPatternMatching(trimmedBelief);
+    if (result) {
+      console.log(`🔍 ENHANCED_BELIEF_TRANSFORM: "${trimmedBelief}" → "${result}"`);
+      return result;
+    }
+
+    // Fallback to original logic
+    return this.fallbackPositiveBeliefStatement(trimmedBelief);
+  }
+
+  /**
+   * Enhanced pattern matching for common belief transformations
+   * Handles contractions and various negative patterns
+   */
+  private tryEnhancedPatternMatching(belief: string): string | null {
+    let result = belief;
+    
+    // Handle contractions first (most common issue)
+    // "wont" → "will" (handles "i wont make it" → "i will make it")
+    if (result.match(/\bwont\b/i)) {
+      return result.replace(/\bwont\b/gi, 'will');
+    }
+    
+    // "cant" → "can"
+    if (result.match(/\bcant\b/i)) {
+      return result.replace(/\bcant\b/gi, 'can');
+    }
+    
+    // "dont" → "do"
+    if (result.match(/\bdont\b/i)) {
+      return result.replace(/\bdont\b/gi, 'do');
+    }
+    
+    // Handle formal contractions
+    // "I can't" → "I can"
+    if (result.match(/I can't/i)) {
+      return result.replace(/I can't/gi, 'I can');
+    }
+    
+    // "I won't" → "I will"
+    if (result.match(/I won't/i)) {
+      return result.replace(/I won't/gi, 'I will');
+    }
+    
+    // "I don't" → "I do"
+    if (result.match(/I don't/i)) {
+      return result.replace(/I don't /gi, 'I ');
+    }
+    
+    // "I'm not" → "I'm" (remove the "not")
+    if (result.match(/I'm not /i)) {
+      return result.replace(/I'm not /gi, "I'm ");
+    }
+    
+    // Handle negative words
+    // "nobody" → "somebody"
+    if (result.match(/nobody/i)) {
+      return result.replace(/nobody/gi, 'somebody');
+    }
+    
+    // "nothing" → "something"
+    if (result.match(/nothing/i)) {
+      return result.replace(/nothing/gi, 'something');
+    }
+    
+    // "never" → remove it or replace with "sometimes"
+    if (result.match(/never /i)) {
+      return result.replace(/never /gi, '');
+    }
+    
+    // Handle "always fail" patterns
+    if (result.match(/always fail/i)) {
+      return result.replace(/always fail/gi, "don't always fail");
+    }
+    
+    return null; // No pattern matched
+  }
+
+
+
+  /**
+   * Fallback method using the original logic
+   */
+  private fallbackPositiveBeliefStatement(belief: string): string {
+    let result = belief;
     
     // Handle "that I am [negative]" patterns
     if (result.match(/^that I am /i)) {
-      // If it doesn't already contain "not", add it
       if (!result.toLowerCase().includes(' not ')) {
         result = result.replace(/^(that I am )/i, '$1not ');
       }
-      return result;
-    }
-    
-    // Handle "that I must" → "that I don't have to"
-    if (result.match(/^that I must/i)) {
-      result = result.replace(/^that I must/gi, "that I don't have to");
       return result;
     }
     
@@ -6517,56 +6600,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       return result;
     }
     
-    // Handle "I can't" → "I can"
-    if (result.match(/I can't/i)) {
-      result = result.replace(/I can't/gi, 'I can');
-      return result;
-    }
-    
-    // Handle "I must" → "I don't have to" or "I don't need to"
-    if (result.match(/I must/i)) {
-      result = result.replace(/I must/gi, "I don't have to");
-      return result;
-    }
-    
-    // Handle "I'm not" → "I'm" (remove the "not")
-    if (result.match(/I'm not /i)) {
-      result = result.replace(/I'm not /gi, "I'm ");
-      return result;
-    }
-    
-    // Handle "I don't" → "I do" or "I"
-    if (result.match(/I don't/i)) {
-      result = result.replace(/I don't /gi, 'I ');
-      return result;
-    }
-    
-    // Handle "nobody" → "somebody"
-    if (result.match(/nobody/i)) {
-      result = result.replace(/nobody/gi, 'somebody');
-      return result;
-    }
-    
-    // Handle "nothing" → "something"
-    if (result.match(/nothing/i)) {
-      result = result.replace(/nothing/gi, 'something');
-      return result;
-    }
-    
-    // Handle "never" → "sometimes" or remove it
-    if (result.match(/never/i)) {
-      result = result.replace(/never /gi, '');
-      return result;
-    }
-    
-    // Handle "always fail" → "don't always fail" or "can succeed"
-    if (result.match(/always fail/i)) {
-      result = result.replace(/always fail/gi, "don't always fail");
-      return result;
-    }
-    
     // If no specific pattern matched, try to add "not" in a sensible place
-    // For patterns like "that [something negative]"
     if (result.match(/^that /i) && !result.toLowerCase().includes(' not ')) {
       result = result.replace(/^(that )/i, '$1I am not ');
       return result;
@@ -6574,11 +6608,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
     
     // Fallback: if we can't parse it, just add "not" after "I am"
     if (!result.toLowerCase().includes(' not ')) {
-      // If it starts with "I", try to add "not" appropriately
       if (result.match(/^I /i)) {
         result = result.replace(/^(I )/i, '$1am not ');
       } else {
-        // Last resort: prepend "that I am not"
         result = `that I am not ${result}`;
       }
     }
