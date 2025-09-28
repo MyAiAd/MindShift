@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { TreatmentStateMachine, ProcessingResult } from '@/lib/v3/treatment-state-machine';
+import { TreatmentStateMachine } from '@/lib/v3/treatment-state-machine';
+import { ProcessingResult } from '@/lib/v3/types';
 import { AIAssistanceManager, AIAssistanceRequest, ValidationAssistanceRequest } from '@/lib/v2/ai-assistance';
 import { createServerClient } from '@/lib/database-server';
 
