@@ -482,8 +482,10 @@ export default function TreatmentSession({
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (!lastBotMessage) return false;
     
-    // Show buttons if the message contains the method selection signal
-    const containsMethodSelection = lastBotMessage.content.includes('METHOD_SELECTION_NEEDED');
+    // Show buttons if the message contains the method selection text
+    const containsMethodSelection = lastBotMessage.content.includes('Which method would you like to use') &&
+                                  lastBotMessage.content.includes('1. Problem Shifting') &&
+                                  lastBotMessage.content.includes('2. Identity Shifting');
     
     // Don't show if AI is asking clarifying questions
     if (lastBotMessage.usedAI) return false;

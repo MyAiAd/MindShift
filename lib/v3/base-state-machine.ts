@@ -515,7 +515,6 @@ export class BaseTreatmentStateMachine {
       'ROUTE_TO_BLOCKAGE_INTEGRATION',
       'ROUTE_TO_TRAUMA_INTEGRATION',
       'ROUTE_TO_INTEGRATION',
-      'METHOD_SELECTION_NEEDED',
       // New routing signals
       'ROUTE_TO_PROBLEM_SHIFTING',
       'ROUTE_TO_IDENTITY_SHIFTING',
