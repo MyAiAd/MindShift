@@ -47,24 +47,19 @@ export class WorkTypeSelectionPhase {
               context.metadata.problemStatement = statement;
               context.problemStatement = statement;
               
-              // Return routing signal based on work type and selected method
+              // Set routing flag and return user-friendly message
+              context.metadata.readyForTreatment = true;
+              
               if (workType === 'problem') {
                 const selectedMethod = context.metadata.selectedMethod;
-                if (selectedMethod === 'identity_shifting') {
-                  return `ROUTE_TO_IDENTITY_SHIFTING`;
-                } else if (selectedMethod === 'problem_shifting') {
-                  return `ROUTE_TO_PROBLEM_SHIFTING`;
-                } else if (selectedMethod === 'belief_shifting') {
-                  return `ROUTE_TO_BELIEF_SHIFTING`;
-                } else if (selectedMethod === 'blockage_shifting') {
-                  return `ROUTE_TO_BLOCKAGE_SHIFTING`;
-                }
+                const methodName = selectedMethod?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'the selected method';
+                return `Perfect! We'll work on "${statement}" using ${methodName}. Let's begin the treatment.`;
               } else if (workType === 'goal') {
                 context.metadata.selectedMethod = 'reality_shifting';
-                return `ROUTE_TO_REALITY_SHIFTING`;
+                return `Great! We'll work on achieving "${statement}" using Reality Shifting. Let's begin.`;
               } else if (workType === 'negative_experience') {
                 context.metadata.selectedMethod = 'trauma_shifting';
-                return `ROUTE_TO_TRAUMA_SHIFTING`;
+                return `I understand. We'll work on "${statement}" using Trauma Shifting. Let's begin the treatment.`;
               }
               
               // Fallback to confirmation if no method set

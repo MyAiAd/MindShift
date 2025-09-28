@@ -412,7 +412,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     }
     
     // Handle problem description after method selection
-    if (context.metadata.workType === 'problem' && context.metadata.selectedMethod) {
+    if (context.metadata.workType === 'problem' && context.metadata.selectedMethod && context.metadata.readyForTreatment) {
       this.updateProblemStatement(context, context.userResponses[context.currentStep]);
       
       // Route to appropriate treatment phase
@@ -464,20 +464,25 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       this.updateProblemStatement(context, userProblemStatement);
     }
     
-    // Route to appropriate treatment intro
-    const workType = context.metadata.workType;
-    const selectedMethod = context.metadata.selectedMethod;
-    
-    if (workType === 'problem' && selectedMethod) {
-      context.currentPhase = this.getPhaseForMethod(selectedMethod);
-      return this.getIntroStepForMethod(selectedMethod);
-    } else if (workType === 'goal') {
-      context.currentPhase = 'reality_shifting';
-      return 'reality_shifting_intro';
-    } else if (workType === 'negative_experience') {
-      context.currentPhase = 'trauma_shifting';
-      return 'trauma_shifting_intro';
+    // Only route to treatment if ready
+    if (context.metadata.readyForTreatment) {
+      const workType = context.metadata.workType;
+      const selectedMethod = context.metadata.selectedMethod;
+      
+      if (workType === 'problem' && selectedMethod) {
+        context.currentPhase = this.getPhaseForMethod(selectedMethod);
+        return this.getIntroStepForMethod(selectedMethod);
+      } else if (workType === 'goal') {
+        context.currentPhase = 'reality_shifting';
+        return 'reality_shifting_intro';
+      } else if (workType === 'negative_experience') {
+        context.currentPhase = 'trauma_shifting';
+        return 'trauma_shifting_intro';
+      }
     }
+    
+    // Stay on current step if not ready for treatment
+    return 'work_type_description';
     
     return 'confirm_statement';
   }

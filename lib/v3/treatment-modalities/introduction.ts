@@ -78,16 +78,12 @@ export class IntroductionPhase {
                 context.metadata.originalProblemStatement = userInput;
               }
               
-              // Return routing signal instead of direct phase manipulation
-              if (context.metadata.selectedMethod === 'problem_shifting') {
-                return "ROUTE_TO_PROBLEM_SHIFTING";
-              } else if (context.metadata.selectedMethod === 'identity_shifting') {
-                return "ROUTE_TO_IDENTITY_SHIFTING";
-              } else if (context.metadata.selectedMethod === 'belief_shifting') {
-                return "ROUTE_TO_BELIEF_SHIFTING";
-              } else if (context.metadata.selectedMethod === 'blockage_shifting') {
-                return "ROUTE_TO_BLOCKAGE_SHIFTING";
-              }
+              // Set routing flag for determineNextStep to handle
+              context.metadata.readyForTreatment = true;
+              
+              // Return user-friendly confirmation message
+              const methodName = context.metadata.selectedMethod.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+              return `Great! We'll work on "${userInput}" using ${methodName}. Let's begin the treatment.`;
             }
             
             // Handle goal description after work type selection for goals
