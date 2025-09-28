@@ -14,9 +14,13 @@ import {
   StepHistoryEntry 
 } from './shared/types';
 
-// TODO: Import V3 modality components when created
-// import ProblemShifting from './modalities/ProblemShifting/ProblemShifting';
-// ... other modalities
+// Import V3 modality components
+import ProblemShifting from './modalities/ProblemShifting/ProblemShifting';
+import IdentityShifting from './modalities/IdentityShifting/IdentityShifting';
+import BeliefShifting from './modalities/BeliefShifting/BeliefShifting';
+import BlockageShifting from './modalities/BlockageShifting/BlockageShifting';
+import RealityShifting from './modalities/RealityShifting/RealityShifting';
+import TraumaShifting from './modalities/TraumaShifting/TraumaShifting';
 
 export default function TreatmentSession({ 
   sessionId, 
@@ -67,13 +71,7 @@ export default function TreatmentSession({
       console.error('V3 Voice error:', error);
       setVoiceError(error);
     },
-    onStart: () => {
-      console.log('V3 Voice started');
-      setVoiceError('');
-    },
-    onEnd: () => {
-      console.log('V3 Voice ended');
-    }
+    currentStep: currentStep
   });
 
   // Helper function to format method names
@@ -338,8 +336,8 @@ export default function TreatmentSession({
         }
 
         // V3: Enhanced voice feedback
-        if (voice.isEnabled && systemMessage.content) {
-          voice.speak(systemMessage.content);
+        if (voice.isVoiceOutputEnabled && systemMessage.content) {
+          voice.speakGlobally(systemMessage.content);
         }
 
       } else {
