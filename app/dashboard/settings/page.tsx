@@ -125,7 +125,8 @@ export default function SettingsPage() {
   const [labsToggles, setLabsToggles] = useState({
     voiceTreatmentDemo: false,
     unifiedTreatmentDemo: false,
-    newExperimentalDemo: true
+    newExperimentalDemo: false,
+    v3TreatmentDemo: true
   });
 
   // Load notification preferences on component mount
@@ -1220,6 +1221,62 @@ export default function SettingsPage() {
                   </button>
                 </div>
                 {labsToggles.newExperimentalDemo && <TreatmentSessionDemo />}
+              </div>
+
+              {/* V3 Treatment Demo with Toggle */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <h4 className="text-md font-medium text-gray-900 dark:text-white">V3 Treatment Demo</h4>
+                    <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full">
+                      Latest
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleLabsToggle('v3TreatmentDemo')}
+                    aria-label={`${labsToggles.v3TreatmentDemo ? 'Disable' : 'Enable'} V3 Treatment Demo`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                      labsToggles.v3TreatmentDemo
+                        ? 'bg-indigo-600'
+                        : 'bg-gray-200 dark:bg-gray-700'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        labsToggles.v3TreatmentDemo ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                {labsToggles.v3TreatmentDemo && (
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Brain className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                      <h5 className="font-medium text-gray-900 dark:text-white">V3 Treatment System</h5>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      Next-generation treatment engine with enhanced state management and improved therapeutic protocols.
+                    </p>
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>Enhanced state machine architecture</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>Improved validation and text processing</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>Advanced integration capabilities</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                        <span>In active development</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* Individual treatment modality demos - temporarily hidden for company review */}
