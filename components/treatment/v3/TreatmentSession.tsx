@@ -433,6 +433,41 @@ export default function TreatmentSession({
     sendMessage(buttonText);
   };
 
+  // V3: Helper function to determine if we should show work type selection buttons
+  const shouldShowWorkTypeSelection = () => {
+    // Check if we're in the initial explanation step
+    const isInitialStep = currentStep === 'mind_shifting_explanation';
+    
+    if (!isInitialStep) return false;
+    
+    // Don't show if we're loading or session isn't active
+    if (isLoading || !isSessionActive) return false;
+    
+    // Check the last bot message to see if it contains the work type options
+    const lastBotMessage = messages.filter(m => !m.isUser).pop();
+    if (!lastBotMessage) return false;
+    
+    // Show buttons if the message contains the work type selection text
+    const containsWorkTypeSelection = lastBotMessage.content.includes('1. PROBLEM') && 
+                                    lastBotMessage.content.includes('2. GOAL') && 
+                                    lastBotMessage.content.includes('3. NEGATIVE EXPERIENCE');
+    
+    // Don't show if AI is asking clarifying questions
+    if (lastBotMessage.usedAI) return false;
+    
+    // Don't show if user has already made multiple inputs (likely past selection)
+    const userMessages = messages.filter(m => m.isUser);
+    if (userMessages.length >= 2) return false;
+    
+    return containsWorkTypeSelection;
+  };
+
+  // V3: Handle work type selection button clicks
+  const handleWorkTypeSelection = (workType: string) => {
+    setClickedButton(workType);
+    sendMessage(workType);
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4">
       {/* V3 Header */}
@@ -563,25 +598,79 @@ export default function TreatmentSession({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="flex space-x-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Type your response..."
-              disabled={isLoading || !isSessionActive}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !userInput.trim() || !isSessionActive}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center space-x-2"
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span>Send</span>
-            </button>
-          </form>
+          {/* V3: Work Type Selection Buttons */}
+          {shouldShowWorkTypeSelection() && (
+            <div className="mb-4">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  What do you want to work on?
+                </h3>
+              </div>
+              <div className="flex space-x-4 justify-center">
+                <button
+                  onClick={() => handleWorkTypeSelection('1')}
+                  disabled={isLoading}
+                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                    isLoading ? 'opacity-50' : ''
+                  } ${
+                    clickedButton === '1' ? 'scale-105 bg-blue-700 shadow-lg' : ''
+                  }`}
+                >
+                  <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
+                  <span>PROBLEM</span>
+                </button>
+                
+                <button
+                  onClick={() => handleWorkTypeSelection('2')}
+                  disabled={isLoading}
+                  className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                    isLoading ? 'opacity-50' : ''
+                  } ${
+                    clickedButton === '2' ? 'scale-105 bg-green-700 shadow-lg' : ''
+                  }`}
+                >
+                  <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
+                  <span>GOAL</span>
+                </button>
+                
+                <button
+                  onClick={() => handleWorkTypeSelection('3')}
+                  disabled={isLoading}
+                  className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                    isLoading ? 'opacity-50' : ''
+                  } ${
+                    clickedButton === '3' ? 'scale-105 bg-purple-700 shadow-lg' : ''
+                  }`}
+                >
+                  <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">3</span>
+                  <span>NEGATIVE EXPERIENCE</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* V3: Text Input Form - Hidden when work type buttons are shown */}
+          {!shouldShowWorkTypeSelection() && (
+            <form onSubmit={handleSubmit} className="flex space-x-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Type your response..."
+                disabled={isLoading || !isSessionActive}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !userInput.trim() || !isSessionActive}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center space-x-2"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Send</span>
+              </button>
+            </form>
+          )}
         </div>
       </div>
 
