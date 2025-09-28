@@ -572,6 +572,7 @@ export class BaseTreatmentStateMachine {
     if (nextStepId) {
       context.currentStep = nextStepId;
       
+      // CRITICAL FIX: Get the updated phase after determineNextStep may have changed it
       const updatedPhase = this.phases.get(context.currentPhase);
       if (!updatedPhase) {
         throw new Error(`Invalid updated phase: ${context.currentPhase}`);
@@ -591,7 +592,10 @@ export class BaseTreatmentStateMachine {
           needsLinguisticProcessing
         };
       } else {
-        throw new Error(`Step '${nextStepId}' not found in phase '${context.currentPhase}'`);
+        // ENHANCED ERROR: Show which steps are available in the current phase for debugging
+        const availableSteps = updatedPhase.steps.map(s => s.id).join(', ');
+        console.error(`V3 PHASE_STEP_MISMATCH: Step '${nextStepId}' not found in phase '${context.currentPhase}'. Available steps: ${availableSteps}`);
+        throw new Error(`Step '${nextStepId}' not found in phase '${context.currentPhase}'. Available steps: ${availableSteps}`);
       }
     }
 
