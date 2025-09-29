@@ -262,6 +262,7 @@ export class TreatmentStateMachine {
         const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
         console.log(`🔍 PROCESS_INPUT: Auto-progression found nextStep:`, nextStep ? `YES (${nextStep.id})` : 'NO');
         console.log(`🔍 PROCESS_INPUT: Available steps in phase "${treatmentContext.currentPhase}":`, updatedPhase.steps.map(s => s.id));
+        console.log(`🔍 PROCESS_INPUT: Looking for step "${nextStepId}" in phase "${treatmentContext.currentPhase}"`);
         
         if (nextStep) {
           const actualResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
@@ -320,9 +321,10 @@ export class TreatmentStateMachine {
         throw new Error(`Invalid updated phase: ${treatmentContext.currentPhase}`);
       }
       
-      const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
-      console.log(`🔍 PROCESS_INPUT: Found nextStep:`, nextStep ? `YES (${nextStep.id})` : 'NO');
-      console.log(`🔍 PROCESS_INPUT: Available steps in phase "${treatmentContext.currentPhase}":`, updatedPhase.steps.map(s => s.id));
+              const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
+        console.log(`🔍 PROCESS_INPUT: Regular flow found nextStep:`, nextStep ? `YES (${nextStep.id})` : 'NO');
+        console.log(`🔍 PROCESS_INPUT: Regular flow available steps in phase "${treatmentContext.currentPhase}":`, updatedPhase.steps.map(s => s.id));
+        console.log(`🔍 PROCESS_INPUT: Regular flow looking for step "${nextStepId}" in phase "${treatmentContext.currentPhase}"`);
       
       if (nextStep) {
         const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
@@ -6001,6 +6003,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           context.currentPhase = 'problem_shifting';
           context.metadata.workType = 'problem'; // Ensure correct work type for problem shifting
           console.log(`🔍 MODALITY_SWITCH: Switched to Problem Shifting with problem: "${newDiggingProblem}"`);
+          console.log(`🔍 MODALITY_SWITCH: Phase set to: "${context.currentPhase}", returning step: "problem_shifting_intro"`);
           return 'problem_shifting_intro';
         } else if (diggingSelectedMethod === 'identity_shifting') {
           context.currentPhase = 'identity_shifting';
