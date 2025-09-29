@@ -811,9 +811,9 @@ export default function TreatmentSession({
   // Helper function to determine if we should show the future_problem_check buttons (Yes/No/Maybe)
   const shouldShowFutureProblemCheckButtons = () => {
     // Show for yes/no steps matching the flowchart exactly
-    const yesNoSteps = [
+    const yesNoSteps: string[] = [
       // NOTE: future_problem_check is now handled by ProblemShifting modality component
-      'identity_problem_check',         // Step 5: Check Problem
+      // REMOVED: 'identity_problem_check' - now handled by IdentityShifting modality component
       // NOTE: Trauma Shifting yes/no steps are now handled by TraumaShifting component
       // NOTE: digging_deeper_start is now handled by modality digging components
       // NOTE: All scenario_check and anything_else_check steps are handled by modality digging components
