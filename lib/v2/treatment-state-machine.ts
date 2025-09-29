@@ -457,6 +457,7 @@ export class TreatmentStateMachine {
                             (step.id === 'belief_problem_check' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'what_needs_to_happen_step' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'future_problem_check' && context.metadata?.currentDiggingProblem) ||
+                            step.id === 'digging_method_selection' ||
                                         // Steps that use user input directly and should never be cached
             (step.id === 'feel_good_state' && userInput?.trim()) ||
             (step.id === 'what_happens_step' && userInput?.trim()) ||
