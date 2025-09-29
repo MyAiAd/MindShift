@@ -59,7 +59,7 @@ export class AIAssistanceManager {
     'belief_step_b',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'belief_step_e',           // Belief Shifting: "Feel [contextualized emotion]... what does [contextualized emotion] feel like?"
     'identity_dissolve_step_a', // Identity Shifting: "Feel yourself being [identity]... what does it feel like?"
-    'identity_dissolve_step_b', // Identity Shifting: "Feel [last response]... what happens in yourself when you feel [last response]?"
+    // REMOVED: 'identity_dissolve_step_b' - Use scripted response for faster performance (already has perfect scripted logic)
     // 'identity_check' removed - should use stored originalProblemIdentity, not AI processing
     'trauma_dissolve_step_a',   // Trauma Shifting: "Feel yourself being [identity]... what does it feel like?"
     'trauma_dissolve_step_b',   // Trauma Shifting: "Feel [last response]... what happens in yourself when you feel [last response]?"
@@ -572,31 +572,7 @@ Template: "Feel yourself being [user's exact words]... what does it feel like?"
 If the user said "${userInput}", you must include ALL words from "${userInput}" in your response.
 
 Use the user's exact words in the template now:`;
-    } else if (stepId === 'identity_dissolve_step_b') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's identity response.
-
-User's response: "${userInput}"
-Current scripted response: "${scriptedResponse}"
-
-Task: Extract the core identity from the user's response and use it naturally in the template.
-
-Template: "Feel [user's exact words]... what happens in yourself when you feel [user's exact words]?"
-
-Rules:
-1. Use the user's exact words from their response - do NOT change, interpret, or paraphrase them
-2. Only remove unnecessary phrases like "someone who is", "a person who", "I am" if present
-3. Use the correct template ending "what happens in yourself when you feel [same words]?"
-4. Use the same exact words in both places in the template
-5. Return only the response using their exact words, nothing else
-
-Examples:
-- User: "bad" → "Feel bad... what happens in yourself when you feel bad?"
-- User: "scared" → "Feel scared... what happens in yourself when you feel scared?"
-- User: "powerless" → "Feel powerless... what happens in yourself when you feel powerless?"
-- User: "like a victim" → "Feel like a victim... what happens in yourself when you feel like a victim?"
-        - User: "in control of my own future" → "Feel in control of your future... what happens in yourself when you feel in control of your future?"
-
-Extract the core identity and apply the template now:`;
+    // REMOVED: identity_dissolve_step_b AI logic - now uses scripted response for better performance
     // REMOVED: identity_check should use stored originalProblemIdentity, not AI processing
     } else if (stepId === 'trauma_dissolve_step_a') {
       return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to contextualize the user's identity response for Trauma Shifting.
@@ -712,8 +688,7 @@ Rephrase now:`;
         return `Feel "${userResponse}"... what happens to "${userResponse}" when you feel "${userResponse}"?`;
       case 'identity_dissolve_step_a':
         return `Feel yourself being "${userResponse}"... as "${userResponse}", what do you want?`;
-      case 'identity_dissolve_step_b':
-        return `Feel "${userResponse}"... what happens in yourself when you feel "${userResponse}"?`;
+      // REMOVED: identity_dissolve_step_b - now uses scripted response for better performance
       // REMOVED: identity_check should use stored originalProblemIdentity, not AI processing
       case 'trauma_dissolve_step_a':
         return `Feel yourself being "${userResponse}"... what does it feel like?`;
