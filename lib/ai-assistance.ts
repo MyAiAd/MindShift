@@ -558,11 +558,11 @@ Template: "Feel yourself being [user's exact words]... what does it feel like?"
 5. Return only the response using their exact words, nothing else
 
 🔥 SPECIFIC EXAMPLES - FOLLOW THESE EXACTLY:
-- User: "hurt person" → "Feel yourself being a hurt person... what does it feel like?"
-- User: "angry person" → "Feel yourself being an angry person... what does it feel like?"
-- User: "bad person" → "Feel yourself being a bad person... what does it feel like?"
-- User: "victim" → "Feel yourself being a victim... what does it feel like?"
-- User: "bad mother" → "Feel yourself being a bad mother... what does it feel like?"
+- User: "hurt person" → "Feel yourself being hurt person... what does it feel like?"
+- User: "angry person" → "Feel yourself being angry person... what does it feel like?"
+- User: "bad person" → "Feel yourself being bad person... what does it feel like?"
+- User: "victim" → "Feel yourself being victim... what does it feel like?"
+- User: "bad mother" → "Feel yourself being bad mother... what does it feel like?"
 
 ⚠️ WRONG EXAMPLES - DO NOT DO THIS:
 - User: "hurt person" → ❌ "Feel yourself being hurt... what does it feel like?" (WRONG - dropped "person")
@@ -616,11 +616,11 @@ Template: "Feel yourself being [user's exact words]... what does it feel like?"
 5. Return only the response using their exact words, nothing else
 
 🔥 SPECIFIC EXAMPLES - FOLLOW THESE EXACTLY:
-- User: "hurt person" → "Feel yourself being a hurt person... what does it feel like?"
-- User: "damaged child" → "Feel yourself being a damaged child... what does it feel like?"
-- User: "angry person" → "Feel yourself being an angry person... what does it feel like?"
-- User: "victim" → "Feel yourself being a victim... what does it feel like?"
-- User: "abandoned child" → "Feel yourself being an abandoned child... what does it feel like?"
+- User: "hurt person" → "Feel yourself being hurt person... what does it feel like?"
+- User: "damaged child" → "Feel yourself being damaged child... what does it feel like?"
+- User: "angry person" → "Feel yourself being angry person... what does it feel like?"
+- User: "victim" → "Feel yourself being victim... what does it feel like?"
+- User: "abandoned child" → "Feel yourself being abandoned child... what does it feel like?"
 
 ⚠️ WRONG EXAMPLES - DO NOT DO THIS:
 - User: "hurt person" → ❌ "Feel yourself being hurt... what does it feel like?" (WRONG - dropped "person")
