@@ -466,6 +466,7 @@ export class TreatmentStateMachine {
             (step.id === 'belief_step_b' && userInput?.trim()) ||
             (step.id === 'belief_step_d' && userInput?.trim()) ||
             (step.id === 'belief_step_e' && userInput?.trim()) ||
+            (step.id === 'identity_dissolve_step_e' && userInput?.trim()) ||
                                         // Goal-related steps that depend on dynamic goal context - never cache to prevent cross-session conflicts
             step.id === 'goal_confirmation' ||
             step.id === 'reality_shifting_intro' ||
