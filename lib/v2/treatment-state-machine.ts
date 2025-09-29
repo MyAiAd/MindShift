@@ -3961,10 +3961,20 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           scriptedResponse: (userInput, context) => {
             // Get the problem statement - prioritize digging deeper restated problem
             console.log('🔍 BELIEF_DEBUG belief_shifting_intro - context.metadata:', JSON.stringify(context.metadata, null, 2));
-            const diggingProblem = context?.metadata?.currentDiggingProblem;
+            console.log('🔍 BELIEF_DEBUG belief_shifting_intro - userResponses:', JSON.stringify(context.userResponses, null, 2));
+            
+            // Priority order for problem statement in digging deeper flow:
+            // 1. currentDiggingProblem (set by digging_method_selection)
+            // 2. newDiggingProblem (set by restate_problem_future) 
+            // 3. restate_problem_future user response
+            // 4. context.problemStatement
+            const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+            const restatedProblem = context?.userResponses?.['restate_problem_future'];
+            const problemStatement = diggingProblem || restatedProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            
             console.log('🔍 BELIEF_DEBUG belief_shifting_intro - diggingProblem:', diggingProblem);
+            console.log('🔍 BELIEF_DEBUG belief_shifting_intro - restatedProblem:', restatedProblem);
             console.log('🔍 BELIEF_DEBUG belief_shifting_intro - context.problemStatement:', context?.problemStatement);
-            const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
             console.log('🔍 BELIEF_DEBUG belief_shifting_intro - final problemStatement:', problemStatement);
             // Check if we're coming from digging deeper (shorter instructions)
             const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem || context?.metadata?.skipIntroInstructions;
@@ -5894,10 +5904,11 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'belief_problem_check':
         // Belief Shifting: Check if problem still exists
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {
-          // Still a problem - start new process
+          // Still a problem - route to digging deeper method selection flow
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          context.currentPhase = 'discovery';
-          return 'restate_belief_problem';
+          context.currentPhase = 'digging_deeper';
+          console.log(`🔍 BELIEF_PROBLEM_CHECK: Problem still exists, routing to digging deeper flow`);
+          return 'restate_problem_future';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
           // No longer a problem - check if we're in digging deeper flow
