@@ -446,7 +446,7 @@ export class TreatmentStateMachine {
       
       // NEW: Try cache for dynamic responses with context hash
       // CRITICAL FIX: Don't use cache for steps that depend on user input or digging context
-      const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem)) ||
+      const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem || context.metadata?.problemRestated)) ||
                             (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem) ||
                             step.id === 'problem_shifting_intro' ||
                             (step.id === 'blockage_shifting_intro' && (context.metadata?.cycleCount > 0 || context.metadata?.currentDiggingProblem)) ||
@@ -1992,6 +1992,9 @@ export class TreatmentStateMachine {
             // Store the new problem statement
             const newProblem = userInput || 'the problem';
             context.problemStatement = newProblem;
+            // Mark that problem has been restated to skip cache for intro steps
+            context.metadata = context.metadata || {};
+            context.metadata.problemRestated = true;
             return `So the problem is now '${newProblem}'. Is this correct?`;
           },
           expectedResponseType: 'yesno',
