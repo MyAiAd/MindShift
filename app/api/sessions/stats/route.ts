@@ -43,8 +43,19 @@ export async function GET(request: NextRequest) {
         message: statsError.message,
         code: statsError.code,
         details: statsError.details,
-        hint: statsError.hint
+        hint: statsError.hint,
+        user_id: user.id,
+        tenant_id: profile.tenant_id,
+        days: days
       });
+      
+      // Try to get raw session data to compare
+      const { data: rawSessions } = await supabase
+        .from('treatment_sessions')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      console.error('Raw sessions for comparison:', rawSessions);
       
       // Return default stats instead of failing completely
       const defaultStats = {
@@ -60,7 +71,14 @@ export async function GET(request: NextRequest) {
         total_treatment_hours_this_month: 0
       };
       
-      return NextResponse.json({ stats: defaultStats });
+      return NextResponse.json({ 
+        stats: defaultStats,
+        debug: {
+          function_error: true,
+          error_details: statsError,
+          raw_sessions: rawSessions
+        }
+      });
     }
 
     // Return the first row of results (the function returns a table)
