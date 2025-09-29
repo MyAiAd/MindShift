@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity, Zap } from 'lucide-react';
+import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity, Zap, RotateCcw } from 'lucide-react';
 import EnhancedBookingModal from '@/components/sessions/EnhancedBookingModal';
 
 interface CoachingSession {
@@ -79,6 +79,7 @@ export default function SessionsPage() {
   const [showBookModal, setShowBookModal] = useState(false);
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [clearingStats, setClearingStats] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -402,6 +403,40 @@ export default function SessionsPage() {
     setShowBookModal(false);
   };
 
+  const handleClearStats = async () => {
+    if (!confirm('Are you sure you want to clear all statistics? This will reset your session counts and hours but will not delete any actual session data. This action cannot be undone.')) {
+      return;
+    }
+
+    setClearingStats(true);
+    try {
+      const response = await fetch('/api/sessions/stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear_stats' })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Refresh stats to show cleared values
+        const statsResponse = await fetch('/api/sessions/stats');
+        const statsData = await statsResponse.json();
+        if (statsData.stats) {
+          setStats(statsData.stats);
+        }
+        alert('Statistics cleared successfully!');
+      } else {
+        throw new Error(data.error || 'Failed to clear statistics');
+      }
+    } catch (error) {
+      console.error('Error clearing stats:', error);
+      alert('Failed to clear statistics. Please try again.');
+    } finally {
+      setClearingStats(false);
+    }
+  };
+
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -410,13 +445,23 @@ export default function SessionsPage() {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Coaching Sessions</h1>
             <p className="text-gray-600 dark:text-gray-300 mt-1">Manage your coaching sessions and track your progress with AI and human coaches.</p>
           </div>
-          <button 
-            onClick={() => setShowBookModal(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Book Session
-          </button>
+          <div className="flex space-x-3">
+            <button 
+              onClick={handleClearStats}
+              disabled={clearingStats}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RotateCcw className={`h-5 w-5 mr-2 ${clearingStats ? 'animate-spin' : ''}`} />
+              {clearingStats ? 'Clearing...' : 'Clear Stats'}
+            </button>
+            <button 
+              onClick={() => setShowBookModal(true)}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Book Session
+            </button>
+          </div>
         </div>
       </div>
 

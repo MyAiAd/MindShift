@@ -1048,16 +1048,31 @@ async function updateSessionContextInDatabase(
     // Get the context from the state machine
     const context = treatmentMachine.getContextForUndo(sessionId);
     
+    // Check if session is completed
+    const isCompleted = currentStep === 'session_complete' || 
+                       currentStep === 'reality_session_complete' || 
+                       currentStep?.includes('session_complete');
+    
+    // Prepare update data
+    const updateData: any = {
+      current_phase: context.currentPhase,
+      current_step: currentStep,
+      problem_statement: context.problemStatement,
+      metadata: context.metadata,
+      updated_at: new Date().toISOString()
+    };
+    
+    // If session is completed, update status and completion timestamp
+    if (isCompleted) {
+      updateData.status = 'completed';
+      updateData.completed_at = new Date().toISOString();
+      console.log(`🎉 TREATMENT_COMPLETION: Marking session ${sessionId} as completed`);
+    }
+    
     // Update the session with current state
     await supabase
       .from('treatment_sessions')
-      .update({
-        current_phase: context.currentPhase,
-        current_step: currentStep,
-        problem_statement: context.problemStatement,
-        metadata: context.metadata,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('session_id', sessionId);
 
     // Save user response to treatment_progress if we have one

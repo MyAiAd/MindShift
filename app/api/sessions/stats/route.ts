@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ stats: defaultStats });
     }
 
-    // The function returns an array with one row, extract the values
-    const stats = statsData?.[0] || {
+    // Return the first row of results (the function returns a table)
+    const stats = statsData && statsData.length > 0 ? statsData[0] : {
       total_sessions: 0,
       upcoming_sessions: 0,
       completed_sessions: 0,
@@ -79,7 +79,67 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ stats });
   } catch (error) {
-    console.error('Error in session stats fetch:', error);
+    console.error('Error in session stats:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST method to clear/reset statistics
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = createServerClient();
+    
+    // Get the current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get user's profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const { action } = body;
+
+    if (action !== 'clear_stats') {
+      return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    }
+
+    // Update user profile to set stats_cleared_at timestamp
+    // This will be used by the stats function to exclude sessions before this date
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        stats_cleared_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+
+    if (updateError) {
+      console.error('Error clearing stats:', updateError);
+      return NextResponse.json({ error: 'Failed to clear stats' }, { status: 500 });
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Statistics cleared successfully',
+      cleared_at: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error in clear stats:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
