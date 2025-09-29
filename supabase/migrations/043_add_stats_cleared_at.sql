@@ -59,7 +59,7 @@ BEGIN
     treatment_stats AS (
         SELECT 
             COUNT(*) as total_treatment_sessions,
-            COUNT(*) FILTER (WHERE status = 'active') as active_treatment_sessions,
+            COUNT(*) FILTER (WHERE status IN ('active', 'paused')) as active_treatment_sessions,
             COUNT(*) FILTER (WHERE status = 'completed') as completed_treatment_sessions,
             COALESCE(SUM(duration_minutes) FILTER (WHERE status = 'completed' AND created_at >= date_trunc('month', CURRENT_DATE)), 0) / 60.0 as treatment_hours_this_month
         FROM treatment_sessions ts
