@@ -228,7 +228,11 @@ export class TreatmentStateMachine {
                             currentStepResponse === 'ROUTE_TO_BELIEF_INTEGRATION' ||
                             currentStepResponse === 'ROUTE_TO_BLOCKAGE_INTEGRATION' ||
                             currentStepResponse === 'ROUTE_TO_TRAUMA_INTEGRATION' ||
-                            currentStepResponse === 'METHOD_SELECTION_NEEDED';
+                            currentStepResponse === 'METHOD_SELECTION_NEEDED' ||
+                            currentStepResponse === 'PROBLEM_SHIFTING_SELECTED' ||
+                            currentStepResponse === 'IDENTITY_SHIFTING_SELECTED' ||
+                            currentStepResponse === 'BELIEF_SHIFTING_SELECTED' ||
+                            currentStepResponse === 'BLOCKAGE_SHIFTING_SELECTED';
     
     if (isInternalSignal) {
       console.log(`🔍 PROCESS_INPUT: Internal signal detected, proceeding to determine next step automatically`);
@@ -730,6 +734,35 @@ export class TreatmentStateMachine {
     });
     
     console.log(`🧹 CACHE_CLEAR: Cleared ${clearedCount} goal-related cache entries`);
+  }
+
+  /**
+   * Clear previous modality-specific metadata when switching modalities
+   * This ensures a clean switch without interference from previous modality state
+   */
+  private clearPreviousModalityMetadata(context: TreatmentContext): void {
+    console.log('🔍 MODALITY_CLEANUP: Clearing previous modality metadata');
+    
+    // Clear belief-specific metadata
+    delete context.metadata.currentBelief;
+    delete context.metadata.cycleCount;
+    
+    // Clear identity-specific metadata
+    delete context.metadata.currentIdentity;
+    
+    // Clear blockage-specific metadata
+    delete context.metadata.currentBlockage;
+    
+    // Clear reality-specific metadata
+    delete context.metadata.currentReality;
+    
+    // Clear trauma-specific metadata
+    delete context.metadata.currentTrauma;
+    
+    // Keep digging-deeper specific metadata as it's needed for the flow
+    // Keep: currentDiggingProblem, newDiggingProblem, returnToDiggingStep, selectedMethod, workType
+    
+    console.log('🔍 MODALITY_CLEANUP: Cleared previous modality metadata, kept digging-deeper context');
   }
 
   /**
@@ -5950,21 +5983,34 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: Source - userResponse: "${newProblemFromUserResponse}", metadata: "${context.metadata?.newDiggingProblem}"`);
         }
         
+        // Clear previous modality-specific metadata to ensure clean switch
+        this.clearPreviousModalityMetadata(context);
+        
         if (diggingSelectedMethod === 'problem_shifting') {
           context.currentPhase = 'problem_shifting';
+          context.metadata.workType = 'problem'; // Ensure correct work type for problem shifting
+          console.log(`🔍 MODALITY_SWITCH: Switched to Problem Shifting with problem: "${newDiggingProblem}"`);
           return 'problem_shifting_intro';
         } else if (diggingSelectedMethod === 'identity_shifting') {
           context.currentPhase = 'identity_shifting';
+          context.metadata.workType = 'problem'; // Identity shifting also works with problems in digging deeper
+          console.log(`🔍 MODALITY_SWITCH: Switched to Identity Shifting with problem: "${newDiggingProblem}"`);
           return 'identity_shifting_intro';
         } else if (diggingSelectedMethod === 'belief_shifting') {
           context.currentPhase = 'belief_shifting';
+          context.metadata.workType = 'problem'; // Belief shifting also works with problems in digging deeper
+          console.log(`🔍 MODALITY_SWITCH: Switched to Belief Shifting with problem: "${newDiggingProblem}"`);
           return 'belief_shifting_intro';
         } else if (diggingSelectedMethod === 'blockage_shifting') {
           context.currentPhase = 'blockage_shifting';
+          context.metadata.workType = 'problem'; // Blockage shifting also works with problems in digging deeper
+          console.log(`🔍 MODALITY_SWITCH: Switched to Blockage Shifting with problem: "${newDiggingProblem}"`);
           return 'blockage_shifting_intro';
         }
         // Default fallback
         context.currentPhase = 'problem_shifting';
+        context.metadata.workType = 'problem';
+        console.log(`🔍 MODALITY_SWITCH: Defaulted to Problem Shifting with problem: "${newDiggingProblem}"`);
         return 'problem_shifting_intro';
         
       // Handle all scenario check steps
