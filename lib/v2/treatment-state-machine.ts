@@ -2875,11 +2875,26 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_problem_check',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement - prioritize digging deeper restated problem
-            const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
-            const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
-            console.log(`🔍 IDENTITY_PROBLEM_CHECK: Using problem statement: "${cleanProblemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
-            return `Feel '${cleanProblemStatement}'... does it still feel like a problem?`;
+            // Check if we're coming from identity_future_check (user said yes to feeling identity in future)
+            // If so, ask them to project into the future and feel the identity
+            if (context?.metadata?.fromFutureCheck) {
+              // Coming from future check - ask them to feel the identity in the future
+              const identityData = context.metadata.identityResponse;
+              const identity = (identityData && identityData.type === 'IDENTITY') 
+                ? identityData.value 
+                : (context.metadata.currentIdentity || context.metadata.originalProblemIdentity || 'that identity');
+              
+              console.log(`🔍 IDENTITY_PROBLEM_CHECK: Coming from future check - asking to feel identity '${identity}' in the future`);
+              // Clear the flag so it doesn't affect future checks
+              context.metadata.fromFutureCheck = false;
+              return `Put yourself in the future and feel yourself being '${identity}'... what does it feel like?`;
+            } else {
+              // Normal problem check
+              const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+              const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+              console.log(`🔍 IDENTITY_PROBLEM_CHECK: Using problem statement: "${cleanProblemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
+              return `Feel '${cleanProblemStatement}'... does it still feel like a problem?`;
+            }
           },
           expectedResponseType: 'yesno',
           validationRules: [
@@ -5662,6 +5677,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         if (lastResponse.includes('yes') || lastResponse.includes('1')) {
           // YES - skip to problem check (they might feel the identity in future)
           console.log(`🔍 IDENTITY_FUTURE_CHECK: User said YES, skipping to problem check`);
+          // Track that we're coming from future check so identity_problem_check can use different phrasing
+          context.metadata.fromFutureCheck = true;
           return 'identity_problem_check';
         } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
           // NO - proceed to scenario check
