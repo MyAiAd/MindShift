@@ -916,6 +916,7 @@ export default function TreatmentSession({
       'belief_check_2',
       'belief_check_3',
       'belief_check_4',
+      'belief_future_step_f',           // Future projection step F (only F has yes/no buttons)
       'belief_problem_check',
       'confirm_belief_problem',
       
@@ -932,6 +933,7 @@ export default function TreatmentSession({
       // Trauma Shifting steps (negative experiences)
       'trauma_identity_check',
       'trauma_future_identity_check',
+      'trauma_future_step_f',           // Future projection step F (only F has yes/no buttons)
       'trauma_future_scenario_check',
       'trauma_experience_check',
       'trauma_dig_deeper',
