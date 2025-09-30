@@ -3920,6 +3920,107 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         },
 
         {
+          id: 'trauma_future_projection',
+          scriptedResponse: (userInput, context) => {
+            // Step A: Ask them to project into the future and feel the identity
+            const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
+            
+            console.log(`🔍 TRAUMA_FUTURE_PROJECTION: Asking to feel identity '${identity}' in the future`);
+            return `Put yourself in the future and feel yourself being ${identity}... what does it feel like?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
+          ],
+          nextStep: 'trauma_future_step_c',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_future_step_c',
+          scriptedResponse: (userInput, context) => {
+            // Step C: Store response from future projection and ask what they are when not being the identity
+            context.metadata.traumaFutureStepAResponse = userInput || 'that';
+            
+            const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
+            
+            console.log(`🔍 TRAUMA_FUTURE_STEP_C: Asking what they are when not being '${identity}' in the future`);
+            return `What are you when you're not being '${identity}'?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you are when you are not being that.' }
+          ],
+          nextStep: 'trauma_future_step_d',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_future_step_d',
+          scriptedResponse: (userInput, context) => {
+            // Step D: Store response from C and ask them to feel that state
+            context.metadata.traumaFutureStepCResponse = userInput || 'that';
+            const stepCResponse = context.metadata.traumaFutureStepCResponse;
+            
+            console.log(`🔍 TRAUMA_FUTURE_STEP_D: Asking them to feel '${stepCResponse}'`);
+            return `Feel yourself being '${stepCResponse}'... what does it feel like?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
+          ],
+          nextStep: 'trauma_future_step_e',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_future_step_e',
+          scriptedResponse: (userInput, context) => {
+            // Step E: Store response from D and ask what happens
+            context.metadata.traumaFutureStepDResponse = userInput || 'that feeling';
+            const stepDResponse = context.metadata.traumaFutureStepDResponse;
+            
+            console.log(`🔍 TRAUMA_FUTURE_STEP_E: Asking what happens when they feel '${stepDResponse}'`);
+            return `Feel '${stepDResponse}'... what happens in yourself when you feel '${stepDResponse}'?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself when you feel that.' }
+          ],
+          nextStep: 'trauma_future_step_f',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_future_step_f',
+          scriptedResponse: (userInput, context) => {
+            // Step F: Check if they can still feel the identity in the future
+            context.metadata.traumaFutureStepEResponse = userInput || 'that';
+            
+            const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
+            
+            console.log(`🔍 TRAUMA_FUTURE_STEP_F: Checking if they can still feel '${identity}' in the future`);
+            return `Can you still feel yourself being ${identity}?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'trauma_experience_check',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
           id: 'trauma_experience_check',
           scriptedResponse: () => {
             return `Take your mind back to the frozen moment which was the worst part of the negative experience. Does it still feel like a problem to you?`;
@@ -4297,6 +4398,125 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
           nextStep: 'belief_check_4',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_future_projection',
+          scriptedResponse: (userInput, context) => {
+            // Step A: Ask them to project into the future and feel the belief
+            const belief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+            
+            console.log(`🔍 BELIEF_FUTURE_PROJECTION: Asking to feel belief '${belief}' in the future`);
+            return `Put yourself in the future and feel yourself believing '${belief}'... what does it feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like to believe that.' }
+          ],
+          nextStep: 'belief_future_step_b',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_future_step_b',
+          scriptedResponse: (userInput, context) => {
+            // Step B: Store response from future projection and ask what it feels like
+            context.metadata.beliefFutureStepAResponse = userInput || 'that feeling';
+            const stepAResponse = context.metadata.beliefFutureStepAResponse;
+            
+            console.log(`🔍 BELIEF_FUTURE_STEP_B: Asking what '${stepAResponse}' feels like`);
+            return `Feel '${stepAResponse}'... what does '${stepAResponse}' feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
+          ],
+          nextStep: 'belief_future_step_c',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_future_step_c',
+          scriptedResponse: (userInput, context) => {
+            // Step C: Store response from B and ask what they would rather feel
+            context.metadata.beliefFutureStepBResponse = userInput || 'that';
+            
+            console.log(`🔍 BELIEF_FUTURE_STEP_C: Asking what they would rather feel`);
+            return `What would you rather feel?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you would rather feel.' }
+          ],
+          nextStep: 'belief_future_step_d',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_future_step_d',
+          scriptedResponse: (userInput, context) => {
+            // Step D: Store the desired feeling and ask what it would feel like
+            context.metadata.beliefFutureDesiredFeeling = userInput || 'that feeling';
+            const desiredFeeling = context.metadata.beliefFutureDesiredFeeling;
+            
+            console.log(`🔍 BELIEF_FUTURE_STEP_D: Asking what '${desiredFeeling}' would feel like`);
+            return `What would '${desiredFeeling}' feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that would feel like.' }
+          ],
+          nextStep: 'belief_future_step_e',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_future_step_e',
+          scriptedResponse: (userInput, context) => {
+            // Step E: Store response from D and ask what it feels like
+            context.metadata.beliefFutureStepDResponse = userInput || 'that feeling';
+            const stepDResponse = context.metadata.beliefFutureStepDResponse;
+            
+            console.log(`🔍 BELIEF_FUTURE_STEP_E: Asking what '${stepDResponse}' feels like`);
+            return `Feel '${stepDResponse}'... what does '${stepDResponse}' feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
+          ],
+          nextStep: 'belief_future_step_f',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'belief_future_step_f',
+          scriptedResponse: (userInput, context) => {
+            // Step F: Check if they still believe it
+            context.metadata.beliefFutureStepEResponse = userInput || 'that';
+            
+            const belief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+            
+            console.log(`🔍 BELIEF_FUTURE_STEP_F: Checking if they still believe '${belief}'`);
+            return `Do you still believe '${belief}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'belief_check_3',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
@@ -5954,9 +6174,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'trauma_future_identity_check':
         // Trauma Shifting: First future question - "Do you think you can ever feel yourself being X in the future?"
         if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
-          // Might feel identity in future - repeat Steps 3-5 with new identity
-          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          return 'trauma_dissolve_step_c'; // Ask "What are you when you're not being X?"
+          // Might feel identity in future - go to future projection sequence
+          console.log(`🔍 TRAUMA_FUTURE_IDENTITY_CHECK: User said YES, going to future projection step`);
+          return 'trauma_future_projection';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
           // Won't feel identity in future - proceed to second question
@@ -6035,6 +6255,19 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
           // No longer believes - proceed to belief checking questions
           return 'belief_check_1';
+        }
+        break;
+
+      case 'belief_check_2':
+        // Belief Shifting: Future check question - "Do you feel you may believe [belief] again in the future?"
+        if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
+          // Might believe it in future - go to future projection sequence
+          console.log(`🔍 BELIEF_CHECK_2: User said YES, going to future projection step`);
+          return 'belief_future_projection';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
+          // Won't believe it in future - proceed to scenario check
+          return 'belief_check_3';
         }
         break;
         
