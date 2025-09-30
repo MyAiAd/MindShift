@@ -47,6 +47,7 @@ export default function BeliefShifting({
       'belief_check_2',                 // Belief check 2
       'belief_check_3',                 // Belief check 3
       'belief_check_4',                 // Belief check 4
+      'belief_future_step_f',           // Future projection step F (only F has yes/no buttons)
       'belief_problem_check',           // Belief problem check
       'confirm_belief_problem',         // Confirm belief problem
     ];

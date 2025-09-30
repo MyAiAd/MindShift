@@ -7,6 +7,7 @@ export default function TraumaShiftingGuardrails({ currentStep, messages, lastBo
   const validateTraumaShiftingStep = (): boolean => {
     const traumaShiftingSteps = [
       'trauma_identity_check',
+      'trauma_future_step_f',
       'trauma_experience_check',
       'trauma_dig_deeper',
       'trauma_shifting_intro'

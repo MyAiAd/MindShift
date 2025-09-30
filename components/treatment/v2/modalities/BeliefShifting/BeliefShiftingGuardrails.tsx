@@ -18,6 +18,7 @@ export default function BeliefShiftingGuardrails({
       'belief_check_2',
       'belief_check_3',
       'belief_check_4',
+      'belief_future_step_f',
       'belief_problem_check',
       'confirm_belief_problem',
       'belief_description',

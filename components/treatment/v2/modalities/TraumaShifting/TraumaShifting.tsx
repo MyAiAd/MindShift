@@ -39,6 +39,7 @@ export default function TraumaShifting({
     const traumaShiftingYesNoSteps = [
       'trauma_identity_check',          // Trauma Step 4: Can you still feel yourself being X?
       'trauma_future_identity_check',   // Trauma Step 5A: Do you think you can ever feel yourself being X in the future?
+      'trauma_future_step_f',           // Future projection step F (only F has yes/no buttons)
       'trauma_future_scenario_check',   // Trauma Step 5B: Is there any scenario in which you might still feel yourself being X?
       'trauma_experience_check',        // Trauma Step 6: Does it still feel like a problem?
       'trauma_dig_deeper',              // Trauma Step 7A: Do you feel you might feel bad about this incident again in the future?
