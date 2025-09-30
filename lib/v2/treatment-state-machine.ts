@@ -6980,6 +6980,12 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       return result.replace(/I'm not /gi, "I'm ");
     }
     
+    // "I am not" → "you are" (convert from first person negative to second person positive)
+    // e.g., "i am not taking the right path" → "that you are taking the right path"
+    if (result.match(/^I am not /i)) {
+      return result.replace(/^I am not /gi, 'that you are ');
+    }
+    
     // Handle negative words
     // "nobody" → "somebody"
     if (result.match(/nobody/i)) {
