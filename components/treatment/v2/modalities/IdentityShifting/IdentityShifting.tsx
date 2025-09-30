@@ -46,8 +46,9 @@ export default function IdentityShifting({
       'identity_problem_check',         // Identity problem check
       'confirm_identity_problem',       // Confirm identity problem
       'identity_dissolve_step_f',       // Identity dissolve step F
-              'identity_future_check',          // Identity future check
-        'identity_scenario_check',        // Identity scenario check
+      'identity_future_check',          // Identity future check
+      'identity_future_step_f',         // Identity future step F (can still feel identity in future?)
+      'identity_scenario_check',        // Identity scenario check
     ];
     return identityShiftingYesNoSteps.includes(currentStep);
   };

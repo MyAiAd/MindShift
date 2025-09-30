@@ -2875,38 +2875,126 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'identity_future_projection',
           scriptedResponse: (userInput, context) => {
-            // Ask them to project into the future and feel the identity (like step 3a)
+            // Step A: Ask them to project into the future and feel the identity
             const identityData = context.metadata.identityResponse;
             const identity = (identityData && identityData.type === 'IDENTITY') 
               ? identityData.value 
               : (context.metadata.currentIdentity || context.metadata.originalProblemIdentity || 'that identity');
             
-            console.log(`🔍 IDENTITY_FUTURE_PROJECTION: Asking to feel identity '${identity}' in the future`);
+            console.log(`🔍 IDENTITY_FUTURE_PROJECTION_A: Asking to feel identity '${identity}' in the future`);
             return `Put yourself in the future and feel yourself being '${identity}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
           ],
-          nextStep: 'identity_future_experience',
+          nextStep: 'identity_future_step_b',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
 
         {
-          id: 'identity_future_experience',
+          id: 'identity_future_step_b',
           scriptedResponse: (userInput, context) => {
-            // Store their response about feeling the identity in the future (like step 3a response)
-            context.metadata.futureIdentityFeeling = userInput || 'that feeling';
-            const feeling = context.metadata.futureIdentityFeeling;
+            // Step B: Store response from A and ask what happens
+            context.metadata.futureStepAResponse = userInput || 'that feeling';
+            const stepAResponse = context.metadata.futureStepAResponse;
             
-            console.log(`🔍 IDENTITY_FUTURE_EXPERIENCE: Asking what happens when they feel '${feeling}'`);
-            return `Feel '${feeling}'... what happens in yourself when you feel '${feeling}'?`;
+            console.log(`🔍 IDENTITY_FUTURE_STEP_B: Asking what happens when they feel '${stepAResponse}'`);
+            return `Feel '${stepAResponse}'... what happens in yourself when you feel '${stepAResponse}'?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself.' }
+          ],
+          nextStep: 'identity_future_step_c',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_future_step_c',
+          scriptedResponse: (userInput, context) => {
+            // Step C: Store response from B and ask what they are when not being the identity
+            context.metadata.futureStepBResponse = userInput || 'that';
+            
+            const identityData = context.metadata.identityResponse;
+            const identity = (identityData && identityData.type === 'IDENTITY') 
+              ? identityData.value 
+              : (context.metadata.currentIdentity || context.metadata.originalProblemIdentity || 'that identity');
+            
+            console.log(`🔍 IDENTITY_FUTURE_STEP_C: Asking what they are when not being '${identity}' in the future`);
+            return `What are you when you're not being '${identity}'?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you are when you\'re not being that identity.' }
+          ],
+          nextStep: 'identity_future_step_d',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_future_step_d',
+          scriptedResponse: (userInput, context) => {
+            // Step D: Store response from C and ask them to feel that state
+            context.metadata.futureStepCResponse = userInput || 'that';
+            const stepCResponse = context.metadata.futureStepCResponse;
+            
+            console.log(`🔍 IDENTITY_FUTURE_STEP_D: Asking them to feel '${stepCResponse}'`);
+            return `Feel yourself being '${stepCResponse}'... what does '${stepCResponse}' feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
+          ],
+          nextStep: 'identity_future_step_e',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_future_step_e',
+          scriptedResponse: (userInput, context) => {
+            // Step E: Store response from D and ask what happens
+            context.metadata.futureStepDResponse = userInput || 'that feeling';
+            const stepDResponse = context.metadata.futureStepDResponse;
+            
+            console.log(`🔍 IDENTITY_FUTURE_STEP_E: Asking what happens when they feel '${stepDResponse}'`);
+            return `Feel '${stepDResponse}'... what happens in yourself when you feel '${stepDResponse}'?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself.' }
+          ],
+          nextStep: 'identity_future_step_f',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_future_step_f',
+          scriptedResponse: (userInput, context) => {
+            // Step F: Check if they can still feel the identity in the future
+            context.metadata.futureStepEResponse = userInput || 'that';
+            
+            const identityData = context.metadata.identityResponse;
+            const identity = (identityData && identityData.type === 'IDENTITY') 
+              ? identityData.value 
+              : (context.metadata.currentIdentity || context.metadata.originalProblemIdentity || 'that identity');
+            
+            console.log(`🔍 IDENTITY_FUTURE_STEP_F: Checking if they can still feel '${identity}' in the future`);
+            return `Can you still feel yourself being '${identity}'?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
           nextStep: 'identity_problem_check',
           aiTriggers: [
