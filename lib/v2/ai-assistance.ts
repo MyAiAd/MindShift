@@ -61,8 +61,8 @@ export class AIAssistanceManager {
     'identity_dissolve_step_a', // Identity Shifting: "Feel yourself being [identity]... what does it feel like?"
     // REMOVED: 'identity_dissolve_step_b' - Use scripted response for faster performance (already has perfect scripted logic)
     // 'identity_check' removed - should use stored originalProblemIdentity, not AI processing
-    'trauma_dissolve_step_a',   // Trauma Shifting: "Feel yourself being [identity]... what does it feel like?"
-    'trauma_dissolve_step_b',   // Trauma Shifting: "Feel [last response]... what happens in yourself when you feel [last response]?"
+    // REMOVED: 'trauma_dissolve_step_a' - Use scripted response with user's exact words to preserve agency and match protocol flowchart
+    // REMOVED: 'trauma_dissolve_step_b' - Use scripted response for faster performance (already has perfect scripted logic)
     // 'trauma_identity_check' removed - should use stored originalProblemIdentity, not AI processing
     // Intro steps that need user input contextualisation
     'problem_shifting_intro',  // Problem Shifting: Ensure input is stated as a problem

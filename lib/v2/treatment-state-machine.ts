@@ -398,9 +398,9 @@ export class TreatmentStateMachine {
     ];
     
     // Trauma Shifting steps that need linguistic processing
-    const traumaShiftingSteps = [
-      'trauma_dissolve_step_a',   // "Feel yourself being [identity]... what does it feel like?"
-      'trauma_dissolve_step_b'    // "Feel [last response]... what happens in yourself when you feel [last response]?"
+    // REMOVED: 'trauma_dissolve_step_a' - Use scripted response with user's exact words to preserve agency and match protocol flowchart
+    // REMOVED: 'trauma_dissolve_step_b' - Use scripted response for faster performance (already has perfect scripted logic)
+    const traumaShiftingSteps: string[] = [
       // 'trauma_identity_check' REMOVED - should use stored originalTraumaIdentity, not AI processing
     ];
     
