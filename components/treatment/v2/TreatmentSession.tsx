@@ -907,6 +907,12 @@ export default function TreatmentSession({
       'confirm_identity_problem',
       'identity_dissolve_step_f',
       'identity_future_check',
+      'identity_future_projection',     // Future projection step A
+      'identity_future_step_b',         // Future projection step B
+      'identity_future_step_c',         // Future projection step C
+      'identity_future_step_d',         // Future projection step D
+      'identity_future_step_e',         // Future projection step E
+      'identity_future_step_f',         // Future projection step F
       'identity_scenario_check',
       
       // Belief Shifting steps
