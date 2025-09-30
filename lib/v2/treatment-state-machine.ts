@@ -2873,28 +2873,55 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
 
 
         {
+          id: 'identity_future_projection',
+          scriptedResponse: (userInput, context) => {
+            // Ask them to project into the future and feel the identity (like step 3a)
+            const identityData = context.metadata.identityResponse;
+            const identity = (identityData && identityData.type === 'IDENTITY') 
+              ? identityData.value 
+              : (context.metadata.currentIdentity || context.metadata.originalProblemIdentity || 'that identity');
+            
+            console.log(`🔍 IDENTITY_FUTURE_PROJECTION: Asking to feel identity '${identity}' in the future`);
+            return `Put yourself in the future and feel yourself being '${identity}'... what does it feel like?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
+          ],
+          nextStep: 'identity_future_experience',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'identity_future_experience',
+          scriptedResponse: (userInput, context) => {
+            // Store their response about feeling the identity in the future (like step 3a response)
+            context.metadata.futureIdentityFeeling = userInput || 'that feeling';
+            const feeling = context.metadata.futureIdentityFeeling;
+            
+            console.log(`🔍 IDENTITY_FUTURE_EXPERIENCE: Asking what happens when they feel '${feeling}'`);
+            return `Feel '${feeling}'... what happens in yourself when you feel '${feeling}'?`;
+          },
+          expectedResponseType: 'feeling',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself.' }
+          ],
+          nextStep: 'identity_problem_check',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
           id: 'identity_problem_check',
           scriptedResponse: (userInput, context) => {
-            // Check if we're coming from identity_future_check (user said yes to feeling identity in future)
-            // If so, ask them to project into the future and feel the identity
-            if (context?.metadata?.fromFutureCheck) {
-              // Coming from future check - ask them to feel the identity in the future
-              const identityData = context.metadata.identityResponse;
-              const identity = (identityData && identityData.type === 'IDENTITY') 
-                ? identityData.value 
-                : (context.metadata.currentIdentity || context.metadata.originalProblemIdentity || 'that identity');
-              
-              console.log(`🔍 IDENTITY_PROBLEM_CHECK: Coming from future check - asking to feel identity '${identity}' in the future`);
-              // Clear the flag so it doesn't affect future checks
-              context.metadata.fromFutureCheck = false;
-              return `Put yourself in the future and feel yourself being '${identity}'... what does it feel like?`;
-            } else {
-              // Normal problem check
-              const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
-              const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
-              console.log(`🔍 IDENTITY_PROBLEM_CHECK: Using problem statement: "${cleanProblemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
-              return `Feel '${cleanProblemStatement}'... does it still feel like a problem?`;
-            }
+            // Normal problem check
+            const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+            const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            console.log(`🔍 IDENTITY_PROBLEM_CHECK: Using problem statement: "${cleanProblemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
+            return `Feel '${cleanProblemStatement}'... does it still feel like a problem?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
@@ -5675,11 +5702,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'identity_future_check':
         // First identity check question: "Do you think you might feel yourself being [IDENTITY] in the future?"
         if (lastResponse.includes('yes') || lastResponse.includes('1')) {
-          // YES - skip to problem check (they might feel the identity in future)
-          console.log(`🔍 IDENTITY_FUTURE_CHECK: User said YES, skipping to problem check`);
-          // Track that we're coming from future check so identity_problem_check can use different phrasing
-          context.metadata.fromFutureCheck = true;
-          return 'identity_problem_check';
+          // YES - ask them to project into future and feel the identity (like step 3a)
+          console.log(`🔍 IDENTITY_FUTURE_CHECK: User said YES, going to future projection step`);
+          return 'identity_future_projection';
         } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
           // NO - proceed to scenario check
           console.log(`🔍 IDENTITY_FUTURE_CHECK: User said NO, proceeding to scenario check`);
