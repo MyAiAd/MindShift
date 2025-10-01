@@ -958,6 +958,8 @@ export default function TreatmentSession({
       'anything_else_check_1',
       'anything_else_check_2',
       'anything_else_check_3',
+      'clear_anything_else_problem_1',  // When showing method selection
+      'clear_anything_else_problem_2',  // When showing method selection
       'digging_method_selection',
       
       // Method selection step (handled by Problem Shifting when PROBLEM selected)
