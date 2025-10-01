@@ -242,7 +242,9 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       if (result.scriptedResponse === 'TRANSITION_TO_DIG_DEEPER' || result.scriptedResponse === 'METHOD_SELECTION_NEEDED') {
         console.log('Treatment API: Detected transition signal (' + result.scriptedResponse + '), processing next step immediately');
         // Process the next step immediately without showing the transition message
-        const nextResult = await treatmentMachine.processUserInput(sessionId, userInput || '', { userId });
+        // For METHOD_SELECTION_NEEDED, pass empty string to avoid confusion with previous input
+        const inputForNextStep = result.scriptedResponse === 'METHOD_SELECTION_NEEDED' ? '' : (userInput || '');
+        const nextResult = await treatmentMachine.processUserInput(sessionId, inputForNextStep, { userId });
         if (nextResult.canContinue && nextResult.scriptedResponse) {
           result = nextResult; // Use the next step's result
           console.log('Treatment API: Using next step result:', result);
