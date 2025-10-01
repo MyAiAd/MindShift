@@ -289,7 +289,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
         const isDiggingContext = treatmentContext?.metadata?.currentDiggingProblem || treatmentContext?.metadata?.newDiggingProblem;
         const isIntroStep = ['problem_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '');
-        const shouldSkipAI = isDiggingContext && isIntroStep;
+        const shouldSkipAI = (isDiggingContext && isIntroStep) || result.nextStep === 'problem_shifting_intro';
         
         console.log('Treatment API: Skip AI check - currentDiggingProblem:', treatmentContext?.metadata?.currentDiggingProblem, 'isIntroStep:', isIntroStep, 'shouldSkipAI:', shouldSkipAI);
         console.log('Treatment API: Full metadata:', JSON.stringify(treatmentContext?.metadata, null, 2));
