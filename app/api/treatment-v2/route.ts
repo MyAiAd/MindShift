@@ -239,8 +239,8 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       console.log('Treatment API: Processing successful result...');
       
       // Handle special transition signals
-      if (result.scriptedResponse === 'TRANSITION_TO_DIG_DEEPER') {
-        console.log('Treatment API: Detected transition signal, processing next step immediately');
+      if (result.scriptedResponse === 'TRANSITION_TO_DIG_DEEPER' || result.scriptedResponse === 'METHOD_SELECTION_NEEDED') {
+        console.log('Treatment API: Detected transition signal (' + result.scriptedResponse + '), processing next step immediately');
         // Process the next step immediately without showing the transition message
         const nextResult = await treatmentMachine.processUserInput(sessionId, userInput || '', { userId });
         if (nextResult.canContinue && nextResult.scriptedResponse) {
