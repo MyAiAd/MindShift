@@ -199,9 +199,6 @@ export default function BlockageShiftingDigging({
 
         <div className="flex flex-col space-y-4 flex-1">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Choose your method to clear this blockage:
-            </h3>
             <div className="flex justify-center">
               <div className="grid grid-cols-2 gap-3 max-w-lg">
                 <button
