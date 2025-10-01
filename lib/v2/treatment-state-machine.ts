@@ -4815,7 +4815,11 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         },
         {
           id: 'scenario_check_1',
-          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            // Always reference the ORIGINAL problem (Problem 1), not any digging problems
+            const originalProblem = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the original problem';
+            return `Is there any scenario in which '${originalProblem}' would still be a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
