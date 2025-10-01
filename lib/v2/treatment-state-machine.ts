@@ -372,7 +372,7 @@ export class TreatmentStateMachine {
     }
     
     // Problem Shifting steps
-    const problemShiftingSteps = ['body_sensation_check', 'feel_solution_state'];
+    const problemShiftingSteps = ['feel_solution_state'];
     
     // Reality Shifting steps - ALL REMOVED: Now use pure scripted responses per flowchart
     // Previously included: reality_step_a2, reality_feel_reason, reality_feel_reason_2, reality_feel_reason_3
