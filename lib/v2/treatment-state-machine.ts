@@ -5076,13 +5076,15 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             
             // Set the problem statement for the method selection
             context.problemStatement = newProblem;
-            return "METHOD_SELECTION_NEEDED"; // Signal to show method selection
+            
+            // Directly show method selection message instead of using signal
+            return "We need to clear this problem. Which method would you like to use?";
           },
-          expectedResponseType: 'open',
+          expectedResponseType: 'selection',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please continue with the process.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
           ],
-          nextStep: undefined, // Handled by routing logic
+          nextStep: 'digging_method_selection',
           aiTriggers: []
         },
         {

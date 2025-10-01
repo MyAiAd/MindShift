@@ -59,13 +59,21 @@ export default function BlockageShiftingDigging({
 
   // Helper function for Blockage Shifting method selection during digging
   const shouldShowBlockageDiggingMethodButtons = () => {
-    // Show for both the modality-specific step and the generic digging method selection step
-    if (currentStep !== 'blockage_digging_method_selection' && currentStep !== 'digging_method_selection') return false;
+    // Show for method selection steps or when on clear step (which shows method selection message)
+    if (currentStep !== 'blockage_digging_method_selection' && 
+        currentStep !== 'digging_method_selection' &&
+        currentStep !== 'clear_anything_else_problem_1' &&
+        currentStep !== 'clear_anything_else_problem_2') return false;
     
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (lastBotMessage?.usedAI) return false;
     
-    return true;
+    // Check if the message indicates method selection is needed
+    if (lastBotMessage?.content && lastBotMessage.content.includes('Which method would you like to use')) {
+      return true;
+    }
+    
+    return currentStep === 'digging_method_selection' || currentStep === 'blockage_digging_method_selection';
   };
 
   // Render Blockage Shifting digging deeper buttons
