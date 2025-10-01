@@ -345,24 +345,14 @@ export default function ProblemShiftingDigging({
               <span>Yes</span>
             </button>
             
-            {/* Hide Maybe button for anything_else_check steps */}
-            {!currentStep.includes('anything_else_check') && (
-              <button
-                onClick={() => handleYesNoMaybeResponse('maybe')}
-                disabled={isLoading}
-                className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
-              >
-                <span className="bg-orange-700 px-2 py-1 rounded text-sm font-bold">2</span>
-                <span>Maybe</span>
-              </button>
-            )}
+            {/* Maybe button removed from all digging deeper steps (scenario_check and anything_else_check) */}
             
             <button
               onClick={() => handleYesNoMaybeResponse('no')}
               disabled={isLoading}
-              className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold ${currentStep.includes('anything_else_check') ? '' : ''}`}
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
             >
-              <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">{currentStep.includes('anything_else_check') ? '2' : '3'}</span>
+              <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
               <span>No</span>
             </button>
           </div>
