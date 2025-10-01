@@ -896,7 +896,6 @@ function getPhaseForStep(stepId: string): string {
     'blockage_step_d': 'blockage_shifting',
     'blockage_step_e': 'blockage_shifting',
     'blockage_check_if_still_problem': 'blockage_shifting',
-    'blockage_digging_method_selection': 'blockage_shifting',
     
     // Identity shifting phase
     'identity_shifting_intro': 'identity_shifting',
@@ -907,7 +906,6 @@ function getPhaseForStep(stepId: string): string {
     'identity_dissolve_step_e': 'identity_shifting',
     'identity_check': 'identity_shifting',
     'identity_problem_check': 'identity_shifting',
-    'identity_digging_method_selection': 'identity_shifting',
     
     // Reality shifting phase
     'reality_shifting_intro': 'reality_shifting',
@@ -958,7 +956,6 @@ function getPhaseForStep(stepId: string): string {
     'belief_check_3': 'belief_shifting',
     'belief_check_4': 'belief_shifting',
     'belief_problem_check': 'belief_shifting',
-    'belief_digging_method_selection': 'belief_shifting',
     
     // Digging deeper phase
     'digging_deeper_start': 'digging_deeper',

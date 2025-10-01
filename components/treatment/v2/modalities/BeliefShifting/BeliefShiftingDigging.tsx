@@ -59,7 +59,8 @@ export default function BeliefShiftingDigging({
 
   // Helper function for Belief Shifting method selection during digging
   const shouldShowBeliefDiggingMethodButtons = () => {
-    if (currentStep !== 'belief_digging_method_selection') return false;
+    // Show for both the modality-specific step and the generic digging method selection step
+    if (currentStep !== 'belief_digging_method_selection' && currentStep !== 'digging_method_selection') return false;
     
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (lastBotMessage?.usedAI) return false;

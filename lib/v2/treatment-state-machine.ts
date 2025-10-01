@@ -6481,24 +6481,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         
       case 'clear_anything_else_problem_1':
         // Route to method selection for clearing the new problem
-        // Use modality-specific method selection step based on the original method used
-        const originalMethod1 = context.metadata?.selectedMethod;
-        if (originalMethod1 === 'problem_shifting') {
-          return 'digging_method_selection';
-        } else if (originalMethod1 === 'blockage_shifting') {
-          context.currentPhase = 'blockage_shifting';
-          return 'blockage_digging_method_selection';
-        } else if (originalMethod1 === 'identity_shifting') {
-          context.currentPhase = 'identity_shifting';
-          return 'identity_digging_method_selection';
-        } else if (originalMethod1 === 'belief_shifting') {
-          context.currentPhase = 'belief_shifting';
-          return 'belief_digging_method_selection';
-        } else {
-          // Default to generic digging method selection
-          context.currentPhase = 'digging_deeper';
-          return 'digging_method_selection';
-        }
+        context.currentPhase = 'digging_deeper';
+        return 'digging_method_selection';
         
       case 'anything_else_check_2':
         if (lastResponse.includes('yes')) {
@@ -6514,24 +6498,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         
       case 'clear_anything_else_problem_2':
         // Route to method selection for clearing the new problem
-        // Use modality-specific method selection step based on the original method used
-        const originalMethod2 = context.metadata?.selectedMethod;
-        if (originalMethod2 === 'problem_shifting') {
-          return 'digging_method_selection';
-        } else if (originalMethod2 === 'blockage_shifting') {
-          context.currentPhase = 'blockage_shifting';
-          return 'blockage_digging_method_selection';
-        } else if (originalMethod2 === 'identity_shifting') {
-          context.currentPhase = 'identity_shifting';
-          return 'identity_digging_method_selection';
-        } else if (originalMethod2 === 'belief_shifting') {
-          context.currentPhase = 'belief_shifting';
-          return 'belief_digging_method_selection';
-        } else {
-          // Default to generic digging method selection
-          context.currentPhase = 'digging_deeper';
-          return 'digging_method_selection';
-        }
+        context.currentPhase = 'digging_deeper';
+        return 'digging_method_selection';
         
       case 'anything_else_check_3':
         if (lastResponse.includes('yes')) {
