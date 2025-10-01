@@ -441,6 +441,11 @@ export default function TreatmentSession({
       }
       
       if (currentStep === 'mind_shifting_explanation' || currentStep === 'work_type_selection') {
+        // Prevent voice from auto-triggering selection while still loading
+        if (isLoading) {
+          console.log('🎤 Voice input ignored - still loading');
+          return;
+        }
         // Handle work type selection (1, 2, 3)
         if (['1', '2', '3', 'problem', 'goal', 'negative experience', 'negative'].includes(transcript.toLowerCase())) {
           handleWorkTypeSelection(transcript);
@@ -455,6 +460,11 @@ export default function TreatmentSession({
       
       // Handle method selection ONLY when we're actually on the method selection step
       if (currentStep === 'choose_method') {
+        // Prevent voice from auto-triggering selection while still loading
+        if (isLoading) {
+          console.log('🎤 Voice input ignored - still loading');
+          return;
+        }
         // Handle method selection by name or number
         if (['1', '2', '3', '4', '5', '6', 'problem shifting', 'identity shifting', 'belief shifting', 'blockage shifting', 'reality shifting', 'trauma shifting'].includes(transcript.toLowerCase())) {
           handleMethodSelection(transcript);
