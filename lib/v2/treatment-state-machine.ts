@@ -6306,21 +6306,75 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           return 'belief_step_a';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer believes - proceed to belief checking questions
+          // No longer believes - check if we need to return to a specific check question
+          const returnToCheck = context.metadata.returnToBeliefCheck;
+          if (returnToCheck) {
+            // Return to the check question we came from
+            return returnToCheck;
+          }
+          // First time through - proceed to belief checking questions
           return 'belief_check_1';
+        }
+        break;
+
+      case 'belief_check_1':
+        // Belief Shifting: First check question - "Does any part of you still believe [belief]?"
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // Still believes - cycle back to step A and remember to return here
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          context.metadata.returnToBeliefCheck = 'belief_check_1';
+          return 'belief_step_a';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No longer believes - clear return marker and proceed to next belief check
+          context.metadata.returnToBeliefCheck = undefined;
+          return 'belief_check_2';
         }
         break;
 
       case 'belief_check_2':
         // Belief Shifting: Future check question - "Do you feel you may believe [belief] again in the future?"
         if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
-          // Might believe it in future - go to future projection sequence
-          console.log(`🔍 BELIEF_CHECK_2: User said YES, going to future projection step`);
-          return 'belief_future_projection';
+          // Still might believe it - cycle back to step A and remember to return here
+          console.log(`🔍 BELIEF_CHECK_2: User said YES, cycling back to belief_step_a`);
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          context.metadata.returnToBeliefCheck = 'belief_check_2';
+          return 'belief_step_a';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
-          // Won't believe it in future - proceed to scenario check
+          // Won't believe it in future - clear return marker and proceed to scenario check
+          context.metadata.returnToBeliefCheck = undefined;
           return 'belief_check_3';
+        }
+        break;
+
+      case 'belief_check_3':
+        // Belief Shifting: Scenario check question - "Is there any scenario in which you would still believe [belief]?"
+        if (lastResponse.includes('yes')) {
+          // Still might believe it in some scenario - cycle back to step A and remember to return here
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          context.metadata.returnToBeliefCheck = 'belief_check_3';
+          return 'belief_step_a';
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // Won't believe it in any scenario - clear return marker and proceed to next check
+          context.metadata.returnToBeliefCheck = undefined;
+          return 'belief_check_4';
+        }
+        break;
+
+      case 'belief_check_4':
+        // Belief Shifting: Knowledge check question - "Do you now know [opposite of belief]?"
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // Don't know the opposite yet - cycle back to step A and remember to return here
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          context.metadata.returnToBeliefCheck = 'belief_check_4';
+          return 'belief_step_a';
+        }
+        if (lastResponse.includes('yes')) {
+          // Know the opposite - clear return marker and proceed to problem check
+          context.metadata.returnToBeliefCheck = undefined;
+          return 'belief_problem_check';
         }
         break;
         
