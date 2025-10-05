@@ -6162,17 +6162,14 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             context.metadata.returnToDiggingStep = undefined; // Clear the return step
             return returnStep;
           } else {
-            // Regular flow - complete session
-            return 'reality_session_complete';
+            // Regular flow - complete session, move to integration phase
+            context.currentPhase = 'integration';
+            return 'session_complete';
           }
         } else {
           // User gave another action - keep asking what else
           return 'reality_integration_action_more';
         }
-        
-      case 'reality_session_complete':
-        // Reality Shifting session is complete - let the API layer handle completion
-        return null;
         
       case 'trauma_shifting_intro':
         // Trauma Shifting: Check if user is comfortable with recalling worst part
@@ -6615,7 +6612,6 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
   private handlePhaseCompletion(context: TreatmentContext): ProcessingResult {
     // Check if this is truly session completion or just a phase transition
     if (context.currentStep === 'session_complete' || 
-        context.currentStep === 'reality_session_complete' ||
         context.currentStep === 'identity_session_complete' ||
         context.currentStep?.includes('session_complete')) {
       return {
