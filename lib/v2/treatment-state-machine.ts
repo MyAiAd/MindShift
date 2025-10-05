@@ -6148,8 +6148,24 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         return 'reality_integration_helped';
         
       case 'reality_integration_action':
-        // User answered what needs to happen, ask what else
-        return 'reality_integration_action_more';
+        // User answered what needs to happen
+        if (lastResponse.toLowerCase().includes('nothing') || lastResponse.toLowerCase().includes('no') || lastResponse.toLowerCase().includes('not')) {
+          // User said nothing needs to happen - skip the "what else" question and complete directly
+          const returnStep = context.metadata?.returnToDiggingStep;
+          if (returnStep) {
+            // We're clearing a problem from digging deeper - return to that step
+            context.currentPhase = 'digging_deeper';
+            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            return returnStep;
+          } else {
+            // Regular flow - complete session, move to integration phase
+            context.currentPhase = 'integration';
+            return 'session_complete';
+          }
+        } else {
+          // User gave a specific action - ask what else needs to happen
+          return 'reality_integration_action_more';
+        }
         
       case 'reality_integration_action_more':
         // User answered what else needs to happen
