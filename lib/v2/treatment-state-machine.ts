@@ -5724,8 +5724,12 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         if (lastResponse.toLowerCase().includes('yes') || lastResponse.toLowerCase().includes('y')) {
           return 'goal_certainty';
         } else {
-          // If user says no, we might need to restart goal capture
-          return 'goal_description';
+          // If user says no, clear goal metadata and restart goal capture
+          context.metadata.currentGoal = '';
+          context.metadata.goalWithDeadline = '';
+          delete context.userResponses['goal_deadline_check'];
+          delete context.userResponses['goal_deadline_date'];
+          return 'reality_goal_capture';
         }
         
       case 'goal_certainty':
