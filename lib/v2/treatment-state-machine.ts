@@ -3201,7 +3201,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 3, errorMessage: 'Please tell me what you want instead.' }
           ],
-          nextStep: 'goal_deadline_check',
+          nextStep: undefined, // Will be determined by determineNextStep logic with AI deadline detection
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
@@ -5704,6 +5704,32 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           return 'goal_confirmation';
         } else {
           console.log(`🤖 AI_DEADLINE_DETECTION: No deadline detected, proceeding to deadline check`);
+          return 'goal_deadline_check';
+        }
+        
+      case 'reality_goal_capture':
+        // User provided goal in reality shifting phase, store it and check for deadline with AI assistance
+        context.problemStatement = lastResponse;
+        context.metadata.problemStatement = lastResponse;
+        context.metadata.currentGoal = lastResponse;
+        // Store the original problem statement for digging deeper questions
+        if (!context.metadata.originalProblemStatement) {
+          context.metadata.originalProblemStatement = lastResponse;
+        }
+        console.log(`🔍 REALITY_GOAL_CAPTURE: Stored goal: "${lastResponse}"`);
+        
+        // AI assistance: Check if deadline is already mentioned in the goal
+        const hasDeadlineInRealityGoal = this.detectDeadlineInGoal(lastResponse);
+        if (hasDeadlineInRealityGoal.hasDeadline && hasDeadlineInRealityGoal.deadline && hasDeadlineInRealityGoal.synthesizedGoal) {
+          console.log(`🤖 AI_DEADLINE_DETECTION (REALITY): Deadline detected in goal: "${hasDeadlineInRealityGoal.deadline}"`);
+          // Store the deadline and synthesized goal
+          context.metadata.goalWithDeadline = hasDeadlineInRealityGoal.synthesizedGoal;
+          context.userResponses['goal_deadline_check'] = 'yes'; // Simulate yes response
+          context.userResponses['goal_deadline_date'] = hasDeadlineInRealityGoal.deadline;
+          // Skip deadline questions and go directly to confirmation
+          return 'goal_confirmation';
+        } else {
+          console.log(`🤖 AI_DEADLINE_DETECTION (REALITY): No deadline detected, proceeding to deadline check`);
           return 'goal_deadline_check';
         }
         
