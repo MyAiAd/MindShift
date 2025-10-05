@@ -478,7 +478,9 @@ export class TreatmentStateMachine {
                             step.id === 'reality_step_a3' ||
                             step.id === 'reality_feel_reason' ||
                             step.id === 'reality_feel_reason_2' ||
-                            step.id === 'reality_feel_reason_3';
+                            step.id === 'reality_feel_reason_3' ||
+                            // Reality Shifting doubt reason - depends on dynamic doubt percentage that changes between iterations
+                            step.id === 'reality_doubt_reason';
       let cacheKey: string | undefined;
       
       if (!shouldSkipCache) {
@@ -518,6 +520,8 @@ export class TreatmentStateMachine {
           console.log(`🚀 CACHE_SKIP: Skipping cache for work_type_description to prevent cross-session context conflicts (workType: ${context.metadata?.workType}, problemStatement: ${context.metadata?.problemStatement})`);
         } else if (step.id === 'problem_shifting_intro') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro to prevent cross-session problem conflicts (problemStatement: ${context.metadata?.problemStatement || context.problemStatement})`);
+        } else if (step.id === 'reality_doubt_reason') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for reality_doubt_reason to prevent cross-iteration doubt percentage conflicts (doubtPercentage: ${context.metadata?.doubtPercentage}%)`);
         }
       }
       
