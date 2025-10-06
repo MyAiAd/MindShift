@@ -4047,9 +4047,8 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         {
           id: 'trauma_dig_deeper',
-          scriptedResponse: (userInput, context) => {
-            const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this incident';
-            return `Do you feel you might feel bad about ${negativeExperience} again in the future?`;
+          scriptedResponse: () => {
+            return `Do you feel you might feel bad about this incident in the future?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
@@ -4064,7 +4063,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'trauma_dig_deeper_2',
           scriptedResponse: () => {
-            return `Is there anything else about this that is still a problem for you?`;
+            return `Is there anything else about this that's still a problem for you?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
