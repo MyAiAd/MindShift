@@ -6204,7 +6204,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         // Set to problem work type and ask them to state the problem clearly
         context.metadata.workType = 'problem';
         context.metadata.selectedMethod = undefined; // Reset method selection
-        context.currentPhase = 'method_selection';
+        context.currentPhase = 'work_type_selection';
         return 'work_type_description'; // Ask them to state the problem in a few words
         break;
 
