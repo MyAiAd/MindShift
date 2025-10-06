@@ -3760,7 +3760,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me how you feel about the fact that this happened.' }
           ],
-          nextStep: 'choose_method',
+          nextStep: 'work_type_description',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
