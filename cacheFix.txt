@@ -1,0 +1,1164 @@
+================================================================================
+  CRITICAL CACHE BUG FIX - TREATMENT V2 RESPONSE CACHING ISSUE
+================================================================================
+
+⚠️  IMPORTANT NOTICE TO ALL DEVELOPERS  ⚠️
+
+This document outlines a CRITICAL but COMPLEX bug fix for the response caching
+system in treatment v2. This issue affects ALL modalities when users undo and
+re-enter different user input (trauma memories, goals, problems, beliefs, etc.).
+
+🚨 SURGICAL APPROACH REQUIRED 🚨
+
+The MindShifting application is NEARLY COMPLETE and working VERY WELL in all
+areas. This caching bug has deep tendrils throughout the v2 treatment system.
+
+REQUIREMENTS FOR IMPLEMENTATION:
+1. Make changes INCREMENTALLY - one fix at a time
+2. TEST THOROUGHLY after each change
+3. DO NOT refactor or "improve" working code
+4. Focus ONLY on the specific cache-related issues documented here
+5. Keep changes MINIMAL and TARGETED
+6. Document any deviations from this plan
+
+We do NOT use v1 or v3, so ALL changes should be in v2 only:
+- lib/v2/treatment-state-machine.ts
+- app/api/treatment-v2/route.ts
+- Related v2 files only
+
+================================================================================
+  TABLE OF CONTENTS
+================================================================================
+
+1. BUG SUMMARY
+2. ROOT CAUSE ANALYSIS
+3. EVIDENCE & REPRODUCTION
+4. AFFECTED COMPONENTS
+5. RECOMMENDED FIXES (PHASED APPROACH)
+6. IMPLEMENTATION STEPS
+7. TESTING PROCEDURES
+8. ROLLBACK PLAN
+
+================================================================================
+  1. BUG SUMMARY
+================================================================================
+
+SYMPTOM:
+When a user in Trauma Shifting (or any modality):
+1. Enters initial input (e.g., "first bad memory")
+2. Progresses through several steps
+3. Uses the UNDO button to go back
+4. Enters different input (e.g., "second bad memory")
+5. Progresses forward again
+
+RESULT: The system displays the OLD input ("first bad memory") in treatment
+messages instead of the NEW input ("second bad memory")
+
+IMPACT:
+- Critical UX issue - user sees wrong content
+- Affects treatment quality and user trust
+- Occurs in ALL modalities (Trauma, Problem, Identity, Belief, Blockage, Reality)
+- Reproducible 100% of the time
+
+================================================================================
+  2. ROOT CAUSE ANALYSIS
+================================================================================
+
+The bug has THREE interconnected causes:
+
+CAUSE #1: CACHED RESPONSES WITH EMBEDDED TEXT
+---------------------------------------------
+Location: lib/v2/treatment-state-machine.ts, lines 3776-3780
+
+The trauma_identity_step (and similar steps) generates responses that EMBED
+user input directly into the string:
+
+```typescript
+scriptedResponse: (userInput, context) => {
+  const negativeExperience = context?.problemStatement || ...;
+  return `Think about and feel the negative experience of '${negativeExperience}'...`;
+}
+```
+
+This generated response gets CACHED with the literal text baked in.
+Cache key includes contextHash, but the response string itself contains the text.
+
+CAUSE #2: INCOMPLETE CACHE PROTECTION
+-------------------------------------
+Location: lib/v2/treatment-state-machine.ts, lines 449-483
+
+The shouldSkipCache safeguard list includes:
+✅ identity_shifting_intro
+✅ belief_shifting_intro  
+✅ problem_shifting_intro
+✅ reality_shifting_intro
+✅ blockage_shifting_intro
+
+But MISSING:
+❌ trauma_shifting_intro
+❌ trauma_identity_step
+
+These trauma steps embed user data but are NOT protected from caching.
+
+CAUSE #3: METADATA NOT CLEARED ON UNDO
+--------------------------------------
+Location: app/api/treatment-v2/route.ts, lines 1097-1101
+
+When undo happens, the system ONLY updates:
+✅ currentStep
+✅ currentPhase
+✅ Clears userResponses for future steps
+
+But does NOT clear:
+❌ context.problemStatement
+❌ context.metadata.problemStatement
+❌ context.metadata.originalProblemStatement
+❌ context.metadata.currentTraumaIdentity
+❌ Other modality-specific metadata
+❌ The response cache itself
+
+RESULT: Stale cached responses with old embedded text remain in memory.
+
+================================================================================
+  3. EVIDENCE & REPRODUCTION
+================================================================================
+
+CONSOLE LOG EVIDENCE:
+--------------------
+
+After undo and entering NEW input ("some bad 2nd experience"):
+
+```javascript
+debugInfo: {
+  Problem_Statement: 'some bad 2nd experience',  // ✅ Context is correct
+  ...
+}
+message: "...Think about and feel the negative experience of 'some bad 1st experience'..."
+// ❌ CACHED RESPONSE has OLD text baked in
+```
+
+CACHE HIT RATE CONFIRMS:
+------------------------
+- First attempt: cacheHitRate: 42.857142857142854
+- Second attempt: cacheHitRate: 63.63636363636363  ← INCREASED!
+
+This proves the cached response was served on the second attempt.
+
+REPRODUCTION STEPS:
+------------------
+1. Start treatment session, select "NEGATIVE EXPERIENCE" (work type 3)
+2. Enter trauma description: "first bad memory"
+3. Answer yes to trauma_shifting_intro
+4. Reach trauma_identity_step - note it says "first bad memory"
+5. Click UNDO button twice to return to negative_experience_description
+6. Enter NEW trauma description: "second bad memory"
+7. Answer yes to trauma_shifting_intro
+8. At trauma_identity_step - BUG: Still says "first bad memory" ❌
+
+EXPECTED: Should say "second bad memory" ✅
+
+================================================================================
+  4. AFFECTED COMPONENTS
+================================================================================
+
+FILES REQUIRING CHANGES:
+-----------------------
+1. lib/v2/treatment-state-machine.ts (PRIMARY)
+   - Lines 449-483: shouldSkipCache logic
+   - Lines 589-613: generateContextHash function
+   - Lines 3776-3780: trauma_identity_step definition
+   - New method needed: invalidateCacheForSteps()
+
+2. app/api/treatment-v2/route.ts (SECONDARY)
+   - Lines 1004-1137: handleUndo function
+   - Need to add metadata clearing logic
+
+ALL STEPS THAT EMBED USER DATA (Need Protection):
+-------------------------------------------------
+
+Trauma Shifting:
+  ❌ trauma_shifting_intro (line 3747)
+  ❌ trauma_identity_step (line 3779) ← PRIMARY BUG
+
+Problem Shifting:
+  ✅ problem_shifting_intro (line 2080) - ALREADY PROTECTED
+  ⚠️  what_needs_to_happen_step (line 2126)
+  ⚠️  check_if_still_problem (line 2180)
+
+Identity Shifting:
+  ✅ identity_shifting_intro (line 2597) - ALREADY PROTECTED
+  ⚠️  identity_problem_check (line 3020)
+
+Belief Shifting:
+  ✅ belief_shifting_intro (line 2326) - ALREADY PROTECTED
+  ⚠️  belief_problem_check (line 2491)
+
+Blockage Shifting:
+  ✅ blockage_shifting_intro (line 2836) - ALREADY PROTECTED
+  ⚠️  blockage_check_if_still_problem (line 3223)
+
+Reality Shifting:
+  ✅ reality_shifting_intro (line 4234) - ALREADY PROTECTED
+  ⚠️  reality_step_a (line 4299)
+  ⚠️  reality_step_a2 (line 4354)
+  ⚠️  reality_step_b (line 4431)
+
+Digging Deeper:
+  ⚠️  future_problem_check (line 4215)
+  ⚠️  restate_problem_future
+
+Legend:
+  ✅ = Already in skip-cache list
+  ❌ = Missing from skip-cache list (CRITICAL BUG)
+  ⚠️  = Embeds user data but may work due to conditional checks
+
+================================================================================
+  5. RECOMMENDED FIXES (PHASED APPROACH)
+================================================================================
+
+PHASE 1: QUICK WIN - ADD MISSING CACHE PROTECTIONS
+--------------------------------------------------
+Priority: CRITICAL - Do FIRST
+Time Estimate: 15 minutes
+Risk Level: MINIMAL
+Testing Required: Trauma shifting only
+
+CHANGES:
+File: lib/v2/treatment-state-machine.ts
+Location: Lines 449-483 (shouldSkipCache logic)
+
+ADD these two lines to the shouldSkipCache conditions:
+
+```typescript
+const shouldSkipCache = 
+  (step.id === 'identity_shifting_intro' && ...) ||
+  (step.id === 'belief_shifting_intro' && ...) ||
+  step.id === 'problem_shifting_intro' ||
+  step.id === 'trauma_shifting_intro' ||           // ← ADD THIS
+  step.id === 'trauma_identity_step' ||            // ← ADD THIS
+  (step.id === 'blockage_shifting_intro' && ...) ||
+  // ... rest of conditions
+```
+
+RATIONALE:
+- Immediate fix for the reported trauma bug
+- Zero risk - only affects 2 steps
+- Small performance impact (2 steps won't cache)
+- Does not fix root cause but prevents symptom
+
+EXPECTED RESULT:
+- Trauma shifting will generate fresh responses every time
+- Console should show: "🚀 CACHE_SKIP: Skipping cache for trauma_identity_step..."
+
+
+PHASE 2: ROOT CAUSE - CLEAR METADATA ON UNDO
+--------------------------------------------
+Priority: HIGH - Do SECOND
+Time Estimate: 45 minutes
+Risk Level: LOW-MEDIUM
+Testing Required: All modalities
+
+CHANGES:
+File: app/api/treatment-v2/route.ts
+Location: After line 1089, inside handleUndo function
+
+ADD conditional metadata clearing based on undo target:
+
+```typescript
+// After line 1089, before updating context (line 1097):
+
+// CACHE FIX: Clear step-specific metadata when undoing to re-entry points
+// This prevents stale cached responses from using old user input
+
+if (undoToStep === 'negative_experience_description') {
+  // User is going back to re-enter trauma description
+  console.log('🧹 UNDO_METADATA_CLEAR: Clearing trauma-related metadata');
+  context.problemStatement = '';
+  context.metadata.problemStatement = '';
+  context.metadata.originalProblemStatement = '';
+  context.metadata.currentTraumaIdentity = '';
+  context.metadata.originalTraumaIdentity = '';
+}
+
+if (undoToStep === 'reality_goal_capture' || undoToStep === 'goal_description') {
+  // User is going back to re-enter goal
+  console.log('🧹 UNDO_METADATA_CLEAR: Clearing goal-related metadata');
+  context.problemStatement = '';
+  context.metadata.problemStatement = '';
+  context.metadata.originalProblemStatement = '';
+  context.metadata.currentGoal = '';
+  context.metadata.goalWithDeadline = '';
+  context.metadata.goalStatement = '';
+}
+
+if (undoToStep === 'work_type_description') {
+  // User is going back to re-enter problem description
+  console.log('🧹 UNDO_METADATA_CLEAR: Clearing problem-related metadata');
+  context.problemStatement = '';
+  context.metadata.problemStatement = '';
+  context.metadata.originalProblemStatement = '';
+  context.metadata.currentDiggingProblem = '';
+  context.metadata.newDiggingProblem = '';
+}
+
+// Add similar blocks for other critical re-entry steps as needed
+```
+
+RATIONALE:
+- Fixes the root cause across all modalities
+- Ensures clean state when user re-enters input
+- Low risk - only clears metadata that will be regenerated
+- Surgical approach - only clears when undoing to specific steps
+
+TESTING CHECKPOINTS:
+- Trauma: Undo to negative_experience_description, verify metadata cleared
+- Reality: Undo to reality_goal_capture, verify goal metadata cleared
+- Problem: Undo to work_type_description, verify problem metadata cleared
+
+
+PHASE 3: DEFENSE IN DEPTH - CACHE INVALIDATION
+----------------------------------------------
+Priority: MEDIUM - Do THIRD
+Time Estimate: 1.5 hours
+Risk Level: MEDIUM
+Testing Required: All modalities + performance testing
+
+CHANGES:
+File: lib/v2/treatment-state-machine.ts
+Location: Add new method after line 745 (after clearGoalCache)
+
+ADD new cache invalidation method:
+
+```typescript
+/**
+ * Clear cached responses for specific steps (called during undo)
+ * This removes stale cached responses that may have old user input embedded
+ */
+public invalidateCacheForSteps(stepIds: string[]): void {
+  if (!stepIds || stepIds.length === 0) {
+    console.log('🧹 CACHE_INVALIDATION: No steps to invalidate');
+    return;
+  }
+  
+  let clearedCount = 0;
+  stepIds.forEach(stepId => {
+    // Clear all cache entries that contain this stepId
+    // This includes both static and dynamic cache entries
+    this.responseCache.cache.forEach((_, key) => {
+      if (key.includes(stepId)) {
+        this.responseCache.cache.delete(key);
+        clearedCount++;
+      }
+    });
+  });
+  
+  console.log(`🧹 UNDO_CACHE_CLEAR: Invalidated ${clearedCount} cache entries for ${stepIds.length} undone steps`);
+}
+```
+
+File: app/api/treatment-v2/route.ts
+Location: After line 1070 in handleUndo function
+
+ADD call to invalidate cache:
+
+```typescript
+// After clearing user responses (around line 1070):
+try {
+  if (foundTargetStep) {
+    // Clear responses for steps after our target
+    treatmentMachine.clearUserResponsesForUndo(sessionId, stepsToKeep);
+    console.log('Treatment API: Cleared user responses after target step');
+    
+    // CACHE FIX: Also invalidate cached responses for those steps
+    const stepsToInvalidate: string[] = [];
+    Object.keys(context.userResponses).forEach(stepId => {
+      if (!stepsToKeep.has(stepId)) {
+        stepsToInvalidate.push(stepId);
+      }
+    });
+    
+    if (stepsToInvalidate.length > 0) {
+      treatmentMachine.invalidateCacheForSteps(stepsToInvalidate);
+      console.log('Treatment API: Invalidated cache for undone steps');
+    }
+  } else {
+    // ... existing else block
+  }
+}
+```
+
+RATIONALE:
+- Comprehensive solution that removes stale cache entries
+- Works for all modalities automatically
+- Prevents any edge cases where cache might persist
+- Small performance cost (regenerate responses) but ensures correctness
+
+ALTERNATIVE (Nuclear Option):
+If targeted invalidation proves complex, use broad cache clearing:
+
+```typescript
+// In handleUndo, after clearing responses:
+treatmentMachine.clearIdentityCache();
+treatmentMachine.clearGoalCache();
+// Note: Would need to add clearTraumaCache() method
+```
+
+
+PHASE 4: LONG-TERM - MUTATION TRACKING (OPTIONAL)
+-------------------------------------------------
+Priority: LOW - Do LAST or SKIP
+Time Estimate: 2 hours
+Risk Level: HIGH
+Testing Required: Comprehensive system testing
+
+CHANGES:
+File: lib/v2/treatment-state-machine.ts
+Location: Lines 589-613 (generateContextHash)
+
+MODIFY context hash to include mutation counter:
+
+```typescript
+private generateContextHash(stepId: string, userInput: string | undefined, context: TreatmentContext): string {
+  const relevantData = {
+    stepId,
+    userInput: userInput || '',
+    workType: context.metadata.workType,
+    selectedMethod: context.metadata.selectedMethod,
+    currentPhase: context.currentPhase,
+    problemStatement: context.problemStatement,
+    originalProblemStatement: context.metadata.originalProblemStatement,
+    currentBelief: context.metadata.currentBelief,
+    desiredFeeling: context.metadata.desiredFeeling,
+    currentGoal: context.metadata.currentGoal,
+    goalWithDeadline: context.metadata.goalWithDeadline,
+    currentDiggingProblem: context.metadata.currentDiggingProblem,
+    identityResponse: context.metadata.identityResponse,
+    currentIdentity: context.metadata.currentIdentity,
+    
+    // NEW: Mutation tracking to force cache misses after changes
+    undoCount: context.metadata.undoCount || 0,
+    lastProblemUpdate: context.metadata.lastProblemUpdateTimestamp,
+  };
+  
+  return btoa(JSON.stringify(relevantData)).substring(0, 16);
+}
+```
+
+File: app/api/treatment-v2/route.ts
+Location: In handleUndo, before updating context
+
+ADD mutation counter increment:
+
+```typescript
+// Before treatmentMachine.updateContextForUndo (line 1097):
+context.metadata.undoCount = (context.metadata.undoCount || 0) + 1;
+```
+
+RATIONALE:
+- Bulletproof solution that prevents any cache collisions
+- Forces fresh responses after any undo
+- However, reduces cache effectiveness overall
+- May introduce new bugs if not tested thoroughly
+
+RECOMMENDATION: Only implement if Phase 1-3 don't fully resolve the issue.
+
+================================================================================
+  6. IMPLEMENTATION STEPS
+================================================================================
+
+STEP-BY-STEP IMPLEMENTATION GUIDE:
+
+PHASE 1 IMPLEMENTATION (Do First):
+----------------------------------
+
+1. Create a new git branch:
+   ```bash
+   git checkout -b fix/cache-trauma-shifting
+   git commit -m "Checkpoint: Before cache fix implementation"
+   ```
+
+2. Open file: lib/v2/treatment-state-machine.ts
+
+3. Navigate to line 449 (shouldSkipCache logic)
+
+4. Find this line:
+   ```typescript
+   step.id === 'problem_shifting_intro' ||
+   ```
+
+5. ADD two new lines immediately after:
+   ```typescript
+   step.id === 'problem_shifting_intro' ||
+   step.id === 'trauma_shifting_intro' ||
+   step.id === 'trauma_identity_step' ||
+   ```
+
+6. Save the file
+
+7. Verify the change:
+   ```bash
+   git diff lib/v2/treatment-state-machine.ts
+   ```
+
+8. Run linter:
+   ```bash
+   npm run lint
+   ```
+
+9. Test locally (see TESTING PROCEDURES below)
+
+10. Commit:
+    ```bash
+    git add lib/v2/treatment-state-machine.ts
+    git commit -m "fix(cache): Add trauma steps to skip-cache safeguard list
+
+    - Added trauma_shifting_intro to shouldSkipCache
+    - Added trauma_identity_step to shouldSkipCache
+    - Prevents caching of responses with embedded user trauma text
+    - Fixes bug where old trauma text appears after undo
+    
+    Phase 1 of 3 for cache fix - see cacheFix.txt"
+    ```
+
+11. Deploy to staging and test
+
+12. If successful, merge to main
+
+PAUSE HERE. Test thoroughly before proceeding to Phase 2.
+
+
+PHASE 2 IMPLEMENTATION (Do Second):
+-----------------------------------
+
+1. Create new branch (or continue on same branch):
+   ```bash
+   git checkout -b fix/cache-metadata-clearing
+   ```
+
+2. Open file: app/api/treatment-v2/route.ts
+
+3. Navigate to line 1089 (inside handleUndo function)
+
+4. Find these lines:
+   ```typescript
+   } else {
+     console.log('Treatment API: No phase steps found, clearing all responses');
+     try {
+       treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
+     } catch (clearError) {
+       console.error('Treatment API: Error clearing all responses:', clearError);
+       // Continue - this isn't critical for the undo operation
+     }
+   }
+   ```
+
+5. ADD the following AFTER the closing brace (after line 1089):
+   ```typescript
+   
+   // CACHE FIX: Clear step-specific metadata when undoing to re-entry points
+   // This prevents stale cached responses from using old user input
+   const undoToStep = undoToStep; // Should already be in scope
+   
+   if (undoToStep === 'negative_experience_description') {
+     // User is going back to re-enter trauma description
+     console.log('🧹 UNDO_METADATA_CLEAR: Clearing trauma-related metadata');
+     context.problemStatement = '';
+     context.metadata.problemStatement = '';
+     context.metadata.originalProblemStatement = '';
+     context.metadata.currentTraumaIdentity = '';
+     context.metadata.originalTraumaIdentity = '';
+   }
+   
+   if (undoToStep === 'reality_goal_capture' || undoToStep === 'goal_description') {
+     // User is going back to re-enter goal
+     console.log('🧹 UNDO_METADATA_CLEAR: Clearing goal-related metadata');
+     context.problemStatement = '';
+     context.metadata.problemStatement = '';
+     context.metadata.originalProblemStatement = '';
+     context.metadata.currentGoal = '';
+     context.metadata.goalWithDeadline = '';
+     context.metadata.goalStatement = '';
+   }
+   
+   if (undoToStep === 'work_type_description') {
+     // User is going back to re-enter problem description
+     console.log('🧹 UNDO_METADATA_CLEAR: Clearing problem-related metadata');
+     context.problemStatement = '';
+     context.metadata.problemStatement = '';
+     context.metadata.originalProblemStatement = '';
+     context.metadata.currentDiggingProblem = '';
+     context.metadata.newDiggingProblem = '';
+   }
+   ```
+
+6. Verify placement - this should be BEFORE the line:
+   ```typescript
+   // Determine the correct phase for the target step
+   const targetPhase = getPhaseForStep(undoToStep);
+   ```
+
+7. Save file, run linter, test
+
+8. Commit:
+   ```bash
+   git add app/api/treatment-v2/route.ts
+   git commit -m "fix(cache): Clear metadata when undoing to re-entry points
+
+   - Clear trauma metadata when undoing to negative_experience_description
+   - Clear goal metadata when undoing to reality_goal_capture
+   - Clear problem metadata when undoing to work_type_description
+   - Ensures clean state for user re-entry
+   
+   Phase 2 of 3 for cache fix - see cacheFix.txt"
+   ```
+
+PAUSE HERE. Test thoroughly before proceeding to Phase 3.
+
+
+PHASE 3 IMPLEMENTATION (Do Third):
+----------------------------------
+
+PART A: Add cache invalidation method
+
+1. Open file: lib/v2/treatment-state-machine.ts
+
+2. Navigate to line 745 (after clearGoalCache method)
+
+3. ADD new method:
+   ```typescript
+   
+   /**
+    * Clear cached responses for specific steps (called during undo)
+    * This removes stale cached responses that may have old user input embedded
+    */
+   public invalidateCacheForSteps(stepIds: string[]): void {
+     if (!stepIds || stepIds.length === 0) {
+       console.log('🧹 CACHE_INVALIDATION: No steps to invalidate');
+       return;
+     }
+     
+     let clearedCount = 0;
+     stepIds.forEach(stepId => {
+       // Clear all cache entries that contain this stepId
+       // This includes both static and dynamic cache entries
+       this.responseCache.cache.forEach((_, key) => {
+         if (key.includes(stepId)) {
+           this.responseCache.cache.delete(key);
+           clearedCount++;
+         }
+       });
+     });
+     
+     console.log(`🧹 UNDO_CACHE_CLEAR: Invalidated ${clearedCount} cache entries for ${stepIds.length} undone steps`);
+   }
+   ```
+
+PART B: Call cache invalidation during undo
+
+4. Open file: app/api/treatment-v2/route.ts
+
+5. Navigate to line 1070 (inside the foundTargetStep block)
+
+6. MODIFY the try block to add cache invalidation:
+   ```typescript
+   try {
+     if (foundTargetStep) {
+       // Clear responses for steps after our target
+       treatmentMachine.clearUserResponsesForUndo(sessionId, stepsToKeep);
+       console.log('Treatment API: Cleared user responses after target step');
+       
+       // CACHE FIX: Also invalidate cached responses for those steps
+       const stepsToInvalidate: string[] = [];
+       Object.keys(context.userResponses).forEach(stepId => {
+         if (!stepsToKeep.has(stepId)) {
+           stepsToInvalidate.push(stepId);
+         }
+       });
+       
+       if (stepsToInvalidate.length > 0) {
+         treatmentMachine.invalidateCacheForSteps(stepsToInvalidate);
+         console.log('Treatment API: Invalidated cache for undone steps:', stepsToInvalidate);
+       }
+     } else {
+       // ... existing else block
+     }
+   }
+   ```
+
+7. Save files, run linter, test
+
+8. Commit:
+   ```bash
+   git add lib/v2/treatment-state-machine.ts app/api/treatment-v2/route.ts
+   git commit -m "fix(cache): Add cache invalidation during undo
+
+   - New method invalidateCacheForSteps() to clear stale cache entries
+   - Call cache invalidation in handleUndo for all undone steps
+   - Removes cached responses with embedded old user input
+   - Comprehensive solution for all modalities
+   
+   Phase 3 of 3 for cache fix - see cacheFix.txt"
+   ```
+
+FINAL STEP: Full regression testing across all modalities
+
+================================================================================
+  7. TESTING PROCEDURES
+================================================================================
+
+TEST SUITE A: PHASE 1 VERIFICATION (Trauma Specific)
+----------------------------------------------------
+
+Test Case A1: Trauma Undo and Re-entry
+Prerequisites: Clean browser session, logged in
+Steps:
+  1. Start new treatment session
+  2. Select work type: "3" (NEGATIVE EXPERIENCE)
+  3. Enter trauma: "first traumatic memory"
+  4. Answer "yes" to trauma_shifting_intro
+  5. At trauma_identity_step, verify message contains "first traumatic memory"
+  6. Click undo button twice (back to negative_experience_description)
+  7. Enter NEW trauma: "second traumatic memory"
+  8. Answer "yes" to trauma_shifting_intro
+  9. At trauma_identity_step, CHECK:
+     ✅ Message should contain "second traumatic memory"
+     ❌ Message should NOT contain "first traumatic memory"
+
+Expected Console Logs:
+  - "🚀 CACHE_SKIP: Skipping cache for trauma_identity_step..."
+  - Cache hit rate should NOT increase significantly
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+Test Case A2: Multiple Undo Cycles
+Prerequisites: Clean browser session, logged in
+Steps:
+  1-9. Same as A1
+  10. Click undo twice again
+  11. Enter THIRD trauma: "third traumatic memory"
+  12. Progress to trauma_identity_step
+  13. Verify message contains "third traumatic memory"
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+TEST SUITE B: PHASE 2 VERIFICATION (All Modalities)
+---------------------------------------------------
+
+Test Case B1: Reality Shifting (Goals)
+Steps:
+  1. Start session, select work type "2" (GOAL)
+  2. Enter goal: "first goal description"
+  3. Progress through reality_shifting_intro
+  4. Undo back to goal_description or reality_goal_capture
+  5. Enter NEW goal: "second goal description"
+  6. Progress forward
+  7. Verify all messages use "second goal description"
+
+Expected Console Logs:
+  - "🧹 UNDO_METADATA_CLEAR: Clearing goal-related metadata"
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+Test Case B2: Problem Shifting
+Steps:
+  1. Start session, select work type "1" (PROBLEM)
+  2. Enter problem: "first problem description"
+  3. Progress through several steps
+  4. Undo back to work_type_description
+  5. Enter NEW problem: "second problem description"
+  6. Progress forward
+  7. Verify all messages use "second problem description"
+
+Expected Console Logs:
+  - "🧹 UNDO_METADATA_CLEAR: Clearing problem-related metadata"
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+Test Case B3: Identity Shifting (via Problem work type)
+Steps:
+  1. Start session, select work type "1" (PROBLEM)
+  2. Enter problem, select "Identity Shifting" method
+  3. Progress through identity_shifting_intro
+  4. Note the problem text used
+  5. Complete several steps
+  6. Undo back multiple steps
+  7. Progress forward again
+  8. Verify consistent problem text throughout
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+Test Case B4: Belief Shifting (via Problem work type)
+Steps:
+  1. Start session, select work type "1" (PROBLEM)
+  2. Enter problem, select "Belief Shifting" method
+  3. Progress through belief_shifting_intro
+  4. Note the problem text used
+  5. Complete several steps
+  6. Undo back multiple steps
+  7. Progress forward again
+  8. Verify consistent problem text throughout
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+Test Case B5: Blockage Shifting (via Problem work type)
+Steps:
+  1. Start session, select work type "1" (PROBLEM)
+  2. Enter problem, select "Blockage Shifting" method
+  3. Progress through blockage_shifting_intro
+  4. Note the problem text used
+  5. Complete several steps
+  6. Undo back multiple steps
+  7. Progress forward again
+  8. Verify consistent problem text throughout
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+TEST SUITE C: PHASE 3 VERIFICATION (Cache Invalidation)
+-------------------------------------------------------
+
+Test Case C1: Cache Invalidation Logging
+Steps:
+  1. Start any session type
+  2. Progress through 5+ steps
+  3. Undo back 3 steps
+  4. Check console logs for:
+     - "Treatment API: Cleared user responses after target step"
+     - "🧹 UNDO_CACHE_CLEAR: Invalidated X cache entries..."
+     - List of invalidated step IDs
+
+Expected: Should see cache entries being cleared
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+Test Case C2: Performance After Cache Invalidation
+Steps:
+  1. Complete full treatment session (no undo)
+  2. Note response times and cache hit rate
+  3. Start new session
+  4. Progress 10 steps, undo 5 steps, progress 5 steps
+  5. Compare response times
+  6. Verify no significant performance degradation
+
+Expected: Response times should remain < 200ms average
+
+Result: PASS / FAIL
+Average response time: ______ ms
+Notes: _______________________________________________________________
+
+
+TEST SUITE D: REGRESSION TESTING (Ensure Nothing Broke)
+-------------------------------------------------------
+
+Test Case D1: Normal Flow Without Undo
+Steps:
+  1. Start session, select each work type (1, 2, 3)
+  2. Complete full session WITHOUT using undo
+  3. Verify all responses are appropriate
+  4. Verify cache is working (check hit rates in console)
+  5. Verify no errors in console
+
+Expected: Everything should work as before
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+Test Case D2: Voice Features Still Work
+Steps:
+  1. Enable voice input/output in accessibility settings
+  2. Start session with voice enabled
+  3. Use undo button during voice session
+  4. Verify voice features still work
+  5. Verify undo doesn't break voice state
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+Test Case D3: Database Persistence
+Steps:
+  1. Start session, progress several steps
+  2. Use undo button
+  3. Check database (treatment_sessions table)
+  4. Verify session state is correctly saved
+  5. Verify treatment_progress entries are accurate
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+TEST SUITE E: EDGE CASES
+------------------------
+
+Test Case E1: Rapid Undo/Redo
+Steps:
+  1. Start session
+  2. Progress 5 steps
+  3. Click undo 5 times rapidly
+  4. Progress forward 5 steps
+  5. Repeat 3-4 multiple times
+  6. Verify no errors, consistent state
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+Test Case E2: Undo to Beginning
+Steps:
+  1. Start session
+  2. Progress 10 steps
+  3. Undo all the way back to first step
+  4. Verify clean state
+  5. Progress forward with different inputs
+  6. Verify all new inputs are used
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+
+Test Case E3: Empty/Invalid Input After Undo
+Steps:
+  1. Start session, enter valid input
+  2. Progress several steps
+  3. Undo back to input step
+  4. Try to submit empty input
+  5. Verify validation works
+  6. Enter valid input
+  7. Verify works correctly
+
+Result: PASS / FAIL
+Notes: _______________________________________________________________
+
+================================================================================
+  8. ROLLBACK PLAN
+================================================================================
+
+If any phase causes issues, rollback immediately using these steps:
+
+ROLLBACK PHASE 1:
+----------------
+1. Revert commit:
+   ```bash
+   git revert <commit-hash-of-phase-1>
+   ```
+
+2. Or manually remove the two added lines:
+   - Open lib/v2/treatment-state-machine.ts
+   - Remove: `step.id === 'trauma_shifting_intro' ||`
+   - Remove: `step.id === 'trauma_identity_step' ||`
+   - Save and deploy
+
+Impact: Trauma caching bug will return, but no other side effects
+
+
+ROLLBACK PHASE 2:
+----------------
+1. Revert commit:
+   ```bash
+   git revert <commit-hash-of-phase-2>
+   ```
+
+2. Or manually remove the added metadata clearing block:
+   - Open app/api/treatment-v2/route.ts
+   - Remove the entire block added after line 1089
+   - Save and deploy
+
+Impact: Metadata will not be cleared on undo, Phase 1 fix still active
+
+
+ROLLBACK PHASE 3:
+----------------
+1. Revert commit:
+   ```bash
+   git revert <commit-hash-of-phase-3>
+   ```
+
+2. Or manually remove changes:
+   - Open lib/v2/treatment-state-machine.ts
+   - Remove invalidateCacheForSteps() method
+   - Open app/api/treatment-v2/route.ts
+   - Remove cache invalidation call in handleUndo
+   - Save and deploy
+
+Impact: Cache won't be invalidated on undo, but Phase 1 & 2 fixes still active
+
+
+EMERGENCY FULL ROLLBACK:
+-----------------------
+If all phases need to be rolled back:
+
+```bash
+git log --oneline  # Find commit before fixes started
+git reset --hard <commit-hash-before-fixes>
+git push --force-with-lease origin main  # CAUTION: Only if necessary
+```
+
+Or cherry-pick specific good commits:
+```bash
+git checkout <commit-before-fixes>
+git cherry-pick <good-commit-1>
+git cherry-pick <good-commit-2>
+```
+
+NOTIFICATION:
+After any rollback, update this document with:
+- What failed
+- Why it failed
+- What was learned
+- Revised approach
+
+================================================================================
+  9. ADDITIONAL NOTES & CONSIDERATIONS
+================================================================================
+
+PERFORMANCE CONSIDERATIONS:
+--------------------------
+- Phase 1: Minimal impact (2 steps won't cache)
+- Phase 2: No performance impact (just clearing metadata)
+- Phase 3: Small impact (regenerate responses after undo)
+- Overall: Response times should remain < 200ms
+
+MONITORING AFTER DEPLOYMENT:
+---------------------------
+Watch for:
+- Cache hit rate changes (should decrease slightly)
+- Response time changes (should stay under 200ms)
+- Error rates (should not increase)
+- User reports of correct/incorrect content display
+
+Console logs to monitor:
+- "🚀 CACHE_SKIP" messages (should see for trauma steps)
+- "🧹 UNDO_METADATA_CLEAR" messages (should see on specific undos)
+- "🧹 UNDO_CACHE_CLEAR" messages (should see after Phase 3)
+
+FUTURE IMPROVEMENTS (Post-Fix):
+-------------------------------
+After all phases are stable:
+
+1. Consider adding more comprehensive cache keys that include session ID
+   to prevent cross-session cache collisions
+
+2. Add telemetry to track:
+   - How often users undo
+   - Which steps users undo from most
+   - Cache effectiveness after fixes
+
+3. Consider implementing TTL refresh on metadata changes
+
+4. Document cache strategy in separate architecture doc
+
+KNOWN LIMITATIONS:
+-----------------
+- This fix addresses undo-related caching issues
+- Does not address potential cross-session cache issues (different bug)
+- Does not optimize cache performance (working as designed)
+- Phase 4 (mutation tracking) intentionally not recommended due to complexity
+
+QUESTIONS/CLARIFICATIONS NEEDED:
+--------------------------------
+(Add any questions that arise during implementation)
+
+Q: 
+A: 
+
+Q: 
+A: 
+
+================================================================================
+  10. SIGN-OFF & COMPLETION TRACKING
+================================================================================
+
+PHASE 1 - Cache Skip Protection:
+---------------------------------
+Date Started: _______________
+Implementer: _______________
+Date Completed: _______________
+Tested By: _______________
+Test Results: PASS / FAIL
+Deployed to Staging: _______________
+Deployed to Production: _______________
+Status: [ ] Not Started [ ] In Progress [ ] Complete [ ] Rolled Back
+
+Notes:
+_____________________________________________________________________
+_____________________________________________________________________
+
+
+PHASE 2 - Metadata Clearing:
+----------------------------
+Date Started: _______________
+Implementer: _______________
+Date Completed: _______________
+Tested By: _______________
+Test Results: PASS / FAIL
+Deployed to Staging: _______________
+Deployed to Production: _______________
+Status: [ ] Not Started [ ] In Progress [ ] Complete [ ] Rolled Back
+
+Notes:
+_____________________________________________________________________
+_____________________________________________________________________
+
+
+PHASE 3 - Cache Invalidation:
+-----------------------------
+Date Started: _______________
+Implementer: _______________
+Date Completed: _______________
+Tested By: _______________
+Test Results: PASS / FAIL
+Deployed to Staging: _______________
+Deployed to Production: _______________
+Status: [ ] Not Started [ ] In Progress [ ] Complete [ ] Rolled Back
+
+Notes:
+_____________________________________________________________________
+_____________________________________________________________________
+
+
+FINAL SIGN-OFF:
+--------------
+All phases completed and tested: _______________
+Final approval: _______________
+Date: _______________
+
+This bug is: [ ] Fully Fixed [ ] Partially Fixed [ ] Not Fixed
+
+Post-deployment monitoring period: _______ days
+Monitoring results: _____________________________________________________
+_____________________________________________________________________
+
+================================================================================
+  END OF DOCUMENT
+================================================================================
+
+Document Version: 1.0
+Created: 2025-01-06
+Last Updated: 2025-01-06
+Document Owner: Development Team
+Related Issues: Trauma Shifting Cache Bug
+Related Files: 
+  - lib/v2/treatment-state-machine.ts
+  - app/api/treatment-v2/route.ts
+  - components/treatment/v2/TreatmentSession.tsx (frontend undo button)
+
+For questions or clarifications, refer to the investigation session logs
+or contact the original investigator.
+
+================================================================================

@@ -1069,6 +1069,19 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
           // Clear responses for steps after our target
           treatmentMachine.clearUserResponsesForUndo(sessionId, stepsToKeep);
           console.log('Treatment API: Cleared user responses after target step');
+          
+          // CACHE FIX: Also invalidate cached responses for those steps
+          const stepsToInvalidate: string[] = [];
+          Object.keys(context.userResponses).forEach(stepId => {
+            if (!stepsToKeep.has(stepId)) {
+              stepsToInvalidate.push(stepId);
+            }
+          });
+          
+          if (stepsToInvalidate.length > 0) {
+            treatmentMachine.invalidateCacheForSteps(stepsToInvalidate);
+            console.log('Treatment API: Invalidated cache for undone steps:', stepsToInvalidate);
+          }
         } else {
           // If not found in current phase, clear all responses to be safe
           treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
@@ -1086,6 +1099,39 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
         console.error('Treatment API: Error clearing all responses:', clearError);
         // Continue - this isn't critical for the undo operation
       }
+    }
+    
+    // CACHE FIX: Clear step-specific metadata when undoing to re-entry points
+    // This prevents stale cached responses from using old user input
+    if (undoToStep === 'negative_experience_description') {
+      // User is going back to re-enter trauma description
+      console.log('🧹 UNDO_METADATA_CLEAR: Clearing trauma-related metadata');
+      context.problemStatement = '';
+      context.metadata.problemStatement = '';
+      context.metadata.originalProblemStatement = '';
+      context.metadata.currentTraumaIdentity = '';
+      context.metadata.originalTraumaIdentity = '';
+    }
+    
+    if (undoToStep === 'reality_goal_capture' || undoToStep === 'goal_description') {
+      // User is going back to re-enter goal
+      console.log('🧹 UNDO_METADATA_CLEAR: Clearing goal-related metadata');
+      context.problemStatement = '';
+      context.metadata.problemStatement = '';
+      context.metadata.originalProblemStatement = '';
+      context.metadata.currentGoal = '';
+      context.metadata.goalWithDeadline = '';
+      context.metadata.goalStatement = '';
+    }
+    
+    if (undoToStep === 'work_type_description') {
+      // User is going back to re-enter problem description
+      console.log('🧹 UNDO_METADATA_CLEAR: Clearing problem-related metadata');
+      context.problemStatement = '';
+      context.metadata.problemStatement = '';
+      context.metadata.originalProblemStatement = '';
+      context.metadata.currentDiggingProblem = '';
+      context.metadata.newDiggingProblem = '';
     }
     
       // Determine the correct phase for the target step

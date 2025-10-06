@@ -449,6 +449,8 @@ export class TreatmentStateMachine {
       const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem || context.metadata?.problemRestated)) ||
                             (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem) ||
                             step.id === 'problem_shifting_intro' ||
+                            step.id === 'trauma_shifting_intro' ||
+                            step.id === 'trauma_identity_step' ||
                             (step.id === 'blockage_shifting_intro' && (context.metadata?.cycleCount > 0 || context.metadata?.currentDiggingProblem)) ||
                             (step.id.startsWith('blockage_step_') && (context.metadata?.cycleCount > 0)) ||
                             (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
@@ -742,6 +744,31 @@ export class TreatmentStateMachine {
     });
     
     console.log(`🧹 CACHE_CLEAR: Cleared ${clearedCount} goal-related cache entries`);
+  }
+
+  /**
+   * Clear cached responses for specific steps (called during undo)
+   * This removes stale cached responses that may have old user input embedded
+   */
+  public invalidateCacheForSteps(stepIds: string[]): void {
+    if (!stepIds || stepIds.length === 0) {
+      console.log('🧹 CACHE_INVALIDATION: No steps to invalidate');
+      return;
+    }
+    
+    let clearedCount = 0;
+    stepIds.forEach(stepId => {
+      // Clear all cache entries that contain this stepId
+      // This includes both static and dynamic cache entries
+      this.responseCache.cache.forEach((_, key) => {
+        if (key.includes(stepId)) {
+          this.responseCache.cache.delete(key);
+          clearedCount++;
+        }
+      });
+    });
+    
+    console.log(`🧹 UNDO_CACHE_CLEAR: Invalidated ${clearedCount} cache entries for ${stepIds.length} undone steps`);
   }
 
   /**
