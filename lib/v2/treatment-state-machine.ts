@@ -410,7 +410,7 @@ export class TreatmentStateMachine {
       'reality_shifting_intro',  // Ensure goal is stated as a goal  
       'blockage_shifting_intro', // Ensure problem is stated as a problem
       // 'identity_shifting_intro' REMOVED - should store identity response directly, not process with AI
-      'trauma_shifting_intro',   // Ensure input is stated as a negative experience
+      // 'trauma_shifting_intro',   // REMOVED - This is a simple yes/no question, no AI needed
       'belief_shifting_intro'    // Ensure problem is stated as a problem
     ];
     
@@ -6200,14 +6200,12 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         break;
 
       case 'trauma_problem_redirect':
-        // User answered how they feel about the fact it happened - now route to problem clearing methods
-        // Store their feeling as the problem statement and reset to problem work type
-        context.problemStatement = lastResponse;
-        context.metadata.problemStatement = lastResponse;
+        // User answered how they feel about the fact it happened - now route to problem statement capture
+        // Set to problem work type and ask them to state the problem clearly
         context.metadata.workType = 'problem';
         context.metadata.selectedMethod = undefined; // Reset method selection
         context.currentPhase = 'method_selection';
-        return 'choose_method';
+        return 'work_type_description'; // Ask them to state the problem in a few words
         break;
 
 
