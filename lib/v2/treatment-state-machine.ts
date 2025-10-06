@@ -6305,11 +6305,15 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'trauma_dig_deeper':
         // Trauma Shifting: Check if might feel bad about this incident in future
         if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
-          // Might feel bad in future - ask about other problems
-          return 'trauma_dig_deeper_2';
+          // Might feel bad in future - route to problem statement capture and method selection
+          context.metadata.workType = 'problem';
+          context.metadata.selectedMethod = undefined;
+          context.metadata.skipUserInput = true;
+          context.currentPhase = 'work_type_selection';
+          return 'work_type_description';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
-          // Won't feel bad in future - ask about other problems
+          // Won't feel bad in future - ask second dig deeper question
           return 'trauma_dig_deeper_2';
         }
         break;
@@ -6317,9 +6321,12 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'trauma_dig_deeper_2':
         // Trauma Shifting: Check if anything else is a problem
         if (lastResponse.includes('yes')) {
-          // Yes, something else is a problem - ask them to define it in a few words first
-          context.currentPhase = 'discovery';
-          return 'restate_selected_problem';
+          // Yes, something else is a problem - route to problem statement capture and method selection
+          context.metadata.workType = 'problem';
+          context.metadata.selectedMethod = undefined;
+          context.metadata.skipUserInput = true;
+          context.currentPhase = 'work_type_selection';
+          return 'work_type_description';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
           // No other problems - check if we're in digging deeper flow
