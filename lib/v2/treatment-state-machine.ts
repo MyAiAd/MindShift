@@ -1867,7 +1867,7 @@ export class TreatmentStateMachine {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please confirm if this is correct.' }
           ],
-          nextStep: 'route_to_method',
+          nextStep: 'choose_method',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
@@ -2057,7 +2057,7 @@ export class TreatmentStateMachine {
       steps: [
         {
           id: 'choose_method',
-          scriptedResponse: "METHOD_SELECTION_NEEDED",
+          scriptedResponse: "Choose your Problem Shifting method:",
           expectedResponseType: 'open',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
