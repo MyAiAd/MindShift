@@ -5638,9 +5638,13 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         } else if (descWorkType === 'negative_experience') {
           context.currentPhase = 'trauma_shifting';
           return 'trauma_shifting_intro';
+        } else if (descWorkType === 'problem' && !descSelectedMethod) {
+          // Problem work type but no method selected yet - route to method selection
+          context.currentPhase = 'method_selection';
+          return 'choose_method';
         }
         
-        // Fallback to confirmation step
+        // Fallback to confirmation step (for other cases like goal without method)
         return 'confirm_statement';
         
       case 'work_type_selection':
