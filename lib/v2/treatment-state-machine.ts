@@ -1749,6 +1749,12 @@ export class TreatmentStateMachine {
             
             const workType = context.metadata.workType || 'item';
 
+            // Check if we should skip user input (e.g., coming from trauma_problem_redirect)
+            const skipUserInput = context.metadata.skipUserInput;
+            if (skipUserInput) {
+              context.metadata.skipUserInput = false; // Clear flag
+            }
+
             // Check if user input is actually a method name (not a problem description)
             const isMethodName = userInput && (
               userInput.toLowerCase().includes('problem shifting') ||
@@ -1759,8 +1765,8 @@ export class TreatmentStateMachine {
               userInput.toLowerCase().includes('trauma shifting')
             );
             
-            // If no user input OR if user input is a method name, ask for description
-            if (!userInput || isMethodName) {
+            // If no user input OR if user input is a method name OR skipUserInput flag is set, ask for description
+            if (!userInput || isMethodName || skipUserInput) {
               if (workType === 'problem') {
                 return "Tell me what the problem is in a few words.";
               } else if (workType === 'goal') {
@@ -6204,6 +6210,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         // Set to problem work type and ask them to state the problem clearly
         context.metadata.workType = 'problem';
         context.metadata.selectedMethod = undefined; // Reset method selection
+        context.metadata.skipUserInput = true; // Force work_type_description to ask the question, not process previous input
         context.currentPhase = 'work_type_selection';
         return 'work_type_description'; // Ask them to state the problem in a few words
         break;
