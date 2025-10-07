@@ -6281,6 +6281,16 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {
           // Still feeling identity - repeat step 3 (go back to step A)
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          
+          // CRITICAL FIX: Clear previous iteration responses to prevent cached feelings
+          // This ensures step E uses the NEW step D response, not the old one
+          delete context.userResponses['trauma_dissolve_step_a'];
+          delete context.userResponses['trauma_dissolve_step_b'];
+          delete context.userResponses['trauma_dissolve_step_c'];
+          delete context.userResponses['trauma_dissolve_step_d'];
+          delete context.userResponses['trauma_dissolve_step_e'];
+          console.log(`🔄 TRAUMA_CYCLE: Starting iteration ${context.metadata.cycleCount}, cleared previous dissolve responses`);
+          
           return 'trauma_dissolve_step_a';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
