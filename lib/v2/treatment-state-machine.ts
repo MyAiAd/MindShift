@@ -6291,6 +6291,12 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           delete context.userResponses['trauma_dissolve_step_e'];
           console.log(`🔄 TRAUMA_CYCLE: Starting iteration ${context.metadata.cycleCount}, cleared previous dissolve responses`);
           
+          // CRITICAL: Immediately persist the cleared responses to database
+          // This prevents the old responses from being reloaded on the next request
+          this.saveContextToDatabase(context).catch(error => 
+            console.error('Failed to save cleared trauma responses to database:', error)
+          );
+          
           return 'trauma_dissolve_step_a';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
