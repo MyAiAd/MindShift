@@ -484,6 +484,7 @@ export class TreatmentStateMachine {
             (step.id === 'identity_dissolve_step_e' && userInput?.trim()) ||
             // CRITICAL: Trauma dissolve steps that reference previous step responses - never cache to prevent iteration conflicts
             step.id === 'trauma_dissolve_step_b' ||
+            step.id === 'trauma_dissolve_step_d' ||
             step.id === 'trauma_dissolve_step_e' ||
                                         // Goal-related steps that depend on dynamic goal context - never cache to prevent cross-session conflicts
             step.id === 'goal_confirmation' ||
