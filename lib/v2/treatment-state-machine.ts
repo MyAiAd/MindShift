@@ -168,7 +168,20 @@ export class TreatmentStateMachine {
     // Update context with user response
     treatmentContext.userResponses[treatmentContext.currentStep] = userInput;
     treatmentContext.lastActivity = new Date();
-
+    
+    // CRITICAL FIX: For trauma dissolve step A, also store in metadata for immediate access by step B
+    // This prevents step B from using cached responses from previous iterations
+    if (treatmentContext.currentStep === 'trauma_dissolve_step_a') {
+      treatmentContext.metadata.currentStepAResponse = userInput;
+      console.log(`🔄 TRAUMA_STEP_A_SUBMITTED: Stored response "${userInput}" in metadata`);
+    }
+    
+    // CRITICAL FIX: For trauma dissolve step D, also store in metadata for immediate access by step E
+    // This prevents step E from using cached responses from previous iterations
+    if (treatmentContext.currentStep === 'trauma_dissolve_step_d') {
+      treatmentContext.metadata.currentStepDResponse = userInput;
+      console.log(`🔄 TRAUMA_STEP_D_SUBMITTED: Stored response "${userInput}" in metadata`);
+    }
     // Validate user input FIRST (unless bypassed)
     console.log(`🚨 MAIN_PROCESSING: About to validate - bypassValidation=${bypassValidation}, step="${currentStep.id}", input="${userInput}"`);
     if (!bypassValidation) {
@@ -3848,8 +3861,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'trauma_dissolve_step_b',
           scriptedResponse: (userInput, context) => {
-            // Get the feeling from trauma_dissolve_step_a response
-            const lastResponse = context.userResponses?.['trauma_dissolve_step_a'] || 'that feeling';
+            // FIXED: Use metadata to get the CURRENT step A response, not the cached one from userResponses
+            // This prevents using old responses from previous iterations
+            const lastResponse = context.metadata.currentStepAResponse || context.userResponses?.['trauma_dissolve_step_a'] || 'that feeling';
             return `Feel '${lastResponse}'... what happens in yourself when you feel '${lastResponse}'?`;
           },
           expectedResponseType: 'open',
@@ -3897,7 +3911,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'trauma_dissolve_step_e',
           scriptedResponse: (userInput, context) => {
-            const lastResponse = context.userResponses?.['trauma_dissolve_step_d'] || 'that feeling';
+            // FIXED: Use metadata to get the CURRENT step D response, not the cached one from userResponses
+            // This prevents using old responses from previous iterations
+            const lastResponse = context.metadata.currentStepDResponse || context.userResponses?.['trauma_dissolve_step_d'] || 'that feeling';
             return `Feel '${lastResponse}'... what happens in yourself when you feel '${lastResponse}'?`;
           },
           expectedResponseType: 'open',
