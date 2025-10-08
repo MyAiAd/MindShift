@@ -6341,9 +6341,23 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'trauma_future_scenario_check':
         // Trauma Shifting: Second future question - "Is there any scenario in which you might still feel yourself being X?"
         if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
-          // Might feel identity in scenarios - repeat Steps 3-5 with new identity
+          // Might feel identity in scenarios - repeat Steps 3-5 starting from step A
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          return 'trauma_dissolve_step_c'; // Ask "What are you when you're not being X?"
+          
+          // Clear previous iteration responses to prevent cached feelings
+          delete context.userResponses['trauma_dissolve_step_a'];
+          delete context.userResponses['trauma_dissolve_step_b'];
+          delete context.userResponses['trauma_dissolve_step_c'];
+          delete context.userResponses['trauma_dissolve_step_d'];
+          delete context.userResponses['trauma_dissolve_step_e'];
+          console.log(`🔄 TRAUMA_SCENARIO_CYCLE: Starting iteration ${context.metadata.cycleCount}, cleared previous dissolve responses`);
+          
+          // Persist the cleared responses to database
+          this.saveContextToDatabase(context).catch(error => 
+            console.error('Failed to save cleared trauma responses to database:', error)
+          );
+          
+          return 'trauma_dissolve_step_a'; // Start full dissolve sequence from the beginning
         }
         if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
           // Won't feel identity in any scenario - proceed to experience check (Step 6)
