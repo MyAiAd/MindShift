@@ -933,15 +933,24 @@ function getPhaseForStep(stepId: string): string {
     
     // Trauma shifting phase
     'trauma_shifting_intro': 'trauma_shifting',
+    'trauma_problem_redirect': 'trauma_shifting',
+    'trauma_identity_step': 'trauma_shifting',
     'trauma_dissolve_step_a': 'trauma_shifting',
     'trauma_dissolve_step_b': 'trauma_shifting',
-            'trauma_dissolve_step_c': 'trauma_shifting',
-        'trauma_dissolve_step_d': 'trauma_shifting',
-        'trauma_dissolve_step_e': 'trauma_shifting',
-      
+    'trauma_dissolve_step_c': 'trauma_shifting',
+    'trauma_dissolve_step_d': 'trauma_shifting',
+    'trauma_dissolve_step_e': 'trauma_shifting',
     'trauma_identity_check': 'trauma_shifting',
     'trauma_experience_check': 'trauma_shifting',
+    'trauma_dig_deeper_start': 'trauma_shifting',
     'trauma_dig_deeper': 'trauma_shifting',
+    'trauma_dig_deeper_2': 'trauma_shifting',
+    'trauma_integration_awareness_1': 'trauma_shifting',
+    'trauma_integration_awareness_2': 'trauma_shifting',
+    'trauma_integration_helped': 'trauma_shifting',
+    'trauma_integration_action': 'trauma_shifting',
+    'trauma_integration_action_more': 'trauma_shifting',
+    'trauma_session_complete': 'trauma_shifting',
     
     // Belief shifting phase
     'belief_shifting_intro': 'belief_shifting',
