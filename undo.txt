@@ -1,0 +1,390 @@
+UNDO / PHASE MAP ANALYSIS
+==========================
+Date: October 8, 2025
+Purpose: Identify missing step IDs in phase map that could cause 500 errors during undo operations
+
+METHODOLOGY:
+- Extracted all step IDs from lib/v2/treatment-state-machine.ts
+- Compared with stepToPhaseMap in app/api/treatment-v2/route.ts
+- Documented missing steps per modality
+- Identified potential yes/no button configuration issues
+
+==========================
+FINDINGS BY MODALITY
+==========================
+
+1. PROBLEM SHIFTING
+-------------------
+Steps in State Machine:
+- problem_shifting_intro
+- body_sensation_check
+- what_needs_to_happen_step
+- feel_solution_state
+- feel_good_state
+- what_happens_step
+- check_if_still_problem
+- problem_integration_awareness_1
+- problem_integration_awareness_2
+- problem_integration_awareness_3
+- problem_integration_awareness_4
+- problem_integration_awareness_5
+- problem_integration_action_1
+- problem_integration_action_2
+- problem_integration_action_3
+
+Steps in Phase Map:
+- problem_shifting_intro ✓
+- body_sensation_check ✓
+- what_needs_to_happen_step ✓
+- feel_solution_state ✓
+- feel_good_state ✓
+- what_happens_step ✓
+- check_if_still_problem ✓
+
+MISSING FROM PHASE MAP:
+❌ problem_integration_awareness_1
+❌ problem_integration_awareness_2
+❌ problem_integration_awareness_3
+❌ problem_integration_awareness_4
+❌ problem_integration_awareness_5
+❌ problem_integration_action_1
+❌ problem_integration_action_2
+❌ problem_integration_action_3
+
+RISK LEVEL: HIGH
+These are integration steps that users will reach. Undo from these steps will cause 500 errors.
+
+-------------------
+
+2. BLOCKAGE SHIFTING
+-------------------
+Steps in State Machine:
+- blockage_shifting_intro
+- blockage_step_b
+- blockage_step_c
+- blockage_step_d
+- blockage_step_e
+- blockage_check_if_still_problem
+- blockage_integration_awareness_1
+- blockage_integration_awareness_2
+- blockage_integration_awareness_3
+- blockage_integration_awareness_4
+- blockage_integration_awareness_5
+- blockage_integration_action_1
+- blockage_integration_action_2
+- blockage_integration_action_3
+
+Steps in Phase Map:
+- blockage_shifting_intro ✓
+- blockage_step_b ✓
+- blockage_step_c ✓
+- blockage_step_d ✓
+- blockage_step_e ✓
+- blockage_check_if_still_problem ✓
+
+MISSING FROM PHASE MAP:
+❌ blockage_integration_awareness_1
+❌ blockage_integration_awareness_2
+❌ blockage_integration_awareness_3
+❌ blockage_integration_awareness_4
+❌ blockage_integration_awareness_5
+❌ blockage_integration_action_1
+❌ blockage_integration_action_2
+❌ blockage_integration_action_3
+
+RISK LEVEL: HIGH
+Same issue as Problem Shifting - all integration steps missing.
+
+-------------------
+
+3. IDENTITY SHIFTING
+-------------------
+Steps in State Machine:
+- identity_shifting_intro
+- identity_dissolve_step_a
+- identity_dissolve_step_b
+- identity_dissolve_step_c
+- identity_dissolve_step_d
+- identity_dissolve_step_e
+- identity_dissolve_step_f
+- identity_future_check
+- identity_scenario_check
+- identity_check
+- identity_future_projection
+- identity_future_step_b
+- identity_future_step_c
+- identity_future_step_d
+- identity_future_step_e
+- identity_future_step_f
+- identity_problem_check
+- identity_session_complete
+
+Steps in Phase Map:
+- identity_shifting_intro ✓
+- identity_dissolve_step_a ✓
+- identity_dissolve_step_b ✓
+- identity_dissolve_step_c ✓
+- identity_dissolve_step_d ✓
+- identity_dissolve_step_e ✓
+- identity_check ✓
+- identity_problem_check ✓
+
+MISSING FROM PHASE MAP:
+❌ identity_dissolve_step_f
+❌ identity_future_check
+❌ identity_scenario_check
+❌ identity_future_projection
+❌ identity_future_step_b
+❌ identity_future_step_c
+❌ identity_future_step_d
+❌ identity_future_step_e
+❌ identity_future_step_f
+❌ identity_session_complete
+
+RISK LEVEL: HIGH
+Missing the entire "future projection" sequence (steps b-f) and identity_future_check.
+Similar pattern to trauma shifting that we just fixed.
+
+-------------------
+
+4. BELIEF SHIFTING
+-------------------
+Steps in State Machine:
+- belief_shifting_intro
+- belief_step_a
+- belief_step_b
+- belief_step_c
+- belief_step_d
+- belief_step_e
+- belief_step_f
+- belief_check_1
+- belief_check_2
+- belief_check_3
+- belief_check_4
+- belief_future_projection
+- belief_future_step_b
+- belief_future_step_c
+- belief_future_step_d
+- belief_future_step_e
+- belief_future_step_f
+- belief_problem_check
+- belief_integration_awareness_1
+- belief_integration_awareness_2
+- belief_integration_awareness_3
+- belief_integration_awareness_4
+- belief_integration_awareness_5
+- belief_integration_action_1
+- belief_integration_action_2
+- belief_integration_action_3
+
+Steps in Phase Map:
+- belief_shifting_intro ✓
+- belief_step_a ✓
+- belief_step_b ✓
+- belief_step_c ✓
+- belief_step_d ✓
+- belief_step_e ✓
+- belief_step_f ✓
+- belief_check_1 ✓
+- belief_check_2 ✓
+- belief_check_3 ✓
+- belief_check_4 ✓
+- belief_problem_check ✓
+
+MISSING FROM PHASE MAP:
+❌ belief_future_projection
+❌ belief_future_step_b
+❌ belief_future_step_c
+❌ belief_future_step_d
+❌ belief_future_step_e
+❌ belief_future_step_f
+❌ belief_integration_awareness_1
+❌ belief_integration_awareness_2
+❌ belief_integration_awareness_3
+❌ belief_integration_awareness_4
+❌ belief_integration_awareness_5
+❌ belief_integration_action_1
+❌ belief_integration_action_2
+❌ belief_integration_action_3
+
+RISK LEVEL: HIGH
+Missing entire future projection sequence and all integration steps.
+
+-------------------
+
+5. REALITY SHIFTING
+-------------------
+Steps in State Machine:
+- reality_goal_capture
+- reality_shifting_intro
+- reality_step_a2
+- reality_step_a3
+- reality_why_not_possible
+- reality_feel_reason
+- reality_feel_reason_2
+- reality_feel_reason_3
+- reality_column_a_restart
+- reality_checking_questions
+- reality_doubt_reason
+- reality_cycle_b2
+- reality_cycle_b3
+- reality_cycle_b4
+- reality_certainty_check
+- reality_integration_intro
+- reality_integration_start
+- reality_integration_helped
+- reality_integration_awareness
+- reality_integration_action
+- reality_integration_action_more
+- reality_integration_awareness_1
+- reality_integration_awareness_2
+- reality_integration_awareness_3
+- reality_integration_awareness_4
+- reality_integration_action_1
+- reality_integration_action_2
+- reality_integration_action_3
+
+Steps in Phase Map:
+- reality_shifting_intro ✓
+- reality_goal_capture ✓
+- reality_step_a2 ✓
+- reality_step_a3 ✓
+- reality_step_b ✓  [NOTE: NOT FOUND IN STATE MACHINE - may be legacy]
+- reality_why_not_possible ✓
+- reality_feel_reason ✓
+- reality_feel_reason_2 ✓
+- reality_feel_reason_3 ✓
+- reality_checking_questions ✓
+- reality_doubt_reason ✓
+- reality_cycle_b2 ✓
+- reality_cycle_b3 ✓
+- reality_cycle_b4 ✓
+- reality_certainty_check ✓
+- reality_integration_intro ✓
+- reality_integration_start ✓
+- reality_integration_helped ✓
+- reality_integration_awareness ✓
+- reality_integration_action ✓
+- reality_integration_action_more ✓
+- reality_session_complete ✓
+
+MISSING FROM PHASE MAP:
+❌ reality_column_a_restart
+❌ reality_integration_awareness_1
+❌ reality_integration_awareness_2
+❌ reality_integration_awareness_3
+❌ reality_integration_awareness_4
+❌ reality_integration_action_1
+❌ reality_integration_action_2
+❌ reality_integration_action_3
+
+RISK LEVEL: MEDIUM-HIGH
+Reality Shifting is better covered but still missing several integration steps and column_a_restart.
+
+-------------------
+
+6. TRAUMA SHIFTING
+-------------------
+STATUS: ✅ FIXED (as of today's commits)
+
+All trauma steps now properly mapped including:
+- All trauma_future_* steps
+- All trauma_integration_* steps
+- trauma_dig_deeper_start (newly added)
+
+-------------------
+
+==========================
+SHARED/GENERIC INTEGRATION STEPS
+==========================
+
+The following generic integration steps are used across modalities:
+- integration_awareness_1
+- integration_awareness_2
+- integration_awareness_3
+- integration_awareness_4
+- integration_awareness_5
+- integration_action_1
+- integration_action_2
+- integration_action_3
+- integration_action_4
+- integration_action_5
+
+These are mapped to 'integration' phase ✓
+
+However, each modality also has its own specific integration steps (e.g., problem_integration_awareness_1) 
+that are currently NOT mapped, which is causing the undo issues.
+
+==========================
+YES/NO BUTTON CONFIGURATION CHECK
+==========================
+
+Checking if all yes/no steps are properly configured in their respective modality components...
+
+TRAUMA SHIFTING: ✅ FIXED (today)
+- trauma_dig_deeper_start now included in yes/no steps
+
+IDENTITY SHIFTING:
+Based on state machine, these appear to be yes/no steps:
+- identity_future_check (expectedResponseType: 'yesno')
+- identity_scenario_check (expectedResponseType: 'yesno')
+- identity_check (expectedResponseType: 'yesno')
+- identity_problem_check (expectedResponseType: 'yesno')
+- identity_future_step_f (may have yes/no buttons)
+
+Need to verify IdentityShifting.tsx component includes all of these.
+
+BELIEF SHIFTING:
+Based on state machine, these appear to be yes/no steps:
+- belief_check_1, belief_check_2, belief_check_3, belief_check_4
+- belief_problem_check
+- belief_future_step_b, c, d, e, f (may have yes/no buttons)
+
+Need to verify BeliefShifting.tsx component includes all of these.
+
+PROBLEM SHIFTING:
+- check_if_still_problem (expectedResponseType: 'yesno')
+
+BLOCKAGE SHIFTING:
+- blockage_check_if_still_problem (expectedResponseType: 'yesno')
+
+REALITY SHIFTING:
+- Various reality_checking_questions and reality_certainty_check steps
+
+==========================
+SUMMARY & RECOMMENDATIONS
+==========================
+
+CRITICAL ISSUES FOUND:
+1. Problem Shifting: 8 integration steps missing from phase map
+2. Blockage Shifting: 8 integration steps missing from phase map
+3. Identity Shifting: 10 steps missing (entire future projection sequence)
+4. Belief Shifting: 13 steps missing (future projection + all integration)
+5. Reality Shifting: 8 steps missing (various integration steps)
+
+TOTAL MISSING STEPS: 47 steps across 5 modalities
+
+IMPACT:
+- Any undo operation to these missing steps will result in 500 error
+- Users will lose their session progress
+- Creates frustration and data loss
+
+PRIORITY FIXES RECOMMENDED:
+1. HIGH: Add all missing integration steps for Problem Shifting
+2. HIGH: Add all missing integration steps for Blockage Shifting  
+3. HIGH: Add Identity Shifting future projection steps (identity_future_*)
+4. HIGH: Add Belief Shifting future projection + integration steps
+5. MEDIUM: Add Reality Shifting missing integration steps
+
+PATTERN OBSERVED:
+The phase map was likely created early and hasn't been kept in sync with state machine additions.
+Integration steps and future projection sequences appear to be systematically missing across modalities.
+
+RECOMMENDATION:
+Add all 47 missing steps to the phase map in app/api/treatment-v2/route.ts to prevent 500 errors.
+This is a surgical fix with no risk of breaking existing functionality.
+
+==========================
+END OF ANALYSIS
+==========================
+
