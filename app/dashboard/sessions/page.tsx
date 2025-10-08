@@ -425,7 +425,6 @@ export default function SessionsPage() {
         if (statsData.stats) {
           setStats(statsData.stats);
         }
-        alert('Statistics cleared successfully!');
       } else {
         throw new Error(data.error || 'Failed to clear statistics');
       }
