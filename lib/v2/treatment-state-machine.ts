@@ -6385,6 +6385,21 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {
           // Still a problem - repeat Steps 3-5 (skip intro, they already answered that)
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          
+          // Clear previous iteration responses to prevent cached identity/feelings
+          delete context.userResponses['trauma_identity_step'];
+          delete context.userResponses['trauma_dissolve_step_a'];
+          delete context.userResponses['trauma_dissolve_step_b'];
+          delete context.userResponses['trauma_dissolve_step_c'];
+          delete context.userResponses['trauma_dissolve_step_d'];
+          delete context.userResponses['trauma_dissolve_step_e'];
+          console.log(`🔄 TRAUMA_EXPERIENCE_CYCLE: Starting iteration ${context.metadata.cycleCount}, cleared previous identity and dissolve responses`);
+          
+          // Persist the cleared responses to database
+          this.saveContextToDatabase(context).catch(error => 
+            console.error('Failed to save cleared trauma responses to database:', error)
+          );
+          
           return 'trauma_identity_step';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
