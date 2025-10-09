@@ -405,7 +405,7 @@ export class TreatmentStateMachine {
     
     // Identity Shifting steps that need linguistic processing
     const identityShiftingSteps = [
-      'identity_dissolve_step_a', // "Feel yourself being [identity]... what does it feel like?"
+      // REMOVED: 'identity_dissolve_step_a' - Use scripted response for faster performance (already has perfect scripted logic)
       // REMOVED: 'identity_dissolve_step_b' - Use scripted response for better performance (already has perfect scripted logic)
       // 'identity_check' REMOVED - should use stored originalProblemIdentity, not AI processing
     ];
