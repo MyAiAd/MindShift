@@ -481,11 +481,13 @@ export class TreatmentStateMachine {
             (step.id === 'belief_step_b' && userInput?.trim()) ||
             (step.id === 'belief_step_d' && userInput?.trim()) ||
             (step.id === 'belief_step_e' && userInput?.trim()) ||
-            // CRITICAL: Identity dissolve steps that reference previous step responses - never cache to prevent wrong user input
+            // CRITICAL: Identity dissolve steps use user-specific identity/responses - never cache to prevent cross-session contamination
+            step.id === 'identity_dissolve_step_a' ||
             step.id === 'identity_dissolve_step_b' ||
             step.id === 'identity_dissolve_step_c' ||
             step.id === 'identity_dissolve_step_d' ||
-            (step.id === 'identity_dissolve_step_e' && userInput?.trim()) ||
+            step.id === 'identity_dissolve_step_e' ||
+            step.id === 'identity_dissolve_step_f' ||
             // CRITICAL: Trauma dissolve steps that reference previous step responses - never cache to prevent iteration conflicts
             step.id === 'trauma_dissolve_step_b' ||
             step.id === 'trauma_dissolve_step_d' ||
