@@ -6383,9 +6383,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'trauma_experience_check':
         // Trauma Shifting: Check if negative experience still feels like problem
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {
-          // Still a problem - repeat Steps 2-5 (go back to intro)
+          // Still a problem - repeat Steps 3-5 (skip intro, they already answered that)
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          return 'trauma_shifting_intro';
+          return 'trauma_identity_step';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
           // No longer a problem - ask if they want to dig deeper
