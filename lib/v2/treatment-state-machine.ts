@@ -6151,9 +6151,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'identity_future_check':
         // First identity check question: "Do you think you might feel yourself being [IDENTITY] in the future?"
         if (lastResponse.includes('yes') || lastResponse.includes('1')) {
-          // YES - ask them to project into future and feel the identity (like step 3a)
-          console.log(`🔍 IDENTITY_FUTURE_CHECK: User said YES, going to future projection step`);
-          return 'identity_future_projection';
+          // YES - identity not cleared, go back to Step 3 (Shifting) per flowchart
+          console.log(`🔍 IDENTITY_FUTURE_CHECK: User said YES, going back to shifting steps`);
+          return 'identity_dissolve_step_a';
         } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
           // NO - proceed to scenario check
           console.log(`🔍 IDENTITY_FUTURE_CHECK: User said NO, proceeding to scenario check`);
@@ -6166,17 +6166,17 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'identity_scenario_check':
         // Second identity check question: "Is there any scenario in which you might still feel yourself being [IDENTITY]?"
         if (lastResponse.includes('yes') || lastResponse.includes('1')) {
-          // YES - proceed to problem check (they found a scenario)
-          console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said YES, proceeding to problem check`);
-          return 'identity_problem_check';
+          // YES - identity not cleared, go back to Step 3 (Shifting) per flowchart
+          console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said YES, going back to shifting steps`);
+          return 'identity_dissolve_step_a';
         } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
-          // NO - identity is fully resolved, skip to final integration
-          console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said NO, identity fully resolved - proceeding to integration`);
-          return 'integration_awareness_1';
+          // NO - both checks passed, proceed to Step 5 (Check Problem)
+          console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said NO, both checks passed - proceeding to problem check`);
+          return 'identity_problem_check';
         }
-        // Default to problem check
-        console.log(`🔍 IDENTITY_SCENARIO_CHECK: Unclear response, proceeding to problem check`);
-        return 'identity_problem_check';
+        // Default: treat unclear as needing more work, go back to shifting
+        console.log(`🔍 IDENTITY_SCENARIO_CHECK: Unclear response, going back to shifting steps`);
+        return 'identity_dissolve_step_a';
         
       case 'reality_why_not_possible':
         // B1: Check if user says "no reason" to break the A/B loop
