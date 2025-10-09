@@ -1938,8 +1938,8 @@ export default function TreatmentSession({
                   </div>
                 </div>
               </div>
-            ) : currentStep === 'choose_method' ? (
-              /* Method Selection Buttons for choose_method step */
+            ) : false && currentStep === 'choose_method' ? (
+              /* DISABLED: Method Selection Buttons for choose_method step - Now handled by ProblemShifting modality component */
               <div className="flex space-x-3 max-w-4xl w-full">
                 {/* Undo Button */}
                 <div className="flex items-center">
