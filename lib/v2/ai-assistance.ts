@@ -58,7 +58,7 @@ export class AIAssistanceManager {
     // REMOVED: 'blockage_step_d' - Use user's exact words to preserve their agency
     // REMOVED: 'belief_step_b' - Use scripted response with user's exact words
     // REMOVED: 'belief_step_e' - Use scripted response with user's exact words to preserve agency
-    'identity_dissolve_step_a', // Identity Shifting: "Feel yourself being [identity]... what does it feel like?"
+    // REMOVED: 'identity_dissolve_step_a' - Use scripted response for faster performance (already has perfect scripted logic)
     // REMOVED: 'identity_dissolve_step_b' - Use scripted response for faster performance (already has perfect scripted logic)
     // 'identity_check' removed - should use stored originalProblemIdentity, not AI processing
     // REMOVED: 'trauma_dissolve_step_a' - Use scripted response with user's exact words to preserve agency and match protocol flowchart
@@ -626,38 +626,7 @@ CRITICAL: You must use the user's EXACT words for their goal. Do not change, rep
 The scripted response should use their goal exactly as stated: "${userInput}"
 
 Return the scripted response using their exact goal wording without any modifications.`;
-    } else if (stepId === 'identity_dissolve_step_a') {
-      return `You are a linguistic interpreter for Mind Shifting sessions. Your task is to use the user's exact identity words in the template.
-
-User's response: "${userInput}"
-Current scripted response: "${scriptedResponse}"
-
-Task: Use the user's exact identity words in the template without changing or interpreting them.
-
-Template: "Feel yourself being [user's exact words]... what does it feel like?"
-
-🚨 ABSOLUTELY CRITICAL RULES - DO NOT VIOLATE THESE:
-1. Use the user's COMPLETE and EXACT words - do NOT drop any words, especially nouns like "person", "man", "woman", etc.
-2. ONLY remove these specific prefixes if present: "someone who is", "a person who is", "I am a", "I am"
-3. NEVER EVER remove descriptive nouns like "person", "man", "woman", "child", "victim", etc.
-4. Preserve ALL adjectives and descriptive words exactly as given
-5. Return only the response using their exact words, nothing else
-
-🔥 SPECIFIC EXAMPLES - FOLLOW THESE EXACTLY:
-- User: "hurt person" → "Feel yourself being hurt person... what does it feel like?"
-- User: "angry person" → "Feel yourself being angry person... what does it feel like?"
-- User: "bad person" → "Feel yourself being bad person... what does it feel like?"
-- User: "victim" → "Feel yourself being victim... what does it feel like?"
-- User: "bad mother" → "Feel yourself being bad mother... what does it feel like?"
-
-⚠️ WRONG EXAMPLES - DO NOT DO THIS:
-- User: "hurt person" → ❌ "Feel yourself being hurt... what does it feel like?" (WRONG - dropped "person")
-- User: "angry person" → ❌ "Feel yourself being angry... what does it feel like?" (WRONG - dropped "person")
-
-🎯 YOUR EXACT TASK:
-If the user said "${userInput}", you must include ALL words from "${userInput}" in your response.
-
-Use the user's exact words in the template now:`;
+    // REMOVED: identity_dissolve_step_a AI logic - now uses scripted response for better performance
     // REMOVED: identity_dissolve_step_b AI logic - now uses scripted response for better performance
     // REMOVED: identity_check should use stored originalProblemIdentity, not AI processing
     } else if (stepId === 'trauma_dissolve_step_a') {
@@ -773,8 +742,7 @@ Rephrase now:`;
         return `Feel "${userResponse}"... what does "${userResponse}" feel like in your body?`;
       case 'sensation_progression':
         return `Feel "${userResponse}"... what happens to "${userResponse}" when you feel "${userResponse}"?`;
-      case 'identity_dissolve_step_a':
-        return `Feel yourself being "${userResponse}"... as "${userResponse}", what do you want?`;
+      // REMOVED: identity_dissolve_step_a - now uses scripted response for better performance
       // REMOVED: identity_dissolve_step_b - now uses scripted response for better performance
       // REMOVED: identity_check should use stored originalProblemIdentity, not AI processing
       case 'trauma_dissolve_step_a':
