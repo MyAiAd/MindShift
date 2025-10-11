@@ -2179,7 +2179,8 @@ export default function TreatmentSession({
                   )}
                   
                   {/* Method Selection Section - Only show for PROBLEM work type */}
-                  {selectedWorkType === 'PROBLEM' && (
+                  {/* DISABLED: Now handled by ProblemShifting modality component at choose_method step - Remove 'false &&' to re-enable */}
+                  {false && selectedWorkType === 'PROBLEM' && (
                     <div className="text-center">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                         Choose your preferred problem-clearing method:
