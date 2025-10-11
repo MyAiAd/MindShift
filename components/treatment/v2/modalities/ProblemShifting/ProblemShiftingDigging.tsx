@@ -75,12 +75,17 @@ export default function ProblemShiftingDigging({
     if (currentStep !== 'digging_method_selection') return false;
     
     // CRITICAL FIX: Only show if this is the active modality (prevents multiple button sets)
-    if (sessionMethod !== 'problem_shifting') return false;
+    console.log('🔍 ProblemShiftingDigging: sessionMethod =', sessionMethod, 'checking against "problem_shifting"');
+    if (sessionMethod !== 'problem_shifting') {
+      console.log('🔍 ProblemShiftingDigging: sessionMethod mismatch, not showing buttons');
+      return false;
+    }
     
     // Don't show if AI is asking clarifying questions
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (lastBotMessage?.usedAI) return false;
     
+    console.log('🔍 ProblemShiftingDigging: All checks passed, showing buttons');
     return true;
   };
 

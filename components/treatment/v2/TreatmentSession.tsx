@@ -353,7 +353,8 @@ export default function TreatmentSession({
                                    data.message === 'BLOCKAGE_SHIFTING_SELECTED' ||
                                    data.message === 'REALITY_SHIFTING_SELECTED' ||
                                    data.message === 'TRAUMA_SHIFTING_SELECTED' ||
-                                   data.message === 'Choose which Mind Shifting method you would like to use to clear the problem:';
+                                   data.message === 'Choose which Mind Shifting method you would like to use to clear the problem:' ||
+                                   data.message === 'We need to clear this problem. Which method would you like to use?';
         
         if (!isUIHandledMessage) {
           const botMessage: TreatmentMessage = {
