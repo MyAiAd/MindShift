@@ -506,7 +506,12 @@ export class TreatmentStateMachine {
                             step.id === 'reality_feel_reason_2' ||
                             step.id === 'reality_feel_reason_3' ||
                             // Reality Shifting doubt reason - depends on dynamic doubt percentage that changes between iterations
-                            step.id === 'reality_doubt_reason';
+                            step.id === 'reality_doubt_reason' ||
+                            // CRITICAL: Steps that depend on previous userResponses - never cache to prevent cross-problem conflicts
+                            step.id === 'feel_solution_state' ||  // Uses userResponses['what_needs_to_happen_step']
+                            step.id === 'reality_cycle_b2' ||      // Uses userResponses['reality_doubt_reason']
+                            step.id === 'reality_cycle_b4' ||      // Uses userResponses['reality_cycle_b3']
+                            step.id === 'analyze_response';        // Uses userResponses['mind_shifting_explanation'] before problemStatement is set
       let cacheKey: string | undefined;
       
       if (!shouldSkipCache) {
