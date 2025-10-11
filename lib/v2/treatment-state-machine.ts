@@ -6655,6 +6655,13 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         // Also update the problem statement to use the new problem from digging deeper
         const diggingSelectedMethod = context.metadata?.selectedMethod;
         
+        // DEBUG: Log everything to diagnose the issue
+        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: DEBUG START`);
+        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: selectedMethod: "${diggingSelectedMethod}"`);
+        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: metadata.currentDiggingProblem: "${context.metadata?.currentDiggingProblem}"`);
+        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: metadata.newDiggingProblem: "${context.metadata?.newDiggingProblem}"`);
+        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: userResponses.restate_anything_else_problem_1: "${context.userResponses?.['restate_anything_else_problem_1']}"`);
+        
         // Update problem statement to use the new problem from digging deeper flow
         // Get the problem statement from user responses first, then fall back to metadata
         const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
@@ -6664,11 +6671,16 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
                                             context.userResponses?.['restate_anything_else_problem_1'] ||
                                             context.userResponses?.['restate_anything_else_problem_2'];
         const newDiggingProblem = newProblemFromUserResponse || context.metadata?.newDiggingProblem || context.metadata?.currentDiggingProblem;
+        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: newProblemFromUserResponse: "${newProblemFromUserResponse}"`);
+        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: newDiggingProblem (final): "${newDiggingProblem}"`);
+        
         if (newDiggingProblem) {
           context.problemStatement = newDiggingProblem;
           context.metadata.currentDiggingProblem = newDiggingProblem;
           console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: Updated problemStatement to: "${newDiggingProblem}"`);
           console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: Source - userResponse: "${newProblemFromUserResponse}", metadata: "${context.metadata?.newDiggingProblem}"`);
+        } else {
+          console.error(`❌ DIGGING_METHOD_SELECTION_ROUTE: NO PROBLEM FOUND! This will cause routing to fail!`);
         }
         
         // Clear previous modality-specific metadata to ensure clean switch
