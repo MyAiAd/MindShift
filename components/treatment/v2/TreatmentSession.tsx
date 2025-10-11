@@ -1064,7 +1064,16 @@ export default function TreatmentSession({
 
       {/* Messages Area - No longer scrollable, uses page scroll instead */}
       <div className={`px-4 py-3 space-y-3 ${currentStep === 'digging_method_selection' ? 'pb-56' : 'pb-40'}`}>
-        {messages.map((message) => (
+        {messages
+          .filter(message => {
+            // Filter out the duplicate "Choose which Mind Shifting method" message from choose_method step
+            // The UI already shows this as a heading above the buttons
+            if (!message.isUser && message.content?.includes('Choose which Mind Shifting method you would like to use to clear the problem')) {
+              return false;
+            }
+            return true;
+          })
+          .map((message) => (
           <div
             key={message.id}
             className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
