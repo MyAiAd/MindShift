@@ -61,7 +61,10 @@ export default function BeliefShiftingDigging({
   // Helper function for Belief Shifting method selection during digging
   const shouldShowBeliefDiggingMethodButtons = () => {
     // Show for both the modality-specific step and the generic digging method selection step
-    if (currentStep !== 'belief_digging_method_selection' && currentStep !== 'digging_method_selection') return false;
+    if (currentStep !== 'belief_digging_method_selection' && 
+        currentStep !== 'digging_method_selection' &&
+        currentStep !== 'clear_anything_else_problem_1' &&
+        currentStep !== 'clear_anything_else_problem_2') return false;
     
     // CRITICAL FIX: Only show if this is the active modality (prevents multiple button sets)
     if (sessionMethod !== 'belief_shifting') return false;

@@ -72,7 +72,9 @@ export default function ProblemShiftingDigging({
   // Helper function to determine if we should show the digging method selection buttons
   const shouldShowDiggingMethodButtons = () => {
     // Only show for digging_method_selection step
-    if (currentStep !== 'digging_method_selection') return false;
+    if (currentStep !== 'digging_method_selection' &&
+        currentStep !== 'clear_anything_else_problem_1' &&
+        currentStep !== 'clear_anything_else_problem_2') return false;
     
     // CRITICAL FIX: Only show if this is the active modality (prevents multiple button sets)
     if (sessionMethod !== 'problem_shifting') return false;
