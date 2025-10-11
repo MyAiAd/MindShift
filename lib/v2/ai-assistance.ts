@@ -49,7 +49,7 @@ export class AIAssistanceManager {
   // Define specific steps that need linguistic interpretation
   private readonly AI_LINGUISTIC_STEPS = [
     'body_sensation_check',    // Problem Shifting: "Feel [contextualized emotion]... what happens in yourself when you feel [contextualized emotion]?"
-    'feel_solution_state',     // Problem Shifting: "What would you feel like if '[contextualized user response]' had already happened?"
+    // REMOVED: 'feel_solution_state' - Now uses scripted response with previous answer for instant performance
     // REMOVED: 'reality_step_a2' - Use user's exact words to preserve their agency
     // REMOVED: 'reality_feel_reason' - Use user's exact words to preserve their agency
     // REMOVED: 'reality_feel_reason_2' - Use exact scripted response from flowchart

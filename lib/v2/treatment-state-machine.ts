@@ -385,7 +385,8 @@ export class TreatmentStateMachine {
     }
     
     // Problem Shifting steps
-    const problemShiftingSteps = ['feel_solution_state'];
+    // REMOVED: 'feel_solution_state' - Now uses scripted response with previous answer for instant performance
+    const problemShiftingSteps: string[] = [];
     
     // Reality Shifting steps - ALL REMOVED: Now use pure scripted responses per flowchart
     // Previously included: reality_step_a2, reality_feel_reason, reality_feel_reason_2, reality_feel_reason_3
@@ -2188,7 +2189,11 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         },
         {
           id: 'feel_solution_state',
-          scriptedResponse: (userInput) => `What would you feel like if you already ${userInput || 'had that'}?`,
+          scriptedResponse: (userInput, context) => {
+            // Get the previous answer from what_needs_to_happen_step
+            const previousAnswer = context?.userResponses?.['what_needs_to_happen_step'] || 'that';
+            return `What would you feel like if ${previousAnswer} had already happened?`;
+          },
           expectedResponseType: 'feeling',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what you would feel like.' }
