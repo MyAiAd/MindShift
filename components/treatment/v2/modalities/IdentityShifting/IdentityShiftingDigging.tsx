@@ -20,7 +20,8 @@ export default function IdentityShiftingDigging({
   setUserInput,
   selectedWorkType,
   clickedButton,
-  modalityType
+  modalityType,
+  sessionMethod
 }: DiggingDeeperProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
@@ -61,6 +62,9 @@ export default function IdentityShiftingDigging({
   const shouldShowIdentityDiggingMethodButtons = () => {
     // Show for both the modality-specific step and the generic digging method selection step
     if (currentStep !== 'identity_digging_method_selection' && currentStep !== 'digging_method_selection') return false;
+    
+    // CRITICAL FIX: Only show if this is the active modality (prevents multiple button sets)
+    if (sessionMethod !== 'identity_shifting') return false;
     
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (lastBotMessage?.usedAI) return false;

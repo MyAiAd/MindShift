@@ -20,7 +20,8 @@ export default function BlockageShiftingDigging({
   setUserInput,
   selectedWorkType,
   clickedButton,
-  modalityType
+  modalityType,
+  sessionMethod
 }: DiggingDeeperProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
@@ -64,6 +65,9 @@ export default function BlockageShiftingDigging({
         currentStep !== 'digging_method_selection' &&
         currentStep !== 'clear_anything_else_problem_1' &&
         currentStep !== 'clear_anything_else_problem_2') return false;
+    
+    // CRITICAL FIX: Only show if this is the active modality (prevents multiple button sets)
+    if (sessionMethod !== 'blockage_shifting') return false;
     
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (lastBotMessage?.usedAI) return false;

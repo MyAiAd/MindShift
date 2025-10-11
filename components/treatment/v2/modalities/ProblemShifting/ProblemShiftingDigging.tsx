@@ -20,7 +20,8 @@ export default function ProblemShiftingDigging({
   setUserInput,
   selectedWorkType,
   clickedButton,
-  modalityType
+  modalityType,
+  sessionMethod
 }: DiggingDeeperProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
@@ -72,6 +73,9 @@ export default function ProblemShiftingDigging({
   const shouldShowDiggingMethodButtons = () => {
     // Only show for digging_method_selection step
     if (currentStep !== 'digging_method_selection') return false;
+    
+    // CRITICAL FIX: Only show if this is the active modality (prevents multiple button sets)
+    if (sessionMethod !== 'problem_shifting') return false;
     
     // Don't show if AI is asking clarifying questions
     const lastBotMessage = messages.filter(m => !m.isUser).pop();

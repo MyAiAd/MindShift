@@ -1191,6 +1191,7 @@ export default function TreatmentSession({
               selectedWorkType={selectedWorkType}
               clickedButton={clickedButton}
               modalityType="problem"
+              sessionMethod={sessionMethod}
             />
             <IdentityShifting 
               sessionId={sessionId}
@@ -1226,6 +1227,7 @@ export default function TreatmentSession({
               selectedWorkType={selectedWorkType}
               clickedButton={clickedButton}
               modalityType="identity"
+              sessionMethod={sessionMethod}
             />
             <BeliefShifting 
               sessionId={sessionId}
@@ -1261,6 +1263,7 @@ export default function TreatmentSession({
               selectedWorkType={selectedWorkType}
               clickedButton={clickedButton}
               modalityType="belief"
+              sessionMethod={sessionMethod}
             />
             <BlockageShifting 
               sessionId={sessionId}
@@ -1296,6 +1299,7 @@ export default function TreatmentSession({
               selectedWorkType={selectedWorkType}
               clickedButton={clickedButton}
               modalityType="blockage"
+              sessionMethod={sessionMethod}
             />
             <RealityShifting 
               sessionId={sessionId}

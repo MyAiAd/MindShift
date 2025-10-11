@@ -63,6 +63,7 @@ export interface GuardrailsProps {
 
 export interface DiggingDeeperProps extends ModalityComponentProps {
   modalityType: 'problem' | 'identity' | 'belief' | 'blockage' | 'reality' | 'trauma';
+  sessionMethod?: string; // Tracks active modality to prevent multiple button renders
 }
 
 export interface IntegrationProps extends ModalityComponentProps {
