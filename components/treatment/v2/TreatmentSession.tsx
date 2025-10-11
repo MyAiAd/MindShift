@@ -352,7 +352,8 @@ export default function TreatmentSession({
                                    data.message === 'BELIEF_SHIFTING_SELECTED' ||
                                    data.message === 'BLOCKAGE_SHIFTING_SELECTED' ||
                                    data.message === 'REALITY_SHIFTING_SELECTED' ||
-                                   data.message === 'TRAUMA_SHIFTING_SELECTED';
+                                   data.message === 'TRAUMA_SHIFTING_SELECTED' ||
+                                   data.message === 'Choose which Mind Shifting method you would like to use to clear the problem:';
         
         if (!isUIHandledMessage) {
           const botMessage: TreatmentMessage = {
@@ -1064,16 +1065,7 @@ export default function TreatmentSession({
 
       {/* Messages Area - No longer scrollable, uses page scroll instead */}
       <div className={`px-4 py-3 space-y-3 ${currentStep === 'digging_method_selection' ? 'pb-56' : 'pb-40'}`}>
-        {messages
-          .filter(message => {
-            // Filter out the duplicate "Choose which Mind Shifting method" message from choose_method step
-            // The UI already shows this as a heading above the buttons
-            if (!message.isUser && message.content?.includes('Choose which Mind Shifting method you would like to use to clear the problem')) {
-              return false;
-            }
-            return true;
-          })
-          .map((message) => (
+        {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
@@ -1755,7 +1747,7 @@ export default function TreatmentSession({
                 <div className="flex flex-col space-y-4 flex-1">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                      Choose your Mind Shifting method:
+                      Choose which Mind Shifting method you would like to use to clear the problem:
                     </h3>
                     {selectedWorkType === 'PROBLEM' ? (
                       // 2x2 grid layout for problem-clearing methods only
