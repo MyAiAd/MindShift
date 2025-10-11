@@ -53,6 +53,7 @@ export interface ModalityComponentProps {
   setUserInput: (input: string) => void;
   selectedWorkType: string | null;
   clickedButton: string | null;
+  setSessionMethod?: (method: string) => void; // For setting active modality
 }
 
 export interface GuardrailsProps {

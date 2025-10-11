@@ -23,11 +23,21 @@ export default function BeliefShifting({
   userInput,
   setUserInput,
   selectedWorkType,
-  clickedButton
+  clickedButton,
+  setSessionMethod
 }: BeliefShiftingProps) {
 
   const handleMethodSelection = async (method: string) => {
     console.log('🔍 DEBUG: BeliefShifting handleMethodSelection called with:', method);
+    
+    // Set sessionMethod when user selects a method
+    if (setSessionMethod) {
+      const methodLower = method.toLowerCase();
+      if (methodLower.includes('belief')) {
+        setSessionMethod('belief_shifting');
+      }
+    }
+    
     await onSendMessage(method);
   };
 

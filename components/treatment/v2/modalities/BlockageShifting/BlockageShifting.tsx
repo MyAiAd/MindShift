@@ -23,11 +23,21 @@ export default function BlockageShifting({
   userInput,
   setUserInput,
   selectedWorkType,
-  clickedButton
+  clickedButton,
+  setSessionMethod
 }: BlockageShiftingProps) {
 
   const handleMethodSelection = async (method: string) => {
     console.log('🔍 DEBUG: BlockageShifting handleMethodSelection called with:', method);
+    
+    // Set sessionMethod when user selects a method
+    if (setSessionMethod) {
+      const methodLower = method.toLowerCase();
+      if (methodLower.includes('blockage')) {
+        setSessionMethod('blockage_shifting');
+      }
+    }
+    
     await onSendMessage(method);
   };
 

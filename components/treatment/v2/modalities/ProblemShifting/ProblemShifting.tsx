@@ -25,11 +25,31 @@ export default function ProblemShifting({
   setUserInput,
   selectedWorkType,
   clickedButton,
-  showEmotionConfirmation
+  showEmotionConfirmation,
+  setSessionMethod
 }: ProblemShiftingProps) {
 
   const handleMethodSelection = async (method: string) => {
     console.log('🔍 DEBUG: ProblemShifting handleMethodSelection called with:', method);
+    
+    // CRITICAL FIX: Set sessionMethod when user selects a method
+    if (setSessionMethod) {
+      const methodLower = method.toLowerCase();
+      if (methodLower.includes('problem')) {
+        console.log('🎯 Setting sessionMethod to: problem_shifting');
+        setSessionMethod('problem_shifting');
+      } else if (methodLower.includes('identity')) {
+        console.log('🎯 Setting sessionMethod to: identity_shifting');
+        setSessionMethod('identity_shifting');
+      } else if (methodLower.includes('belief')) {
+        console.log('🎯 Setting sessionMethod to: belief_shifting');
+        setSessionMethod('belief_shifting');
+      } else if (methodLower.includes('blockage')) {
+        console.log('🎯 Setting sessionMethod to: blockage_shifting');
+        setSessionMethod('blockage_shifting');
+      }
+    }
+    
     await onSendMessage(method);
   };
 

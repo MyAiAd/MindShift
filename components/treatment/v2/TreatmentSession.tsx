@@ -1192,6 +1192,7 @@ export default function TreatmentSession({
               selectedWorkType={selectedWorkType}
               clickedButton={clickedButton}
               showEmotionConfirmation={showEmotionConfirmation}
+              setSessionMethod={setSessionMethod}
             />
             <ProblemShiftingDigging 
               sessionId={sessionId}
@@ -1228,6 +1229,7 @@ export default function TreatmentSession({
               setUserInput={setUserInput}
               selectedWorkType={selectedWorkType}
               clickedButton={clickedButton}
+              setSessionMethod={setSessionMethod}
             />
             <IdentityShiftingDigging 
               sessionId={sessionId}
@@ -1264,6 +1266,7 @@ export default function TreatmentSession({
               setUserInput={setUserInput}
               selectedWorkType={selectedWorkType}
               clickedButton={clickedButton}
+              setSessionMethod={setSessionMethod}
             />
             <BeliefShiftingDigging 
               sessionId={sessionId}
@@ -1300,6 +1303,7 @@ export default function TreatmentSession({
               setUserInput={setUserInput}
               selectedWorkType={selectedWorkType}
               clickedButton={clickedButton}
+              setSessionMethod={setSessionMethod}
             />
             <BlockageShiftingDigging 
               sessionId={sessionId}
