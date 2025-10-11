@@ -343,6 +343,60 @@ export class TreatmentStateMachine {
         const scriptedResponse = this.getScriptedResponse(nextStep, treatmentContext, userInput);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, treatmentContext);
         
+        // CRITICAL FIX: Check if this new step's response is also a signal that needs auto-progression
+        const isSignalResponse = scriptedResponse === 'GOAL_SELECTION_CONFIRMED' || 
+                                scriptedResponse === 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED' ||
+                                scriptedResponse === 'PROBLEM_SELECTION_CONFIRMED' ||
+                                scriptedResponse === 'SKIP_TO_TREATMENT_INTRO' ||
+                                scriptedResponse === 'ROUTE_TO_PROBLEM_INTEGRATION' ||
+                                scriptedResponse === 'ROUTE_TO_IDENTITY_INTEGRATION' ||
+                                scriptedResponse === 'ROUTE_TO_BELIEF_INTEGRATION' ||
+                                scriptedResponse === 'ROUTE_TO_BLOCKAGE_INTEGRATION' ||
+                                scriptedResponse === 'ROUTE_TO_TRAUMA_INTEGRATION' ||
+                                scriptedResponse === 'METHOD_SELECTION_NEEDED' ||
+                                scriptedResponse === 'PROBLEM_SHIFTING_SELECTED' ||
+                                scriptedResponse === 'IDENTITY_SHIFTING_SELECTED' ||
+                                scriptedResponse === 'BELIEF_SHIFTING_SELECTED' ||
+                                scriptedResponse === 'BLOCKAGE_SHIFTING_SELECTED';
+        
+        if (isSignalResponse) {
+          console.log(`🔍 PROCESS_INPUT: Signal detected in next step response: "${scriptedResponse}", continuing auto-progression`);
+          // This is a signal, we need to auto-progress ONE MORE time
+          const finalNextStepId = this.determineNextStep(nextStep, treatmentContext);
+          console.log(`🔍 PROCESS_INPUT: Signal auto-progression to final step: "${finalNextStepId}"`);
+          
+          if (finalNextStepId) {
+            treatmentContext.currentStep = finalNextStepId;
+            const finalPhase = this.phases.get(treatmentContext.currentPhase);
+            if (finalPhase) {
+              const finalStep = finalPhase.steps.find(s => s.id === finalNextStepId);
+              if (finalStep) {
+                const finalResponse = this.getScriptedResponse(finalStep, treatmentContext, userInput);
+                const finalNeedsLinguistic = this.isLinguisticProcessingStep(finalStep.id, treatmentContext);
+                
+                // Save context
+                this.contexts.set(treatmentContext.sessionId, treatmentContext);
+                this.saveContextToDatabase(treatmentContext).catch(error => 
+                  console.error('Failed to save context to database:', error)
+                );
+                
+                // Pre-load next responses
+                setTimeout(() => {
+                  this.preloadNextResponses(treatmentContext.sessionId);
+                }, 100);
+                
+                return {
+                  canContinue: true,
+                  nextStep: finalNextStepId,
+                  scriptedResponse: finalResponse,
+                  needsLinguisticProcessing: finalNeedsLinguistic
+                };
+              }
+            }
+          }
+        }
+        
+        // Not a signal, return normally
         // Save the updated context back to the contexts map
         this.contexts.set(treatmentContext.sessionId, treatmentContext);
         console.log(`🔍 PROCESS_INPUT: Regular flow SAVED context for session ${treatmentContext.sessionId}`);
