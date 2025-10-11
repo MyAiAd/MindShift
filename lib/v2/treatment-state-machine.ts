@@ -2107,7 +2107,7 @@ export class TreatmentStateMachine {
       steps: [
         {
           id: 'choose_method',
-          scriptedResponse: "Choose your Problem Shifting method:",
+          scriptedResponse: "Choose which Mind Shifting method you would like to use to clear the problem:",
           expectedResponseType: 'open',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }

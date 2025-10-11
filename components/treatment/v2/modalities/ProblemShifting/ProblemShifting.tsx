@@ -325,7 +325,7 @@ export default function ProblemShifting({
         <div className="flex flex-col space-y-4 flex-1">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Choose your Problem Shifting method:
+              Choose which Mind Shifting method you would like to use to clear the problem:
             </h3>
             <div className="flex justify-center">
               <div className="grid grid-cols-2 gap-3 max-w-lg">
