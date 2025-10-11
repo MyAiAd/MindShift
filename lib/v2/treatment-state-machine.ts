@@ -4295,6 +4295,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             // 4. context.problemStatement
             const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
             const restatedProblem = context?.userResponses?.['restate_problem_future'] ||
+                                    context?.userResponses?.['restate_scenario_problem_1'] ||
+                                    context?.userResponses?.['restate_scenario_problem_2'] ||
+                                    context?.userResponses?.['restate_scenario_problem_3'] ||
                                     context?.userResponses?.['restate_anything_else_problem_1'] ||
                                     context?.userResponses?.['restate_anything_else_problem_2'];
             const problemStatement = diggingProblem || restatedProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
@@ -6655,6 +6658,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         // Update problem statement to use the new problem from digging deeper flow
         // Get the problem statement from user responses first, then fall back to metadata
         const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
+                                            context.userResponses?.['restate_scenario_problem_1'] ||
+                                            context.userResponses?.['restate_scenario_problem_2'] ||
+                                            context.userResponses?.['restate_scenario_problem_3'] ||
                                             context.userResponses?.['restate_anything_else_problem_1'] ||
                                             context.userResponses?.['restate_anything_else_problem_2'];
         const newDiggingProblem = newProblemFromUserResponse || context.metadata?.newDiggingProblem || context.metadata?.currentDiggingProblem;
