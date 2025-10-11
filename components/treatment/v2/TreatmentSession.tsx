@@ -539,6 +539,24 @@ export default function TreatmentSession({
 
   const handleMethodSelection = async (method: string) => {
     console.log('🔍 DEBUG: handleMethodSelection called with:', method, 'from stack:', new Error().stack?.split('\n')[2]?.trim());
+    
+    // CRITICAL FIX: Update sessionMethod immediately when user selects a method
+    // This ensures digging components know which modality is active
+    const methodLower = method.toLowerCase();
+    if (methodLower.includes('problem')) {
+      setSessionMethod('problem_shifting');
+    } else if (methodLower.includes('identity')) {
+      setSessionMethod('identity_shifting');
+    } else if (methodLower.includes('belief')) {
+      setSessionMethod('belief_shifting');
+    } else if (methodLower.includes('blockage')) {
+      setSessionMethod('blockage_shifting');
+    } else if (methodLower.includes('reality')) {
+      setSessionMethod('reality_shifting');
+    } else if (methodLower.includes('trauma')) {
+      setSessionMethod('trauma_shifting');
+    }
+    
     await sendMessageWithContent(method);
   };
 
