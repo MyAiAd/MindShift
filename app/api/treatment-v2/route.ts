@@ -860,6 +860,9 @@ function getPhaseForStep(stepId: string): string {
   const stepToPhaseMap: Record<string, string> = {
     // Introduction phase
     'mind_shifting_explanation': 'introduction',
+    'goal_description': 'introduction',
+    'negative_experience_description': 'introduction',
+    'method_selection': 'introduction',
     
     // Work type selection phase
     'work_type_selection': 'work_type_selection',
@@ -936,6 +939,10 @@ function getPhaseForStep(stepId: string): string {
     // Reality shifting phase
     'reality_shifting_intro': 'reality_shifting',
     'reality_goal_capture': 'reality_shifting',
+    'goal_deadline_check': 'reality_shifting',
+    'goal_deadline_date': 'reality_shifting',
+    'goal_confirmation': 'reality_shifting',
+    'goal_certainty': 'reality_shifting',
     'reality_step_a2': 'reality_shifting',
     'reality_step_a3': 'reality_shifting',
     'reality_step_b': 'reality_shifting',
