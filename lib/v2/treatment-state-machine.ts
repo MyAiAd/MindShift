@@ -5945,6 +5945,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           context.metadata.goalWithDeadline = '';
           delete context.userResponses['goal_deadline_check'];
           delete context.userResponses['goal_deadline_date'];
+          // Reset phase to introduction where goal_description lives
+          context.currentPhase = 'introduction';
           return 'goal_description';
         }
         
