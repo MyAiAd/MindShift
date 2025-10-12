@@ -6272,7 +6272,16 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             lastResponse.toLowerCase().includes('none') ||
             lastResponse.toLowerCase().includes('nothing')) {
           // No reason found - proceed to checking section
-          return 'reality_checking_questions';
+          // Check if we came from second checking question
+          const fromSecondCheck = context?.metadata?.fromSecondCheckingQuestion;
+          if (fromSecondCheck) {
+            // Clear the flag and go back to second checking question
+            context.metadata.fromSecondCheckingQuestion = false;
+            return 'reality_certainty_check';
+          } else {
+            // Go to first checking question
+            return 'reality_checking_questions';
+          }
         }
         // Has a reason - continue with B2 (feel the reason)
         return 'reality_feel_reason';
@@ -6306,16 +6315,10 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           return 'reality_cycle_b4';
           
                  case 'reality_cycle_b4':
-           // Completed B2-B4 cycle, check if we came from first or second checking question
-           const fromSecondCheck = context?.metadata?.fromSecondCheckingQuestion;
-           if (fromSecondCheck) {
-             // Clear the flag and go back to second checking question
-             context.metadata.fromSecondCheckingQuestion = false;
-             return 'reality_certainty_check';
-           } else {
-             // Go back to first checking question
-             return 'reality_checking_questions';
-           }
+           // Completed B4, loop back to A1 to continue alternating A/B cycle
+           // The flag is preserved so that when user says "no reason" at B1,
+           // we know which checking question to return to
+           return 'reality_column_a_restart';
            
         case 'reality_certainty_check':
           // Second checking question: Are there any doubts left?
