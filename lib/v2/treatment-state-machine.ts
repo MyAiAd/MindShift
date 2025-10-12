@@ -1490,6 +1490,7 @@ export class TreatmentStateMachine {
       { patterns: ['by january', 'by february', 'by march', 'by april', 'by may', 'by june', 'by july', 'by august', 'by september', 'by october', 'by november', 'by december'], weight: 0.9, type: 'month_deadline' },
       
       // Medium confidence - relative time references
+      { patterns: ['in january', 'in february', 'in march', 'in april', 'in may', 'in june', 'in july', 'in august', 'in september', 'in october', 'in november', 'in december'], weight: 0.85, type: 'month_deadline' },
       { patterns: ['tomorrow', 'next week', 'next month', 'this week', 'this month'], weight: 0.8, type: 'relative_deadline' },
       { patterns: ['soon', 'quickly', 'asap', 'as soon as possible'], weight: 0.7, type: 'urgency_deadline' },
       
@@ -5944,7 +5945,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           context.metadata.goalWithDeadline = '';
           delete context.userResponses['goal_deadline_check'];
           delete context.userResponses['goal_deadline_date'];
-          return 'reality_goal_capture';
+          return 'goal_description';
         }
         
       case 'goal_certainty':
