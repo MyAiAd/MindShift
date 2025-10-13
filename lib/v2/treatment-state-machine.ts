@@ -521,13 +521,16 @@ export class TreatmentStateMachine {
                             step.id === 'trauma_shifting_intro' ||
                             step.id === 'trauma_identity_step' ||
                             step.id === 'blockage_shifting_intro' ||
+                            // Checking steps that embed session-specific identity/problem data - always skip cache
+                            step.id === 'identity_future_check' ||
+                            step.id === 'identity_scenario_check' ||
+                            step.id === 'future_problem_check' ||
                             (step.id.startsWith('blockage_step_') && (context.metadata?.cycleCount > 0)) ||
                             (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'blockage_check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'identity_problem_check' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'belief_problem_check' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'what_needs_to_happen_step' && context.metadata?.currentDiggingProblem) ||
-                            (step.id === 'future_problem_check' && context.metadata?.currentDiggingProblem) ||
                             step.id === 'digging_method_selection' ||
                                         // Steps that use user input directly and should never be cached
             (step.id === 'feel_good_state' && userInput?.trim()) ||
@@ -588,6 +591,12 @@ export class TreatmentStateMachine {
           console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro to prevent cross-session problem contamination`);
         } else if (step.id === 'blockage_shifting_intro') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for blockage_shifting_intro to prevent cross-session problem contamination`);
+        } else if (step.id === 'identity_future_check') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for identity_future_check to prevent cross-session identity contamination`);
+        } else if (step.id === 'identity_scenario_check') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for identity_scenario_check to prevent cross-session identity contamination`);
+        } else if (step.id === 'future_problem_check') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for future_problem_check to prevent cross-session problem contamination`);
         } else if (step.id.startsWith('blockage_step_')) {
           console.log(`🚀 CACHE_SKIP: Skipping cache for ${step.id} on subsequent cycle (cycleCount: ${context.metadata?.cycleCount})`);
         } else if (step.id === 'check_if_still_problem') {
