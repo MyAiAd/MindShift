@@ -3939,13 +3939,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             // Get the identity from the trauma_identity_step response
             const traumaIdentityResponse = context.userResponses?.['trauma_identity_step'];
             
-            // Store the identity from the identity step if we don't have it yet
-            if (!context.metadata.currentTraumaIdentity && traumaIdentityResponse) {
+            // ALWAYS update the identity when we have a fresh trauma_identity_step response
+            // This prevents using cached identities from earlier in the session (e.g., from trauma redirect)
+            if (traumaIdentityResponse) {
               // CRITICAL FIX: Process the trauma identity response to add "person" suffix like Identity Shifting does
               const processedTraumaIdentity = this.processIdentityResponse(traumaIdentityResponse.trim());
               context.metadata.currentTraumaIdentity = processedTraumaIdentity;
               context.metadata.originalTraumaIdentity = processedTraumaIdentity; // Store processed version for trauma_identity_check
-              console.log(`🔍 TRAUMA_DISSOLVE_STEP_A: Processing trauma identity "${traumaIdentityResponse}" -> "${processedTraumaIdentity}"`);
+              console.log(`🔧 TRAUMA_DISSOLVE_STEP_A: Processing trauma identity "${traumaIdentityResponse}" -> "${processedTraumaIdentity}"`);
             }
             
             // Use the stored identity, don't overwrite with current userInput
