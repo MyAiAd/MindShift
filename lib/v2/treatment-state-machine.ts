@@ -514,12 +514,13 @@ export class TreatmentStateMachine {
       
       // NEW: Try cache for dynamic responses with context hash
       // CRITICAL FIX: Don't use cache for steps that depend on user input or digging context
-      const shouldSkipCache = (step.id === 'identity_shifting_intro' && (userInput?.trim() || context.metadata?.currentDiggingProblem || context.metadata?.problemRestated)) ||
-                            (step.id === 'belief_shifting_intro' && context.metadata?.currentDiggingProblem) ||
+      // All intro steps must skip cache to prevent cross-session contamination with session-specific problem statements
+      const shouldSkipCache = step.id === 'identity_shifting_intro' ||
+                            step.id === 'belief_shifting_intro' ||
                             step.id === 'problem_shifting_intro' ||
                             step.id === 'trauma_shifting_intro' ||
                             step.id === 'trauma_identity_step' ||
-                            (step.id === 'blockage_shifting_intro' && (context.metadata?.cycleCount > 0 || context.metadata?.currentDiggingProblem)) ||
+                            step.id === 'blockage_shifting_intro' ||
                             (step.id.startsWith('blockage_step_') && (context.metadata?.cycleCount > 0)) ||
                             (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'blockage_check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
@@ -580,13 +581,13 @@ export class TreatmentStateMachine {
       } else {
         const diggingProblem = context.metadata?.currentDiggingProblem;
         if (step.id === 'identity_shifting_intro') {
-          console.log(`🚀 CACHE_SKIP: Skipping cache for identity_shifting_intro - userInput: ${!!userInput?.trim()}, digging: ${!!diggingProblem}`);
+          console.log(`🚀 CACHE_SKIP: Skipping cache for identity_shifting_intro to prevent cross-session problem contamination`);
         } else if (step.id === 'belief_shifting_intro') {
-          console.log(`🚀 CACHE_SKIP: Skipping cache for belief_shifting_intro in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
+          console.log(`🚀 CACHE_SKIP: Skipping cache for belief_shifting_intro to prevent cross-session problem contamination`);
         } else if (step.id === 'problem_shifting_intro') {
-          console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro in digging deeper mode (currentDiggingProblem: ${diggingProblem})`);
+          console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro to prevent cross-session problem contamination`);
         } else if (step.id === 'blockage_shifting_intro') {
-          console.log(`🚀 CACHE_SKIP: Skipping cache for blockage_shifting_intro (cycleCount: ${context.metadata?.cycleCount}, digging: ${context.metadata?.currentDiggingProblem})`);
+          console.log(`🚀 CACHE_SKIP: Skipping cache for blockage_shifting_intro to prevent cross-session problem contamination`);
         } else if (step.id.startsWith('blockage_step_')) {
           console.log(`🚀 CACHE_SKIP: Skipping cache for ${step.id} on subsequent cycle (cycleCount: ${context.metadata?.cycleCount})`);
         } else if (step.id === 'check_if_still_problem') {
