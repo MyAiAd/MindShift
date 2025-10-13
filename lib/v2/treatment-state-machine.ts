@@ -1974,7 +1974,7 @@ export class TreatmentStateMachine {
             } else {
               // Show confirmation again if unclear input
               if (workType === 'problem') {
-                return `So you want to work on '${statement}'. Is that correct? Please say yes or no.`;
+                return `Ok so the problem is '${statement}' is that right?`;
               } else if (workType === 'goal') {
                 return `So you want to work on the goal of '${statement}'. Is that correct? Please say yes or no.`;
               } else if (workType === 'negative_experience') {
@@ -6456,13 +6456,30 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         break;
 
       case 'trauma_problem_redirect':
-        // User answered how they feel about the fact it happened - now route to problem statement capture
-        // Set to problem work type and ask them to state the problem clearly
+        // User answered how they feel about the fact it happened - construct problem statement
+        const feeling = lastResponse || 'this way';
+        const traumaDescription = context.userResponses['negative_experience_description'] || 
+                                 context.metadata.originalProblemStatement || 
+                                 'that happened';
+        
+        // Construct the full problem statement: "I feel [feeling] that [trauma] happened"
+        const constructedProblem = `I feel ${feeling} that ${traumaDescription} happened`;
+        console.log(`🔧 TRAUMA_REDIRECT: Constructed problem statement: "${constructedProblem}"`);
+        
+        // Store the constructed problem statement
+        context.problemStatement = constructedProblem;
+        context.metadata.problemStatement = constructedProblem;
+        if (!context.metadata.originalProblemStatement) {
+          context.metadata.originalProblemStatement = constructedProblem;
+        }
+        
+        // Set to problem work type for method selection later
         context.metadata.workType = 'problem';
         context.metadata.selectedMethod = undefined; // Reset method selection
-        context.metadata.skipUserInput = true; // Force work_type_description to ask the question, not process previous input
         context.currentPhase = 'work_type_selection';
-        return 'work_type_description'; // Ask them to state the problem in a few words
+        
+        // Route to confirm_statement to get user confirmation
+        return 'confirm_statement';
         break;
 
 
