@@ -2015,8 +2015,8 @@ export class TreatmentStateMachine {
                 return "Great! Let's begin Blockage Shifting.";
               }
             } else if (workType === 'problem' && !selectedMethod) {
-              // Problem work type but no method yet - will route to choose_method
-              return "Choose which Mind Shifting method you would like to use to clear the problem:";
+              // Problem work type but no method yet - transition signal to route to choose_method
+              return "METHOD_SELECTION_NEEDED";
             } else if (workType === 'goal') {
               // Goals automatically use Reality Shifting - go directly to first step
               context.currentPhase = 'reality_shifting';
