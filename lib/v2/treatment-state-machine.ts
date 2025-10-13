@@ -7300,6 +7300,14 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       return `${adjective} person`;
     }
     
+    // Handle patterns like "bad 1", "sad 2" - treat number as noise, extract adjective
+    const numberPattern = /^(\w+)\s+(\d+)$/i;
+    const numberMatch = input.match(numberPattern);
+    if (numberMatch) {
+      const adjective = numberMatch[1];
+      return `${adjective} person`;
+    }
+    
     // Handle patterns like "an angry person", "a sad person" - extract the adjective
     const personPattern = /^(a|an|the)\s+(\w+)\s+person$/i;
     const personMatch = input.match(personPattern);
