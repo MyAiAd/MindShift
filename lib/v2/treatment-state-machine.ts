@@ -2788,7 +2788,23 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
               identity = context.metadata.currentIdentity || 'that identity';
             }
             
-            return `Feel yourself being '${identity}'... what does it feel like?`;
+            // Determine the appropriate prefix based on which checking question we're returning from
+            const returnTo = context.metadata.returnToIdentityCheck;
+            let prefix = 'Feel yourself being';
+            
+            if (returnTo === 'identity_future_check') {
+              // Coming from future check: "Do you think you might feel yourself being ... in the future?"
+              prefix = 'Put yourself in the future and feel yourself being';
+              // Clear the flag after using it
+              context.metadata.returnToIdentityCheck = undefined;
+            } else if (returnTo === 'identity_scenario_check') {
+              // Coming from scenario check: "Is there any scenario in which you might still feel yourself being..."
+              prefix = 'Imagine that scenario and feel yourself being';
+              // Clear the flag after using it
+              context.metadata.returnToIdentityCheck = undefined;
+            }
+            
+            return `${prefix} '${identity}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
@@ -6266,6 +6282,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         if (lastResponse.includes('yes') || lastResponse.includes('1')) {
           // YES - identity not cleared, go back to Step 3 (Shifting) per flowchart
           console.log(`🔍 IDENTITY_FUTURE_CHECK: User said YES, going back to shifting steps`);
+          // Set flag to indicate we're returning from future check for context-specific phrasing
+          context.metadata.returnToIdentityCheck = 'identity_future_check';
           return 'identity_dissolve_step_a';
         } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
           // NO - proceed to scenario check
@@ -6281,6 +6299,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         if (lastResponse.includes('yes') || lastResponse.includes('1')) {
           // YES - identity not cleared, go back to Step 3 (Shifting) per flowchart
           console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said YES, going back to shifting steps`);
+          // Set flag to indicate we're returning from scenario check for context-specific phrasing
+          context.metadata.returnToIdentityCheck = 'identity_scenario_check';
           return 'identity_dissolve_step_a';
         } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
           // NO - both checks passed, proceed to Step 5 (Check Problem)
