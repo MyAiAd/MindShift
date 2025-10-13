@@ -6269,6 +6269,15 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'confirm_identity_problem':
         // If confirmed, go back to identity shifting
         if (lastResponse.includes('yes')) {
+          // CRITICAL: Store the confirmed restated problem for the new identity shifting cycle
+          // This ensures identity_shifting_intro uses the NEW problem statement, not the old one
+          const confirmedProblem = context.userResponses?.['restate_identity_problem'];
+          if (confirmedProblem) {
+            context.metadata.currentDiggingProblem = confirmedProblem;
+            context.metadata.problemStatement = confirmedProblem;
+            context.problemStatement = confirmedProblem;
+            console.log(`🔍 CONFIRM_IDENTITY_PROBLEM: Stored restated problem: "${confirmedProblem}"`);
+          }
           context.currentPhase = 'identity_shifting';
           return 'identity_shifting_intro';
         }
