@@ -3921,7 +3921,19 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             
             // Use the stored identity, don't overwrite with current userInput
             const identity = context.metadata.currentTraumaIdentity || 'that identity';
-            return `Feel yourself being ${identity}... what does it feel like?`;
+            
+            // Determine the appropriate prefix based on which checking question we're returning from
+            const returnTo = context.metadata.returnToTraumaCheck;
+            let prefix = 'Feel yourself being';
+            
+            if (returnTo === 'trauma_future_scenario_check') {
+              // Coming from scenario check: "Is there any scenario in which you might still feel yourself being..."
+              prefix = 'Imagine that scenario and feel yourself being';
+              // Clear the flag after using it
+              context.metadata.returnToTraumaCheck = undefined;
+            }
+            
+            return `${prefix} ${identity}... what does it feel like?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -6475,6 +6487,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           this.saveContextToDatabase(context).catch(error => 
             console.error('Failed to save cleared trauma responses to database:', error)
           );
+          
+          // Set flag to indicate we're returning from scenario check for context-specific phrasing
+          context.metadata.returnToTraumaCheck = 'trauma_future_scenario_check';
           
           return 'trauma_dissolve_step_a'; // Start full dissolve sequence from the beginning
         }
