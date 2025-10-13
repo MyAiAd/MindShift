@@ -2014,6 +2014,9 @@ export class TreatmentStateMachine {
                 context.currentPhase = 'blockage_shifting';
                 return "Great! Let's begin Blockage Shifting.";
               }
+            } else if (workType === 'problem' && !selectedMethod) {
+              // Problem work type but no method yet - will route to choose_method
+              return "Choose which Mind Shifting method you would like to use to clear the problem:";
             } else if (workType === 'goal') {
               // Goals automatically use Reality Shifting - go directly to first step
               context.currentPhase = 'reality_shifting';
@@ -2028,7 +2031,7 @@ export class TreatmentStateMachine {
               return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?`;
             }
             
-            // Should not reach here - method should be selected first
+            // Fallback (should not reach here normally)
             return "Please select a method first.";
           },
           expectedResponseType: 'open',
@@ -5918,6 +5921,11 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           } else if (routeSelectedMethod === 'blockage_shifting') {
             return 'blockage_shifting_intro';
           }
+        } else if (routeWorkType === 'problem' && !routeSelectedMethod) {
+          // Problem work type but no method selected yet - route to method selection
+          console.log(`🔧 ROUTE_TO_METHOD: Problem without method, routing to choose_method`);
+          context.currentPhase = 'method_selection';
+          return 'choose_method';
         }
         break;
         
