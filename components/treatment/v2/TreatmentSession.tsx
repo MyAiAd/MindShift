@@ -383,6 +383,13 @@ export default function TreatmentSession({
         setLastResponseTime(data.responseTime);
         updateStats(data);
         
+        // SURGICAL FIX: Sync selectedWorkType when backend routes to choose_method
+        // The choose_method step is exclusively used for problem-clearing flows (never goals/trauma)
+        if (data.currentStep === 'choose_method' && selectedWorkType !== 'PROBLEM') {
+          console.log('🔧 SYNC_FIX: Setting selectedWorkType to PROBLEM for choose_method step');
+          setSelectedWorkType('PROBLEM');
+        }
+        
         // Handle emotion confirmation flag
         if (data.showEmotionConfirmation !== undefined) {
           setShowEmotionConfirmation(data.showEmotionConfirmation);
