@@ -4408,7 +4408,21 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             }
             
             console.log('🔍 BELIEF_DEBUG belief_step_a - context.metadata after:', JSON.stringify(context.metadata, null, 2));
-            return `Feel yourself believing '${belief}'... what does it feel like?`;
+            
+            // Determine the appropriate prefix based on which checking question we're returning from
+            const returnTo = context.metadata.returnToBeliefCheck;
+            let prefix = 'Feel yourself believing';
+            
+            if (returnTo === 'belief_check_2') {
+              // Coming from future check: "Do you feel you may believe ... again in the future?"
+              prefix = 'Put yourself in the future and feel yourself believing';
+            } else if (returnTo === 'belief_check_3') {
+              // Coming from scenario check: "Is there any scenario in which you would still believe..."
+              prefix = 'Imagine that scenario and feel yourself believing';
+            }
+            // For belief_check_1 and belief_check_4, use the standard prefix
+            
+            return `${prefix} '${belief}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
