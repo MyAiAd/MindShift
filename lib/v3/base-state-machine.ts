@@ -238,6 +238,16 @@ export class BaseTreatmentStateMachine {
       return true;
     }
     
+    // Integration steps that reference problem statement - must always skip cache to prevent cross-session contamination
+    const alwaysSkipCacheSteps = [
+      'integration_start',
+      'intention_question'
+    ];
+    
+    if (alwaysSkipCacheSteps.includes(stepId)) {
+      return true;
+    }
+    
     // Steps that use user input directly
     const userInputSteps = [
       'feel_good_state',

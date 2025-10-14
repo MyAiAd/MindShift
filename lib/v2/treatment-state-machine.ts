@@ -521,6 +521,9 @@ export class TreatmentStateMachine {
                             step.id === 'trauma_shifting_intro' ||
                             step.id === 'trauma_identity_step' ||
                             step.id === 'blockage_shifting_intro' ||
+                            // Integration steps that reference problem statement - must skip cache to prevent cross-session contamination
+                            step.id === 'integration_start' ||
+                            step.id === 'intention_question' ||
                             // Checking steps that embed session-specific identity/problem data - always skip cache
                             step.id === 'identity_future_check' ||
                             step.id === 'identity_scenario_check' ||
@@ -5380,7 +5383,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           id: 'integration_start',
           scriptedResponse: (userInput, context) => {
             // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            // CRITICAL: Check metadata.problemStatement first (set at work_type_description) to prevent cached cross-session contamination
+            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
             return `Ok now we have cleared the problem, next I will ask you some questions about how your perspective has shifted and what you want to do next. So firstly, how do you feel about the former problem of '${problemStatement}' now?`;
           },
           expectedResponseType: 'open',
@@ -5424,7 +5428,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           id: 'intention_question',
           scriptedResponse: (userInput, context) => {
             // Get the problem statement from the stored context or fallback to previous responses
-            const problemStatement = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the former problem';
+            // CRITICAL: Check metadata.problemStatement first (set at work_type_description) to prevent cached cross-session contamination
+            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the former problem';
             return `What's your intention now in relation to the former problem of '${problemStatement}'?`;
           },
           expectedResponseType: 'open',
