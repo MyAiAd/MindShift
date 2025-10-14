@@ -239,9 +239,12 @@ export class BaseTreatmentStateMachine {
     }
     
     // Integration steps that reference problem statement - must always skip cache to prevent cross-session contamination
+    // Blockage steps that embed userInput directly - must always skip cache to prevent cross-cycle contamination
     const alwaysSkipCacheSteps = [
       'integration_start',
-      'intention_question'
+      'intention_question',
+      'blockage_step_b',
+      'blockage_step_d'
     ];
     
     if (alwaysSkipCacheSteps.includes(stepId)) {

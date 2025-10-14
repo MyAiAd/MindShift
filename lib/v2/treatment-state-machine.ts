@@ -528,7 +528,9 @@ export class TreatmentStateMachine {
                             step.id === 'identity_future_check' ||
                             step.id === 'identity_scenario_check' ||
                             step.id === 'future_problem_check' ||
-                            (step.id.startsWith('blockage_step_') && (context.metadata?.cycleCount > 0)) ||
+                            // CRITICAL: Blockage steps b and d embed userInput directly - never cache to prevent cross-cycle contamination
+                            step.id === 'blockage_step_b' ||
+                            step.id === 'blockage_step_d' ||
                             (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'blockage_check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'identity_problem_check' && context.metadata?.currentDiggingProblem) ||
