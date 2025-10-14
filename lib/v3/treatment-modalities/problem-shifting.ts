@@ -57,10 +57,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'what_needs_to_happen_step',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement - prioritize digging deeper restated problem
+            // Get the problem statement - prioritize digging deeper, then metadata (set at work_type_description), then fallbacks
             const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
-            const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            console.log(`🔍 WHAT_NEEDS_TO_HAPPEN_STEP: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
+            const problemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            console.log(`🔍 WHAT_NEEDS_TO_HAPPEN_STEP: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", metadata: "${context?.metadata?.problemStatement}", original: "${context?.problemStatement}")`);
             return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
           },
           expectedResponseType: 'open',

@@ -240,11 +240,15 @@ export class BaseTreatmentStateMachine {
     
     // Integration steps that reference problem statement - must always skip cache to prevent cross-session contamination
     // Blockage steps that embed userInput directly - must always skip cache to prevent cross-cycle contamination
+    // Problem Shifting steps that embed user-specific data - must always skip cache
     const alwaysSkipCacheSteps = [
       'integration_start',
       'intention_question',
       'blockage_step_b',
-      'blockage_step_d'
+      'blockage_step_d',
+      'body_sensation_check',
+      'what_needs_to_happen_step',
+      'blockage_check_if_still_problem'
     ];
     
     if (alwaysSkipCacheSteps.includes(stepId)) {
@@ -254,8 +258,7 @@ export class BaseTreatmentStateMachine {
     // Steps that use user input directly
     const userInputSteps = [
       'feel_good_state',
-      'what_happens_step', 
-      'body_sensation_check',
+      'what_happens_step',
       'belief_step_a',
       'belief_step_b',
       'belief_step_d',

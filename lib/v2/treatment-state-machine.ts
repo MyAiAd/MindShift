@@ -531,16 +531,17 @@ export class TreatmentStateMachine {
                             // CRITICAL: Blockage steps b and d embed userInput directly - never cache to prevent cross-cycle contamination
                             step.id === 'blockage_step_b' ||
                             step.id === 'blockage_step_d' ||
+                            // CRITICAL: Problem Shifting steps that embed user-specific data - never cache
+                            step.id === 'body_sensation_check' ||
+                            step.id === 'what_needs_to_happen_step' ||
+                            step.id === 'blockage_check_if_still_problem' ||
                             (step.id === 'check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
-                            (step.id === 'blockage_check_if_still_problem' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'identity_problem_check' && context.metadata?.currentDiggingProblem) ||
                             (step.id === 'belief_problem_check' && context.metadata?.currentDiggingProblem) ||
-                            (step.id === 'what_needs_to_happen_step' && context.metadata?.currentDiggingProblem) ||
                             step.id === 'digging_method_selection' ||
                                         // Steps that use user input directly and should never be cached
             (step.id === 'feel_good_state' && userInput?.trim()) ||
             (step.id === 'what_happens_step' && userInput?.trim()) ||
-            (step.id === 'body_sensation_check' && userInput?.trim()) ||
             (step.id === 'belief_step_a' && userInput?.trim()) ||
             (step.id === 'belief_step_b' && userInput?.trim()) ||
             (step.id === 'belief_step_d' && userInput?.trim()) ||
@@ -2250,10 +2251,10 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'what_needs_to_happen_step',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement - prioritize digging deeper restated problem
+            // Get the problem statement - prioritize digging deeper, then metadata (set at work_type_description), then fallbacks
             const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
-            const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            console.log(`🔍 WHAT_NEEDS_TO_HAPPEN_STEP: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", original: "${context?.problemStatement}")`);
+            const problemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            console.log(`🔍 WHAT_NEEDS_TO_HAPPEN_STEP: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", metadata: "${context?.metadata?.problemStatement}", original: "${context?.problemStatement}")`);
             return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
           },
           expectedResponseType: 'open',
