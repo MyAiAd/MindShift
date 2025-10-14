@@ -4446,11 +4446,15 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             let belief;
             if (isCyclingBack) {
               // When cycling back, ALWAYS use the original belief from belief_shifting_intro
-              belief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+              const rawBelief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+              // Strip "I believe" prefix and optional "that" if present
+              belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
               console.log('🔍 BELIEF_DEBUG belief_step_a - CYCLING BACK, using original belief:', belief);
             } else {
               // First time through - set the belief from userInput (this should be from belief_shifting_intro)
-              belief = userInput || context.metadata.currentBelief || 'that belief';
+              const rawBelief = userInput || context.metadata.currentBelief || 'that belief';
+              // Strip "I believe" prefix and optional "that" if present
+              belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
               context.metadata.currentBelief = belief;
               console.log('🔍 BELIEF_DEBUG belief_step_a - FIRST TIME, setting belief:', belief);
             }
@@ -4543,9 +4547,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           id: 'belief_step_f',
           scriptedResponse: (userInput, context) => {
             console.log('🔍 BELIEF_DEBUG belief_step_f - context.metadata:', JSON.stringify(context.metadata, null, 2));
-            // ALWAYS use the original belief from belief_shifting_intro for consistency
-            const originalBelief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief;
-            const belief = originalBelief || 'that belief';
+            // Use the cleaned belief from metadata (cleaned in belief_step_a)
+            const belief = context.metadata.currentBelief || context.userResponses?.['belief_shifting_intro'] || 'that belief';
             console.log('🔍 BELIEF_DEBUG belief_step_f - retrieved belief:', belief);
             console.log('🔍 BELIEF_DEBUG belief_step_f - originalBelief from belief_shifting_intro:', context.userResponses?.['belief_shifting_intro']);
             console.log('🔍 BELIEF_DEBUG belief_step_f - currentBelief from metadata:', context.metadata.currentBelief);
@@ -4564,8 +4567,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         {
           id: 'belief_check_1',
           scriptedResponse: (userInput, context) => {
-            // Use original belief from belief_shifting_intro for consistency
-            const belief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+            // Use the cleaned belief from metadata (cleaned in belief_step_a)
+            const belief = context.metadata.currentBelief || context.userResponses?.['belief_shifting_intro'] || 'that belief';
             return `Does any part of you still believe '${belief}'?`;
           },
           expectedResponseType: 'yesno',
@@ -4581,8 +4584,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         {
           id: 'belief_check_2',
           scriptedResponse: (userInput, context) => {
-            // Use original belief from belief_shifting_intro for consistency
-            const belief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+            // Use the cleaned belief from metadata (cleaned in belief_step_a)
+            const belief = context.metadata.currentBelief || context.userResponses?.['belief_shifting_intro'] || 'that belief';
             return `Do you feel you may believe '${belief}' again in the future?`;
           },
           expectedResponseType: 'yesno',
@@ -4598,8 +4601,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         {
           id: 'belief_check_3',
           scriptedResponse: (userInput, context) => {
-            // Use original belief from belief_shifting_intro for consistency
-            const belief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+            // Use the cleaned belief from metadata (cleaned in belief_step_a)
+            const belief = context.metadata.currentBelief || context.userResponses?.['belief_shifting_intro'] || 'that belief';
             return `Is there any scenario in which you would still believe '${belief}'?`;
           },
           expectedResponseType: 'yesno',
@@ -4735,8 +4738,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           id: 'belief_check_4',
           scriptedResponse: (userInput, context) => {
             console.log('🔍 BELIEF_DEBUG belief_check_4 - context.metadata:', JSON.stringify(context.metadata, null, 2));
-            // Use original belief from belief_shifting_intro for consistency
-            const belief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+            // Use the cleaned belief from metadata (cleaned in belief_step_a)
+            const belief = context.metadata.currentBelief || context.userResponses?.['belief_shifting_intro'] || 'that belief';
             console.log('🔍 BELIEF_DEBUG belief_check_4 - retrieved belief:', belief);
             
             // Enhanced pattern matching to preserve user's exact language while making it grammatically correct
