@@ -6248,10 +6248,11 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'identity_problem_check':
         // Identity Shifting: Check if problem still exists
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {
-          // Still a problem - start new process
+          // Still a problem - route to digging deeper method selection flow
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          context.currentPhase = 'discovery';
-          return 'restate_identity_problem';
+          context.currentPhase = 'digging_deeper';
+          console.log(`🔍 IDENTITY_PROBLEM_CHECK: Problem still exists, routing to digging deeper flow`);
+          return 'restate_problem_future';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
           // No longer a problem - check if we're in digging deeper flow
