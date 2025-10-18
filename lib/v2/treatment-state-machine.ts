@@ -4451,8 +4451,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
               belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
               console.log('🔍 BELIEF_DEBUG belief_step_a - CYCLING BACK, using original belief:', belief);
             } else {
-              // First time through - set the belief from userInput (this should be from belief_shifting_intro)
-              const rawBelief = userInput || context.metadata.currentBelief || 'that belief';
+              // First time through - retrieve the belief from belief_shifting_intro response (not userInput which is the feeling)
+              const rawBelief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
               // Strip "I believe" prefix and optional "that" if present
               belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
               context.metadata.currentBelief = belief;
