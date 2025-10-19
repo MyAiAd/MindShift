@@ -4967,7 +4967,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
               const newProblem = context.metadata.newDiggingProblem || input;
               context.metadata.currentDiggingProblem = newProblem;
               context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
-              context.metadata.returnToDiggingStep = 'scenario_check_1'; // Where to return after clearing
+              context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
               context.problemStatement = newProblem;
               
               // CRITICAL: Set work type to 'problem' to ensure proper method selection
@@ -5060,7 +5060,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             const newProblem = context?.userResponses?.['restate_scenario_problem_1'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 2) + 1;
-            context.metadata.returnToDiggingStep = 'anything_else_check_1'; // Where to return after clearing
+            context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
             context.metadata.workType = 'problem'; // Set work type for method selection
             
             // Set the problem statement for the method selection
@@ -5111,7 +5111,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             const newProblem = context?.userResponses?.['restate_scenario_problem_2'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 3) + 1;
-            context.metadata.returnToDiggingStep = 'scenario_check_3'; // Where to return after clearing
+            context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
             context.metadata.workType = 'problem'; // Set work type for method selection
             
             // Set the problem statement for the method selection
@@ -5162,7 +5162,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             const newProblem = context?.userResponses?.['restate_scenario_problem_3'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 4) + 1;
-            context.metadata.returnToDiggingStep = 'anything_else_check_1'; // Move to "anything else" questions after this
+            context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
             context.metadata.workType = 'problem'; // Set work type for method selection
             
             // Set the problem statement for the method selection
@@ -5210,7 +5210,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             const newProblem = context?.userResponses?.['restate_anything_else_problem_1'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
-            context.metadata.returnToDiggingStep = 'integration_start'; // Where to return after clearing
+            context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
             context.metadata.workType = 'problem'; // Set work type for method selection
             
             // Set the problem statement for the method selection
@@ -5258,7 +5258,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             const newProblem = context?.userResponses?.['restate_anything_else_problem_2'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 6) + 1;
-            context.metadata.returnToDiggingStep = 'anything_else_check_3'; // Where to return after clearing
+            context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
             context.metadata.workType = 'problem'; // Set work type for method selection
             
             // Set the problem statement for the method selection
