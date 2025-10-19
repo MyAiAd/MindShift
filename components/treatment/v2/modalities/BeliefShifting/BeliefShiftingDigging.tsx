@@ -64,7 +64,10 @@ export default function BeliefShiftingDigging({
     if (currentStep !== 'belief_digging_method_selection' && 
         currentStep !== 'digging_method_selection' &&
         currentStep !== 'clear_anything_else_problem_1' &&
-        currentStep !== 'clear_anything_else_problem_2') return false;
+        currentStep !== 'clear_anything_else_problem_2' &&
+        currentStep !== 'clear_scenario_problem_1' &&
+        currentStep !== 'clear_scenario_problem_2' &&
+        currentStep !== 'clear_scenario_problem_3') return false;
     
     // CRITICAL FIX: Only show if this is the active modality (prevents multiple button sets)
     if (sessionMethod !== 'belief_shifting') return false;

@@ -74,7 +74,10 @@ export default function ProblemShiftingDigging({
     // Only show for digging_method_selection step
     if (currentStep !== 'digging_method_selection' &&
         currentStep !== 'clear_anything_else_problem_1' &&
-        currentStep !== 'clear_anything_else_problem_2') return false;
+        currentStep !== 'clear_anything_else_problem_2' &&
+        currentStep !== 'clear_scenario_problem_1' &&
+        currentStep !== 'clear_scenario_problem_2' &&
+        currentStep !== 'clear_scenario_problem_3') return false;
     
     // CRITICAL FIX: Only show if this is the active modality (prevents multiple button sets)
     if (sessionMethod !== 'problem_shifting') return false;
