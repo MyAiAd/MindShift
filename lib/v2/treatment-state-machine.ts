@@ -4935,15 +4935,11 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         {
           id: 'restate_problem_future',
           scriptedResponse: (userInput, context) => {
-            // Store the new problem statement when user provides it
-            console.log('🔍 BELIEF_DEBUG restate_problem_future - userInput:', userInput);
-            console.log('🔍 BELIEF_DEBUG restate_problem_future - context.metadata before:', JSON.stringify(context.metadata, null, 2));
-            if (userInput && userInput.trim()) {
-              console.log(`🔍 RESTATE_PROBLEM_FUTURE: Storing new problem: "${userInput}"`);
-              context.metadata.newDiggingProblem = userInput.trim();
-              console.log(`🔍 RESTATE_PROBLEM_FUTURE: Next step should be digging_method_selection`);
-            }
-            console.log('🔍 BELIEF_DEBUG restate_problem_future - context.metadata after:', JSON.stringify(context.metadata, null, 2));
+            // Don't store anything here - scriptedResponse is called when SHOWING the question,
+            // not when processing the answer. The user's input ("prob 2") will be passed to
+            // digging_method_selection, which will handle storage correctly.
+            // BUGFIX: Previously this was storing "yes" (from future_problem_check) instead
+            // of the actual problem statement, causing "Feel the problem 'yes'..." display.
             return "How would you state the problem in a few words?";
           },
           expectedResponseType: 'problem',
