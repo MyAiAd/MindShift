@@ -5060,12 +5060,6 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         {
           id: 'clear_scenario_problem_1',
           scriptedResponse: (userInput, context) => {
-            // DEBUG: Log all userResponses to diagnose caching issue
-            console.log(`🔍 CLEAR_SCENARIO_1_DEBUG: userInput="${userInput}"`);
-            console.log(`🔍 CLEAR_SCENARIO_1_DEBUG: ALL userResponses=`, JSON.stringify(context?.userResponses, null, 2));
-            console.log(`🔍 CLEAR_SCENARIO_1_DEBUG: restate_scenario_problem_1="${context?.userResponses?.['restate_scenario_problem_1']}"`);
-            console.log(`🔍 CLEAR_SCENARIO_1_DEBUG: currentDiggingProblem="${context?.metadata?.currentDiggingProblem}"`);
-            
             // Store the new scenario problem for clearing
             const newProblem = context?.userResponses?.['restate_scenario_problem_1'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
@@ -5075,9 +5069,6 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             
             // Set the problem statement for the method selection
             context.problemStatement = newProblem;
-            
-            console.log(`🔍 CLEAR_SCENARIO_1_DEBUG: Set currentDiggingProblem to="${context.metadata.currentDiggingProblem}"`);
-            console.log(`🔍 CLEAR_SCENARIO_1_DEBUG: Set problemStatement to="${context.problemStatement}"`);
             
             // Ask user to choose method instead of dictating
             return "We need to clear this problem. Which method would you like to use?";
@@ -6752,32 +6743,20 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         // Also update the problem statement to use the new problem from digging deeper
         const diggingSelectedMethod = context.metadata?.selectedMethod;
         
-        // DEBUG: Log everything to diagnose the issue
-        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: DEBUG START`);
-        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: selectedMethod: "${diggingSelectedMethod}"`);
-        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: metadata.currentDiggingProblem: "${context.metadata?.currentDiggingProblem}"`);
-        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: metadata.newDiggingProblem: "${context.metadata?.newDiggingProblem}"`);
-        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: context.problemStatement: "${context.problemStatement}"`);
-        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: userResponses.restate_scenario_problem_1: "${context.userResponses?.['restate_scenario_problem_1']}"`);
-        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: userResponses.restate_anything_else_problem_1: "${context.userResponses?.['restate_anything_else_problem_1']}"`);
-        
         // Update problem statement to use the new problem from digging deeper flow
-        // Get the problem statement from user responses first, then fall back to metadata
         const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
                                             context.userResponses?.['restate_scenario_problem_1'] ||
                                             context.userResponses?.['restate_scenario_problem_2'] ||
                                             context.userResponses?.['restate_scenario_problem_3'] ||
                                             context.userResponses?.['restate_anything_else_problem_1'] ||
                                             context.userResponses?.['restate_anything_else_problem_2'];
-        const newDiggingProblem = newProblemFromUserResponse || context.metadata?.newDiggingProblem || context.metadata?.currentDiggingProblem;
-        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: newProblemFromUserResponse: "${newProblemFromUserResponse}"`);
-        console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: newDiggingProblem (final): "${newDiggingProblem}"`);
+        // CRITICAL FIX: Prioritize currentDiggingProblem (set by previous step) over userResponses (which may contain stale data from earlier iterations)
+        const newDiggingProblem = context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem || newProblemFromUserResponse;
         
         if (newDiggingProblem) {
           context.problemStatement = newDiggingProblem;
           context.metadata.currentDiggingProblem = newDiggingProblem;
-          console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: Updated problemStatement to: "${newDiggingProblem}"`);
-          console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: Source - userResponse: "${newProblemFromUserResponse}", metadata: "${context.metadata?.newDiggingProblem}"`);
+          console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: Using problem: "${newDiggingProblem}"`);
         } else {
           console.error(`❌ DIGGING_METHOD_SELECTION_ROUTE: NO PROBLEM FOUND! This will cause routing to fail!`);
         }
