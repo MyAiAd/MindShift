@@ -6815,15 +6815,6 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'restate_scenario_problem_1':
         return 'clear_scenario_problem_1';
         
-      case 'clear_scenario_problem_1':
-        // After clearing, return to anything else check (question 3 in flowchart)
-        const returnStep1 = context.metadata?.returnToDiggingStep;
-        if (returnStep1) {
-          context.currentPhase = 'digging_deeper';
-          return returnStep1;
-        }
-        return 'anything_else_check_1';
-        
       case 'scenario_check_2':
         if (lastResponse.includes('yes')) {
           return 'restate_scenario_problem_2';
@@ -6836,15 +6827,6 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'restate_scenario_problem_2':
         return 'clear_scenario_problem_2';
         
-      case 'clear_scenario_problem_2':
-        // After clearing, return to next scenario check
-        const returnStep2 = context.metadata?.returnToDiggingStep;
-        if (returnStep2) {
-          context.currentPhase = 'digging_deeper';
-          return returnStep2;
-        }
-        return 'scenario_check_3';
-        
       case 'scenario_check_3':
         if (lastResponse.includes('yes')) {
           return 'restate_scenario_problem_3';
@@ -6856,15 +6838,6 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         
       case 'restate_scenario_problem_3':
         return 'clear_scenario_problem_3';
-        
-      case 'clear_scenario_problem_3':
-        // After clearing, move to anything else checks
-        const returnStep3 = context.metadata?.returnToDiggingStep;
-        if (returnStep3) {
-          context.currentPhase = 'digging_deeper';
-          return returnStep3;
-        }
-        return 'anything_else_check_1';
         
       // Handle all "anything else" check steps
       case 'anything_else_check_1':
