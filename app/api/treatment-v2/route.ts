@@ -1211,6 +1211,14 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       context.metadata.newDiggingProblem = '';
     }
     
+    if (undoToStep === 'restate_problem_future') {
+      // User is going back to re-enter the new digging problem statement
+      // Clear current digging problem so it can be properly updated on next iteration
+      console.log('🧹 UNDO_METADATA_CLEAR: Clearing digging problem metadata for re-entry');
+      context.metadata.currentDiggingProblem = '';
+      context.metadata.newDiggingProblem = '';
+    }
+    
       // Determine the correct phase for the target step
   const targetPhase = getPhaseForStep(undoToStep);
   console.log('Treatment API: Target step belongs to phase:', targetPhase);

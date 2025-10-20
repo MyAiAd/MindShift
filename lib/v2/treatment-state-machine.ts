@@ -4960,11 +4960,12 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             console.log('🔍 BELIEF_DEBUG digging_method_selection - context.metadata before:', JSON.stringify(context.metadata, null, 2));
             console.log('🔍 BELIEF_DEBUG digging_method_selection - context.problemStatement before:', context.problemStatement);
             
-            // If this is the first time showing this step (coming from restate_problem_future), 
-            // store the problem and show the selection message
-            if (!context.metadata.currentDiggingProblem && input && input !== 'METHOD_SELECTION_NEEDED') {
-              // Use the new problem statement that was stored in restate_problem_future step
-              const newProblem = context.metadata.newDiggingProblem || input;
+            // BUGFIX: Always check for new problem from restate_problem_future, even on subsequent iterations
+            // This ensures we use "issue 3" instead of sticking with "issue 2"
+            const newProblemFromRestate = context.userResponses?.['restate_problem_future'];
+            if (newProblemFromRestate && newProblemFromRestate.trim() && input && input !== 'METHOD_SELECTION_NEEDED') {
+              // User just came from restate_problem_future - update to the new problem (overwrite old one)
+              const newProblem = newProblemFromRestate.trim();
               context.metadata.currentDiggingProblem = newProblem;
               context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
               context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
@@ -4972,8 +4973,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
               
               // CRITICAL: Set work type to 'problem' to ensure proper method selection
               context.metadata.workType = 'problem';
-              console.log(`🔍 DIGGING_METHOD_SELECTION: Stored new problem: "${newProblem}"`);
-              console.log(`🔍 DIGGING_METHOD_SELECTION: Using newDiggingProblem: "${context.metadata.newDiggingProblem}"`);
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Stored new problem from restate_problem_future: "${newProblem}"`);
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Iteration #${context.metadata.diggingProblemNumber}`);
               console.log(`🔍 DIGGING_METHOD_SELECTION: Set workType to 'problem' for method selection`);
               console.log('🔍 BELIEF_DEBUG digging_method_selection - context.metadata after storing:', JSON.stringify(context.metadata, null, 2));
               console.log('🔍 BELIEF_DEBUG digging_method_selection - context.problemStatement after storing:', context.problemStatement);
