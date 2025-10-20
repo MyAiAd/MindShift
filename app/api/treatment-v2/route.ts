@@ -1214,6 +1214,7 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
     if (undoToStep === 'restate_problem_future') {
       // User is going back to re-enter the new digging problem statement
       // Clear current digging problem so it can be properly updated on next iteration
+      // ROLLBACK POINT: If issues arise, revert to commit 7fbb50b
       console.log('🧹 UNDO_METADATA_CLEAR: Clearing digging problem metadata for re-entry');
       context.metadata.currentDiggingProblem = '';
       context.metadata.newDiggingProblem = '';
