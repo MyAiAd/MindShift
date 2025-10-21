@@ -5802,8 +5802,25 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'confirm_statement':
         const confirmInput = lastResponse.toLowerCase();
         
-        // If user says "no", go back to work_type_description
+        // If user says "no", route back to appropriate input step based on workType
         if (confirmInput.includes('no') || confirmInput.includes('not') || confirmInput.includes('wrong') || confirmInput.includes('incorrect')) {
+          const workType = context.metadata.workType;
+          
+          // Check if this came from trauma_problem_redirect (when user said no to trauma_shifting_intro)
+          if (workType === 'negative_experience' && context.userResponses['trauma_problem_redirect']) {
+            return 'trauma_problem_redirect'; // Go back to re-answer how they feel
+          }
+          
+          // Otherwise route based on workType to re-enter description
+          if (workType === 'problem') {
+            return 'problem_description';
+          } else if (workType === 'goal') {
+            return 'goal_description';
+          } else if (workType === 'negative_experience') {
+            return 'negative_experience_description';
+          }
+          
+          // Fallback (should rarely happen)
           return 'work_type_description';
         }
         // If user says "yes", route to treatment
