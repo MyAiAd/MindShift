@@ -6739,7 +6739,21 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         // This step routes to appropriate treatment method based on user choice
         // We need to change the phase here and route to the proper intro steps
         // Also update the problem statement to use the new problem from digging deeper
-        const diggingSelectedMethod = context.metadata?.selectedMethod;
+        
+        // BUGFIX: Read from lastResponse (user input) directly, not from metadata.selectedMethod
+        // because scriptedResponse runs AFTER getNextStep, so metadata isn't set yet
+        const input = lastResponse.toLowerCase();
+        let diggingSelectedMethod = '';
+        
+        if (input.includes('problem shifting') || input === '1') {
+          diggingSelectedMethod = 'problem_shifting';
+        } else if (input.includes('identity shifting') || input === '2') {
+          diggingSelectedMethod = 'identity_shifting';
+        } else if (input.includes('belief shifting') || input === '3') {
+          diggingSelectedMethod = 'belief_shifting';
+        } else if (input.includes('blockage shifting') || input === '4') {
+          diggingSelectedMethod = 'blockage_shifting';
+        }
         
         // Update problem statement to use the new problem from digging deeper flow
         const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
@@ -6761,6 +6775,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         
         // Clear previous modality-specific metadata to ensure clean switch
         this.clearPreviousModalityMetadata(context);
+        
+        // Store the selected method in metadata for reference
+        context.metadata.selectedMethod = diggingSelectedMethod;
         
         if (diggingSelectedMethod === 'problem_shifting') {
           context.currentPhase = 'problem_shifting';
