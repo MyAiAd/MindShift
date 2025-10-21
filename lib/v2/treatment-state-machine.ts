@@ -6525,9 +6525,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           // Might feel bad in future - route to problem statement capture and method selection
           context.metadata.workType = 'problem';
           context.metadata.selectedMethod = undefined;
-          context.metadata.skipUserInput = false;
-          context.currentPhase = 'work_type_selection';
-          return 'work_type_description';
+          context.currentPhase = 'problem_or_goal_input';
+          return 'negative_experience_description';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
           // Won't feel bad in future - ask second dig deeper question
@@ -6541,9 +6540,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           // Yes, something else is a problem - route to problem statement capture and method selection
           context.metadata.workType = 'problem';
           context.metadata.selectedMethod = undefined;
-          context.metadata.skipUserInput = false;
-          context.currentPhase = 'work_type_selection';
-          return 'work_type_description';
+          context.currentPhase = 'problem_or_goal_input';
+          return 'negative_experience_description';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
           // No other problems - check if we're in digging deeper flow
