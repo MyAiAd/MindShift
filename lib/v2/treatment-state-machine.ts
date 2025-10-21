@@ -6581,8 +6581,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
       case 'belief_step_f':
         // Belief Shifting: Check if still believes the belief
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {
-          // Still believes - cycle back to step A
+          // Still believes - cycle back to step A (clear returnToBeliefCheck so we use standard prefix)
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          context.metadata.returnToBeliefCheck = undefined;
           return 'belief_step_a';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
