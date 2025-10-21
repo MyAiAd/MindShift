@@ -619,6 +619,8 @@ export class TreatmentStateMachine {
           console.log(`🚀 CACHE_SKIP: Skipping cache for reality_shifting_intro to prevent cross-session goal conflicts (goalWithDeadline: ${context.metadata?.goalWithDeadline})`);
         } else if (step.id === 'work_type_description') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for work_type_description to prevent cross-session context conflicts (workType: ${context.metadata?.workType}, problemStatement: ${context.metadata?.problemStatement})`);
+        } else if (step.id === 'confirm_statement') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for confirm_statement to prevent stale problem statement in confirmation (problemStatement: ${context.metadata?.problemStatement})`);
         } else if (step.id === 'problem_shifting_intro') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for problem_shifting_intro to prevent cross-session problem conflicts (problemStatement: ${context.metadata?.problemStatement || context.problemStatement})`);
         } else if (step.id === 'reality_doubt_reason') {
