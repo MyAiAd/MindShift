@@ -1597,13 +1597,16 @@ export class TreatmentStateMachine {
     * Synthesize goal statement with deadline properly formatted
     */
    private synthesizeGoalWithDeadline(goalStatement: string, deadline: string): string {
-     // If the goal already contains the deadline in the correct format, return as-is
+     // If the goal already contains the deadline in a valid format, return as-is
      const lowerGoal = goalStatement.toLowerCase();
      const lowerDeadline = deadline.toLowerCase();
      
-     // Check if goal already ends with "by [deadline]" - if so, return as-is
-     if (lowerGoal.endsWith(`by ${lowerDeadline}`)) {
-       return goalStatement;
+     // Check if goal already contains deadline with any preposition - if so, return as-is
+     if (lowerGoal.includes(`by ${lowerDeadline}`) || 
+         lowerGoal.includes(`in ${lowerDeadline}`) ||
+         lowerGoal.includes(`on ${lowerDeadline}`) ||
+         lowerGoal.includes(`within ${lowerDeadline}`)) {
+       return goalStatement; // Return as-is, preserving the user's original preposition
      }
      
      // Find and remove deadline patterns to get clean goal
