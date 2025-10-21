@@ -4206,21 +4206,6 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'trauma_dig_deeper_start',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
-        },
-
-        {
-          id: 'trauma_dig_deeper_start',
-          scriptedResponse: () => {
-            return `Would you like to dig deeper in this area?`;
-          },
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
-          ],
           nextStep: 'trauma_dig_deeper',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
@@ -6529,21 +6514,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           return 'trauma_identity_step';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer a problem - ask if they want to dig deeper
-          return 'trauma_dig_deeper_start';
-        }
-        break;
-        
-      case 'trauma_dig_deeper_start':
-        // Trauma Shifting: Ask if user wants to dig deeper
-        if (lastResponse.includes('yes')) {
-          // User wants to dig deeper - proceed to first dig deeper question
+          // No longer a problem - proceed directly to dig deeper questions
           return 'trauma_dig_deeper';
-        }
-        if (lastResponse.includes('no')) {
-          // User doesn't want to dig deeper - skip to integration
-          context.currentPhase = 'integration';
-          return 'integration_start';
         }
         break;
         

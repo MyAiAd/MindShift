@@ -973,7 +973,6 @@ export default function TreatmentSession({
       'trauma_future_step_f',           // Future projection step F (only F has yes/no buttons)
       'trauma_future_scenario_check',
       'trauma_experience_check',
-      'trauma_dig_deeper_start',        // Dig deeper prompt
       'trauma_dig_deeper',
       'trauma_dig_deeper_2',
       'trauma_shifting_intro',

@@ -990,7 +990,6 @@ function getPhaseForStep(stepId: string): string {
     'trauma_future_step_e': 'trauma_shifting',
     'trauma_future_step_f': 'trauma_shifting',
     'trauma_experience_check': 'trauma_shifting',
-    'trauma_dig_deeper_start': 'trauma_shifting',
     'trauma_dig_deeper': 'trauma_shifting',
     'trauma_dig_deeper_2': 'trauma_shifting',
     'trauma_integration_awareness_1': 'trauma_shifting',
