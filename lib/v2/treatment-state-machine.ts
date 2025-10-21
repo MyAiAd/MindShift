@@ -6051,10 +6051,10 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           // No longer a problem - check if we're in digging deeper flow
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
-            // We're clearing a problem from digging deeper - return to that step
+            // We're clearing a problem from digging deeper - ask if user wants to dig deeper on original problem
             context.currentPhase = 'digging_deeper';
             context.metadata.returnToDiggingStep = undefined; // Clear the return step
-            return returnStep;
+            return 'digging_deeper_start';
           } else {
             // Regular flow - move to digging deeper start
             context.currentPhase = 'digging_deeper';
