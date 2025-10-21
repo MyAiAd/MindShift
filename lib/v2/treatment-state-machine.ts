@@ -5951,26 +5951,38 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         return 'reality_shifting_intro';
         
       case 'negative_experience_description':
-        // User provided negative experience description, store it and go to trauma shifting intro
+        // User provided negative experience description, store it
         console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: *** CASE TRIGGERED *** - lastResponse="${lastResponse}"`);
         context.problemStatement = lastResponse;
         context.metadata.problemStatement = lastResponse;
-        // Store the original problem statement for digging deeper questions
-        if (!context.metadata.originalProblemStatement) {
-          context.metadata.originalProblemStatement = lastResponse;
+        
+        // Check if this is from dig deeper flow (originalProblemStatement exists means we're already working on something)
+        const isFromDigDeeper = context.metadata.originalProblemStatement && 
+                                context.metadata.originalProblemStatement !== lastResponse;
+        
+        if (isFromDigDeeper) {
+          // Coming from dig deeper - route to method selection
+          console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: From dig deeper flow, routing to method selection`);
+          context.currentPhase = 'work_type_selection';
+          context.metadata.selectedMethod = undefined; // Clear method so they can choose
+          return 'choose_method';
+        } else {
+          // Initial flow - store as original and go straight to trauma shifting
+          if (!context.metadata.originalProblemStatement) {
+            context.metadata.originalProblemStatement = lastResponse;
+          }
+          context.currentPhase = 'trauma_shifting';
+          context.metadata.selectedMethod = 'trauma_shifting';
+          console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Initial flow, going to trauma_shifting_intro`);
+          console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Context after update:`, JSON.stringify({
+            currentPhase: context.currentPhase,
+            currentStep: context.currentStep,
+            problemStatement: context.problemStatement,
+            selectedMethod: context.metadata.selectedMethod,
+            workType: context.metadata.workType
+          }, null, 2));
+          return 'trauma_shifting_intro';
         }
-        context.currentPhase = 'trauma_shifting';
-        context.metadata.selectedMethod = 'trauma_shifting';
-        console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Stored description: "${lastResponse}"`);
-        console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Setting phase to trauma_shifting and returning trauma_shifting_intro`);
-        console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Context after update:`, JSON.stringify({
-          currentPhase: context.currentPhase,
-          currentStep: context.currentStep,
-          problemStatement: context.problemStatement,
-          selectedMethod: context.metadata.selectedMethod,
-          workType: context.metadata.workType
-        }, null, 2));
-        return 'trauma_shifting_intro';
         
       case 'multiple_problems_selection':
         return 'restate_selected_problem';
