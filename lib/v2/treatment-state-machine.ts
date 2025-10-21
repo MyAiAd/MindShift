@@ -5813,6 +5813,12 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             delete context.userResponses['confirm_statement']; // Clear old confirmation too
             context.metadata.problemStatement = undefined; // Clear the old problem statement
             context.problemStatement = undefined; // Clear this too
+            
+            // Persist the cleared values to database to prevent reload
+            this.saveContextToDatabase(context).catch(error => 
+              console.error('Failed to save cleared context to database:', error)
+            );
+            
             return 'trauma_problem_redirect'; // Go back to re-answer how they feel
           }
           
