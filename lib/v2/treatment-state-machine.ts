@@ -5809,6 +5809,8 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           // Check if this came from trauma_problem_redirect - check FIRST before workType
           if (context.userResponses['trauma_problem_redirect']) {
             context.currentPhase = 'trauma_shifting'; // Set correct phase
+            delete context.userResponses['trauma_problem_redirect']; // Clear old response
+            delete context.userResponses['confirm_statement']; // Clear old confirmation too
             return 'trauma_problem_redirect'; // Go back to re-answer how they feel
           }
           
