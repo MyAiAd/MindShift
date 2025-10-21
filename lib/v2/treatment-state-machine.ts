@@ -5806,16 +5806,20 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         if (confirmInput.includes('no') || confirmInput.includes('not') || confirmInput.includes('wrong') || confirmInput.includes('incorrect')) {
           const workType = context.metadata.workType;
           
-          // Check if this came from trauma_problem_redirect (when user said no to trauma_shifting_intro)
-          if (workType === 'negative_experience' && context.userResponses['trauma_problem_redirect']) {
+          // Check if this came from trauma_problem_redirect - check FIRST before workType
+          if (context.userResponses['trauma_problem_redirect']) {
             context.currentPhase = 'trauma_shifting'; // Set correct phase
             return 'trauma_problem_redirect'; // Go back to re-answer how they feel
           }
           
           // Otherwise route based on workType to re-enter description
           if (workType === 'problem') {
-            return 'problem_description';
+            // For regular problems, clear statement and ask again
+            context.metadata.problemStatement = undefined;
+            context.problemStatement = undefined;
+            return 'work_type_description'; // Stay in work_type_selection phase
           } else if (workType === 'goal') {
+            context.currentPhase = 'introduction';
             return 'goal_description';
           } else if (workType === 'negative_experience') {
             context.currentPhase = 'introduction'; // Set correct phase for negative_experience_description
