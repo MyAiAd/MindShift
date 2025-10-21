@@ -2817,13 +2817,11 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             if (returnTo === 'identity_future_check') {
               // Coming from future check: "Do you think you might feel yourself being ... in the future?"
               prefix = 'Put yourself in the future and feel yourself being';
-              // Clear the flag after using it
-              context.metadata.returnToIdentityCheck = undefined;
+              // DON'T clear the flag here - we need it in identity_dissolve_step_f to know where to return
             } else if (returnTo === 'identity_scenario_check') {
               // Coming from scenario check: "Is there any scenario in which you might still feel yourself being..."
               prefix = 'Imagine that scenario and feel yourself being';
-              // Clear the flag after using it
-              context.metadata.returnToIdentityCheck = undefined;
+              // DON'T clear the flag here - we need it in identity_dissolve_step_f to know where to return
             }
             
             return `${prefix} '${identity}'... what does it feel like?`;
