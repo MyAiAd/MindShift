@@ -6523,9 +6523,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         // Trauma Shifting: Check if might feel bad about this incident in future
         if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
           // Might feel bad in future - route to problem statement capture and method selection
-          context.metadata.workType = 'problem';
+          context.metadata.workType = 'negative_experience';
           context.metadata.selectedMethod = undefined;
-          context.currentPhase = 'problem_or_goal_input';
+          context.currentPhase = 'introduction';
           return 'negative_experience_description';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
@@ -6538,9 +6538,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         // Trauma Shifting: Check if anything else is a problem
         if (lastResponse.includes('yes')) {
           // Yes, something else is a problem - route to problem statement capture and method selection
-          context.metadata.workType = 'problem';
+          context.metadata.workType = 'negative_experience';
           context.metadata.selectedMethod = undefined;
-          context.currentPhase = 'problem_or_goal_input';
+          context.currentPhase = 'introduction';
           return 'negative_experience_description';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
