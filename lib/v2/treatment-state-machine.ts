@@ -6454,6 +6454,11 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           context.metadata.originalProblemStatement = constructedProblem;
         }
         
+        // Immediately persist to prevent database reload overwriting it
+        this.saveContextToDatabase(context).catch(error => 
+          console.error('Failed to save trauma problem statement to database:', error)
+        );
+        
         // Set to problem work type for method selection later
         context.metadata.workType = 'problem';
         context.metadata.selectedMethod = undefined; // Reset method selection
