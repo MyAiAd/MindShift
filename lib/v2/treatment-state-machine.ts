@@ -5808,6 +5808,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           
           // Check if this came from trauma_problem_redirect (when user said no to trauma_shifting_intro)
           if (workType === 'negative_experience' && context.userResponses['trauma_problem_redirect']) {
+            context.currentPhase = 'trauma_shifting'; // Set correct phase
             return 'trauma_problem_redirect'; // Go back to re-answer how they feel
           }
           
@@ -5817,6 +5818,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           } else if (workType === 'goal') {
             return 'goal_description';
           } else if (workType === 'negative_experience') {
+            context.currentPhase = 'introduction'; // Set correct phase for negative_experience_description
             return 'negative_experience_description';
           }
           
