@@ -5973,7 +5973,7 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         if (isFromDigDeeper) {
           // Coming from dig deeper - route to method selection
           console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: From dig deeper flow, routing to method selection`);
-          context.currentPhase = 'work_type_selection';
+          context.currentPhase = 'method_selection';
           context.metadata.selectedMethod = undefined; // Clear method so they can choose
           return 'choose_method';
         } else {
