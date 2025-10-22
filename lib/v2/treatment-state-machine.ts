@@ -5809,6 +5809,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         if (confirmInput.includes('no') || confirmInput.includes('not') || confirmInput.includes('wrong') || confirmInput.includes('incorrect')) {
           const workType = context.metadata.workType;
           
+          // DEBUG: Log the state
+          console.log(`🔍 CONFIRM_STATEMENT "NO": workType=${workType}, hasTraumaRedirect=${!!context.userResponses['trauma_problem_redirect']}, userResponses keys:`, Object.keys(context.userResponses || {}));
+          
           // Check if this came from trauma_problem_redirect - check FIRST before workType
           if (context.userResponses['trauma_problem_redirect']) {
             context.currentPhase = 'trauma_shifting'; // Set correct phase
