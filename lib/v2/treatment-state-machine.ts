@@ -6537,6 +6537,40 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
         }
         break;
         
+      case 'trauma_future_step_f':
+        // Trauma Shifting: Final check after future projection sequence (Step 5 repeat in future)
+        // "Can you still feel yourself being X?" (in the future projection context)
+        if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+          // Still feeling identity in future - loop back to step 4A to repeat shifting
+          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          
+          // Clear previous iteration responses to prevent cached feelings
+          delete context.userResponses['trauma_dissolve_step_a'];
+          delete context.userResponses['trauma_dissolve_step_b'];
+          delete context.userResponses['trauma_dissolve_step_c'];
+          delete context.userResponses['trauma_dissolve_step_d'];
+          delete context.userResponses['trauma_dissolve_step_e'];
+          delete context.userResponses['trauma_future_projection'];
+          delete context.userResponses['trauma_future_step_c'];
+          delete context.userResponses['trauma_future_step_d'];
+          delete context.userResponses['trauma_future_step_e'];
+          delete context.userResponses['trauma_future_step_f'];
+          console.log(`🔄 TRAUMA_FUTURE_F_CYCLE: Still feeling identity in future, starting iteration ${context.metadata.cycleCount}, cleared previous responses`);
+          
+          // Persist the cleared responses to database
+          this.saveContextToDatabase(context).catch(error => 
+            console.error('Failed to save cleared trauma future responses to database:', error)
+          );
+          
+          return 'trauma_dissolve_step_a'; // Loop back to Step 4A
+        }
+        if (lastResponse.includes('no') || lastResponse.includes('not')) {
+          // No longer feeling identity in future - proceed to Step 6 (experience check)
+          console.log(`🔍 TRAUMA_FUTURE_F: User said NO, proceeding to experience check`);
+          return 'trauma_experience_check';
+        }
+        break;
+        
       case 'trauma_experience_check':
         // Trauma Shifting: Check if negative experience still feels like problem
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {
