@@ -562,6 +562,7 @@ export class TreatmentStateMachine {
             step.id === 'reality_shifting_intro' ||
             // Work type and problem-related steps that depend on dynamic context
             step.id === 'work_type_description' ||
+            step.id === 'confirm_statement' ||  // CRITICAL: Skip cache to prevent stale problem statement in confirmation
                             // Reality Shifting A/B loop steps - never cache to prevent cross-iteration conflicts
                             step.id === 'reality_column_a_restart' ||
                             step.id === 'reality_step_a2' ||
