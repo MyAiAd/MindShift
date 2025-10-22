@@ -5813,12 +5813,11 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
             context.currentPhase = 'trauma_shifting'; // Set correct phase
             delete context.userResponses['trauma_problem_redirect']; // Clear old response
             delete context.userResponses['confirm_statement']; // Clear old confirmation too
-            context.metadata.problemStatement = undefined; // Clear the old problem statement
-            context.problemStatement = undefined; // Clear this too
+            // Don't clear problemStatement - trauma_problem_redirect will overwrite it with new value
             
-            // Persist the cleared values to database to prevent reload
+            // Persist the cleared responses to database
             this.saveContextToDatabase(context).catch(error => 
-              console.error('Failed to save cleared context to database:', error)
+              console.error('Failed to save cleared responses to database:', error)
             );
             
             return 'trauma_problem_redirect'; // Go back to re-answer how they feel
