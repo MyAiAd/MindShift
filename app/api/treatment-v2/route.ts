@@ -351,20 +351,51 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       };
 
     } else if (result.needsAIAssistance) {
-      // AI assistance needed (only 5% of cases)
-      const aiResponse = await handleAIAssistance(result.needsAIAssistance, sessionId, userId);
-      const endTime = performance.now();
-      const responseTime = endTime - startTime;
+      // Check if this is a userStuck trigger - use scripted response instead of AI
+      if (result.needsAIAssistance.trigger?.condition === 'userStuck') {
+        const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+        const currentPhase = treatmentContext?.currentPhase;
+        const currentStepId = treatmentContext?.currentStep;
+        
+        // Get the current step's scripted response to repeat it
+        let lastQuestion = 'Please try again.';
+        try {
+          const stepResponse = treatmentMachine.getStepResponse(sessionId, currentStepId);
+          if (stepResponse) {
+            lastQuestion = stepResponse;
+          }
+        } catch (error) {
+          console.log('Could not retrieve step response:', error);
+        }
+        
+        const endTime = performance.now();
+        const responseTime = endTime - startTime;
+        
+        finalResponse = {
+          ...finalResponse,
+          message: `Let's try that last step again…\n\n${lastQuestion}`,
+          currentStep: currentStepId, // Keep user on their current step
+          responseTime: Math.round(responseTime),
+          usedAI: false,
+          aiCost: 0,
+          aiTokens: 0
+        };
+      } else {
+        // AI assistance needed for other triggers (only 5% of cases)
+        const aiResponse = await handleAIAssistance(result.needsAIAssistance, sessionId, userId);
+        const endTime = performance.now();
+        const responseTime = endTime - startTime;
 
-      finalResponse = {
-        ...finalResponse,
-        message: aiResponse.message,
-        currentStep: 'mind_shifting_explanation', // AI assistance keeps user on same step for clarification
-        responseTime: Math.round(responseTime),
-        usedAI: true,
-        aiCost: aiResponse.cost,
-        aiTokens: aiResponse.tokenCount
-      };
+        finalResponse = {
+          ...finalResponse,
+          message: aiResponse.message,
+          currentStep: 'mind_shifting_explanation', // AI assistance keeps user on same step for clarification
+          responseTime: Math.round(responseTime),
+          usedAI: true,
+          aiCost: aiResponse.cost,
+          aiTokens: aiResponse.tokenCount
+        };
+      }
 
     } else if (result.reason && result.reason.startsWith('AI_VALIDATION_NEEDED:')) {
       // NEW: Handle AI validation requests

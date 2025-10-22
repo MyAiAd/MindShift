@@ -7081,6 +7081,29 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
   }
 
   /**
+   * Public method to get the current step's scripted response
+   */
+  public getStepResponse(sessionId: string, stepId?: string): string | null {
+    if (!sessionId) {
+      throw new Error('SessionId is required for getStepResponse');
+    }
+    const context = this.getOrCreateContext(sessionId);
+    const targetStepId = stepId || context.currentStep;
+    const currentPhase = this.phases.get(context.currentPhase);
+    
+    if (!currentPhase) {
+      return null;
+    }
+    
+    const step = currentPhase.steps.find(s => s.id === targetStepId);
+    if (!step) {
+      return null;
+    }
+    
+    return this.getScriptedResponse(step, context);
+  }
+
+  /**
    * Public method to clear user responses for undo functionality
    */
   public clearUserResponsesForUndo(sessionId: string, stepsToKeep: Set<string>): void {
