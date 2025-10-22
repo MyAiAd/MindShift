@@ -6565,9 +6565,9 @@ Feel the problem that '${problemStatement}'... what do you believe about yoursel
           return 'trauma_dissolve_step_a'; // Loop back to Step 4A
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer feeling identity in future - proceed to Step 6 (experience check)
-          console.log(`🔍 TRAUMA_FUTURE_F: User said NO, proceeding to experience check`);
-          return 'trauma_experience_check';
+          // No longer feeling identity in future - proceed to scenario check
+          console.log(`🔍 TRAUMA_FUTURE_F: User said NO, proceeding to scenario check`);
+          return 'trauma_future_scenario_check';
         }
         break;
         
