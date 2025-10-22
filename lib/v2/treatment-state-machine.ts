@@ -903,6 +903,32 @@ export class TreatmentStateMachine {
   }
 
   /**
+   * Validate percentage input (0-100)
+   */
+  private validatePercentageInput(userInput: string): { isValid: boolean; error?: string; percentage?: number } {
+    const trimmed = userInput.trim();
+    
+    // Try to extract a number from the input (handles "50", "50%", "fifty", etc.)
+    const numberMatch = trimmed.match(/(\d+)/);
+    
+    if (!numberMatch) {
+      return { isValid: false, error: 'Please give me a percentage between 0 and 100.' };
+    }
+    
+    const percentage = parseInt(numberMatch[1]);
+    
+    if (isNaN(percentage)) {
+      return { isValid: false, error: 'Please give me a percentage between 0 and 100.' };
+    }
+    
+    if (percentage < 0 || percentage > 100) {
+      return { isValid: false, error: 'Please give me a percentage between 0 and 100.' };
+    }
+    
+    return { isValid: true, percentage };
+  }
+
+  /**
    * Validate user input against step requirements
    */
   private validateUserInput(userInput: string, step: TreatmentStep, context?: TreatmentContext): { isValid: boolean; error?: string } {
@@ -911,6 +937,15 @@ export class TreatmentStateMachine {
     const lowerInput = trimmed.toLowerCase();
     
     console.log(`🚨 VALIDATION_CALLED: step="${step.id}", input="${userInput}", trimmed="${trimmed}", words=${words}`);
+    
+    // Special validation for percentage inputs in Reality Shifting
+    if (step.id === 'goal_certainty' || step.id === 'reality_checking_questions') {
+      const percentageValidation = this.validatePercentageInput(userInput);
+      if (!percentageValidation.isValid) {
+        return { isValid: false, error: percentageValidation.error };
+      }
+      return { isValid: true };
+    }
     
     // Special validation for introduction phase
     if (step.id === 'mind_shifting_explanation') {
