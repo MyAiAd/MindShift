@@ -4978,7 +4978,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             // BUGFIX: Always check for new problem from restate_problem_future, even on subsequent iterations
             // This ensures we use "issue 3" instead of sticking with "issue 2"
             const newProblemFromRestate = context.userResponses?.['restate_problem_future'];
-            if (newProblemFromRestate && newProblemFromRestate.trim() && input && input !== 'METHOD_SELECTION_NEEDED') {
+            if (newProblemFromRestate && newProblemFromRestate.trim()) {
               // User just came from restate_problem_future - update to the new problem (overwrite old one)
               const newProblem = newProblemFromRestate.trim();
               context.metadata.currentDiggingProblem = newProblem;
