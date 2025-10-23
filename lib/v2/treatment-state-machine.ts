@@ -4922,7 +4922,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
       steps: [
         {
           id: 'digging_deeper_start',
-          scriptedResponse: "Would you like to dig deeper in this area?",
+          scriptedResponse: (userInput, context) => {
+            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            return `Take your mind back to '${problemStatement}'. Would you like to dig deeper in this area?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
