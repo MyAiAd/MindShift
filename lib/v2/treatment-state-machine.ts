@@ -6279,6 +6279,8 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           // If YES, they can still feel the identity - cycle back to step A
           console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: User said YES, cycling back to dissolve step A`);
           context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+          // Clear the returnToIdentityCheck flag so we use regular "Feel yourself being..." phrasing
+          context.metadata.returnToIdentityCheck = undefined;
           return 'identity_dissolve_step_a';
         }
         // If unclear response, default to proceeding (assume NO to avoid loops)
