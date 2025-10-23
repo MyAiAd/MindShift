@@ -4955,7 +4955,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             // digging_method_selection, which will handle storage correctly.
             // BUGFIX: Previously this was storing "yes" (from future_problem_check) instead
             // of the actual problem statement, causing "Feel the problem 'yes'..." display.
-            return "How would you state the problem in a few words?";
+            return "How would you state the problem now in a few words?";
           },
           expectedResponseType: 'problem',
           validationRules: [
