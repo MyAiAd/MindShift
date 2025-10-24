@@ -7097,6 +7097,8 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         if (anythingElse1Problem) {
           context.problemStatement = anythingElse1Problem;
           context.metadata.currentDiggingProblem = anythingElse1Problem;
+          // CRITICAL: Reset originalProblemStatement for new problem chain - prevents Integration Questions from referencing previous treatment's problem
+          context.metadata.originalProblemStatement = anythingElse1Problem;
           console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Using problem: "${anythingElse1Problem}"`);
         }
         
@@ -7152,6 +7154,8 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         if (anythingElse2Problem) {
           context.problemStatement = anythingElse2Problem;
           context.metadata.currentDiggingProblem = anythingElse2Problem;
+          // CRITICAL: Reset originalProblemStatement for new problem chain - prevents Integration Questions from referencing previous treatment's problem
+          context.metadata.originalProblemStatement = anythingElse2Problem;
           console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Using problem: "${anythingElse2Problem}"`);
         }
         
