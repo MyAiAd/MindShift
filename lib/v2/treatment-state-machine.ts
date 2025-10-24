@@ -4923,7 +4923,8 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         {
           id: 'digging_deeper_start',
           scriptedResponse: (userInput, context) => {
-            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            // CRITICAL: Use originalProblemStatement - digging deeper should reference the FIRST problem, not subsequent ones
+            const problemStatement = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
             return `Take your mind back to '${problemStatement}'. Would you like to dig deeper in this area?`;
           },
           expectedResponseType: 'yesno',
