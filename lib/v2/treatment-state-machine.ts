@@ -520,6 +520,18 @@ export class TreatmentStateMachine {
                             step.id === 'problem_shifting_intro' ||
                             step.id === 'trauma_shifting_intro' ||
                             step.id === 'trauma_identity_step' ||
+                            step.id === 'trauma_dissolve_step_a' ||
+                            step.id === 'trauma_dissolve_step_b' ||
+                            step.id === 'trauma_dissolve_step_c' ||
+                            step.id === 'trauma_dissolve_step_d' ||
+                            step.id === 'trauma_dissolve_step_e' ||
+                            step.id === 'trauma_identity_check' ||
+                            step.id === 'trauma_future_identity_check' ||
+                            step.id === 'trauma_future_scenario_check' ||
+                            step.id === 'trauma_future_step_c' ||
+                            step.id === 'trauma_future_step_d' ||
+                            step.id === 'trauma_future_step_e' ||
+                            step.id === 'trauma_future_step_f' ||
                             step.id === 'blockage_shifting_intro' ||
                             // Integration steps that reference problem statement - must skip cache to prevent cross-session contamination
                             step.id === 'integration_start' ||
