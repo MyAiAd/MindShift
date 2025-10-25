@@ -6080,7 +6080,71 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         break;
         
       case 'choose_method':
-        // Route to different methods based on user choice
+        // Check if this is digging deeper method selection (flag set by restate_problem_future)
+        if (context.metadata.isDiggingDeeperMethodSelection) {
+          // Clear the flag
+          context.metadata.isDiggingDeeperMethodSelection = false;
+          
+          // Delegate to digging_method_selection logic
+          const input = lastResponse.toLowerCase();
+          let diggingSelectedMethod = '';
+          
+          if (input.includes('problem shifting') || input === '1') {
+            diggingSelectedMethod = 'problem_shifting';
+          } else if (input.includes('identity shifting') || input === '2') {
+            diggingSelectedMethod = 'identity_shifting';
+          } else if (input.includes('belief shifting') || input === '3') {
+            diggingSelectedMethod = 'belief_shifting';
+          } else if (input.includes('blockage shifting') || input === '4') {
+            diggingSelectedMethod = 'blockage_shifting';
+          }
+          
+          // Update problem statement to use the new problem from digging deeper flow
+          const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
+                                              context.userResponses?.['restate_scenario_problem_1'] ||
+                                              context.userResponses?.['restate_scenario_problem_2'] ||
+                                              context.userResponses?.['restate_scenario_problem_3'] ||
+                                              context.userResponses?.['restate_anything_else_problem_1'] ||
+                                              context.userResponses?.['restate_anything_else_problem_2'];
+          const newDiggingProblem = context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem || newProblemFromUserResponse;
+          
+          if (newDiggingProblem) {
+            context.problemStatement = newDiggingProblem;
+            context.metadata.currentDiggingProblem = newDiggingProblem;
+            console.log(`🔍 CHOOSE_METHOD_DIGGING: Using problem: "${newDiggingProblem}"`);
+          }
+          
+          // Clear previous modality-specific metadata to ensure clean switch
+          this.clearPreviousModalityMetadata(context);
+          
+          // Store the selected method in metadata for reference
+          context.metadata.selectedMethod = diggingSelectedMethod;
+          
+          // Route to appropriate method intro
+          if (diggingSelectedMethod === 'problem_shifting') {
+            context.currentPhase = 'problem_shifting';
+            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Problem Shifting`);
+            return 'problem_shifting_intro';
+          } else if (diggingSelectedMethod === 'identity_shifting') {
+            context.currentPhase = 'identity_shifting';
+            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Identity Shifting`);
+            return 'identity_shifting_intro';
+          } else if (diggingSelectedMethod === 'belief_shifting') {
+            context.currentPhase = 'belief_shifting';
+            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Belief Shifting`);
+            return 'belief_shifting_intro';
+          } else if (diggingSelectedMethod === 'blockage_shifting') {
+            context.currentPhase = 'blockage_shifting';
+            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Blockage Shifting`);
+            return 'blockage_shifting_intro';
+          } else {
+            // No valid method selected - stay on choose_method
+            console.error(`❌ CHOOSE_METHOD_DIGGING: Invalid method selection: "${input}"`);
+            return 'choose_method';
+          }
+        }
+        
+        // Original choose_method logic for non-digging-deeper flow
         const methodChoice = context.userResponses[context.currentStep]?.toLowerCase() || '';
         
         if (methodChoice.includes('problem shifting')) {
@@ -6920,8 +6984,11 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         break;
         
       case 'restate_problem_future':
-        // After restating the problem, route directly to method selection
-        return 'digging_method_selection';
+        // After restating the problem, route to choose_method (triggers frontend UI)
+        // Set flag so choose_method handler knows to use digging deeper routing logic
+        context.metadata.isDiggingDeeperMethodSelection = true;
+        context.currentPhase = 'method_selection';  // Frontend recognizes this phase and shows buttons
+        return 'choose_method';
         
       case 'digging_method_selection':
         // This step routes to appropriate treatment method based on user choice
