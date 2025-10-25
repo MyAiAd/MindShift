@@ -3955,9 +3955,17 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
         {
           id: 'trauma_identity_step',
           scriptedResponse: (userInput, context) => {
-            // Get the negative experience statement
-            const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
-            return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience...now freeze it there. Keep feeling this frozen moment...what kind of person are you being in this moment?`;
+            // Check if this is a repeat cycle (user's eyes are already closed)
+            const cycleCount = context.metadata.cycleCount || 0;
+            
+            if (cycleCount > 0) {
+              // Eyes already closed from previous cycle, skip the intro
+              return `Keep feeling this frozen moment...what kind of person are you being in this moment?`;
+            } else {
+              // First time through - include full instructions
+              const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
+              return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience...now freeze it there. Keep feeling this frozen moment...what kind of person are you being in this moment?`;
+            }
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -4231,8 +4239,9 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
 
         {
           id: 'trauma_experience_check',
-          scriptedResponse: () => {
-            return `Take your mind back to the frozen moment which was the worst part of the negative experience. Does it still feel like a problem to you?`;
+          scriptedResponse: (userInput, context) => {
+            const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
+            return `Take your mind back to the frozen moment which was the worst part of the negative experience (${negativeExperience}). Does it still feel like a problem to you?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
