@@ -6117,10 +6117,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           // No longer a problem - check if we're in digging deeper flow
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
-            // We're clearing a problem from digging deeper - return to that step
+            // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             context.currentPhase = 'digging_deeper';
             context.metadata.returnToDiggingStep = undefined; // Clear the return step
-            return returnStep;
+            return 'digging_deeper_start';
           } else {
             // Regular flow - move to digging deeper start
             context.currentPhase = 'digging_deeper';
@@ -6184,11 +6184,11 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Problem resolved, transitioning to dig deeper`);
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
-            // We're clearing a problem from digging deeper - return to that step
-            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Returning to digging step: ${returnStep}`);
+            // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
+            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Asking permission before continuing to dig deeper`);
             context.currentPhase = 'digging_deeper';
             context.metadata.returnToDiggingStep = undefined; // Clear the return step
-            return returnStep;
+            return 'digging_deeper_start';
           } else {
             // Regular flow - move to digging deeper start immediately
             console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Regular flow - setting phase to digging_deeper and returning digging_deeper_start`);
@@ -6243,10 +6243,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           // No longer a problem - check if we're in digging deeper flow
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
-            // We're clearing a problem from digging deeper - return to that step
+            // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             context.currentPhase = 'digging_deeper';
             context.metadata.returnToDiggingStep = undefined; // Clear the return step
-            return returnStep;
+            return 'digging_deeper_start';
           } else {
             // Regular flow - move to digging deeper start
             context.currentPhase = 'digging_deeper';
@@ -6426,10 +6426,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           // User said nothing needs to happen - skip the "what else" question and complete directly
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
-            // We're clearing a problem from digging deeper - return to that step
+            // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             context.currentPhase = 'digging_deeper';
             context.metadata.returnToDiggingStep = undefined; // Clear the return step
-            return returnStep;
+            return 'digging_deeper_start';
           } else {
             // Regular flow - complete session, move to integration phase
             context.currentPhase = 'integration';
@@ -6446,10 +6446,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           // User said nothing more needs to happen - check if we're in digging deeper flow
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
-            // We're clearing a problem from digging deeper - return to that step
+            // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             context.currentPhase = 'digging_deeper';
             context.metadata.returnToDiggingStep = undefined; // Clear the return step
-            return returnStep;
+            return 'digging_deeper_start';
           } else {
             // Regular flow - complete session, move to integration phase
             context.currentPhase = 'integration';
@@ -6772,10 +6772,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           // No longer a problem - check if we're in digging deeper flow
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
-            // We're clearing a problem from digging deeper - return to that step
+            // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             context.currentPhase = 'digging_deeper';
             context.metadata.returnToDiggingStep = undefined; // Clear the return step
-            return returnStep;
+            return 'digging_deeper_start';
           } else {
             // Regular flow - move to digging deeper start
             context.currentPhase = 'digging_deeper';
