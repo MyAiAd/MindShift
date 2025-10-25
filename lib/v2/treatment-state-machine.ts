@@ -3992,11 +3992,14 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             const returnTo = context.metadata.returnToTraumaCheck;
             let prefix = 'Feel yourself being';
             
-            if (returnTo === 'trauma_future_scenario_check') {
+            if (returnTo === 'trauma_identity_check') {
+              // Coming from identity check: "Can you still feel yourself being..."
+              prefix = 'Feel yourself being';
+              // DON'T clear the flag here - we need it at the end to know where to return
+            } else if (returnTo === 'trauma_future_scenario_check') {
               // Coming from scenario check: "Is there any scenario in which you might still feel yourself being..."
               prefix = 'Imagine that scenario and feel yourself being';
-              // Clear the flag after using it
-              context.metadata.returnToTraumaCheck = undefined;
+              // DON'T clear the flag here - we need it at the end to know where to return
             }
             
             return `${prefix} ${identity}... what does it feel like?`;
@@ -6505,6 +6508,20 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         break;
 
 
+      case 'trauma_dissolve_step_e':
+        // Trauma Shifting: After completing dissolve sequence, check if we need to return to a specific check question
+        // This implements the same pattern as Identity Shifting (identity_dissolve_step_f)
+        const returnToTraumaCheck = context.metadata.returnToTraumaCheck;
+        if (returnToTraumaCheck) {
+          // Return to the check question we came from (skipping earlier passed checks)
+          console.log(`🔍 TRAUMA_DISSOLVE_STEP_E: Returning to ${returnToTraumaCheck}`);
+          context.metadata.returnToTraumaCheck = undefined; // Clear the flag after using it
+          return returnToTraumaCheck;
+        }
+        // First time through - proceed to first check question
+        console.log(`🔍 TRAUMA_DISSOLVE_STEP_E: First time, proceeding to trauma_identity_check`);
+        return 'trauma_identity_check';
+      
       case 'trauma_identity_check':
         // Trauma Shifting: Check if still feeling the identity
         if (lastResponse.includes('yes') || lastResponse.includes('still')) {
@@ -6525,6 +6542,9 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           this.saveContextToDatabase(context).catch(error => 
             console.error('Failed to save cleared trauma responses to database:', error)
           );
+          
+          // Set flag to indicate we're returning from identity check (same pattern as Identity Shifting)
+          context.metadata.returnToTraumaCheck = 'trauma_identity_check';
           
           return 'trauma_dissolve_step_a';
         }

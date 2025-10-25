@@ -1233,6 +1233,12 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       context.metadata.returnToDiggingStep = undefined;
     }
     
+    // Clear trauma check tracking if any trauma check responses were cleared
+    if (clearedSteps.some(step => step === 'trauma_identity_check' || step === 'trauma_future_identity_check' || step === 'trauma_future_scenario_check')) {
+      console.log('🧹 UNDO_TRACKING: Clearing returnToTraumaCheck');
+      context.metadata.returnToTraumaCheck = undefined;
+    }
+    
     // CACHE FIX: Clear step-specific metadata when undoing to re-entry points
     // This prevents stale cached responses from using old user input
     if (undoToStep === 'negative_experience_description') {
