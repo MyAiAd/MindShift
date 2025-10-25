@@ -6106,7 +6106,8 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
                                               context.userResponses?.['restate_scenario_problem_3'] ||
                                               context.userResponses?.['restate_anything_else_problem_1'] ||
                                               context.userResponses?.['restate_anything_else_problem_2'];
-          const newDiggingProblem = context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem || newProblemFromUserResponse;
+          // CRITICAL: Prioritize newProblemFromUserResponse FIRST to use the latest restated problem ("bad 2" not "bad 1")
+          const newDiggingProblem = newProblemFromUserResponse || context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem;
           
           if (newDiggingProblem) {
             context.problemStatement = newDiggingProblem;
@@ -6785,6 +6786,8 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           context.metadata.workType = 'negative_experience';
           context.metadata.selectedMethod = undefined;
           context.currentPhase = 'introduction';
+          // CRITICAL: Set return step so after clearing the sub-problem, user comes back to THIS same question
+          context.metadata.returnToDiggingStep = 'trauma_dig_deeper';
           return 'negative_experience_description';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
@@ -6800,6 +6803,8 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           context.metadata.workType = 'negative_experience';
           context.metadata.selectedMethod = undefined;
           context.currentPhase = 'introduction';
+          // CRITICAL: Set return step so after clearing the sub-problem, user comes back to THIS same question
+          context.metadata.returnToDiggingStep = 'trauma_dig_deeper_2';
           return 'negative_experience_description';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
