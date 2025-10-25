@@ -6125,15 +6125,21 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           return 'problem_shifting_intro';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer a problem - check if we're in digging deeper flow
+          // No longer a problem - check if we've already asked permission to dig deeper
+          const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
           const returnStep = context.metadata?.returnToDiggingStep;
-          if (returnStep) {
-            // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
+          
+          if (alreadyGrantedPermission && returnStep) {
+            // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
             context.currentPhase = 'digging_deeper';
-            // DON'T clear returnToDiggingStep yet - we need it to know where to return
-            return 'digging_deeper_start';
+            context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+            return returnStep;
+          } else if (alreadyGrantedPermission) {
+            // Permission already granted - skip permission, go to future_problem_check to continue digging
+            context.currentPhase = 'digging_deeper';
+            return 'future_problem_check';
           } else {
-            // Regular flow - move to digging deeper start
+            // First time - ask permission
             context.currentPhase = 'digging_deeper';
             return 'digging_deeper_start';
           }
@@ -6191,18 +6197,25 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           context.currentPhase = 'digging_deeper';
           return 'digging_deeper_start';
         } else if (seemsResolved) {
-          // Problem seems resolved - immediately transition to dig deeper
+          // Problem seems resolved - check if we've already asked permission to dig deeper
           console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Problem resolved, transitioning to dig deeper`);
+          const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
           const returnStep = context.metadata?.returnToDiggingStep;
-          if (returnStep) {
-            // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
-            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Asking permission before continuing to dig deeper`);
+          
+          if (alreadyGrantedPermission && returnStep) {
+            // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
+            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Permission already granted, returning to ${returnStep}`);
             context.currentPhase = 'digging_deeper';
-            // DON'T clear returnToDiggingStep yet - we need it to know where to return
-            return 'digging_deeper_start';
+            context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+            return returnStep;
+          } else if (alreadyGrantedPermission) {
+            // Permission already granted - skip permission, go to future_problem_check to continue digging
+            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Permission already granted, going to future_problem_check`);
+            context.currentPhase = 'digging_deeper';
+            return 'future_problem_check';
           } else {
-            // Regular flow - move to digging deeper start immediately
-            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Regular flow - setting phase to digging_deeper and returning digging_deeper_start`);
+            // First time - ask permission
+            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: First time, asking permission`);
             context.currentPhase = 'digging_deeper';
             return 'digging_deeper_start';
           }
@@ -6251,15 +6264,21 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           return 'restate_problem_future';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer a problem - check if we're in digging deeper flow
+          // No longer a problem - check if we've already asked permission to dig deeper
+          const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
           const returnStep = context.metadata?.returnToDiggingStep;
-          if (returnStep) {
-            // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
+          
+          if (alreadyGrantedPermission && returnStep) {
+            // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
             context.currentPhase = 'digging_deeper';
-            // DON'T clear returnToDiggingStep yet - we need it to know where to return
-            return 'digging_deeper_start';
+            context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+            return returnStep;
+          } else if (alreadyGrantedPermission) {
+            // Permission already granted - skip permission, go to future_problem_check to continue digging
+            context.currentPhase = 'digging_deeper';
+            return 'future_problem_check';
           } else {
-            // Regular flow - move to digging deeper start
+            // First time - ask permission
             context.currentPhase = 'digging_deeper';
             return 'digging_deeper_start';
           }
@@ -6662,8 +6681,24 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           return 'trauma_identity_step';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer a problem - proceed directly to dig deeper questions
-          return 'trauma_dig_deeper';
+          // No longer a problem - check if we've already asked permission to dig deeper
+          const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+          const returnStep = context.metadata?.returnToDiggingStep;
+          
+          if (alreadyGrantedPermission && returnStep) {
+            // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
+            context.currentPhase = 'digging_deeper';
+            context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+            return returnStep;
+          } else if (alreadyGrantedPermission) {
+            // Permission already granted but first trauma completion - skip permission, start digging questions
+            context.currentPhase = 'digging_deeper';
+            return 'trauma_dig_deeper';
+          } else {
+            // First time - ask permission
+            context.currentPhase = 'digging_deeper';
+            return 'digging_deeper_start';
+          }
         }
         break;
         
@@ -6797,15 +6832,21 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           return 'restate_problem_future';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // No longer a problem - check if we're in digging deeper flow
+          // No longer a problem - check if we've already asked permission to dig deeper
+          const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
           const returnStep = context.metadata?.returnToDiggingStep;
-          if (returnStep) {
-            // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
+          
+          if (alreadyGrantedPermission && returnStep) {
+            // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
             context.currentPhase = 'digging_deeper';
-            // DON'T clear returnToDiggingStep yet - we need it to know where to return
-            return 'digging_deeper_start';
+            context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+            return returnStep;
+          } else if (alreadyGrantedPermission) {
+            // Permission already granted - skip permission, go to future_problem_check to continue digging
+            context.currentPhase = 'digging_deeper';
+            return 'future_problem_check';
           } else {
-            // Regular flow - move to digging deeper start
+            // First time - ask permission
             context.currentPhase = 'digging_deeper';
             return 'digging_deeper_start';
           }
