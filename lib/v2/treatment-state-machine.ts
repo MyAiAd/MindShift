@@ -528,6 +528,7 @@ export class TreatmentStateMachine {
                             step.id === 'identity_future_check' ||
                             step.id === 'identity_scenario_check' ||
                             step.id === 'future_problem_check' ||
+                            step.id === 'trauma_experience_check' ||
                             // CRITICAL: Blockage steps b and d embed userInput directly - never cache to prevent cross-cycle contamination
                             step.id === 'blockage_step_b' ||
                             step.id === 'blockage_step_d' ||
@@ -2283,11 +2284,9 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'what_needs_to_happen_step',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement - prioritize digging deeper, then metadata (set at work_type_description), then fallbacks
-            const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
-            const problemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            console.log(`🔍 WHAT_NEEDS_TO_HAPPEN_STEP: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", metadata: "${context?.metadata?.problemStatement}", original: "${context?.problemStatement}")`);
-            return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
+            // Get the previous response from body_sensation_check to maintain flow continuity
+            const previousResponse = context?.userResponses?.['body_sensation_check'] || userInput || 'this';
+            return `Feel '${previousResponse}'... what needs to happen for this to not be a problem?`;
           },
           expectedResponseType: 'open',
           validationRules: [
