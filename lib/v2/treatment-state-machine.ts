@@ -7163,7 +7163,20 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         break;
         
       case 'restate_anything_else_problem_1':
-        return 'clear_anything_else_problem_1';
+        // Setup metadata for the new problem and route to method selection
+        const anythingElseProblem = context.userResponses?.['restate_anything_else_problem_1'];
+        if (anythingElseProblem) {
+          context.problemStatement = anythingElseProblem;
+          context.metadata.currentDiggingProblem = anythingElseProblem;
+          context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
+          context.metadata.returnToDiggingStep = 'future_problem_check';
+          context.metadata.workType = 'problem';
+          // CRITICAL: Reset originalProblemStatement for new problem chain
+          context.metadata.originalProblemStatement = anythingElseProblem;
+          console.log(`🔍 ANYTHING_ELSE_1: Stored problem "${anythingElseProblem}", routing to method selection`);
+        }
+        this.clearPreviousModalityMetadata(context);
+        return 'digging_method_selection';
         
       case 'clear_anything_else_problem_1':
         // User selected a method - route directly to that method
@@ -7220,7 +7233,19 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         break;
         
       case 'restate_anything_else_problem_2':
-        return 'clear_anything_else_problem_2';
+        // Setup metadata for the new problem and route to method selection
+        const anythingElseProblem2 = context.userResponses?.['restate_anything_else_problem_2'];
+        if (anythingElseProblem2) {
+          context.problemStatement = anythingElseProblem2;
+          context.metadata.currentDiggingProblem = anythingElseProblem2;
+          context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 6) + 1;
+          context.metadata.returnToDiggingStep = 'future_problem_check';
+          context.metadata.workType = 'problem';
+          context.metadata.originalProblemStatement = anythingElseProblem2;
+          console.log(`🔍 ANYTHING_ELSE_2: Stored problem "${anythingElseProblem2}", routing to method selection`);
+        }
+        this.clearPreviousModalityMetadata(context);
+        return 'digging_method_selection';
         
       case 'clear_anything_else_problem_2':
         // User selected a method - route directly to that method
