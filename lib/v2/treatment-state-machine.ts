@@ -5080,7 +5080,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             const newProblem = context?.userResponses?.['restate_scenario_problem_1'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 2) + 1;
-            context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
+            context.metadata.returnToDiggingStep = 'scenario_check_1'; // Return to this scenario check after clearing
             context.metadata.workType = 'problem'; // Set work type for method selection
             
             // Set the problem statement for the method selection
@@ -5131,7 +5131,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             const newProblem = context?.userResponses?.['restate_scenario_problem_2'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 3) + 1;
-            context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
+            context.metadata.returnToDiggingStep = 'scenario_check_2'; // Return to this scenario check after clearing
             context.metadata.workType = 'problem'; // Set work type for method selection
             
             // Set the problem statement for the method selection
@@ -5182,7 +5182,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             const newProblem = context?.userResponses?.['restate_scenario_problem_3'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 4) + 1;
-            context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
+            context.metadata.returnToDiggingStep = 'scenario_check_3'; // Return to this scenario check after clearing
             context.metadata.workType = 'problem'; // Set work type for method selection
             
             // Set the problem statement for the method selection
@@ -6119,7 +6119,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           if (returnStep) {
             // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             context.currentPhase = 'digging_deeper';
-            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            // DON'T clear returnToDiggingStep yet - we need it to know where to return
             return 'digging_deeper_start';
           } else {
             // Regular flow - move to digging deeper start
@@ -6187,7 +6187,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Asking permission before continuing to dig deeper`);
             context.currentPhase = 'digging_deeper';
-            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            // DON'T clear returnToDiggingStep yet - we need it to know where to return
             return 'digging_deeper_start';
           } else {
             // Regular flow - move to digging deeper start immediately
@@ -6245,7 +6245,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           if (returnStep) {
             // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             context.currentPhase = 'digging_deeper';
-            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            // DON'T clear returnToDiggingStep yet - we need it to know where to return
             return 'digging_deeper_start';
           } else {
             // Regular flow - move to digging deeper start
@@ -6428,7 +6428,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           if (returnStep) {
             // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             context.currentPhase = 'digging_deeper';
-            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            // DON'T clear returnToDiggingStep yet - we need it to know where to return
             return 'digging_deeper_start';
           } else {
             // Regular flow - complete session, move to integration phase
@@ -6448,7 +6448,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           if (returnStep) {
             // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             context.currentPhase = 'digging_deeper';
-            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            // DON'T clear returnToDiggingStep yet - we need it to know where to return
             return 'digging_deeper_start';
           } else {
             // Regular flow - complete session, move to integration phase
@@ -6774,7 +6774,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           if (returnStep) {
             // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
             context.currentPhase = 'digging_deeper';
-            context.metadata.returnToDiggingStep = undefined; // Clear the return step
+            // DON'T clear returnToDiggingStep yet - we need it to know where to return
             return 'digging_deeper_start';
           } else {
             // Regular flow - move to digging deeper start
@@ -6802,14 +6802,21 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         context.currentPhase = 'digging_deeper';
         console.log(`🔍 DIGGING_DEEPER_START: Set currentPhase to "digging_deeper"`);
         
-        // If user says "yes", continue to future problem check
+        // If user says "yes", continue to saved position or future problem check
         if (lastResponse.includes('yes')) {
+          const returnStep = context.metadata?.returnToDiggingStep;
+          if (returnStep) {
+            console.log(`🔍 DIGGING_DEEPER_START: User said yes, returning to saved step: ${returnStep}`);
+            context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+            return returnStep;
+          }
           console.log(`🔍 DIGGING_DEEPER_START: User said yes, going to future_problem_check`);
           return 'future_problem_check';
         }
         // If "no", skip digging deeper and go straight to integration
         if (lastResponse.includes('no')) {
           console.log(`🔍 DIGGING_DEEPER_START: User said no, going to integration`);
+          context.metadata.returnToDiggingStep = undefined; // Clear saved position
           context.currentPhase = 'integration';
           return 'integration_start';
         }
