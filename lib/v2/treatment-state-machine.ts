@@ -6989,7 +6989,17 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         break;
         
       case 'restate_problem_future':
-        // After restating the problem, route to choose_method (triggers frontend UI)
+        // After restating the problem, update problem statement BEFORE routing to choose_method
+        const newProblemFromRestate = context.userResponses?.['restate_problem_future'];
+        if (newProblemFromRestate && newProblemFromRestate.trim()) {
+          const newProblem = newProblemFromRestate.trim();
+          context.metadata.currentDiggingProblem = newProblem;
+          context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
+          context.metadata.returnToDiggingStep = 'future_problem_check';
+          context.problemStatement = newProblem;
+          context.metadata.workType = 'problem';
+          console.log(`🔍 RESTATE_PROBLEM_FUTURE: Updated problem to "${newProblem}" before routing to choose_method`);
+        }
         // Set flag so choose_method handler knows to use digging deeper routing logic
         context.metadata.isDiggingDeeperMethodSelection = true;
         context.currentPhase = 'method_selection';  // Frontend recognizes this phase and shows buttons
