@@ -1208,6 +1208,31 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       }
     }
     
+    // CRITICAL: Clear position-tracking metadata when their associated check responses are cleared
+    // This prevents returning to a check question that the user undid past
+    const clearedSteps = Object.keys(context.userResponses || {})
+      .filter(stepId => !stepsToKeep.has(stepId));
+    
+    console.log('Treatment API: Cleared steps:', clearedSteps);
+    
+    // Clear belief check tracking if any belief check responses were cleared
+    if (clearedSteps.some(step => step.startsWith('belief_check_'))) {
+      console.log('🧹 UNDO_TRACKING: Clearing returnToBeliefCheck');
+      context.metadata.returnToBeliefCheck = undefined;
+    }
+    
+    // Clear identity check tracking if any identity check responses were cleared
+    if (clearedSteps.some(step => step === 'identity_future_check' || step === 'identity_scenario_check')) {
+      console.log('🧹 UNDO_TRACKING: Clearing returnToIdentityCheck');
+      context.metadata.returnToIdentityCheck = undefined;
+    }
+    
+    // Clear digging deeper tracking if any digging deeper check responses were cleared
+    if (clearedSteps.some(step => step === 'future_problem_check' || step.startsWith('scenario_check_'))) {
+      console.log('🧹 UNDO_TRACKING: Clearing returnToDiggingStep');
+      context.metadata.returnToDiggingStep = undefined;
+    }
+    
     // CACHE FIX: Clear step-specific metadata when undoing to re-entry points
     // This prevents stale cached responses from using old user input
     if (undoToStep === 'negative_experience_description') {
@@ -1265,6 +1290,16 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
   } catch (updateError) {
     console.error('Treatment API: Error updating context:', updateError);
     throw new Error(`Failed to update context: ${updateError instanceof Error ? updateError.message : 'Unknown update error'}`);
+  }
+  
+  // CRITICAL: Persist context changes to database
+  // Without this, tracking variable clears and other metadata changes are lost on reload
+  try {
+    await treatmentMachine.saveContextToDatabase(context);
+    console.log('Treatment API: Saved updated context to database');
+  } catch (saveError) {
+    console.error('Treatment API: Error saving context to database:', saveError);
+    // Continue - the in-memory changes are still valid
   }
     
     // Get updated context for logging
