@@ -5253,7 +5253,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             const newProblem = context?.userResponses?.['restate_anything_else_problem_1'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
-            context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
+            context.metadata.returnToDiggingStep = 'anything_else_check_1'; // Return to the same question we were on
             context.metadata.workType = 'problem'; // Set work type for method selection
             
             // Set the problem statement for the method selection
@@ -5301,7 +5301,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             const newProblem = context?.userResponses?.['restate_anything_else_problem_2'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 6) + 1;
-            context.metadata.returnToDiggingStep = 'future_problem_check'; // Always return to first digging deeper question
+            context.metadata.returnToDiggingStep = 'anything_else_check_2'; // Return to the same question we were on
             context.metadata.workType = 'problem'; // Set work type for method selection
             
             // Set the problem statement for the method selection
@@ -7263,10 +7263,9 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           context.problemStatement = anythingElseProblem;
           context.metadata.currentDiggingProblem = anythingElseProblem;
           context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
-          context.metadata.returnToDiggingStep = 'future_problem_check';
+          context.metadata.returnToDiggingStep = 'anything_else_check_1';
           context.metadata.workType = 'problem';
-          // CRITICAL: Reset originalProblemStatement for new problem chain
-          context.metadata.originalProblemStatement = anythingElseProblem;
+          // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
           console.log(`🔍 ANYTHING_ELSE_1: Stored problem "${anythingElseProblem}", routing to method selection`);
         }
         this.clearPreviousModalityMetadata(context);
@@ -7280,8 +7279,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         if (anythingElse1Problem) {
           context.problemStatement = anythingElse1Problem;
           context.metadata.currentDiggingProblem = anythingElse1Problem;
-          // CRITICAL: Reset originalProblemStatement for new problem chain - prevents Integration Questions from referencing previous treatment's problem
-          context.metadata.originalProblemStatement = anythingElse1Problem;
+          // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
           console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Using problem: "${anythingElse1Problem}"`);
         }
         
@@ -7333,9 +7331,9 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           context.problemStatement = anythingElseProblem2;
           context.metadata.currentDiggingProblem = anythingElseProblem2;
           context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 6) + 1;
-          context.metadata.returnToDiggingStep = 'future_problem_check';
+          context.metadata.returnToDiggingStep = 'anything_else_check_2';
           context.metadata.workType = 'problem';
-          context.metadata.originalProblemStatement = anythingElseProblem2;
+          // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
           console.log(`🔍 ANYTHING_ELSE_2: Stored problem "${anythingElseProblem2}", routing to method selection`);
         }
         this.clearPreviousModalityMetadata(context);
@@ -7349,8 +7347,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         if (anythingElse2Problem) {
           context.problemStatement = anythingElse2Problem;
           context.metadata.currentDiggingProblem = anythingElse2Problem;
-          // CRITICAL: Reset originalProblemStatement for new problem chain - prevents Integration Questions from referencing previous treatment's problem
-          context.metadata.originalProblemStatement = anythingElse2Problem;
+          // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
           console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Using problem: "${anythingElse2Problem}"`);
         }
         
