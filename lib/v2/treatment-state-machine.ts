@@ -476,7 +476,7 @@ export class TreatmentStateMachine {
     const introSteps = [
       'problem_shifting_intro',  // Ensure problem is stated as a problem
       'reality_shifting_intro',  // Ensure goal is stated as a goal  
-      'blockage_shifting_intro', // Ensure problem is stated as a problem
+      // 'blockage_shifting_intro' REMOVED - scripted response already has correct problem statement logic, AI not needed
       // 'identity_shifting_intro' REMOVED - should store identity response directly, not process with AI
       // 'trauma_shifting_intro',   // REMOVED - This is a simple yes/no question, no AI needed
       'belief_shifting_intro'    // Ensure problem is stated as a problem
