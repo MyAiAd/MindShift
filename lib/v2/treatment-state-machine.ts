@@ -6042,6 +6042,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: From dig deeper flow, routing to method selection`);
           context.currentPhase = 'method_selection';
           context.metadata.selectedMethod = undefined; // Clear method so they can choose
+          context.metadata.isDiggingDeeperMethodSelection = true; // Critical: tells choose_method to preserve returnToDiggingStep
           return 'choose_method';
         } else {
           // Initial flow - store as original and go straight to trauma shifting
