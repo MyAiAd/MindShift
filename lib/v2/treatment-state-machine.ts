@@ -6778,8 +6778,9 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             context.currentPhase = 'digging_deeper';
             return 'trauma_dig_deeper';
           } else {
-            // First time - ask permission
+            // First time - ask permission, then route to trauma-specific digging questions
             context.currentPhase = 'digging_deeper';
+            context.metadata.diggingType = 'trauma'; // Flag for digging_deeper_start to route to trauma_dig_deeper
             return 'digging_deeper_start';
           }
         }
@@ -6958,13 +6959,19 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         context.currentPhase = 'digging_deeper';
         console.log(`🔍 DIGGING_DEEPER_START: Set currentPhase to "digging_deeper"`);
         
-        // If user says "yes", continue to saved position or future problem check
+        // If user says "yes", continue to saved position or appropriate digging questions
         if (lastResponse.includes('yes')) {
           const returnStep = context.metadata?.returnToDiggingStep;
           if (returnStep) {
             console.log(`🔍 DIGGING_DEEPER_START: User said yes, returning to saved step: ${returnStep}`);
             context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
             return returnStep;
+          }
+          // Check if coming from trauma shifting
+          if (context.metadata?.diggingType === 'trauma') {
+            context.metadata.diggingType = undefined; // Clear flag
+            console.log(`🔍 DIGGING_DEEPER_START: User said yes, going to trauma_dig_deeper`);
+            return 'trauma_dig_deeper';
           }
           console.log(`🔍 DIGGING_DEEPER_START: User said yes, going to future_problem_check`);
           return 'future_problem_check';
