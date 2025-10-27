@@ -617,6 +617,8 @@ export class TreatmentStateMachine {
           console.log(`🚀 CACHE_SKIP: Skipping cache for identity_scenario_check to prevent cross-session identity contamination`);
         } else if (step.id === 'future_problem_check') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for future_problem_check to prevent cross-session problem contamination`);
+        } else if (step.id === 'digging_deeper_start') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for digging_deeper_start to prevent cross-session problem contamination (originalProblemStatement: ${context.metadata?.originalProblemStatement})`);
         } else if (step.id.startsWith('blockage_step_')) {
           console.log(`🚀 CACHE_SKIP: Skipping cache for ${step.id} on subsequent cycle (cycleCount: ${context.metadata?.cycleCount})`);
         } else if (step.id === 'check_if_still_problem') {
@@ -6241,10 +6243,35 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           (lastResponse.startsWith('not ') && lastResponse.length < 15);  // Short "not" responses
         
         if (stepESeemsResolved) {
-          // Problem seems resolved - move to dig deeper
-          console.log(`🔍 BLOCKAGE_STEP_E: Problem resolved (response: "${lastResponse}"), moving to dig deeper`);
-          context.currentPhase = 'digging_deeper';
-          return 'digging_deeper_start';
+          // Problem seems resolved - check if we're returning from a sub-problem or this is first completion
+          console.log(`🔍 BLOCKAGE_STEP_E: Problem resolved (response: "${lastResponse}"), checking dig deeper context`);
+          const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+          const returnStep = context.metadata?.returnToDiggingStep;
+          
+          if (alreadyGrantedPermission && returnStep) {
+            // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
+            console.log(`🔍 BLOCKAGE_STEP_E: Permission already granted, returning to ${returnStep}`);
+            context.currentPhase = 'digging_deeper';
+            context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+            return returnStep;
+          } else if (alreadyGrantedPermission) {
+            // Permission already granted - skip permission, go to appropriate digging question
+            console.log(`🔍 BLOCKAGE_STEP_E: Permission already granted, checking for trauma digging context`);
+            context.currentPhase = 'digging_deeper';
+            // Check if we're in trauma shifting context
+            if (context.metadata?.selectedMethod === 'trauma_shifting' || context.metadata?.diggingType === 'trauma') {
+              console.log(`🔍 BLOCKAGE_STEP_E: Returning to trauma_dig_deeper`);
+              return 'trauma_dig_deeper';
+            } else {
+              console.log(`🔍 BLOCKAGE_STEP_E: Returning to future_problem_check`);
+              return 'future_problem_check';
+            }
+          } else {
+            // First time - ask permission
+            console.log(`🔍 BLOCKAGE_STEP_E: First time, asking permission via digging_deeper_start`);
+            context.currentPhase = 'digging_deeper';
+            return 'digging_deeper_start';
+          }
         } else {
           // Still a problem - update problem statement and cycle back to step A
           const newProblem = context.userResponses[context.currentStep] || lastResponse;
