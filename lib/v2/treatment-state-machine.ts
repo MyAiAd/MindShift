@@ -4258,37 +4258,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'trauma_dig_deeper',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
-        },
-
-        {
-          id: 'trauma_dig_deeper',
-          scriptedResponse: () => {
-            return `Do you feel you might feel bad about this incident in the future?`;
-          },
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
-          ],
-          nextStep: 'trauma_dig_deeper_2',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
-        },
-
-        {
-          id: 'trauma_dig_deeper_2',
-          scriptedResponse: () => {
-            return `Is there anything else about this that's still a problem for you?`;
-          },
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
-          ],
-          nextStep: 'trauma_integration_awareness_1',
+          nextStep: undefined, // Handled by routing logic in determineNextStep
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
@@ -5342,6 +5312,36 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           ],
           nextStep: undefined, // Handled by routing logic
           aiTriggers: []
+        },
+
+        {
+          id: 'trauma_dig_deeper',
+          scriptedResponse: () => {
+            return `Do you feel you might feel bad about this incident in the future?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'trauma_dig_deeper_2',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_dig_deeper_2',
+          scriptedResponse: () => {
+            return `Is there anything else about this that's still a problem for you?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: undefined, // Handled by routing logic
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
         }
       ]
     });
