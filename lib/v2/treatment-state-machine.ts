@@ -5200,7 +5200,11 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         },
         {
           id: 'anything_else_check_1',
-          scriptedResponse: "Is there anything else about this that's still a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            // Always reference the ORIGINAL problem (Problem 1), not any digging problems
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the original problem';
+            return `Is there anything else about '${originalProblem}' that's still a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -5248,7 +5252,11 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         },
         {
           id: 'anything_else_check_2',
-          scriptedResponse: "Is there anything else about this that's still a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            // Always reference the ORIGINAL problem (Problem 1), not any digging problems
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the original problem';
+            return `Is there anything else about '${originalProblem}' that's still a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -5294,7 +5302,11 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         },
         {
           id: 'anything_else_check_3',
-          scriptedResponse: "Is there anything else about this that's still a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            // Always reference the ORIGINAL problem (Problem 1), not any digging problems
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the original problem';
+            return `Is there anything else about '${originalProblem}' that's still a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -5333,8 +5345,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
 
         {
           id: 'trauma_dig_deeper_2',
-          scriptedResponse: () => {
-            return `Is there anything else about this that's still a problem for you?`;
+          scriptedResponse: (userInput, context) => {
+            // Always reference the ORIGINAL problem (Problem 1), not any digging problems
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the original problem';
+            return `Is there anything else about '${originalProblem}' that's still a problem for you?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
