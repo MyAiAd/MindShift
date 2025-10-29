@@ -5652,6 +5652,76 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
     console.log(`🔍 DETERMINE_NEXT_STEP: *** SWITCH STATEMENT *** - context.currentStep="${context.currentStep}"`);
     switch (context.currentStep) {
       case 'choose_method':
+        // CRITICAL: Check if this is digging deeper method selection FIRST
+        // This flag is set by restate_problem_future when routing here from digging deeper flow
+        if (context.metadata.isDiggingDeeperMethodSelection) {
+          console.log(`🔍 CHOOSE_METHOD_DIGGING: Processing digging deeper method selection`);
+          
+          // Clear the flag
+          context.metadata.isDiggingDeeperMethodSelection = false;
+          
+          // Delegate to digging_method_selection logic
+          const input = lastResponse.toLowerCase();
+          let diggingSelectedMethod = '';
+          
+          if (input.includes('problem shifting') || input === '1') {
+            diggingSelectedMethod = 'problem_shifting';
+          } else if (input.includes('identity shifting') || input === '2') {
+            diggingSelectedMethod = 'identity_shifting';
+          } else if (input.includes('belief shifting') || input === '3') {
+            diggingSelectedMethod = 'belief_shifting';
+          } else if (input.includes('blockage shifting') || input === '4') {
+            diggingSelectedMethod = 'blockage_shifting';
+          }
+          
+          // Update problem statement to use the new problem from digging deeper flow
+          const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
+                                              context.userResponses?.['restate_scenario_problem_1'] ||
+                                              context.userResponses?.['restate_scenario_problem_2'] ||
+                                              context.userResponses?.['restate_scenario_problem_3'] ||
+                                              context.userResponses?.['restate_anything_else_problem_1'] ||
+                                              context.userResponses?.['restate_anything_else_problem_2'];
+          // CRITICAL: Prioritize newProblemFromUserResponse FIRST to use the latest restated problem ("issue 2" not "issue 1")
+          const newDiggingProblem = newProblemFromUserResponse || context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem;
+          
+          if (newDiggingProblem) {
+            context.problemStatement = newDiggingProblem;
+            context.metadata.currentDiggingProblem = newDiggingProblem;
+            console.log(`🔍 CHOOSE_METHOD_DIGGING: Using problem: "${newDiggingProblem}"`);
+          }
+          
+          // ⭐ THIS IS THE FIX: Clear previous modality-specific metadata to ensure clean switch
+          // This removes stale currentBelief, cycleCount, etc. from the previous belief shifting session
+          this.clearPreviousModalityMetadata(context);
+          
+          // Store the selected method in metadata for reference
+          context.metadata.selectedMethod = diggingSelectedMethod;
+          
+          // Route to appropriate method intro
+          if (diggingSelectedMethod === 'problem_shifting') {
+            context.currentPhase = 'problem_shifting';
+            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Problem Shifting`);
+            return 'problem_shifting_intro';
+          } else if (diggingSelectedMethod === 'identity_shifting') {
+            context.currentPhase = 'identity_shifting';
+            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Identity Shifting`);
+            return 'identity_shifting_intro';
+          } else if (diggingSelectedMethod === 'belief_shifting') {
+            context.currentPhase = 'belief_shifting';
+            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Belief Shifting`);
+            return 'belief_shifting_intro';
+          } else if (diggingSelectedMethod === 'blockage_shifting') {
+            context.currentPhase = 'blockage_shifting';
+            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Blockage Shifting`);
+            return 'blockage_shifting_intro';
+          } else {
+            // No valid method selected - stay on choose_method
+            console.error(`❌ CHOOSE_METHOD_DIGGING: Invalid method selection: "${input}"`);
+            return 'choose_method';
+          }
+        }
+        
+        // NORMAL FLOW: Original choose_method logic for non-digging-deeper scenarios
         console.log(`🔍 CHOOSE_METHOD_DETERMINE: lastResponse="${lastResponse}", processing choose_method step`);
         // Route to different methods based on user choice
         const chosenMethod = context.userResponses[context.currentStep]?.toLowerCase() || '';
@@ -6101,106 +6171,6 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         }
         break;
         
-      case 'choose_method':
-        // Check if this is digging deeper method selection (flag set by restate_problem_future)
-        if (context.metadata.isDiggingDeeperMethodSelection) {
-          // Clear the flag
-          context.metadata.isDiggingDeeperMethodSelection = false;
-          
-          // Delegate to digging_method_selection logic
-          const input = lastResponse.toLowerCase();
-          let diggingSelectedMethod = '';
-          
-          if (input.includes('problem shifting') || input === '1') {
-            diggingSelectedMethod = 'problem_shifting';
-          } else if (input.includes('identity shifting') || input === '2') {
-            diggingSelectedMethod = 'identity_shifting';
-          } else if (input.includes('belief shifting') || input === '3') {
-            diggingSelectedMethod = 'belief_shifting';
-          } else if (input.includes('blockage shifting') || input === '4') {
-            diggingSelectedMethod = 'blockage_shifting';
-          }
-          
-          // Update problem statement to use the new problem from digging deeper flow
-          const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
-                                              context.userResponses?.['restate_scenario_problem_1'] ||
-                                              context.userResponses?.['restate_scenario_problem_2'] ||
-                                              context.userResponses?.['restate_scenario_problem_3'] ||
-                                              context.userResponses?.['restate_anything_else_problem_1'] ||
-                                              context.userResponses?.['restate_anything_else_problem_2'];
-          // CRITICAL: Prioritize newProblemFromUserResponse FIRST to use the latest restated problem ("bad 2" not "bad 1")
-          const newDiggingProblem = newProblemFromUserResponse || context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem;
-          
-          if (newDiggingProblem) {
-            context.problemStatement = newDiggingProblem;
-            context.metadata.currentDiggingProblem = newDiggingProblem;
-            console.log(`🔍 CHOOSE_METHOD_DIGGING: Using problem: "${newDiggingProblem}"`);
-          }
-          
-          // Clear previous modality-specific metadata to ensure clean switch
-          this.clearPreviousModalityMetadata(context);
-          
-          // Store the selected method in metadata for reference
-          context.metadata.selectedMethod = diggingSelectedMethod;
-          
-          // Route to appropriate method intro
-          if (diggingSelectedMethod === 'problem_shifting') {
-            context.currentPhase = 'problem_shifting';
-            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Problem Shifting`);
-            return 'problem_shifting_intro';
-          } else if (diggingSelectedMethod === 'identity_shifting') {
-            context.currentPhase = 'identity_shifting';
-            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Identity Shifting`);
-            return 'identity_shifting_intro';
-          } else if (diggingSelectedMethod === 'belief_shifting') {
-            context.currentPhase = 'belief_shifting';
-            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Belief Shifting`);
-            return 'belief_shifting_intro';
-          } else if (diggingSelectedMethod === 'blockage_shifting') {
-            context.currentPhase = 'blockage_shifting';
-            console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Blockage Shifting`);
-            return 'blockage_shifting_intro';
-          } else {
-            // No valid method selected - stay on choose_method
-            console.error(`❌ CHOOSE_METHOD_DIGGING: Invalid method selection: "${input}"`);
-            return 'choose_method';
-          }
-        }
-        
-        // Original choose_method logic for non-digging-deeper flow
-        const methodChoice = context.userResponses[context.currentStep]?.toLowerCase() || '';
-        
-        if (methodChoice.includes('problem shifting')) {
-          context.currentPhase = 'work_type_selection';
-          context.metadata.selectedMethod = 'problem_shifting';
-          return 'work_type_description';
-        } else if (methodChoice.includes('blockage shifting')) {
-          context.currentPhase = 'work_type_selection';
-          context.metadata.selectedMethod = 'blockage_shifting';
-          return 'work_type_description';
-        } else if (methodChoice.includes('identity shifting')) {
-          context.currentPhase = 'work_type_selection';
-          context.metadata.selectedMethod = 'identity_shifting';
-          return 'work_type_description';
-        } else if (methodChoice.includes('reality shifting')) {
-          context.currentPhase = 'reality_shifting';
-          context.metadata.selectedMethod = 'reality_shifting';
-          return 'reality_goal_capture';
-        } else if (methodChoice.includes('trauma shifting')) {
-          context.currentPhase = 'work_type_selection';
-          context.metadata.selectedMethod = 'trauma_shifting';
-          return 'work_type_description';
-        } else if (methodChoice.includes('belief shifting')) {
-          context.currentPhase = 'work_type_selection';
-          context.metadata.selectedMethod = 'belief_shifting';
-          return 'work_type_description';
-        } else {
-          // Fallback to Problem Shifting (all methods now implemented)
-          context.currentPhase = 'work_type_selection';
-          context.metadata.selectedMethod = 'problem_shifting';
-          return 'work_type_description';
-        }
-
       case 'method_selection':
         // When user has selected a method, check if method is set and route appropriately
         const currentSelectedMethod = context.metadata.selectedMethod;
