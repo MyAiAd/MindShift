@@ -34,6 +34,7 @@ export interface StepHistoryEntry {
   currentStep: string;
   userInput: string;
   sessionStats: SessionStats;
+  sessionMethod?: string; // Optional for backward compatibility with old history entries
   timestamp: number;
 }
 

@@ -635,6 +635,7 @@ export default function TreatmentSession({
       currentStep,
       userInput,
       sessionStats: { ...sessionStats }, // Deep copy
+      sessionMethod, // Save for restoration on undo
       timestamp: new Date().getTime() // Use current timestamp
     };
 
@@ -705,6 +706,10 @@ export default function TreatmentSession({
       setCurrentStep(backendCurrentStep); // Use backend's step, not history step
       setUserInput(previousState.userInput);
       setSessionStats({ ...previousState.sessionStats });
+      // Restore sessionMethod if it was saved (backward compatible with old history entries)
+      if (previousState.sessionMethod) {
+        setSessionMethod(previousState.sessionMethod);
+      }
               // Note: lastResponseTime will be updated by the response handler
       
       // Remove the last history entry
