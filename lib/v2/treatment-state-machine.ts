@@ -540,6 +540,9 @@ export class TreatmentStateMachine {
                             step.id === 'identity_future_check' ||
                             step.id === 'identity_scenario_check' ||
                             step.id === 'future_problem_check' ||
+                            step.id === 'digging_deeper_start' ||
+                            step.id === 'trauma_dig_deeper' ||
+                            step.id === 'trauma_dig_deeper_2' ||
                             step.id === 'trauma_experience_check' ||
                             // CRITICAL: Blockage steps b and d embed userInput directly - never cache to prevent cross-cycle contamination
                             step.id === 'blockage_step_b' ||
