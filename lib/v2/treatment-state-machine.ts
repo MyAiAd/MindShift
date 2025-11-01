@@ -559,6 +559,7 @@ export class TreatmentStateMachine {
             (step.id === 'belief_step_b' && userInput?.trim()) ||
             (step.id === 'belief_step_d' && userInput?.trim()) ||
             (step.id === 'belief_step_e' && userInput?.trim()) ||
+            step.id === 'belief_step_f' ||  // CRITICAL: Skip cache - uses currentBelief which can be stale across sessions
             // CRITICAL: Identity dissolve steps use user-specific identity/responses - never cache to prevent cross-session contamination
             step.id === 'identity_dissolve_step_a' ||
             step.id === 'identity_dissolve_step_b' ||
@@ -4557,8 +4558,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           id: 'belief_step_f',
           scriptedResponse: (userInput, context) => {
             console.log('🔍 BELIEF_DEBUG belief_step_f - context.metadata:', JSON.stringify(context.metadata, null, 2));
-            // Use the cleaned belief from metadata (cleaned in belief_step_a)
-            const belief = context.metadata.currentBelief || context.userResponses?.['belief_shifting_intro'] || 'that belief';
+            // CRITICAL FIX: Prioritize userResponses FIRST to get current session's belief, not stale metadata
+            const rawBelief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+            // Clean the belief (strip "I believe" prefix if present)
+            const belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
             console.log('🔍 BELIEF_DEBUG belief_step_f - retrieved belief:', belief);
             console.log('🔍 BELIEF_DEBUG belief_step_f - originalBelief from belief_shifting_intro:', context.userResponses?.['belief_shifting_intro']);
             console.log('🔍 BELIEF_DEBUG belief_step_f - currentBelief from metadata:', context.metadata.currentBelief);
@@ -4577,8 +4580,9 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         {
           id: 'belief_check_1',
           scriptedResponse: (userInput, context) => {
-            // Use the cleaned belief from metadata (cleaned in belief_step_a)
-            const belief = context.metadata.currentBelief || context.userResponses?.['belief_shifting_intro'] || 'that belief';
+            // CRITICAL FIX: Prioritize userResponses FIRST to get current session's belief
+            const rawBelief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+            const belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
             return `Does any part of you still believe '${belief}'?`;
           },
           expectedResponseType: 'yesno',
@@ -4594,8 +4598,9 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         {
           id: 'belief_check_2',
           scriptedResponse: (userInput, context) => {
-            // Use the cleaned belief from metadata (cleaned in belief_step_a)
-            const belief = context.metadata.currentBelief || context.userResponses?.['belief_shifting_intro'] || 'that belief';
+            // CRITICAL FIX: Prioritize userResponses FIRST to get current session's belief
+            const rawBelief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+            const belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
             return `Do you feel you may believe '${belief}' again in the future?`;
           },
           expectedResponseType: 'yesno',
@@ -4611,8 +4616,9 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         {
           id: 'belief_check_3',
           scriptedResponse: (userInput, context) => {
-            // Use the cleaned belief from metadata (cleaned in belief_step_a)
-            const belief = context.metadata.currentBelief || context.userResponses?.['belief_shifting_intro'] || 'that belief';
+            // CRITICAL FIX: Prioritize userResponses FIRST to get current session's belief
+            const rawBelief = context.userResponses?.['belief_shifting_intro'] || context.metadata.currentBelief || 'that belief';
+            const belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
             return `Is there any scenario in which you would still believe '${belief}'?`;
           },
           expectedResponseType: 'yesno',
