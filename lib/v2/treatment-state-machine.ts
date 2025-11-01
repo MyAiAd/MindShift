@@ -5654,6 +5654,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
       case 'choose_method':
         // CRITICAL: Check if this is digging deeper method selection FIRST
         // This flag is set by restate_problem_future when routing here from digging deeper flow
+        console.log(`🚨 BELIEF_FIX_DEBUG: choose_method reached - isDiggingDeeperMethodSelection: ${context.metadata.isDiggingDeeperMethodSelection}`);
         if (context.metadata.isDiggingDeeperMethodSelection) {
           console.log(`🔍 CHOOSE_METHOD_DIGGING: Processing digging deeper method selection`);
           
@@ -5692,7 +5693,9 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           
           // ⭐ THIS IS THE FIX: Clear previous modality-specific metadata to ensure clean switch
           // This removes stale currentBelief, cycleCount, etc. from the previous belief shifting session
+          console.log(`🚨 BELIEF_FIX_DEBUG: About to clear metadata - currentBelief before: "${context.metadata.currentBelief}", cycleCount: ${context.metadata.cycleCount}`);
           this.clearPreviousModalityMetadata(context);
+          console.log(`🚨 BELIEF_FIX_DEBUG: Metadata cleared - currentBelief after: "${context.metadata.currentBelief}", cycleCount: ${context.metadata.cycleCount}`);
           
           // Store the selected method in metadata for reference
           context.metadata.selectedMethod = diggingSelectedMethod;
