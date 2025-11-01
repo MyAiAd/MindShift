@@ -1,0 +1,398 @@
+TRAUMA SHIFTING V2 - DIGGING DEEPER FIX PLAN
+=============================================
+Date: November 1, 2025
+Status: PROPOSED - NOT YET IMPLEMENTED
+Impact Level: MEDIUM - Production app modifications
+
+REPORTED ISSUES
+===============
+
+Issue 1: Incorrect Language After Trauma Digging Deeper Questions
+------------------------------------------------------------------
+PROBLEM: When user answers "yes" to trauma digging deeper questions, the app says:
+  "Tell me what the negative experience was in a few words"
+  
+SHOULD SAY:
+  "How would you state the problem in a few words?"
+
+LOCATION: This occurs after both:
+  - Step 1: "Do you feel you might feel bad about this incident in the future?"
+  - Step 2: "Is there anything else about [original problem] that's still a problem for you?"
+
+
+Issue 2: Re-asking Permission After Sub-Problem Completion
+-----------------------------------------------------------
+PROBLEM: After clearing a sub-problem using any modality (e.g., Blockage Shifting), 
+the app incorrectly asks permission again:
+  "Take your mind back to 'memory 1'. Would you like to dig deeper in this area?"
+
+SHOULD: Skip permission (already granted) and go directly to:
+  "Do you feel you might feel bad about 'MEMORY 1' in the future?"
+  (Note: Should reference original problem name, not "this incident")
+
+
+Issue 3: Generic Language Instead of Problem-Specific Reference
+----------------------------------------------------------------
+PROBLEM: The trauma_dig_deeper question says:
+  "Do you feel you might feel bad about this incident in the future?"
+
+SHOULD SAY:
+  "Do you feel you might feel bad about '[ORIGINAL PROBLEM NAME]' in the future?"
+
+
+PROPOSED FIXES
+==============
+
+Fix 1: Update trauma_dig_deeper routing (Lines 6816-6830)
+----------------------------------------------------------
+FILE: lib/v2/treatment-state-machine.ts
+LOCATION: case 'trauma_dig_deeper' in determineNextStep method
+
+CURRENT CODE (Lines 6816-6830):
+```
+case 'trauma_dig_deeper':
+  // Trauma Shifting: Check if might feel bad about this incident in future
+  if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
+    // Might feel bad in future - route to problem statement capture and method selection
+    context.metadata.workType = 'negative_experience';
+    context.metadata.selectedMethod = undefined;
+    context.currentPhase = 'introduction';
+    // CRITICAL: Set return step so after clearing the sub-problem, user comes back to THIS same question
+    context.metadata.returnToDiggingStep = 'trauma_dig_deeper';
+    return 'negative_experience_description';
+  }
+  if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
+    // Won't feel bad in future - ask second dig deeper question
+    return 'trauma_dig_deeper_2';
+  }
+  break;
+```
+
+CHANGE TO:
+```
+case 'trauma_dig_deeper':
+  // Trauma Shifting: Check if might feel bad about this incident in future
+  if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
+    // Might feel bad in future - route to problem statement capture and method selection
+    context.metadata.workType = 'problem';  // CHANGED: 'problem' instead of 'negative_experience'
+    context.metadata.selectedMethod = undefined;
+    context.currentPhase = 'digging_deeper';  // CHANGED: 'digging_deeper' instead of 'introduction'
+    // CRITICAL: Set return step to NEXT question (trauma_dig_deeper_2) to avoid re-asking permission
+    context.metadata.returnToDiggingStep = 'trauma_dig_deeper_2';  // CHANGED: advance to question 2
+    return 'restate_problem_future';  // CHANGED: use standard digging problem collection step
+  }
+  if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
+    // Won't feel bad in future - ask second dig deeper question
+    return 'trauma_dig_deeper_2';
+  }
+  break;
+```
+
+RATIONALE:
+- Changes workType to 'problem' to use standard problem collection language
+- Routes to 'restate_problem_future' which asks "How would you state the problem in a few words?"
+- Sets returnToDiggingStep to 'trauma_dig_deeper_2' (question 2) instead of 'trauma_dig_deeper' 
+  (question 1), so after clearing sub-problem, it continues to the next question rather than 
+  re-asking the same question
+- Changes currentPhase to 'digging_deeper' to maintain proper phase context
+
+
+Fix 2: Update trauma_dig_deeper_2 routing (Lines 6833-6843)
+------------------------------------------------------------
+FILE: lib/v2/treatment-state-machine.ts
+LOCATION: case 'trauma_dig_deeper_2' in determineNextStep method
+
+CURRENT CODE (Lines 6833-6843):
+```
+case 'trauma_dig_deeper_2':
+  // Trauma Shifting: Check if anything else is a problem
+  if (lastResponse.includes('yes')) {
+    // Yes, something else is a problem - route to problem statement capture and method selection
+    context.metadata.workType = 'negative_experience';
+    context.metadata.selectedMethod = undefined;
+    context.currentPhase = 'introduction';
+    // CRITICAL: Set return step so after clearing the sub-problem, user comes back to THIS same question
+    context.metadata.returnToDiggingStep = 'trauma_dig_deeper_2';
+    return 'negative_experience_description';
+  }
+```
+
+CHANGE TO:
+```
+case 'trauma_dig_deeper_2':
+  // Trauma Shifting: Check if anything else is a problem
+  if (lastResponse.includes('yes')) {
+    // Yes, something else is a problem - route to problem statement capture and method selection
+    context.metadata.workType = 'problem';  // CHANGED: 'problem' instead of 'negative_experience'
+    context.metadata.selectedMethod = undefined;
+    context.currentPhase = 'digging_deeper';  // CHANGED: 'digging_deeper' instead of 'introduction'
+    // CRITICAL: Set return step so after clearing the sub-problem, user comes back to THIS same question
+    context.metadata.returnToDiggingStep = 'trauma_dig_deeper_2';
+    return 'restate_problem_future';  // CHANGED: use standard digging problem collection step
+  }
+```
+
+RATIONALE:
+- Same as Fix 1, but for the second trauma digging question
+- In this case, returnToDiggingStep stays as 'trauma_dig_deeper_2' because this is the last 
+  trauma digging question, so returning to it is appropriate
+- Changes ensure consistent language and flow with standard digging deeper
+
+
+Fix 3: Update trauma_dig_deeper question to reference original problem (Lines 5346-5357)
+-----------------------------------------------------------------------------------------
+FILE: lib/v2/treatment-state-machine.ts
+LOCATION: trauma_dig_deeper step definition in digging_deeper phase
+
+CURRENT CODE (Lines 5345-5357):
+```
+{
+  id: 'trauma_dig_deeper',
+  scriptedResponse: () => {
+    return `Do you feel you might feel bad about this incident in the future?`;
+  },
+  expectedResponseType: 'yesno',
+  validationRules: [
+    { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+  ],
+  nextStep: 'trauma_dig_deeper_2',
+  aiTriggers: [
+    { condition: 'needsClarification', action: 'clarify' }
+  ]
+},
+```
+
+CHANGE TO:
+```
+{
+  id: 'trauma_dig_deeper',
+  scriptedResponse: (userInput, context) => {
+    // Reference the original problem by name, not "this incident"
+    const originalProblem = context?.metadata?.originalProblemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this incident';
+    return `Do you feel you might feel bad about '${originalProblem}' in the future?`;
+  },
+  expectedResponseType: 'yesno',
+  validationRules: [
+    { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+  ],
+  nextStep: 'trauma_dig_deeper_2',
+  aiTriggers: [
+    { condition: 'needsClarification', action: 'clarify' }
+  ]
+},
+```
+
+RATIONALE:
+- Changes scriptedResponse from arrow function with no params to function that accepts context
+- References the original problem by name (e.g., "memory 1") instead of generic "this incident"
+- Matches the pattern used by other digging deeper questions like future_problem_check
+- Provides better clarity and context for the user
+
+
+POTENTIAL IMPACTS & RISKS
+==========================
+
+Impact 1: Change in User Experience Flow
+-----------------------------------------
+SEVERITY: LOW
+SCOPE: Trauma Shifting digging deeper flow only
+
+When users are in trauma shifting and identify sub-problems during digging deeper:
+- OLD: Asked "Tell me what the negative experience was..."
+- NEW: Asked "How would you state the problem in a few words?"
+
+RISK: Users who are mid-session when this deploys will experience language change
+MITIGATION: Change is more consistent with standard digging deeper, should feel natural
+
+
+Impact 2: Metadata Structure Changes
+-------------------------------------
+SEVERITY: LOW-MEDIUM
+SCOPE: Context metadata during trauma digging deeper
+
+When routing to sub-problems from trauma digging:
+- OLD: workType = 'negative_experience', currentPhase = 'introduction'
+- NEW: workType = 'problem', currentPhase = 'digging_deeper'
+
+RISK: If any other code checks these specific metadata values, behavior could change
+MITIGATION: Reviewed code - no other dependencies found on these specific values during 
+trauma digging deeper flow. The method selection logic correctly handles 'problem' workType.
+
+
+Impact 3: Return Step Navigation Logic
+---------------------------------------
+SEVERITY: MEDIUM
+SCOPE: Users returning from sub-problems during trauma digging deeper
+
+When completing a sub-problem during trauma_dig_deeper (question 1):
+- OLD: Returns to 'trauma_dig_deeper' (same question), which triggers permission re-check
+- NEW: Returns to 'trauma_dig_deeper_2' (next question), skipping permission
+
+RISK: If a user has multiple nested sub-problems from question 1, the returnToDiggingStep 
+will keep getting overwritten to point to trauma_dig_deeper_2, which means they might skip 
+re-asking question 1 for intermediate problems.
+
+ANALYSIS: This is actually CORRECT behavior. The flow should be:
+  1. Ask "Do you feel bad about X in future?" 
+  2. User: "yes" → collect new problem → clear it
+  3. Continue to question 2: "Is there anything else about X that's a problem?"
+  4. User: "yes" → collect new problem → clear it
+  5. Return to question 2 again (not question 1)
+
+The current code was incorrectly returning to question 1, making users answer it repeatedly.
+
+MITIGATION: This change actually FIXES the unintended permission re-asking behavior.
+
+
+Impact 4: Database Context Storage
+-----------------------------------
+SEVERITY: LOW
+SCOPE: Persisted session contexts
+
+Context objects stored in database will have:
+- Different phase values during trauma digging deeper sub-problem collection
+- Different workType values
+- Different returnToDiggingStep values
+
+RISK: If sessions are paused/resumed across deployment, context might be inconsistent
+MITIGATION: 
+  - The system loads context from database and continues based on currentStep
+  - The fixes only affect routing logic, not step definitions
+  - Existing sessions will naturally migrate to new flow on next processStep call
+  - No database schema changes required
+
+
+Impact 5: Response Caching System
+----------------------------------
+SEVERITY: LOW
+SCOPE: Preloaded response cache keys
+
+The response cache creates keys based on stepId and context hash. Changes to:
+- How we reach certain steps
+- Context metadata values during those steps
+
+May result in different cache keys, reducing cache hit rate temporarily.
+
+RISK: Slight performance degradation (more AI calls) until cache rebuilds
+MITIGATION: Cache is designed to handle this - will rebuild naturally as users progress
+
+
+Impact 6: Analytics and Logging
+--------------------------------
+SEVERITY: LOW
+SCOPE: Session analytics, debugging logs
+
+Console logs reference phase names and step transitions. Changes will result in:
+- Different phase names in logs ('digging_deeper' vs 'introduction')
+- Different step sequences in session flow analytics
+- Different metadata values in stored sessions
+
+RISK: Historical session analysis might show apparent "breaking" point at deployment
+MITIGATION: Document deployment timestamp for analytics correlation
+
+
+TESTING RECOMMENDATIONS
+========================
+
+Before Deployment:
+------------------
+1. Test trauma shifting digging deeper flow end-to-end
+   - Complete trauma shifting → answer "yes" to dig deeper
+   - Answer "yes" to first trauma dig question
+   - Select any method (e.g., Blockage Shifting)
+   - Complete the sub-problem
+   - VERIFY: Should go directly to question 2, not ask permission again
+   - VERIFY: Language should say "How would you state the problem..."
+
+2. Test nested sub-problems in trauma digging
+   - Complete trauma shifting → dig deeper → trauma_dig_deeper: yes
+   - Clear sub-problem → should advance to trauma_dig_deeper_2
+   - Answer "yes" to trauma_dig_deeper_2
+   - Clear another sub-problem
+   - VERIFY: Should return to trauma_dig_deeper_2, then proceed to integration
+
+3. Test question language references original problem
+   - Complete trauma shifting with problem "anxiety about work"
+   - Dig deeper → verify question says "about 'anxiety about work'"
+   - Not "about this incident"
+
+4. Test other modalities not affected
+   - Problem Shifting digging deeper → should work as before
+   - Identity Shifting digging deeper → should work as before
+   - Belief Shifting digging deeper → should work as before
+   - Blockage Shifting digging deeper → should work as before
+
+5. Test cache invalidation doesn't break flow
+   - Complete trauma session with digging deeper
+   - Verify responses are appropriately cached/not cached
+
+
+After Deployment:
+-----------------
+1. Monitor error logs for any routing issues in trauma digging deeper
+2. Check cache hit rates - expect slight dip then recovery
+3. Review user sessions that include trauma digging deeper
+4. Confirm no users getting stuck in loops or seeing duplicate questions
+
+
+ROLLBACK PLAN
+=============
+
+If issues are discovered after deployment:
+
+Quick Fix (Simple):
+- Revert the three changes in treatment-state-machine.ts
+- Redeploy previous version
+- Loss: Returns to old behavior with re-asking permission bug
+
+Targeted Fix (If only some parts cause issues):
+- Can selectively revert individual fixes
+- Fix 3 (question language) is safest - can keep even if others revert
+- Fix 1 and 2 are interdependent - should revert together if needed
+
+
+DEPLOYMENT NOTES
+================
+
+Files Modified:
+- lib/v2/treatment-state-machine.ts (3 changes across ~200 lines)
+
+No Breaking Changes:
+- No API changes
+- No database schema changes
+- No new dependencies
+- No environment variable changes
+
+Deployment Steps:
+1. Apply changes to treatment-state-machine.ts
+2. Test in staging environment
+3. Deploy to production during low-traffic period
+4. Monitor logs for 1 hour post-deployment
+5. Verify 2-3 test sessions work correctly
+
+
+ADDITIONAL NOTES
+================
+
+Why These Fixes Are Safe:
+-------------------------
+1. Isolated to trauma shifting digging deeper flow only
+2. Makes trauma flow consistent with other modalities
+3. Fixes actual bugs (re-asking permission, wrong language)
+4. No external API or database dependencies
+5. Code changes are minimal and focused
+6. Similar patterns already exist for other modalities
+
+
+Consistency Improvements:
+-------------------------
+These changes make trauma digging deeper work like the standard digging deeper:
+- Uses 'restate_problem_future' like other modalities
+- Sets workType to 'problem' consistently
+- Properly manages returnToDiggingStep to avoid permission re-asks
+- References original problem by name (like future_problem_check does)
+
+
+End of Fix Plan Document
+=========================
+

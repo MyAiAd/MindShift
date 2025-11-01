@@ -5343,8 +5343,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
 
         {
           id: 'trauma_dig_deeper',
-          scriptedResponse: () => {
-            return `Do you feel you might feel bad about this incident in the future?`;
+          scriptedResponse: (userInput, context) => {
+            // Reference the original problem by name, not "this incident"
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this incident';
+            return `Do you feel you might feel bad about '${originalProblem}' in the future?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
@@ -6817,12 +6819,12 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         // Trauma Shifting: Check if might feel bad about this incident in future
         if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
           // Might feel bad in future - route to problem statement capture and method selection
-          context.metadata.workType = 'negative_experience';
+          context.metadata.workType = 'problem';
           context.metadata.selectedMethod = undefined;
-          context.currentPhase = 'introduction';
-          // CRITICAL: Set return step so after clearing the sub-problem, user comes back to THIS same question
-          context.metadata.returnToDiggingStep = 'trauma_dig_deeper';
-          return 'negative_experience_description';
+          context.currentPhase = 'digging_deeper';
+          // CRITICAL: Set return step to NEXT question (trauma_dig_deeper_2) to avoid re-asking permission
+          context.metadata.returnToDiggingStep = 'trauma_dig_deeper_2';
+          return 'restate_problem_future';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
           // Won't feel bad in future - ask second dig deeper question
@@ -6834,12 +6836,12 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         // Trauma Shifting: Check if anything else is a problem
         if (lastResponse.includes('yes')) {
           // Yes, something else is a problem - route to problem statement capture and method selection
-          context.metadata.workType = 'negative_experience';
+          context.metadata.workType = 'problem';
           context.metadata.selectedMethod = undefined;
-          context.currentPhase = 'introduction';
+          context.currentPhase = 'digging_deeper';
           // CRITICAL: Set return step so after clearing the sub-problem, user comes back to THIS same question
           context.metadata.returnToDiggingStep = 'trauma_dig_deeper_2';
-          return 'negative_experience_description';
+          return 'restate_problem_future';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not')) {
           // No other problems - check if we're in digging deeper flow
