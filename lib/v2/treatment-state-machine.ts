@@ -7294,7 +7294,23 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           return 'restate_anything_else_problem_1';
         }
         if (lastResponse.includes('no')) {
-          // Mark that multiple problems were worked on and go to integration
+          // PRODUCTION FIX: Check if we need to return to trauma digging parent context
+          const isTraumaDigging = context.userResponses['trauma_dig_deeper'] === 'yes';
+          const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+          
+          if (alreadyGrantedPermission && isTraumaDigging) {
+            // Check if we've already answered the second trauma question
+            const answeredSecondQuestion = context.userResponses['trauma_dig_deeper_2'] !== undefined;
+            
+            if (!answeredSecondQuestion) {
+              // They still need to answer trauma question 2
+              context.currentPhase = 'digging_deeper';
+              return 'trauma_dig_deeper_2';
+            }
+            // else: They've answered both trauma questions, proceed to integration
+          }
+          
+          // Normal flow to integration (all other modalities + trauma after both questions answered)
           context.metadata.multipleProblems = true;
           context.currentPhase = 'integration';
           return 'integration_start';
