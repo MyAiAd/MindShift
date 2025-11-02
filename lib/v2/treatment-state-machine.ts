@@ -6227,17 +6227,23 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
           const returnStep = context.metadata?.returnToDiggingStep;
           
+          console.log(`🔍 CHECK_IF_STILL_PROBLEM: alreadyGrantedPermission=${alreadyGrantedPermission}, returnStep=${returnStep}`);
+          console.log(`🔍 CHECK_IF_STILL_PROBLEM: userResponses['digging_deeper_start']=${context.userResponses['digging_deeper_start']}`);
+          
           if (alreadyGrantedPermission && returnStep) {
             // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
+            console.log(`🔍 CHECK_IF_STILL_PROBLEM: Returning to ${returnStep}`);
             context.currentPhase = 'digging_deeper';
             context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
             return returnStep;
           } else if (alreadyGrantedPermission) {
             // Permission already granted - skip permission, go to future_problem_check to continue digging
+            console.log(`🔍 CHECK_IF_STILL_PROBLEM: Permission granted, going to future_problem_check`);
             context.currentPhase = 'digging_deeper';
             return 'future_problem_check';
           } else {
             // First time - ask permission
+            console.log(`🔍 CHECK_IF_STILL_PROBLEM: First time, asking permission`);
             context.currentPhase = 'digging_deeper';
             return 'digging_deeper_start';
           }
