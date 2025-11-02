@@ -5003,7 +5003,15 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
               const newProblem = newProblemFromRestate.trim();
               context.metadata.currentDiggingProblem = newProblem;
               context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
-              context.metadata.returnToDiggingStep = 'future_problem_check'; // Return to first digging question for future path
+              
+              // PRODUCTION FIX: Don't overwrite returnToDiggingStep if already set to a trauma step
+              // This preserves the correct return point for trauma's two-question flow
+              if (!context.metadata.returnToDiggingStep || 
+                  context.metadata.returnToDiggingStep === 'future_problem_check') {
+                context.metadata.returnToDiggingStep = 'future_problem_check'; // Return to first digging question for future path
+              }
+              // else: Keep existing returnToDiggingStep (e.g., trauma_dig_deeper_2)
+              
               context.problemStatement = newProblem;
               
               // CRITICAL: Set work type to 'problem' to ensure proper method selection
@@ -7040,7 +7048,15 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           const newProblem = newProblemFromRestate.trim();
           context.metadata.currentDiggingProblem = newProblem;
           context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
-          context.metadata.returnToDiggingStep = 'future_problem_check';
+          
+          // PRODUCTION FIX: Don't overwrite returnToDiggingStep if already set to a trauma step
+          // This preserves the correct return point for trauma's two-question flow
+          if (!context.metadata.returnToDiggingStep || 
+              context.metadata.returnToDiggingStep === 'future_problem_check') {
+            context.metadata.returnToDiggingStep = 'future_problem_check';
+          }
+          // else: Keep existing returnToDiggingStep (e.g., trauma_dig_deeper_2)
+          
           context.problemStatement = newProblem;
           context.metadata.workType = 'problem';
           console.log(`🔍 RESTATE_PROBLEM_FUTURE: Updated problem to "${newProblem}" before routing to choose_method`);
@@ -7294,23 +7310,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           return 'restate_anything_else_problem_1';
         }
         if (lastResponse.includes('no')) {
-          // PRODUCTION FIX: Check if we need to return to trauma digging parent context
-          const isTraumaDigging = context.userResponses['trauma_dig_deeper'] === 'yes';
-          const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
-          
-          if (alreadyGrantedPermission && isTraumaDigging) {
-            // Check if we've already answered the second trauma question
-            const answeredSecondQuestion = context.userResponses['trauma_dig_deeper_2'] !== undefined;
-            
-            if (!answeredSecondQuestion) {
-              // They still need to answer trauma question 2
-              context.currentPhase = 'digging_deeper';
-              return 'trauma_dig_deeper_2';
-            }
-            // else: They've answered both trauma questions, proceed to integration
-          }
-          
-          // Normal flow to integration (all other modalities + trauma after both questions answered)
+          // Mark that multiple problems were worked on and go to integration
           context.metadata.multipleProblems = true;
           context.currentPhase = 'integration';
           return 'integration_start';
