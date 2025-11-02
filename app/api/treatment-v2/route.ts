@@ -1232,7 +1232,9 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
         step === 'future_problem_check' || 
         step.startsWith('scenario_check_') ||
         step === 'trauma_dig_deeper' ||
-        step === 'trauma_dig_deeper_2'
+        step === 'trauma_dig_deeper_2' ||
+        step === 'anything_else_check_1' ||
+        step === 'anything_else_check_2'
     )) {
       console.log('🧹 UNDO_TRACKING: Clearing returnToDiggingStep');
       context.metadata.returnToDiggingStep = undefined;
