@@ -6839,8 +6839,9 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           context.metadata.workType = 'problem';
           context.metadata.selectedMethod = undefined;
           context.currentPhase = 'digging_deeper';
-          // CRITICAL: Set return step to NEXT question (trauma_dig_deeper_2) to avoid re-asking permission
-          context.metadata.returnToDiggingStep = 'trauma_dig_deeper_2';
+          // PRODUCTION FIX: Return to THIS SAME question after clearing nested problem
+          // This allows user to clear multiple "future" problems before moving to question 2
+          context.metadata.returnToDiggingStep = 'trauma_dig_deeper';
           return 'restate_problem_future';
         }
         if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
