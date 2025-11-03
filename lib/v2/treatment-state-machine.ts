@@ -6645,9 +6645,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         // Store the constructed problem statement
         context.problemStatement = constructedProblem;
         context.metadata.problemStatement = constructedProblem;
-        if (!context.metadata.originalProblemStatement) {
-          context.metadata.originalProblemStatement = constructedProblem;
-        }
+        // PRODUCTION FIX: ALWAYS set originalProblemStatement to the constructed problem
+        // When user declines trauma process, this constructed problem IS their original problem
+        // This ensures digging deeper references the correct problem, not just the trauma descriptor
+        context.metadata.originalProblemStatement = constructedProblem;
         
         // Immediately persist to prevent database reload overwriting it
         this.saveContextToDatabase(context).catch(error => 
