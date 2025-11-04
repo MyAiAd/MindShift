@@ -7170,6 +7170,11 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           console.log(`🔍 SCENARIO_1_ROUTE: Using problem: "${scenario1Problem}"`);
         }
         
+        // PRODUCTION FIX: Set return point for nested digging deeper
+        // After clearing this nested problem, return to this same question
+        // WARNING: This will fail on triple-nesting (see comments at top of determineNextStep)
+        context.metadata.returnToDiggingStep = 'scenario_check_1';
+        
         this.clearPreviousModalityMetadata(context);
         
         if (scenario1Input.includes('problem shifting') || scenario1Input === '1') {
@@ -7225,6 +7230,11 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           console.log(`🔍 SCENARIO_2_ROUTE: Using problem: "${scenario2Problem}"`);
         }
         
+        // PRODUCTION FIX: Set return point for nested digging deeper
+        // After clearing this nested problem, return to this same question
+        // WARNING: This will fail on triple-nesting (see comments at top of determineNextStep)
+        context.metadata.returnToDiggingStep = 'scenario_check_2';
+        
         this.clearPreviousModalityMetadata(context);
         
         if (scenario2Input.includes('problem shifting') || scenario2Input === '1') {
@@ -7279,6 +7289,11 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           context.metadata.currentDiggingProblem = scenario3Problem;
           console.log(`🔍 SCENARIO_3_ROUTE: Using problem: "${scenario3Problem}"`);
         }
+        
+        // PRODUCTION FIX: Set return point for nested digging deeper
+        // After clearing this nested problem, return to this same question
+        // WARNING: This will fail on triple-nesting (see comments at top of determineNextStep)
+        context.metadata.returnToDiggingStep = 'scenario_check_3';
         
         this.clearPreviousModalityMetadata(context);
         
@@ -7352,6 +7367,11 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Using problem: "${anythingElse1Problem}"`);
         }
         
+        // PRODUCTION FIX: Set return point for nested digging deeper
+        // After clearing this nested problem, return to this same question
+        // WARNING: This will fail on triple-nesting (see comments at top of determineNextStep)
+        context.metadata.returnToDiggingStep = 'anything_else_check_1';
+        
         this.clearPreviousModalityMetadata(context);
         
         if (anythingElse1Input.includes('problem shifting') || anythingElse1Input === '1') {
@@ -7419,6 +7439,11 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
           console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Using problem: "${anythingElse2Problem}"`);
         }
+        
+        // PRODUCTION FIX: Set return point for nested digging deeper
+        // After clearing this nested problem, return to this same question
+        // WARNING: This will fail on triple-nesting (see comments at top of determineNextStep)
+        context.metadata.returnToDiggingStep = 'anything_else_check_2';
         
         this.clearPreviousModalityMetadata(context);
         
