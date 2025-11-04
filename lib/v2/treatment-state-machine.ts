@@ -4487,10 +4487,18 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             
             if (returnTo === 'belief_check_2') {
               // Coming from future check: "Do you feel you may believe ... again in the future?"
-              prefix = 'Put yourself in the future and feel yourself believing';
+              // Only use bridge phrase on FIRST cycle from this check
+              if (!context.metadata.usedBridgePhraseFor_belief_check_2) {
+                prefix = 'Put yourself in the future and feel yourself believing';
+                context.metadata.usedBridgePhraseFor_belief_check_2 = true;
+              }
             } else if (returnTo === 'belief_check_3') {
               // Coming from scenario check: "Is there any scenario in which you would still believe..."
-              prefix = 'Imagine that scenario and feel yourself believing';
+              // Only use bridge phrase on FIRST cycle from this check
+              if (!context.metadata.usedBridgePhraseFor_belief_check_3) {
+                prefix = 'Imagine that scenario and feel yourself believing';
+                context.metadata.usedBridgePhraseFor_belief_check_3 = true;
+              }
             }
             // For belief_check_1 and belief_check_4, use the standard prefix
             
