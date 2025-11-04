@@ -71,21 +71,38 @@ export default function ProblemShiftingDigging({
 
   // Helper function to determine if we should show the digging method selection buttons
   const shouldShowDiggingMethodButtons = () => {
+    const lastBotMessage = messages.filter(m => !m.isUser).pop();
+    
+    // DIAGNOSTIC: Log entry to this function
+    console.log('🔍 PROBLEM_DIGGING: Checking method buttons', {
+      currentStep,
+      sessionMethod,
+      lastMessage: lastBotMessage?.content?.substring(0, 60),
+      stepCheck: currentStep === 'clear_scenario_problem_1',
+      sessionMethodCheck: sessionMethod === 'problem_shifting'
+    });
+    
     // Only show for digging_method_selection step
     if (currentStep !== 'digging_method_selection' &&
         currentStep !== 'clear_anything_else_problem_1' &&
         currentStep !== 'clear_anything_else_problem_2' &&
         currentStep !== 'clear_scenario_problem_1' &&
         currentStep !== 'clear_scenario_problem_2' &&
-        currentStep !== 'clear_scenario_problem_3') return false;
+        currentStep !== 'clear_scenario_problem_3') {
+      console.log('🔍 PROBLEM_DIGGING: Step check failed, returning false');
+      return false;
+    }
     
     // CRITICAL FIX: Only show if this is the active modality (prevents multiple button sets)
-    if (sessionMethod !== 'problem_shifting') return false;
+    if (sessionMethod !== 'problem_shifting') {
+      console.log('🔍 PROBLEM_DIGGING: sessionMethod check failed, returning false');
+      return false;
+    }
     
     // Don't show if AI is asking clarifying questions
-    const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (lastBotMessage?.usedAI) return false;
     
+    console.log('🔍 PROBLEM_DIGGING: All checks passed, returning true');
     return true;
   };
 
@@ -208,6 +225,7 @@ export default function ProblemShiftingDigging({
 
   // Render digging method selection UI
   if (shouldShowDiggingMethodButtons()) {
+    console.log('🔍 PROBLEM_DIGGING: Rendering method selection buttons');
     return (
       <div className="flex space-x-3 max-w-4xl w-full">
         {/* Undo Button */}

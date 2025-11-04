@@ -60,6 +60,17 @@ export default function BlockageShiftingDigging({
 
   // Helper function for Blockage Shifting method selection during digging
   const shouldShowBlockageDiggingMethodButtons = () => {
+    const lastBotMessage = messages.filter(m => !m.isUser).pop();
+    
+    // DIAGNOSTIC: Log entry to this function
+    console.log('🔍 BLOCKAGE_DIGGING: Checking method buttons', {
+      currentStep,
+      sessionMethod,
+      lastMessage: lastBotMessage?.content?.substring(0, 60),
+      stepCheck: currentStep === 'clear_scenario_problem_1',
+      sessionMethodCheck: sessionMethod === 'blockage_shifting'
+    });
+    
     // Show for method selection steps or when on clear step (which shows method selection message)
     if (currentStep !== 'blockage_digging_method_selection' && 
         currentStep !== 'digging_method_selection' &&
@@ -67,20 +78,28 @@ export default function BlockageShiftingDigging({
         currentStep !== 'clear_anything_else_problem_2' &&
         currentStep !== 'clear_scenario_problem_1' &&
         currentStep !== 'clear_scenario_problem_2' &&
-        currentStep !== 'clear_scenario_problem_3') return false;
+        currentStep !== 'clear_scenario_problem_3') {
+      console.log('🔍 BLOCKAGE_DIGGING: Step check failed, returning false');
+      return false;
+    }
     
     // CRITICAL FIX: Only show if this is the active modality (prevents multiple button sets)
-    if (sessionMethod !== 'blockage_shifting') return false;
+    if (sessionMethod !== 'blockage_shifting') {
+      console.log('🔍 BLOCKAGE_DIGGING: sessionMethod check failed, returning false');
+      return false;
+    }
     
-    const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (lastBotMessage?.usedAI) return false;
     
     // Check if the message indicates method selection is needed
     if (lastBotMessage?.content && lastBotMessage.content.includes('Which method would you like to use')) {
+      console.log('🔍 BLOCKAGE_DIGGING: Message check passed, returning true');
       return true;
     }
     
-    return currentStep === 'digging_method_selection' || currentStep === 'blockage_digging_method_selection';
+    const result = currentStep === 'digging_method_selection' || currentStep === 'blockage_digging_method_selection';
+    console.log('🔍 BLOCKAGE_DIGGING: Final decision', { result, currentStep });
+    return result;
   };
 
   // Render Blockage Shifting digging deeper buttons
@@ -170,6 +189,7 @@ export default function BlockageShiftingDigging({
 
   // Render Blockage Shifting digging method selection
   if (shouldShowBlockageDiggingMethodButtons()) {
+    console.log('🔍 BLOCKAGE_DIGGING: Rendering method selection buttons');
     return (
       <div className="flex space-x-3 max-w-4xl w-full">
         {/* Undo Button */}
@@ -252,5 +272,11 @@ export default function BlockageShiftingDigging({
   }
 
   // Default: return null if this component shouldn't handle the current step
+  console.log('🔍 BLOCKAGE_DIGGING: Returning null (not handling this step)', {
+    currentStep,
+    sessionMethod,
+    showBlockageButtons: shouldShowBlockageDiggingButtons(),
+    showMethodButtons: shouldShowBlockageDiggingMethodButtons()
+  });
   return null;
 } 
