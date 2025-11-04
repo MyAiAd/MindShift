@@ -91,15 +91,10 @@ export default function BlockageShiftingDigging({
     
     if (lastBotMessage?.usedAI) return false;
     
-    // Check if the message indicates method selection is needed
-    if (lastBotMessage?.content && lastBotMessage.content.includes('Which method would you like to use')) {
-      console.log('🔍 BLOCKAGE_DIGGING: Message check passed, returning true');
-      return true;
-    }
-    
-    const result = currentStep === 'digging_method_selection' || currentStep === 'blockage_digging_method_selection';
-    console.log('🔍 BLOCKAGE_DIGGING: Final decision', { result, currentStep });
-    return result;
+    // PRODUCTION FIX: If we passed all checks above (step in allowed list, correct sessionMethod, not AI),
+    // then show the buttons. Don't do redundant step checks that create timing issues with React state.
+    console.log('🔍 BLOCKAGE_DIGGING: All checks passed, returning true');
+    return true;
   };
 
   // Render Blockage Shifting digging deeper buttons
