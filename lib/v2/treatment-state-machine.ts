@@ -2869,18 +2869,19 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             
             // Determine the appropriate prefix based on which checking question we're returning from
             const returnTo = context.metadata.returnToIdentityCheck;
+            const bridgeUsed = context.metadata.identityBridgePhraseUsed;
             let prefix = 'Feel yourself being';
             
-            if (returnTo === 'identity_future_check') {
+            if (returnTo === 'identity_future_check' && !bridgeUsed) {
               // Coming from future check: "Do you think you might feel yourself being ... in the future?"
               prefix = 'Put yourself in the future and feel yourself being';
-              // Clear the flag after using it - bridge phrase should only be used on first return from check
-              context.metadata.returnToIdentityCheck = undefined;
-            } else if (returnTo === 'identity_scenario_check') {
+              // Mark bridge phrase as used - only use once per check failure
+              context.metadata.identityBridgePhraseUsed = true;
+            } else if (returnTo === 'identity_scenario_check' && !bridgeUsed) {
               // Coming from scenario check: "Is there any scenario in which you might still feel yourself being..."
               prefix = 'Imagine that scenario and feel yourself being';
-              // Clear the flag after using it - bridge phrase should only be used on first return from check
-              context.metadata.returnToIdentityCheck = undefined;
+              // Mark bridge phrase as used - only use once per check failure
+              context.metadata.identityBridgePhraseUsed = true;
             }
             
             return `${prefix} '${identity}'... what does it feel like?`;
@@ -6484,11 +6485,13 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           console.log(`🔍 IDENTITY_FUTURE_CHECK: User said YES, going back to shifting steps`);
           // Set flag to indicate we're returning from future check (both for context-specific phrasing and to remember which check failed)
           context.metadata.returnToIdentityCheck = 'identity_future_check';
+          context.metadata.identityBridgePhraseUsed = false;
           return 'identity_dissolve_step_a';
         } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
           // NO - this check passed, clear return marker and proceed to scenario check
           console.log(`🔍 IDENTITY_FUTURE_CHECK: User said NO, proceeding to scenario check`);
           context.metadata.returnToIdentityCheck = undefined;
+          context.metadata.identityBridgePhraseUsed = false;
           return 'identity_scenario_check';
         }
         // Default to scenario check
@@ -6502,11 +6505,13 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
           console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said YES, going back to shifting steps`);
           // Set flag to indicate we're returning from scenario check (both for context-specific phrasing and to remember which check failed)
           context.metadata.returnToIdentityCheck = 'identity_scenario_check';
+          context.metadata.identityBridgePhraseUsed = false;
           return 'identity_dissolve_step_a';
         } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
           // NO - both checks passed, clear return marker and proceed to Step 5 (Check Problem)
           console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said NO, both checks passed - proceeding to problem check`);
           context.metadata.returnToIdentityCheck = undefined;
+          context.metadata.identityBridgePhraseUsed = false;
           return 'identity_problem_check';
         }
         // Default: treat unclear as needing more work, go back to shifting
