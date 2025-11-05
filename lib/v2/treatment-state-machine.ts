@@ -540,6 +540,7 @@ export class TreatmentStateMachine {
                             step.id === 'identity_future_check' ||
                             step.id === 'identity_scenario_check' ||
                             step.id === 'future_problem_check' ||
+                            step.id === 'scenario_check_1' ||  // CRITICAL: Skip cache to prevent cross-session problem contamination
                             step.id === 'digging_deeper_start' ||
                             step.id === 'trauma_dig_deeper' ||
                             step.id === 'trauma_dig_deeper_2' ||
@@ -627,6 +628,8 @@ export class TreatmentStateMachine {
           console.log(`🚀 CACHE_SKIP: Skipping cache for identity_scenario_check to prevent cross-session identity contamination`);
         } else if (step.id === 'future_problem_check') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for future_problem_check to prevent cross-session problem contamination`);
+        } else if (step.id === 'scenario_check_1') {
+          console.log(`🚀 CACHE_SKIP: Skipping cache for scenario_check_1 to prevent cross-session problem contamination`);
         } else if (step.id === 'digging_deeper_start') {
           console.log(`🚀 CACHE_SKIP: Skipping cache for digging_deeper_start to prevent cross-session problem contamination (originalProblemStatement: ${context.metadata?.originalProblemStatement})`);
         } else if (step.id.startsWith('blockage_step_')) {
