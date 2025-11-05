@@ -6365,18 +6365,10 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         }
         break;
         
-      case 'identity_dissolve_step_e':
-        // Identity Shifting: Check if goal is fully achieved
-        if (lastResponse.includes('no') || lastResponse.includes('not')) {
-          // Goal not achieved - repeat steps B-E (go back to step B)
-          context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-          return 'identity_dissolve_step_b';
-        }
-        if (lastResponse.includes('yes')) {
-          // Goal achieved - proceed to identity check
-          return 'identity_check';
-        }
-        break;
+      // NOTE: identity_dissolve_step_e intentionally has NO case statement
+      // Step 3E is an open-ended feeling question that should ALWAYS proceed to step 3F
+      // The phase definition (line 2976) correctly sets nextStep: 'identity_dissolve_step_f'
+      // Step 3F then handles all yes/no branching logic (see case below)
         
       case 'identity_check':
         // Identity Shifting: Check if still feeling the identity
