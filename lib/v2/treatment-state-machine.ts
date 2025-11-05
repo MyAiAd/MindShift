@@ -2308,9 +2308,11 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
         {
           id: 'what_needs_to_happen_step',
           scriptedResponse: (userInput, context) => {
-            // Get the previous response from body_sensation_check to maintain flow continuity
-            const previousResponse = context?.userResponses?.['body_sensation_check'] || userInput || 'this';
-            return `Feel '${previousResponse}'... what needs to happen for this to not be a problem?`;
+            // Step C should reference the PROBLEM (not the last response) per protocol flowchart
+            // This matches the pattern used in problem_shifting_intro (Step A) and check_if_still_problem (Step G)
+            const diggingProblem = context?.metadata?.currentDiggingProblem;
+            const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            return `Feel '${cleanProblemStatement}'... what needs to happen for this to not be a problem?`;
           },
           expectedResponseType: 'open',
           validationRules: [
