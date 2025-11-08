@@ -8,7 +8,11 @@ export class DiggingDeeperPhase {
       steps: [
         {
           id: 'digging_deeper_start',
-          scriptedResponse: "Would you like to dig deeper in this area?",
+          scriptedResponse: (userInput, context) => {
+            // Add specific problem reference for personalization
+            const problemStatement = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            return `Take your mind back to '${problemStatement}'. Would you like to dig deeper in this area?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -20,7 +24,11 @@ export class DiggingDeeperPhase {
         },
         {
           id: 'future_problem_check',
-          scriptedResponse: "Do you feel the problem will come back in the future?",
+          scriptedResponse: (userInput, context) => {
+            // Add specific problem reference for personalization
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
+            return `Do you feel '${originalProblem}' will come back in the future?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -128,7 +136,11 @@ export class DiggingDeeperPhase {
         },
         {
           id: 'scenario_check_1',
-          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            // Add specific problem reference for personalization
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'this';
+            return `Is there any scenario in which '${originalProblem}' would still be a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -189,7 +201,11 @@ export class DiggingDeeperPhase {
         },
         {
           id: 'scenario_check_2',
-          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            // Add specific problem reference for personalization
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'this';
+            return `Is there any scenario in which '${originalProblem}' would still be a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -309,6 +325,60 @@ export class DiggingDeeperPhase {
           nextStep: undefined, // Handled by routing logic
           aiTriggers: []
         },
+        
+        // SCENARIO CHECK 3 - Third scenario check (missing in original V3)
+        {
+          id: 'scenario_check_3',
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'the original problem';
+            return `Is there any scenario in which '${originalProblem}' would still be a problem for you?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'restate_scenario_problem_3',
+          aiTriggers: [
+            { condition: 'needsClarification', action: 'clarify' }
+          ]
+        },
+        {
+          id: 'restate_scenario_problem_3',
+          scriptedResponse: "How would you state the problem in a few words?",
+          expectedResponseType: 'problem',
+          validationRules: [
+            { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state this scenario problem.' }
+          ],
+          nextStep: 'clear_scenario_problem_3',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' },
+            { condition: 'tooLong', action: 'simplify' }
+          ]
+        },
+        {
+          id: 'clear_scenario_problem_3',
+          scriptedResponse: (userInput, context) => {
+            // Store the new scenario problem for clearing
+            const newProblem = context?.userResponses?.['restate_scenario_problem_3'] || 'the problem';
+            context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 4) + 1;
+            context.metadata.returnToDiggingStep = 'scenario_check_3'; // Return to this scenario check after clearing
+            context.metadata.workType = 'problem'; // Set work type for method selection
+            
+            // Set the problem statement for the method selection
+            context.problemStatement = newProblem;
+            
+            // Ask user to choose method instead of dictating
+            return "We need to clear this problem. Which method would you like to use?";
+          },
+          expectedResponseType: 'selection',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
+          ],
+          nextStep: 'digging_method_selection',
+          aiTriggers: []
+        },
+        
         {
           id: 'anything_else_check_1',
           scriptedResponse: "Is there anything else about this that's still a problem for you?",

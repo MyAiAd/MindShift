@@ -61,7 +61,7 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
             const diggingProblem = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
             const problemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
             console.log(`🔍 WHAT_NEEDS_TO_HAPPEN_STEP: Using problem statement: "${problemStatement}" (digging: "${diggingProblem}", metadata: "${context?.metadata?.problemStatement}", original: "${context?.problemStatement}")`);
-            return `Feel the problem '${problemStatement}'... what needs to happen for this to not be a problem?`;
+            return `Feel '${problemStatement}'... what needs to happen for this to not be a problem?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -75,7 +75,11 @@ Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
 
         {
           id: 'feel_solution_state',
-          scriptedResponse: (userInput) => `What would you feel like if you already ${userInput || 'had that'}?`,
+          scriptedResponse: (userInput, context) => {
+            // Get the response from the previous step (what_needs_to_happen_step)
+            const previousAnswer = context?.userResponses?.['what_needs_to_happen_step'] || 'that';
+            return `What would you feel like if ${previousAnswer} had already happened?`;
+          },
           expectedResponseType: 'feeling',
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what you would feel like.' }

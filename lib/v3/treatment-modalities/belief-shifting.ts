@@ -15,7 +15,17 @@ export class BeliefShiftingPhase {
             const diggingProblem = context?.metadata?.currentDiggingProblem;
             console.log('🔍 BELIEF_DEBUG belief_shifting_intro - diggingProblem:', diggingProblem);
             console.log('🔍 BELIEF_DEBUG belief_shifting_intro - context.problemStatement:', context?.problemStatement);
-            const problemStatement = diggingProblem || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            // Extended fallbacks to handle complex digging deeper scenarios
+            const problemStatement = diggingProblem 
+              || context?.userResponses?.['restate_scenario_problem_1'] 
+              || context?.userResponses?.['restate_scenario_problem_2']
+              || context?.userResponses?.['restate_scenario_problem_3']
+              || context?.userResponses?.['restate_anything_else_problem_1']
+              || context?.userResponses?.['restate_anything_else_problem_2']
+              || context?.problemStatement 
+              || context?.userResponses?.['restate_selected_problem'] 
+              || context?.userResponses?.['mind_shifting_explanation'] 
+              || 'the problem';
             console.log('🔍 BELIEF_DEBUG belief_shifting_intro - final problemStatement:', problemStatement);
             
             // Check if we're coming from digging deeper (shorter instructions)

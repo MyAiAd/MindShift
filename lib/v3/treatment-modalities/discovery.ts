@@ -67,7 +67,7 @@ export class DiscoveryPhase {
         {
           id: 'restate_identity_problem',
           scriptedResponse: () => {
-            return `How would you describe the problem now?`;
+            return `How would you state the problem now in a few words?`;
           },
           expectedResponseType: 'problem',
           validationRules: [

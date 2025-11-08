@@ -137,7 +137,9 @@ export class TraumaShiftingPhase {
         {
           id: 'trauma_dissolve_step_e',
           scriptedResponse: (userInput, context) => {
-            const lastResponse = context.userResponses?.['trauma_dissolve_step_d'] || 'that feeling';
+            // FIXED: Use metadata to get the CURRENT step D response, not the cached one from userResponses
+            // This prevents using old responses from previous iterations
+            const lastResponse = context.metadata.currentStepDResponse || context.userResponses?.['trauma_dissolve_step_d'] || 'that feeling';
             return `Feel '${lastResponse}'... what happens in yourself when you feel '${lastResponse}'?`;
           },
           expectedResponseType: 'open',
@@ -196,10 +198,114 @@ export class TraumaShiftingPhase {
           ]
         },
 
+        // FUTURE PROJECTION PATHWAY - 5 steps for when identity persists in future scenarios
+        {
+          id: 'trauma_future_projection',
+          scriptedResponse: (userInput, context) => {
+            // Step A: Ask them to project into the future and feel the identity
+            const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
+            
+            console.log(`🔍 TRAUMA_FUTURE_PROJECTION: Asking to feel identity '${identity}' in the future`);
+            return `Put yourself in the future and feel yourself being ${identity}... what does it feel like?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
+          ],
+          nextStep: 'trauma_future_step_c',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_future_step_c',
+          scriptedResponse: (userInput, context) => {
+            // Step C: Store response from future projection and ask what they are when not being the identity
+            context.metadata.traumaFutureStepAResponse = userInput || 'that';
+            
+            const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
+            
+            console.log(`🔍 TRAUMA_FUTURE_STEP_C: Asking what they are when not being '${identity}' in the future`);
+            return `What are you when you're not being '${identity}'?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what you are when you are not being that.' }
+          ],
+          nextStep: 'trauma_future_step_d',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_future_step_d',
+          scriptedResponse: (userInput, context) => {
+            // Step D: Store response from C and ask them to feel that state
+            context.metadata.traumaFutureStepCResponse = userInput || 'that';
+            const stepCResponse = context.metadata.traumaFutureStepCResponse;
+            
+            console.log(`🔍 TRAUMA_FUTURE_STEP_D: Asking them to feel '${stepCResponse}'`);
+            return `Feel yourself being '${stepCResponse}'... what does it feel like?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what it feels like.' }
+          ],
+          nextStep: 'trauma_future_step_e',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_future_step_e',
+          scriptedResponse: (userInput, context) => {
+            // Step E: Store response from D and ask what happens
+            context.metadata.traumaFutureStepDResponse = userInput || 'that feeling';
+            const stepDResponse = context.metadata.traumaFutureStepDResponse;
+            
+            console.log(`🔍 TRAUMA_FUTURE_STEP_E: Asking what happens when they feel '${stepDResponse}'`);
+            return `Feel '${stepDResponse}'... what happens in yourself when you feel '${stepDResponse}'?`;
+          },
+          expectedResponseType: 'open',
+          validationRules: [
+            { type: 'minLength', value: 2, errorMessage: 'Please tell me what happens in yourself when you feel that.' }
+          ],
+          nextStep: 'trauma_future_step_f',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
+        {
+          id: 'trauma_future_step_f',
+          scriptedResponse: (userInput, context) => {
+            // Step F: Check if they can still feel the identity in the future
+            context.metadata.traumaFutureStepEResponse = userInput || 'that';
+            
+            const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
+            
+            console.log(`🔍 TRAUMA_FUTURE_STEP_F: Checking if they can still feel '${identity}' in the future`);
+            return `Can you still feel yourself being ${identity}?`;
+          },
+          expectedResponseType: 'yesno',
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
+          ],
+          nextStep: 'trauma_experience_check',
+          aiTriggers: [
+            { condition: 'userStuck', action: 'clarify' }
+          ]
+        },
+
         {
           id: 'trauma_experience_check',
-          scriptedResponse: () => {
-            return `Take your mind back to the frozen moment which was the worst part of the negative experience. Does it still feel like a problem to you?`;
+          scriptedResponse: (userInput, context) => {
+            // Add specific experience reference for personalization
+            const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
+            return `Take your mind back to the frozen moment which was the worst part of the negative experience (${negativeExperience}). Does it still feel like a problem to you?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
