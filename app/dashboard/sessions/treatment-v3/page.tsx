@@ -4,7 +4,7 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import TreatmentSession from '@/components/treatment/v3/TreatmentSession';
-import { Brain, ArrowLeft, BarChart3, Zap } from 'lucide-react';
+import { Brain, ArrowLeft, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 
 function TreatmentSessionContent() {
@@ -95,11 +95,7 @@ function TreatmentSessionContent() {
               </Link>
               <div className="flex items-center space-x-2">
                 <Brain className="h-6 w-6 text-indigo-600" />
-                <span className="text-lg font-semibold text-gray-900 dark:text-white">Treatment Session V3</span>
-                <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full flex items-center space-x-1">
-                  <Zap className="h-3 w-3" />
-                  <span>V3</span>
-                </span>
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">Treatment Session</span>
               </div>
               <span className="text-sm text-gray-500 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                 ID: {sessionId.slice(-8)}
@@ -131,24 +127,21 @@ function TreatmentSessionContent() {
         />
       </div>
 
-      {/* Performance Info Footer - Updated for V3 */}
+      {/* Performance Info Footer */}
       <div className="fixed bottom-24 left-0 right-0 md:left-64 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 px-4 py-2 z-20">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
             <div className="flex items-center space-x-4">
-              <span className="flex items-center space-x-1">
-                <Zap className="h-3 w-3 text-orange-500" />
-                <span>V3 Enhanced Architecture</span>
-              </span>
+              <span>Automation-First Architecture</span>
               <span>•</span>
-              <span>Advanced State Management</span>
+              <span>95% Scripted Responses</span>
               <span>•</span>
-              <span>Improved Validation</span>
+              <span>5% AI Assistance</span>
             </div>
             <div className="flex items-center space-x-4">
-              <span>Target: &lt;150ms Response</span>
+              <span>Target: &lt;200ms Response</span>
               <span>•</span>
-              <span>Enhanced Therapeutic Protocols</span>
+              <span>Cost: &lt;$0.05/session</span>
             </div>
           </div>
         </div>

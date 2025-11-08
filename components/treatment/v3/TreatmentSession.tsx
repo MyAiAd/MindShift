@@ -775,28 +775,6 @@ export default function TreatmentSession({
           )}
         </div>
       </div>
-
-      {/* V3 Stats Footer */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-indigo-600">{sessionStats.totalResponses}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Responses</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-green-600">{sessionStats.avgResponseTime}ms</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Avg Response</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-blue-600">{sessionStats.aiUsagePercent}%</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">AI Usage</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-orange-600">{performanceMetrics.cacheHitRate.toFixed(1)}%</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Cache Hit</div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 } 

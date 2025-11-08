@@ -129,22 +129,6 @@ export default function ProblemShifting({
           </button>
         </div>
       )}
-
-      {/* V3 Enhanced: Performance Metrics Display */}
-      {performanceMetrics && (
-        <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-            <div className="flex justify-between">
-              <span>Cache Hit Rate:</span>
-              <span>{performanceMetrics.cacheHitRate.toFixed(1)}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Avg Response Time:</span>
-              <span>{performanceMetrics.averageResponseTime}ms</span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 
