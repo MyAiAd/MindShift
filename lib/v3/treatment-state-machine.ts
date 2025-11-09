@@ -586,13 +586,16 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.currentPhase = this.getPhaseForMethod(selectedMethod);
       return this.getIntroStepForMethod(selectedMethod);
     } else if (workType === 'goal') {
+      // Goals: go to reality_shifting_intro
       context.currentPhase = 'reality_shifting';
       context.metadata.selectedMethod = 'reality_shifting';
       return 'reality_shifting_intro';
     } else if (workType === 'negative_experience') {
+      // Negative experiences: we showed trauma_shifting_intro content, so go to trauma_dissolve_step_a next
       context.currentPhase = 'trauma_shifting';
       context.metadata.selectedMethod = 'trauma_shifting';
-      return 'trauma_identity_step';
+      console.log(`🔧 ROUTE_TO_METHOD: Negative experience, routing to trauma_dissolve_step_a`);
+      return 'trauma_dissolve_step_a';  // NOT trauma_identity_step!
     }
     
     return 'choose_method';
