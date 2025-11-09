@@ -233,3 +233,4 @@ context.metadata.identityBridgePhraseUsed = false;  // ← ADD (cleanup)
 ✅ Bridge phrase used only once (original bug)
 ✅ Returns to correct check after cycles (new bug from our fix)
 
+
