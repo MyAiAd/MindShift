@@ -835,19 +835,34 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleCheckIfStillProblem(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('still')) {
-      // Still a problem - cycle back
+      // Still a problem - cycle back to problem_shifting_intro but skip the introductory instructions
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-      context.metadata.skipIntroInstructions = true;
-      context.metadata.skipLinguisticProcessing = true;
+      context.metadata.skipIntroInstructions = true; // Flag to skip intro instructions
+      context.metadata.skipLinguisticProcessing = true; // Flag to prevent AI processing on repeat
       return 'problem_shifting_intro';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
+      // No longer a problem - check if we've already asked permission to dig deeper
+      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
       const returnStep = context.metadata?.returnToDiggingStep;
-      if (returnStep) {
+      
+      console.log(`🔍 CHECK_IF_STILL_PROBLEM: alreadyGrantedPermission=${alreadyGrantedPermission}, returnStep=${returnStep}`);
+      console.log(`🔍 CHECK_IF_STILL_PROBLEM: userResponses['digging_deeper_start']=${context.userResponses['digging_deeper_start']}`);
+      
+      if (alreadyGrantedPermission && returnStep) {
+        // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
+        console.log(`🔍 CHECK_IF_STILL_PROBLEM: Returning to ${returnStep}`);
         context.currentPhase = 'digging_deeper';
-        context.metadata.returnToDiggingStep = undefined;
+        context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
         return returnStep;
+      } else if (alreadyGrantedPermission) {
+        // Permission already granted - skip permission, go to future_problem_check to continue digging
+        console.log(`🔍 CHECK_IF_STILL_PROBLEM: Permission granted, going to future_problem_check`);
+        context.currentPhase = 'digging_deeper';
+        return 'future_problem_check';
       } else {
+        // First time - ask permission
+        console.log(`🔍 CHECK_IF_STILL_PROBLEM: First time, asking permission`);
         context.currentPhase = 'digging_deeper';
         return 'digging_deeper_start';
       }
