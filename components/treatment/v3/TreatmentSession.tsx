@@ -451,27 +451,56 @@ export default function TreatmentSession({
     // Check if we're in the initial explanation step
     const isInitialStep = currentStep === 'mind_shifting_explanation';
     
-    if (!isInitialStep) return false;
+    console.log('🔍 BUTTON CHECK:', {
+      currentStep,
+      isInitialStep,
+      isLoading,
+      isSessionActive,
+      messagesCount: messages.length,
+      userMessagesCount: messages.filter(m => m.isUser).length
+    });
+    
+    if (!isInitialStep) {
+      console.log('❌ Not initial step');
+      return false;
+    }
     
     // Don't show if we're loading or session isn't active
-    if (isLoading || !isSessionActive) return false;
+    if (isLoading || !isSessionActive) {
+      console.log('❌ Loading or session inactive:', { isLoading, isSessionActive });
+      return false;
+    }
     
     // Check the last bot message to see if it contains the work type options
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
-    if (!lastBotMessage) return false;
+    if (!lastBotMessage) {
+      console.log('❌ No bot message found');
+      return false;
+    }
+    
+    console.log('📝 Last bot message:', lastBotMessage.content.substring(0, 100) + '...');
     
     // Show buttons if the message contains the work type selection text
     const containsWorkTypeSelection = lastBotMessage.content.includes('1. PROBLEM') && 
                                     lastBotMessage.content.includes('2. GOAL') && 
                                     lastBotMessage.content.includes('3. NEGATIVE EXPERIENCE');
     
+    console.log('✅ Contains work type text:', containsWorkTypeSelection);
+    
     // Don't show if AI is asking clarifying questions
-    if (lastBotMessage.usedAI) return false;
+    if (lastBotMessage.usedAI) {
+      console.log('❌ Message used AI');
+      return false;
+    }
     
     // Don't show if user has already made multiple inputs (likely past selection)
     const userMessages = messages.filter(m => m.isUser);
-    if (userMessages.length >= 2) return false;
+    if (userMessages.length >= 2) {
+      console.log('❌ Too many user messages:', userMessages.length);
+      return false;
+    }
     
+    console.log('✅ BUTTONS SHOULD SHOW');
     return containsWorkTypeSelection;
   };
 
