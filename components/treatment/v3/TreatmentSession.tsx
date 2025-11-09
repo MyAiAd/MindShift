@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
@@ -61,6 +61,9 @@ export default function TreatmentSession({
   const [clickedButton, setClickedButton] = useState<string | null>(null);
   const [sessionMethod, setSessionMethod] = useState<string>('mind_shifting');
   const [showEmotionConfirmation, setShowEmotionConfirmation] = useState<boolean>(false);
+  
+  // V3: Button visibility state - managed by useEffect for race condition safety
+  const [showWorkTypeButtons, setShowWorkTypeButtons] = useState<boolean>(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -446,13 +449,13 @@ export default function TreatmentSession({
     sendMessage(buttonText);
   };
 
-  // V3: RACE CONDITION FIX - Memoize button visibility to prevent flickering
-  // useMemo ensures the value is stable across rapid re-renders
-  const showWorkTypeButtons = useMemo(() => {
+  // V3: RACE CONDITION FIX - Use useEffect to compute button visibility after all state updates complete
+  // This ensures we see consistent state, not partial updates during rapid re-renders
+  useEffect(() => {
     // Check if we're in the initial explanation step
     const isInitialStep = currentStep === 'mind_shifting_explanation';
     
-    console.log('🔍 BUTTON CHECK (MEMOIZED):', {
+    console.log('🔍 BUTTON CHECK (useEffect):', {
       currentStep,
       isInitialStep,
       isLoading,
@@ -463,20 +466,23 @@ export default function TreatmentSession({
     
     if (!isInitialStep) {
       console.log('❌ Not initial step');
-      return false;
+      setShowWorkTypeButtons(false);
+      return;
     }
     
     // Don't show if we're loading or session isn't active
     if (isLoading || !isSessionActive) {
       console.log('❌ Loading or session inactive:', { isLoading, isSessionActive });
-      return false;
+      setShowWorkTypeButtons(false);
+      return;
     }
     
     // Check the last bot message to see if it contains the work type options
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (!lastBotMessage) {
       console.log('❌ No bot message found');
-      return false;
+      setShowWorkTypeButtons(false);
+      return;
     }
     
     console.log('📝 Last bot message:', lastBotMessage.content.substring(0, 100) + '...');
@@ -491,19 +497,21 @@ export default function TreatmentSession({
     // Don't show if AI is asking clarifying questions
     if (lastBotMessage.usedAI) {
       console.log('❌ Message used AI');
-      return false;
+      setShowWorkTypeButtons(false);
+      return;
     }
     
     // Don't show if user has already made multiple inputs (likely past selection)
     const userMessages = messages.filter(m => m.isUser);
     if (userMessages.length >= 2) {
       console.log('❌ Too many user messages:', userMessages.length);
-      return false;
+      setShowWorkTypeButtons(false);
+      return;
     }
     
-    console.log('✅ BUTTONS SHOULD SHOW - MEMOIZED VALUE:', containsWorkTypeSelection);
-    return containsWorkTypeSelection;
-  }, [currentStep, isLoading, isSessionActive, messages]); // Re-compute only when these change
+    console.log('✅ SETTING BUTTONS TO SHOW:', containsWorkTypeSelection);
+    setShowWorkTypeButtons(containsWorkTypeSelection);
+  }, [currentStep, isLoading, isSessionActive, messages]); // Run after these change
 
   // V3: Handle work type selection button clicks
   const handleWorkTypeSelection = (workType: string) => {
