@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
@@ -446,12 +446,13 @@ export default function TreatmentSession({
     sendMessage(buttonText);
   };
 
-  // V3: Helper function to determine if we should show work type selection buttons
-  const shouldShowWorkTypeSelection = () => {
+  // V3: RACE CONDITION FIX - Memoize button visibility to prevent flickering
+  // useMemo ensures the value is stable across rapid re-renders
+  const showWorkTypeButtons = useMemo(() => {
     // Check if we're in the initial explanation step
     const isInitialStep = currentStep === 'mind_shifting_explanation';
     
-    console.log('🔍 BUTTON CHECK:', {
+    console.log('🔍 BUTTON CHECK (MEMOIZED):', {
       currentStep,
       isInitialStep,
       isLoading,
@@ -500,9 +501,9 @@ export default function TreatmentSession({
       return false;
     }
     
-    console.log('✅ BUTTONS SHOULD SHOW');
+    console.log('✅ BUTTONS SHOULD SHOW - MEMOIZED VALUE:', containsWorkTypeSelection);
     return containsWorkTypeSelection;
-  };
+  }, [currentStep, isLoading, isSessionActive, messages]); // Re-compute only when these change
 
   // V3: Handle work type selection button clicks
   const handleWorkTypeSelection = (workType: string) => {
@@ -856,7 +857,7 @@ export default function TreatmentSession({
           )}
 
           {/* V3: Work Type Selection Buttons */}
-          {shouldShowWorkTypeSelection() && (
+          {showWorkTypeButtons && (
             <div className="mb-4">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
