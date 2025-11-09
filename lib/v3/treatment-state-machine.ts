@@ -671,13 +671,42 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       (lastResponse.startsWith('not ') && lastResponse.length < 15);
     
     if (stepESeemsResolved) {
-      context.currentPhase = 'digging_deeper';
-      return 'digging_deeper_start';
+      // Problem seems resolved - check if we're returning from a sub-problem or this is first completion
+      console.log(`🔍 BLOCKAGE_STEP_E: Problem resolved (response: "${lastResponse}"), checking dig deeper context`);
+      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+      const returnStep = context.metadata?.returnToDiggingStep;
+      
+      if (alreadyGrantedPermission && returnStep) {
+        // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
+        console.log(`🔍 BLOCKAGE_STEP_E: Permission already granted, returning to ${returnStep}`);
+        context.currentPhase = 'digging_deeper';
+        context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+        return returnStep;
+      } else if (alreadyGrantedPermission) {
+        // Permission already granted - skip permission, go to appropriate digging question
+        console.log(`🔍 BLOCKAGE_STEP_E: Permission already granted, checking for trauma digging context`);
+        context.currentPhase = 'digging_deeper';
+        // Check if we're in trauma shifting context
+        if (context.metadata?.selectedMethod === 'trauma_shifting' || context.metadata?.diggingType === 'trauma') {
+          console.log(`🔍 BLOCKAGE_STEP_E: Returning to trauma_dig_deeper`);
+          return 'trauma_dig_deeper';
+        } else {
+          console.log(`🔍 BLOCKAGE_STEP_E: Returning to future_problem_check`);
+          return 'future_problem_check';
+        }
+      } else {
+        // First time - ask permission
+        console.log(`🔍 BLOCKAGE_STEP_E: First time, asking permission via digging_deeper_start`);
+        context.currentPhase = 'digging_deeper';
+        return 'digging_deeper_start';
+      }
     } else {
+      // Still a problem - update problem statement and cycle back to step A
       const newProblem = context.userResponses[context.currentStep] || lastResponse;
       if (newProblem) {
         this.updateProblemStatement(context, newProblem);
         context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+        console.log(`🔍 BLOCKAGE_STEP_E: Updated problem to "${newProblem}", cycling back to blockage_shifting_intro`);
       }
       return 'blockage_shifting_intro';
     }
