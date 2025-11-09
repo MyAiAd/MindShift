@@ -116,7 +116,7 @@ export default function TreatmentSession({
         content: "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE",
         isUser: false,
         timestamp: new Date(),
-        responseTime: 0,
+        // Don't set responseTime - it's instant, no badge needed
         usedAI: false,
         version: 'v3'
       };
@@ -124,7 +124,6 @@ export default function TreatmentSession({
       setMessages([instantMessage]);
       setCurrentStep('mind_shifting_explanation');
       setIsSessionActive(true);
-      setLastResponseTime(0);
       
       // Focus input immediately for user interaction
       setTimeout(() => {
