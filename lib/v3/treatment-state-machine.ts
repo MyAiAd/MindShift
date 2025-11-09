@@ -220,7 +220,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return 'clear_scenario_problem_1';
         
       case 'clear_scenario_problem_1':
-        return this.handleClearScenarioProblem(context, 'anything_else_check_1');
+        return this.handleClearScenarioProblem1(lastResponse, context);
         
       case 'scenario_check_2':
         return this.handleScenarioCheck(lastResponse, 'restate_scenario_problem_2', 'scenario_check_3');
@@ -229,7 +229,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return 'clear_scenario_problem_2';
         
       case 'clear_scenario_problem_2':
-        return this.handleClearScenarioProblem(context, 'scenario_check_3');
+        return this.handleClearScenarioProblem2(lastResponse, context);
         
       case 'scenario_check_3':
         return this.handleScenarioCheck(lastResponse, 'restate_scenario_problem_3', 'anything_else_check_1');
@@ -238,7 +238,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return 'clear_scenario_problem_3';
         
       case 'clear_scenario_problem_3':
-        return this.handleClearScenarioProblem(context, 'anything_else_check_1');
+        return this.handleClearScenarioProblem3(lastResponse, context);
         
       case 'anything_else_check_1':
         return this.handleAnythingElseCheck(lastResponse, context, 'restate_anything_else_problem_1');
@@ -1570,13 +1570,146 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     return restateStep;
   }
 
-  private handleClearScenarioProblem(context: TreatmentContext, returnStep: string): string {
-    const returnStepFromContext = context.metadata?.returnToDiggingStep;
-    if (returnStepFromContext) {
-      context.currentPhase = 'digging_deeper';
-      return returnStepFromContext;
+  private handleClearScenarioProblem1(lastResponse: string, context: TreatmentContext): string {
+    // User selected a method - route directly to that method
+    const scenario1Input = lastResponse.toLowerCase();
+    const scenario1Problem = context.userResponses?.['restate_scenario_problem_1'];
+    
+    if (scenario1Problem) {
+      context.problemStatement = scenario1Problem;
+      context.metadata.currentDiggingProblem = scenario1Problem;
+      console.log(`🔍 SCENARIO_1_ROUTE: Using problem: "${scenario1Problem}"`);
     }
-    return returnStep;
+    
+    // PRODUCTION FIX: Set return point for nested digging deeper
+    // After clearing this nested problem, return to this same question
+    context.metadata.returnToDiggingStep = 'scenario_check_1';
+    
+    this.clearPreviousModalityMetadata(context);
+    
+    if (scenario1Input.includes('problem shifting') || scenario1Input === '1') {
+      context.currentPhase = 'problem_shifting';
+      context.metadata.selectedMethod = 'problem_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_1_ROUTE: Routing to Problem Shifting`);
+      return 'problem_shifting_intro';
+    } else if (scenario1Input.includes('identity shifting') || scenario1Input === '2') {
+      context.currentPhase = 'identity_shifting';
+      context.metadata.selectedMethod = 'identity_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_1_ROUTE: Routing to Identity Shifting`);
+      return 'identity_shifting_intro';
+    } else if (scenario1Input.includes('belief shifting') || scenario1Input === '3') {
+      context.currentPhase = 'belief_shifting';
+      context.metadata.selectedMethod = 'belief_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_1_ROUTE: Routing to Belief Shifting`);
+      return 'belief_shifting_intro';
+    } else if (scenario1Input.includes('blockage shifting') || scenario1Input === '4') {
+      context.currentPhase = 'blockage_shifting';
+      context.metadata.selectedMethod = 'blockage_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_1_ROUTE: Routing to Blockage Shifting`);
+      return 'blockage_shifting_intro';
+    }
+    // Default to problem shifting if unclear
+    context.currentPhase = 'problem_shifting';
+    context.metadata.workType = 'problem';
+    return 'problem_shifting_intro';
+  }
+
+  private handleClearScenarioProblem2(lastResponse: string, context: TreatmentContext): string {
+    // User selected a method - route directly to that method
+    const scenario2Input = lastResponse.toLowerCase();
+    const scenario2Problem = context.userResponses?.['restate_scenario_problem_2'];
+    
+    if (scenario2Problem) {
+      context.problemStatement = scenario2Problem;
+      context.metadata.currentDiggingProblem = scenario2Problem;
+      console.log(`🔍 SCENARIO_2_ROUTE: Using problem: "${scenario2Problem}"`);
+    }
+    
+    // PRODUCTION FIX: Set return point for nested digging deeper
+    context.metadata.returnToDiggingStep = 'scenario_check_2';
+    
+    this.clearPreviousModalityMetadata(context);
+    
+    if (scenario2Input.includes('problem shifting') || scenario2Input === '1') {
+      context.currentPhase = 'problem_shifting';
+      context.metadata.selectedMethod = 'problem_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_2_ROUTE: Routing to Problem Shifting`);
+      return 'problem_shifting_intro';
+    } else if (scenario2Input.includes('identity shifting') || scenario2Input === '2') {
+      context.currentPhase = 'identity_shifting';
+      context.metadata.selectedMethod = 'identity_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_2_ROUTE: Routing to Identity Shifting`);
+      return 'identity_shifting_intro';
+    } else if (scenario2Input.includes('belief shifting') || scenario2Input === '3') {
+      context.currentPhase = 'belief_shifting';
+      context.metadata.selectedMethod = 'belief_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_2_ROUTE: Routing to Belief Shifting`);
+      return 'belief_shifting_intro';
+    } else if (scenario2Input.includes('blockage shifting') || scenario2Input === '4') {
+      context.currentPhase = 'blockage_shifting';
+      context.metadata.selectedMethod = 'blockage_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_2_ROUTE: Routing to Blockage Shifting`);
+      return 'blockage_shifting_intro';
+    }
+    // Default to problem shifting if unclear
+    context.currentPhase = 'problem_shifting';
+    context.metadata.workType = 'problem';
+    return 'problem_shifting_intro';
+  }
+
+  private handleClearScenarioProblem3(lastResponse: string, context: TreatmentContext): string {
+    // User selected a method - route directly to that method
+    const scenario3Input = lastResponse.toLowerCase();
+    const scenario3Problem = context.userResponses?.['restate_scenario_problem_3'];
+    
+    if (scenario3Problem) {
+      context.problemStatement = scenario3Problem;
+      context.metadata.currentDiggingProblem = scenario3Problem;
+      console.log(`🔍 SCENARIO_3_ROUTE: Using problem: "${scenario3Problem}"`);
+    }
+    
+    // PRODUCTION FIX: Set return point for nested digging deeper
+    context.metadata.returnToDiggingStep = 'scenario_check_3';
+    
+    this.clearPreviousModalityMetadata(context);
+    
+    if (scenario3Input.includes('problem shifting') || scenario3Input === '1') {
+      context.currentPhase = 'problem_shifting';
+      context.metadata.selectedMethod = 'problem_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_3_ROUTE: Routing to Problem Shifting`);
+      return 'problem_shifting_intro';
+    } else if (scenario3Input.includes('identity shifting') || scenario3Input === '2') {
+      context.currentPhase = 'identity_shifting';
+      context.metadata.selectedMethod = 'identity_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_3_ROUTE: Routing to Identity Shifting`);
+      return 'identity_shifting_intro';
+    } else if (scenario3Input.includes('belief shifting') || scenario3Input === '3') {
+      context.currentPhase = 'belief_shifting';
+      context.metadata.selectedMethod = 'belief_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_3_ROUTE: Routing to Belief Shifting`);
+      return 'belief_shifting_intro';
+    } else if (scenario3Input.includes('blockage shifting') || scenario3Input === '4') {
+      context.currentPhase = 'blockage_shifting';
+      context.metadata.selectedMethod = 'blockage_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_3_ROUTE: Routing to Blockage Shifting`);
+      return 'blockage_shifting_intro';
+    }
+    // Default to problem shifting if unclear
+    context.currentPhase = 'problem_shifting';
+    context.metadata.workType = 'problem';
+    return 'problem_shifting_intro';
   }
 
   private handleAnythingElseCheck(lastResponse: string, context: TreatmentContext, restateStep: string): string {
