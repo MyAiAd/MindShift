@@ -294,12 +294,12 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return true;
         
       case 'GOAL_SELECTION_CONFIRMED':
-        context.currentPhase = 'reality_shifting';
+        context.currentPhase = 'introduction';
         context.currentStep = 'goal_description';
         return true;
         
       case 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED':
-        context.currentPhase = 'trauma_shifting';
+        context.currentPhase = 'introduction';
         context.currentStep = 'negative_experience_description';
         return true;
         
