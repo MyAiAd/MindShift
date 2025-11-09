@@ -393,7 +393,26 @@ if (!userInput || isMethodName || isMethodSelection) {
 **Phases 1-4**: ✅ Complete (Handler routing logic)  
 **Phase 5**: ✅ Complete (Verification)  
 **Phase 6**: ✅ Complete (Testing guide created)  
-**Phase 7**: 🔴 **PENDING** (UserInput flow fixes - THIS DOCUMENT)
+**Phase 7**: ✅ **COMPLETE** (UserInput flow fixes - DEPLOYED)
+
+### What Was Found:
+- ✅ **Fix #1**: `getPreviousStep()` method already existed in V3 (line 759)
+- ✅ **Fix #2**: Fallback logic already existed in V3 (lines 178-181)
+- ❌ **Fix #3**: Transition calls were passing wrong userInput (NOW FIXED)
+- 🚫 **Fix #4**: Not needed (root fix solved the problem)
+
+### The Critical Issue:
+Both `handleInternalSignal()` and `handleRegularFlow()` were passing `userInput` from the CURRENT step when calling `getScriptedResponse()` for the NEXT step. This made the fallback logic NEVER execute because `currentUserInput` was always truthy.
+
+### The Fix:
+Removed `userInput` parameter from both `getScriptedResponse()` calls. Now the fallback logic executes, using `getPreviousStep()` to determine appropriate input, or returning `undefined` for steps that should prompt for input.
+
+### Files Changed:
+- ✅ `/lib/v3/base-state-machine.ts` (lines 567, 602) - Removed userInput parameter
+
+### V2 Protection:
+- ✅ V2 completely untouched
+- ✅ Only V3 files modified
 
 ---
 
