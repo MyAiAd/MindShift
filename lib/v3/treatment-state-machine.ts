@@ -922,31 +922,54 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   }
 
   private handleBlockageCheckIfStillProblem(lastResponse: string, context: TreatmentContext): string {
+    // Core cycling logic for Blockage Shifting
+    // Check if the response indicates no problem left
     const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
     const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator)) ||
+      // Check for standalone "no" or "not" responses (not part of problem descriptions)
       (lastResponse.trim() === 'no') || 
       (lastResponse.trim() === 'not') ||
       (lastResponse.trim() === 'no problem') ||
-      (lastResponse.startsWith('no ') && lastResponse.length < 15) ||
-      (lastResponse.startsWith('not ') && lastResponse.length < 15);
+      (lastResponse.startsWith('no ') && lastResponse.length < 15) || // Short "no" responses
+      (lastResponse.startsWith('not ') && lastResponse.length < 15);  // Short "not" responses
+    console.log(`🔍 BLOCKAGE_CHECK: lastResponse="${lastResponse}", seemsResolved=${seemsResolved}, noProblemIndicators matched:`, noProblemIndicators.filter(indicator => lastResponse.includes(indicator)));
     
+    // Check if user is responding to dig deeper question with yes/no
     const isDigDeeperResponse = lastResponse.includes('yes') || lastResponse.includes('no');
     
     if (isDigDeeperResponse) {
+      // User is responding to "Would you like to dig deeper in this area?"
+      console.log(`🔍 BLOCKAGE_CHECK_DIG_DEEPER: User responded ${lastResponse} to dig deeper question`);
       context.currentPhase = 'digging_deeper';
       return 'digging_deeper_start';
     } else if (seemsResolved) {
+      // Problem seems resolved - check if we've already asked permission to dig deeper
+      console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Problem resolved, transitioning to dig deeper`);
+      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
       const returnStep = context.metadata?.returnToDiggingStep;
-      if (returnStep) {
+      
+      if (alreadyGrantedPermission && returnStep) {
+        // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
+        console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Permission already granted, returning to ${returnStep}`);
         context.currentPhase = 'digging_deeper';
-        context.metadata.returnToDiggingStep = undefined;
+        context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
         return returnStep;
+      } else if (alreadyGrantedPermission) {
+        // Permission already granted - skip permission, go to future_problem_check to continue digging
+        console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Permission already granted, going to future_problem_check`);
+        context.currentPhase = 'digging_deeper';
+        return 'future_problem_check';
       } else {
+        // First time - ask permission
+        console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: First time, asking permission`);
         context.currentPhase = 'digging_deeper';
         return 'digging_deeper_start';
       }
     } else {
+      // Still a problem - cycle back to step A (blockage_shifting_intro)
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+      // Don't update the problem statement when cycling back from yes/no response
+      // Keep the original problem statement intact
       return 'blockage_shifting_intro';
     }
   }
