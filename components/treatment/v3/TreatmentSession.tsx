@@ -624,20 +624,16 @@ export default function TreatmentSession({
     // Don't show if we're loading or session isn't active
     if (isLoading || !isSessionActive) return false;
     
-    // Check the last bot message to see if it contains the method selection signal
-    const lastBotMessage = messages.filter(m => !m.isUser).pop();
-    if (!lastBotMessage) return false;
+    // Check if user has already selected a method (multiple user messages)
+    const userMessages = messages.filter(m => m.isUser);
+    if (userMessages.length >= 2) {
+      console.log('❌ METHOD BUTTONS: Too many user messages:', userMessages.length);
+      return false;
+    }
     
-    // Show buttons if the message is the method selection step
-    // Updated to match simplified "Choose a method:" message from Fix #2
-    const containsMethodSelection = lastBotMessage.content.includes('Choose a method') ||
-                                  (lastBotMessage.content.includes('Which method would you like to use') &&
-                                   lastBotMessage.content.includes('1. Problem Shifting'));
-    
-    // Don't show if AI is asking clarifying questions
-    if (lastBotMessage.usedAI) return false;
-    
-    return containsMethodSelection;
+    // Show buttons for choose_method step
+    console.log('✅ METHOD BUTTONS: Showing buttons for choose_method step');
+    return true;
   };
 
   // V3: Handle method selection button clicks
