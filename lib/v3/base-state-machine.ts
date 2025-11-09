@@ -667,20 +667,24 @@ export class BaseTreatmentStateMachine {
       return false;
     }
     
-    // Define steps that need linguistic processing
+    // PERFORMANCE FIX: Match V2's optimized linguistic processing configuration
+    // V2 removed most steps for performance - only use AI where absolutely necessary
+    // All modality intro steps that need linguistic processing for user input contextualisation
     const linguisticSteps = [
-      'body_sensation_check',
-      'feel_solution_state',
-      'identity_dissolve_step_a',
-      'identity_dissolve_step_b',
-      'trauma_dissolve_step_a',
-      'trauma_dissolve_step_b',
-      'problem_shifting_intro',
-      'reality_shifting_intro',
-      'blockage_shifting_intro',
-      'trauma_shifting_intro',
-      'belief_shifting_intro'
+      'problem_shifting_intro',  // Ensure problem is stated as a problem
+      'reality_shifting_intro',  // Ensure goal is stated as a goal  
+      // 'blockage_shifting_intro' REMOVED - scripted response already has correct problem statement logic, AI not needed
+      // 'identity_shifting_intro' REMOVED - should store identity response directly, not process with AI
+      // 'trauma_shifting_intro' REMOVED - This is a simple yes/no question, no AI needed
+      'belief_shifting_intro'    // Ensure problem is stated as a problem
     ];
+    // REMOVED from V3 (were in V2's optimization):
+    // - 'body_sensation_check' - V2 removed for performance
+    // - 'feel_solution_state' - V2 removed for performance
+    // - 'identity_dissolve_step_a' - V2 removed for performance
+    // - 'identity_dissolve_step_b' - V2 removed for performance
+    // - 'trauma_dissolve_step_a' - V2 removed for performance
+    // - 'trauma_dissolve_step_b' - V2 removed for performance
     
     return linguisticSteps.includes(stepId);
   }

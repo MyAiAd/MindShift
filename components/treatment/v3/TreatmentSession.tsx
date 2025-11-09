@@ -572,7 +572,7 @@ export default function TreatmentSession({
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                 }`}
               >
-                <p className="text-sm">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 {message.responseTime && (
                   <div className="flex items-center justify-between mt-1 text-xs opacity-70">
                     <span>{message.usedAI ? 'AI Enhanced' : 'Scripted'}</span>
@@ -588,7 +588,7 @@ export default function TreatmentSession({
               <div className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2">
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-300">V3 Processing...</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Processing...</span>
                 </div>
               </div>
             </div>

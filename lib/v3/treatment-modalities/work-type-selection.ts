@@ -48,22 +48,37 @@ export class WorkTypeSelectionPhase {
               console.log(`║ ➡️  RETURNING (asking for description): "${response}"\n╚════════════════════════════════════════════════════════════════\n`);
               return response;
             } else {
-              // User provided description, store it and return routing signal
+              // User provided description, store it and proceed directly to treatment
               const statement = userInput || '';
               context.metadata.problemStatement = statement;
               context.problemStatement = statement;
-              context.metadata.readyForTreatment = true;
               
               let response = '';
+              // Skip confirmation and route directly to treatment intro step
               if (workType === 'problem') {
-                const methodName = selectedMethod?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'the selected method';
-                response = `Perfect! We'll work on "${statement}" using ${methodName}. Let's begin the treatment.`;
+                if (selectedMethod === 'identity_shifting') {
+                  context.currentPhase = 'identity_shifting';
+                  response = `Great! Let's begin Identity Shifting.`;
+                } else if (selectedMethod === 'problem_shifting') {
+                  context.currentPhase = 'problem_shifting';
+                  response = `Great! Let's begin Problem Shifting.`;
+                } else if (selectedMethod === 'belief_shifting') {
+                  context.currentPhase = 'belief_shifting';
+                  response = `Great! Let's begin Belief Shifting.`;
+                } else if (selectedMethod === 'blockage_shifting') {
+                  context.currentPhase = 'blockage_shifting';
+                  response = `Great! Let's begin Blockage Shifting.`;
+                } else {
+                  response = `Great! Let's begin the treatment.`;
+                }
               } else if (workType === 'goal') {
+                context.currentPhase = 'reality_shifting';
                 context.metadata.selectedMethod = 'reality_shifting';
-                response = `Great! We'll work on achieving "${statement}" using Reality Shifting. Let's begin.`;
+                response = `Great! Let's begin Reality Shifting.`;
               } else if (workType === 'negative_experience') {
+                context.currentPhase = 'trauma_shifting';
                 context.metadata.selectedMethod = 'trauma_shifting';
-                response = `I understand. We'll work on "${statement}" using Trauma Shifting. Let's begin the treatment.`;
+                response = `Great! Let's begin Trauma Shifting.`;
               } else {
                 response = `So you want to work on '${statement}'. Is that correct?`;
               }
