@@ -75,7 +75,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleMethodSelection(context);
         
       case 'confirm_statement':
-        return this.handleConfirmStatement(lastResponse);
+        return this.handleConfirmStatement(lastResponse, context);
         
       case 'route_to_method':
         return this.handleRouteToMethod(context);
@@ -590,14 +590,54 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     }
   }
 
-  private handleConfirmStatement(lastResponse: string): string {
-    if (lastResponse === 'yes' || lastResponse === 'y' || lastResponse.includes('correct') || lastResponse.includes('right')) {
-      return 'route_to_method';
-    } else if (lastResponse === 'no' || lastResponse === 'n' || lastResponse.includes('wrong') || lastResponse.includes('incorrect')) {
+  private handleConfirmStatement(lastResponse: string, context: TreatmentContext): string {
+    const confirmInput = lastResponse.toLowerCase();
+    
+    // If user says "no", route back to appropriate input step based on workType
+    if (confirmInput.includes('no') || confirmInput.includes('not') || confirmInput.includes('wrong') || confirmInput.includes('incorrect')) {
+      const workType = context.metadata.workType;
+      
+      // DEBUG: Log the state
+      console.log(`🔍 CONFIRM_STATEMENT "NO": workType=${workType}, hasTraumaRedirect=${!!context.userResponses['trauma_problem_redirect']}, userResponses keys:`, Object.keys(context.userResponses || {}));
+      
+      // Check if this came from trauma_problem_redirect - check FIRST before workType
+      if (context.userResponses['trauma_problem_redirect']) {
+        context.currentPhase = 'trauma_shifting'; // Set correct phase
+        delete context.userResponses['trauma_problem_redirect']; // Clear old response
+        delete context.userResponses['confirm_statement']; // Clear old confirmation too
+        // Don't clear problemStatement - trauma_problem_redirect will overwrite it with new value
+        
+        // Persist the cleared responses to database
+        this.saveContextToDatabase(context).catch(error => 
+          console.error('Failed to save cleared responses to database:', error)
+        );
+        
+        return 'trauma_problem_redirect'; // Go back to re-answer how they feel
+      }
+      
+      // Otherwise route based on workType to re-enter description
+      if (workType === 'problem') {
+        // For regular problems, clear statement and ask again
+        context.metadata.problemStatement = undefined;
+        context.problemStatement = undefined;
+        return 'work_type_description'; // Stay in work_type_selection phase
+      } else if (workType === 'goal') {
+        context.currentPhase = 'introduction';
+        return 'goal_description';
+      } else if (workType === 'negative_experience') {
+        context.currentPhase = 'introduction'; // Set correct phase for negative_experience_description
+        return 'negative_experience_description';
+      }
+      
+      // Fallback (should rarely happen)
       return 'work_type_description';
-    } else {
-      return 'confirm_statement';
     }
+    // If user says "yes", route to treatment
+    if (confirmInput.includes('yes') || confirmInput.includes('correct') || confirmInput.includes('right')) {
+      return 'route_to_method';
+    }
+    // If it's not yes/no, stay on confirm_statement (it will handle showing confirmation)
+    return 'confirm_statement';
   }
 
   private handleRouteToMethod(context: TreatmentContext): string {
