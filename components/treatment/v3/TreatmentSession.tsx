@@ -289,17 +289,25 @@ export default function TreatmentSession({
       console.log('V3 Continue session response:', data);
 
       if (data.success) {
-        const systemMessage: TreatmentMessage = {
-          id: `system-${Date.now()}`,
-          content: data.message,
-          isUser: false,
-          timestamp: new Date(),
-          responseTime: data.responseTime,
-          usedAI: data.usedAI,
-          version: 'v3'
-        };
+        // Don't display "Choose a method:" message when buttons will be shown
+        const shouldSkipMessage = data.message === "Choose a method:" || 
+                                 (data.currentStep === 'choose_method' && 
+                                  data.message.includes('Choose a method'));
+        
+        if (!shouldSkipMessage) {
+          const systemMessage: TreatmentMessage = {
+            id: `system-${Date.now()}`,
+            content: data.message,
+            isUser: false,
+            timestamp: new Date(),
+            responseTime: data.responseTime,
+            usedAI: data.usedAI,
+            version: 'v3'
+          };
 
-        setMessages(prev => [...prev, systemMessage]);
+          setMessages(prev => [...prev, systemMessage]);
+        }
+        
         setCurrentStep(data.currentStep);
         setLastResponseTime(data.responseTime || 0);
         
@@ -465,7 +473,102 @@ export default function TreatmentSession({
   // V3: Handle work type selection button clicks
   const handleWorkTypeSelection = (workType: string) => {
     setClickedButton(workType);
-    sendMessage(workType);
+    
+    // Display the full work type name in the UI
+    const workTypeMap: { [key: string]: string } = {
+      '1': 'PROBLEM',
+      '2': 'GOAL',
+      '3': 'NEGATIVE EXPERIENCE'
+    };
+    
+    const displayText = workTypeMap[workType] || workType;
+    
+    // Create user message with display text
+    const userMessage: TreatmentMessage = {
+      id: `user-${Date.now()}`,
+      content: displayText,
+      isUser: true,
+      timestamp: new Date(),
+      version: 'v3'
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setClickedButton(null);
+    setUserInput('');
+    setIsLoading(true);
+    setHasError(false);
+
+    // Save step history
+    const historyEntry: StepHistoryEntry = {
+      messages: [...messages, userMessage],
+      currentStep,
+      userInput: workType,
+      sessionStats,
+      timestamp: Date.now(),
+      version: 'v3'
+    };
+    setStepHistory(prev => [...prev, historyEntry]);
+
+    // Continue with backend call using the number
+    fetch('/api/treatment-v3', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'continue',
+        sessionId,
+        userId,
+        userInput: workType
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Skip "Choose a method:" message if buttons will be shown
+        const shouldSkipMessage = data.message === "Choose a method:" || 
+                                 (data.currentStep === 'choose_method' && 
+                                  data.message.includes('Choose a method'));
+        
+        if (!shouldSkipMessage) {
+          const systemMessage: TreatmentMessage = {
+            id: `system-${Date.now()}`,
+            content: data.message,
+            isUser: false,
+            timestamp: new Date(),
+            responseTime: data.responseTime,
+            usedAI: data.usedAI,
+            version: 'v3'
+          };
+          setMessages(prev => [...prev, systemMessage]);
+        }
+        
+        setCurrentStep(data.currentStep);
+        setLastResponseTime(data.responseTime || 0);
+        
+        if (data.performanceMetrics) {
+          setPerformanceMetrics(prev => ({
+            ...prev,
+            ...data.performanceMetrics
+          }));
+        }
+        
+        if (data.currentStep) {
+          setSessionStats(prev => ({
+            ...prev,
+            totalResponses: prev.totalResponses + 1
+          }));
+        }
+        
+        if (voice.isVoiceOutputEnabled && data.message && !shouldSkipMessage) {
+          voice.speakGlobally(data.message);
+        }
+      }
+      setIsLoading(false);
+    })
+    .catch(error => {
+      console.error('Work type selection error:', error);
+      setHasError(true);
+      setErrorMessage('Failed to process work type selection');
+      setIsLoading(false);
+    });
   };
 
   // V3: Helper function to determine if we should show method selection buttons
@@ -497,14 +600,95 @@ export default function TreatmentSession({
   // V3: Handle method selection button clicks
   const handleMethodSelection = (method: string) => {
     setClickedButton(method);
-    // Send the method number instead of the full name to match V3 state machine expectations
+    // Send the method number to backend but display full name to user
     const methodMap: { [key: string]: string } = {
       'Problem Shifting': '1',
       'Identity Shifting': '2', 
       'Belief Shifting': '3',
       'Blockage Shifting': '4'
     };
-    sendMessage(methodMap[method] || method);
+    
+    // Display the full method name in the UI
+    const userMessage: TreatmentMessage = {
+      id: `user-${Date.now()}`,
+      content: method,
+      isUser: true,
+      timestamp: new Date(),
+      version: 'v3'
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setClickedButton(null);
+    
+    // Send the number to the backend (what it expects)
+    const methodNumber = methodMap[method] || method;
+    setUserInput('');
+    setIsLoading(true);
+    setHasError(false);
+
+    // Save step history
+    const historyEntry: StepHistoryEntry = {
+      messages: [...messages, userMessage],
+      currentStep,
+      userInput: methodNumber,
+      sessionStats,
+      timestamp: Date.now(),
+      version: 'v3'
+    };
+    setStepHistory(prev => [...prev, historyEntry]);
+
+    // Continue with backend call
+    fetch('/api/treatment-v3', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'continue',
+        sessionId,
+        userId,
+        userInput: methodNumber
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const systemMessage: TreatmentMessage = {
+          id: `system-${Date.now()}`,
+          content: data.message,
+          isUser: false,
+          timestamp: new Date(),
+          responseTime: data.responseTime,
+          usedAI: data.usedAI,
+          version: 'v3'
+        };
+        setMessages(prev => [...prev, systemMessage]);
+        setCurrentStep(data.currentStep);
+        setLastResponseTime(data.responseTime || 0);
+        
+        if (data.performanceMetrics) {
+          setPerformanceMetrics(prev => ({
+            ...prev,
+            ...data.performanceMetrics
+          }));
+        }
+        
+        if (data.currentStep) {
+          setSessionStats(prev => ({
+            ...prev,
+            totalResponses: prev.totalResponses + 1
+          }));
+        }
+        
+        if (voice.isVoiceOutputEnabled && systemMessage.content) {
+          voice.speakGlobally(systemMessage.content);
+        }
+      }
+      setIsLoading(false);
+    })
+    .catch(error => {
+      console.error('Method selection error:', error);
+      setHasError(true);
+      setErrorMessage('Failed to process method selection');
+      setIsLoading(false);
+    });
   };
 
   return (
