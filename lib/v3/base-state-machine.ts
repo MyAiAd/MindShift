@@ -562,7 +562,9 @@ export class BaseTreatmentStateMachine {
       
       const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
       if (nextStep) {
-        const actualResponse = this.getScriptedResponse(nextStep, context, userInput);
+        // PHASE 7 FIX: Don't pass userInput for new steps - let getScriptedResponse use fallback logic
+        // This ensures each step receives appropriate context via getPreviousStep() or undefined
+        const actualResponse = this.getScriptedResponse(nextStep, context);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, context);
         
         this.saveContext(context);
@@ -595,7 +597,9 @@ export class BaseTreatmentStateMachine {
       
       const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
       if (nextStep) {
-        const scriptedResponse = this.getScriptedResponse(nextStep, context, userInput);
+        // PHASE 7 FIX: Don't pass userInput for new steps - let getScriptedResponse use fallback logic
+        // This ensures each step receives appropriate context via getPreviousStep() or undefined
+        const scriptedResponse = this.getScriptedResponse(nextStep, context);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, context);
         
         this.saveContext(context);
