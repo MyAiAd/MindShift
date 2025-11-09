@@ -482,10 +482,11 @@ export default function TreatmentSession({
     const lastBotMessage = messages.filter(m => !m.isUser).pop();
     if (!lastBotMessage) return false;
     
-    // Show buttons if the message contains the method selection text
-    const containsMethodSelection = lastBotMessage.content.includes('Which method would you like to use') &&
-                                  lastBotMessage.content.includes('1. Problem Shifting') &&
-                                  lastBotMessage.content.includes('2. Identity Shifting');
+    // Show buttons if the message is the method selection step
+    // Updated to match simplified "Choose a method:" message from Fix #2
+    const containsMethodSelection = lastBotMessage.content.includes('Choose a method') ||
+                                  (lastBotMessage.content.includes('Which method would you like to use') &&
+                                   lastBotMessage.content.includes('1. Problem Shifting'));
     
     // Don't show if AI is asking clarifying questions
     if (lastBotMessage.usedAI) return false;
