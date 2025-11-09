@@ -751,13 +751,16 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleIdentityCheck(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+      // Still feeling identity - repeat step 3 (go back to step A)
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
       return 'identity_dissolve_step_a';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
-      return 'identity_future_check';
+      // No longer feeling identity - proceed to problem check
+      console.log(`🔍 IDENTITY_CHECK: Identity dissolved, proceeding to problem check`);
+      return 'identity_problem_check';  // NOT identity_future_check!
     }
-    return 'identity_future_check';
+    return 'identity_problem_check';  // Default: assume dissolved
   }
 
   private handleIdentityProblemCheck(lastResponse: string, context: TreatmentContext): string {
