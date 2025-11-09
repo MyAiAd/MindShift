@@ -420,6 +420,11 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         } else if (selectedMethod === 'blockage_shifting') {
           context.currentPhase = 'blockage_shifting';
           return 'blockage_shifting_intro';
+        } else {
+          // Unknown method, default to problem shifting
+          console.log(`🔍 MIND_SHIFTING_DETERMINE: Unknown method "${selectedMethod}", defaulting to problem_shifting`);
+          context.currentPhase = 'problem_shifting';
+          return 'problem_shifting_intro';
         }
       } else {
         // Method selected but no problem statement yet - need to collect it
