@@ -306,6 +306,11 @@ export default function TreatmentSession({
           };
 
           setMessages(prev => [...prev, systemMessage]);
+          
+          // V3: Enhanced voice feedback (only if message is displayed)
+          if (voice.isVoiceOutputEnabled && systemMessage.content) {
+            voice.speakGlobally(systemMessage.content);
+          }
         }
         
         setCurrentStep(data.currentStep);
@@ -341,11 +346,6 @@ export default function TreatmentSession({
         if (data.currentStep === 'session_complete') {
           setIsSessionActive(false);
           onComplete?.(data);
-        }
-
-        // V3: Enhanced voice feedback
-        if (voice.isVoiceOutputEnabled && systemMessage.content) {
-          voice.speakGlobally(systemMessage.content);
         }
 
       } else {
