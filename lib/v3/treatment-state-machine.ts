@@ -409,14 +409,8 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       return 'mind_shifting_explanation';
     }
     
-    // Handle problem description after method selection
-    if (context.metadata.workType === 'problem' && context.metadata.selectedMethod && context.metadata.readyForTreatment) {
-      this.updateProblemStatement(context, context.userResponses[context.currentStep]);
-      
-      // Route to appropriate treatment phase
-      context.currentPhase = this.getPhaseForMethod(context.metadata.selectedMethod);
-      return this.getIntroStepForMethod(context.metadata.selectedMethod);
-    }
+    // NOTE: Removed readyForTreatment flag dependency - doesn't exist in V2
+    // If workType and method are set, routing is handled by work_type_description handler
     
     // Handle goal description
     if (context.metadata.workType === 'goal' && !context.metadata.selectedMethod) {
