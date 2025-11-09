@@ -124,6 +124,7 @@ export default function TreatmentSession({
       setMessages([instantMessage]);
       setCurrentStep('mind_shifting_explanation');
       setIsSessionActive(true);
+      setIsLoading(false); // Stop loading immediately - user can interact now
       
       // Focus input immediately for user interaction
       setTimeout(() => {
