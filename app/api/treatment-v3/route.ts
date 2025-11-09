@@ -205,13 +205,13 @@ async function handleStartSession(sessionId: string, userId: string) {
 
 /**
  * Continue existing treatment session with user input
- * Updated: 2025-01-09 - Force rebuild for goal/negative experience fix
+ * Updated: 2025-01-09 - Fixed routing signals for goal/negative experience
  */
 async function handleContinueSession(sessionId: string, userInput: string, userId: string) {
   const startTime = performance.now();
   
   try {
-    console.log('Treatment V3 API [v3-goal-fix]: Continuing session:', { sessionId, userId, userInput: userInput.substring(0, 50) + '...' });
+    console.log('Treatment V3 API [v3-routing-fix]: Continuing session:', { sessionId, userId, userInput: userInput.substring(0, 50) + '...' });
     
     console.log('Treatment V3 API: About to call processUserInput...');
     // Process with state machine first (95% of cases)
