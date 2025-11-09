@@ -648,7 +648,19 @@ export default function TreatmentSession({
     return true;
   };
 
-  // V3: Handle Yes/No button clicks for trauma intro
+  // V3: Helper function to determine if we should show Yes/No buttons for confirm statement
+  const shouldShowConfirmStatementButtons = () => {
+    // Check if we're in confirm_statement step
+    if (currentStep !== 'confirm_statement') return false;
+    
+    // Don't show if we're loading or session isn't active
+    if (isLoading || !isSessionActive) return false;
+    
+    console.log('✅ CONFIRM STATEMENT YES/NO BUTTONS: Showing for confirm_statement step');
+    return true;
+  };
+
+  // V3: Handle Yes/No button clicks for trauma intro and confirm statement
   const handleYesNoClick = (response: string) => {
     setClickedButton(response);
     sendMessage(response);
@@ -949,6 +961,26 @@ export default function TreatmentSession({
             </div>
           )}
 
+          {/* V3: Yes/No Buttons for Confirm Statement */}
+          {shouldShowConfirmStatementButtons() && (
+            <div className="mb-4 flex space-x-3 justify-center">
+              <button
+                onClick={() => handleYesNoClick('yes')}
+                disabled={isLoading}
+                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => handleYesNoClick('no')}
+                disabled={isLoading}
+                className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold"
+              >
+                No
+              </button>
+            </div>
+          )}
+
           {/* V3: Method Selection Buttons */}
           {shouldShowMethodSelection() && (
             <div className="mb-4">
@@ -1014,7 +1046,7 @@ export default function TreatmentSession({
           )}
 
           {/* V3: Text Input Form - Hidden when buttons are shown */}
-          {!showWorkTypeButtons && !shouldShowMethodSelection() && !shouldShowTraumaYesNoButtons() && (
+          {!showWorkTypeButtons && !shouldShowMethodSelection() && !shouldShowTraumaYesNoButtons() && !shouldShowConfirmStatementButtons() && (
             <form onSubmit={handleSubmit} className="flex space-x-2">
               <input
                 ref={inputRef}
