@@ -483,26 +483,54 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // Store goal and check for deadline
     this.updateProblemStatement(context, lastResponse);
     context.metadata.currentGoal = lastResponse;
+    // Store the original problem statement for digging deeper questions
+    if (!context.metadata.originalProblemStatement) {
+      context.metadata.originalProblemStatement = lastResponse;
+    }
     context.currentPhase = 'reality_shifting';
     context.metadata.selectedMethod = 'reality_shifting';
+    console.log(`🔍 GOAL_DESCRIPTION: Stored goal: "${lastResponse}"`);
     
     // Check if deadline is already mentioned in the goal
     const hasDeadlineInGoal = ValidationHelpers.detectDeadlineInGoal(lastResponse);
     if (hasDeadlineInGoal.hasDeadline && hasDeadlineInGoal.deadline && hasDeadlineInGoal.synthesizedGoal) {
+      console.log(`🤖 AI_DEADLINE_DETECTION: Deadline detected in goal: "${hasDeadlineInGoal.deadline}"`);
       context.metadata.goalWithDeadline = hasDeadlineInGoal.synthesizedGoal;
       context.userResponses['goal_deadline_check'] = 'yes';
       context.userResponses['goal_deadline_date'] = hasDeadlineInGoal.deadline;
       return 'goal_confirmation';
     } else {
+      console.log(`🤖 AI_DEADLINE_DETECTION: No deadline detected, proceeding to deadline check`);
       return 'goal_deadline_check';
     }
   }
 
   private handleNegativeExperienceDescription(lastResponse: string, context: TreatmentContext): string {
+    // Store negative experience description
+    console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Storing "${lastResponse}"`);
     this.updateProblemStatement(context, lastResponse);
-    context.currentPhase = 'trauma_shifting';
-    context.metadata.selectedMethod = 'trauma_shifting';
-    return 'trauma_shifting_intro';
+    
+    // Check if this is from dig deeper flow (originalProblemStatement exists means we're already working on something)
+    const isFromDigDeeper = context.metadata.originalProblemStatement && 
+                            context.metadata.originalProblemStatement !== lastResponse;
+    
+    if (isFromDigDeeper) {
+      // Coming from dig deeper - route to method selection
+      console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: From dig deeper flow, routing to method selection`);
+      context.currentPhase = 'method_selection';
+      context.metadata.selectedMethod = undefined; // Clear method so they can choose
+      context.metadata.isDiggingDeeperMethodSelection = true; // Critical: tells choose_method to preserve returnToDiggingStep
+      return 'choose_method';
+    } else {
+      // Initial flow - store as original and go straight to trauma shifting
+      if (!context.metadata.originalProblemStatement) {
+        context.metadata.originalProblemStatement = lastResponse;
+      }
+      context.currentPhase = 'trauma_shifting';
+      context.metadata.selectedMethod = 'trauma_shifting';
+      console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Initial flow, going to trauma_shifting_intro`);
+      return 'trauma_shifting_intro';
+    }
   }
 
   private handleAnalyzeResponse(lastResponse: string, context: TreatmentContext): string {
