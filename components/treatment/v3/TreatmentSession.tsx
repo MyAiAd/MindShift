@@ -636,6 +636,24 @@ export default function TreatmentSession({
     return true;
   };
 
+  // V3: Helper function to determine if we should show Yes/No buttons for trauma intro
+  const shouldShowTraumaYesNoButtons = () => {
+    // Check if we're in trauma_shifting_intro step
+    if (currentStep !== 'trauma_shifting_intro') return false;
+    
+    // Don't show if we're loading or session isn't active
+    if (isLoading || !isSessionActive) return false;
+    
+    console.log('✅ TRAUMA YES/NO BUTTONS: Showing for trauma_shifting_intro step');
+    return true;
+  };
+
+  // V3: Handle Yes/No button clicks for trauma intro
+  const handleYesNoClick = (response: string) => {
+    setClickedButton(response);
+    sendMessage(response);
+  };
+
   // V3: Handle method selection button clicks
   const handleMethodSelection = (method: string) => {
     setClickedButton(method);
@@ -911,6 +929,26 @@ export default function TreatmentSession({
             </div>
           )}
 
+          {/* V3: Yes/No Buttons for Trauma Intro */}
+          {shouldShowTraumaYesNoButtons() && (
+            <div className="mb-4 flex space-x-3 justify-center">
+              <button
+                onClick={() => handleYesNoClick('yes')}
+                disabled={isLoading}
+                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => handleYesNoClick('no')}
+                disabled={isLoading}
+                className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold"
+              >
+                No
+              </button>
+            </div>
+          )}
+
           {/* V3: Method Selection Buttons */}
           {shouldShowMethodSelection() && (
             <div className="mb-4">
@@ -975,8 +1013,8 @@ export default function TreatmentSession({
             </div>
           )}
 
-          {/* V3: Text Input Form - Hidden when work type buttons are shown */}
-          {!showWorkTypeButtons && !shouldShowMethodSelection() && (
+          {/* V3: Text Input Form - Hidden when buttons are shown */}
+          {!showWorkTypeButtons && !shouldShowMethodSelection() && !shouldShowTraumaYesNoButtons() && (
             <form onSubmit={handleSubmit} className="flex space-x-2">
               <input
                 ref={inputRef}
