@@ -613,6 +613,333 @@ Reason: Routes to wrong step on "yes". Missing permission check may cause redund
 
 ---
 
+## Handler 13: `handleBeliefStepF`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 771-780  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6893-6910  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~18 lines with metadata tracking
+
+**Key responsibilities**:
+1. Handle "yes"/"still": Increment cycleCount, return to `belief_step_a`
+2. Handle "no"/"not": Check `returnToBeliefCheck` metadata
+   - If exists: Return to that specific check question
+   - If not: Proceed to `belief_check_1`
+3. No explicit default
+
+### V3 Implementation Summary
+
+**Complexity**: ~10 lines - SIMPLIFIED
+
+1. ✅ Handle "yes"/"still": Increment cycleCount, return to `belief_step_a`
+2. ✅ Handle "no"/"not": Return to `belief_check_1`
+3. ⚠️ Default: Return `belief_check_1`
+4. ❌ NO check for `returnToBeliefCheck` metadata
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| "Yes" response | ✅ | ✅ | ✅ OK |
+| Check `returnToBeliefCheck` | ✅ | ❌ | 🔴 **CRITICAL** |
+| "No" with metadata | → specific check | → `belief_check_1` | 🔴 **CRITICAL** |
+| "No" without metadata | → `belief_check_1` | → `belief_check_1` | ✅ OK |
+
+### Missing Logic in V3
+
+#### CRITICAL: Missing Return Check Logic
+
+**V2 lines 6902-6906** - Absent in v3:
+```typescript
+const returnToCheck = context.metadata.returnToBeliefCheck;
+if (returnToCheck) {
+  return returnToCheck;  // Return to specific check (1, 2, 3, or 4)
+}
+```
+
+**Impact**: When cycling back from a specific belief check, v3 always goes to check_1 instead of returning to the check that failed. This breaks the cycling logic and may repeat already-passed checks.
+
+### Priority Assessment
+
+Priority: 🔴🔴 **CRITICAL**  
+Reason: Breaks belief check cycling. Will repeat checks unnecessarily, doesn't properly track which check failed.
+
+**Estimated fix effort**: 10 minutes
+
+---
+
+## Handler 14: `handleBeliefChecks`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 782-791  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6912-6972  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~60 lines across 4 check steps with complex metadata management
+
+**belief_check_1** (lines 6912-6925):
+- "Yes": Set `returnToBeliefCheck = 'belief_check_1'`, increment cycleCount, return to `belief_step_a`
+- "No": Clear `returnToBeliefCheck`, proceed to `belief_check_2`
+
+**belief_check_2** (lines 6927-6945):
+- "Yes": Set `returnToBeliefCheck = 'belief_check_2'`, increment cycleCount, return to `belief_step_a`
+- "No": Clear `returnToBeliefCheck`, proceed to `belief_check_3`
+
+**belief_check_3** (lines 6947-6966):
+- "Yes": Set `returnToBeliefCheck = 'belief_check_3'`, increment cycleCount, return to `belief_step_a`
+- "No": Clear `returnToBeliefCheck`, proceed to `belief_check_4`
+
+### V3 Implementation Summary
+
+**Complexity**: ~10 lines - EXTREMELY simplified
+
+1. ❌ Just a simple switch that advances to next check
+2. ❌ NO metadata management
+3. ❌ NO handling of "yes"/"no" responses
+4. ❌ NO cycling back to belief_step_a
+5. ❌ NO incrementing cycleCount
+6. ⚠️ Only routes check_1 → check_2 → check_3 → check_4 unconditionally
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| Handle "yes" responses | ✅ | ❌ | 🔴🔴🔴 **SHOWSTOPPER** |
+| Handle "no" responses | ✅ | ❌ | 🔴🔴🔴 **SHOWSTOPPER** |
+| Set `returnToBeliefCheck` | ✅ | ❌ | 🔴🔴🔴 **SHOWSTOPPER** |
+| Clear `returnToBeliefCheck` | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+| Cycle back to belief_step_a | ✅ | ❌ | 🔴🔴🔴 **SHOWSTOPPER** |
+| Increment cycleCount | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+| Simple advancement | ❌ | ✅ | 🔴🔴🔴 **WRONG** |
+
+### Missing Logic in V3
+
+#### SHOWSTOPPER: Entire Check Logic Missing
+
+V3 has NONE of the check logic - it just advances through checks blindly!
+
+**V2 has for EACH check (lines 6912-6966, ~60 lines)**:
+```typescript
+case 'belief_check_1':
+  if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+    context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+    context.metadata.returnToBeliefCheck = 'belief_check_1';
+    return 'belief_step_a';
+  }
+  if (lastResponse.includes('no') || lastResponse.includes('not')) {
+    context.metadata.returnToBeliefCheck = undefined;
+    return 'belief_check_2';
+  }
+  break;
+// ... same pattern for check_2, check_3, check_4
+```
+
+**V3 has**:
+```typescript
+private handleBeliefChecks(stepId: string, lastResponse: string): string {
+  if (stepId === 'belief_check_1') {
+    return 'belief_check_2';  // Just advances!
+  } else if (stepId === 'belief_check_2') {
+    return 'belief_check_3';
+  } else if (stepId === 'belief_check_3') {
+    return 'belief_check_4';
+  }
+  return 'belief_check_1';
+}
+```
+
+**Impact**: 
+- Belief checks DON'T CHECK ANYTHING - they just advance through all 4 questions regardless of answers!
+- Never cycles back to dissolve steps when user still believes
+- No metadata tracking
+- Completely non-functional
+
+### Priority Assessment
+
+Priority: 🔴🔴🔴 **SHOWSTOPPER**  
+Reason: Belief checks are COMPLETELY NON-FUNCTIONAL. They don't actually check anything - just advance through questions. This breaks the entire Belief Shifting modality.
+
+**Estimated fix effort**: 1-2 hours (need to implement all 4 checks properly)
+
+---
+
+## Handler 15: `handleBeliefProblemCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 793-811  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6973-7002  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~30 lines with complex permission checking
+
+**Key responsibilities**:
+1. Handle "yes"/"still": Increment cycleCount, set phase to `digging_deeper`, return to `restate_problem_future` (NOT `restate_belief_problem`!)
+2. Handle "no"/"not": Check both `alreadyGrantedPermission` AND `returnToDiggingStep`
+   - If both: Skip permission, clear returnStep, return to returnStep
+   - If permission only: Skip permission, go to `future_problem_check`
+   - If neither: Ask permission at `digging_deeper_start`
+
+### V3 Implementation Summary
+
+**Complexity**: ~18 lines - SIMPLIFIED
+
+1. ⚠️ Handle "yes": Increment cycleCount, set phase, return to `restate_belief_problem` (WRONG!)
+2. ⚠️ Handle "no": Simple check for `returnToDiggingStep`
+   - If exists: Clear it, return to step
+   - Else: Go to `digging_deeper_start`
+3. ❌ NO permission checking logic
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| "Yes" destination | → `restate_problem_future` | → `restate_belief_problem` | 🔴🔴 **CRITICAL** |
+| Permission + returnStep | ✅ | ❌ | 🔴 **HIGH** |
+| Permission only | ✅ | ❌ | 🔴 **HIGH** |
+| No permission | ✅ | ✅ | ✅ OK |
+
+### Missing Logic in V3
+
+Same as handleIdentityProblemCheck - wrong step and missing permission logic.
+
+### Priority Assessment
+
+Priority: 🔴🔴 **CRITICAL**  
+Reason: Wrong step on "yes", missing permission optimization
+
+**Estimated fix effort**: 15 minutes
+
+---
+
+## Handler 16: `handleConfirmBeliefProblem`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 813-822  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 7004-7014  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- "Yes" → Set phase to `belief_shifting`, return `belief_shifting_intro`
+- "No" → Return `restate_belief_problem`
+- Default → Stay on `confirm_belief_problem`
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 17: `handleTraumaProblemRedirect`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 893-899  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6646-6684  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~39 lines with complex problem construction
+
+**Key responsibilities**:
+1. Get user's feeling from lastResponse
+2. Get trauma description from multiple sources:
+   - `negative_experience_description`
+   - `originalProblemStatement`
+   - Default: 'that happened'
+3. **Construct problem**: `"I feel [feeling] that [trauma] happened"`
+4. Store in `context.problemStatement`
+5. Store in `context.metadata.problemStatement`
+6. **ALWAYS set `originalProblemStatement`** (PRODUCTION FIX comment!)
+7. Store `workType = 'problem'`
+8. Clear `selectedMethod`
+9. Set phase to `work_type_selection` (NOT method_selection!)
+10. Return to `confirm_statement`
+11. Extensive logging
+
+### V3 Implementation Summary
+
+**Complexity**: ~6 lines - EXTREMELY simplified
+
+1. ⚠️ Calls `updateProblemStatement(context, lastResponse)` (just stores lastResponse as-is!)
+2. ✅ Sets `workType = 'problem'`
+3. ✅ Clears `selectedMethod`
+4. ⚠️ Sets phase to `method_selection` (WRONG!)
+5. ⚠️ Returns to `choose_method` (WRONG!)
+6. ❌ NO problem construction
+7. ❌ NO trauma description retrieval
+8. ❌ NO originalProblemStatement setting
+9. ❌ NO logging
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| Problem construction | ✅ "I feel X that Y happened" | ❌ Just stores feeling | 🔴🔴🔴 **SHOWSTOPPER** |
+| Get trauma description | ✅ | ❌ | 🔴🔴🔴 **SHOWSTOPPER** |
+| Set originalProblemStatement | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+| Next phase | `work_type_selection` | `method_selection` | 🔴🔴 **CRITICAL** |
+| Next step | `confirm_statement` | `choose_method` | 🔴🔴 **CRITICAL** |
+
+### Missing Logic in V3
+
+#### SHOWSTOPPER: No Problem Construction
+
+**V2 lines 6647-6660** - Completely absent:
+```typescript
+const feeling = lastResponse || 'this way';
+const traumaDescription = context.userResponses['negative_experience_description'] || 
+                         context.metadata.originalProblemStatement || 
+                         'that happened';
+const constructedProblem = `I feel ${feeling} that ${traumaDescription} happened`;
+console.log(`🔧 TRAUMA_REDIRECT: Constructed problem statement: "${constructedProblem}"`);
+
+context.problemStatement = constructedProblem;
+context.metadata.problemStatement = constructedProblem;
+context.metadata.originalProblemStatement = constructedProblem;
+```
+
+**V3 line 894**:
+```typescript
+this.updateProblemStatement(context, lastResponse);
+// Just stores the feeling, NOT the constructed problem!
+```
+
+**Impact**: 
+- V3 stores "angry" instead of "I feel angry that my father hit me happened"
+- Loses the trauma description entirely
+- Treatment will reference incomplete/wrong problem
+- **PATIENT SAFETY RISK**
+
+#### CRITICAL: Wrong Next Step
+
+**V2 lines 6676-6677**:
+```typescript
+context.currentPhase = 'work_type_selection';
+return 'confirm_statement';
+```
+
+**V3 lines 897-898**:
+```typescript
+context.currentPhase = 'method_selection';
+return 'choose_method';
+```
+
+**Impact**: Skips confirmation, goes straight to method selection
+
+### Priority Assessment
+
+Priority: 🔴🔴🔴 **SHOWSTOPPER - PATIENT SAFETY RISK**  
+Reason: Doesn't construct proper problem statement. Loses trauma description. Stores incomplete data that will be used in treatment.
+
+**Estimated fix effort**: 30 minutes
+
+---
+
 ## Handler 1: `handleMindShiftingExplanation`
 
 **V3 Location**: `lib/v3/treatment-state-machine.ts` lines 372-459  
