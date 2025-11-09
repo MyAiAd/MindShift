@@ -369,60 +369,101 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleMindShiftingExplanation(lastResponse: string, context: TreatmentContext): string {
     console.log(`🔍 MIND_SHIFTING_DETERMINE: lastResponse="${lastResponse}", workType="${context.metadata.workType}", selectedMethod="${context.metadata.selectedMethod}"`);
+    console.log(`🔍 MIND_SHIFTING_DETERMINE: Full metadata:`, JSON.stringify(context.metadata, null, 2));
     
     // Handle work type selection based on user input
     if (lastResponse.includes('1') || (lastResponse.includes('problem') && !lastResponse.includes('shifting'))) {
+      // Reset all work type metadata for fresh selection
       context.metadata.workType = 'problem';
       context.metadata.selectedMethod = undefined;
+      console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'problem'`);
+      // For problems, go to method selection phase and step
       context.currentPhase = 'method_selection';
       return 'choose_method';
     } else if (lastResponse.includes('2') || (lastResponse.includes('goal') && !lastResponse.includes('shifting'))) {
+      // Reset all work type metadata for fresh selection
       context.metadata.workType = 'goal';
       context.metadata.selectedMethod = undefined;
+      console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'goal'`);
+      // Stay in introduction phase for goal description
       return 'goal_description';
     } else if (lastResponse.includes('3') || (lastResponse.includes('negative') && !lastResponse.includes('shifting')) || (lastResponse.includes('experience') && !lastResponse.includes('shifting'))) {
+      // Reset all work type metadata for fresh selection
       context.metadata.workType = 'negative_experience';
       context.metadata.selectedMethod = undefined;
+      console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'negative_experience'`);
+      // Stay in introduction phase for negative experience description
       return 'negative_experience_description';
     }
     
-    // Handle method selection for problems
-    if (context.metadata.workType === 'problem' && !context.metadata.selectedMethod) {
-      const lowerInput = lastResponse.toLowerCase();
-      if (lowerInput.includes('problem shifting')) {
-        context.metadata.selectedMethod = 'problem_shifting';
-        context.currentPhase = 'work_type_selection';
-        return 'work_type_description';
-      } else if (lowerInput.includes('identity shifting')) {
-        context.metadata.selectedMethod = 'identity_shifting';
-        context.currentPhase = 'work_type_selection';
-        return 'work_type_description';
-      } else if (lowerInput.includes('belief shifting')) {
-        context.metadata.selectedMethod = 'belief_shifting';
-        context.currentPhase = 'work_type_selection';
-        return 'work_type_description';
-      } else if (lowerInput.includes('blockage shifting')) {
-        context.metadata.selectedMethod = 'blockage_shifting';
+    // If no valid selection, stay on current step
+    console.log(`🔍 MIND_SHIFTING_DETERMINE: No valid work type selected, staying on mind_shifting_explanation`);
+    
+    const selectedWorkType = context.metadata.workType;
+    const selectedMethod = context.metadata.selectedMethod;
+    console.log(`🔍 MIND_SHIFTING_DETERMINE: selectedWorkType="${selectedWorkType}", selectedMethod="${selectedMethod}"`);
+    
+    // If user selected a work type and method (for problems), check if we have problem statement
+    if (selectedWorkType === 'problem' && selectedMethod) {
+      // Only skip to treatment intro if we already have a problem statement
+      if (context.problemStatement || context.metadata.problemStatement) {
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem, method, and problem statement all present - going directly to treatment intro`);
+        if (selectedMethod === 'problem_shifting') {
+          context.currentPhase = 'problem_shifting';
+          return 'problem_shifting_intro';
+        } else if (selectedMethod === 'identity_shifting') {
+          context.currentPhase = 'identity_shifting';
+          return 'identity_shifting_intro';
+        } else if (selectedMethod === 'belief_shifting') {
+          context.currentPhase = 'belief_shifting';
+          return 'belief_shifting_intro';
+        } else if (selectedMethod === 'blockage_shifting') {
+          context.currentPhase = 'blockage_shifting';
+          return 'blockage_shifting_intro';
+        }
+      } else {
+        // Method selected but no problem statement yet - need to collect it
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem and method selected, but no problem statement - going to collect problem description`);
         context.currentPhase = 'work_type_selection';
         return 'work_type_description';
       }
+    } else if (selectedWorkType === 'goal') {
+      // Check if we have the goal description yet
+      if (!context.problemStatement && !context.metadata.problemStatement) {
+        // Go to dedicated goal description step - ensure we stay in introduction phase
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal selected, going to goal_description step`);
+        context.currentPhase = 'introduction'; // Explicitly set to ensure we're in correct phase
+        return 'goal_description';
+      } else {
+        // Have description, go to reality shifting intro
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal and description provided, going to reality_shifting_intro`);
+        context.currentPhase = 'reality_shifting';
+        context.metadata.selectedMethod = 'reality_shifting';
+        return 'reality_shifting_intro';
+      }
+    } else if (selectedWorkType === 'negative_experience') {
+      // Check if we have the negative experience description yet
+      if (!context.problemStatement && !context.metadata.problemStatement) {
+        // Go to dedicated negative experience description step - ensure we stay in introduction phase
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience selected, going to negative_experience_description step`);
+        context.currentPhase = 'introduction'; // Explicitly set to ensure we're in correct phase
+        return 'negative_experience_description';
+      } else {
+        // Have description, go to trauma shifting intro
+        console.log(`🔍 MIND_SHIFTING_DETERMINE: Negative experience and description provided, going to trauma_shifting_intro`);
+        context.currentPhase = 'trauma_shifting';
+        context.metadata.selectedMethod = 'trauma_shifting';
+        return 'trauma_shifting_intro';
+      }
+    } else if (selectedWorkType === 'problem' && !selectedMethod) {
+      // Problem selected but no method yet, stay on current step for method selection
+      console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem selected, waiting for method selection, staying on mind_shifting_explanation`);
+      return 'mind_shifting_explanation';
+    } else {
+      // No valid work type selected yet, stay on current step
+      console.log(`🔍 MIND_SHIFTING_DETERMINE: No valid work type selected, staying on mind_shifting_explanation`);
       return 'mind_shifting_explanation';
     }
-    
-    // NOTE: Removed readyForTreatment flag dependency - doesn't exist in V2
-    // If workType and method are set, routing is handled by work_type_description handler
-    
-    // Handle goal description
-    if (context.metadata.workType === 'goal' && !context.metadata.selectedMethod) {
-      context.metadata.goalStatement = context.userResponses[context.currentStep];
-      this.updateProblemStatement(context, context.userResponses[context.currentStep]);
-      context.currentStep = 'reality_goal_capture';
-      context.currentPhase = 'reality_shifting';
-      context.metadata.selectedMethod = 'reality_shifting';
-      return context.currentStep;
-    }
-    
-    return 'mind_shifting_explanation';
   }
 
   private clearPreviousModalityMetadata(context: TreatmentContext): void {
