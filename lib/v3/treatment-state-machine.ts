@@ -208,7 +208,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleFutureProblemCheck(lastResponse);
         
       case 'restate_problem_future':
-        return 'digging_method_selection';
+        return this.handleRestateProblemFuture(lastResponse, context);
         
       case 'digging_method_selection':
         return this.handleDiggingMethodSelection(lastResponse, context);
@@ -1462,6 +1462,32 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       return 'scenario_check_1';
     }
     return 'future_problem_check';
+  }
+
+  private handleRestateProblemFuture(lastResponse: string, context: TreatmentContext): string {
+    // After restating the problem, update problem statement BEFORE routing to choose_method
+    const newProblemFromRestate = context.userResponses?.['restate_problem_future'];
+    if (newProblemFromRestate && newProblemFromRestate.trim()) {
+      const newProblem = newProblemFromRestate.trim();
+      context.metadata.currentDiggingProblem = newProblem;
+      context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
+      
+      // PRODUCTION FIX: Don't overwrite returnToDiggingStep if already set to a trauma step
+      // This preserves the correct return point for trauma's two-question flow
+      if (!context.metadata.returnToDiggingStep || 
+          context.metadata.returnToDiggingStep === 'future_problem_check') {
+        context.metadata.returnToDiggingStep = 'future_problem_check';
+      }
+      // else: Keep existing returnToDiggingStep (e.g., trauma_dig_deeper_2)
+      
+      context.problemStatement = newProblem;
+      context.metadata.workType = 'problem';
+      console.log(`🔍 RESTATE_PROBLEM_FUTURE: Updated problem to "${newProblem}" before routing to choose_method`);
+    }
+    // Set flag so choose_method handler knows to use digging deeper routing logic
+    context.metadata.isDiggingDeeperMethodSelection = true;
+    context.currentPhase = 'method_selection';  // Frontend recognizes this phase and shows buttons
+    return 'choose_method';
   }
 
   private handleDiggingMethodSelection(lastResponse: string, context: TreatmentContext): string {
