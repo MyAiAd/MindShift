@@ -143,7 +143,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         
       // Reality Shifting routing
       case 'reality_why_not_possible':
-        return this.handleRealityWhyNotPossible(lastResponse);
+        return this.handleRealityWhyNotPossible(lastResponse, context);
         
       case 'reality_feel_reason':
         return 'reality_feel_reason_2';
@@ -832,10 +832,18 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleBeliefStepF(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+      // Still believes - cycle back to step A (keep returnToBeliefCheck so we remember which check question to return to)
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
       return 'belief_step_a';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
+      // No longer believes - check if we need to return to a specific check question
+      const returnToCheck = context.metadata.returnToBeliefCheck;
+      if (returnToCheck) {
+        // Return to the check question we came from
+        return returnToCheck;
+      }
+      // First time through - proceed to belief checking questions
       return 'belief_check_1';
     }
     return 'belief_check_1';
@@ -945,12 +953,21 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     return 'confirm_belief_problem';
   }
 
-  private handleRealityWhyNotPossible(lastResponse: string): string {
+  private handleRealityWhyNotPossible(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.toLowerCase().includes('no reason') || 
         lastResponse.toLowerCase().includes('no') && lastResponse.toLowerCase().includes('reason') ||
         lastResponse.toLowerCase().includes('none') ||
         lastResponse.toLowerCase().includes('nothing')) {
-      return 'reality_checking_questions';
+      // User said "no reason" - check which checking question we came from
+      const fromSecondCheck = context?.metadata?.fromSecondCheckingQuestion;
+      if (fromSecondCheck) {
+        // Came from second checking question - return there
+        context.metadata.fromSecondCheckingQuestion = false;
+        return 'reality_certainty_check';
+      } else {
+        // Came from first checking question - return there
+        return 'reality_checking_questions';
+      }
     }
     return 'reality_feel_reason';
   }
