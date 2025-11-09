@@ -132,10 +132,8 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       case 'belief_check_1':
       case 'belief_check_2':
       case 'belief_check_3':
-        return this.handleBeliefChecks(context.currentStep, lastResponse);
-        
       case 'belief_check_4':
-        return 'belief_problem_check';
+        return this.handleBeliefChecks(context.currentStep, lastResponse, context);
         
       case 'belief_problem_check':
         return this.handleBeliefProblemCheck(lastResponse, context);
@@ -779,13 +777,64 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     return 'belief_check_1';
   }
 
-  private handleBeliefChecks(stepId: string, lastResponse: string): string {
+  private handleBeliefChecks(stepId: string, lastResponse: string, context: TreatmentContext): string {
     if (stepId === 'belief_check_1') {
-      return 'belief_check_2';
+      // First check question - "Does any part of you still believe [belief]?"
+      if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+        // Still believes - cycle back to step A and remember to return here
+        context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+        context.metadata.returnToBeliefCheck = 'belief_check_1';
+        return 'belief_step_a';
+      }
+      if (lastResponse.includes('no') || lastResponse.includes('not')) {
+        // No longer believes - clear return marker and proceed to next belief check
+        context.metadata.returnToBeliefCheck = undefined;
+        return 'belief_check_2';
+      }
+      return 'belief_check_1'; // Stay on step if unclear response
     } else if (stepId === 'belief_check_2') {
-      return 'belief_check_3';
+      // Future check question - "Do you feel you may believe [belief] again in the future?"
+      if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
+        // Still might believe it - cycle back to step A and remember to return here
+        console.log(`🔍 BELIEF_CHECK_2: User said YES, cycling back to belief_step_a`);
+        context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+        context.metadata.returnToBeliefCheck = 'belief_check_2';
+        return 'belief_step_a';
+      }
+      if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
+        // Won't believe it in future - clear return marker and proceed to scenario check
+        context.metadata.returnToBeliefCheck = undefined;
+        return 'belief_check_3';
+      }
+      return 'belief_check_2'; // Stay on step if unclear response
     } else if (stepId === 'belief_check_3') {
-      return 'belief_check_4';
+      // Scenario check question - "Is there any scenario in which you would still believe [belief]?"
+      if (lastResponse.includes('yes')) {
+        // Still might believe it in some scenario - cycle back to step A and remember to return here
+        context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+        context.metadata.returnToBeliefCheck = 'belief_check_3';
+        return 'belief_step_a';
+      }
+      if (lastResponse.includes('no') || lastResponse.includes('not')) {
+        // Won't believe it in any scenario - clear return marker and proceed to next check
+        context.metadata.returnToBeliefCheck = undefined;
+        return 'belief_check_4';
+      }
+      return 'belief_check_3'; // Stay on step if unclear response
+    } else if (stepId === 'belief_check_4') {
+      // Knowledge check question - "Do you now know [opposite of belief]?"
+      if (lastResponse.includes('no') || lastResponse.includes('not')) {
+        // Don't know the opposite yet - cycle back to step A and remember to return here
+        context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+        context.metadata.returnToBeliefCheck = 'belief_check_4';
+        return 'belief_step_a';
+      }
+      if (lastResponse.includes('yes')) {
+        // Know the opposite - clear return marker and proceed to problem check
+        context.metadata.returnToBeliefCheck = undefined;
+        return 'belief_problem_check';
+      }
+      return 'belief_check_4'; // Stay on step if unclear response
     }
     return 'belief_check_1';
   }
