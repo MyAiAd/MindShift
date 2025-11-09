@@ -790,17 +790,28 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleIdentityProblemCheck(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+      // Still a problem - route to digging deeper method selection flow
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-      context.currentPhase = 'discovery';
-      return 'restate_identity_problem';
+      context.currentPhase = 'digging_deeper';
+      console.log(`🔍 IDENTITY_PROBLEM_CHECK: Problem still exists, routing to digging deeper flow`);
+      return 'restate_problem_future';  // NOT restate_identity_problem!
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
+      // No longer a problem - check if we've already asked permission to dig deeper
+      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
       const returnStep = context.metadata?.returnToDiggingStep;
-      if (returnStep) {
+      
+      if (alreadyGrantedPermission && returnStep) {
+        // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         context.currentPhase = 'digging_deeper';
-        context.metadata.returnToDiggingStep = undefined;
+        context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
         return returnStep;
+      } else if (alreadyGrantedPermission) {
+        // Permission already granted - skip permission, go to future_problem_check to continue digging
+        context.currentPhase = 'digging_deeper';
+        return 'future_problem_check';
       } else {
+        // First time - ask permission
         context.currentPhase = 'digging_deeper';
         return 'digging_deeper_start';
       }
@@ -894,17 +905,28 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleBeliefProblemCheck(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+      // Still a problem - route to digging deeper method selection flow
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-      context.currentPhase = 'discovery';
-      return 'restate_belief_problem';
+      context.currentPhase = 'digging_deeper';
+      console.log(`🔍 BELIEF_PROBLEM_CHECK: Problem still exists, routing to digging deeper flow`);
+      return 'restate_problem_future';  // NOT restate_belief_problem!
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
+      // No longer a problem - check if we've already asked permission to dig deeper
+      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
       const returnStep = context.metadata?.returnToDiggingStep;
-      if (returnStep) {
+      
+      if (alreadyGrantedPermission && returnStep) {
+        // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         context.currentPhase = 'digging_deeper';
-        context.metadata.returnToDiggingStep = undefined;
+        context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
         return returnStep;
+      } else if (alreadyGrantedPermission) {
+        // Permission already granted - skip permission, go to future_problem_check to continue digging
+        context.currentPhase = 'digging_deeper';
+        return 'future_problem_check';
       } else {
+        // First time - ask permission
         context.currentPhase = 'digging_deeper';
         return 'digging_deeper_start';
       }
