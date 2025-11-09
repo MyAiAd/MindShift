@@ -516,32 +516,45 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   }
 
   private handleWorkTypeDescription(lastResponse: string, context: TreatmentContext): string {
-    // Store the user's problem statement
+    // CRITICAL: Store the user's problem statement FIRST before routing
     const userProblemStatement = context.userResponses[context.currentStep] || '';
     if (userProblemStatement) {
+      console.log(`🔍 WORK_TYPE_DESCRIPTION_DETERMINE: Storing user problem statement: "${userProblemStatement}"`);
       this.updateProblemStatement(context, userProblemStatement);
+      console.log(`🔍 WORK_TYPE_DESCRIPTION_DETERMINE: Stored - metadata: "${context.metadata.problemStatement}", context: "${context.problemStatement}"`);
     }
     
-    // Only route to treatment if ready
-    if (context.metadata.readyForTreatment) {
-      const workType = context.metadata.workType;
-      const selectedMethod = context.metadata.selectedMethod;
-      
-      if (workType === 'problem' && selectedMethod) {
-        context.currentPhase = this.getPhaseForMethod(selectedMethod);
-        return this.getIntroStepForMethod(selectedMethod);
-      } else if (workType === 'goal') {
-        context.currentPhase = 'reality_shifting';
-        return 'reality_shifting_intro';
-      } else if (workType === 'negative_experience') {
-        context.currentPhase = 'trauma_shifting';
-        return 'trauma_shifting_intro';
+    // User provided description, route to appropriate treatment intro
+    const descWorkType = context.metadata.workType;
+    const descSelectedMethod = context.metadata.selectedMethod;
+    
+    if (descWorkType === 'problem' && descSelectedMethod) {
+      if (descSelectedMethod === 'identity_shifting') {
+        context.currentPhase = 'identity_shifting';
+        return 'identity_shifting_intro';
+      } else if (descSelectedMethod === 'problem_shifting') {
+        context.currentPhase = 'problem_shifting';
+        return 'problem_shifting_intro';
+      } else if (descSelectedMethod === 'belief_shifting') {
+        context.currentPhase = 'belief_shifting';
+        return 'belief_shifting_intro';
+      } else if (descSelectedMethod === 'blockage_shifting') {
+        context.currentPhase = 'blockage_shifting';
+        return 'blockage_shifting_intro';
       }
+    } else if (descWorkType === 'goal') {
+      context.currentPhase = 'reality_shifting';
+      return 'reality_shifting_intro';
+    } else if (descWorkType === 'negative_experience') {
+      context.currentPhase = 'trauma_shifting';
+      return 'trauma_shifting_intro';
+    } else if (descWorkType === 'problem' && !descSelectedMethod) {
+      // Problem work type but no method selected yet - route to method selection
+      context.currentPhase = 'method_selection';
+      return 'choose_method';
     }
     
-    // Stay on current step if not ready for treatment
-    return 'work_type_description';
-    
+    // Fallback to confirmation step (for other cases like goal without method)
     return 'confirm_statement';
   }
 
