@@ -244,19 +244,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleAnythingElseCheck(lastResponse, context, 'restate_anything_else_problem_1');
         
       case 'restate_anything_else_problem_1':
-        return 'clear_anything_else_problem_1';
+        return this.handleRestateAnythingElseProblem1(context);
         
       case 'clear_anything_else_problem_1':
-        return this.handleClearAnythingElseProblem(context, 'integration_start');
+        return this.handleClearAnythingElseProblem1(lastResponse, context);
         
       case 'anything_else_check_2':
         return this.handleAnythingElseCheck(lastResponse, context, 'restate_anything_else_problem_2');
         
       case 'restate_anything_else_problem_2':
-        return 'clear_anything_else_problem_2';
+        return this.handleRestateAnythingElseProblem2(context);
         
       case 'clear_anything_else_problem_2':
-        return this.handleClearAnythingElseProblem(context, 'anything_else_check_3');
+        return this.handleClearAnythingElseProblem2(lastResponse, context);
         
       case 'anything_else_check_3':
         return this.handleAnythingElseCheck3(lastResponse, context);
@@ -1591,9 +1591,135 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     return restateStep;
   }
 
-  private handleClearAnythingElseProblem(context: TreatmentContext, fallbackStep: string): string {
-    context.currentPhase = 'digging_deeper';
+  private handleRestateAnythingElseProblem1(context: TreatmentContext): string {
+    // Setup metadata for the new problem and route to method selection
+    const anythingElseProblem = context.userResponses?.['restate_anything_else_problem_1'];
+    if (anythingElseProblem) {
+      context.problemStatement = anythingElseProblem;
+      context.metadata.currentDiggingProblem = anythingElseProblem;
+      context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
+      context.metadata.returnToDiggingStep = 'anything_else_check_1';
+      context.metadata.workType = 'problem';
+      // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
+      console.log(`🔍 ANYTHING_ELSE_1: Stored problem "${anythingElseProblem}", routing to method selection`);
+    }
+    this.clearPreviousModalityMetadata(context);
     return 'digging_method_selection';
+  }
+
+  private handleClearAnythingElseProblem1(lastResponse: string, context: TreatmentContext): string {
+    // User selected a method - route directly to that method
+    const anythingElse1Input = lastResponse.toLowerCase();
+    const anythingElse1Problem = context.userResponses?.['restate_anything_else_problem_1'];
+    
+    if (anythingElse1Problem) {
+      context.problemStatement = anythingElse1Problem;
+      context.metadata.currentDiggingProblem = anythingElse1Problem;
+      // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
+      console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Using problem: "${anythingElse1Problem}"`);
+    }
+    
+    // PRODUCTION FIX: Set return point for nested digging deeper
+    // After clearing this nested problem, return to this same question
+    context.metadata.returnToDiggingStep = 'anything_else_check_1';
+    
+    this.clearPreviousModalityMetadata(context);
+    
+    if (anythingElse1Input.includes('problem shifting') || anythingElse1Input === '1') {
+      context.currentPhase = 'problem_shifting';
+      context.metadata.selectedMethod = 'problem_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Routing to Problem Shifting`);
+      return 'problem_shifting_intro';
+    } else if (anythingElse1Input.includes('identity shifting') || anythingElse1Input === '2') {
+      context.currentPhase = 'identity_shifting';
+      context.metadata.selectedMethod = 'identity_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Routing to Identity Shifting`);
+      return 'identity_shifting_intro';
+    } else if (anythingElse1Input.includes('belief shifting') || anythingElse1Input === '3') {
+      context.currentPhase = 'belief_shifting';
+      context.metadata.selectedMethod = 'belief_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Routing to Belief Shifting`);
+      return 'belief_shifting_intro';
+    } else if (anythingElse1Input.includes('blockage shifting') || anythingElse1Input === '4') {
+      context.currentPhase = 'blockage_shifting';
+      context.metadata.selectedMethod = 'blockage_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Routing to Blockage Shifting`);
+      return 'blockage_shifting_intro';
+    }
+    // Default to problem shifting if unclear
+    context.currentPhase = 'problem_shifting';
+    context.metadata.workType = 'problem';
+    console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Defaulted to Problem Shifting`);
+    return 'problem_shifting_intro';
+  }
+
+  private handleRestateAnythingElseProblem2(context: TreatmentContext): string {
+    // Setup metadata for the new problem and route to method selection
+    const anythingElseProblem2 = context.userResponses?.['restate_anything_else_problem_2'];
+    if (anythingElseProblem2) {
+      context.problemStatement = anythingElseProblem2;
+      context.metadata.currentDiggingProblem = anythingElseProblem2;
+      context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 6) + 1;
+      context.metadata.returnToDiggingStep = 'anything_else_check_2';
+      context.metadata.workType = 'problem';
+      // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
+      console.log(`🔍 ANYTHING_ELSE_2: Stored problem "${anythingElseProblem2}", routing to method selection`);
+    }
+    this.clearPreviousModalityMetadata(context);
+    return 'digging_method_selection';
+  }
+
+  private handleClearAnythingElseProblem2(lastResponse: string, context: TreatmentContext): string {
+    // User selected a method - route directly to that method
+    const anythingElse2Input = lastResponse.toLowerCase();
+    const anythingElse2Problem = context.userResponses?.['restate_anything_else_problem_2'];
+    
+    if (anythingElse2Problem) {
+      context.problemStatement = anythingElse2Problem;
+      context.metadata.currentDiggingProblem = anythingElse2Problem;
+      // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
+      console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Using problem: "${anythingElse2Problem}"`);
+    }
+    
+    // PRODUCTION FIX: Set return point for nested digging deeper
+    context.metadata.returnToDiggingStep = 'anything_else_check_2';
+    
+    this.clearPreviousModalityMetadata(context);
+    
+    if (anythingElse2Input.includes('problem shifting') || anythingElse2Input === '1') {
+      context.currentPhase = 'problem_shifting';
+      context.metadata.selectedMethod = 'problem_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Routing to Problem Shifting`);
+      return 'problem_shifting_intro';
+    } else if (anythingElse2Input.includes('identity shifting') || anythingElse2Input === '2') {
+      context.currentPhase = 'identity_shifting';
+      context.metadata.selectedMethod = 'identity_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Routing to Identity Shifting`);
+      return 'identity_shifting_intro';
+    } else if (anythingElse2Input.includes('belief shifting') || anythingElse2Input === '3') {
+      context.currentPhase = 'belief_shifting';
+      context.metadata.selectedMethod = 'belief_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Routing to Belief Shifting`);
+      return 'belief_shifting_intro';
+    } else if (anythingElse2Input.includes('blockage shifting') || anythingElse2Input === '4') {
+      context.currentPhase = 'blockage_shifting';
+      context.metadata.selectedMethod = 'blockage_shifting';
+      context.metadata.workType = 'problem';
+      console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Routing to Blockage Shifting`);
+      return 'blockage_shifting_intro';
+    }
+    // Default to problem shifting if unclear
+    context.currentPhase = 'problem_shifting';
+    context.metadata.workType = 'problem';
+    console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Defaulted to Problem Shifting`);
+    return 'problem_shifting_intro';
   }
 
   private handleAnythingElseCheck3(lastResponse: string, context: TreatmentContext): string {
