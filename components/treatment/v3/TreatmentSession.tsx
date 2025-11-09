@@ -972,7 +972,7 @@ export default function TreatmentSession({
           )}
 
           {/* V3: Text Input Form - Hidden when work type buttons are shown */}
-          {!shouldShowWorkTypeSelection() && !shouldShowMethodSelection() && (
+          {!showWorkTypeButtons && !shouldShowMethodSelection() && (
             <form onSubmit={handleSubmit} className="flex space-x-2">
               <input
                 ref={inputRef}
