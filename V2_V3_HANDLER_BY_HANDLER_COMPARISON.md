@@ -145,6 +145,161 @@ Critical bugs found: 1
 
 ---
 
+## 🔍 DETAILED HANDLER COMPARISONS - BATCH 2
+
+---
+
+## Handler 8: `handleDiggingMethodSelection`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 987-1022  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 7089-7160  
+**Priority**: 🔴🔴 **CRITICAL** (digging deeper metadata contamination)
+
+### V2 Implementation Summary
+
+**Complexity**: 72 lines with extensive error handling
+
+**Key responsibilities**:
+1. Parse user's method selection (1-4 or text)
+2. **Get new problem from 6 possible sources** (in priority order):
+   - `context.metadata.currentDiggingProblem` (HIGHEST priority)
+   - `context.metadata.newDiggingProblem`
+   - `restate_problem_future`
+   - `restate_scenario_problem_1`
+   - `restate_scenario_problem_2`
+   - `restate_scenario_problem_3`
+   - `restate_anything_else_problem_1`
+   - `restate_anything_else_problem_2`
+3. Update both `context.problemStatement` AND `context.metadata.currentDiggingProblem`
+4. **CRITICAL: Call `clearPreviousModalityMetadata(context)`**
+5. Store `selectedMethod` in metadata
+6. **Set `context.metadata.workType = 'problem'`** for each method
+7. Update `context.currentPhase`
+8. Route to `*_shifting_intro`
+9. Extensive logging and error detection
+10. Default fallback to Problem Shifting
+
+### V3 Implementation Summary
+
+**Complexity**: 36 lines - SIMPLIFIED
+
+V3 has INCOMPLETE logic:
+
+1. ⚠️ Reads `context.metadata?.selectedMethod` FIRST (may be stale!)
+2. ⚠️ Only checks ONE problem source: `restate_problem_future`
+3. ❌ **NO** check for 5 other problem sources
+4. ❌ **NO** prioritization of `currentDiggingProblem` over user responses
+5. ❌ **NO** call to `clearPreviousModalityMetadata()`
+6. ❌ **NO** setting of `context.metadata.workType`
+7. ✅ Parses user input (1-4 or text)
+8. ✅ Updates problem statement and currentDiggingProblem
+9. ✅ Updates phase and routes correctly
+10. ❌ **NO** extensive logging or error detection
+11. ❌ **NO** default fallback
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| Problem source checking | ✅ 6 sources | ⚠️ 1 source | 🔴🔴 **CRITICAL** |
+| Source prioritization | ✅ metadata first | ⚠️ userResponses first | 🔴 **HIGH** |
+| `clearPreviousModalityMetadata()` | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+| Set `workType` | ✅ | ❌ | 🔴 **HIGH** |
+| Error detection | ✅ | ❌ | 🟡 **MEDIUM** |
+| Default fallback | ✅ | ❌ | 🟡 **MEDIUM** |
+| Method parsing | ✅ | ✅ | ✅ OK |
+
+### Missing Logic in V3
+
+#### MISSING BLOCK 1: Multiple Problem Sources (6 lines)
+
+**V2 lines 7110-7117** - Partially present in v3
+
+```typescript
+// V2:
+const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
+                                    context.userResponses?.['restate_scenario_problem_1'] ||
+                                    context.userResponses?.['restate_scenario_problem_2'] ||
+                                    context.userResponses?.['restate_scenario_problem_3'] ||
+                                    context.userResponses?.['restate_anything_else_problem_1'] ||
+                                    context.userResponses?.['restate_anything_else_problem_2'];
+const newDiggingProblem = context.metadata?.currentDiggingProblem || 
+                         context.metadata?.newDiggingProblem || 
+                         newProblemFromUserResponse;
+
+// V3:
+const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'];
+const newDiggingProblem = newProblemFromUserResponse || 
+                         context.metadata?.newDiggingProblem || 
+                         context.metadata?.currentDiggingProblem;
+```
+
+**Impact**: 
+- V3 only checks future problem, misses scenario/anything_else problems
+- V3 has WRONG priority order (userResponses before metadata)
+- Will use WRONG problem if user has gone through scenario checks
+
+#### MISSING BLOCK 2: Metadata Clearing
+
+**V2 line 7128** - Completely absent
+
+```typescript
+// V2:
+this.clearPreviousModalityMetadata(context);
+
+// V3:
+// MISSING
+```
+
+**Impact**: Same as handleChooseMethod - stale metadata contaminates new session
+
+#### MISSING BLOCK 3: WorkType Setting (per-method)
+
+**V2 lines 7135, 7141, 7146, 7151, 7157** - Absent in v3
+
+```typescript
+// V2:
+context.metadata.workType = 'problem';
+
+// V3:
+// MISSING
+```
+
+**Impact**: May cause issues with workType-dependent logic later
+
+#### MISSING BLOCK 4: Error Detection
+
+**V2 lines 7123-7125** - Absent in v3
+
+```typescript
+// V2:
+if (newDiggingProblem) {
+  // ... use it
+} else {
+  console.error(`❌ NO PROBLEM FOUND! This will cause routing to fail!`);
+}
+
+// V3:
+// No check - just assumes problem exists
+```
+
+**Impact**: Silent failures when problem is missing
+
+### Priority Assessment
+
+Priority: 🔴🔴 **CRITICAL**  
+Reason: 
+1. Missing 5 problem sources means wrong problem used in many digging deeper scenarios
+2. No `clearPreviousModalityMetadata()` causes metadata contamination
+3. Wrong priority order may use stale data
+4. Missing `workType` may cause downstream issues
+
+**User Experience**: Digging deeper will reference wrong problem when user has gone through scenario or anything_else checks
+
+**Estimated fix effort**: 2-3 hours
+
+---
+
 ## Handler 1: `handleMindShiftingExplanation`
 
 **V3 Location**: `lib/v3/treatment-state-machine.ts` lines 372-459  
@@ -696,15 +851,61 @@ Reason:
 
 ---
 
-## STATUS: CRITICAL HANDLERS REVIEWED
+## STATUS: HANDLER REVIEW IN PROGRESS
 
-Key findings documented below. Critical issues found in:
-- ✅ handleChooseMethod (MAJOR GAPS)
-- ✅ handleConfirmStatement (MAJOR GAPS)  
-- ✅ handleWorkTypeDescription (MISSING LOGIC)
-- ✅ handleRouteToMethod (BUG FOUND)
-- ✅ handleMindShiftingExplanation (PARTIAL)
-- ✅ handleInternalRoutingSignals (NEW SYSTEM)
+### Completed (7 of 48):
+- ✅ handleMindShiftingExplanation (PARTIAL - 40 lines missing)
+- ✅ handleChooseMethod (SHOWSTOPPER - 114 lines missing)
+- ✅ handleWorkTypeDescription (CRITICAL - readyForTreatment flag)
+- ✅ handleMethodSelection (OK)
+- ✅ handleInternalRoutingSignals (NEW SYSTEM - needs verification)
+- ✅ handleRouteToMethod (CRITICAL BUG - 1 line wrong)
+- ✅ handleConfirmStatement (SHOWSTOPPER - 39 lines missing)
+
+### In Progress (Batch 2 - Next 10):
+- 🔄 handleDiggingMethodSelection
+- 🔄 handleIdentityScenarioCheck
+- 🔄 handleRealityWhyNotPossible
+- 🔄 handleTraumaProblemRedirect
+- 🔄 handleScenarioCheck
+- 🔄 handleClearScenarioProblem
+- 🔄 handleAnythingElseCheck
+- 🔄 handleClearAnythingElseProblem
+- 🔄 handleRouteToIntegration
+- 🔄 handleActionFollowup
+
+### Pending (31 remaining):
+- [ ] handleGoalDescription
+- [ ] handleNegativeExperienceDescription
+- [ ] handleAnalyzeResponse
+- [ ] handleGoalDeadlineCheck
+- [ ] handleGoalConfirmation
+- [ ] handleCheckIfStillProblem
+- [ ] handleBlockageStepE
+- [ ] handleBlockageCheckIfStillProblem
+- [ ] handleIdentityShiftingIntro
+- [ ] handleIdentityDissolveStepF
+- [ ] handleIdentityFutureCheck
+- [ ] handleIdentityCheck
+- [ ] handleIdentityProblemCheck
+- [ ] handleConfirmIdentityProblem
+- [ ] handleBeliefStepF
+- [ ] handleBeliefChecks
+- [ ] handleBeliefProblemCheck
+- [ ] handleConfirmBeliefProblem
+- [ ] handleRealityCheckingQuestions
+- [ ] handleRealityCycleB
+- [ ] handleRealityCertaintyCheck
+- [ ] handleRealityIntegrationActionMore
+- [ ] handleTraumaShiftingIntro
+- [ ] handleTraumaIdentityCheck
+- [ ] handleTraumaFutureIdentityCheck
+- [ ] handleTraumaFutureScenarioCheck
+- [ ] handleTraumaExperienceCheck
+- [ ] handleTraumaDigDeeper
+- [ ] handleDiggingDeeperStart
+- [ ] handleFutureProblemCheck
+- [ ] (others)
 
 ---
 
