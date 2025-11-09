@@ -386,6 +386,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = undefined;
       console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'goal'`);
       // Stay in introduction phase for goal description
+      context.currentPhase = 'introduction';
       return 'goal_description';
     } else if (lastResponse.includes('3') || (lastResponse.includes('negative') && !lastResponse.includes('shifting')) || (lastResponse.includes('experience') && !lastResponse.includes('shifting'))) {
       // Reset all work type metadata for fresh selection
@@ -393,6 +394,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = undefined;
       console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'negative_experience'`);
       // Stay in introduction phase for negative experience description
+      context.currentPhase = 'introduction';
       return 'negative_experience_description';
     }
     
