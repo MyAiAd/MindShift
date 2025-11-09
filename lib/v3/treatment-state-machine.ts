@@ -1322,11 +1322,45 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleTraumaExperienceCheck(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+      // Still a problem - repeat Steps 3-5 (skip intro, they already answered that)
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-      return 'trauma_shifting_intro';
+      
+      // Clear previous iteration responses to prevent cached identity/feelings
+      delete context.userResponses['trauma_identity_step'];
+      delete context.userResponses['trauma_dissolve_step_a'];
+      delete context.userResponses['trauma_dissolve_step_b'];
+      delete context.userResponses['trauma_dissolve_step_c'];
+      delete context.userResponses['trauma_dissolve_step_d'];
+      delete context.userResponses['trauma_dissolve_step_e'];
+      console.log(`🔄 TRAUMA_EXPERIENCE_CYCLE: Starting iteration ${context.metadata.cycleCount}, cleared previous identity and dissolve responses`);
+      
+      // Persist the cleared responses to database
+      this.saveContextToDatabase(context).catch(error => 
+        console.error('Failed to save cleared trauma responses to database:', error)
+      );
+      
+      return 'trauma_identity_step';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
-      return 'trauma_dig_deeper';
+      // No longer a problem - check if we've already asked permission to dig deeper
+      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+      const returnStep = context.metadata?.returnToDiggingStep;
+      
+      if (alreadyGrantedPermission && returnStep) {
+        // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
+        context.currentPhase = 'digging_deeper';
+        context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+        return returnStep;
+      } else if (alreadyGrantedPermission) {
+        // Permission already granted but first trauma completion - skip permission, start digging questions
+        context.currentPhase = 'digging_deeper';
+        return 'trauma_dig_deeper';
+      } else {
+        // First time - ask permission, then route to trauma-specific digging questions
+        context.currentPhase = 'digging_deeper';
+        context.metadata.diggingType = 'trauma'; // Flag for digging_deeper_start to route to trauma_dig_deeper
+        return 'digging_deeper_start';
+      }
     }
     return 'trauma_experience_check';
   }
