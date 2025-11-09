@@ -101,7 +101,7 @@ export default function TreatmentSession({
     }
   }, [sessionId, userId, shouldResume]);
 
-  // V3: Enhanced session start
+  // V3: Enhanced session start with instant initial message
   const startSession = async () => {
     setIsLoading(true);
     setHasError(false);
@@ -109,6 +109,29 @@ export default function TreatmentSession({
     try {
       console.log('Starting V3 treatment session:', { sessionId, userId });
       
+      // V3 OPTIMIZATION: Show hardcoded initial message IMMEDIATELY (0ms perceived delay)
+      // This eliminates wait time for database operations on first message
+      const instantMessage: TreatmentMessage = {
+        id: `system-${Date.now()}`,
+        content: "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE",
+        isUser: false,
+        timestamp: new Date(),
+        responseTime: 0,
+        usedAI: false,
+        version: 'v3'
+      };
+      
+      setMessages([instantMessage]);
+      setCurrentStep('mind_shifting_explanation');
+      setIsSessionActive(true);
+      setLastResponseTime(0);
+      
+      // Focus input immediately for user interaction
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      
+      // Backend processing happens in background (doesn't block UI)
       const response = await fetch('/api/treatment-v3', {
         method: 'POST',
         headers: {
@@ -129,22 +152,7 @@ export default function TreatmentSession({
       console.log('V3 Start session response:', data);
 
       if (data.success) {
-        const newMessage: TreatmentMessage = {
-          id: `system-${Date.now()}`,
-          content: data.message,
-          isUser: false,
-          timestamp: new Date(),
-          responseTime: data.responseTime,
-          usedAI: data.usedAI,
-          version: 'v3'
-        };
-
-        setMessages([newMessage]);
-        setCurrentStep(data.currentStep);
-        setIsSessionActive(true);
-        setLastResponseTime(data.responseTime || 0);
-        
-        // V3: Update enhanced performance metrics
+        // Update performance metrics from backend (but message already displayed)
         if (data.performanceMetrics) {
           setPerformanceMetrics(prev => ({
             ...prev,
@@ -154,11 +162,6 @@ export default function TreatmentSession({
             memoryUsage: data.performanceMetrics.memoryUsage || prev.memoryUsage
           }));
         }
-
-        // Focus input for immediate interaction
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 100);
       } else {
         throw new Error(data.error || 'Failed to start V3 session');
       }
