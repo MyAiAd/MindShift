@@ -301,6 +301,318 @@ Reason:
 
 ---
 
+## Handler 9: `handleIdentityCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 729-738  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6381-6392  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~12 lines
+
+**Key responsibilities**:
+1. Handle "yes"/"still" response: Increment cycleCount, return to `identity_dissolve_step_a`
+2. Handle "no"/"not" response: Proceed to `identity_problem_check` (NOT future check!)
+3. No default return - relies on break statement
+
+### V3 Implementation Summary
+
+**Complexity**: ~10 lines
+
+**Key responsibilities**:
+1. ✅ Handle "yes"/"still": Increment cycleCount, return to `identity_dissolve_step_a`
+2. ❌ Handle "no"/"not": Returns `identity_future_check` (WRONG!)
+3. ⚠️ Has explicit default: return `identity_future_check`
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| "Yes" response | ✅ | ✅ | ✅ OK |
+| "No" response | → `identity_problem_check` | → `identity_future_check` | 🔴🔴 **CRITICAL BUG** |
+| Default behavior | break (no return) | → `identity_future_check` | 🔴 **HIGH** |
+
+### Missing Logic in V3
+
+#### CRITICAL BUG: Wrong Next Step
+
+**V2 line 6390**:
+```typescript
+return 'identity_problem_check';
+```
+
+**V3 lines 735, 737**:
+```typescript
+return 'identity_future_check';  // Both "no" and default!
+```
+
+**Impact**: When identity is dissolved, v3 goes to future check instead of problem check. This is WRONG per flowchart. Should check if problem still exists immediately, not ask about future identity.
+
+**User Experience**: Wrong question sequence, doesn't follow therapeutic flowchart
+
+### Priority Assessment
+
+Priority: 🔴🔴 **CRITICAL BUG**  
+Reason: Wrong routing - goes to wrong step, violates flowchart sequence
+
+**Estimated fix effort**: 5 minutes (change lines 735 and 737)
+
+---
+
+## Handler 10: `handleIdentityFutureCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 711-718  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6481-6499  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~19 lines with extensive metadata management
+
+**Key responsibilities**:
+1. Handle "yes"/"1": Set `returnToIdentityCheck = 'identity_future_check'`, clear `identityBridgePhraseUsed`, return to `identity_dissolve_step_a`
+2. Handle "no"/"2": Clear `returnToIdentityCheck`, clear `identityBridgePhraseUsed`, proceed to `identity_scenario_check`
+3. Default: Proceed to `identity_scenario_check`
+4. Extensive logging for debugging
+
+### V3 Implementation Summary
+
+**Complexity**: ~8 lines - SIMPLIFIED
+
+**Key responsibilities**:
+1. ⚠️ Handle "yes"/"1": Return to `identity_problem_check` (WRONG!)
+2. ✅ Handle "no"/"2": Proceed to `identity_scenario_check`
+3. ✅ Default: Return `identity_scenario_check`
+4. ❌ NO metadata setting
+5. ❌ NO logging
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| "Yes" response destination | → `identity_dissolve_step_a` | → `identity_problem_check` | 🔴🔴🔴 **SHOWSTOPPER** |
+| Set `returnToIdentityCheck` | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+| Clear `identityBridgePhraseUsed` | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+| Logging | ✅ | ❌ | 🟡 **MEDIUM** |
+
+### Missing Logic in V3
+
+#### SHOWSTOPPER: Wrong Routing on "Yes"
+
+**V2 lines 6487-6489**:
+```typescript
+context.metadata.returnToIdentityCheck = 'identity_future_check';
+context.metadata.identityBridgePhraseUsed = false;
+return 'identity_dissolve_step_a';
+```
+
+**V3 line 713**:
+```typescript
+return 'identity_problem_check';  // COMPLETELY WRONG!
+```
+
+**Impact**: 
+- When user says "yes" (might feel identity in future), v2 goes BACK to dissolve steps to work on it more
+- V3 skips the work and goes straight to problem check
+- This breaks the entire Identity Shifting therapeutic process
+- Bridge phrases won't work (metadata not set)
+
+#### CRITICAL: Missing Metadata Management
+
+V3 doesn't set/clear ANY metadata:
+- No `returnToIdentityCheck` setting
+- No `identityBridgePhraseUsed` clearing
+
+**Impact**: Bridge phrases in identity_dissolve_step_a won't work correctly. Step won't know which check failed.
+
+### Priority Assessment
+
+Priority: 🔴🔴🔴 **SHOWSTOPPER**  
+Reason: Completely breaks Identity Shifting therapeutic process. Skips critical dissolve work when identity not cleared.
+
+**Estimated fix effort**: 15 minutes
+
+---
+
+## Handler 11: `handleIdentityScenarioCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 720-727  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6501-6519  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~19 lines
+
+**Key responsibilities**:
+1. Handle "yes"/"1": Set `returnToIdentityCheck = 'identity_scenario_check'`, clear `identityBridgePhraseUsed`, return to `identity_dissolve_step_a`
+2. Handle "no"/"2": Clear `returnToIdentityCheck`, clear `identityBridgePhraseUsed`, proceed to `identity_problem_check`
+3. Default: Go back to shifting (`identity_dissolve_step_a`)
+4. Extensive logging
+
+### V3 Implementation Summary
+
+**Complexity**: ~8 lines - SIMPLIFIED
+
+**Key responsibilities**:
+1. ⚠️ Handle "yes"/"1": Return to `identity_problem_check` (WRONG!)
+2. ⚠️ Handle "no"/"2": Route to `integration_awareness_1` (WRONG!)
+3. ⚠️ Default: Return `identity_problem_check` (WRONG!)
+4. ❌ NO metadata setting
+5. ❌ NO logging
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| "Yes" response | → `identity_dissolve_step_a` | → `identity_problem_check` | 🔴🔴🔴 **SHOWSTOPPER** |
+| "No" response | → `identity_problem_check` | → `integration_awareness_1` | 🔴🔴🔴 **SHOWSTOPPER** |
+| Default | → `identity_dissolve_step_a` | → `identity_problem_check` | 🔴🔴 **CRITICAL** |
+| Set `returnToIdentityCheck` | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+| Clear `identityBridgePhraseUsed` | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+
+### Missing Logic in V3
+
+#### SHOWSTOPPER: All 3 Code Paths Wrong
+
+**V2 "yes" logic (lines 6507-6509)**:
+```typescript
+context.metadata.returnToIdentityCheck = 'identity_scenario_check';
+context.metadata.identityBridgePhraseUsed = false;
+return 'identity_dissolve_step_a';
+```
+
+**V3 line 722**:
+```typescript
+return 'identity_problem_check';  // WRONG!
+```
+
+**V2 "no" logic (lines 6513-6515)**:
+```typescript
+context.metadata.returnToIdentityCheck = undefined;
+context.metadata.identityBridgePhraseUsed = false;
+return 'identity_problem_check';
+```
+
+**V3 line 724**:
+```typescript
+return 'integration_awareness_1';  // COMPLETELY WRONG - skips to integration!
+```
+
+**V2 default (lines 6518-6519)**:
+```typescript
+return 'identity_dissolve_step_a';
+```
+
+**V3 line 726**:
+```typescript
+return 'identity_problem_check';  // WRONG!
+```
+
+**Impact**: 
+- "Yes" doesn't go back to work on identity (skips therapeutic work)
+- "No" SKIPS STRAIGHT TO INTEGRATION (bypasses problem check and digging deeper!)
+- Default doesn't handle unclear responses properly
+- No metadata set = bridge phrases broken
+
+### Priority Assessment
+
+Priority: 🔴🔴🔴 **SHOWSTOPPER**  
+Reason: ALL THREE code paths are wrong. "No" response jumps straight to integration, skipping critical problem check and digging deeper. Completely breaks Identity Shifting flow.
+
+**Estimated fix effort**: 20 minutes
+
+---
+
+## Handler 12: `handleIdentityProblemCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 740-758  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6394-6426  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~33 lines with complex conditional logic
+
+**Key responsibilities**:
+1. Handle "yes"/"still": Increment cycleCount, set phase to `discovery`, return to `restate_problem_future` (NOT `restate_identity_problem`!)
+2. Handle "no"/"not": Check `returnToDiggingStep`, route accordingly
+   - If `returnToDiggingStep` exists: Clear it, return to that step
+   - Check if already granted permission (`digging_deeper_start === 'yes'`)
+   - If yes: Route directly to appropriate digging step
+   - If no: Ask permission (`digging_deeper_start`)
+3. Default: Stay on current step
+
+### V3 Implementation Summary
+
+**Complexity**: ~18 lines - SIMPLIFIED
+
+**Key responsibilities**:
+1. ⚠️ Handle "yes"/"still": Increment cycleCount, set phase to `discovery`, return to `restate_identity_problem` (WRONG!)
+2. ⚠️ Handle "no"/"not": Check `returnToDiggingStep`, simple routing
+   - If exists: Clear it, return to step
+   - Else: Go to `digging_deeper_start`
+3. ❌ NO permission check logic
+4. ✅ Default: Stay on current step
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| "Yes" destination | → `restate_problem_future` | → `restate_identity_problem` | 🔴🔴 **CRITICAL** |
+| Permission check | ✅ 13 lines | ❌ | 🔴 **HIGH** |
+| "No" with returnStep | ✅ | ✅ | ✅ OK |
+| "No" without returnStep | → check permission | → `digging_deeper_start` | ⚠️ **MAY BE OK** |
+
+### Missing Logic in V3
+
+#### CRITICAL: Wrong Step for "Yes" Response
+
+**V2 line 6401**:
+```typescript
+return 'restate_problem_future';
+```
+
+**V3 line 744**:
+```typescript
+return 'restate_identity_problem';
+```
+
+**Impact**: Routes to wrong discovery step. Identity problems should use future problem flow, not identity-specific restate flow.
+
+#### MISSING: Permission Check Logic (13 lines)
+
+**V2 lines 6404-6417** - Absent in v3:
+```typescript
+const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+const returnStep = context.metadata?.returnToDiggingStep;
+
+if (returnStep) {
+  // Return to specific digging step
+} else if (alreadyGrantedPermission) {
+  // Route to future_problem_check or scenario_check_1
+} else {
+  // Ask permission
+}
+```
+
+**V3 equivalent**:
+```typescript
+// Just checks returnStep, no permission logic
+```
+
+**Impact**: May ask for digging permission multiple times (annoying) OR may be OK if permission flow works differently in v3.
+
+### Priority Assessment
+
+Priority: 🔴🔴 **CRITICAL**  
+Reason: Routes to wrong step on "yes". Missing permission check may cause redundant questions.
+
+**Estimated fix effort**: 15-20 minutes
+
+---
+
 ## Handler 1: `handleMindShiftingExplanation`
 
 **V3 Location**: `lib/v3/treatment-state-machine.ts` lines 372-459  
