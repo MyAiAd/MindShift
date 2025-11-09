@@ -965,11 +965,36 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   }
 
   private handleTraumaProblemRedirect(lastResponse: string, context: TreatmentContext): string {
-    this.updateProblemStatement(context, lastResponse);
+    // User answered how they feel about the fact it happened - construct problem statement
+    const feeling = lastResponse || 'this way';
+    const traumaDescription = context.userResponses['negative_experience_description'] || 
+                             context.metadata.originalProblemStatement || 
+                             'that happened';
+    
+    // Construct the full problem statement: "I feel [feeling] that [trauma] happened"
+    const constructedProblem = `I feel ${feeling} that ${traumaDescription} happened`;
+    console.log(`🔧 TRAUMA_REDIRECT: Constructed problem statement: "${constructedProblem}"`);
+    
+    // Store the constructed problem statement
+    context.problemStatement = constructedProblem;
+    context.metadata.problemStatement = constructedProblem;
+    // PRODUCTION FIX: ALWAYS set originalProblemStatement to the constructed problem
+    // When user declines trauma process, this constructed problem IS their original problem
+    // This ensures digging deeper references the correct problem, not just the trauma descriptor
+    context.metadata.originalProblemStatement = constructedProblem;
+    
+    // Immediately persist to prevent database reload overwriting it
+    this.saveContextToDatabase(context).catch(error => 
+      console.error('Failed to save trauma problem statement to database:', error)
+    );
+    
+    // Set to problem work type for method selection later
     context.metadata.workType = 'problem';
-    context.metadata.selectedMethod = undefined;
-    context.currentPhase = 'method_selection';
-    return 'choose_method';
+    context.metadata.selectedMethod = undefined; // Reset method selection
+    context.currentPhase = 'work_type_selection';  // NOT method_selection!
+    
+    // Route to confirm_statement to get user confirmation
+    return 'confirm_statement';  // NOT choose_method!
   }
 
   private handleTraumaIdentityCheck(lastResponse: string, context: TreatmentContext): string {
