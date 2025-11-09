@@ -18,6 +18,16 @@ export class WorkTypeSelectionPhase {
             }
             
             const workType = context.metadata.workType || 'item';
+            const selectedMethod = context.metadata.selectedMethod;
+
+            console.log(`
+╔════════════════════════════════════════════════════════════════
+║ 📋 WORK_TYPE_DESCRIPTION - Step scriptedResponse() Called
+╠════════════════════════════════════════════════════════════════
+║ userInput: "${userInput}"
+║ workType: "${workType}"
+║ selectedMethod: "${selectedMethod}"
+╚════════════════════════════════════════════════════════════════`);
 
             // Check if user input is actually a method name (not a problem description)
             const isMethodName = userInput && (
@@ -31,39 +41,37 @@ export class WorkTypeSelectionPhase {
             
             // If no user input OR if user input is a method name, ask for description
             if (!userInput || isMethodName) {
-              if (workType === 'problem') {
-                return "Tell me what the problem is in a few words.";
-              } else if (workType === 'goal') {
-                return "Tell me what the goal is in a few words.";
-              } else if (workType === 'negative_experience') {
-                return "Tell me what the negative experience was in a few words.";
-              } else {
-                return "Tell me what you want to work on in a few words.";
-              }
+              const response = workType === 'problem' ? "Tell me what the problem is in a few words." :
+                               workType === 'goal' ? "Tell me what the goal is in a few words." :
+                               workType === 'negative_experience' ? "Tell me what the negative experience was in a few words." :
+                               "Tell me what you want to work on in a few words.";
+              console.log(`║ ➡️  RETURNING (asking for description): "${response}"\n╚════════════════════════════════════════════════════════════════\n`);
+              return response;
             } else {
               // User provided description, store it and return routing signal
               const statement = userInput || '';
-              console.log(`🔍 WORK_TYPE_DESCRIPTION: Storing problem statement: "${statement}"`);
               context.metadata.problemStatement = statement;
               context.problemStatement = statement;
-              
-              // Set routing flag and return user-friendly message
               context.metadata.readyForTreatment = true;
               
+              let response = '';
               if (workType === 'problem') {
-                const selectedMethod = context.metadata.selectedMethod;
                 const methodName = selectedMethod?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'the selected method';
-                return `Perfect! We'll work on "${statement}" using ${methodName}. Let's begin the treatment.`;
+                response = `Perfect! We'll work on "${statement}" using ${methodName}. Let's begin the treatment.`;
               } else if (workType === 'goal') {
                 context.metadata.selectedMethod = 'reality_shifting';
-                return `Great! We'll work on achieving "${statement}" using Reality Shifting. Let's begin.`;
+                response = `Great! We'll work on achieving "${statement}" using Reality Shifting. Let's begin.`;
               } else if (workType === 'negative_experience') {
                 context.metadata.selectedMethod = 'trauma_shifting';
-                return `I understand. We'll work on "${statement}" using Trauma Shifting. Let's begin the treatment.`;
+                response = `I understand. We'll work on "${statement}" using Trauma Shifting. Let's begin the treatment.`;
+              } else {
+                response = `So you want to work on '${statement}'. Is that correct?`;
               }
               
-              // Fallback to confirmation if no method set
-              return `So you want to work on '${statement}'. Is that correct?`;
+              console.log(`║ ✅ STORED: problemStatement = "${statement}"
+║ ➡️  RETURNING (confirmation): "${response}"
+╚════════════════════════════════════════════════════════════════\n`);
+              return response;
             }
           },
           expectedResponseType: 'description',

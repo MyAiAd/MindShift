@@ -146,12 +146,24 @@ export class BaseTreatmentStateMachine {
     // Check if this is an internal confirmation signal that should trigger automatic step progression
     const isInternalSignal = this.isInternalConfirmationSignal(currentStepResponse);
     
+    console.log(`
+╔════════════════════════════════════════════════════════════════
+║ 🔄 PROCESS_INPUT FLOW CHECK
+╠════════════════════════════════════════════════════════════════
+║ currentStep: "${currentStep.id}"
+║ currentStepResponse: "${currentStepResponse.substring(0, 80)}${currentStepResponse.length > 80 ? '...' : ''}"
+║ isInternalSignal: ${isInternalSignal}
+╚════════════════════════════════════════════════════════════════`);
+    
     if (isInternalSignal) {
-      console.log(`🔍 PROCESS_INPUT: Internal signal detected, proceeding to determine next step automatically`);
+      console.log(`║ ⚡ INTERNAL SIGNAL - Auto-progressing to next step
+╚════════════════════════════════════════════════════════════════\n`);
       return this.handleInternalSignal(currentStepResponse, currentStep, treatmentContext, userInput);
     }
 
     // Regular flow - proceed to next step
+    console.log(`║ ✅ REGULAR FLOW - Will call determineNextStep and transition
+╚════════════════════════════════════════════════════════════════\n`);
     return this.handleRegularFlow(currentStep, treatmentContext, userInput);
   }
 
@@ -586,6 +598,14 @@ export class BaseTreatmentStateMachine {
   private handleRegularFlow(currentStep: TreatmentStep, context: TreatmentContext, userInput: string): ProcessingResult {
     const nextStepId = this.determineNextStep(currentStep, context);
     
+    console.log(`
+╔════════════════════════════════════════════════════════════════
+║ 🎬 HANDLE_REGULAR_FLOW
+╠════════════════════════════════════════════════════════════════
+║ determineNextStep returned: "${nextStepId}"
+║ currentPhase: "${context.currentPhase}"
+╚════════════════════════════════════════════════════════════════`);
+    
     if (nextStepId) {
       context.currentStep = nextStepId;
       
@@ -601,6 +621,9 @@ export class BaseTreatmentStateMachine {
         // This ensures each step receives appropriate context via getPreviousStep() or undefined
         const scriptedResponse = this.getScriptedResponse(nextStep, context);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, context);
+        
+        console.log(`║ 💬 RESPONSE TO USER: "${scriptedResponse.substring(0, 80)}${scriptedResponse.length > 80 ? '...' : ''}"
+╚════════════════════════════════════════════════════════════════\n`);
         
         this.saveContext(context);
         

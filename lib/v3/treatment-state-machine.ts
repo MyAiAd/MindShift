@@ -523,10 +523,20 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleWorkTypeDescription(lastResponse: string, context: TreatmentContext): string {
     // CRITICAL: Store the user's problem statement FIRST before routing
     const userProblemStatement = context.userResponses[context.currentStep] || '';
+    
+    console.log(`
+╔════════════════════════════════════════════════════════════════
+║ 🎯 WORK_TYPE_DESCRIPTION - Handler (determineNextStep)
+╠════════════════════════════════════════════════════════════════
+║ userProblemStatement: "${userProblemStatement}"
+║ workType: "${context.metadata.workType}"
+║ selectedMethod: "${context.metadata.selectedMethod}"
+║ currentPhase: "${context.currentPhase}"
+╚════════════════════════════════════════════════════════════════`);
+    
     if (userProblemStatement) {
-      console.log(`🔍 WORK_TYPE_DESCRIPTION_DETERMINE: Storing user problem statement: "${userProblemStatement}"`);
       this.updateProblemStatement(context, userProblemStatement);
-      console.log(`🔍 WORK_TYPE_DESCRIPTION_DETERMINE: Stored - metadata: "${context.metadata.problemStatement}", context: "${context.problemStatement}"`);
+      console.log(`║ ✅ STORED via updateProblemStatement: "${context.metadata.problemStatement}"`);
     }
     
     // User provided description, route to appropriate treatment intro
@@ -534,32 +544,44 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const descSelectedMethod = context.metadata.selectedMethod;
     
     if (descWorkType === 'problem' && descSelectedMethod) {
+      let nextStep = '';
       if (descSelectedMethod === 'identity_shifting') {
         context.currentPhase = 'identity_shifting';
-        return 'identity_shifting_intro';
+        nextStep = 'identity_shifting_intro';
       } else if (descSelectedMethod === 'problem_shifting') {
         context.currentPhase = 'problem_shifting';
-        return 'problem_shifting_intro';
+        nextStep = 'problem_shifting_intro';
       } else if (descSelectedMethod === 'belief_shifting') {
         context.currentPhase = 'belief_shifting';
-        return 'belief_shifting_intro';
+        nextStep = 'belief_shifting_intro';
       } else if (descSelectedMethod === 'blockage_shifting') {
         context.currentPhase = 'blockage_shifting';
-        return 'blockage_shifting_intro';
+        nextStep = 'blockage_shifting_intro';
       }
+      console.log(`║ 🚀 ROUTING TO: "${nextStep}" (phase: "${context.currentPhase}")
+╚════════════════════════════════════════════════════════════════\n`);
+      return nextStep;
     } else if (descWorkType === 'goal') {
       context.currentPhase = 'reality_shifting';
+      console.log(`║ 🚀 ROUTING TO: "reality_shifting_intro" (phase: "${context.currentPhase}")
+╚════════════════════════════════════════════════════════════════\n`);
       return 'reality_shifting_intro';
     } else if (descWorkType === 'negative_experience') {
       context.currentPhase = 'trauma_shifting';
+      console.log(`║ 🚀 ROUTING TO: "trauma_shifting_intro" (phase: "${context.currentPhase}")
+╚════════════════════════════════════════════════════════════════\n`);
       return 'trauma_shifting_intro';
     } else if (descWorkType === 'problem' && !descSelectedMethod) {
       // Problem work type but no method selected yet - route to method selection
       context.currentPhase = 'method_selection';
+      console.log(`║ 🚀 ROUTING TO: "choose_method" (phase: "${context.currentPhase}")
+╚════════════════════════════════════════════════════════════════\n`);
       return 'choose_method';
     }
     
     // Fallback to confirmation step (for other cases like goal without method)
+    console.log(`║ ⚠️  FALLBACK: Routing to "confirm_statement"
+╚════════════════════════════════════════════════════════════════\n`);
     return 'confirm_statement';
   }
 
