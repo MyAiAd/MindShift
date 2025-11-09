@@ -768,11 +768,9 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       return hasExistingProblem ? 'trauma_shifting_intro' : 'work_type_description';
     }
     
-    // Fallback to Problem Shifting
-    console.log(`🔍 CHOOSE_METHOD: No valid method, defaulting to Problem Shifting`);
-    context.currentPhase = hasExistingProblem ? 'problem_shifting' : 'work_type_selection';
-    context.metadata.selectedMethod = 'problem_shifting';
-    return hasExistingProblem ? 'problem_shifting_intro' : 'work_type_description';
+    // No valid method selected yet - stay on choose_method to show buttons
+    console.log(`🔍 CHOOSE_METHOD: No valid method detected, staying on choose_method`);
+    return 'choose_method';
   }
 
   private handleMethodSelection(context: TreatmentContext): string {
