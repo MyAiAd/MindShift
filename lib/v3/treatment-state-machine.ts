@@ -1268,16 +1268,22 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   }
 
   private handleRealityIntegrationActionMore(lastResponse: string, context: TreatmentContext): string {
+    // User answered what else needs to happen
     if (lastResponse.toLowerCase().includes('nothing') || lastResponse.toLowerCase().includes('no') || lastResponse.toLowerCase().includes('not')) {
+      // User said nothing more needs to happen - check if we're in digging deeper flow
       const returnStep = context.metadata?.returnToDiggingStep;
       if (returnStep) {
+        // We're clearing a problem from digging deeper - ALWAYS ask permission before continuing
         context.currentPhase = 'digging_deeper';
-        context.metadata.returnToDiggingStep = undefined;
-        return returnStep;
+        // DON'T clear returnToDiggingStep yet - we need it to know where to return
+        return 'digging_deeper_start';
       } else {
-        return 'reality_session_complete';
+        // Regular flow - complete session, move to integration phase
+        context.currentPhase = 'integration';
+        return 'session_complete';
       }
     } else {
+      // User gave another action - keep asking what else
       return 'reality_integration_action_more';
     }
   }
