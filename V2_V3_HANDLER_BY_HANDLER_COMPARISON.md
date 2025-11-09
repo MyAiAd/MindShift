@@ -11,10 +11,11 @@
 
 ### Critical Findings
 
-**Handlers Reviewed**: 8 of 48 (most critical ones in initial flow + digging deeper)  
-**Showstopper Issues Found**: 3  
-**Critical Issues Found**: 5  
-**Total Missing Lines of Logic**: ~220 lines
+**Handlers Reviewed**: 17 of 48 (35% complete)  
+**Showstopper Issues Found**: 9  
+**Critical Issues Found**: 11+  
+**Total Missing Lines of Logic**: ~340+ lines
+**Patient Safety Risks**: 1 (handleTraumaProblemRedirect)
 
 ### The Core Problem
 
@@ -937,6 +938,724 @@ Priority: 🔴🔴🔴 **SHOWSTOPPER - PATIENT SAFETY RISK**
 Reason: Doesn't construct proper problem statement. Loses trauma description. Stores incomplete data that will be used in treatment.
 
 **Estimated fix effort**: 30 minutes
+
+---
+
+## Handler 18: `handleRealityWhyNotPossible`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 824-832  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6521-6540  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~20 lines with conditional flag checking
+
+**Key responsibilities**:
+1. Check if user says "no reason"/"none"/"nothing"
+2. Check `fromSecondCheckingQuestion` flag
+   - If true: Clear flag, return to `reality_certainty_check`
+   - If false: Return to `reality_checking_questions`
+3. Otherwise: Return to `reality_feel_reason`
+
+### V3 Implementation Summary
+
+**Complexity**: ~8 lines - SIMPLIFIED
+
+1. ✅ Check "no reason"/"none"/"nothing"
+2. ⚠️ Always return to `reality_checking_questions`
+3. ❌ NO check for `fromSecondCheckingQuestion` flag
+4. ✅ Otherwise return `reality_feel_reason`
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| Check "no reason" | ✅ | ✅ | ✅ OK |
+| Check `fromSecondCheckingQuestion` | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+| Route based on flag | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+
+### Missing Logic in V3
+
+**V2 lines 6529-6537** - Absent:
+```typescript
+const fromSecondCheck = context?.metadata?.fromSecondCheckingQuestion;
+if (fromSecondCheck) {
+  context.metadata.fromSecondCheckingQuestion = false;
+  return 'reality_certainty_check';
+} else {
+  return 'reality_checking_questions';
+}
+```
+
+**V3 line 829**:
+```typescript
+return 'reality_checking_questions';  // Always!
+```
+
+**Impact**: Always returns to first checking question instead of remembering which one user came from
+
+### Priority Assessment
+
+Priority: 🔴🔴 **CRITICAL**  
+Reason: Breaks Reality Shifting cycling logic. Won't return to correct check.
+
+**Estimated fix effort**: 10 minutes
+
+---
+
+## Handler 19: `handleRealityCheckingQuestions`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 834-845  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6542-6556  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- Parse percentage from response
+- If >= 100: Go to `reality_certainty_check`
+- If > 0: Set `doubtPercentage`, go to `reality_doubt_reason`
+- Default: Stay on `reality_checking_questions`
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 20: `handleRealityCertaintyCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 857-866  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6576-6588  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- "Yes" → Set `fromSecondCheckingQuestion = true`, go to `reality_doubt_reason`
+- "No" → Go to `reality_integration_intro`
+- Default → Stay on `reality_certainty_check`
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 21: `handleRealityIntegrationActionMore`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 868-881  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6614-6632  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~19 lines
+
+1. Check for "nothing"/"no"/"not"
+2. Check `returnToDiggingStep`
+   - If exists: Set phase, DON'T clear returnStep, return `digging_deeper_start`
+   - If not: Set phase, return `session_complete`
+3. Otherwise: Stay on `reality_integration_action_more`
+
+### V3 Implementation Summary
+
+**Complexity**: ~13 lines - SIMPLIFIED
+
+1. ✅ Check for "nothing"/"no"/"not"
+2. ⚠️ Check `returnToDiggingStep`
+   - If exists: Set phase, **CLEAR returnStep**, return to returnStep
+   - If not: Return `reality_session_complete`
+3. ✅ Otherwise stay on step
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| Check nothing/no | ✅ | ✅ | ✅ OK |
+| With returnStep | → `digging_deeper_start` | → returnStep | 🔴 **HIGH** |
+| DON'T clear returnStep | ✅ | ❌ Clears it | 🔴 **HIGH** |
+| Without returnStep | → `session_complete` | → `reality_session_complete` | ⚠️ Different |
+
+### Missing Logic in V3
+
+**V2 lines 6619-6624**:
+```typescript
+if (returnStep) {
+  context.currentPhase = 'digging_deeper';
+  // DON'T clear returnToDiggingStep yet - we need it to know where to return
+  return 'digging_deeper_start';
+}
+```
+
+**V3 lines 871-874**:
+```typescript
+if (returnStep) {
+  context.currentPhase = 'digging_deeper';
+  context.metadata.returnToDiggingStep = undefined;  // CLEARS IT!
+  return returnStep;  // Different destination
+}
+```
+
+**Impact**: May lose digging step reference or route incorrectly
+
+### Priority Assessment
+
+Priority: 🔴 **HIGH**  
+Reason: Different routing logic, may lose digging deeper state
+
+**Estimated fix effort**: 10 minutes
+
+---
+
+## Handler 22: `handleTraumaShiftingIntro`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 883-891  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6634-6644  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- "Yes" → Return `trauma_identity_step`
+- "No" → Return `trauma_problem_redirect`
+- Default → Stay on `trauma_shifting_intro`
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 23: `handleTraumaIdentityCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 901-910  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6686-6700  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- "Yes"/"still" → Increment cycleCount, return `trauma_dissolve_step_a`
+- "No"/"not" → Return `trauma_future_identity_check`
+- Default → Return `trauma_future_identity_check`
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 24: `handleTraumaFutureIdentityCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 912-921  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6702-6716  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- "Yes"/"might"/"could" → Increment cycleCount, return `trauma_dissolve_step_c`
+- "No"/"not"/"never" → Return `trauma_future_scenario_check`
+- Default → Return `trauma_future_scenario_check`
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 25: `handleTraumaFutureScenarioCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 923-932  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6718-6732  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- "Yes"/"might"/"could" → Increment cycleCount, return `trauma_dissolve_step_c`
+- "No"/"not"/"never" → Return `trauma_experience_check`
+- Default → Return `trauma_experience_check`
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 26: `handleTraumaExperienceCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 934-963  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6803-6863  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~61 lines with complex cycling + permission logic
+
+**Key responsibilities**:
+1. "Yes"/"still": Increment cycleCount, **DELETE 6 previous responses**, save to DB, return `trauma_identity_step`
+2. "No"/"not": Complex permission checking
+   - Check both `alreadyGrantedPermission` AND `returnToDiggingStep`
+   - If both: Set phase, clear returnStep, return to returnStep
+   - If permission only: Set phase, return `future_problem_check`
+   - If neither: Set phase, return `digging_deeper_start`
+3. Default: Stay on step
+
+### V3 Implementation Summary
+
+**Complexity**: ~29 lines - SIMPLIFIED
+
+1. ✅ "Yes"/"still": Increment cycleCount, **DELETE 6 responses**, return `trauma_identity_step`
+2. ⚠️ "No"/"not": Simplified permission logic
+   - Check returnToDiggingStep only
+   - If exists: Clear it, return to it
+   - Else: Return `digging_deeper_start`
+3. ❌ NO `alreadyGrantedPermission` check
+4. ❌ NO save to database after clearing responses
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| Clear 6 responses on cycle | ✅ | ✅ | ✅ OK |
+| Save to DB after clearing | ✅ | ❌ | 🔴 **HIGH** |
+| Permission + returnStep | ✅ | ❌ | 🔴 **HIGH** |
+| Permission only | ✅ | ❌ | 🔴 **HIGH** |
+
+### Missing Logic in V3
+
+**V2 lines 6819-6821** - Database save absent:
+```typescript
+this.saveContextToDatabase(context).catch(error => 
+  console.error('Failed to save cleared trauma responses to database:', error)
+);
+```
+
+**V2 lines 6827-6840** - Complex permission logic:
+```typescript
+const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+const returnStep = context.metadata?.returnToDiggingStep;
+
+if (alreadyGrantedPermission && returnStep) {
+  // ... return to returnStep
+} else if (alreadyGrantedPermission) {
+  // ... go to future_problem_check
+} else {
+  // ... go to digging_deeper_start
+}
+```
+
+**V3 only has**:
+```typescript
+if (returnStep) {
+  // ... return to returnStep
+} else {
+  return 'digging_deeper_start';
+}
+```
+
+**Impact**: May ask redundant permission, doesn't persist cleared responses
+
+### Priority Assessment
+
+Priority: 🔴 **HIGH**  
+Reason: Missing database persistence and permission optimization
+
+**Estimated fix effort**: 15 minutes
+
+---
+
+## Handler 27: `handleTraumaDigDeeper2`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 965-985  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6866-6891  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- "Yes" → Set workType, clear selectedMethod, set phase, set returnStep to `trauma_dig_deeper_2`, return `restate_problem_future`
+- "No" → Check returnStep, return appropriately
+- Default → Stay on step
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 28: `handleCheckIfStillProblem` (Problem Shifting)
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 491-527  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6232-6267  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~36 lines with complex permission logic
+
+**Key responsibilities**:
+1. "Yes"/"still": Increment cycleCount, set skip flags, return `problem_shifting_intro`
+2. "No"/"not": Complex permission checking (same 3-path pattern)
+   - If permission + returnStep: Return to returnStep
+   - If permission only: Go to `future_problem_check`
+   - If neither: Go to `digging_deeper_start`
+
+### V3 Implementation Summary
+
+**Complexity**: ~36 lines - MATCHES STRUCTURE
+
+1. ✅ "Yes"/"still": Increment cycleCount, set skip flags, return `problem_shifting_intro`
+2. ⚠️ "No"/"not": Simplified permission logic
+   - Only checks returnToDiggingStep
+   - Missing `alreadyGrantedPermission` check
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| Cycling logic | ✅ | ✅ | ✅ OK |
+| Permission + returnStep | ✅ | ❌ | 🔴 **HIGH** |
+| Permission only | ✅ | ❌ | 🔴 **HIGH** |
+
+### Missing Logic in V3
+
+Same permission optimization pattern missing as other modalities.
+
+**V2 has** (lines 6242-6260):
+```typescript
+const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+const returnStep = context.metadata?.returnToDiggingStep;
+
+if (alreadyGrantedPermission && returnStep) {
+  // ... 
+} else if (alreadyGrantedPermission) {
+  // ...
+} else {
+  // ...
+}
+```
+
+**V3 only checks returnStep**.
+
+### Priority Assessment
+
+Priority: 🔴 **HIGH**  
+Reason: Missing permission optimization, may ask redundant questions
+
+**Estimated fix effort**: 10 minutes
+
+---
+
+## Handler 29: `handleBlockageStepE`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 603-662  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6269-6378  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~110 lines with VERY complex logic
+
+**Key responsibilities**:
+1. Check extensive "no problem" indicators list
+2. Check for standalone "no"/"not" responses
+3. Complex permission checking (3 paths)
+4. Special trauma digging context handling
+5. Otherwise: Cycle back to `blockage_step_a`
+
+### V3 Implementation Summary
+
+**Complexity**: ~59 lines - SIGNIFICANTLY SIMPLIFIED
+
+1. ✅ Check "no problem" indicators (similar list)
+2. ✅ Check standalone "no"/"not"
+3. ⚠️ Simplified permission logic (only returnStep)
+4. ❌ NO trauma digging context handling
+5. ✅ Cycle back to `blockage_step_a`
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| Resolution indicators | ✅ | ✅ | ✅ OK |
+| Permission + returnStep | ✅ | ❌ | 🔴 **HIGH** |
+| Permission only | ✅ | ❌ | 🔴 **HIGH** |
+| Trauma digging context | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+| Cycle logic | ✅ | ✅ | ✅ OK |
+
+### Missing Logic in V3
+
+#### CRITICAL: Missing Trauma Digging Context
+
+**V2 lines 6294-6312** - Completely absent:
+```typescript
+} else if (alreadyGrantedPermission) {
+  // Permission already granted - skip permission, go to appropriate digging question
+  console.log(`🔍 BLOCKAGE_STEP_E: Permission already granted, checking for trauma digging context`);
+  
+  // Check if we're coming from trauma modality by looking at trauma-related responses
+  const hasTraumaContext = context.userResponses['negative_experience_description'] || 
+                          context.userResponses['trauma_identity_step'] ||
+                          context.userResponses['trauma_dissolve_step_a'];
+  
+  if (hasTraumaContext) {
+    console.log(`🔍 BLOCKAGE_STEP_E: Found trauma context, routing to trauma_dig_deeper_2`);
+    context.currentPhase = 'digging_deeper';
+    return 'trauma_dig_deeper_2';
+  } else {
+    // Regular digging deeper flow
+    console.log(`🔍 BLOCKAGE_STEP_E: No trauma context, routing to future_problem_check`);
+    context.currentPhase = 'digging_deeper';
+    return 'future_problem_check';
+  }
+```
+
+**Impact**: Won't route correctly from Blockage to trauma digging, breaks trauma + blockage combination
+
+### Priority Assessment
+
+Priority: 🔴🔴 **CRITICAL**  
+Reason: Missing trauma context routing, won't work correctly with trauma digging deeper
+
+**Estimated fix effort**: 20 minutes
+
+---
+
+## Handler 30: `handleBlockageCheckIfStillProblem`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 664-709  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6380-6426  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~47 lines with permission logic
+
+**Key responsibilities**:
+1. "Yes"/"still": Set workType, clear selectedMethod, set phase, return `restate_problem_future`
+2. "No"/"not": Complex permission checking (3 paths)
+
+### V3 Implementation Summary
+
+**Complexity**: ~45 lines - SIMILAR STRUCTURE
+
+1. ✅ "Yes": Set workType, clear selectedMethod, set phase, return `restate_problem_future`
+2. ⚠️ "No": Simplified permission logic
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| "Yes" routing | ✅ | ✅ | ✅ OK |
+| Permission + returnStep | ✅ | ❌ | 🔴 **HIGH** |
+| Permission only | ✅ | ❌ | 🔴 **HIGH** |
+
+### Missing Logic in V3
+
+Same permission optimization pattern missing.
+
+### Priority Assessment
+
+Priority: 🔴 **HIGH**  
+Reason: Missing permission optimization
+
+**Estimated fix effort**: 10 minutes
+
+---
+
+## Handler 31: `handleGoalDeadlineCheck`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 1034-1043  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 7387-7396  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- "Yes" → Return `goal_deadline_importance`
+- "No" → Return `goal_confirmation`
+- Default → Stay on step
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 32: `handleGoalConfirmation`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 1045-1054  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 7398-7407  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- "Yes" → Set phase to `integration`, return `integration_start`
+- "No" → Return `goal_what_needs_to_happen`
+- Default → Stay on step
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 33: `handleAnalyzeResponse`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 490-499  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6089-6098  
+**Priority**: Must match exactly
+
+### V2 vs V3 Comparison
+
+**Status**: ✅ **MATCHES EXACTLY**
+
+Both versions:
+- "Yes" → Return `choose_method`
+- "No" → Return `work_type_description`
+- Default → Stay on step
+
+**No differences found** - this handler is correct!
+
+---
+
+## Handler 34: `handleGoalDescription`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 501-509  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6100-6113  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~14 lines
+
+1. Store goal in both `goalStatement` and `metadata.goalStatement`
+2. Set `workType = 'goal'`
+3. Set phase to `work_type_selection`
+4. Return `confirm_statement`
+
+### V3 Implementation Summary
+
+**Complexity**: ~8 lines - SIMPLIFIED
+
+1. ⚠️ Call `updateGoalStatement(context, lastResponse)` (just stores in `goalStatement`)
+2. ✅ Set `workType = 'goal'`
+3. ⚠️ Set phase to `method_selection` (WRONG!)
+4. ⚠️ Return `choose_method` (WRONG!)
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| Store in goalStatement | ✅ | ✅ | ✅ OK |
+| Store in metadata.goalStatement | ✅ | ❌ | 🔴 **HIGH** |
+| Next phase | `work_type_selection` | `method_selection` | 🔴🔴 **CRITICAL** |
+| Next step | `confirm_statement` | `choose_method` | 🔴🔴 **CRITICAL** |
+
+### Missing Logic in V3
+
+**V2 lines 6101-6106**:
+```typescript
+context.goalStatement = lastResponse;
+context.metadata.goalStatement = lastResponse;
+context.metadata.workType = 'goal';
+context.currentPhase = 'work_type_selection';
+return 'confirm_statement';
+```
+
+**V3 lines 502-505**:
+```typescript
+this.updateGoalStatement(context, lastResponse);  // Only sets goalStatement
+context.metadata.workType = 'goal';
+context.currentPhase = 'method_selection';  // WRONG!
+return 'choose_method';  // WRONG! Skips confirmation!
+```
+
+**Impact**: 
+- Skips goal confirmation entirely
+- Doesn't store in metadata
+- Wrong phase
+
+### Priority Assessment
+
+Priority: 🔴🔴 **CRITICAL**  
+Reason: Skips goal confirmation, wrong phase, incomplete storage
+
+**Estimated fix effort**: 10 minutes
+
+---
+
+## Handler 35: `handleNegativeExperienceDescription`
+
+**V3 Location**: `lib/v3/treatment-state-machine.ts` lines 511-519  
+**V2 Location**: `lib/v2/treatment-state-machine.ts` lines 6115-6128  
+**Priority**: Must match exactly
+
+### V2 Implementation Summary
+
+**Complexity**: ~14 lines
+
+1. Store in both `problemStatement` and `metadata.problemStatement`
+2. **ALSO store in `metadata.originalProblemStatement`**
+3. Set `workType = 'problem'`
+4. Set phase to `work_type_selection`
+5. Return `confirm_statement`
+
+### V3 Implementation Summary
+
+**Complexity**: ~8 lines - SIMPLIFIED
+
+1. ⚠️ Call `updateProblemStatement(context, lastResponse)`
+2. ✅ Set `workType = 'problem'`
+3. ⚠️ Set phase to `method_selection` (WRONG!)
+4. ⚠️ Return `choose_method` (WRONG!)
+
+### Differences Found
+
+| Feature | V2 | V3 | Impact |
+|---------|-----|-----|---------|
+| Store in problemStatement | ✅ | ✅ | ✅ OK |
+| Store in metadata.problemStatement | ✅ | ✅ | ✅ OK |
+| Store in originalProblemStatement | ✅ | ❌ | 🔴🔴 **CRITICAL** |
+| Next phase | `work_type_selection` | `method_selection` | 🔴🔴 **CRITICAL** |
+| Next step | `confirm_statement` | `choose_method` | 🔴🔴 **CRITICAL** |
+
+### Missing Logic in V3
+
+**V2 lines 6116-6121**:
+```typescript
+context.problemStatement = lastResponse;
+context.metadata.problemStatement = lastResponse;
+context.metadata.originalProblemStatement = lastResponse;  // CRITICAL!
+context.metadata.workType = 'problem';
+context.currentPhase = 'work_type_selection';
+return 'confirm_statement';
+```
+
+**V3 lines 512-515**:
+```typescript
+this.updateProblemStatement(context, lastResponse);
+context.metadata.workType = 'problem';
+context.currentPhase = 'method_selection';  // WRONG!
+return 'choose_method';  // WRONG! Skips confirmation!
+```
+
+**Impact**: 
+- Missing `originalProblemStatement` (used later for digging deeper!)
+- Skips confirmation
+- Wrong phase
+
+### Priority Assessment
+
+Priority: 🔴🔴 **CRITICAL**  
+Reason: Missing originalProblemStatement storage, skips confirmation, wrong phase
+
+**Estimated fix effort**: 10 minutes
 
 ---
 
