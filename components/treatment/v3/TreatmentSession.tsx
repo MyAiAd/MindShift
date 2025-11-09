@@ -170,9 +170,11 @@ export default function TreatmentSession({
       setHasError(true);
       setErrorMessage(error instanceof Error ? error.message : 'Unknown V3 error');
       onError?.(error instanceof Error ? error.message : 'Unknown V3 error');
-    } finally {
+      // Set loading false on error so user can retry
       setIsLoading(false);
     }
+    // No finally block needed - isLoading already set to false at line 127
+    // Removing finally prevents unnecessary re-render that causes button flickering
   };
 
   // V3: Enhanced session resume
