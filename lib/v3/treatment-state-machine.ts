@@ -111,7 +111,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleIdentityDissolveStepF(lastResponse, context);
         
       case 'identity_future_check':
-        return this.handleIdentityFutureCheck(lastResponse);
+        return this.handleIdentityFutureCheck(lastResponse, context);
         
       case 'identity_scenario_check':
         return this.handleIdentityScenarioCheck(lastResponse);
@@ -706,12 +706,24 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     return 'identity_future_check';
   }
 
-  private handleIdentityFutureCheck(lastResponse: string): string {
+  private handleIdentityFutureCheck(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('1')) {
-      return 'identity_problem_check';
+      // YES - identity not cleared, go back to Step 3 (Shifting) per flowchart
+      console.log(`🔍 IDENTITY_FUTURE_CHECK: User said YES, going back to shifting steps`);
+      // Set flag to indicate we're returning from future check (both for context-specific phrasing and to remember which check failed)
+      context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+      context.metadata.returnToIdentityCheck = 'identity_future_check';
+      context.metadata.identityBridgePhraseUsed = false;
+      return 'identity_dissolve_step_a';  // NOT identity_problem_check!
     } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
+      // NO - this check passed, clear return marker and proceed to scenario check
+      console.log(`🔍 IDENTITY_FUTURE_CHECK: User said NO, proceeding to scenario check`);
+      context.metadata.returnToIdentityCheck = undefined;
+      context.metadata.identityBridgePhraseUsed = false;
       return 'identity_scenario_check';
     }
+    // Default to scenario check
+    console.log(`🔍 IDENTITY_FUTURE_CHECK: Unclear response, proceeding to scenario check`);
     return 'identity_scenario_check';
   }
 
