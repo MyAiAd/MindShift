@@ -114,7 +114,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleIdentityFutureCheck(lastResponse, context);
         
       case 'identity_scenario_check':
-        return this.handleIdentityScenarioCheck(lastResponse);
+        return this.handleIdentityScenarioCheck(lastResponse, context);
         
       case 'identity_check':
         return this.handleIdentityCheck(lastResponse, context);
@@ -727,13 +727,26 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     return 'identity_scenario_check';
   }
 
-  private handleIdentityScenarioCheck(lastResponse: string): string {
+  private handleIdentityScenarioCheck(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('1')) {
-      return 'identity_problem_check';
+      // YES - identity not cleared, go back to Step 3 (Shifting) per flowchart
+      console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said YES, going back to shifting steps`);
+      // Set flag to indicate we're returning from scenario check (both for context-specific phrasing and to remember which check failed)
+      context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+      context.metadata.returnToIdentityCheck = 'identity_scenario_check';
+      context.metadata.identityBridgePhraseUsed = false;
+      return 'identity_dissolve_step_a';  // NOT identity_problem_check!
     } else if (lastResponse.includes('no') || lastResponse.includes('2')) {
-      return 'integration_awareness_1';
+      // NO - both checks passed, clear return marker and proceed to Step 5 (Check Problem)
+      console.log(`🔍 IDENTITY_SCENARIO_CHECK: User said NO, both checks passed - proceeding to problem check`);
+      context.metadata.returnToIdentityCheck = undefined;
+      context.metadata.identityBridgePhraseUsed = false;
+      return 'identity_problem_check';  // NOT integration_awareness_1!
     }
-    return 'identity_problem_check';
+    // Default: treat unclear as needing more work, go back to shifting
+    console.log(`🔍 IDENTITY_SCENARIO_CHECK: Unclear response, going back to shifting steps`);
+    context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+    return 'identity_dissolve_step_a';  // NOT identity_problem_check!
   }
 
   private handleIdentityCheck(lastResponse: string, context: TreatmentContext): string {
