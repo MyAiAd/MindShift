@@ -112,17 +112,8 @@ export class WorkTypeSelectionPhase {
               // User confirmed, continue to treatment
               return "Great! Let's continue with the process.";
             } else if (input === 'no' || input === 'n' || input.includes('wrong') || input.includes('incorrect')) {
-              // User said no, go back to description step
-              context.currentStep = 'work_type_description';
-              if (workType === 'problem') {
-                return "Tell me what the problem is in a few words.";
-              } else if (workType === 'goal') {
-                return "Tell me what the goal is in a few words.";
-              } else if (workType === 'negative_experience') {
-                return "Tell me what the negative experience was in a few words.";
-              } else {
-                return "Tell me what you want to work on in a few words.";
-              }
+              // User said no, go back to description step (determineNextStep will handle routing)
+              return "Let me ask you again.";
             } else {
               // Show confirmation again if unclear input
               if (workType === 'problem') {
