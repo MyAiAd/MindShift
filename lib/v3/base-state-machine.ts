@@ -260,7 +260,8 @@ export class BaseTreatmentStateMachine {
       'blockage_step_d',
       'body_sensation_check',
       'what_needs_to_happen_step',
-      'blockage_check_if_still_problem'
+      'blockage_check_if_still_problem',
+      'confirm_statement'  // References problemStatement which changes after trauma_problem_redirect
     ];
     
     if (alwaysSkipCacheSteps.includes(stepId)) {
