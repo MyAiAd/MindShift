@@ -304,8 +304,10 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return true;
         
       case 'METHOD_SELECTION_NEEDED':
-        // Show method selection options
-        return false; // Let normal flow continue
+        // Route to method selection
+        context.currentPhase = 'method_selection';
+        context.currentStep = 'choose_method';
+        return true;
         
       case 'SKIP_TO_TREATMENT_INTRO':
         // This should be handled by the calling step's routing

@@ -153,6 +153,9 @@ export class WorkTypeSelectionPhase {
               } else if (selectedMethod === 'blockage_shifting') {
                 return "ROUTE_TO_BLOCKAGE_SHIFTING";
               }
+            } else if (workType === 'problem' && !selectedMethod) {
+              // Problem work type but no method yet - transition signal to route to choose_method
+              return "METHOD_SELECTION_NEEDED";
             } else if (workType === 'goal') {
               // Goals automatically use Reality Shifting
               context.metadata.selectedMethod = 'reality_shifting';
@@ -164,7 +167,7 @@ export class WorkTypeSelectionPhase {
               return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?`;
             }
             
-            // Should not reach here - method should be selected first
+            // Fallback (should not reach here normally)
             return "Please select a method first.";
           },
           expectedResponseType: 'open',
