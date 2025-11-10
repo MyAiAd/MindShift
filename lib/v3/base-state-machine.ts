@@ -624,6 +624,46 @@ export class BaseTreatmentStateMachine {
         const scriptedResponse = this.getScriptedResponse(nextStep, context);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, context);
         
+        // CRITICAL FIX (V2 parity): Check if this new step's response is also a signal that needs auto-progression
+        // This handles cases like route_to_method returning "METHOD_SELECTION_NEEDED"
+        const isSignalResponse = this.isInternalConfirmationSignal(scriptedResponse);
+        
+        if (isSignalResponse) {
+          console.log(`║ ⚡ SIGNAL IN NEXT STEP: "${scriptedResponse}" - Auto-progressing one more time
+╚════════════════════════════════════════════════════════════════\n`);
+          
+          // This is a signal, we need to auto-progress ONE MORE time
+          const finalNextStepId = this.determineNextStep(nextStep, context);
+          console.log(`║ 🎯 FINAL AUTO-PROGRESSION to: "${finalNextStepId}"`);
+          
+          if (finalNextStepId) {
+            context.currentStep = finalNextStepId;
+            const finalPhase = this.phases.get(context.currentPhase);
+            
+            if (finalPhase) {
+              const finalStep = finalPhase.steps.find(s => s.id === finalNextStepId);
+              
+              if (finalStep) {
+                const finalResponse = this.getScriptedResponse(finalStep, context);
+                const finalNeedsLinguistic = this.isLinguisticProcessingStep(finalStep.id, context);
+                
+                console.log(`║ 💬 FINAL RESPONSE TO USER: "${finalResponse.substring(0, 80)}${finalResponse.length > 80 ? '...' : ''}"
+╚════════════════════════════════════════════════════════════════\n`);
+                
+                this.saveContext(context);
+                
+                return {
+                  canContinue: true,
+                  nextStep: finalNextStepId,
+                  scriptedResponse: finalResponse,
+                  needsLinguisticProcessing: finalNeedsLinguistic
+                };
+              }
+            }
+          }
+        }
+        
+        // Not a signal, return normally
         console.log(`║ 💬 RESPONSE TO USER: "${scriptedResponse.substring(0, 80)}${scriptedResponse.length > 80 ? '...' : ''}"
 ╚════════════════════════════════════════════════════════════════\n`);
         
