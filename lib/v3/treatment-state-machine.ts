@@ -790,13 +790,17 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // If user says "no", route back to appropriate input step based on workType
     if (confirmInput.includes('no') || confirmInput.includes('not') || confirmInput.includes('wrong') || confirmInput.includes('incorrect')) {
       const workType = context.metadata.workType;
-      const fromTrauma = context.metadata.fromTraumaRedirect || context.userResponses['trauma_problem_redirect'];
+      const problemStatement = context.metadata.problemStatement || context.problemStatement || '';
+      
+      // Check if problem statement matches trauma redirect pattern: "I feel X that Y happened"
+      const traumaPattern = /^I feel .+ that .+ happened$/i;
+      const isFromTrauma = traumaPattern.test(problemStatement) && context.userResponses['trauma_problem_redirect'];
       
       // DEBUG: Log the state
-      console.log(`🔍 CONFIRM_STATEMENT "NO": workType=${workType}, fromTrauma=${!!fromTrauma}, hasTraumaRedirect=${!!context.userResponses['trauma_problem_redirect']}, userResponses keys:`, Object.keys(context.userResponses || {}));
+      console.log(`🔍 CONFIRM_STATEMENT "NO": workType=${workType}, problemStatement="${problemStatement}", isFromTrauma=${isFromTrauma}, hasTraumaRedirect=${!!context.userResponses['trauma_problem_redirect']}, userResponses keys:`, Object.keys(context.userResponses || {}));
       
       // Check if this came from trauma_problem_redirect - check FIRST before workType
-      if (fromTrauma) {
+      if (isFromTrauma) {
         context.currentPhase = 'trauma_shifting'; // Set correct phase
         context.metadata.problemStatement = undefined; // Clear the synthesized problem statement
         context.problemStatement = undefined;
@@ -831,8 +835,6 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     }
     // If user says "yes", route to treatment
     if (confirmInput.includes('yes') || confirmInput.includes('correct') || confirmInput.includes('right')) {
-      // Clear the trauma redirect flag since user confirmed
-      delete context.metadata.fromTraumaRedirect;
       return 'route_to_method';
     }
     // If it's not yes/no, stay on confirm_statement (it will handle showing confirmation)
@@ -1361,13 +1363,6 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // When user declines trauma process, this constructed problem IS their original problem
     // This ensures digging deeper references the correct problem, not just the trauma descriptor
     context.metadata.originalProblemStatement = constructedProblem;
-    // Set flag to track that we came from trauma redirect (for confirm_statement routing)
-    context.metadata.fromTraumaRedirect = true;
-    
-    // Immediately persist to prevent database reload overwriting it
-    this.saveContextToDatabase(context).catch(error => 
-      console.error('Failed to save trauma problem statement to database:', error)
-    );
     
     // Set to problem work type for method selection later
     context.metadata.workType = 'problem';
