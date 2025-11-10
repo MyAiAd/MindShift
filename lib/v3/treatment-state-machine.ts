@@ -790,29 +790,22 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // If user says "no", route back to appropriate input step based on workType
     if (confirmInput.includes('no') || confirmInput.includes('not') || confirmInput.includes('wrong') || confirmInput.includes('incorrect')) {
       const workType = context.metadata.workType;
-      const problemStatement = context.metadata.problemStatement || context.problemStatement || '';
-      
-      // Check if problem statement matches trauma redirect pattern: "I feel X that Y happened"
-      const traumaPattern = /^I feel .+ that .+ happened$/i;
-      const isFromTrauma = traumaPattern.test(problemStatement) && context.userResponses['trauma_problem_redirect'];
       
       // DEBUG: Log the state
-      console.log(`🔍 CONFIRM_STATEMENT "NO": workType=${workType}, problemStatement="${problemStatement}", isFromTrauma=${isFromTrauma}, hasTraumaRedirect=${!!context.userResponses['trauma_problem_redirect']}, userResponses keys:`, Object.keys(context.userResponses || {}));
+      console.log(`🔍 CONFIRM_STATEMENT "NO": workType=${workType}, hasTraumaRedirect=${!!context.userResponses['trauma_problem_redirect']}, userResponses keys:`, Object.keys(context.userResponses || {}));
       
       // Check if this came from trauma_problem_redirect - check FIRST before workType
-      if (isFromTrauma) {
+      if (context.userResponses['trauma_problem_redirect']) {
         context.currentPhase = 'trauma_shifting'; // Set correct phase
-        context.metadata.problemStatement = undefined; // Clear the synthesized problem statement
-        context.problemStatement = undefined;
         delete context.userResponses['trauma_problem_redirect']; // Clear old response
         delete context.userResponses['confirm_statement']; // Clear old confirmation too
+        // Don't clear problemStatement - trauma_problem_redirect will overwrite it with new value
         
         // Persist the cleared responses to database
         this.saveContextToDatabase(context).catch(error => 
           console.error('Failed to save cleared responses to database:', error)
         );
         
-        console.log(`🔍 CONFIRM_STATEMENT: Routing back to trauma_problem_redirect`);
         return 'trauma_problem_redirect'; // Go back to re-answer how they feel
       }
       
