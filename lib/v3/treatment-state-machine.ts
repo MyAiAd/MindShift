@@ -792,7 +792,9 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       const workType = context.metadata.workType;
       
       // DEBUG: Log the state
-      console.log(`🔍 CONFIRM_STATEMENT "NO": workType=${workType}, hasTraumaRedirect=${!!context.userResponses['trauma_problem_redirect']}, userResponses keys:`, Object.keys(context.userResponses || {}));
+      console.log(`🔍 CONFIRM_STATEMENT "NO": workType=${workType}, hasTraumaRedirect=${!!context.userResponses['trauma_problem_redirect']}`);
+      console.log(`🔍 CONFIRM_STATEMENT "NO": userResponses keys:`, Object.keys(context.userResponses || {}));
+      console.log(`🔍 CONFIRM_STATEMENT "NO": trauma_problem_redirect value:`, context.userResponses['trauma_problem_redirect']);
       
       // Check if this came from trauma_problem_redirect - check FIRST before workType
       if (context.userResponses['trauma_problem_redirect']) {
