@@ -624,13 +624,6 @@ export default function TreatmentSession({
     // Don't show if we're loading or session isn't active
     if (isLoading || !isSessionActive) return false;
     
-    // Check if user has already selected a method (multiple user messages)
-    const userMessages = messages.filter(m => m.isUser);
-    if (userMessages.length >= 2) {
-      console.log('❌ METHOD BUTTONS: Too many user messages:', userMessages.length);
-      return false;
-    }
-    
     // Show buttons for choose_method step
     console.log('✅ METHOD BUTTONS: Showing buttons for choose_method step');
     return true;
