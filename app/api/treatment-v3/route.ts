@@ -390,11 +390,11 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       };
     }
 
-    // Save interaction to database
-    await saveInteractionToDatabase(sessionId, userInput, finalResponse);
-
-    // Update session context in database
-    await updateSessionContextInDatabase(sessionId, finalResponse.currentStep, finalResponse.usedAI, finalResponse.responseTime);
+    // PHASE 1 OPTIMIZATION: Save interaction and update context in parallel (independent operations)
+    await Promise.all([
+      saveInteractionToDatabase(sessionId, userInput, finalResponse),
+      updateSessionContextInDatabase(sessionId, finalResponse.currentStep, finalResponse.usedAI, finalResponse.responseTime)
+    ]);
 
     // NEW: Add performance metrics to response
     const perfMetrics = treatmentMachine.getPerformanceMetrics();
@@ -847,6 +847,8 @@ async function saveInteractionToDatabase(
   try {
     const supabase = createServerClient();
     
+    // PHASE 3 OPTIMIZATION: Critical interaction insert (blocking) + Non-critical stats update (non-blocking)
+    // Insert interaction record (blocking - this data is critical)
     await supabase.from('treatment_interactions').insert({
       session_id: sessionId,
       user_input: userInput,
@@ -862,11 +864,19 @@ async function saveInteractionToDatabase(
       treatment_version: 'v3'
     });
 
-    // Update session statistics
-    await supabase.rpc('update_session_stats', {
+    // Update stats (non-blocking - fire and forget for performance)
+    supabase.rpc('update_session_stats', {
       p_session_id: sessionId,
       p_used_ai: response.usedAI,
       p_response_time: response.responseTime
+    }).catch(error => {
+      console.error('V3 Background stats update failed:', error, {
+        sessionId,
+        step: response.currentStep,
+        timestamp: new Date().toISOString()
+      });
+      // Stats are non-critical - log error but don't fail the request
+      // Could implement retry queue here in the future
     });
   } catch (error) {
     console.error('V3 Database interaction save error:', error);
@@ -911,17 +921,19 @@ async function updateSessionContextInDatabase(
       console.log(`🎉 TREATMENT_COMPLETION_V3: Marking session ${sessionId} as completed`);
     }
     
-    // Update the session with current state
-    await supabase
-      .from('treatment_sessions')
-      .update(updateData)
-      .eq('session_id', sessionId);
+    // PHASE 2 OPTIMIZATION: Build array of database operations to run in parallel
+    const operations = [
+      supabase
+        .from('treatment_sessions')
+        .update(updateData)
+        .eq('session_id', sessionId)
+    ];
 
-    // Save user response to treatment_progress if we have one
+    // Add progress update if we have a user response
     const userResponse = context.userResponses[context.currentStep];
     if (userResponse) {
-      try {
-        await supabase
+      operations.push(
+        supabase
           .from('treatment_progress')
           .upsert({
             session_id: sessionId,
@@ -932,12 +944,12 @@ async function updateSessionContextInDatabase(
             treatment_version: 'v3'
           }, {
             onConflict: 'session_id,phase_id,step_id'
-          });
-      } catch (progressError) {
-        console.error('V3 Error saving progress data:', progressError);
-        // Continue execution - progress saving failure shouldn't break treatment
-      }
+          })
+      );
     }
+
+    // Execute all operations in parallel
+    await Promise.all(operations);
   } catch (error) {
     console.error('V3 Database context update error:', error);
     // Don't fail the request if database update fails
