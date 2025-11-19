@@ -869,6 +869,8 @@ async function saveInteractionToDatabase(
       p_session_id: sessionId,
       p_used_ai: response.usedAI,
       p_response_time: response.responseTime
+    }).then(() => {
+      // Success - stats updated in background
     }).catch(error => {
       console.error('V3 Background stats update failed:', error, {
         sessionId,
