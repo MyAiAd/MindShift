@@ -121,7 +121,7 @@ export default function TreatmentSession({
         timestamp: new Date(),
         // Don't set responseTime - it's instant, no badge needed
         usedAI: false,
-        version: 'v3'
+        version: 'v4'
       };
       
       setMessages([instantMessage]);
@@ -212,7 +212,7 @@ export default function TreatmentSession({
         const restoredMessages: TreatmentMessage[] = data.messages.map((msg: any) => ({
           ...msg,
           timestamp: new Date(msg.timestamp),
-          version: 'v3'
+          version: 'v4'
         }));
 
         setMessages(restoredMessages);
@@ -253,7 +253,7 @@ export default function TreatmentSession({
       content: content.trim(),
       isUser: true,
       timestamp: new Date(),
-      version: 'v3'
+      version: 'v4'
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -269,7 +269,7 @@ export default function TreatmentSession({
       userInput: content.trim(),
       sessionStats,
       timestamp: Date.now(),
-      version: 'v3'
+      version: 'v4'
     };
     setStepHistory(prev => [...prev, historyEntry]);
 
@@ -310,7 +310,7 @@ export default function TreatmentSession({
             timestamp: new Date(),
             responseTime: data.responseTime,
             usedAI: data.usedAI,
-            version: 'v3'
+            version: 'v4'
           };
 
           setMessages(prev => [...prev, systemMessage]);
@@ -340,7 +340,7 @@ export default function TreatmentSession({
           totalResponses: prev.totalResponses + 1,
           avgResponseTime: Math.round((prev.avgResponseTime * prev.totalResponses + (data.responseTime || 0)) / (prev.totalResponses + 1)),
           aiUsagePercent: data.usedAI ? Math.round(((prev.aiUsagePercent * prev.totalResponses) + 100) / (prev.totalResponses + 1)) : Math.round((prev.aiUsagePercent * prev.totalResponses) / (prev.totalResponses + 1)),
-          version: 'v3'
+          version: 'v4'
         }));
 
         // Handle special UI states
@@ -370,7 +370,7 @@ export default function TreatmentSession({
         content: `V4 Error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
         isUser: false,
         timestamp: new Date(),
-        version: 'v3'
+        version: 'v4'
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -532,7 +532,7 @@ export default function TreatmentSession({
       content: displayText,
       isUser: true,
       timestamp: new Date(),
-      version: 'v3'
+      version: 'v4'
     };
     setMessages(prev => [...prev, userMessage]);
     setClickedButton(null);
@@ -547,7 +547,7 @@ export default function TreatmentSession({
       userInput: workType,
       sessionStats,
       timestamp: Date.now(),
-      version: 'v3'
+      version: 'v4'
     };
     setStepHistory(prev => [...prev, historyEntry]);
 
@@ -578,7 +578,7 @@ export default function TreatmentSession({
             timestamp: new Date(),
             responseTime: data.responseTime,
             usedAI: data.usedAI,
-            version: 'v3'
+            version: 'v4'
           };
           setMessages(prev => [...prev, systemMessage]);
         }
@@ -688,7 +688,7 @@ export default function TreatmentSession({
       content: method,
       isUser: true,
       timestamp: new Date(),
-      version: 'v3'
+      version: 'v4'
     };
     setMessages(prev => [...prev, userMessage]);
     setClickedButton(null);
@@ -706,7 +706,7 @@ export default function TreatmentSession({
       userInput: methodNumber,
       sessionStats,
       timestamp: Date.now(),
-      version: 'v3'
+      version: 'v4'
     };
     setStepHistory(prev => [...prev, historyEntry]);
 
@@ -731,7 +731,7 @@ export default function TreatmentSession({
           timestamp: new Date(),
           responseTime: data.responseTime,
           usedAI: data.usedAI,
-          version: 'v3'
+          version: 'v4'
         };
         setMessages(prev => [...prev, systemMessage]);
         setCurrentStep(data.currentStep);
@@ -777,9 +777,9 @@ export default function TreatmentSession({
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {formatMethodName(sessionMethod)}
                 </h2>
-                <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full flex items-center space-x-1">
+                <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full flex items-center space-x-1">
                   <Sparkles className="h-3 w-3" />
-                  <span>V3</span>
+                  <span>V4</span>
                 </span>
               </div>
               {currentStep && (
