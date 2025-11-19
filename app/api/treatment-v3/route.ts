@@ -1020,6 +1020,10 @@ function getPhaseForStep(stepId: string): string {
     // Reality shifting phase
     'reality_shifting_intro': 'reality_shifting',
     'reality_goal_capture': 'reality_shifting',
+    'goal_deadline_check': 'reality_shifting',
+    'goal_deadline_date': 'reality_shifting',
+    'goal_confirmation': 'reality_shifting',
+    'goal_certainty': 'reality_shifting',
     'reality_step_a2': 'reality_shifting',
     'reality_step_a3': 'reality_shifting',
     'reality_step_b': 'reality_shifting',
