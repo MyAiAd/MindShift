@@ -6,7 +6,7 @@ export interface TreatmentMessage {
   responseTime?: number;
   usedAI?: boolean;
   metadata?: any;
-  version?: 'v3'; // V3 specific
+  version?: 'v3' | 'v4'; // V3/V4 specific
 }
 
 export interface TreatmentSessionProps {
@@ -15,14 +15,14 @@ export interface TreatmentSessionProps {
   shouldResume?: boolean;
   onComplete?: (sessionData: any) => void;
   onError?: (error: string) => void;
-  version?: 'v3'; // V3 specific
+  version?: 'v3' | 'v4'; // V3/V4 specific
 }
 
 export interface SessionStats {
   totalResponses: number;
   avgResponseTime: number;
   aiUsagePercent: number;
-  version?: 'v3'; // V3 specific
+  version?: 'v3' | 'v4'; // V3/V4 specific
 }
 
 export interface PerformanceMetrics {
@@ -42,7 +42,7 @@ export interface StepHistoryEntry {
   userInput: string;
   sessionStats: SessionStats;
   timestamp: number;
-  version?: 'v3'; // V3 specific
+  version?: 'v3' | 'v4'; // V3/V4 specific
 }
 
 export interface ModalityComponentProps {
@@ -61,14 +61,14 @@ export interface ModalityComponentProps {
   setUserInput: (input: string) => void;
   selectedWorkType: string | null;
   clickedButton: string | null;
-  version?: 'v3'; // V3 specific
+  version?: 'v3' | 'v4'; // V3/V4 specific
 }
 
 export interface GuardrailsProps {
   currentStep: string;
   messages: TreatmentMessage[];
   lastBotMessage?: TreatmentMessage;
-  version?: 'v3'; // V3 specific
+  version?: 'v3' | 'v4'; // V3/V4 specific
 }
 
 export interface DiggingDeeperProps extends ModalityComponentProps {
@@ -79,7 +79,7 @@ export interface IntegrationProps extends ModalityComponentProps {
   modalityType: 'problem' | 'identity' | 'belief' | 'blockage' | 'reality' | 'trauma';
 }
 
-// V3 specific interfaces
+// V3/V4 specific interfaces
 export interface V3TreatmentContext {
   sessionId: string;
   userId: string;
@@ -90,7 +90,7 @@ export interface V3TreatmentContext {
   startTime: Date;
   lastActivity: Date;
   metadata: Record<string, any>;
-  version: 'v3';
+  version: 'v3' | 'v4';
 }
 
 export interface V3ProcessingResult {
@@ -110,7 +110,7 @@ export interface V3ProcessingResult {
     phase: string;
     step: string;
     userInput: string;
-    version: 'v3';
+    version: 'v3' | 'v4';
   };
 }
 
@@ -119,5 +119,5 @@ export interface V3ValidationResult {
   error?: string;
   confidence?: number;
   suggestions?: string[];
-  version: 'v3';
+  version: 'v3' | 'v4';
 } 
