@@ -1134,7 +1134,8 @@ export default function SettingsPage() {
             </p>
             
             <div className="space-y-6">
-              {/* V3 Treatment Demo with Toggle */}
+              {/* V3 Treatment Demo with Toggle - HIDDEN FOR LABS FOCUS */}
+              {/* 
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
@@ -1205,6 +1206,7 @@ export default function SettingsPage() {
                   </div>
                 )}
               </div>
+              */}
 
               {/* V4 Treatment Demo with Toggle */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
