@@ -1196,6 +1196,39 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       throw new Error(`Failed to update V3 context: ${updateError instanceof Error ? updateError.message : 'Unknown update error'}`);
     }
     
+    // CRITICAL: Restore goal metadata from userResponses when undoing to goal-related steps
+    // This fixes the issue where saying "no" to goal_confirmation clears metadata,
+    // then undoing back requires that metadata to display the confirmation message
+    const goalRelatedSteps = ['goal_deadline_check', 'goal_deadline_date', 'goal_confirmation', 'goal_certainty'];
+    if (goalRelatedSteps.includes(undoToStep)) {
+      try {
+        const ctx = treatmentMachine.getContextForUndo(sessionId);
+        // Restore currentGoal from reality_goal_capture or goal_description response
+        if (ctx.userResponses['reality_goal_capture']) {
+          ctx.metadata.currentGoal = ctx.userResponses['reality_goal_capture'];
+          console.log(`🔄 UNDO_RESTORE: Restored currentGoal from reality_goal_capture: "${ctx.metadata.currentGoal}"`);
+        } else if (ctx.userResponses['goal_description']) {
+          ctx.metadata.currentGoal = ctx.userResponses['goal_description'];
+          console.log(`🔄 UNDO_RESTORE: Restored currentGoal from goal_description: "${ctx.metadata.currentGoal}"`);
+        }
+        
+        // Restore goalWithDeadline if there was a deadline
+        const hasDeadline = ctx.userResponses['goal_deadline_check']?.toLowerCase().includes('yes');
+        const deadline = ctx.userResponses['goal_deadline_date'];
+        if (hasDeadline && deadline && ctx.metadata.currentGoal) {
+          ctx.metadata.goalWithDeadline = `${ctx.metadata.currentGoal} by ${deadline}`;
+          console.log(`🔄 UNDO_RESTORE: Restored goalWithDeadline: "${ctx.metadata.goalWithDeadline}"`);
+        }
+        
+        // Save the restored context
+        await treatmentMachine.saveContextToDatabase(ctx);
+        console.log('🔄 UNDO_RESTORE: Goal metadata restored and saved successfully');
+      } catch (restoreError) {
+        console.error('Treatment V3 API: Error restoring goal metadata:', restoreError);
+        // Continue - this isn't critical enough to fail the undo
+      }
+    }
+    
     // Get updated context for logging
     let updatedContext;
     try {
