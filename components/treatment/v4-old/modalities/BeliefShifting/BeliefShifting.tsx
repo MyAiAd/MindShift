@@ -5,7 +5,7 @@ import { Undo2, Sparkles } from 'lucide-react';
 import { ModalityComponentProps } from '../../shared/types';
 
 interface BeliefShiftingProps extends ModalityComponentProps {
-  // V4 specific props for Belief Shifting
+  // V3 specific props for Belief Shifting
   version?: 'v3';
 }
 
@@ -29,21 +29,21 @@ export default function BeliefShifting({
 }: BeliefShiftingProps) {
 
   const handleMethodSelection = async (method: string) => {
-    console.log('🔍 V4 DEBUG: BeliefShifting handleMethodSelection called with:', method);
+    console.log('🔍 V3 DEBUG: BeliefShifting handleMethodSelection called with:', method);
     await onSendMessage(method);
   };
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
-    console.log('🔍 V4 DEBUG: BeliefShifting yes/no response:', response);
+    console.log('🔍 V3 DEBUG: BeliefShifting yes/no response:', response);
     await onSendMessage(response);
   };
 
   const handleYesNoMaybeResponse = async (response: 'yes' | 'no' | 'maybe') => {
-    console.log('🔍 V4 DEBUG: BeliefShifting yes/no/maybe response:', response);
+    console.log('🔍 V3 DEBUG: BeliefShifting yes/no/maybe response:', response);
     await onSendMessage(response);
   };
 
-  // V4 Enhanced: Belief Shifting specific step checks with improved logic
+  // V3 Enhanced: Belief Shifting specific step checks with improved logic
   const isBeliefShiftingYesNoStep = () => {
     const beliefShiftingYesNoSteps = [
       'belief_step_f',                  // Belief step F
@@ -79,7 +79,7 @@ export default function BeliefShifting({
     return beliefShiftingTextSteps.includes(currentStep);
   };
 
-  // V4 Enhanced: Get last bot message with better error handling
+  // V3 Enhanced: Get last bot message with better error handling
   const getLastBotMessage = () => {
     const botMessages = messages.filter(msg => !msg.isUser);
     return botMessages.length > 0 ? botMessages[botMessages.length - 1] : null;
@@ -89,7 +89,7 @@ export default function BeliefShifting({
 
   return (
     <div className="space-y-4">
-      {/* V4 Enhanced Header */}
+      {/* V3 Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -113,7 +113,7 @@ export default function BeliefShifting({
         )}
       </div>
 
-      {/* V4 Enhanced: Method Selection UI */}
+      {/* V3 Enhanced: Method Selection UI */}
       {isBeliefShiftingMethodSelectionStep() && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {[
@@ -137,7 +137,7 @@ export default function BeliefShifting({
         </div>
       )}
 
-      {/* V4 Enhanced: Yes/No Response UI */}
+      {/* V3 Enhanced: Yes/No Response UI */}
       {isBeliefShiftingYesNoStep() && (
         <div className="flex space-x-3">
           <button
@@ -157,7 +157,7 @@ export default function BeliefShifting({
         </div>
       )}
 
-      {/* V4 Enhanced: Yes/No/Maybe Response UI */}
+      {/* V3 Enhanced: Yes/No/Maybe Response UI */}
       {isBeliefShiftingYesNoMaybeStep() && (
         <div className="flex space-x-2">
           <button
@@ -184,7 +184,7 @@ export default function BeliefShifting({
         </div>
       )}
 
-      {/* V4 Enhanced: Text Input UI */}
+      {/* V3 Enhanced: Text Input UI */}
       {isBeliefShiftingTextInputStep() && (
         <div className="space-y-3">
           <div className="relative">
@@ -216,11 +216,11 @@ export default function BeliefShifting({
         </div>
       )}
 
-      {/* V4 Enhanced: Debug Information (development only) */}
+      {/* V3 Enhanced: Debug Information (development only) */}
       {process.env.NODE_ENV === 'development' && (
         <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <div className="text-xs text-blue-600 dark:text-blue-400">
-            <div><strong>V4 Debug:</strong></div>
+            <div><strong>V3 Debug:</strong></div>
             <div>Current Step: {currentStep}</div>
             <div>Session ID: {sessionId.slice(-8)}</div>
             <div>Messages: {messages.length}</div>

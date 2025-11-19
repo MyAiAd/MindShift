@@ -4,11 +4,11 @@ import React from 'react';
 import { Undo2, Sparkles } from 'lucide-react';
 import { ModalityComponentProps } from '../../shared/types';
 
-interface IdentityShiftingProps extends ModalityComponentProps {
+interface TraumaShiftingProps extends ModalityComponentProps {
   version?: 'v3';
 }
 
-export default function IdentityShifting({
+export default function TraumaShifting({
   sessionId,
   userId,
   messages,
@@ -25,41 +25,42 @@ export default function IdentityShifting({
   selectedWorkType,
   clickedButton,
   version = 'v3'
-}: IdentityShiftingProps) {
+}: TraumaShiftingProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
-    console.log('🔍 V4 DEBUG: IdentityShifting yes/no response:', response);
+    console.log('🔍 V3 DEBUG: TraumaShifting yes/no response:', response);
     await onSendMessage(response);
   };
 
-  // V4 Enhanced: Identity Shifting specific step checks
-  const isIdentityShiftingYesNoStep = () => {
-    const identityShiftingYesNoSteps = [
-      'identity_check',                 // Identity check
-      'identity_problem_check',         // Identity problem check
+  // V3 Enhanced: Trauma Shifting specific step checks
+  const isTraumaShiftingYesNoStep = () => {
+    const traumaShiftingYesNoSteps = [
+      'trauma_identity_check',          // Trauma identity check
+      'trauma_experience_check',        // Trauma experience check
     ];
-    return identityShiftingYesNoSteps.includes(currentStep);
+    return traumaShiftingYesNoSteps.includes(currentStep);
   };
 
-  const isIdentityShiftingTextInputStep = () => {
-    const identityShiftingTextSteps = [
-      'identity_shifting_intro',        // Identity shifting intro
-      'identity_dissolve_step_a',       // Identity dissolve step A
-      'identity_dissolve_step_b',       // Identity dissolve step B
-      'identity_dissolve_step_c',       // Identity dissolve step C
-      'identity_dissolve_step_d',       // Identity dissolve step D
-      'identity_dissolve_step_e',       // Identity dissolve step E
+  const isTraumaShiftingTextInputStep = () => {
+    const traumaShiftingTextSteps = [
+      'trauma_shifting_intro',          // Trauma shifting intro
+      'trauma_dissolve_step_a',         // Trauma dissolve step A
+      'trauma_dissolve_step_b',         // Trauma dissolve step B
+      'trauma_dissolve_step_c',         // Trauma dissolve step C
+      'trauma_dissolve_step_d',         // Trauma dissolve step D
+      'trauma_dissolve_step_e',         // Trauma dissolve step E
+      'trauma_dig_deeper',              // Trauma dig deeper
     ];
-    return identityShiftingTextSteps.includes(currentStep);
+    return traumaShiftingTextSteps.includes(currentStep);
   };
 
   return (
     <div className="space-y-4">
-      {/* V4 Enhanced Header */}
+      {/* V3 Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Identity Shifting
+            Trauma Shifting
           </h3>
           <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full flex items-center space-x-1">
             <Sparkles className="h-3 w-3" />
@@ -79,8 +80,8 @@ export default function IdentityShifting({
         )}
       </div>
 
-      {/* V4 Enhanced: Yes/No Response UI */}
-      {isIdentityShiftingYesNoStep() && (
+      {/* V3 Enhanced: Yes/No Response UI */}
+      {isTraumaShiftingYesNoStep() && (
         <div className="flex space-x-3">
           <button
             onClick={() => handleYesNoResponse('yes')}
@@ -99,8 +100,8 @@ export default function IdentityShifting({
         </div>
       )}
 
-      {/* V4 Enhanced: Text Input UI */}
-      {isIdentityShiftingTextInputStep() && (
+      {/* V3 Enhanced: Text Input UI */}
+      {isTraumaShiftingTextInputStep() && (
         <div className="space-y-3">
           <div className="relative">
             <input

@@ -28,11 +28,11 @@ export default function ProblemShifting({
 }: ProblemShiftingProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
-    console.log('🔍 V3 DEBUG: ProblemShifting yes/no response:', response);
+    console.log('🔍 V4 DEBUG: ProblemShifting yes/no response:', response);
     await onSendMessage(response);
   };
 
-  // V3 Enhanced: Problem Shifting specific step checks
+  // V4 Enhanced: Problem Shifting specific step checks
   const isProblemShiftingYesNoStep = () => {
     const problemShiftingYesNoSteps = [
       'check_if_still_problem',         // Check if still problem
@@ -54,7 +54,7 @@ export default function ProblemShifting({
 
   return (
     <div className="space-y-4">
-      {/* V3 Enhanced Header */}
+      {/* V4 Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -78,7 +78,7 @@ export default function ProblemShifting({
         )}
       </div>
 
-      {/* V3 Enhanced: Yes/No Response UI */}
+      {/* V4 Enhanced: Yes/No Response UI */}
       {isProblemShiftingYesNoStep() && (
         <div className="flex space-x-3">
           <button
@@ -98,7 +98,7 @@ export default function ProblemShifting({
         </div>
       )}
 
-      {/* V3 Enhanced: Text Input UI */}
+      {/* V4 Enhanced: Text Input UI */}
       {isProblemShiftingTextInputStep() && (
         <div className="space-y-3">
           <div className="relative">

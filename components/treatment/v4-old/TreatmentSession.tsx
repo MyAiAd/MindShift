@@ -14,7 +14,7 @@ import {
   StepHistoryEntry 
 } from './shared/types';
 
-// Import V4 modality components
+// Import V3 modality components
 import ProblemShifting from './modalities/ProblemShifting/ProblemShifting';
 import IdentityShifting from './modalities/IdentityShifting/IdentityShifting';
 import BeliefShifting from './modalities/BeliefShifting/BeliefShifting';
@@ -44,7 +44,7 @@ export default function TreatmentSession({
     version: 'v4'
   });
   
-  // V4: Enhanced performance metrics state
+  // V3: Enhanced performance metrics state
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
     cacheHitRate: 0,
     averageResponseTime: 0,
@@ -62,16 +62,16 @@ export default function TreatmentSession({
   const [sessionMethod, setSessionMethod] = useState<string>('mind_shifting');
   const [showEmotionConfirmation, setShowEmotionConfirmation] = useState<boolean>(false);
   
-  // V4: Button visibility state - managed by useEffect for race condition safety
+  // V3: Button visibility state - managed by useEffect for race condition safety
   const [showWorkTypeButtons, setShowWorkTypeButtons] = useState<boolean>(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // V4: Enhanced voice integration
+  // V3: Enhanced voice integration
   const voice = useGlobalVoice({
     onError: (error: string) => {
-      console.error('V4 Voice error:', error);
+      console.error('V3 Voice error:', error);
       setVoiceError(error);
     },
     currentStep: currentStep
@@ -79,13 +79,13 @@ export default function TreatmentSession({
 
   // Helper function to format method names
   const formatMethodName = (methodName: string) => {
-    if (!methodName) return 'Mind Shifting V4';
+    if (!methodName) return 'Mind Shifting V3';
     
     // Convert snake_case to Title Case
     return methodName
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ') + ' V4';
+      .join(' ') + ' V3';
   };
 
   // Auto-scroll to bottom when new messages arrive
@@ -110,9 +110,9 @@ export default function TreatmentSession({
     setHasError(false);
     
     try {
-      console.log('Starting V4 treatment session:', { sessionId, userId });
+      console.log('Starting V3 treatment session:', { sessionId, userId });
       
-      // V4 OPTIMIZATION: Show hardcoded initial message IMMEDIATELY (0ms perceived delay)
+      // V3 OPTIMIZATION: Show hardcoded initial message IMMEDIATELY (0ms perceived delay)
       // This eliminates wait time for database operations on first message
       const instantMessage: TreatmentMessage = {
         id: `system-${Date.now()}`,
@@ -121,7 +121,7 @@ export default function TreatmentSession({
         timestamp: new Date(),
         // Don't set responseTime - it's instant, no badge needed
         usedAI: false,
-        version: 'v3'
+        version: 'v4'
       };
       
       setMessages([instantMessage]);
@@ -148,11 +148,11 @@ export default function TreatmentSession({
       });
 
       if (!response.ok) {
-        throw new Error(`V4 HTTP error! status: ${response.status}`);
+        throw new Error(`V3 HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('V4 Start session response:', data);
+      console.log('V3 Start session response:', data);
 
       if (data.success) {
         // Update performance metrics from backend (but message already displayed)
@@ -166,13 +166,13 @@ export default function TreatmentSession({
           }));
         }
       } else {
-        throw new Error(data.error || 'Failed to start V4 session');
+        throw new Error(data.error || 'Failed to start V3 session');
       }
     } catch (error) {
-      console.error('V4 Start session error:', error);
+      console.error('V3 Start session error:', error);
       setHasError(true);
-      setErrorMessage(error instanceof Error ? error.message : 'Unknown V4 error');
-      onError?.(error instanceof Error ? error.message : 'Unknown V4 error');
+      setErrorMessage(error instanceof Error ? error.message : 'Unknown V3 error');
+      onError?.(error instanceof Error ? error.message : 'Unknown V3 error');
       // Set loading false on error so user can retry
       setIsLoading(false);
     }
@@ -186,7 +186,7 @@ export default function TreatmentSession({
     setHasError(false);
     
     try {
-      console.log('Resuming V4 treatment session:', { sessionId, userId });
+      console.log('Resuming V3 treatment session:', { sessionId, userId });
       
       const response = await fetch('/api/treatment-v4', {
         method: 'POST',
@@ -201,18 +201,18 @@ export default function TreatmentSession({
       });
 
       if (!response.ok) {
-        throw new Error(`V4 HTTP error! status: ${response.status}`);
+        throw new Error(`V3 HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('V4 Resume session response:', data);
+      console.log('V3 Resume session response:', data);
 
       if (data.success) {
         // Restore conversation history
         const restoredMessages: TreatmentMessage[] = data.messages.map((msg: any) => ({
           ...msg,
           timestamp: new Date(msg.timestamp),
-          version: 'v3'
+          version: 'v4'
         }));
 
         setMessages(restoredMessages);
@@ -231,13 +231,13 @@ export default function TreatmentSession({
         }, 100);
       } else {
         // If resume fails, start a new session
-        console.log('V4 Resume failed, starting new session');
+        console.log('V3 Resume failed, starting new session');
         await startSession();
       }
     } catch (error) {
-      console.error('V4 Resume session error:', error);
+      console.error('V3 Resume session error:', error);
       // Fallback to starting new session
-      console.log('V4 Resume failed, falling back to new session');
+      console.log('V3 Resume failed, falling back to new session');
       await startSession();
     } finally {
       setIsLoading(false);
@@ -253,7 +253,7 @@ export default function TreatmentSession({
       content: content.trim(),
       isUser: true,
       timestamp: new Date(),
-      version: 'v3'
+      version: 'v4'
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -269,12 +269,12 @@ export default function TreatmentSession({
       userInput: content.trim(),
       sessionStats,
       timestamp: Date.now(),
-      version: 'v3'
+      version: 'v4'
     };
     setStepHistory(prev => [...prev, historyEntry]);
 
     try {
-      console.log('Sending V4 message:', { content, currentStep });
+      console.log('Sending V3 message:', { content, currentStep });
       
       const response = await fetch('/api/treatment-v4', {
         method: 'POST',
@@ -290,11 +290,11 @@ export default function TreatmentSession({
       });
 
       if (!response.ok) {
-        throw new Error(`V4 HTTP error! status: ${response.status}`);
+        throw new Error(`V3 HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('V4 Continue session response:', data);
+      console.log('V3 Continue session response:', data);
 
       if (data.success) {
         // Don't display "Choose a method:" message when buttons will be shown
@@ -310,7 +310,7 @@ export default function TreatmentSession({
             timestamp: new Date(),
             responseTime: data.responseTime,
             usedAI: data.usedAI,
-            version: 'v3'
+            version: 'v4'
           };
 
           setMessages(prev => [...prev, systemMessage]);
@@ -340,7 +340,7 @@ export default function TreatmentSession({
           totalResponses: prev.totalResponses + 1,
           avgResponseTime: Math.round((prev.avgResponseTime * prev.totalResponses + (data.responseTime || 0)) / (prev.totalResponses + 1)),
           aiUsagePercent: data.usedAI ? Math.round(((prev.aiUsagePercent * prev.totalResponses) + 100) / (prev.totalResponses + 1)) : Math.round((prev.aiUsagePercent * prev.totalResponses) / (prev.totalResponses + 1)),
-          version: 'v3'
+          version: 'v4'
         }));
 
         // Handle special UI states
@@ -357,20 +357,20 @@ export default function TreatmentSession({
         }
 
       } else {
-        throw new Error(data.error || 'Failed to process V4 message');
+        throw new Error(data.error || 'Failed to process V3 message');
       }
     } catch (error) {
-      console.error('V4 Send message error:', error);
+      console.error('V3 Send message error:', error);
       setHasError(true);
-      setErrorMessage(error instanceof Error ? error.message : 'Unknown V4 error');
+      setErrorMessage(error instanceof Error ? error.message : 'Unknown V3 error');
       
       // Add error message to conversation
       const errorMessage: TreatmentMessage = {
         id: `error-${Date.now()}`,
-        content: `V4 Error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
+        content: `V3 Error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
         isUser: false,
         timestamp: new Date(),
-        version: 'v3'
+        version: 'v4'
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -390,7 +390,7 @@ export default function TreatmentSession({
     setIsLoading(true);
 
     try {
-      console.log('V4 Undo to step:', lastEntry.currentStep);
+      console.log('V3 Undo to step:', lastEntry.currentStep);
       
       const response = await fetch('/api/treatment-v4', {
         method: 'POST',
@@ -406,11 +406,11 @@ export default function TreatmentSession({
       });
 
       if (!response.ok) {
-        throw new Error(`V4 Undo HTTP error! status: ${response.status}`);
+        throw new Error(`V3 Undo HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('V4 Undo response:', data);
+      console.log('V3 Undo response:', data);
 
       if (data.success) {
         // Restore previous state
@@ -422,14 +422,14 @@ export default function TreatmentSession({
         // Remove the last entry from history
         setStepHistory(prev => prev.slice(0, -1));
         
-        console.log('V4 Undo successful');
+        console.log('V3 Undo successful');
       } else {
-        throw new Error(data.error || 'V4 Undo failed');
+        throw new Error(data.error || 'V3 Undo failed');
       }
     } catch (error) {
-      console.error('V4 Undo error:', error);
+      console.error('V3 Undo error:', error);
       setHasError(true);
-      setErrorMessage(error instanceof Error ? error.message : 'V4 Undo failed');
+      setErrorMessage(error instanceof Error ? error.message : 'V3 Undo failed');
     } finally {
       setIsLoading(false);
     }
@@ -532,7 +532,7 @@ export default function TreatmentSession({
       content: displayText,
       isUser: true,
       timestamp: new Date(),
-      version: 'v3'
+      version: 'v4'
     };
     setMessages(prev => [...prev, userMessage]);
     setClickedButton(null);
@@ -547,7 +547,7 @@ export default function TreatmentSession({
       userInput: workType,
       sessionStats,
       timestamp: Date.now(),
-      version: 'v3'
+      version: 'v4'
     };
     setStepHistory(prev => [...prev, historyEntry]);
 
@@ -578,7 +578,7 @@ export default function TreatmentSession({
             timestamp: new Date(),
             responseTime: data.responseTime,
             usedAI: data.usedAI,
-            version: 'v3'
+            version: 'v4'
           };
           setMessages(prev => [...prev, systemMessage]);
         }
@@ -653,18 +653,6 @@ export default function TreatmentSession({
     return true;
   };
 
-  const shouldShowGoalYesNoButtons = () => {
-    // Check if we're in goal yes/no steps
-    const goalYesNoSteps = ['goal_deadline_check', 'goal_confirmation'];
-    if (!goalYesNoSteps.includes(currentStep)) return false;
-    
-    // Don't show if we're loading or session isn't active
-    if (isLoading || !isSessionActive) return false;
-    
-    console.log(`✅ GOAL YES/NO BUTTONS: Showing for ${currentStep} step`);
-    return true;
-  };
-
   // V3: Handle Yes/No button clicks for trauma intro and confirm statement
   const handleYesNoClick = (response: string) => {
     setClickedButton(response);
@@ -688,7 +676,7 @@ export default function TreatmentSession({
       content: method,
       isUser: true,
       timestamp: new Date(),
-      version: 'v3'
+      version: 'v4'
     };
     setMessages(prev => [...prev, userMessage]);
     setClickedButton(null);
@@ -706,7 +694,7 @@ export default function TreatmentSession({
       userInput: methodNumber,
       sessionStats,
       timestamp: Date.now(),
-      version: 'v3'
+      version: 'v4'
     };
     setStepHistory(prev => [...prev, historyEntry]);
 
@@ -731,7 +719,7 @@ export default function TreatmentSession({
           timestamp: new Date(),
           responseTime: data.responseTime,
           usedAI: data.usedAI,
-          version: 'v3'
+          version: 'v4'
         };
         setMessages(prev => [...prev, systemMessage]);
         setCurrentStep(data.currentStep);
@@ -767,7 +755,7 @@ export default function TreatmentSession({
 
   return (
     <div className="max-w-4xl mx-auto px-4">
-      {/* V4 Header */}
+      {/* V3 Header */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
@@ -790,7 +778,7 @@ export default function TreatmentSession({
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* V4 Performance Indicators */}
+              {/* V3 Performance Indicators */}
               <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                 <Clock className="h-4 w-4" />
                 <span>{lastResponseTime}ms</span>
@@ -817,7 +805,7 @@ export default function TreatmentSession({
           </div>
         </div>
 
-        {/* V4 Messages Area */}
+        {/* V3 Messages Area */}
         <div className="h-96 overflow-y-auto p-6 space-y-4">
           {messages.map((message) => (
             <div
@@ -845,7 +833,7 @@ export default function TreatmentSession({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* V4 Input Area */}
+        {/* V3 Input Area */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
           {hasError && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -975,26 +963,6 @@ export default function TreatmentSession({
             </div>
           )}
 
-          {/* V3: Yes/No Buttons for Goal Steps (goal_deadline_check, goal_confirmation) */}
-          {shouldShowGoalYesNoButtons() && (
-            <div className="mb-4 flex space-x-3 justify-center">
-              <button
-                onClick={() => handleYesNoClick('yes')}
-                disabled={isLoading}
-                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold"
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => handleYesNoClick('no')}
-                disabled={isLoading}
-                className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold"
-              >
-                No
-              </button>
-            </div>
-          )}
-
           {/* V3: Method Selection Buttons */}
           {shouldShowMethodSelection() && (
             <div className="mb-4">
@@ -1060,7 +1028,7 @@ export default function TreatmentSession({
           )}
 
           {/* V3: Text Input Form - Hidden when buttons are shown */}
-          {!showWorkTypeButtons && !shouldShowMethodSelection() && !shouldShowTraumaYesNoButtons() && !shouldShowConfirmStatementButtons() && !shouldShowGoalYesNoButtons() && (
+          {!showWorkTypeButtons && !shouldShowMethodSelection() && !shouldShowTraumaYesNoButtons() && !shouldShowConfirmStatementButtons() && (
             <form onSubmit={handleSubmit} className="flex space-x-2">
               <input
                 ref={inputRef}

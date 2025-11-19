@@ -120,7 +120,8 @@ export default function SettingsPage() {
 
   // Labs toggle states
   const [labsToggles, setLabsToggles] = useState({
-    v3TreatmentDemo: true
+    v3TreatmentDemo: true,
+    v4TreatmentDemo: true
   });
 
   // Load notification preferences on component mount
@@ -1199,6 +1200,78 @@ export default function SettingsPage() {
                         className="flex-1 px-4 py-2 bg-gray-600 text-white text-center rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
                       >
                         View V3 Code
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* V4 Treatment Demo with Toggle */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <h4 className="text-md font-medium text-gray-900 dark:text-white">V4 Treatment (Labs)</h4>
+                    <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full">
+                      Experimental
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleLabsToggle('v4TreatmentDemo')}
+                    aria-label={`${labsToggles.v4TreatmentDemo ? 'Disable' : 'Enable'} V4 Treatment Demo`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                      labsToggles.v4TreatmentDemo
+                        ? 'bg-indigo-600'
+                        : 'bg-gray-200 dark:bg-gray-700'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        labsToggles.v4TreatmentDemo ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                {labsToggles.v4TreatmentDemo && (
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Brain className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <h5 className="font-medium text-gray-900 dark:text-white">V4 Treatment System (Labs)</h5>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      Experimental copy of V3 for testing new features (voice integration, etc). Based on the latest stable V3 codebase with bug fixes.
+                    </p>
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <span>Based on latest V3 with all bug fixes</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <span>Isolated environment for experimentation</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <span>Voice module integration testing</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <span>All 6 treatment modalities available</span>
+                      </div>
+                    </div>
+                    <div className="flex space-x-3">
+                      <a
+                        href="/dashboard/sessions/treatment-v4"
+                        className="flex-1 px-4 py-2 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm"
+                      >
+                        Try V4 Treatment (Labs)
+                      </a>
+                      <a
+                        href="https://github.com/yourusername/mindshifting/tree/main/lib/v4"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 px-4 py-2 bg-gray-600 text-white text-center rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
+                      >
+                        View V4 Code
                       </a>
                     </div>
                   </div>

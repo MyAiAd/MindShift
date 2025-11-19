@@ -4,11 +4,11 @@ import React from 'react';
 import { Undo2, Sparkles } from 'lucide-react';
 import { ModalityComponentProps } from '../../shared/types';
 
-interface IdentityShiftingProps extends ModalityComponentProps {
+interface ProblemShiftingProps extends ModalityComponentProps {
   version?: 'v3';
 }
 
-export default function IdentityShifting({
+export default function ProblemShifting({
   sessionId,
   userId,
   messages,
@@ -25,41 +25,40 @@ export default function IdentityShifting({
   selectedWorkType,
   clickedButton,
   version = 'v3'
-}: IdentityShiftingProps) {
+}: ProblemShiftingProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
-    console.log('🔍 V4 DEBUG: IdentityShifting yes/no response:', response);
+    console.log('🔍 V3 DEBUG: ProblemShifting yes/no response:', response);
     await onSendMessage(response);
   };
 
-  // V4 Enhanced: Identity Shifting specific step checks
-  const isIdentityShiftingYesNoStep = () => {
-    const identityShiftingYesNoSteps = [
-      'identity_check',                 // Identity check
-      'identity_problem_check',         // Identity problem check
+  // V3 Enhanced: Problem Shifting specific step checks
+  const isProblemShiftingYesNoStep = () => {
+    const problemShiftingYesNoSteps = [
+      'check_if_still_problem',         // Check if still problem
+      'what_happens_step',              // What happens step
     ];
-    return identityShiftingYesNoSteps.includes(currentStep);
+    return problemShiftingYesNoSteps.includes(currentStep);
   };
 
-  const isIdentityShiftingTextInputStep = () => {
-    const identityShiftingTextSteps = [
-      'identity_shifting_intro',        // Identity shifting intro
-      'identity_dissolve_step_a',       // Identity dissolve step A
-      'identity_dissolve_step_b',       // Identity dissolve step B
-      'identity_dissolve_step_c',       // Identity dissolve step C
-      'identity_dissolve_step_d',       // Identity dissolve step D
-      'identity_dissolve_step_e',       // Identity dissolve step E
+  const isProblemShiftingTextInputStep = () => {
+    const problemShiftingTextSteps = [
+      'problem_shifting_intro',         // Problem shifting intro
+      'body_sensation_check',           // Body sensation check
+      'what_needs_to_happen_step',      // What needs to happen step
+      'feel_solution_state',            // Feel solution state
+      'feel_good_state',                // Feel good state
     ];
-    return identityShiftingTextSteps.includes(currentStep);
+    return problemShiftingTextSteps.includes(currentStep);
   };
 
   return (
     <div className="space-y-4">
-      {/* V4 Enhanced Header */}
+      {/* V3 Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Identity Shifting
+            Problem Shifting
           </h3>
           <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full flex items-center space-x-1">
             <Sparkles className="h-3 w-3" />
@@ -79,8 +78,8 @@ export default function IdentityShifting({
         )}
       </div>
 
-      {/* V4 Enhanced: Yes/No Response UI */}
-      {isIdentityShiftingYesNoStep() && (
+      {/* V3 Enhanced: Yes/No Response UI */}
+      {isProblemShiftingYesNoStep() && (
         <div className="flex space-x-3">
           <button
             onClick={() => handleYesNoResponse('yes')}
@@ -99,8 +98,8 @@ export default function IdentityShifting({
         </div>
       )}
 
-      {/* V4 Enhanced: Text Input UI */}
-      {isIdentityShiftingTextInputStep() && (
+      {/* V3 Enhanced: Text Input UI */}
+      {isProblemShiftingTextInputStep() && (
         <div className="space-y-3">
           <div className="relative">
             <input

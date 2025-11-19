@@ -28,11 +28,11 @@ export default function IdentityShifting({
 }: IdentityShiftingProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
-    console.log('🔍 V4 DEBUG: IdentityShifting yes/no response:', response);
+    console.log('🔍 V3 DEBUG: IdentityShifting yes/no response:', response);
     await onSendMessage(response);
   };
 
-  // V4 Enhanced: Identity Shifting specific step checks
+  // V3 Enhanced: Identity Shifting specific step checks
   const isIdentityShiftingYesNoStep = () => {
     const identityShiftingYesNoSteps = [
       'identity_check',                 // Identity check
@@ -55,7 +55,7 @@ export default function IdentityShifting({
 
   return (
     <div className="space-y-4">
-      {/* V4 Enhanced Header */}
+      {/* V3 Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -79,7 +79,7 @@ export default function IdentityShifting({
         )}
       </div>
 
-      {/* V4 Enhanced: Yes/No Response UI */}
+      {/* V3 Enhanced: Yes/No Response UI */}
       {isIdentityShiftingYesNoStep() && (
         <div className="flex space-x-3">
           <button
@@ -99,7 +99,7 @@ export default function IdentityShifting({
         </div>
       )}
 
-      {/* V4 Enhanced: Text Input UI */}
+      {/* V3 Enhanced: Text Input UI */}
       {isIdentityShiftingTextInputStep() && (
         <div className="space-y-3">
           <div className="relative">

@@ -191,13 +191,13 @@ async function handleStartSession(sessionId: string, userId: string) {
     // NEW: Add performance metrics to response
     const perfMetrics = treatmentMachine.getPerformanceMetrics();
     (finalResponse as any).performanceMetrics = perfMetrics;
-    console.log(`🚀 V4 PERFORMANCE: Cache hit rate: ${perfMetrics.cacheHitRate.toFixed(1)}%, Preloaded responses: ${perfMetrics.preloadedResponsesUsed}`);
+    console.log(`🚀 V3 PERFORMANCE: Cache hit rate: ${perfMetrics.cacheHitRate.toFixed(1)}%, Preloaded responses: ${perfMetrics.preloadedResponsesUsed}`);
 
     return NextResponse.json(finalResponse);
   } catch (error) {
-    console.error('V4 Start session error:', error);
+    console.error('V3 Start session error:', error);
     return NextResponse.json(
-      { error: 'Failed to start V4 session', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to start V3 session', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -211,7 +211,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
   const startTime = performance.now();
   
   try {
-    console.log('Treatment V4 API [v4-routing-fix]: Continuing session:', { sessionId, userId, userInput: userInput.substring(0, 50) + '...' });
+    console.log('Treatment V4 API [v3-routing-fix]: Continuing session:', { sessionId, userId, userInput: userInput.substring(0, 50) + '...' });
     
     console.log('Treatment V4 API: About to call processUserInput...');
     // Process with state machine first (95% of cases)
@@ -222,7 +222,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
     } catch (stateMachineError) {
       console.error('Treatment V4 API: State machine error:', stateMachineError);
       return NextResponse.json({
-        error: 'V4 State machine processing failed',
+        error: 'V3 State machine processing failed',
         details: stateMachineError instanceof Error ? stateMachineError.message : 'Unknown state machine error',
         stack: stateMachineError instanceof Error ? stateMachineError.stack : 'No stack trace',
         location: 'processUserInput'
@@ -258,10 +258,10 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       let aiCost = 0;
       let aiTokens = 0;
 
-      // V4 Note: Linguistic processing will be handled by V4 state machine internally
+      // V3 Note: Linguistic processing will be handled by V3 state machine internally
       // For now, we'll use the V2 AI assistance system for compatibility
       if (result.needsLinguisticProcessing) {
-        console.log('Treatment V4 API: V4 linguistic processing needed - using V2 compatibility layer');
+        console.log('Treatment V4 API: V3 linguistic processing needed - using V2 compatibility layer');
         
         // For intro steps, use the problem statement from context, not the current user input
         let textToProcess = userInput;
@@ -399,14 +399,14 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
     // NEW: Add performance metrics to response
     const perfMetrics = treatmentMachine.getPerformanceMetrics();
     (finalResponse as any).performanceMetrics = perfMetrics;
-    console.log(`🚀 V4 PERFORMANCE: Cache hit rate: ${perfMetrics.cacheHitRate.toFixed(1)}%, Preloaded responses: ${perfMetrics.preloadedResponsesUsed}`);
+    console.log(`🚀 V3 PERFORMANCE: Cache hit rate: ${perfMetrics.cacheHitRate.toFixed(1)}%, Preloaded responses: ${perfMetrics.preloadedResponsesUsed}`);
 
     return NextResponse.json(finalResponse);
 
   } catch (error) {
-    console.error('V4 Continue session error:', error);
+    console.error('V3 Continue session error:', error);
     return NextResponse.json(
-      { error: 'Failed to process V4 input', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to process V3 input', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -512,7 +512,7 @@ async function handleResumeSession(sessionId: string, userId: string) {
     });
 
   } catch (error) {
-    console.error('V4 Resume session error:', error);
+    console.error('V3 Resume session error:', error);
     // Fallback to starting a new session if resume fails
     console.log('Treatment V4 API: Resume failed, falling back to new session');
     return await handleStartSession(sessionId, userId);
@@ -521,7 +521,7 @@ async function handleResumeSession(sessionId: string, userId: string) {
 
 // Note: The remaining functions (handleAIValidation, handleAIAssistance, handleGetStatus, handleUndo, 
 // saveSessionToDatabase, saveInteractionToDatabase, updateSessionContextInDatabase, getPhaseForStep)
-// are identical to V2 for now and will be updated as V4 features are implemented.
+// are identical to V2 for now and will be updated as V3 features are implemented.
 // For brevity, I'm including the essential ones and noting that others should be copied from V2.
 
 /**
@@ -559,7 +559,7 @@ async function handleAIAssistance(
     const aiResponse = await aiAssistance.processAssistanceRequest(assistanceRequest);
     
     // Log AI usage for monitoring
-    console.log(`V4 AI assistance used for session ${sessionId}:`, {
+    console.log(`V3 AI assistance used for session ${sessionId}:`, {
       trigger: needsAI.trigger.condition,
       tokens: aiResponse.tokenCount,
       cost: aiResponse.cost
@@ -567,7 +567,7 @@ async function handleAIAssistance(
 
     return aiResponse;
   } catch (error) {
-    console.error('V4 AI assistance error:', error);
+    console.error('V3 AI assistance error:', error);
     // Fallback to scripted response
     return {
       message: "Please continue with the current step of the process.",
@@ -700,7 +700,7 @@ async function handleAIValidation(
       };
     }
   } catch (error) {
-    console.error('V4 AI validation error:', error);
+    console.error('V3 AI validation error:', error);
     // Fallback to allowing the input
     const result = await treatmentMachine.processUserInput(sessionId, userInput, { userId });
     return {
@@ -731,7 +731,7 @@ async function handleGetStatus(sessionId: string, userId: string) {
 
     if (error || !session) {
       return NextResponse.json(
-        { error: 'V4 Session not found' },
+        { error: 'V3 Session not found' },
         { status: 404 }
       );
     }
@@ -761,9 +761,9 @@ async function handleGetStatus(sessionId: string, userId: string) {
       systemStats
     });
   } catch (error) {
-    console.error('V4 Get status error:', error);
+    console.error('V3 Get status error:', error);
     return NextResponse.json(
-      { error: 'Failed to get V4 session status' },
+      { error: 'Failed to get V3 session status' },
       { status: 500 }
     );
   }
@@ -812,7 +812,7 @@ async function saveSessionToDatabase(
       duration_minutes: 0,
       total_ai_cost: 0.00,
       total_ai_tokens: 0,
-      // V4 specific metadata
+      // V3 specific metadata
       treatment_version: 'v4'
     };
     
@@ -830,7 +830,7 @@ async function saveSessionToDatabase(
       console.log('Treatment V4 API: Session saved successfully');
     }
   } catch (error) {
-    console.error('V4 Database save error:', error);
+    console.error('V3 Database save error:', error);
     // Don't fail the request if database save fails
     console.warn('Treatment V4 API: Continuing without database save');
   }
@@ -860,7 +860,7 @@ async function saveInteractionToDatabase(
       step_id: response.currentStep,
       phase_id: getPhaseForStep(response.currentStep || ''),
       created_at: new Date().toISOString(),
-      // V4 specific metadata
+      // V3 specific metadata
       treatment_version: 'v4'
     });
 
@@ -874,7 +874,7 @@ async function saveInteractionToDatabase(
           p_response_time: response.responseTime
         });
       } catch (error) {
-        console.error('V4 Background stats update failed:', error, {
+        console.error('V3 Background stats update failed:', error, {
           sessionId,
           step: response.currentStep,
           timestamp: new Date().toISOString()
@@ -884,7 +884,7 @@ async function saveInteractionToDatabase(
       }
     })();
   } catch (error) {
-    console.error('V4 Database interaction save error:', error);
+    console.error('V3 Database interaction save error:', error);
     // Don't fail the request if database save fails
   }
 }
@@ -956,7 +956,7 @@ async function updateSessionContextInDatabase(
     // Execute all operations in parallel
     await Promise.all(operations);
   } catch (error) {
-    console.error('V4 Database context update error:', error);
+    console.error('V3 Database context update error:', error);
     // Don't fail the request if database update fails
   }
 }
@@ -965,8 +965,8 @@ async function updateSessionContextInDatabase(
  * Get the correct phase for a given step ID
  */
 function getPhaseForStep(stepId: string): string {
-  // Map steps to their correct phases based on V4 state machine definition
-  // Note: This will need to be updated based on actual V4 phase/step structure
+  // Map steps to their correct phases based on V3 state machine definition
+  // Note: This will need to be updated based on actual V3 phase/step structure
   const stepToPhaseMap: Record<string, string> = {
     // Introduction phase
     'mind_shifting_explanation': 'introduction',
@@ -1020,10 +1020,6 @@ function getPhaseForStep(stepId: string): string {
     // Reality shifting phase
     'reality_shifting_intro': 'reality_shifting',
     'reality_goal_capture': 'reality_shifting',
-    'goal_deadline_check': 'reality_shifting',
-    'goal_deadline_date': 'reality_shifting',
-    'goal_confirmation': 'reality_shifting',
-    'goal_certainty': 'reality_shifting',
     'reality_step_a2': 'reality_shifting',
     'reality_step_a3': 'reality_shifting',
     'reality_step_b': 'reality_shifting',
@@ -1118,14 +1114,14 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       console.log('Treatment V4 API: Context retrieved successfully');
     } catch (contextError) {
       console.error('Treatment V4 API: Failed to get context:', contextError);
-      throw new Error(`Failed to get V4 treatment context: ${contextError instanceof Error ? contextError.message : 'Unknown context error'}`);
+      throw new Error(`Failed to get V3 treatment context: ${contextError instanceof Error ? contextError.message : 'Unknown context error'}`);
     }
     
     if (!context) {
-      throw new Error('V4 Treatment context is null or undefined');
+      throw new Error('V3 Treatment context is null or undefined');
     }
     
-    console.log('V4 Current context before undo:', { 
+    console.log('V3 Current context before undo:', { 
       currentStep: context.currentStep, 
       currentPhase: context.currentPhase,
       userResponses: context.userResponses ? Object.keys(context.userResponses) : []
@@ -1197,47 +1193,14 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       console.log('Treatment V4 API: Context updated successfully');
     } catch (updateError) {
       console.error('Treatment V4 API: Error updating context:', updateError);
-      throw new Error(`Failed to update V4 context: ${updateError instanceof Error ? updateError.message : 'Unknown update error'}`);
-    }
-    
-    // CRITICAL: Restore goal metadata from userResponses when undoing to goal-related steps
-    // This fixes the issue where saying "no" to goal_confirmation clears metadata,
-    // then undoing back requires that metadata to display the confirmation message
-    const goalRelatedSteps = ['goal_deadline_check', 'goal_deadline_date', 'goal_confirmation', 'goal_certainty'];
-    if (goalRelatedSteps.includes(undoToStep)) {
-      try {
-        const ctx = treatmentMachine.getContextForUndo(sessionId);
-        // Restore currentGoal from reality_goal_capture or goal_description response
-        if (ctx.userResponses['reality_goal_capture']) {
-          ctx.metadata.currentGoal = ctx.userResponses['reality_goal_capture'];
-          console.log(`🔄 UNDO_RESTORE: Restored currentGoal from reality_goal_capture: "${ctx.metadata.currentGoal}"`);
-        } else if (ctx.userResponses['goal_description']) {
-          ctx.metadata.currentGoal = ctx.userResponses['goal_description'];
-          console.log(`🔄 UNDO_RESTORE: Restored currentGoal from goal_description: "${ctx.metadata.currentGoal}"`);
-        }
-        
-        // Restore goalWithDeadline if there was a deadline
-        const hasDeadline = ctx.userResponses['goal_deadline_check']?.toLowerCase().includes('yes');
-        const deadline = ctx.userResponses['goal_deadline_date'];
-        if (hasDeadline && deadline && ctx.metadata.currentGoal) {
-          ctx.metadata.goalWithDeadline = `${ctx.metadata.currentGoal} by ${deadline}`;
-          console.log(`🔄 UNDO_RESTORE: Restored goalWithDeadline: "${ctx.metadata.goalWithDeadline}"`);
-        }
-        
-        // Save the restored context
-        await treatmentMachine.saveContextToDatabase(ctx);
-        console.log('🔄 UNDO_RESTORE: Goal metadata restored and saved successfully');
-      } catch (restoreError) {
-        console.error('Treatment V4 API: Error restoring goal metadata:', restoreError);
-        // Continue - this isn't critical enough to fail the undo
-      }
+      throw new Error(`Failed to update V3 context: ${updateError instanceof Error ? updateError.message : 'Unknown update error'}`);
     }
     
     // Get updated context for logging
     let updatedContext;
     try {
       updatedContext = treatmentMachine.getContextForUndo(sessionId);
-      console.log('V4 Context after undo:', { 
+      console.log('V3 Context after undo:', { 
         currentStep: updatedContext.currentStep, 
         currentPhase: updatedContext.currentPhase,
         userResponses: updatedContext.userResponses ? Object.keys(updatedContext.userResponses) : []
@@ -1250,7 +1213,7 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
     
     return NextResponse.json({
       success: true,
-      message: 'V4 Undo successful',
+      message: 'V3 Undo successful',
       currentStep: undoToStep,
       version: 'v4',
       clearedResponses: updatedContext.userResponses ? Object.keys(updatedContext.userResponses).length : 0
@@ -1259,7 +1222,7 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
   } catch (error) {
     console.error('Treatment V4 API: Undo error:', error);
     return NextResponse.json(
-      { error: 'V4 Undo failed', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'V3 Undo failed', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

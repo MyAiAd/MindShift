@@ -326,7 +326,7 @@ export class DiggingDeeperPhase {
           aiTriggers: []
         },
         
-        // SCENARIO CHECK 3 - Third scenario check (missing in original V4)
+        // SCENARIO CHECK 3 - Third scenario check (missing in original V3)
         {
           id: 'scenario_check_3',
           scriptedResponse: (userInput, context) => {

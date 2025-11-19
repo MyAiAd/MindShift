@@ -4,11 +4,11 @@ import React from 'react';
 import { Undo2, Sparkles } from 'lucide-react';
 import { ModalityComponentProps } from '../../shared/types';
 
-interface IdentityShiftingProps extends ModalityComponentProps {
+interface BlockageShiftingProps extends ModalityComponentProps {
   version?: 'v3';
 }
 
-export default function IdentityShifting({
+export default function BlockageShifting({
   sessionId,
   userId,
   messages,
@@ -25,41 +25,39 @@ export default function IdentityShifting({
   selectedWorkType,
   clickedButton,
   version = 'v3'
-}: IdentityShiftingProps) {
+}: BlockageShiftingProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
-    console.log('🔍 V4 DEBUG: IdentityShifting yes/no response:', response);
+    console.log('🔍 V3 DEBUG: BlockageShifting yes/no response:', response);
     await onSendMessage(response);
   };
 
-  // V4 Enhanced: Identity Shifting specific step checks
-  const isIdentityShiftingYesNoStep = () => {
-    const identityShiftingYesNoSteps = [
-      'identity_check',                 // Identity check
-      'identity_problem_check',         // Identity problem check
+  // V3 Enhanced: Blockage Shifting specific step checks
+  const isBlockageShiftingYesNoStep = () => {
+    const blockageShiftingYesNoSteps = [
+      'blockage_check_if_still_problem', // Check if still problem
     ];
-    return identityShiftingYesNoSteps.includes(currentStep);
+    return blockageShiftingYesNoSteps.includes(currentStep);
   };
 
-  const isIdentityShiftingTextInputStep = () => {
-    const identityShiftingTextSteps = [
-      'identity_shifting_intro',        // Identity shifting intro
-      'identity_dissolve_step_a',       // Identity dissolve step A
-      'identity_dissolve_step_b',       // Identity dissolve step B
-      'identity_dissolve_step_c',       // Identity dissolve step C
-      'identity_dissolve_step_d',       // Identity dissolve step D
-      'identity_dissolve_step_e',       // Identity dissolve step E
+  const isBlockageShiftingTextInputStep = () => {
+    const blockageShiftingTextSteps = [
+      'blockage_shifting_intro',        // Blockage shifting intro
+      'blockage_step_b',                // Blockage step B
+      'blockage_step_c',                // Blockage step C
+      'blockage_step_d',                // Blockage step D
+      'blockage_step_e',                // Blockage step E
     ];
-    return identityShiftingTextSteps.includes(currentStep);
+    return blockageShiftingTextSteps.includes(currentStep);
   };
 
   return (
     <div className="space-y-4">
-      {/* V4 Enhanced Header */}
+      {/* V3 Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Identity Shifting
+            Blockage Shifting
           </h3>
           <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full flex items-center space-x-1">
             <Sparkles className="h-3 w-3" />
@@ -79,8 +77,8 @@ export default function IdentityShifting({
         )}
       </div>
 
-      {/* V4 Enhanced: Yes/No Response UI */}
-      {isIdentityShiftingYesNoStep() && (
+      {/* V3 Enhanced: Yes/No Response UI */}
+      {isBlockageShiftingYesNoStep() && (
         <div className="flex space-x-3">
           <button
             onClick={() => handleYesNoResponse('yes')}
@@ -99,8 +97,8 @@ export default function IdentityShifting({
         </div>
       )}
 
-      {/* V4 Enhanced: Text Input UI */}
-      {isIdentityShiftingTextInputStep() && (
+      {/* V3 Enhanced: Text Input UI */}
+      {isBlockageShiftingTextInputStep() && (
         <div className="space-y-3">
           <div className="relative">
             <input

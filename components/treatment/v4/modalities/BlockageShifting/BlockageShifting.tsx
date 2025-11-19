@@ -28,11 +28,11 @@ export default function BlockageShifting({
 }: BlockageShiftingProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
-    console.log('🔍 V3 DEBUG: BlockageShifting yes/no response:', response);
+    console.log('🔍 V4 DEBUG: BlockageShifting yes/no response:', response);
     await onSendMessage(response);
   };
 
-  // V3 Enhanced: Blockage Shifting specific step checks
+  // V4 Enhanced: Blockage Shifting specific step checks
   const isBlockageShiftingYesNoStep = () => {
     const blockageShiftingYesNoSteps = [
       'blockage_check_if_still_problem', // Check if still problem
@@ -53,7 +53,7 @@ export default function BlockageShifting({
 
   return (
     <div className="space-y-4">
-      {/* V3 Enhanced Header */}
+      {/* V4 Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -77,7 +77,7 @@ export default function BlockageShifting({
         )}
       </div>
 
-      {/* V3 Enhanced: Yes/No Response UI */}
+      {/* V4 Enhanced: Yes/No Response UI */}
       {isBlockageShiftingYesNoStep() && (
         <div className="flex space-x-3">
           <button
@@ -97,7 +97,7 @@ export default function BlockageShifting({
         </div>
       )}
 
-      {/* V3 Enhanced: Text Input UI */}
+      {/* V4 Enhanced: Text Input UI */}
       {isBlockageShiftingTextInputStep() && (
         <div className="space-y-3">
           <div className="relative">

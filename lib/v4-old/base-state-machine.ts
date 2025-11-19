@@ -678,7 +678,7 @@ export class BaseTreatmentStateMachine {
       } else {
         // ENHANCED ERROR: Show which steps are available in the current phase for debugging
         const availableSteps = updatedPhase.steps.map(s => s.id).join(', ');
-        console.error(`V4 PHASE_STEP_MISMATCH: Step '${nextStepId}' not found in phase '${context.currentPhase}'. Available steps: ${availableSteps}`);
+        console.error(`V3 PHASE_STEP_MISMATCH: Step '${nextStepId}' not found in phase '${context.currentPhase}'. Available steps: ${availableSteps}`);
         throw new Error(`Step '${nextStepId}' not found in phase '${context.currentPhase}'. Available steps: ${availableSteps}`);
       }
     }
@@ -720,7 +720,7 @@ export class BaseTreatmentStateMachine {
       // 'trauma_shifting_intro' REMOVED - This is a simple yes/no question, no AI needed
       'belief_shifting_intro'    // Ensure problem is stated as a problem
     ];
-    // REMOVED from V4 (were in V2's optimization):
+    // REMOVED from V3 (were in V2's optimization):
     // - 'body_sensation_check' - V2 removed for performance
     // - 'feel_solution_state' - V2 removed for performance
     // - 'identity_dissolve_step_a' - V2 removed for performance

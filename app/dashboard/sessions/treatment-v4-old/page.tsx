@@ -35,17 +35,17 @@ function TreatmentSessionContent() {
   }, [searchParams, router]);
 
   const handleSessionComplete = (sessionData: any) => {
-    console.log('V4 Session completed:', sessionData);
+    console.log('V3 Session completed:', sessionData);
     // You could show a completion modal or redirect
     setTimeout(() => {
-      router.push('/dashboard/sessions?completed=true&version=v4');
+      router.push('/dashboard/sessions?completed=true&version=v3');
     }, 3000);
   };
 
   const handleSessionError = (error: string) => {
-    console.error('V4 Session error:', error);
+    console.error('V3 Session error:', error);
     // You could show an error modal or redirect
-    alert(`V4 Session error: ${error}`);
+    alert(`V3 Session error: ${error}`);
   };
 
   if (loading) {
@@ -75,7 +75,7 @@ function TreatmentSessionContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-        <span className="ml-2 text-gray-600 dark:text-gray-300">Initializing V4 session...</span>
+        <span className="ml-2 text-gray-600 dark:text-gray-300">Initializing V3 session...</span>
       </div>
     );
   }
@@ -123,7 +123,7 @@ function TreatmentSessionContent() {
           shouldResume={shouldResume}
           onComplete={handleSessionComplete}
           onError={handleSessionError}
-          version="v4"
+          version="v3"
         />
       </div>
 
@@ -150,7 +150,7 @@ function TreatmentSessionContent() {
   );
 }
 
-export default function TreatmentSessionV4Page() {
+export default function TreatmentSessionV3Page() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">

@@ -4,11 +4,11 @@ import React from 'react';
 import { Undo2, Sparkles } from 'lucide-react';
 import { ModalityComponentProps } from '../../shared/types';
 
-interface IdentityShiftingProps extends ModalityComponentProps {
+interface RealityShiftingProps extends ModalityComponentProps {
   version?: 'v3';
 }
 
-export default function IdentityShifting({
+export default function RealityShifting({
   sessionId,
   userId,
   messages,
@@ -25,41 +25,54 @@ export default function IdentityShifting({
   selectedWorkType,
   clickedButton,
   version = 'v3'
-}: IdentityShiftingProps) {
+}: RealityShiftingProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
-    console.log('🔍 V4 DEBUG: IdentityShifting yes/no response:', response);
+    console.log('🔍 V3 DEBUG: RealityShifting yes/no response:', response);
     await onSendMessage(response);
   };
 
-  // V4 Enhanced: Identity Shifting specific step checks
-  const isIdentityShiftingYesNoStep = () => {
-    const identityShiftingYesNoSteps = [
-      'identity_check',                 // Identity check
-      'identity_problem_check',         // Identity problem check
+  // V3 Enhanced: Reality Shifting specific step checks
+  const isRealityShiftingYesNoStep = () => {
+    const realityShiftingYesNoSteps = [
+      'reality_certainty_check',        // Reality certainty check
+      'reality_integration_helped',     // Reality integration helped
     ];
-    return identityShiftingYesNoSteps.includes(currentStep);
+    return realityShiftingYesNoSteps.includes(currentStep);
   };
 
-  const isIdentityShiftingTextInputStep = () => {
-    const identityShiftingTextSteps = [
-      'identity_shifting_intro',        // Identity shifting intro
-      'identity_dissolve_step_a',       // Identity dissolve step A
-      'identity_dissolve_step_b',       // Identity dissolve step B
-      'identity_dissolve_step_c',       // Identity dissolve step C
-      'identity_dissolve_step_d',       // Identity dissolve step D
-      'identity_dissolve_step_e',       // Identity dissolve step E
+  const isRealityShiftingTextInputStep = () => {
+    const realityShiftingTextSteps = [
+      'reality_shifting_intro',         // Reality shifting intro
+      'reality_goal_capture',           // Reality goal capture
+      'reality_step_a2',                // Reality step A2
+      'reality_step_a3',                // Reality step A3
+      'reality_step_b',                 // Reality step B
+      'reality_why_not_possible',       // Reality why not possible
+      'reality_feel_reason',            // Reality feel reason
+      'reality_feel_reason_2',          // Reality feel reason 2
+      'reality_feel_reason_3',          // Reality feel reason 3
+      'reality_checking_questions',     // Reality checking questions
+      'reality_doubt_reason',           // Reality doubt reason
+      'reality_cycle_b2',               // Reality cycle B2
+      'reality_cycle_b3',               // Reality cycle B3
+      'reality_cycle_b4',               // Reality cycle B4
+      'reality_integration_intro',      // Reality integration intro
+      'reality_integration_start',      // Reality integration start
+      'reality_integration_awareness',  // Reality integration awareness
+      'reality_integration_action',     // Reality integration action
+      'reality_integration_action_more', // Reality integration action more
     ];
-    return identityShiftingTextSteps.includes(currentStep);
+    return realityShiftingTextSteps.includes(currentStep);
   };
 
   return (
     <div className="space-y-4">
-      {/* V4 Enhanced Header */}
+      {/* V3 Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Identity Shifting
+            Reality Shifting
           </h3>
           <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full flex items-center space-x-1">
             <Sparkles className="h-3 w-3" />
@@ -79,8 +92,8 @@ export default function IdentityShifting({
         )}
       </div>
 
-      {/* V4 Enhanced: Yes/No Response UI */}
-      {isIdentityShiftingYesNoStep() && (
+      {/* V3 Enhanced: Yes/No Response UI */}
+      {isRealityShiftingYesNoStep() && (
         <div className="flex space-x-3">
           <button
             onClick={() => handleYesNoResponse('yes')}
@@ -99,8 +112,8 @@ export default function IdentityShifting({
         </div>
       )}
 
-      {/* V4 Enhanced: Text Input UI */}
-      {isIdentityShiftingTextInputStep() && (
+      {/* V3 Enhanced: Text Input UI */}
+      {isRealityShiftingTextInputStep() && (
         <div className="space-y-3">
           <div className="relative">
             <input

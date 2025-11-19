@@ -28,11 +28,11 @@ export default function TraumaShifting({
 }: TraumaShiftingProps) {
 
   const handleYesNoResponse = async (response: 'yes' | 'no') => {
-    console.log('🔍 V3 DEBUG: TraumaShifting yes/no response:', response);
+    console.log('🔍 V4 DEBUG: TraumaShifting yes/no response:', response);
     await onSendMessage(response);
   };
 
-  // V3 Enhanced: Trauma Shifting specific step checks
+  // V4 Enhanced: Trauma Shifting specific step checks
   const isTraumaShiftingYesNoStep = () => {
     const traumaShiftingYesNoSteps = [
       'trauma_identity_check',          // Trauma identity check
@@ -56,7 +56,7 @@ export default function TraumaShifting({
 
   return (
     <div className="space-y-4">
-      {/* V3 Enhanced Header */}
+      {/* V4 Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -80,7 +80,7 @@ export default function TraumaShifting({
         )}
       </div>
 
-      {/* V3 Enhanced: Yes/No Response UI */}
+      {/* V4 Enhanced: Yes/No Response UI */}
       {isTraumaShiftingYesNoStep() && (
         <div className="flex space-x-3">
           <button
@@ -100,7 +100,7 @@ export default function TraumaShifting({
         </div>
       )}
 
-      {/* V3 Enhanced: Text Input UI */}
+      {/* V4 Enhanced: Text Input UI */}
       {isTraumaShiftingTextInputStep() && (
         <div className="space-y-3">
           <div className="relative">
