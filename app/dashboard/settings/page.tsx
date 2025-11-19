@@ -9,9 +9,6 @@ import { AccessibilityService } from '@/services/accessibility/accessibility.ser
 import { GDPRService } from '@/services/gdpr/gdpr.service';
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
 import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker, Brain } from 'lucide-react';
-import UnifiedTreatmentDemo from '@/components/labs/SimpleProblemShiftingDemo';
-import VoiceTreatmentDemo from '@/components/labs/VoiceTreatmentDemo';
-import TreatmentSessionDemo from '@/components/labs/TreatmentSessionDemo';
 import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
 import BeliefShiftingDemo from '@/components/labs/BeliefShiftingDemo';
 import IdentityShiftingDemo from '@/components/labs/IdentityShiftingDemo';
@@ -123,9 +120,6 @@ export default function SettingsPage() {
 
   // Labs toggle states
   const [labsToggles, setLabsToggles] = useState({
-    voiceTreatmentDemo: false,
-    unifiedTreatmentDemo: false,
-    newExperimentalDemo: false,
     v3TreatmentDemo: true
   });
 
@@ -1139,90 +1133,6 @@ export default function SettingsPage() {
             </p>
             
             <div className="space-y-6">
-              {/* Voice Treatment Demo with Toggle */}
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-gray-900 dark:text-white">Voice Treatment Demo</h4>
-                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 rounded-full">
-                      Voice AI
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleLabsToggle('voiceTreatmentDemo')}
-                    aria-label={`${labsToggles.voiceTreatmentDemo ? 'Disable' : 'Enable'} Voice Treatment Demo`}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      labsToggles.voiceTreatmentDemo
-                        ? 'bg-indigo-600'
-                        : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        labsToggles.voiceTreatmentDemo ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-                {labsToggles.voiceTreatmentDemo && <VoiceTreatmentDemo />}
-              </div>
-              
-              {/* Unified Treatment Demo with Toggle */}
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-gray-900 dark:text-white">Treatment Demo</h4>
-                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded-full">
-                      Interactive
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleLabsToggle('unifiedTreatmentDemo')}
-                    aria-label={`${labsToggles.unifiedTreatmentDemo ? 'Disable' : 'Enable'} Treatment Demo`}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      labsToggles.unifiedTreatmentDemo
-                        ? 'bg-indigo-600'
-                        : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        labsToggles.unifiedTreatmentDemo ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-                {labsToggles.unifiedTreatmentDemo && <UnifiedTreatmentDemo />}
-              </div>
-
-              {/* New Experimental Demo Area with Toggle */}
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-gray-900 dark:text-white">Treatment Sessions Demo</h4>
-                    <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full">
-                      Full Session
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleLabsToggle('newExperimentalDemo')}
-                    aria-label={`${labsToggles.newExperimentalDemo ? 'Disable' : 'Enable'} Treatment Sessions Demo`}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      labsToggles.newExperimentalDemo
-                        ? 'bg-indigo-600'
-                        : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        labsToggles.newExperimentalDemo ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-                {labsToggles.newExperimentalDemo && <TreatmentSessionDemo />}
-              </div>
-
               {/* V3 Treatment Demo with Toggle */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
