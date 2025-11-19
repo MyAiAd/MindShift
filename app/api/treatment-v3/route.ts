@@ -865,21 +865,24 @@ async function saveInteractionToDatabase(
     });
 
     // Update stats (non-blocking - fire and forget for performance)
-    supabase.rpc('update_session_stats', {
-      p_session_id: sessionId,
-      p_used_ai: response.usedAI,
-      p_response_time: response.responseTime
-    }).then(() => {
-      // Success - stats updated in background
-    }).catch(error => {
-      console.error('V3 Background stats update failed:', error, {
-        sessionId,
-        step: response.currentStep,
-        timestamp: new Date().toISOString()
-      });
-      // Stats are non-critical - log error but don't fail the request
-      // Could implement retry queue here in the future
-    });
+    // Using async IIFE to properly handle Supabase promise without blocking
+    (async () => {
+      try {
+        await supabase.rpc('update_session_stats', {
+          p_session_id: sessionId,
+          p_used_ai: response.usedAI,
+          p_response_time: response.responseTime
+        });
+      } catch (error) {
+        console.error('V3 Background stats update failed:', error, {
+          sessionId,
+          step: response.currentStep,
+          timestamp: new Date().toISOString()
+        });
+        // Stats are non-critical - log error but don't fail the request
+        // Could implement retry queue here in the future
+      }
+    })();
   } catch (error) {
     console.error('V3 Database interaction save error:', error);
     // Don't fail the request if database save fails
