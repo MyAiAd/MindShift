@@ -87,7 +87,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return 'goal_confirmation';
         
       case 'goal_confirmation':
-        return this.handleGoalConfirmation(lastResponse);
+        return this.handleGoalConfirmation(lastResponse, context);
         
       case 'goal_certainty':
         return 'reality_shifting_intro';
@@ -869,10 +869,21 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     }
   }
 
-  private handleGoalConfirmation(lastResponse: string): string {
+  private handleGoalConfirmation(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.toLowerCase().includes('yes') || lastResponse.toLowerCase().includes('y')) {
       return 'goal_certainty';
     } else {
+      // User said no - clear goal metadata and restart goal capture
+      context.metadata.currentGoal = '';
+      context.metadata.goalWithDeadline = '';
+      delete context.userResponses['goal_deadline_check'];
+      delete context.userResponses['goal_deadline_date'];
+      delete context.userResponses['goal_confirmation'];
+      // Clear goal cache to prevent stale responses
+      this.clearGoalCache();
+      // Reset phase to introduction where goal_description lives
+      context.currentPhase = 'introduction';
+      console.log('🔄 GOAL_CONFIRMATION: User said no, cleared metadata and returning to goal_description');
       return 'goal_description';
     }
   }

@@ -35,6 +35,8 @@ export default function RealityShifting({
   // V3 Enhanced: Reality Shifting specific step checks
   const isRealityShiftingYesNoStep = () => {
     const realityShiftingYesNoSteps = [
+      'goal_deadline_check',            // Goal deadline check
+      'goal_confirmation',              // Goal confirmation
       'reality_certainty_check',        // Reality certainty check
       'reality_integration_helped',     // Reality integration helped
     ];
@@ -45,6 +47,8 @@ export default function RealityShifting({
     const realityShiftingTextSteps = [
       'reality_shifting_intro',         // Reality shifting intro
       'reality_goal_capture',           // Reality goal capture
+      'goal_deadline_date',             // Goal deadline date input
+      'goal_certainty',                 // Goal certainty percentage
       'reality_step_a2',                // Reality step A2
       'reality_step_a3',                // Reality step A3
       'reality_step_b',                 // Reality step B
@@ -52,6 +56,7 @@ export default function RealityShifting({
       'reality_feel_reason',            // Reality feel reason
       'reality_feel_reason_2',          // Reality feel reason 2
       'reality_feel_reason_3',          // Reality feel reason 3
+      'reality_column_a_restart',       // Reality column A restart
       'reality_checking_questions',     // Reality checking questions
       'reality_doubt_reason',           // Reality doubt reason
       'reality_cycle_b2',               // Reality cycle B2
@@ -62,6 +67,13 @@ export default function RealityShifting({
       'reality_integration_awareness',  // Reality integration awareness
       'reality_integration_action',     // Reality integration action
       'reality_integration_action_more', // Reality integration action more
+      'reality_integration_awareness_1', // Reality integration awareness 1
+      'reality_integration_awareness_2', // Reality integration awareness 2
+      'reality_integration_awareness_3', // Reality integration awareness 3
+      'reality_integration_awareness_4', // Reality integration awareness 4
+      'reality_integration_action_1',   // Reality integration action 1
+      'reality_integration_action_2',   // Reality integration action 2
+      'reality_integration_action_3',   // Reality integration action 3
     ];
     return realityShiftingTextSteps.includes(currentStep);
   };
