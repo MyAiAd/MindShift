@@ -97,7 +97,7 @@ export const useNaturalVoice = ({
         }
     }, []);
 
-    // Speak text
+    // Speak text with streaming support
     const speak = useCallback(async (text: string) => {
         if (!text) return;
 
@@ -107,7 +107,7 @@ export const useNaturalVoice = ({
         isSpeakingRef.current = true;
 
         try {
-            console.log('🗣️ Natural Voice: Fetching TTS for:', text);
+            console.log('🗣️ Natural Voice: Fetching TTS stream for:', text);
             const response = await fetch('/api/tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -120,13 +120,15 @@ export const useNaturalVoice = ({
 
             if (!response.ok) throw new Error('TTS request failed');
 
-            const audioBlob = await response.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
-
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current = null;
             }
+
+            // For streaming, we can use the response blob directly as browsers handle
+            // progressive playback of media blobs/urls automatically
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
 
             const audio = new Audio(audioUrl);
             audioRef.current = audio;
@@ -139,6 +141,7 @@ export const useNaturalVoice = ({
                 if (enabled) {
                     startListening();
                 }
+                URL.revokeObjectURL(audioUrl);
             };
 
             await audio.play();

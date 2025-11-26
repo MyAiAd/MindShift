@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
       // '21m00Tcm4TlvDq8ikWAM' is "Rachel" (default)
       const voiceId = (voice === 'alloy' || !voice) ? '21m00Tcm4TlvDq8ikWAM' : voice;
 
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      // Use the stream endpoint
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
         method: 'POST',
         headers: {
           'xi-api-key': ELEVENLABS_API_KEY,
@@ -44,7 +45,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'ElevenLabs TTS synthesis failed' }, { status: 500 });
       }
 
-      audioBuffer = await response.arrayBuffer();
+      // Return the stream directly
+      return new NextResponse(response.body, {
+        headers: {
+          'Content-Type': 'audio/mpeg',
+          'Cache-Control': 'no-cache',
+        },
+      });
 
     } else {
       // OpenAI TTS (Default)
@@ -69,17 +76,17 @@ export async function POST(request: NextRequest) {
       }
 
       audioBuffer = await response.arrayBuffer();
+
+      return new NextResponse(audioBuffer, {
+        headers: {
+          'Content-Type': 'audio/mpeg',
+          'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        },
+      });
     }
-    
-    return new NextResponse(audioBuffer, {
-      headers: {
-        'Content-Type': 'audio/mpeg',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-      },
-    });
 
   } catch (error) {
     console.error('TTS API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-} 
+}
