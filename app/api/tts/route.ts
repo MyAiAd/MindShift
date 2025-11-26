@@ -22,6 +22,37 @@ export async function POST(request: NextRequest) {
       // '21m00Tcm4TlvDq8ikWAM' is "Rachel" (default)
       const voiceId = (voice === 'alloy' || !voice) ? '21m00Tcm4TlvDq8ikWAM' : voice;
 
+      // Caching Logic
+      const crypto = require('crypto');
+      const fs = require('fs');
+      const path = require('path');
+      const os = require('os');
+
+      // Create a unique hash for this request
+      const hash = crypto.createHash('md5').update(`${text}-${voiceId}`).digest('hex');
+      const cacheDir = path.join(os.tmpdir(), 'mindshifting-tts-cache');
+      const cacheFile = path.join(cacheDir, `${hash}.mp3`);
+
+      // Ensure cache directory exists
+      if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir, { recursive: true });
+      }
+
+      // Check if cached file exists
+      if (fs.existsSync(cacheFile)) {
+        console.log(`TTS Cache HIT: ${hash}`);
+        const fileBuffer = fs.readFileSync(cacheFile);
+        return new NextResponse(fileBuffer, {
+          headers: {
+            'Content-Type': 'audio/mpeg',
+            'Cache-Control': 'public, max-age=31536000', // Cache forever
+            'X-TTS-Cache': 'HIT',
+          },
+        });
+      }
+
+      console.log(`TTS Cache MISS: ${hash}`);
+
       // Use the stream endpoint
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
         method: 'POST',
@@ -45,11 +76,23 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'ElevenLabs TTS synthesis failed' }, { status: 500 });
       }
 
+      // Clone the response to save it while streaming
+      const responseClone = response.clone();
+      const arrayBuffer = await responseClone.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      // Save to cache asynchronously (don't block the stream)
+      fs.writeFile(cacheFile, buffer, (err: any) => {
+        if (err) console.error('Failed to save TTS to cache:', err);
+        else console.log(`Saved TTS to cache: ${hash}`);
+      });
+
       // Return the stream directly
       return new NextResponse(response.body, {
         headers: {
           'Content-Type': 'audio/mpeg',
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'public, max-age=31536000',
+          'X-TTS-Cache': 'MISS',
         },
       });
 
