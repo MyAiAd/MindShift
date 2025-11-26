@@ -46,8 +46,37 @@ export default function TreatmentSession({
     version: 'v4'
   });
 
-  // Natural Voice State
-  const [isNaturalVoiceEnabled, setIsNaturalVoiceEnabled] = useState(false);
+  // Natural Voice State - Init from localStorage if available
+  const [isNaturalVoiceEnabled, setIsNaturalVoiceEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('v4_natural_voice') === 'true';
+    }
+    return false;
+  });
+
+  // Toggle handler with Sticky Settings and Retroactive Play
+  const toggleNaturalVoice = () => {
+    const newState = !isNaturalVoiceEnabled;
+    setIsNaturalVoiceEnabled(newState);
+
+    // Sticky Settings
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('v4_natural_voice', String(newState));
+    }
+
+    // Retroactive Play: If turning ON, speak the last AI message
+    if (newState) {
+      // Find the last message that is NOT from the user
+      const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
+      if (lastAiMessage?.content) {
+        console.log('🔊 Retroactive Play:', lastAiMessage.content);
+        naturalVoice.speak(lastAiMessage.content);
+      }
+    } else {
+      // If turning OFF, stop any current speech
+      // (The hook handles this via the enabled prop, but explicit is good)
+    }
+  };
 
   // V4: Enhanced performance metrics state
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
@@ -830,7 +859,7 @@ export default function TreatmentSession({
 
               {/* Natural Voice Toggle */}
               <button
-                onClick={() => setIsNaturalVoiceEnabled(!isNaturalVoiceEnabled)}
+                onClick={toggleNaturalVoice}
                 className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${isNaturalVoiceEnabled
                   ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
                   : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
