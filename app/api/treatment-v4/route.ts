@@ -340,8 +340,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         usedAI,
         expectedResponseType: result.expectedResponseType, // Pass this to frontend for auto-advance
         aiCost,
-        aiTokens,
-        expectedResponseType: result.expectedResponseType // Pass this to frontend for auto-advance
+        aiTokens
       };
 
     } else if (result.needsAIAssistance) {
