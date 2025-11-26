@@ -18,7 +18,7 @@ export class TraumaShiftingPhase {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
           ],
-          nextStep: 'trauma_identity_step',
+          nextStep: 'trauma_identity_step_static',
           aiTriggers: [
             { condition: 'needsClarification', action: 'clarify' }
           ]
@@ -40,11 +40,22 @@ export class TraumaShiftingPhase {
         },
 
         {
-          id: 'trauma_identity_step',
+          id: 'trauma_identity_step_static',
+          scriptedResponse: (userInput, context) => {
+            return `Please close your eyes and keep them closed throughout the rest of the process.`;
+          },
+          expectedResponseType: 'auto',
+          validationRules: [],
+          nextStep: 'trauma_identity_step_dynamic',
+          aiTriggers: []
+        },
+
+        {
+          id: 'trauma_identity_step_dynamic',
           scriptedResponse: (userInput, context) => {
             // Get the negative experience statement
             const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
-            return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience...now freeze it there. Keep feeling this frozen moment...what kind of person are you being in this moment?`;
+            return `Think about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience...now freeze it there. Keep feeling this frozen moment...what kind of person are you being in this moment?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -59,9 +70,9 @@ export class TraumaShiftingPhase {
         {
           id: 'trauma_dissolve_step_a',
           scriptedResponse: (userInput, context) => {
-            // Get the identity from the trauma_identity_step response
-            const traumaIdentityResponse = context.userResponses?.['trauma_identity_step'];
-            
+            // Get the identity from the trauma_identity_step_dynamic response
+            const traumaIdentityResponse = context.userResponses?.['trauma_identity_step_dynamic'];
+
             // Store the identity from the identity step if we don't have it yet
             if (!context.metadata.currentTraumaIdentity && traumaIdentityResponse) {
               // Process the trauma identity response to add "person" suffix like Identity Shifting does
@@ -70,7 +81,7 @@ export class TraumaShiftingPhase {
               context.metadata.originalTraumaIdentity = processedTraumaIdentity; // Store processed version for trauma_identity_check
               console.log(`🔍 TRAUMA_DISSOLVE_STEP_A: Processing trauma identity "${traumaIdentityResponse}" -> "${processedTraumaIdentity}"`);
             }
-            
+
             // Use the stored identity, don't overwrite with current userInput
             const identity = context.metadata.currentTraumaIdentity || 'that identity';
             return `Feel yourself being ${identity}... what does it feel like?`;
@@ -204,7 +215,7 @@ export class TraumaShiftingPhase {
           scriptedResponse: (userInput, context) => {
             // Step A: Ask them to project into the future and feel the identity
             const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
-            
+
             console.log(`🔍 TRAUMA_FUTURE_PROJECTION: Asking to feel identity '${identity}' in the future`);
             return `Put yourself in the future and feel yourself being ${identity}... what does it feel like?`;
           },
@@ -223,9 +234,9 @@ export class TraumaShiftingPhase {
           scriptedResponse: (userInput, context) => {
             // Step C: Store response from future projection and ask what they are when not being the identity
             context.metadata.traumaFutureStepAResponse = userInput || 'that';
-            
+
             const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
-            
+
             console.log(`🔍 TRAUMA_FUTURE_STEP_C: Asking what they are when not being '${identity}' in the future`);
             return `What are you when you're not being '${identity}'?`;
           },
@@ -245,7 +256,7 @@ export class TraumaShiftingPhase {
             // Step D: Store response from C and ask them to feel that state
             context.metadata.traumaFutureStepCResponse = userInput || 'that';
             const stepCResponse = context.metadata.traumaFutureStepCResponse;
-            
+
             console.log(`🔍 TRAUMA_FUTURE_STEP_D: Asking them to feel '${stepCResponse}'`);
             return `Feel yourself being '${stepCResponse}'... what does it feel like?`;
           },
@@ -265,7 +276,7 @@ export class TraumaShiftingPhase {
             // Step E: Store response from D and ask what happens
             context.metadata.traumaFutureStepDResponse = userInput || 'that feeling';
             const stepDResponse = context.metadata.traumaFutureStepDResponse;
-            
+
             console.log(`🔍 TRAUMA_FUTURE_STEP_E: Asking what happens when they feel '${stepDResponse}'`);
             return `Feel '${stepDResponse}'... what happens in yourself when you feel '${stepDResponse}'?`;
           },
@@ -284,9 +295,9 @@ export class TraumaShiftingPhase {
           scriptedResponse: (userInput, context) => {
             // Step F: Check if they can still feel the identity in the future
             context.metadata.traumaFutureStepEResponse = userInput || 'that';
-            
+
             const identity = context.metadata.originalTraumaIdentity || context.metadata.currentTraumaIdentity || 'that identity';
-            
+
             console.log(`🔍 TRAUMA_FUTURE_STEP_F: Checking if they can still feel '${identity}' in the future`);
             return `Can you still feel yourself being ${identity}?`;
           },

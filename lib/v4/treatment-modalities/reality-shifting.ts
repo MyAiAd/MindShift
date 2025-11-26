@@ -49,7 +49,7 @@ export class RealityShiftingPhase {
             const goalStatement = context?.metadata?.currentGoal || 'your goal';
             const deadline = context?.userResponses?.['goal_deadline_date'] || '';
             const hasDeadline = context?.userResponses?.['goal_deadline_check']?.toLowerCase().includes('yes') || false;
-            
+
             if (hasDeadline && deadline) {
               // Check if we already have a synthesized goal with deadline from AI detection
               const existingSynthesizedGoal = context?.metadata?.goalWithDeadline;
@@ -81,22 +81,32 @@ export class RealityShiftingPhase {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please give me a percentage.' }
           ],
-          nextStep: 'reality_shifting_intro',
+          nextStep: 'reality_shifting_intro_static',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
         {
-          id: 'reality_shifting_intro',
+          id: 'reality_shifting_intro_static',
+          scriptedResponse: (userInput, context) => {
+            return `Close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. If ever you feel your goal has changed just let me know.`;
+          },
+          expectedResponseType: 'auto',
+          validationRules: [],
+          nextStep: 'reality_shifting_intro_dynamic',
+          aiTriggers: []
+        },
+
+        {
+          id: 'reality_shifting_intro_dynamic',
           scriptedResponse: (userInput, context) => {
             // Use the goal statement with deadline if available, otherwise use basic goal statement
             const goalWithDeadline = context?.metadata?.goalWithDeadline;
             const basicGoal = context?.metadata?.currentGoal || 'your goal';
             const goalStatement = goalWithDeadline || basicGoal;
             context.metadata.currentGoal = basicGoal; // Keep basic goal for other references
-            return `Close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. If ever you feel your goal has changed just let me know.
 
-Feel that '${goalStatement}' is coming to you... what does it feel like?`;
+            return `Feel that '${goalStatement}' is coming to you... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
@@ -240,7 +250,7 @@ Feel that '${goalStatement}' is coming to you... what does it feel like?`;
             // Check if we're coming from the second checking question (reality_certainty_check)
             const fromSecondCheck = context?.metadata?.fromSecondCheckingQuestion;
             console.log(`Reality doubt reason: fromSecondCheck=${fromSecondCheck}, doubtPercentage=${context?.metadata?.doubtPercentage}`);
-            
+
             if (fromSecondCheck) {
               // Coming from "Are there any doubts left?" - don't reference old percentage
               context.metadata.doubtPercentage = undefined;

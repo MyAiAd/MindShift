@@ -8,65 +8,47 @@ export class IdentityShiftingPhase {
       maxDuration: 30,
       steps: [
         {
-          id: 'identity_shifting_intro',
+          id: 'identity_shifting_intro_static',
+          scriptedResponse: (userInput, context) => {
+            return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question.`;
+          },
+          expectedResponseType: 'auto',
+          validationRules: [],
+          nextStep: 'identity_shifting_intro_dynamic',
+          aiTriggers: []
+        },
+
+        {
+          id: 'identity_shifting_intro_dynamic',
           scriptedResponse: (userInput, context) => {
             // Get the problem statement - prioritize digging deeper restated problem
             const diggingProblem = context?.metadata?.currentDiggingProblem;
             const originalProblem = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
-            
-            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Digging problem: "${diggingProblem}", Original problem: "${originalProblem}"`);
-            
+
             // Use the restated problem from digging deeper if available, otherwise use original
             const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || originalProblem;
-            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}"`);
-            
-            // Enhanced debug: Track what userInput we're receiving
-            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Called with userInput: "${userInput || 'NONE'}"`);
-            console.log(`🔍 IDENTITY_SHIFTING_INTRO: Current step in context: "${context.currentStep}"`);
-            
+
             // Only store identity if this is actually a user's identity response, not the problem statement
             if (userInput && userInput.trim() && userInput.trim() !== cleanProblemStatement) {
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: RAW userInput received: "${userInput}"`);
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Problem statement for reference: "${cleanProblemStatement}"`);
-              
               const processedIdentity = TextProcessingUtils.processIdentityResponse(userInput.trim());
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Processing identity "${userInput}" -> "${processedIdentity}"`);
-              
+
               // Check if user said "me" - need clarification
               if (userInput.toLowerCase().trim() === 'me') {
                 return "What kind of me?";
               }
-              
+
               // Store the processed identity with proper labeling
               context.metadata.identityResponse = {
                 type: 'IDENTITY',
                 value: processedIdentity,
                 originalInput: userInput.trim()
               };
-              
+
               // Keep currentIdentity for backward compatibility
               context.metadata.currentIdentity = processedIdentity;
-              
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ✅ STORED identity response:`, context.metadata.identityResponse);
-            } else if (userInput && userInput.trim() === cleanProblemStatement) {
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ❌ SKIPPED storage - userInput is problem statement, not identity response`);
-            } else if (userInput && userInput.trim()) {
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ❓ SKIPPED storage - userInput present but doesn't match problem statement`);
-            } else {
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: ⏸️ NO userInput - showing question only`);
             }
-            
-            // Check if we're coming from digging deeper (shorter instructions)
-            const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem || context?.metadata?.skipIntroInstructions;
-            
-            if (isFromDigging) {
-              // Short version for digging deeper - user has already seen full instructions
-              console.log(`🔍 IDENTITY_SHIFTING_INTRO: Skipping lengthy instructions - isFromDigging: ${!!isFromDigging}`);
-              return `Feel the problem '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
-            } else {
-              // Full version for first-time users
-              return `Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question. Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
-            }
+
+            return `Feel the problem of '${cleanProblemStatement}'... what kind of person are you being when you're experiencing this problem?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -84,14 +66,14 @@ export class IdentityShiftingPhase {
             // Use the properly labeled identity response
             const identityData = context.metadata.identityResponse;
             let identity = 'that identity';
-            
+
             if (identityData && identityData.type === 'IDENTITY') {
               identity = identityData.value;
             } else {
               // Fallback to currentIdentity for backward compatibility
               identity = context.metadata.currentIdentity || 'that identity';
             }
-            
+
             // BRIDGE PHRASE LOGIC: Adapt wording based on where user is returning from
             const returnTo = context.metadata.returnToIdentityCheck;
             const bridgeUsed = context.metadata.identityBridgePhraseUsed;
@@ -108,7 +90,7 @@ export class IdentityShiftingPhase {
             } else {
               console.log(`🔍 IDENTITY_DISSOLVE_STEP_A: Using DEFAULT phrase for '${identity}'`);
             }
-            
+
             return `${prefix} '${identity}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
@@ -144,18 +126,18 @@ export class IdentityShiftingPhase {
           scriptedResponse: (userInput, context) => {
             // Store the response from step B
             context.metadata.stepBResponse = userInput || 'that';
-            
+
             // Use the properly labeled identity response
             const identityData = context.metadata.identityResponse;
             let identity = 'that identity';
-            
+
             if (identityData && identityData.type === 'IDENTITY') {
               identity = identityData.value;
             } else {
               // Fallback to currentIdentity for backward compatibility
               identity = context.metadata.currentIdentity || 'that identity';
             }
-            
+
             return `What are you when you're not being '${identity}'?`;
           },
           expectedResponseType: 'open',
@@ -174,10 +156,10 @@ export class IdentityShiftingPhase {
             // Store the response from step C (what they are when not being the identity)
             context.metadata.stepCResponse = userInput || 'that';
             const stepCResponse = context.metadata.stepCResponse;
-            
+
             // Critical: Ensure originalProblemIdentity is preserved
             console.log(`🔍 IDENTITY_DISSOLVE_STEP_D: originalProblemIdentity: "${context.metadata.originalProblemIdentity}", currentIdentity: "${context.metadata.currentIdentity}", stepCResponse: "${stepCResponse}"`);
-            
+
             return `Feel yourself being '${stepCResponse}'... what does '${stepCResponse}' feel like?`;
           },
           expectedResponseType: 'feeling',
@@ -196,10 +178,10 @@ export class IdentityShiftingPhase {
             // Store the response from step D
             context.metadata.stepDResponse = userInput || 'that feeling';
             const stepDResponse = context.metadata.stepDResponse;
-            
+
             // Critical: Ensure originalProblemIdentity is preserved
             console.log(`🔍 IDENTITY_DISSOLVE_STEP_E: originalProblemIdentity: "${context.metadata.originalProblemIdentity}", currentIdentity: "${context.metadata.currentIdentity}", stepDResponse: "${stepDResponse}"`);
-            
+
             return `Feel '${stepDResponse}'... what happens in yourself when you feel '${stepDResponse}'?`;
           },
           expectedResponseType: 'feeling',
@@ -218,14 +200,14 @@ export class IdentityShiftingPhase {
             // Use the properly labeled identity response
             const identityData = context.metadata.identityResponse;
             let identity = 'that identity';
-            
+
             if (identityData && identityData.type === 'IDENTITY') {
               identity = identityData.value;
             } else {
               // Fallback to currentIdentity for backward compatibility
               identity = context.metadata.currentIdentity || 'that identity';
             }
-            
+
             return `Can you still feel yourself being '${identity}'?`;
           },
           expectedResponseType: 'yesno',
@@ -244,14 +226,14 @@ export class IdentityShiftingPhase {
             // Use the properly labeled identity response
             const identityData = context.metadata.identityResponse;
             let identity = 'that identity';
-            
+
             if (identityData && identityData.type === 'IDENTITY') {
               identity = identityData.value;
             } else {
               // Fallback to currentIdentity for backward compatibility
               identity = context.metadata.currentIdentity || 'that identity';
             }
-            
+
             return `Do you think you might feel yourself being '${identity}' in the future?`;
           },
           expectedResponseType: 'yesno',
@@ -270,14 +252,14 @@ export class IdentityShiftingPhase {
             // Use the properly labeled identity response
             const identityData = context.metadata.identityResponse;
             let identity = 'that identity';
-            
+
             if (identityData && identityData.type === 'IDENTITY') {
               identity = identityData.value;
             } else {
               // Fallback to currentIdentity for backward compatibility
               identity = context.metadata.currentIdentity || 'that identity';
             }
-            
+
             return `Is there any scenario in which you might still feel yourself being '${identity}'?`;
           },
           expectedResponseType: 'yesno',
@@ -296,7 +278,7 @@ export class IdentityShiftingPhase {
             // Use the properly labeled identity response
             const identityData = context.metadata.identityResponse;
             let identity = 'that identity';
-            
+
             if (identityData && identityData.type === 'IDENTITY') {
               identity = identityData.value;
               console.log(`🔍 IDENTITY_CHECK: Using labeled identity: "${identity}"`);
@@ -305,7 +287,7 @@ export class IdentityShiftingPhase {
               identity = context.metadata.currentIdentity || 'that identity';
               console.log(`🔍 IDENTITY_CHECK: Using fallback identity: "${identity}"`);
             }
-            
+
             return `Can you still feel yourself being '${identity}'?`;
           },
           expectedResponseType: 'yesno',
@@ -322,10 +304,10 @@ export class IdentityShiftingPhase {
           scriptedResponse: (userInput, context) => {
             // Step A: Ask them to project into the future and feel the identity
             const identityData = context.metadata.identityResponse;
-            const identity = (identityData && identityData.type === 'IDENTITY') 
-              ? identityData.value 
+            const identity = (identityData && identityData.type === 'IDENTITY')
+              ? identityData.value
               : (context.metadata.currentIdentity || context.metadata.originalProblemIdentity || 'that identity');
-            
+
             console.log(`🔍 IDENTITY_FUTURE_PROJECTION_A: Asking to feel identity '${identity}' in the future`);
             return `Put yourself in the future and feel yourself being '${identity}'... what does it feel like?`;
           },
@@ -345,7 +327,7 @@ export class IdentityShiftingPhase {
             // Step B: Store response from A and ask what happens
             context.metadata.futureStepAResponse = userInput || 'that feeling';
             const stepAResponse = context.metadata.futureStepAResponse;
-            
+
             console.log(`🔍 IDENTITY_FUTURE_STEP_B: Asking what happens when they feel '${stepAResponse}'`);
             return `Feel '${stepAResponse}'... what happens in yourself when you feel '${stepAResponse}'?`;
           },
@@ -364,12 +346,12 @@ export class IdentityShiftingPhase {
           scriptedResponse: (userInput, context) => {
             // Step C: Store response from B and ask what they are when not being the identity
             context.metadata.futureStepBResponse = userInput || 'that';
-            
+
             const identityData = context.metadata.identityResponse;
-            const identity = (identityData && identityData.type === 'IDENTITY') 
-              ? identityData.value 
+            const identity = (identityData && identityData.type === 'IDENTITY')
+              ? identityData.value
               : (context.metadata.currentIdentity || context.metadata.originalProblemIdentity || 'that identity');
-            
+
             console.log(`🔍 IDENTITY_FUTURE_STEP_C: Asking what they are when not being '${identity}' in the future`);
             return `What are you when you're not being '${identity}'?`;
           },
@@ -389,7 +371,7 @@ export class IdentityShiftingPhase {
             // Step D: Store response from C and ask them to feel that state
             context.metadata.futureStepCResponse = userInput || 'that';
             const stepCResponse = context.metadata.futureStepCResponse;
-            
+
             console.log(`🔍 IDENTITY_FUTURE_STEP_D: Asking them to feel '${stepCResponse}'`);
             return `Feel yourself being '${stepCResponse}'... what does '${stepCResponse}' feel like?`;
           },
@@ -409,7 +391,7 @@ export class IdentityShiftingPhase {
             // Step E: Store response from D and ask what happens
             context.metadata.futureStepDResponse = userInput || 'that feeling';
             const stepDResponse = context.metadata.futureStepDResponse;
-            
+
             console.log(`🔍 IDENTITY_FUTURE_STEP_E: Asking what happens when they feel '${stepDResponse}'`);
             return `Feel '${stepDResponse}'... what happens in yourself when you feel '${stepDResponse}'?`;
           },
@@ -428,12 +410,12 @@ export class IdentityShiftingPhase {
           scriptedResponse: (userInput, context) => {
             // Step F: Check if they can still feel the identity in the future
             context.metadata.futureStepEResponse = userInput || 'that';
-            
+
             const identityData = context.metadata.identityResponse;
-            const identity = (identityData && identityData.type === 'IDENTITY') 
-              ? identityData.value 
+            const identity = (identityData && identityData.type === 'IDENTITY')
+              ? identityData.value
               : (context.metadata.currentIdentity || context.metadata.originalProblemIdentity || 'that identity');
-            
+
             console.log(`🔍 IDENTITY_FUTURE_STEP_F: Checking if they can still feel '${identity}' in the future`);
             return `Can you still feel yourself being '${identity}'?`;
           },

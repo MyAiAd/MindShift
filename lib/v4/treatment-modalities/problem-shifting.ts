@@ -8,28 +8,28 @@ export class ProblemShiftingPhase {
       maxDuration: 30,
       steps: [
         {
-          id: 'problem_shifting_intro',
+          id: 'problem_shifting_intro_static',
           scriptedResponse: (userInput, context) => {
-            // Use the cleanest version of the problem statement - prioritize digging deeper restated problem
+            // First time through - show full instructions
+            return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.`;
+          },
+          expectedResponseType: 'auto', // New type for auto-advancing steps
+          validationRules: [],
+          nextStep: 'problem_shifting_intro_dynamic',
+          aiTriggers: []
+        },
+
+        {
+          id: 'problem_shifting_intro_dynamic',
+          scriptedResponse: (userInput, context) => {
+            // Use the cleanest version of the problem statement
             const diggingProblem = context?.metadata?.currentDiggingProblem;
             const cleanProblemStatement = diggingProblem || context?.metadata?.problemStatement || context?.problemStatement || 'the problem';
-            console.log(`🔍 PROBLEM_SHIFTING_INTRO: Using clean problem statement: "${cleanProblemStatement}" (digging: "${diggingProblem}")`);
-            console.log(`🔍 PROBLEM_SHIFTING_INTRO: Available sources - metadata.problemStatement: "${context?.metadata?.problemStatement}", problemStatement: "${context?.problemStatement}", userInput: "${userInput}"`);
-            
-            // Check if we should skip intro instructions (when cycling back from check_if_still_problem OR coming from digging deeper)
-            const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
-            if (context?.metadata?.skipIntroInstructions || isFromDigging) {
-              // Clear flags and return only the problem feeling question
-              context.metadata.skipIntroInstructions = false;
-              context.metadata.skipLinguisticProcessing = false;
-              console.log(`🔍 PROBLEM_SHIFTING_INTRO: Skipping lengthy instructions - isFromDigging: ${!!isFromDigging}, skipFlag: ${!!context?.metadata?.skipIntroInstructions}`);
-              return `Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
-            }
-            
-            // First time through - show full instructions
-            return `Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.
 
-Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
+            // Check if we should skip intro instructions (when cycling back)
+            // Note: If we skipped, we would have jumped straight here from the previous step
+
+            return `Feel the problem '${cleanProblemStatement}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [

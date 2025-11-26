@@ -8,28 +8,29 @@ export class BlockageShiftingPhase {
       maxDuration: 30,
       steps: [
         {
-          id: 'blockage_shifting_intro',
+          id: 'blockage_shifting_intro_static',
+          scriptedResponse: (userInput, context) => {
+            return `Please close your eyes and keep them closed throughout the process. Please give brief answers to my questions and allow the problem to keep changing...we're going to keep going until there is no problem left.`;
+          },
+          expectedResponseType: 'auto',
+          validationRules: [],
+          nextStep: 'blockage_shifting_intro_dynamic',
+          aiTriggers: []
+        },
+
+        {
+          id: 'blockage_shifting_intro_dynamic',
           scriptedResponse: (userInput, context) => {
             // Get the problem statement - handle digging deeper context
-            const problemStatement = context?.metadata?.currentDiggingProblem || 
-                                   context?.metadata?.newDiggingProblem || 
-                                   context?.problemStatement || 
-                                   context?.metadata?.problemStatement || 
-                                   context?.userResponses?.['restate_selected_problem'] || 
-                                   context?.userResponses?.['mind_shifting_explanation'] || 
-                                   'the problem';
-            
-            // Check if we're in digging deeper mode or subsequent cycle
-            const cycleCount = context?.metadata?.cycleCount || 0;
-            const isDiggingDeeper = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
-            console.log(`🔍 BLOCKAGE_SHIFTING_INTRO: problemStatement="${problemStatement}", cycleCount=${cycleCount}, isDiggingDeeper=${!!isDiggingDeeper}`);
-            
-            if (cycleCount === 0 && !isDiggingDeeper) {
-              return `Please close your eyes and keep them closed throughout the process. Please give brief answers to my questions and allow the problem to keep changing...we're going to keep going until there is no problem left.\n\nFeel '${problemStatement}'... what does it feel like?`;
-            } else {
-              // On subsequent cycles or digging deeper, just ask the question
-              return `Feel '${problemStatement}'... what does it feel like?`;
-            }
+            const problemStatement = context?.metadata?.currentDiggingProblem ||
+              context?.metadata?.newDiggingProblem ||
+              context?.problemStatement ||
+              context?.metadata?.problemStatement ||
+              context?.userResponses?.['restate_selected_problem'] ||
+              context?.userResponses?.['mind_shifting_explanation'] ||
+              'the problem';
+
+            return `Feel '${problemStatement}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
@@ -53,7 +54,7 @@ export class BlockageShiftingPhase {
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
-        
+
         {
           id: 'blockage_step_c',
           scriptedResponse: (userInput, context) => {
@@ -61,7 +62,7 @@ export class BlockageShiftingPhase {
             const previousResponse = context?.userResponses?.[context.currentStep] || '';
             const unknownIndicators = ['don\'t know', 'can\'t feel', 'no idea', 'not sure'];
             const isUnknownResponse = unknownIndicators.some(indicator => previousResponse.toLowerCase().includes(indicator));
-            
+
             if (isUnknownResponse && !context?.metadata?.hasAskedToGuess) {
               context.metadata.hasAskedToGuess = true;
               return `That's okay. Can you guess what it would feel like to not have this problem?`;
@@ -69,7 +70,7 @@ export class BlockageShiftingPhase {
               context.metadata.hasAskedToGuess = false;
               return `Feel that you don't know... what does that feel like?`;
             }
-            
+
             return `Feel the problem that you have right now... what would it feel like to not have this problem?`;
           },
           expectedResponseType: 'feeling',
@@ -81,14 +82,14 @@ export class BlockageShiftingPhase {
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
-        
+
         {
           id: 'blockage_step_d',
           scriptedResponse: (userInput, context) => {
             // Check if current response is "I don't know" or "I can't feel it"
             const unknownIndicators = ['don\'t know', 'can\'t feel', 'no idea', 'not sure'];
             const isUnknownResponse = unknownIndicators.some(indicator => (userInput || '').toLowerCase().includes(indicator));
-            
+
             if (isUnknownResponse && !context?.metadata?.hasAskedToGuessD) {
               context.metadata.hasAskedToGuessD = true;
               return `That's okay. Can you guess what '${userInput || 'that feeling'}' feels like?`;
@@ -96,7 +97,7 @@ export class BlockageShiftingPhase {
               context.metadata.hasAskedToGuessD = false;
               return `Feel that you can't feel it... what does that feel like?`;
             }
-            
+
             return `Feel '${userInput || 'that feeling'}'... what does '${userInput || 'that feeling'}' feel like?`;
           },
           expectedResponseType: 'feeling',
@@ -108,7 +109,7 @@ export class BlockageShiftingPhase {
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
-        
+
         {
           id: 'blockage_step_e',
           scriptedResponse: () => `What's the problem now?`,
@@ -116,12 +117,12 @@ export class BlockageShiftingPhase {
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please tell me what the problem is now.' }
           ],
-          nextStep: 'blockage_shifting_intro', // Direct cycle back to step A with new problem
+          nextStep: 'blockage_shifting_intro_dynamic', // Direct cycle back to step A with new problem
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
         },
-        
+
         {
           id: 'blockage_check_if_still_problem',
           scriptedResponse: (userInput) => {
@@ -129,12 +130,12 @@ export class BlockageShiftingPhase {
             const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
             const response = (userInput || '').toLowerCase();
             const seemsResolved = noProblemIndicators.some(indicator => response.includes(indicator));
-            
+
             if (seemsResolved) {
               // Signal that we should transition immediately - this message won't be shown
               return 'TRANSITION_TO_DIG_DEEPER';
             }
-            
+
             return `Feel '${userInput || 'that problem'}'... what does it feel like?`;
           },
           expectedResponseType: 'open', // Can be feeling description or yes/no for dig deeper

@@ -7,6 +7,7 @@ interface UseNaturalVoiceProps {
     enabled: boolean;
     voiceProvider?: 'openai' | 'elevenlabs';
     elevenLabsVoiceId?: string;
+    onAudioEnded?: () => void;
 }
 
 export const useNaturalVoice = ({
@@ -14,6 +15,7 @@ export const useNaturalVoice = ({
     enabled,
     voiceProvider = 'elevenlabs',
     elevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM', // Rachel
+    onAudioEnded,
 }: UseNaturalVoiceProps) => {
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -97,17 +99,15 @@ export const useNaturalVoice = ({
         }
     }, []);
 
-    // Speak text with streaming support
-    const speak = useCallback(async (text: string) => {
-        if (!text) return;
+    // Cache for prefetched audio
+    const audioCache = useRef<Map<string, string>>(new Map());
 
-        // Stop listening while speaking
-        stopListening();
-        setIsSpeaking(true);
-        isSpeakingRef.current = true;
+    // Prefetch audio for a given text
+    const prefetch = useCallback(async (text: string) => {
+        if (!text || audioCache.current.has(text)) return;
 
         try {
-            console.log('🗣️ Natural Voice: Fetching TTS stream for:', text);
+            console.log('🗣️ Natural Voice: Prefetching:', text);
             const response = await fetch('/api/tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -118,17 +118,55 @@ export const useNaturalVoice = ({
                 }),
             });
 
-            if (!response.ok) throw new Error('TTS request failed');
+            if (!response.ok) throw new Error('Prefetch failed');
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            audioCache.current.set(text, audioUrl);
+            console.log('🗣️ Natural Voice: Prefetch complete for:', text);
+        } catch (err) {
+            console.error('🗣️ Natural Voice: Prefetch error:', err);
+        }
+    }, [voiceProvider, elevenLabsVoiceId]);
+
+    // Speak text with streaming support and cache check
+    const speak = useCallback(async (text: string) => {
+        if (!text) return;
+
+        // Stop listening while speaking
+        stopListening();
+        setIsSpeaking(true);
+        isSpeakingRef.current = true;
+
+        try {
+            let audioUrl: string;
+
+            // Check cache first
+            if (audioCache.current.has(text)) {
+                console.log('🗣️ Natural Voice: Playing from local prefetch cache');
+                audioUrl = audioCache.current.get(text)!;
+            } else {
+                console.log('🗣️ Natural Voice: Fetching TTS stream for:', text);
+                const response = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text,
+                        provider: voiceProvider,
+                        voice: elevenLabsVoiceId,
+                    }),
+                });
+
+                if (!response.ok) throw new Error('TTS request failed');
+
+                const audioBlob = await response.blob();
+                audioUrl = URL.createObjectURL(audioBlob);
+            }
 
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current = null;
             }
-
-            // For streaming, we can use the response blob directly as browsers handle
-            // progressive playback of media blobs/urls automatically
-            const audioBlob = await response.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
 
             const audio = new Audio(audioUrl);
             audioRef.current = audio;
@@ -141,7 +179,13 @@ export const useNaturalVoice = ({
                 if (enabled) {
                     startListening();
                 }
-                URL.revokeObjectURL(audioUrl);
+                // Only revoke if it wasn't from cache (keep cache valid)
+                if (!audioCache.current.has(text)) {
+                    URL.revokeObjectURL(audioUrl);
+                }
+
+                // Trigger callback
+                onAudioEnded?.();
             };
 
             await audio.play();
@@ -175,6 +219,9 @@ export const useNaturalVoice = ({
         isListening,
         isSpeaking,
         speak,
-        error
+        prefetch,
+        error,
+        startListening,
+        stopListening
     };
 };

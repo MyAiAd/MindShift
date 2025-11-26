@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2 } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
@@ -111,6 +111,21 @@ export default function TreatmentSession({
     currentStep: currentStep
   });
 
+  // Ref to track the expected response type of the current step
+  const currentStepTypeRef = useRef<string | null>(null);
+
+  // Handle audio ended event for auto-advance steps
+  const handleAudioEnded = useCallback(() => {
+    console.log('🔊 Audio ended. Step type:', currentStepTypeRef.current);
+    if (currentStepTypeRef.current === 'auto') {
+      console.log('⏩ Auto-advancing step...');
+      // Small delay to ensure natural flow
+      setTimeout(() => {
+        sendMessage(''); // Send empty message to trigger next step
+      }, 500);
+    }
+  }, []);
+
   // Natural Voice Hook
   const naturalVoice = useNaturalVoice({
     enabled: isNaturalVoiceEnabled,
@@ -120,7 +135,8 @@ export default function TreatmentSession({
         sendMessage(transcript);
       }
     },
-    voiceProvider: 'elevenlabs'
+    voiceProvider: 'elevenlabs',
+    onAudioEnded: handleAudioEnded
   });
 
   // Helper function to format method names
@@ -150,6 +166,12 @@ export default function TreatmentSession({
     }
   }, [sessionId, userId, shouldResume]);
 
+  // Prefetch the introduction message for instant playback
+  useEffect(() => {
+    const introText = "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
+    naturalVoice.prefetch(introText);
+  }, []);
+
   // V3: Enhanced session start with instant initial message
   const startSession = async () => {
     setIsLoading(true);
@@ -161,12 +183,10 @@ export default function TreatmentSession({
       // V4 OPTIMIZATION: Show hardcoded initial message IMMEDIATELY (0ms perceived delay)
       // This eliminates wait time for database operations on first message
       const instantMessage: TreatmentMessage = {
-        id: `system-${Date.now()}`,
+        id: 'system-init',
         content: "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE",
         isUser: false,
         timestamp: new Date(),
-        // Don't set responseTime - it's instant, no badge needed
-        usedAI: false,
         version: 'v4'
       };
 
@@ -226,8 +246,6 @@ export default function TreatmentSession({
       // Set loading false on error so user can retry
       setIsLoading(false);
     }
-    // No finally block needed - isLoading already set to false at line 127
-    // Removing finally prevents unnecessary re-render that causes button flickering
   };
 
   // V3: Enhanced session resume
@@ -377,6 +395,9 @@ export default function TreatmentSession({
 
         setCurrentStep(data.currentStep);
         setLastResponseTime(data.responseTime || 0);
+
+        // Update step type ref for auto-advance logic
+        currentStepTypeRef.current = data.expectedResponseType || null;
 
         // V3: Update enhanced performance metrics
         if (data.performanceMetrics) {

@@ -7,7 +7,7 @@ export interface TreatmentPhase {
 export interface TreatmentStep {
   id: string;
   scriptedResponse: string | ((userInput?: string | undefined, context?: any) => string);
-  expectedResponseType: 'feeling' | 'problem' | 'experience' | 'yesno' | 'open' | 'goal' | 'selection' | 'description';
+  expectedResponseType: 'feeling' | 'problem' | 'experience' | 'yesno' | 'open' | 'goal' | 'selection' | 'description' | 'auto';
   validationRules: ValidationRule[];
   nextStep?: string;
   aiTriggers: AITrigger[];
@@ -41,6 +41,7 @@ export interface ProcessingResult {
   canContinue: boolean;
   nextStep?: string;
   scriptedResponse?: string;
+  expectedResponseType?: 'feeling' | 'problem' | 'experience' | 'yesno' | 'open' | 'goal' | 'selection' | 'description' | 'auto';
   needsLinguisticProcessing?: boolean;
   requiresRetry?: boolean;
   reason?: string;
