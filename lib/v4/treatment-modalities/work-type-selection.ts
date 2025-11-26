@@ -16,7 +16,7 @@ export class WorkTypeSelectionPhase {
             if (!context.metadata) {
               context.metadata = {};
             }
-            
+
             const workType = context.metadata.workType || 'item';
             const selectedMethod = context.metadata.selectedMethod;
 
@@ -38,13 +38,13 @@ export class WorkTypeSelectionPhase {
               userInput.toLowerCase().includes('reality shifting') ||
               userInput.toLowerCase().includes('trauma shifting')
             );
-            
+
             // If no user input OR if user input is a method name, ask for description
             if (!userInput || isMethodName) {
               const response = workType === 'problem' ? "Tell me what the problem is in a few words." :
-                               workType === 'goal' ? "Tell me what the goal is in a few words." :
-                               workType === 'negative_experience' ? "Tell me what the negative experience was in a few words." :
-                               "Tell me what you want to work on in a few words.";
+                workType === 'goal' ? "Tell me what the goal is in a few words." :
+                  workType === 'negative_experience' ? "Tell me what the negative experience was in a few words." :
+                    "Tell me what you want to work on in a few words.";
               console.log(`║ ➡️  RETURNING (asking for description): "${response}"\n╚════════════════════════════════════════════════════════════════\n`);
               return response;
             } else {
@@ -52,7 +52,7 @@ export class WorkTypeSelectionPhase {
               const statement = userInput || '';
               context.metadata.problemStatement = statement;
               context.problemStatement = statement;
-              
+
               let response = '';
               // Skip confirmation and route directly to treatment intro step
               if (workType === 'problem') {
@@ -82,7 +82,7 @@ export class WorkTypeSelectionPhase {
               } else {
                 response = `So you want to work on '${statement}'. Is that correct?`;
               }
-              
+
               console.log(`║ ✅ STORED: problemStatement = "${statement}"
 ║ ➡️  RETURNING (confirmation): "${response}"
 ╚════════════════════════════════════════════════════════════════\n`);
@@ -106,7 +106,7 @@ export class WorkTypeSelectionPhase {
             const workType = context.metadata.workType || 'item';
             const input = (userInput || '').toLowerCase();
             const statement = context.metadata.problemStatement || 'your request';
-            
+
             // This step only handles confirmation - description should already be stored
             if (input === 'yes' || input === 'y' || input.includes('correct') || input.includes('right')) {
               // User confirmed, continue to treatment
@@ -141,7 +141,7 @@ export class WorkTypeSelectionPhase {
           scriptedResponse: (userInput, context) => {
             const workType = context.metadata.workType;
             const selectedMethod = context.metadata.selectedMethod;
-            
+
             if (workType === 'problem' && selectedMethod) {
               // For problems with selected method, return routing signal
               if (selectedMethod === 'problem_shifting') {
@@ -163,12 +163,56 @@ export class WorkTypeSelectionPhase {
             } else if (workType === 'negative_experience') {
               // Negative experiences automatically use Trauma Shifting
               context.metadata.selectedMethod = 'trauma_shifting';
-              const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
-              return `Please close your eyes and keep them closed throughout the rest of the process.\n\nThink about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?`;
+              // Return static intro part
+              return `Please close your eyes and keep them closed throughout the rest of the process.`;
             }
-            
+
             // Fallback (should not reach here normally)
             return "Please select a method first.";
+          },
+          expectedResponseType: 'auto', // Changed to auto to support the trauma flow
+          validationRules: [
+            { type: 'minLength', value: 1, errorMessage: 'Please continue.' }
+          ],
+          nextStep: 'route_to_method_dynamic', // Always go to dynamic step, which will handle final routing
+          aiTriggers: []
+        },
+        {
+          id: 'route_to_method_dynamic',
+          scriptedResponse: (userInput, context) => {
+            const workType = context.metadata.workType;
+
+            if (workType === 'negative_experience') {
+              const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
+              return `Think about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience... now freeze it there. Keep feeling this frozen moment... what kind of person are you being in this moment?`;
+            }
+
+            // For other types, we shouldn't really be here if they routed away, 
+            // BUT if the previous step returned a string (like "What do you want?" for goals),
+            // we need to make sure we don't get stuck.
+            // Actually, "What do you want?" for goals is a question. 
+            // If route_to_method returns it, expectedResponseType='auto' will advance to this step immediately.
+            // That's BAD for goals.
+
+            // FIX: We need to handle the non-trauma cases correctly in the previous step or here.
+            // Since we can't easily change expectedResponseType dynamically per step in the current architecture (it's defined in the step config),
+            // we have a challenge.
+
+            // Strategy:
+            // 1. For Trauma: route_to_method (auto) -> route_to_method_dynamic (open)
+            // 2. For Goals: route_to_method (auto) -> route_to_method_dynamic (goal/open)
+            //    But "What do you want?" needs user input.
+            //    If route_to_method is 'auto', it won't wait for input.
+            //    It will play "What do you want?" and then immediately go to route_to_method_dynamic.
+
+            // So route_to_method_dynamic needs to be the one asking "What do you want?" for goals?
+            // Yes.
+
+            if (workType === 'goal') {
+              return "What do you want?";
+            }
+
+            return ""; // Should be handled by routing signals in previous step
           },
           expectedResponseType: 'open',
           validationRules: [

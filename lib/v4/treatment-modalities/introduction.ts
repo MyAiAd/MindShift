@@ -8,7 +8,21 @@ export class IntroductionPhase {
       maxDuration: 5,
       steps: [
         {
-          id: 'mind_shifting_explanation',
+          id: 'mind_shifting_explanation_static',
+          scriptedResponse: (userInput, context) => {
+            // Only show this if we are starting fresh (no input)
+            // If we are looping back, we might want to skip this or handle it differently?
+            // But for now, assuming this is the entry point.
+            return "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.";
+          },
+          expectedResponseType: 'auto',
+          validationRules: [],
+          nextStep: 'mind_shifting_explanation_dynamic',
+          aiTriggers: []
+        },
+
+        {
+          id: 'mind_shifting_explanation_dynamic',
           scriptedResponse: (userInput, context) => {
             // Safety check for context
             if (!context) {
@@ -17,14 +31,14 @@ export class IntroductionPhase {
             if (!context.metadata) {
               context.metadata = {};
             }
-            
-            // If no user input, show the initial explanation and options
+
+            // If no user input, show the question part
             if (!userInput) {
-              return "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
+              return "When you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
             }
-            
+
             const input = userInput.toLowerCase();
-            
+
             // Handle initial work type selection FIRST (reset state for fresh selection)
             console.log(`🔍 WORK_TYPE_CHECK: input="${input}", contains '1': ${input.includes('1')}, contains 'problem': ${input.includes('problem')}, contains 'shifting': ${input.includes('shifting')}`);
             if (input.includes('1') || (input.includes('problem') && !input.includes('shifting'))) {
@@ -44,7 +58,7 @@ export class IntroductionPhase {
               console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'negative_experience'`);
               return "NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED";
             }
-            
+
             // Check if we're already in problem method selection mode
             if (context.metadata.workType === 'problem' && !context.metadata.selectedMethod) {
               // Handle method selection for problems
@@ -69,7 +83,7 @@ export class IntroductionPhase {
                 return "METHOD_SELECTION_NEEDED";
               }
             }
-            
+
             // Handle problem description after method selection
             if (context.metadata.workType === 'problem' && context.metadata.selectedMethod) {
               context.metadata.problemStatement = userInput;
@@ -77,26 +91,26 @@ export class IntroductionPhase {
               if (!context.metadata.originalProblemStatement) {
                 context.metadata.originalProblemStatement = userInput;
               }
-              
+
               // Set routing flag for determineNextStep to handle
               context.metadata.readyForTreatment = true;
-              
+
               // Return user-friendly confirmation message
               const methodName = context.metadata.selectedMethod.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
               return `Great! We'll work on "${userInput}" using ${methodName}. Let's begin the treatment.`;
             }
-            
+
             // Handle goal description after work type selection for goals
             if (context.metadata.workType === 'goal' && !context.metadata.selectedMethod) {
               context.metadata.goalStatement = userInput;
               context.problemStatement = userInput;
               if (!context.metadata.originalProblemStatement) {
                 context.metadata.originalProblemStatement = userInput;
-              }  
+              }
               context.metadata.selectedMethod = 'reality_shifting';
               return "ROUTE_TO_REALITY_SHIFTING";
             }
-            
+
             // If we get here, it's not a valid work type selection
             return "Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.";
           },
@@ -113,15 +127,15 @@ export class IntroductionPhase {
           id: 'method_selection',
           scriptedResponse: (userInput, context) => {
             const workType = context.metadata.workType;
-            
+
             if (workType === 'problem') {
               if (!userInput || !context.metadata.methodSelectionShown) {
                 context.metadata.methodSelectionShown = true;
                 return "METHOD_SELECTION_NEEDED";
               }
-              
+
               const input = userInput.toLowerCase();
-              
+
               if (input.includes('1') || input.includes('problem shifting')) {
                 context.metadata.selectedMethod = 'problem_shifting';
                 context.metadata.workType = 'problem';
@@ -146,7 +160,7 @@ export class IntroductionPhase {
                 return "Please choose 1 for Problem Shifting, 2 for Identity Shifting, 3 for Belief Shifting, or 4 for Blockage Shifting.";
               }
             }
-            
+
             return "Please select a work type first.";
           },
           expectedResponseType: 'selection',
