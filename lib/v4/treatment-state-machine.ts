@@ -12,10 +12,10 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
    * Helper method to get the current problem statement from context
    */
   private getCurrentProblemStatement(context: TreatmentContext): string {
-    return context?.metadata?.currentDiggingProblem || 
-           context?.metadata?.problemStatement || 
-           context?.problemStatement || 
-           'the problem';
+    return context?.metadata?.currentDiggingProblem ||
+      context?.metadata?.problemStatement ||
+      context?.problemStatement ||
+      'the problem';
   }
 
   /**
@@ -34,9 +34,9 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
    */
   protected determineNextStep(currentStep: TreatmentStep, context: TreatmentContext): string | null {
     const lastResponse = context.userResponses[context.currentStep]?.toLowerCase() || '';
-    
+
     console.log(`🔍 DETERMINE_NEXT_STEP: currentStep="${context.currentStep}", lastResponse="${lastResponse}"`);
-    
+
     // Handle internal routing signals first
     if (typeof currentStep.scriptedResponse === 'function') {
       const testResponse = currentStep.scriptedResponse(context.userResponses[context.currentStep], context);
@@ -47,236 +47,236 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
     // Main routing logic based on current step
     switch (context.currentStep) {
-      case 'mind_shifting_explanation':
+      case 'mind_shifting_explanation_dynamic':
         return this.handleMindShiftingExplanation(lastResponse, context);
-        
+
       case 'work_type_description':
         return this.handleWorkTypeDescription(lastResponse, context);
-        
+
       case 'goal_description':
         return this.handleGoalDescription(lastResponse, context);
-        
+
       case 'negative_experience_description':
         return this.handleNegativeExperienceDescription(lastResponse, context);
-        
+
       case 'multiple_problems_selection':
         return 'restate_selected_problem';
-        
+
       case 'restate_selected_problem':
         return 'analyze_response';
-        
+
       case 'analyze_response':
         return this.handleAnalyzeResponse(lastResponse, context);
-        
+
       case 'choose_method':
         return this.handleChooseMethod(lastResponse, context);
-        
+
       case 'method_selection':
         return this.handleMethodSelection(context);
-        
+
       case 'confirm_statement':
         return this.handleConfirmStatement(lastResponse, context);
-        
+
       case 'route_to_method':
         return this.handleRouteToMethod(context);
-        
+
       case 'goal_deadline_check':
         return this.handleGoalDeadlineCheck(lastResponse);
-        
+
       case 'goal_deadline_date':
         return 'goal_confirmation';
-        
+
       case 'goal_confirmation':
         return this.handleGoalConfirmation(lastResponse, context);
-        
+
       case 'goal_certainty':
         return 'reality_shifting_intro';
-        
+
       // Problem Shifting routing
       case 'check_if_still_problem':
         return this.handleCheckIfStillProblem(lastResponse, context);
-        
+
       // Blockage Shifting routing
       case 'blockage_step_e':
         return this.handleBlockageStepE(lastResponse, context);
-        
+
       case 'blockage_check_if_still_problem':
         return this.handleBlockageCheckIfStillProblem(lastResponse, context);
-        
+
       // Identity Shifting routing
       case 'identity_shifting_intro':
         return this.handleIdentityShiftingIntro(context);
-        
+
       case 'identity_dissolve_step_f':
         return this.handleIdentityDissolveStepF(lastResponse, context);
-        
+
       case 'identity_future_check':
         return this.handleIdentityFutureCheck(lastResponse, context);
-        
+
       case 'identity_scenario_check':
         return this.handleIdentityScenarioCheck(lastResponse, context);
-        
+
       case 'identity_check':
         return this.handleIdentityCheck(lastResponse, context);
-        
+
       case 'identity_problem_check':
         return this.handleIdentityProblemCheck(lastResponse, context);
-        
+
       case 'confirm_identity_problem':
         return this.handleConfirmIdentityProblem(lastResponse, context);
-        
+
       // Belief Shifting routing
       case 'belief_step_f':
         return this.handleBeliefStepF(lastResponse, context);
-        
+
       case 'belief_check_1':
       case 'belief_check_2':
       case 'belief_check_3':
       case 'belief_check_4':
         return this.handleBeliefChecks(context.currentStep, lastResponse, context);
-        
+
       case 'belief_problem_check':
         return this.handleBeliefProblemCheck(lastResponse, context);
-        
+
       case 'confirm_belief_problem':
         return this.handleConfirmBeliefProblem(lastResponse, context);
-        
+
       // Reality Shifting routing
       case 'reality_why_not_possible':
         return this.handleRealityWhyNotPossible(lastResponse, context);
-        
+
       case 'reality_feel_reason':
         return 'reality_feel_reason_2';
-        
+
       case 'reality_feel_reason_2':
         return 'reality_feel_reason_3';
-        
+
       case 'reality_feel_reason_3':
         return 'reality_column_a_restart';
-        
+
       case 'reality_checking_questions':
         return this.handleRealityCheckingQuestions(lastResponse, context);
-        
+
       case 'reality_doubt_reason':
         return 'reality_cycle_b2';
-        
+
       case 'reality_cycle_b2':
         return 'reality_cycle_b3';
-        
+
       case 'reality_cycle_b3':
         return 'reality_cycle_b4';
-        
+
       case 'reality_cycle_b4':
         return this.handleRealityCycleB4(context);
-        
+
       case 'reality_certainty_check':
         return this.handleRealityCertaintyCheck(lastResponse, context);
-        
+
       case 'reality_integration_action_more':
         return this.handleRealityIntegrationActionMore(lastResponse, context);
-        
+
       // Trauma Shifting routing
       case 'trauma_shifting_intro':
         return this.handleTraumaShiftingIntro(lastResponse);
-        
+
       case 'trauma_problem_redirect':
         return this.handleTraumaProblemRedirect(lastResponse, context);
-        
+
       case 'trauma_identity_check':
         return this.handleTraumaIdentityCheck(lastResponse, context);
-        
+
       case 'trauma_future_identity_check':
         return this.handleTraumaFutureIdentityCheck(lastResponse, context);
-        
+
       case 'trauma_future_scenario_check':
         return this.handleTraumaFutureScenarioCheck(lastResponse, context);
-        
+
       case 'trauma_experience_check':
         return this.handleTraumaExperienceCheck(lastResponse, context);
-        
+
       case 'trauma_dig_deeper':
         return 'trauma_dig_deeper_2';
-        
+
       case 'trauma_dig_deeper_2':
         return this.handleTraumaDigDeeper2(lastResponse, context);
-        
+
       // Digging Deeper routing
       case 'digging_deeper_start':
         return this.handleDiggingDeeperStart(lastResponse, context);
-        
+
       case 'future_problem_check':
         return this.handleFutureProblemCheck(lastResponse);
-        
+
       case 'restate_problem_future':
         return this.handleRestateProblemFuture(lastResponse, context);
-        
+
       case 'digging_method_selection':
         return this.handleDiggingMethodSelection(lastResponse, context);
-        
+
       case 'scenario_check_1':
         return this.handleScenarioCheck(lastResponse, 'restate_scenario_problem_1', 'anything_else_check_1');
-        
+
       case 'restate_scenario_problem_1':
         return 'clear_scenario_problem_1';
-        
+
       case 'clear_scenario_problem_1':
         return this.handleClearScenarioProblem1(lastResponse, context);
-        
+
       case 'scenario_check_2':
         return this.handleScenarioCheck(lastResponse, 'restate_scenario_problem_2', 'scenario_check_3');
-        
+
       case 'restate_scenario_problem_2':
         return 'clear_scenario_problem_2';
-        
+
       case 'clear_scenario_problem_2':
         return this.handleClearScenarioProblem2(lastResponse, context);
-        
+
       case 'scenario_check_3':
         return this.handleScenarioCheck(lastResponse, 'restate_scenario_problem_3', 'anything_else_check_1');
-        
+
       case 'restate_scenario_problem_3':
         return 'clear_scenario_problem_3';
-        
+
       case 'clear_scenario_problem_3':
         return this.handleClearScenarioProblem3(lastResponse, context);
-        
+
       case 'anything_else_check_1':
         return this.handleAnythingElseCheck(lastResponse, context, 'restate_anything_else_problem_1');
-        
+
       case 'restate_anything_else_problem_1':
         return this.handleRestateAnythingElseProblem1(context);
-        
+
       case 'clear_anything_else_problem_1':
         return this.handleClearAnythingElseProblem1(lastResponse, context);
-        
+
       case 'anything_else_check_2':
         return this.handleAnythingElseCheck(lastResponse, context, 'restate_anything_else_problem_2');
-        
+
       case 'restate_anything_else_problem_2':
         return this.handleRestateAnythingElseProblem2(context);
-        
+
       case 'clear_anything_else_problem_2':
         return this.handleClearAnythingElseProblem2(lastResponse, context);
-        
+
       case 'anything_else_check_3':
         return this.handleAnythingElseCheck3(lastResponse, context);
-        
+
       case 'route_to_integration':
         return this.handleRouteToIntegration(context);
-        
+
       // Integration routing
       case 'action_question':
         return 'action_followup';
-        
+
       case 'action_followup':
         return this.handleActionFollowup(lastResponse);
-        
+
       // Session completion
       case 'session_complete':
       case 'identity_session_complete':
       case 'reality_session_complete':
         return null; // Session finished
-        
+
       default:
         // Default behavior - follow the nextStep
         return currentStep.nextStep || null;
@@ -292,76 +292,76 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.currentPhase = 'method_selection';
         context.currentStep = 'choose_method';
         return true;
-        
+
       case 'GOAL_SELECTION_CONFIRMED':
         context.currentPhase = 'introduction';
         context.currentStep = 'goal_description';
         return true;
-        
+
       case 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED':
         context.currentPhase = 'introduction';
         context.currentStep = 'negative_experience_description';
         return true;
-        
+
       case 'METHOD_SELECTION_NEEDED':
         // Route to method selection
         context.currentPhase = 'method_selection';
         context.currentStep = 'choose_method';
         return true;
-        
+
       case 'SKIP_TO_TREATMENT_INTRO':
         // This should be handled by the calling step's routing
         return false;
-        
+
       case 'ROUTE_TO_PROBLEM_INTEGRATION':
         context.currentPhase = 'integration';
         context.currentStep = 'problem_integration_awareness_1';
         return true;
-        
+
       case 'ROUTE_TO_IDENTITY_INTEGRATION':
         context.currentPhase = 'integration';
         context.currentStep = 'integration_awareness_1';
         return true;
-        
+
       case 'ROUTE_TO_BELIEF_INTEGRATION':
         context.currentPhase = 'integration';
         context.currentStep = 'belief_integration_awareness_1';
         return true;
-        
+
       case 'ROUTE_TO_BLOCKAGE_INTEGRATION':
         context.currentPhase = 'integration';
         context.currentStep = 'blockage_integration_awareness_1';
         return true;
-        
+
       case 'ROUTE_TO_TRAUMA_INTEGRATION':
         context.currentPhase = 'integration';
         context.currentStep = 'trauma_integration_awareness_1';
         return true;
-        
+
       case 'PROBLEM_SHIFTING_SELECTED':
         context.currentPhase = 'problem_shifting';
         context.currentStep = 'problem_shifting_intro';
         context.metadata.selectedMethod = 'problem_shifting';
         return true;
-        
+
       case 'IDENTITY_SHIFTING_SELECTED':
         context.currentPhase = 'identity_shifting';
         context.currentStep = 'identity_shifting_intro';
         context.metadata.selectedMethod = 'identity_shifting';
         return true;
-        
+
       case 'BELIEF_SHIFTING_SELECTED':
         context.currentPhase = 'belief_shifting';
         context.currentStep = 'belief_shifting_intro';
         context.metadata.selectedMethod = 'belief_shifting';
         return true;
-        
+
       case 'BLOCKAGE_SHIFTING_SELECTED':
         context.currentPhase = 'blockage_shifting';
         context.currentStep = 'blockage_shifting_intro';
         context.metadata.selectedMethod = 'blockage_shifting';
         return true;
-        
+
       default:
         return false; // No signal handled
     }
@@ -372,7 +372,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleMindShiftingExplanation(lastResponse: string, context: TreatmentContext): string {
     console.log(`🔍 MIND_SHIFTING_DETERMINE: lastResponse="${lastResponse}", workType="${context.metadata.workType}", selectedMethod="${context.metadata.selectedMethod}"`);
     console.log(`🔍 MIND_SHIFTING_DETERMINE: Full metadata:`, JSON.stringify(context.metadata, null, 2));
-    
+
     // Handle work type selection based on user input
     if (lastResponse.includes('1') || (lastResponse.includes('problem') && !lastResponse.includes('shifting'))) {
       // Reset all work type metadata for fresh selection
@@ -399,14 +399,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.currentPhase = 'introduction';
       return 'negative_experience_description';
     }
-    
+
     // If no valid selection, stay on current step
     console.log(`🔍 MIND_SHIFTING_DETERMINE: No valid work type selected, staying on mind_shifting_explanation`);
-    
+
     const selectedWorkType = context.metadata.workType;
     const selectedMethod = context.metadata.selectedMethod;
     console.log(`🔍 MIND_SHIFTING_DETERMINE: selectedWorkType="${selectedWorkType}", selectedMethod="${selectedMethod}"`);
-    
+
     // If user selected a work type and method (for problems), check if we have problem statement
     if (selectedWorkType === 'problem' && selectedMethod) {
       // Only skip to treatment intro if we already have a problem statement
@@ -477,33 +477,33 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private clearPreviousModalityMetadata(context: TreatmentContext): void {
     console.log('🔍 MODALITY_CLEANUP: Clearing previous modality metadata');
-    
+
     // Clear belief-specific metadata
     delete context.metadata.currentBelief;
     delete context.metadata.cycleCount;
-    
+
     // Clear identity-specific metadata
     delete context.metadata.currentIdentity;
-    
+
     // Clear blockage-specific metadata
     delete context.metadata.currentBlockage;
-    
+
     // Clear reality-specific metadata
     delete context.metadata.currentReality;
-    
+
     // Clear trauma-specific metadata
     delete context.metadata.currentTrauma;
-    
+
     // Keep digging-deeper specific metadata as it's needed for the flow
     // Keep: currentDiggingProblem, newDiggingProblem, returnToDiggingStep, selectedMethod, workType
-    
+
     console.log('🔍 MODALITY_CLEANUP: Cleared previous modality metadata, kept digging-deeper context');
   }
 
   private getPhaseForMethod(method: string): string {
     const methodPhaseMap: Record<string, string> = {
       'problem_shifting': 'problem_shifting',
-      'identity_shifting': 'identity_shifting', 
+      'identity_shifting': 'identity_shifting',
       'belief_shifting': 'belief_shifting',
       'blockage_shifting': 'blockage_shifting',
       'reality_shifting': 'reality_shifting',
@@ -516,7 +516,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const methodStepMap: Record<string, string> = {
       'problem_shifting': 'problem_shifting_intro',
       'identity_shifting': 'identity_shifting_intro',
-      'belief_shifting': 'belief_shifting_intro', 
+      'belief_shifting': 'belief_shifting_intro',
       'blockage_shifting': 'blockage_shifting_intro',
       'reality_shifting': 'reality_shifting_intro',
       'trauma_shifting': 'trauma_shifting_intro'
@@ -527,7 +527,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleWorkTypeDescription(lastResponse: string, context: TreatmentContext): string {
     // CRITICAL: Store the user's problem statement FIRST before routing
     const userProblemStatement = context.userResponses[context.currentStep] || '';
-    
+
     console.log(`
 ╔════════════════════════════════════════════════════════════════
 ║ 🎯 WORK_TYPE_DESCRIPTION - Handler (determineNextStep)
@@ -537,16 +537,16 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 ║ selectedMethod: "${context.metadata.selectedMethod}"
 ║ currentPhase: "${context.currentPhase}"
 ╚════════════════════════════════════════════════════════════════`);
-    
+
     if (userProblemStatement) {
       this.updateProblemStatement(context, userProblemStatement);
       console.log(`║ ✅ STORED via updateProblemStatement: "${context.metadata.problemStatement}"`);
     }
-    
+
     // User provided description, route to appropriate treatment intro
     const descWorkType = context.metadata.workType;
     const descSelectedMethod = context.metadata.selectedMethod;
-    
+
     if (descWorkType === 'problem' && descSelectedMethod) {
       let nextStep = '';
       if (descSelectedMethod === 'identity_shifting') {
@@ -582,7 +582,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 ╚════════════════════════════════════════════════════════════════\n`);
       return 'choose_method';
     }
-    
+
     // Fallback to confirmation step (for other cases like goal without method)
     console.log(`║ ⚠️  FALLBACK: Routing to "confirm_statement"
 ╚════════════════════════════════════════════════════════════════\n`);
@@ -600,7 +600,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     context.currentPhase = 'reality_shifting';
     context.metadata.selectedMethod = 'reality_shifting';
     console.log(`🔍 GOAL_DESCRIPTION: Stored goal: "${lastResponse}"`);
-    
+
     // Check if deadline is already mentioned in the goal
     const hasDeadlineInGoal = ValidationHelpers.detectDeadlineInGoal(lastResponse);
     if (hasDeadlineInGoal.hasDeadline && hasDeadlineInGoal.deadline && hasDeadlineInGoal.synthesizedGoal) {
@@ -619,11 +619,11 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // Store negative experience description
     console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: Storing "${lastResponse}"`);
     this.updateProblemStatement(context, lastResponse);
-    
+
     // Check if this is from dig deeper flow (originalProblemStatement exists means we're already working on something)
-    const isFromDigDeeper = context.metadata.originalProblemStatement && 
-                            context.metadata.originalProblemStatement !== lastResponse;
-    
+    const isFromDigDeeper = context.metadata.originalProblemStatement &&
+      context.metadata.originalProblemStatement !== lastResponse;
+
     if (isFromDigDeeper) {
       // Coming from dig deeper - route to method selection
       console.log(`🔍 NEGATIVE_EXPERIENCE_DESCRIPTION: From dig deeper flow, routing to method selection`);
@@ -662,14 +662,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     console.log(`🔍 CHOOSE_METHOD: isDiggingDeeperMethodSelection=${context.metadata.isDiggingDeeperMethodSelection}`);
     if (context.metadata.isDiggingDeeperMethodSelection) {
       console.log(`🔍 CHOOSE_METHOD_DIGGING: Processing digging deeper method selection`);
-      
+
       // Clear the flag
       context.metadata.isDiggingDeeperMethodSelection = false;
-      
+
       // Delegate to digging_method_selection logic
       const input = lastResponse.toLowerCase();
       let diggingSelectedMethod = '';
-      
+
       if (input.includes('problem shifting') || input === '1') {
         diggingSelectedMethod = 'problem_shifting';
       } else if (input.includes('identity shifting') || input === '2') {
@@ -679,31 +679,31 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       } else if (input.includes('blockage shifting') || input === '4') {
         diggingSelectedMethod = 'blockage_shifting';
       }
-      
+
       // Update problem statement to use the new problem from digging deeper flow
       const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
-                                          context.userResponses?.['restate_scenario_problem_1'] ||
-                                          context.userResponses?.['restate_scenario_problem_2'] ||
-                                          context.userResponses?.['restate_scenario_problem_3'] ||
-                                          context.userResponses?.['restate_anything_else_problem_1'] ||
-                                          context.userResponses?.['restate_anything_else_problem_2'];
+        context.userResponses?.['restate_scenario_problem_1'] ||
+        context.userResponses?.['restate_scenario_problem_2'] ||
+        context.userResponses?.['restate_scenario_problem_3'] ||
+        context.userResponses?.['restate_anything_else_problem_1'] ||
+        context.userResponses?.['restate_anything_else_problem_2'];
       // CRITICAL: Prioritize newProblemFromUserResponse FIRST to use the latest restated problem
       const newDiggingProblem = newProblemFromUserResponse || context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem;
-      
+
       if (newDiggingProblem) {
         context.problemStatement = newDiggingProblem;
         context.metadata.currentDiggingProblem = newDiggingProblem;
         console.log(`🔍 CHOOSE_METHOD_DIGGING: Using problem: "${newDiggingProblem}"`);
       }
-      
+
       // ⭐ THIS IS CRITICAL: Clear previous modality-specific metadata to ensure clean switch
       // This removes stale currentBelief, cycleCount, etc. from the previous modality session
       console.log(`🔍 CHOOSE_METHOD_DIGGING: Clearing previous modality metadata`);
       this.clearPreviousModalityMetadata(context);
-      
+
       // Store the selected method in metadata for reference
       context.metadata.selectedMethod = diggingSelectedMethod;
-      
+
       // Route to appropriate method intro
       if (diggingSelectedMethod === 'problem_shifting') {
         context.currentPhase = 'problem_shifting';
@@ -727,15 +727,15 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return 'choose_method';
       }
     }
-    
+
     // NORMAL FLOW: Original choose_method logic for non-digging-deeper scenarios
     console.log(`🔍 CHOOSE_METHOD: Processing normal method selection`);
     const methodChoice = context.userResponses[context.currentStep]?.toLowerCase() || '';
     console.log(`🔍 CHOOSE_METHOD: methodChoice="${methodChoice}"`);
-    
+
     // Check if problem statement already exists (e.g., from trauma redirect)
     const hasExistingProblem = context.problemStatement || context.metadata.problemStatement;
-    
+
     if (methodChoice.includes('problem shifting') || methodChoice.includes('1')) {
       context.currentPhase = hasExistingProblem ? 'problem_shifting' : 'work_type_selection';
       context.metadata.selectedMethod = 'problem_shifting';
@@ -771,7 +771,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       this.clearPreviousModalityMetadata(context);
       return hasExistingProblem ? 'trauma_shifting_intro' : 'work_type_description';
     }
-    
+
     // No valid method selected yet - stay on choose_method to show buttons
     console.log(`🔍 CHOOSE_METHOD: No valid method detected, staying on choose_method`);
     return 'choose_method';
@@ -788,31 +788,31 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleConfirmStatement(lastResponse: string, context: TreatmentContext): string {
     const confirmInput = lastResponse.toLowerCase();
-    
+
     // If user says "no", route back to appropriate input step based on workType
     if (confirmInput.includes('no') || confirmInput.includes('not') || confirmInput.includes('wrong') || confirmInput.includes('incorrect')) {
       const workType = context.metadata.workType;
-      
+
       // DEBUG: Log the state
       console.log(`🔍 CONFIRM_STATEMENT "NO": workType=${workType}, hasTraumaRedirect=${!!context.userResponses['trauma_problem_redirect']}`);
       console.log(`🔍 CONFIRM_STATEMENT "NO": userResponses keys:`, Object.keys(context.userResponses || {}));
       console.log(`🔍 CONFIRM_STATEMENT "NO": trauma_problem_redirect value:`, context.userResponses['trauma_problem_redirect']);
-      
+
       // Check if this came from trauma_problem_redirect - check FIRST before workType
       if (context.userResponses['trauma_problem_redirect']) {
         context.currentPhase = 'trauma_shifting'; // Set correct phase
         delete context.userResponses['trauma_problem_redirect']; // Clear old response
         delete context.userResponses['confirm_statement']; // Clear old confirmation too
         // Don't clear problemStatement - trauma_problem_redirect will overwrite it with new value
-        
+
         // Persist the cleared responses to database
-        this.saveContextToDatabase(context).catch(error => 
+        this.saveContextToDatabase(context).catch(error =>
           console.error('Failed to save cleared responses to database:', error)
         );
-        
+
         return 'trauma_problem_redirect'; // Go back to re-answer how they feel
       }
-      
+
       // Otherwise route based on workType to re-enter description
       if (workType === 'problem') {
         // For regular problems, clear statement and ask again
@@ -826,7 +826,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.currentPhase = 'introduction'; // Set correct phase for negative_experience_description
         return 'negative_experience_description';
       }
-      
+
       // Fallback (should rarely happen)
       return 'work_type_description';
     }
@@ -841,7 +841,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleRouteToMethod(context: TreatmentContext): string {
     const workType = context.metadata.workType;
     const selectedMethod = context.metadata.selectedMethod;
-    
+
     if (workType === 'problem' && selectedMethod) {
       context.currentPhase = this.getPhaseForMethod(selectedMethod);
       return this.getIntroStepForMethod(selectedMethod);
@@ -857,7 +857,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       console.log(`🔧 ROUTE_TO_METHOD: Negative experience, routing to trauma_dissolve_step_a`);
       return 'trauma_dissolve_step_a';  // NOT trauma_identity_step!
     }
-    
+
     return 'choose_method';
   }
 
@@ -900,10 +900,10 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       // No longer a problem - check if we've already asked permission to dig deeper
       const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
       const returnStep = context.metadata?.returnToDiggingStep;
-      
+
       console.log(`🔍 CHECK_IF_STILL_PROBLEM: alreadyGrantedPermission=${alreadyGrantedPermission}, returnStep=${returnStep}`);
       console.log(`🔍 CHECK_IF_STILL_PROBLEM: userResponses['digging_deeper_start']=${context.userResponses['digging_deeper_start']}`);
-      
+
       if (alreadyGrantedPermission && returnStep) {
         // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         console.log(`🔍 CHECK_IF_STILL_PROBLEM: Returning to ${returnStep}`);
@@ -928,18 +928,18 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleBlockageStepE(lastResponse: string, context: TreatmentContext): string {
     const stepENoProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
     const stepESeemsResolved = stepENoProblemIndicators.some(indicator => lastResponse.includes(indicator)) ||
-      (lastResponse.trim() === 'no') || 
+      (lastResponse.trim() === 'no') ||
       (lastResponse.trim() === 'not') ||
       (lastResponse.trim() === 'no problem') ||
       (lastResponse.startsWith('no ') && lastResponse.length < 15) ||
       (lastResponse.startsWith('not ') && lastResponse.length < 15);
-    
+
     if (stepESeemsResolved) {
       // Problem seems resolved - check if we're returning from a sub-problem or this is first completion
       console.log(`🔍 BLOCKAGE_STEP_E: Problem resolved (response: "${lastResponse}"), checking dig deeper context`);
       const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
       const returnStep = context.metadata?.returnToDiggingStep;
-      
+
       if (alreadyGrantedPermission && returnStep) {
         // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         console.log(`🔍 BLOCKAGE_STEP_E: Permission already granted, returning to ${returnStep}`);
@@ -982,16 +982,16 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
     const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator)) ||
       // Check for standalone "no" or "not" responses (not part of problem descriptions)
-      (lastResponse.trim() === 'no') || 
+      (lastResponse.trim() === 'no') ||
       (lastResponse.trim() === 'not') ||
       (lastResponse.trim() === 'no problem') ||
       (lastResponse.startsWith('no ') && lastResponse.length < 15) || // Short "no" responses
       (lastResponse.startsWith('not ') && lastResponse.length < 15);  // Short "not" responses
     console.log(`🔍 BLOCKAGE_CHECK: lastResponse="${lastResponse}", seemsResolved=${seemsResolved}, noProblemIndicators matched:`, noProblemIndicators.filter(indicator => lastResponse.includes(indicator)));
-    
+
     // Check if user is responding to dig deeper question with yes/no
     const isDigDeeperResponse = lastResponse.includes('yes') || lastResponse.includes('no');
-    
+
     if (isDigDeeperResponse) {
       // User is responding to "Would you like to dig deeper in this area?"
       console.log(`🔍 BLOCKAGE_CHECK_DIG_DEEPER: User responded ${lastResponse} to dig deeper question`);
@@ -1002,7 +1002,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Problem resolved, transitioning to dig deeper`);
       const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
       const returnStep = context.metadata?.returnToDiggingStep;
-      
+
       if (alreadyGrantedPermission && returnStep) {
         // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Permission already granted, returning to ${returnStep}`);
@@ -1116,7 +1116,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       // No longer a problem - check if we've already asked permission to dig deeper
       const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
       const returnStep = context.metadata?.returnToDiggingStep;
-      
+
       if (alreadyGrantedPermission && returnStep) {
         // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         context.currentPhase = 'digging_deeper';
@@ -1239,7 +1239,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       // No longer a problem - check if we've already asked permission to dig deeper
       const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
       const returnStep = context.metadata?.returnToDiggingStep;
-      
+
       if (alreadyGrantedPermission && returnStep) {
         // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         context.currentPhase = 'digging_deeper';
@@ -1270,10 +1270,10 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   }
 
   private handleRealityWhyNotPossible(lastResponse: string, context: TreatmentContext): string {
-    if (lastResponse.toLowerCase().includes('no reason') || 
-        lastResponse.toLowerCase().includes('no') && lastResponse.toLowerCase().includes('reason') ||
-        lastResponse.toLowerCase().includes('none') ||
-        lastResponse.toLowerCase().includes('nothing')) {
+    if (lastResponse.toLowerCase().includes('no reason') ||
+      lastResponse.toLowerCase().includes('no') && lastResponse.toLowerCase().includes('reason') ||
+      lastResponse.toLowerCase().includes('none') ||
+      lastResponse.toLowerCase().includes('nothing')) {
       // User said "no reason" - check which checking question we came from
       const fromSecondCheck = context?.metadata?.fromSecondCheckingQuestion;
       if (fromSecondCheck) {
@@ -1291,7 +1291,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleRealityCheckingQuestions(lastResponse: string, context: TreatmentContext): string {
     const certaintyMatch = lastResponse.match(/(\d+)%?/);
     const certaintyPercentage = certaintyMatch ? parseInt(certaintyMatch[1]) : 0;
-    
+
     if (certaintyPercentage >= 100) {
       return 'reality_certainty_check';
     } else if (certaintyPercentage > 0) {
@@ -1356,14 +1356,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleTraumaProblemRedirect(lastResponse: string, context: TreatmentContext): string {
     // User answered how they feel about the fact it happened - construct problem statement
     const feeling = lastResponse || 'this way';
-    const traumaDescription = context.userResponses['negative_experience_description'] || 
-                             context.metadata.originalProblemStatement || 
-                             'that happened';
-    
+    const traumaDescription = context.userResponses['negative_experience_description'] ||
+      context.metadata.originalProblemStatement ||
+      'that happened';
+
     // Construct the full problem statement: "I feel [feeling] that [trauma] happened"
     const constructedProblem = `I feel ${feeling} that ${traumaDescription} happened`;
     console.log(`🔧 TRAUMA_REDIRECT: Constructed problem statement: "${constructedProblem}"`);
-    
+
     // Store the constructed problem statement
     context.problemStatement = constructedProblem;
     context.metadata.problemStatement = constructedProblem;
@@ -1371,12 +1371,12 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // When user declines trauma process, this constructed problem IS their original problem
     // This ensures digging deeper references the correct problem, not just the trauma descriptor
     context.metadata.originalProblemStatement = constructedProblem;
-    
+
     // Set to problem work type for method selection later
     context.metadata.workType = 'problem';
     context.metadata.selectedMethod = undefined; // Reset method selection
     context.currentPhase = 'work_type_selection';  // NOT method_selection!
-    
+
     // Route to confirm_statement to get user confirmation
     return 'confirm_statement';  // NOT choose_method!
   }
@@ -1418,7 +1418,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     if (lastResponse.includes('yes') || lastResponse.includes('still')) {
       // Still a problem - repeat Steps 3-5 (skip intro, they already answered that)
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-      
+
       // Clear previous iteration responses to prevent cached identity/feelings
       delete context.userResponses['trauma_identity_step'];
       delete context.userResponses['trauma_dissolve_step_a'];
@@ -1427,19 +1427,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       delete context.userResponses['trauma_dissolve_step_d'];
       delete context.userResponses['trauma_dissolve_step_e'];
       console.log(`🔄 TRAUMA_EXPERIENCE_CYCLE: Starting iteration ${context.metadata.cycleCount}, cleared previous identity and dissolve responses`);
-      
+
       // Persist the cleared responses to database
-      this.saveContextToDatabase(context).catch(error => 
+      this.saveContextToDatabase(context).catch(error =>
         console.error('Failed to save cleared trauma responses to database:', error)
       );
-      
+
       return 'trauma_identity_step';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
       // No longer a problem - check if we've already asked permission to dig deeper
       const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
       const returnStep = context.metadata?.returnToDiggingStep;
-      
+
       if (alreadyGrantedPermission && returnStep) {
         // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         context.currentPhase = 'digging_deeper';
@@ -1480,7 +1480,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleDiggingDeeperStart(lastResponse: string, context: TreatmentContext): string {
     context.currentPhase = 'digging_deeper';
-    
+
     if (lastResponse.includes('yes')) {
       return 'future_problem_check';
     }
@@ -1508,15 +1508,15 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       const newProblem = newProblemFromRestate.trim();
       context.metadata.currentDiggingProblem = newProblem;
       context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
-      
+
       // PRODUCTION FIX: Don't overwrite returnToDiggingStep if already set to a trauma step
       // This preserves the correct return point for trauma's two-question flow
-      if (!context.metadata.returnToDiggingStep || 
-          context.metadata.returnToDiggingStep === 'future_problem_check') {
+      if (!context.metadata.returnToDiggingStep ||
+        context.metadata.returnToDiggingStep === 'future_problem_check') {
         context.metadata.returnToDiggingStep = 'future_problem_check';
       }
       // else: Keep existing returnToDiggingStep (e.g., trauma_dig_deeper_2)
-      
+
       context.problemStatement = newProblem;
       context.metadata.workType = 'problem';
       console.log(`🔍 RESTATE_PROBLEM_FUTURE: Updated problem to "${newProblem}" before routing to choose_method`);
@@ -1532,7 +1532,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // because scriptedResponse runs AFTER getNextStep, so metadata isn't set yet
     const input = lastResponse.toLowerCase();
     let diggingSelectedMethod = '';
-    
+
     if (input.includes('problem shifting') || input === '1') {
       diggingSelectedMethod = 'problem_shifting';
     } else if (input.includes('identity shifting') || input === '2') {
@@ -1542,18 +1542,18 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     } else if (input.includes('blockage shifting') || input === '4') {
       diggingSelectedMethod = 'blockage_shifting';
     }
-    
+
     // Update problem statement to use the new problem from digging deeper flow
     // Check ALL 8 possible sources in correct priority order
     const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
-                                        context.userResponses?.['restate_scenario_problem_1'] ||
-                                        context.userResponses?.['restate_scenario_problem_2'] ||
-                                        context.userResponses?.['restate_scenario_problem_3'] ||
-                                        context.userResponses?.['restate_anything_else_problem_1'] ||
-                                        context.userResponses?.['restate_anything_else_problem_2'];
+      context.userResponses?.['restate_scenario_problem_1'] ||
+      context.userResponses?.['restate_scenario_problem_2'] ||
+      context.userResponses?.['restate_scenario_problem_3'] ||
+      context.userResponses?.['restate_anything_else_problem_1'] ||
+      context.userResponses?.['restate_anything_else_problem_2'];
     // CRITICAL FIX: Prioritize currentDiggingProblem (set by previous step) over userResponses (which may contain stale data from earlier iterations)
     const newDiggingProblem = context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem || newProblemFromUserResponse;
-    
+
     if (newDiggingProblem) {
       context.problemStatement = newDiggingProblem;
       context.metadata.currentDiggingProblem = newDiggingProblem;
@@ -1561,13 +1561,13 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     } else {
       console.error(`❌ DIGGING_METHOD_SELECTION_ROUTE: NO PROBLEM FOUND! This will cause routing to fail!`);
     }
-    
+
     // Clear previous modality-specific metadata to ensure clean switch
     this.clearPreviousModalityMetadata(context);
-    
+
     // Store the selected method in metadata for reference
     context.metadata.selectedMethod = diggingSelectedMethod;
-    
+
     if (diggingSelectedMethod === 'problem_shifting') {
       context.currentPhase = 'problem_shifting';
       context.metadata.workType = 'problem'; // Ensure correct work type for problem shifting
@@ -1611,19 +1611,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // User selected a method - route directly to that method
     const scenario1Input = lastResponse.toLowerCase();
     const scenario1Problem = context.userResponses?.['restate_scenario_problem_1'];
-    
+
     if (scenario1Problem) {
       context.problemStatement = scenario1Problem;
       context.metadata.currentDiggingProblem = scenario1Problem;
       console.log(`🔍 SCENARIO_1_ROUTE: Using problem: "${scenario1Problem}"`);
     }
-    
+
     // PRODUCTION FIX: Set return point for nested digging deeper
     // After clearing this nested problem, return to this same question
     context.metadata.returnToDiggingStep = 'scenario_check_1';
-    
+
     this.clearPreviousModalityMetadata(context);
-    
+
     if (scenario1Input.includes('problem shifting') || scenario1Input === '1') {
       context.currentPhase = 'problem_shifting';
       context.metadata.selectedMethod = 'problem_shifting';
@@ -1659,18 +1659,18 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // User selected a method - route directly to that method
     const scenario2Input = lastResponse.toLowerCase();
     const scenario2Problem = context.userResponses?.['restate_scenario_problem_2'];
-    
+
     if (scenario2Problem) {
       context.problemStatement = scenario2Problem;
       context.metadata.currentDiggingProblem = scenario2Problem;
       console.log(`🔍 SCENARIO_2_ROUTE: Using problem: "${scenario2Problem}"`);
     }
-    
+
     // PRODUCTION FIX: Set return point for nested digging deeper
     context.metadata.returnToDiggingStep = 'scenario_check_2';
-    
+
     this.clearPreviousModalityMetadata(context);
-    
+
     if (scenario2Input.includes('problem shifting') || scenario2Input === '1') {
       context.currentPhase = 'problem_shifting';
       context.metadata.selectedMethod = 'problem_shifting';
@@ -1706,18 +1706,18 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // User selected a method - route directly to that method
     const scenario3Input = lastResponse.toLowerCase();
     const scenario3Problem = context.userResponses?.['restate_scenario_problem_3'];
-    
+
     if (scenario3Problem) {
       context.problemStatement = scenario3Problem;
       context.metadata.currentDiggingProblem = scenario3Problem;
       console.log(`🔍 SCENARIO_3_ROUTE: Using problem: "${scenario3Problem}"`);
     }
-    
+
     // PRODUCTION FIX: Set return point for nested digging deeper
     context.metadata.returnToDiggingStep = 'scenario_check_3';
-    
+
     this.clearPreviousModalityMetadata(context);
-    
+
     if (scenario3Input.includes('problem shifting') || scenario3Input === '1') {
       context.currentPhase = 'problem_shifting';
       context.metadata.selectedMethod = 'problem_shifting';
@@ -1781,20 +1781,20 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // User selected a method - route directly to that method
     const anythingElse1Input = lastResponse.toLowerCase();
     const anythingElse1Problem = context.userResponses?.['restate_anything_else_problem_1'];
-    
+
     if (anythingElse1Problem) {
       context.problemStatement = anythingElse1Problem;
       context.metadata.currentDiggingProblem = anythingElse1Problem;
       // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
       console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Using problem: "${anythingElse1Problem}"`);
     }
-    
+
     // PRODUCTION FIX: Set return point for nested digging deeper
     // After clearing this nested problem, return to this same question
     context.metadata.returnToDiggingStep = 'anything_else_check_1';
-    
+
     this.clearPreviousModalityMetadata(context);
-    
+
     if (anythingElse1Input.includes('problem shifting') || anythingElse1Input === '1') {
       context.currentPhase = 'problem_shifting';
       context.metadata.selectedMethod = 'problem_shifting';
@@ -1847,19 +1847,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // User selected a method - route directly to that method
     const anythingElse2Input = lastResponse.toLowerCase();
     const anythingElse2Problem = context.userResponses?.['restate_anything_else_problem_2'];
-    
+
     if (anythingElse2Problem) {
       context.problemStatement = anythingElse2Problem;
       context.metadata.currentDiggingProblem = anythingElse2Problem;
       // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
       console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Using problem: "${anythingElse2Problem}"`);
     }
-    
+
     // PRODUCTION FIX: Set return point for nested digging deeper
     context.metadata.returnToDiggingStep = 'anything_else_check_2';
-    
+
     this.clearPreviousModalityMetadata(context);
-    
+
     if (anythingElse2Input.includes('problem shifting') || anythingElse2Input === '1') {
       context.currentPhase = 'problem_shifting';
       context.metadata.selectedMethod = 'problem_shifting';
@@ -1907,7 +1907,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleRouteToIntegration(context: TreatmentContext): string {
     // Route to appropriate integration based on selected method
     const selectedMethod = context.metadata.selectedMethod;
-    
+
     if (selectedMethod === 'problem_shifting') {
       context.currentPhase = 'integration';
       return 'problem_integration_awareness_1';
@@ -1927,19 +1927,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.currentPhase = 'integration';
       return 'reality_integration_awareness_1';
     }
-    
+
     // Default fallback
     context.currentPhase = 'integration';
     return 'integration_start';
   }
 
   private handleActionFollowup(lastResponse: string): string {
-    if (lastResponse.includes('nothing') || lastResponse.includes('Nothing') || 
-        lastResponse.toLowerCase().includes('nothing coming up') || 
-        lastResponse.toLowerCase().includes('nothing else') ||
-        lastResponse.toLowerCase().trim() === 'no' ||
-        lastResponse.toLowerCase().includes('that\'s it') ||
-        lastResponse.toLowerCase().includes('thats it')) {
+    if (lastResponse.includes('nothing') || lastResponse.includes('Nothing') ||
+      lastResponse.toLowerCase().includes('nothing coming up') ||
+      lastResponse.toLowerCase().includes('nothing else') ||
+      lastResponse.toLowerCase().trim() === 'no' ||
+      lastResponse.toLowerCase().includes('that\'s it') ||
+      lastResponse.toLowerCase().includes('thats it')) {
       return 'one_thing_question';
     } else {
       return 'action_followup';

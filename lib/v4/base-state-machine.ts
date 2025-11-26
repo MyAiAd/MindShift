@@ -30,7 +30,7 @@ export class BaseTreatmentStateMachine {
     this.phases = new Map();
     this.contexts = new Map();
     this.initializePhases();
-    
+
     // Initialize response caching system
     this.responseCache = {
       cache: new Map(),
@@ -38,9 +38,9 @@ export class BaseTreatmentStateMachine {
       missCount: 0,
       preloadedResponses: new Set()
     };
-    
+
     console.log('🚀 RESPONSE_CACHE: Treatment State Machine initialized with response caching');
-    
+
     // Clear any existing cache entries to fix caching bugs
     this.clearIdentityCache();
     this.clearGoalCache();
@@ -50,21 +50,21 @@ export class BaseTreatmentStateMachine {
    * Main processing function - handles 95% of interactions without AI
    */
   async processUserInput(
-    sessionId: string, 
-    userInput: string, 
+    sessionId: string,
+    userInput: string,
     context?: Partial<TreatmentContext>,
     bypassValidation?: boolean
   ): Promise<ProcessingResult> {
     // CRITICAL FIX: Ensure context is loaded from database before processing
     await this.getOrCreateContextAsync(sessionId, context);
-    
+
     // Special handling for session initialization
     if (userInput === 'start') {
       const treatmentContext = this.getOrCreateContext(sessionId, context);
       const currentPhase = this.phases.get(treatmentContext.currentPhase);
-      
+
       console.log(`🔍 PROCESS_INPUT_START: sessionId="${sessionId}", currentPhase="${treatmentContext.currentPhase}", currentStep="${treatmentContext.currentStep}", userInput="${userInput}"`);
-      
+
       if (!currentPhase) {
         throw new Error(`Invalid phase: ${treatmentContext.currentPhase}`);
       }
@@ -85,7 +85,7 @@ export class BaseTreatmentStateMachine {
 
     const treatmentContext = this.getOrCreateContext(sessionId, context);
     const currentPhase = this.phases.get(treatmentContext.currentPhase);
-    
+
     if (!currentPhase) {
       throw new Error(`Invalid phase: ${treatmentContext.currentPhase}`);
     }
@@ -116,7 +116,7 @@ export class BaseTreatmentStateMachine {
             };
           }
         }
-        
+
         // Check if we need AI assistance
         const aiTrigger = this.checkAITriggers(userInput, currentStep, treatmentContext);
         if (aiTrigger) {
@@ -130,7 +130,7 @@ export class BaseTreatmentStateMachine {
             }
           };
         }
-        
+
         // Return validation error with scripted response
         return {
           canContinue: false,
@@ -142,10 +142,10 @@ export class BaseTreatmentStateMachine {
 
     // Get the current step's response to check for internal signals
     const currentStepResponse = this.getScriptedResponse(currentStep, treatmentContext, userInput);
-    
+
     // Check if this is an internal confirmation signal that should trigger automatic step progression
     const isInternalSignal = this.isInternalConfirmationSignal(currentStepResponse);
-    
+
     console.log(`
 ╔════════════════════════════════════════════════════════════════
 ║ 🔄 PROCESS_INPUT FLOW CHECK
@@ -154,7 +154,7 @@ export class BaseTreatmentStateMachine {
 ║ currentStepResponse: "${currentStepResponse.substring(0, 80)}${currentStepResponse.length > 80 ? '...' : ''}"
 ║ isInternalSignal: ${isInternalSignal}
 ╚════════════════════════════════════════════════════════════════`);
-    
+
     if (isInternalSignal) {
       console.log(`║ ⚡ INTERNAL SIGNAL - Auto-progressing to next step
 ╚════════════════════════════════════════════════════════════════\n`);
@@ -172,7 +172,7 @@ export class BaseTreatmentStateMachine {
    */
   private getScriptedResponse(step: TreatmentStep, context: TreatmentContext, currentUserInput?: string): string {
     const startTime = performance.now();
-    
+
     // Try cache first for static responses
     if (typeof step.scriptedResponse === 'string') {
       const cacheKey = `static_${step.id}`;
@@ -183,7 +183,7 @@ export class BaseTreatmentStateMachine {
         return cached;
       }
     }
-    
+
     // Generate response
     let response: string;
     if (typeof step.scriptedResponse === 'function') {
@@ -191,11 +191,11 @@ export class BaseTreatmentStateMachine {
         const previousStepId = this.getPreviousStep(step.id, context.currentPhase);
         return previousStepId ? context.userResponses[previousStepId] : undefined;
       })();
-      
+
       // Try cache for dynamic responses with context hash
       let cacheKey: string | undefined;
       const shouldSkipCache = this.shouldSkipCacheForStep(step.id, userInput, context);
-      
+
       if (!shouldSkipCache) {
         const contextHash = this.generateContextHash(step.id, userInput, context);
         cacheKey = `dynamic_${step.id}_${contextHash}`;
@@ -206,25 +206,25 @@ export class BaseTreatmentStateMachine {
           return cached;
         }
       }
-      
+
       response = step.scriptedResponse(userInput, context);
-      
+
       // Cache the dynamic response (only if we have a cacheKey)
       if (cacheKey) {
         this.setCachedResponse(cacheKey, response, step.id);
       }
     } else {
       response = step.scriptedResponse;
-      
+
       // Cache the static response
       const cacheKey = `static_${step.id}`;
       this.setCachedResponse(cacheKey, response, step.id);
     }
-    
+
     this.responseCache.missCount++;
     const responseTime = Math.round(performance.now() - startTime);
     console.log(`🚀 CACHE_MISS: Generated response for step "${step.id}" (${responseTime}ms)`);
-    
+
     return response;
   }
 
@@ -234,22 +234,22 @@ export class BaseTreatmentStateMachine {
   private shouldSkipCacheForStep(stepId: string, userInput: string | undefined, context: TreatmentContext): boolean {
     const diggingContext = userInput?.trim() || context.metadata?.currentDiggingProblem;
     const cycleCount = context.metadata?.cycleCount > 0;
-    
+
     // Steps that should never be cached due to dynamic context
     const neverCacheSteps = [
       'identity_shifting_intro',
-      'belief_shifting_intro', 
+      'belief_shifting_intro',
       'problem_shifting_intro',
       'blockage_shifting_intro',
       'goal_confirmation',
       'reality_shifting_intro',
       'work_type_description'
     ];
-    
+
     if (neverCacheSteps.includes(stepId) && (diggingContext || cycleCount)) {
       return true;
     }
-    
+
     // Integration steps that reference problem statement - must always skip cache to prevent cross-session contamination
     // Blockage steps that embed userInput directly - must always skip cache to prevent cross-cycle contamination
     // Problem Shifting steps that embed user-specific data - must always skip cache
@@ -263,11 +263,11 @@ export class BaseTreatmentStateMachine {
       'blockage_check_if_still_problem',
       'confirm_statement'  // References problemStatement which changes after trauma_problem_redirect
     ];
-    
+
     if (alwaysSkipCacheSteps.includes(stepId)) {
       return true;
     }
-    
+
     // Steps that use user input directly
     const userInputSteps = [
       'feel_good_state',
@@ -277,7 +277,7 @@ export class BaseTreatmentStateMachine {
       'belief_step_d',
       'belief_step_e'
     ];
-    
+
     return userInputSteps.includes(stepId) && !!userInput?.trim();
   }
 
@@ -287,13 +287,13 @@ export class BaseTreatmentStateMachine {
   private getCachedResponse(cacheKey: string): string | null {
     const cached = this.responseCache.cache.get(cacheKey);
     if (!cached) return null;
-    
+
     // Check if cache entry is still valid
     if (Date.now() - cached.timestamp > this.CACHE_TTL_MS) {
       this.responseCache.cache.delete(cacheKey);
       return null;
     }
-    
+
     return cached.response;
   }
 
@@ -309,7 +309,7 @@ export class BaseTreatmentStateMachine {
       const toRemove = entries.slice(0, 10); // Remove oldest 10 entries
       toRemove.forEach(([key]) => this.responseCache.cache.delete(key));
     }
-    
+
     this.responseCache.cache.set(cacheKey, {
       response,
       timestamp: Date.now(),
@@ -338,7 +338,7 @@ export class BaseTreatmentStateMachine {
       identityResponse: context.metadata.identityResponse,
       currentIdentity: context.metadata.currentIdentity
     };
-    
+
     // Simple hash - could be improved with actual hash function if needed
     return btoa(JSON.stringify(relevantData)).substring(0, 16);
   }
@@ -350,16 +350,16 @@ export class BaseTreatmentStateMachine {
     try {
       const context = this.contexts.get(sessionId);
       if (!context) return;
-      
+
       const currentPhase = this.phases.get(context.currentPhase);
       if (!currentPhase) return;
-      
+
       const currentStep = currentPhase.steps.find(s => s.id === context.currentStep);
       if (!currentStep) return;
-      
+
       // Predict next 2-3 most likely steps
       const likelyNextSteps = this.predictNextSteps(currentStep, context);
-      
+
       // Pre-generate responses for likely steps
       likelyNextSteps.forEach(stepId => {
         const step = currentPhase.steps.find(s => s.id === stepId);
@@ -373,7 +373,7 @@ export class BaseTreatmentStateMachine {
           }
         }
       });
-      
+
     } catch (error) {
       console.warn('🚀 PRELOAD: Error pre-loading responses:', error);
     }
@@ -384,12 +384,12 @@ export class BaseTreatmentStateMachine {
    */
   private predictNextSteps(currentStep: TreatmentStep, context: TreatmentContext): string[] {
     const predictions: string[] = [];
-    
+
     // Use existing nextStep if defined
     if (currentStep.nextStep) {
       predictions.push(currentStep.nextStep);
     }
-    
+
     // Add phase-specific predictions based on common flows
     switch (context.currentPhase) {
       case 'introduction':
@@ -397,7 +397,7 @@ export class BaseTreatmentStateMachine {
           predictions.push('work_type_description', 'goal_description', 'negative_experience_description');
         }
         break;
-      
+
       case 'problem_shifting':
         const problemSteps = ['problem_shifting_intro', 'body_sensation_check', 'feel_solution_state'];
         const currentIndex = problemSteps.indexOf(context.currentStep);
@@ -406,7 +406,7 @@ export class BaseTreatmentStateMachine {
         }
         break;
     }
-    
+
     return predictions.slice(0, 3);
   }
 
@@ -429,12 +429,12 @@ export class BaseTreatmentStateMachine {
   public clearIdentityCache(): void {
     const identitySteps = [
       'identity_dissolve_step_a',
-      'identity_dissolve_step_b', 
+      'identity_dissolve_step_b',
       'identity_dissolve_step_c',
       'identity_dissolve_step_d',
       'identity_dissolve_step_e'
     ];
-    
+
     let clearedCount = 0;
     this.responseCache.cache.forEach((_, key) => {
       const hasIdentityStep = identitySteps.some(step => key.includes(step));
@@ -443,7 +443,7 @@ export class BaseTreatmentStateMachine {
         clearedCount++;
       }
     });
-    
+
     console.log(`🧹 CACHE_CLEAR: Cleared ${clearedCount} identity-related cache entries`);
   }
 
@@ -458,7 +458,7 @@ export class BaseTreatmentStateMachine {
       'goal_deadline_date',
       'goal_certainty'
     ];
-    
+
     let clearedCount = 0;
     this.responseCache.cache.forEach((_, key) => {
       const hasGoalStep = goalSteps.some(step => key.includes(step));
@@ -467,7 +467,7 @@ export class BaseTreatmentStateMachine {
         clearedCount++;
       }
     });
-    
+
     console.log(`🧹 CACHE_CLEAR: Cleared ${clearedCount} goal-related cache entries`);
   }
 
@@ -478,57 +478,57 @@ export class BaseTreatmentStateMachine {
     const trimmed = userInput.trim();
     const words = trimmed.split(' ').length;
     const lowerInput = trimmed.toLowerCase();
-    
+
     for (const trigger of step.aiTriggers) {
       switch (trigger.condition) {
         case 'userStuck':
-          if (trimmed.length < 3 || 
-              lowerInput.includes("i don't know") ||
-              lowerInput.includes("not sure") ||
-              lowerInput.includes("can't think") ||
-              lowerInput.includes("don't feel") ||
-              lowerInput.includes("can't feel")) {
+          if (trimmed.length < 3 ||
+            lowerInput.includes("i don't know") ||
+            lowerInput.includes("not sure") ||
+            lowerInput.includes("can't think") ||
+            lowerInput.includes("don't feel") ||
+            lowerInput.includes("can't feel")) {
             return trigger;
           }
           break;
-          
+
         case 'tooLong':
           if (words > 30) {
             return trigger;
           }
           break;
-          
+
         case 'multipleProblems':
           const problemConnectors = ['and', 'also', 'plus', 'additionally', 'another', 'other', 'too', 'as well'];
-          const problemCount = problemConnectors.filter(connector => 
+          const problemCount = problemConnectors.filter(connector =>
             lowerInput.includes(connector)
           ).length;
           if (problemCount >= 1) {
             return trigger;
           }
           break;
-          
+
         case 'needsClarification':
           if (lowerInput.includes('what do you mean') ||
-              lowerInput.includes('i don\'t understand') ||
-              lowerInput.includes('confused') ||
-              lowerInput.includes('unclear') ||
-              lowerInput.includes('what should i') ||
-              (step.expectedResponseType === 'yesno' && !lowerInput.includes('yes') && !lowerInput.includes('no'))) {
+            lowerInput.includes('i don\'t understand') ||
+            lowerInput.includes('confused') ||
+            lowerInput.includes('unclear') ||
+            lowerInput.includes('what should i') ||
+            (step.expectedResponseType === 'yesno' && !lowerInput.includes('yes') && !lowerInput.includes('no'))) {
             return trigger;
           }
           break;
-          
+
         case 'offTopic':
           const offTopicKeywords = ['weather', 'politics', 'sports', 'food', 'work', 'money', 'family'];
-          if (offTopicKeywords.some(keyword => lowerInput.includes(keyword)) && 
-              context.currentStep.includes('feel') || context.currentStep.includes('problem')) {
+          if (offTopicKeywords.some(keyword => lowerInput.includes(keyword)) &&
+            context.currentStep.includes('feel') || context.currentStep.includes('problem')) {
             return trigger;
           }
           break;
       }
     }
-    
+
     return null;
   }
 
@@ -559,30 +559,30 @@ export class BaseTreatmentStateMachine {
       'REALITY_SHIFTING_SELECTED',
       'TRAUMA_SHIFTING_SELECTED'
     ];
-    
+
     return internalSignals.includes(response);
   }
 
   private handleInternalSignal(signal: string, currentStep: TreatmentStep, context: TreatmentContext, userInput: string): ProcessingResult {
     const nextStepId = this.determineNextStep(currentStep, context);
-    
+
     if (nextStepId) {
       context.currentStep = nextStepId;
-      
+
       const updatedPhase = this.phases.get(context.currentPhase);
       if (!updatedPhase) {
         throw new Error(`Invalid updated phase: ${context.currentPhase}`);
       }
-      
+
       const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
       if (nextStep) {
         // PHASE 7 FIX: Don't pass userInput for new steps - let getScriptedResponse use fallback logic
         // This ensures each step receives appropriate context via getPreviousStep() or undefined
         const actualResponse = this.getScriptedResponse(nextStep, context);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, context);
-        
+
         this.saveContext(context);
-        
+
         return {
           canContinue: true,
           nextStep: nextStepId,
@@ -593,13 +593,13 @@ export class BaseTreatmentStateMachine {
         throw new Error(`Step '${nextStepId}' not found in phase '${context.currentPhase}'`);
       }
     }
-    
+
     return this.handlePhaseCompletion(context);
   }
 
   private handleRegularFlow(currentStep: TreatmentStep, context: TreatmentContext, userInput: string): ProcessingResult {
     const nextStepId = this.determineNextStep(currentStep, context);
-    
+
     console.log(`
 ╔════════════════════════════════════════════════════════════════
 ║ 🎬 HANDLE_REGULAR_FLOW
@@ -607,51 +607,51 @@ export class BaseTreatmentStateMachine {
 ║ determineNextStep returned: "${nextStepId}"
 ║ currentPhase: "${context.currentPhase}"
 ╚════════════════════════════════════════════════════════════════`);
-    
+
     if (nextStepId) {
       context.currentStep = nextStepId;
-      
+
       // CRITICAL FIX: Get the updated phase after determineNextStep may have changed it
       const updatedPhase = this.phases.get(context.currentPhase);
       if (!updatedPhase) {
         throw new Error(`Invalid updated phase: ${context.currentPhase}`);
       }
-      
+
       const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
       if (nextStep) {
         // PHASE 7 FIX: Don't pass userInput for new steps - let getScriptedResponse use fallback logic
         // This ensures each step receives appropriate context via getPreviousStep() or undefined
         const scriptedResponse = this.getScriptedResponse(nextStep, context);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, context);
-        
+
         // CRITICAL FIX (V2 parity): Check if this new step's response is also a signal that needs auto-progression
         // This handles cases like route_to_method returning "METHOD_SELECTION_NEEDED"
         const isSignalResponse = this.isInternalConfirmationSignal(scriptedResponse);
-        
+
         if (isSignalResponse) {
           console.log(`║ ⚡ SIGNAL IN NEXT STEP: "${scriptedResponse}" - Auto-progressing one more time
 ╚════════════════════════════════════════════════════════════════\n`);
-          
+
           // This is a signal, we need to auto-progress ONE MORE time
           const finalNextStepId = this.determineNextStep(nextStep, context);
           console.log(`║ 🎯 FINAL AUTO-PROGRESSION to: "${finalNextStepId}"`);
-          
+
           if (finalNextStepId) {
             context.currentStep = finalNextStepId;
             const finalPhase = this.phases.get(context.currentPhase);
-            
+
             if (finalPhase) {
               const finalStep = finalPhase.steps.find(s => s.id === finalNextStepId);
-              
+
               if (finalStep) {
                 const finalResponse = this.getScriptedResponse(finalStep, context);
                 const finalNeedsLinguistic = this.isLinguisticProcessingStep(finalStep.id, context);
-                
+
                 console.log(`║ 💬 FINAL RESPONSE TO USER: "${finalResponse.substring(0, 80)}${finalResponse.length > 80 ? '...' : ''}"
 ╚════════════════════════════════════════════════════════════════\n`);
-                
+
                 this.saveContext(context);
-                
+
                 return {
                   canContinue: true,
                   nextStep: finalNextStepId,
@@ -662,13 +662,13 @@ export class BaseTreatmentStateMachine {
             }
           }
         }
-        
+
         // Not a signal, return normally
         console.log(`║ 💬 RESPONSE TO USER: "${scriptedResponse.substring(0, 80)}${scriptedResponse.length > 80 ? '...' : ''}"
 ╚════════════════════════════════════════════════════════════════\n`);
-        
+
         this.saveContext(context);
-        
+
         return {
           canContinue: true,
           nextStep: nextStepId,
@@ -688,12 +688,12 @@ export class BaseTreatmentStateMachine {
 
   private saveContext(context: TreatmentContext): void {
     this.contexts.set(context.sessionId, context);
-    
+
     // Persist context to database
-    DatabaseOperations.saveContextToDatabase(context).catch(error => 
+    DatabaseOperations.saveContextToDatabase(context).catch(error =>
       console.error('Failed to save context to database:', error)
     );
-    
+
     // Pre-load next likely responses in background
     setTimeout(() => {
       this.preloadNextResponses(context.sessionId);
@@ -708,7 +708,7 @@ export class BaseTreatmentStateMachine {
     if (context?.metadata?.skipLinguisticProcessing) {
       return false;
     }
-    
+
     // PERFORMANCE FIX: Match V2's optimized linguistic processing configuration
     // V2 removed most steps for performance - only use AI where absolutely necessary
     // All modality intro steps that need linguistic processing for user input contextualisation
@@ -727,7 +727,7 @@ export class BaseTreatmentStateMachine {
     // - 'identity_dissolve_step_b' - V2 removed for performance
     // - 'trauma_dissolve_step_a' - V2 removed for performance
     // - 'trauma_dissolve_step_b' - V2 removed for performance
-    
+
     return linguisticSteps.includes(stepId);
   }
 
@@ -737,7 +737,7 @@ export class BaseTreatmentStateMachine {
         userId: context?.userId || '',
         sessionId,
         currentPhase: 'introduction',
-        currentStep: 'mind_shifting_explanation',
+        currentStep: 'mind_shifting_explanation_static',
         userResponses: {},
         startTime: new Date(),
         lastActivity: new Date(),
@@ -749,7 +749,7 @@ export class BaseTreatmentStateMachine {
         }
       });
     }
-    
+
     return this.contexts.get(sessionId)!;
   }
 
@@ -774,7 +774,7 @@ export class BaseTreatmentStateMachine {
       userId: context?.userId || '',
       sessionId,
       currentPhase: 'introduction',
-      currentStep: 'mind_shifting_explanation',
+      currentStep: 'mind_shifting_explanation_static',
       userResponses: {},
       startTime: new Date(),
       lastActivity: new Date(),
@@ -787,13 +787,13 @@ export class BaseTreatmentStateMachine {
     };
 
     this.contexts.set(sessionId, newContext);
-    
+
     // Clear goal-related cache for new sessions
     this.clearGoalCache();
-    
+
     // Save new context to database
     await DatabaseOperations.saveContextToDatabase(newContext);
-    
+
     return newContext;
   }
 
@@ -811,17 +811,17 @@ export class BaseTreatmentStateMachine {
   }
 
   private handlePhaseCompletion(context: TreatmentContext): ProcessingResult {
-    if (context.currentStep === 'session_complete' || 
-        context.currentStep === 'reality_session_complete' ||
-        context.currentStep === 'identity_session_complete' ||
-        context.currentStep?.includes('session_complete')) {
+    if (context.currentStep === 'session_complete' ||
+      context.currentStep === 'reality_session_complete' ||
+      context.currentStep === 'identity_session_complete' ||
+      context.currentStep?.includes('session_complete')) {
       return {
         canContinue: false,
         reason: 'Session completed successfully',
         scriptedResponse: 'Your Mind Shifting session is now complete. Thank you for your participation.'
       };
     }
-    
+
     return {
       canContinue: false,
       reason: 'Unexpected phase completion',
@@ -832,7 +832,7 @@ export class BaseTreatmentStateMachine {
   private getPreviousStep(currentStepId: string, phaseId: string): string {
     const phase = this.phases.get(phaseId);
     if (!phase) return '';
-    
+
     const currentIndex = phase.steps.findIndex(s => s.id === currentStepId);
     return currentIndex > 0 ? phase.steps[currentIndex - 1].id : '';
   }
@@ -876,9 +876,9 @@ export class BaseTreatmentStateMachine {
 
   public clearUserResponsesForUndo(sessionId: string, stepsToKeep: Set<string>): void {
     const context = this.getOrCreateContext(sessionId);
-    
+
     if (!context.userResponses) return;
-    
+
     Object.keys(context.userResponses).forEach(stepId => {
       if (!stepsToKeep.has(stepId)) {
         delete context.userResponses[stepId];
