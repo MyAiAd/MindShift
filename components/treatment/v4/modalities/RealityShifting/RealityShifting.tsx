@@ -45,7 +45,7 @@ export default function RealityShifting({
 
   const isRealityShiftingTextInputStep = () => {
     const realityShiftingTextSteps = [
-      'reality_shifting_intro',         // Reality shifting intro
+      'reality_shifting_intro_dynamic', // Reality shifting intro
       'reality_goal_capture',           // Reality goal capture
       'goal_deadline_date',             // Goal deadline date input
       'goal_certainty',                 // Goal certainty percentage
@@ -91,7 +91,7 @@ export default function RealityShifting({
             <span>V3</span>
           </span>
         </div>
-        
+
         {stepHistory.length > 0 && (
           <button
             onClick={onUndo}
@@ -145,7 +145,7 @@ export default function RealityShifting({
               <span className="text-xs text-gray-400">Press Enter to send</span>
             </div>
           </div>
-          
+
           <button
             onClick={() => userInput.trim() && onSendMessage(userInput.trim())}
             disabled={isLoading || !userInput.trim()}

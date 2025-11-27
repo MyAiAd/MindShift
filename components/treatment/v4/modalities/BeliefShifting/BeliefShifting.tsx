@@ -69,7 +69,7 @@ export default function BeliefShifting({
 
   const isBeliefShiftingTextInputStep = () => {
     const beliefShiftingTextSteps = [
-      'belief_shifting_intro',          // Belief shifting intro
+      'belief_shifting_intro_dynamic',  // Belief shifting intro
       'belief_step_a',                  // Belief step A
       'belief_step_b',                  // Belief step B
       'belief_step_c',                  // Belief step C
@@ -100,7 +100,7 @@ export default function BeliefShifting({
             <span>V3</span>
           </span>
         </div>
-        
+
         {stepHistory.length > 0 && (
           <button
             onClick={onUndo}
@@ -205,7 +205,7 @@ export default function BeliefShifting({
               <span className="text-xs text-gray-400">Press Enter to send</span>
             </div>
           </div>
-          
+
           <button
             onClick={() => userInput.trim() && onSendMessage(userInput.trim())}
             disabled={isLoading || !userInput.trim()}

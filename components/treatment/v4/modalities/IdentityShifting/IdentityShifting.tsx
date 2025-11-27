@@ -43,7 +43,7 @@ export default function IdentityShifting({
 
   const isIdentityShiftingTextInputStep = () => {
     const identityShiftingTextSteps = [
-      'identity_shifting_intro',        // Identity shifting intro
+      'identity_shifting_intro_dynamic', // Identity shifting intro
       'identity_dissolve_step_a',       // Identity dissolve step A
       'identity_dissolve_step_b',       // Identity dissolve step B
       'identity_dissolve_step_c',       // Identity dissolve step C
@@ -66,7 +66,7 @@ export default function IdentityShifting({
             <span>V3</span>
           </span>
         </div>
-        
+
         {stepHistory.length > 0 && (
           <button
             onClick={onUndo}
@@ -120,7 +120,7 @@ export default function IdentityShifting({
               <span className="text-xs text-gray-400">Press Enter to send</span>
             </div>
           </div>
-          
+
           <button
             onClick={() => userInput.trim() && onSendMessage(userInput.trim())}
             disabled={isLoading || !userInput.trim()}

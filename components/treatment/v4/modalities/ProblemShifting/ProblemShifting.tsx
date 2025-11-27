@@ -43,7 +43,7 @@ export default function ProblemShifting({
 
   const isProblemShiftingTextInputStep = () => {
     const problemShiftingTextSteps = [
-      'problem_shifting_intro',         // Problem shifting intro
+      'problem_shifting_intro_dynamic', // Problem shifting intro
       'body_sensation_check',           // Body sensation check
       'what_needs_to_happen_step',      // What needs to happen step
       'feel_solution_state',            // Feel solution state
@@ -65,7 +65,7 @@ export default function ProblemShifting({
             <span>V3</span>
           </span>
         </div>
-        
+
         {stepHistory.length > 0 && (
           <button
             onClick={onUndo}
@@ -119,7 +119,7 @@ export default function ProblemShifting({
               <span className="text-xs text-gray-400">Press Enter to send</span>
             </div>
           </div>
-          
+
           <button
             onClick={() => userInput.trim() && onSendMessage(userInput.trim())}
             disabled={isLoading || !userInput.trim()}

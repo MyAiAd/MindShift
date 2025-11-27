@@ -42,7 +42,7 @@ export default function BlockageShifting({
 
   const isBlockageShiftingTextInputStep = () => {
     const blockageShiftingTextSteps = [
-      'blockage_shifting_intro',        // Blockage shifting intro
+      'blockage_shifting_intro_dynamic', // Blockage shifting intro
       'blockage_step_b',                // Blockage step B
       'blockage_step_c',                // Blockage step C
       'blockage_step_d',                // Blockage step D
@@ -64,7 +64,7 @@ export default function BlockageShifting({
             <span>V3</span>
           </span>
         </div>
-        
+
         {stepHistory.length > 0 && (
           <button
             onClick={onUndo}
@@ -118,7 +118,7 @@ export default function BlockageShifting({
               <span className="text-xs text-gray-400">Press Enter to send</span>
             </div>
           </div>
-          
+
           <button
             onClick={() => userInput.trim() && onSendMessage(userInput.trim())}
             disabled={isLoading || !userInput.trim()}

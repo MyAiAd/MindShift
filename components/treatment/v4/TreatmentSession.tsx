@@ -191,7 +191,7 @@ export default function TreatmentSession({
       };
 
       setMessages([instantMessage]);
-      setCurrentStep('mind_shifting_explanation');
+      setCurrentStep('mind_shifting_explanation_static');
       setIsSessionActive(true);
       setIsLoading(false); // Stop loading immediately - user can interact now
 
@@ -528,7 +528,7 @@ export default function TreatmentSession({
   // This ensures we see consistent state, not partial updates during rapid re-renders
   useEffect(() => {
     // Check if we're in the initial explanation step
-    const isInitialStep = currentStep === 'mind_shifting_explanation';
+    const isInitialStep = currentStep === 'mind_shifting_explanation_dynamic';
 
     console.log('🔍 BUTTON CHECK (useEffect):', {
       currentStep,
