@@ -293,7 +293,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   /**
    * Handle internal routing signals that bypass normal step progression
    */
-  private handleInternalRoutingSignals(response: string, context: TreatmentContext): boolean {
+  protected handleInternalRoutingSignals(response: string, context: TreatmentContext): boolean {
     switch (response) {
       case 'PROBLEM_SELECTION_CONFIRMED':
         context.currentPhase = 'method_selection';
