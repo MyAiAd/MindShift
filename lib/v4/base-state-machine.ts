@@ -17,7 +17,7 @@ import { TraumaShiftingPhase } from './treatment-modalities/trauma-shifting';
 import { DiggingDeeperPhase } from './treatment-modalities/digging-deeper';
 import { IntegrationPhase } from './treatment-modalities/integration';
 
-export class BaseTreatmentStateMachine {
+export abstract class BaseTreatmentStateMachine {
   protected phases: Map<string, TreatmentPhase>;
   protected contexts: Map<string, TreatmentContext>;
 
@@ -43,8 +43,11 @@ export class BaseTreatmentStateMachine {
 
     // Clear any existing cache entries to fix caching bugs
     this.clearIdentityCache();
+    this.clearIdentityCache();
     this.clearGoalCache();
   }
+
+  protected abstract handleInternalRoutingSignals(signal: string, context: TreatmentContext): boolean;
 
   /**
    * Main processing function - handles 95% of interactions without AI
@@ -633,7 +636,17 @@ export class BaseTreatmentStateMachine {
 ╚════════════════════════════════════════════════════════════════\n`);
 
           // This is a signal, we need to auto-progress ONE MORE time
-          const finalNextStepId = this.determineNextStep(nextStep, context);
+
+          // CRITICAL FIX: Check if this signal is a routing signal first
+          let finalNextStepId: string | null = null;
+
+          if (this.handleInternalRoutingSignals(scriptedResponse, context)) {
+            console.log(`║ ⚡ SIGNAL HANDLED BY ROUTING LOGIC: "${scriptedResponse}" -> "${context.currentStep}"`);
+            finalNextStepId = context.currentStep;
+          } else {
+            finalNextStepId = this.determineNextStep(nextStep, context);
+          }
+
           console.log(`║ 🎯 FINAL AUTO-PROGRESSION to: "${finalNextStepId}"`);
 
           if (finalNextStepId) {
