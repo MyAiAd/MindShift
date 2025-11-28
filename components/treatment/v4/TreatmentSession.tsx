@@ -528,7 +528,7 @@ export default function TreatmentSession({
   // This ensures we see consistent state, not partial updates during rapid re-renders
   useEffect(() => {
     // Check if we're in the initial explanation step
-    const isInitialStep = currentStep === 'mind_shifting_explanation_dynamic';
+    const isInitialStep = currentStep === 'mind_shifting_explanation_dynamic' || currentStep === 'mind_shifting_explanation_static';
 
     console.log('🔍 BUTTON CHECK (useEffect):', {
       currentStep,
