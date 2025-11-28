@@ -242,7 +242,7 @@ export abstract class BaseTreatmentStateMachine {
     const neverCacheSteps = [
       'identity_shifting_intro',
       'belief_shifting_intro',
-      'problem_shifting_intro',
+      'problem_shifting_intro_static',
       'blockage_shifting_intro',
       'goal_confirmation',
       'reality_shifting_intro',
@@ -402,7 +402,7 @@ export abstract class BaseTreatmentStateMachine {
         break;
 
       case 'problem_shifting':
-        const problemSteps = ['problem_shifting_intro', 'body_sensation_check', 'feel_solution_state'];
+        const problemSteps = ['problem_shifting_intro_static', 'body_sensation_check', 'feel_solution_state'];
         const currentIndex = problemSteps.indexOf(context.currentStep);
         if (currentIndex >= 0 && currentIndex < problemSteps.length - 1) {
           predictions.push(problemSteps[currentIndex + 1]);
@@ -726,7 +726,7 @@ export abstract class BaseTreatmentStateMachine {
     // V2 removed most steps for performance - only use AI where absolutely necessary
     // All modality intro steps that need linguistic processing for user input contextualisation
     const linguisticSteps = [
-      'problem_shifting_intro',  // Ensure problem is stated as a problem
+      'problem_shifting_intro_static',  // Ensure problem is stated as a problem
       'reality_shifting_intro',  // Ensure goal is stated as a goal  
       // 'blockage_shifting_intro' REMOVED - scripted response already has correct problem statement logic, AI not needed
       // 'identity_shifting_intro' REMOVED - should store identity response directly, not process with AI

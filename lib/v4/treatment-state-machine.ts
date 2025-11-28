@@ -362,7 +362,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
       case 'PROBLEM_SHIFTING_SELECTED':
         context.currentPhase = 'problem_shifting';
-        context.currentStep = 'problem_shifting_intro';
+        context.currentStep = 'problem_shifting_intro_static';
         context.metadata.selectedMethod = 'problem_shifting';
         return true;
 
@@ -436,7 +436,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem, method, and problem statement all present - going directly to treatment intro`);
         if (selectedMethod === 'problem_shifting') {
           context.currentPhase = 'problem_shifting';
-          return 'problem_shifting_intro';
+          return 'problem_shifting_intro_static';
         } else if (selectedMethod === 'identity_shifting') {
           context.currentPhase = 'identity_shifting';
           return 'identity_shifting_intro';
@@ -450,7 +450,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
           // Unknown method, default to problem shifting
           console.log(`🔍 MIND_SHIFTING_DETERMINE: Unknown method "${selectedMethod}", defaulting to problem_shifting`);
           context.currentPhase = 'problem_shifting';
-          return 'problem_shifting_intro';
+          return 'problem_shifting_intro_static';
         }
       } else {
         // Method selected but no problem statement yet - need to collect it
@@ -536,14 +536,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private getIntroStepForMethod(method: string): string {
     const methodStepMap: Record<string, string> = {
-      'problem_shifting': 'problem_shifting_intro',
+      'problem_shifting': 'problem_shifting_intro_static',
       'identity_shifting': 'identity_shifting_intro',
       'belief_shifting': 'belief_shifting_intro',
       'blockage_shifting': 'blockage_shifting_intro',
       'reality_shifting': 'reality_shifting_intro',
       'trauma_shifting': 'trauma_shifting_intro'
     };
-    return methodStepMap[method] || 'problem_shifting_intro';
+    return methodStepMap[method] || 'problem_shifting_intro_static';
   }
 
   private handleWorkTypeDescription(lastResponse: string, context: TreatmentContext): string {
@@ -576,7 +576,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         nextStep = 'identity_shifting_intro';
       } else if (descSelectedMethod === 'problem_shifting') {
         context.currentPhase = 'problem_shifting';
-        nextStep = 'problem_shifting_intro';
+        nextStep = 'problem_shifting_intro_static';
       } else if (descSelectedMethod === 'belief_shifting') {
         context.currentPhase = 'belief_shifting';
         nextStep = 'belief_shifting_intro';
@@ -730,7 +730,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       if (diggingSelectedMethod === 'problem_shifting') {
         context.currentPhase = 'problem_shifting';
         console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Problem Shifting`);
-        return 'problem_shifting_intro';
+        return 'problem_shifting_intro_static';
       } else if (diggingSelectedMethod === 'identity_shifting') {
         context.currentPhase = 'identity_shifting';
         console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Identity Shifting`);
@@ -763,7 +763,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'problem_shifting';
       // Clear previous modality metadata for clean state
       this.clearPreviousModalityMetadata(context);
-      return hasExistingProblem ? 'problem_shifting_intro' : 'work_type_description';
+      return hasExistingProblem ? 'problem_shifting_intro_static' : 'work_type_description';
     } else if (methodChoice.includes('blockage shifting') || methodChoice.includes('4')) {
       context.currentPhase = hasExistingProblem ? 'blockage_shifting' : 'work_type_selection';
       context.metadata.selectedMethod = 'blockage_shifting';
@@ -916,7 +916,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
       context.metadata.skipIntroInstructions = true; // Flag to skip intro instructions
       context.metadata.skipLinguisticProcessing = true; // Flag to prevent AI processing on repeat
-      return 'problem_shifting_intro';
+      return 'problem_shifting_intro_static';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
       // No longer a problem - check if we've already asked permission to dig deeper
@@ -1595,7 +1595,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.workType = 'problem'; // Ensure correct work type for problem shifting
       console.log(`🔍 MODALITY_SWITCH: Switched to Problem Shifting with problem: "${newDiggingProblem}"`);
       console.log(`🔍 MODALITY_SWITCH: Phase set to: "${context.currentPhase}", returning step: "problem_shifting_intro"`);
-      return 'problem_shifting_intro';
+      return 'problem_shifting_intro_static';
     } else if (diggingSelectedMethod === 'identity_shifting') {
       context.currentPhase = 'identity_shifting';
       context.metadata.workType = 'problem'; // Identity shifting also works with problems in digging deeper
@@ -1616,7 +1616,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     context.currentPhase = 'problem_shifting';
     context.metadata.workType = 'problem';
     console.log(`🔍 MODALITY_SWITCH: Defaulted to Problem Shifting with problem: "${newDiggingProblem}"`);
-    return 'problem_shifting_intro';
+    return 'problem_shifting_intro_static';
   }
 
   private handleScenarioCheck(lastResponse: string, restateStep: string, noStep: string): string {
@@ -1651,7 +1651,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'problem_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_1_ROUTE: Routing to Problem Shifting`);
-      return 'problem_shifting_intro';
+      return 'problem_shifting_intro_static';
     } else if (scenario1Input.includes('identity shifting') || scenario1Input === '2') {
       context.currentPhase = 'identity_shifting';
       context.metadata.selectedMethod = 'identity_shifting';
@@ -1674,7 +1674,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // Default to problem shifting if unclear
     context.currentPhase = 'problem_shifting';
     context.metadata.workType = 'problem';
-    return 'problem_shifting_intro';
+    return 'problem_shifting_intro_static';
   }
 
   private handleClearScenarioProblem2(lastResponse: string, context: TreatmentContext): string {
@@ -1698,7 +1698,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'problem_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_2_ROUTE: Routing to Problem Shifting`);
-      return 'problem_shifting_intro';
+      return 'problem_shifting_intro_static';
     } else if (scenario2Input.includes('identity shifting') || scenario2Input === '2') {
       context.currentPhase = 'identity_shifting';
       context.metadata.selectedMethod = 'identity_shifting';
@@ -1721,7 +1721,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // Default to problem shifting if unclear
     context.currentPhase = 'problem_shifting';
     context.metadata.workType = 'problem';
-    return 'problem_shifting_intro';
+    return 'problem_shifting_intro_static';
   }
 
   private handleClearScenarioProblem3(lastResponse: string, context: TreatmentContext): string {
@@ -1745,7 +1745,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'problem_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_3_ROUTE: Routing to Problem Shifting`);
-      return 'problem_shifting_intro';
+      return 'problem_shifting_intro_static';
     } else if (scenario3Input.includes('identity shifting') || scenario3Input === '2') {
       context.currentPhase = 'identity_shifting';
       context.metadata.selectedMethod = 'identity_shifting';
@@ -1768,7 +1768,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // Default to problem shifting if unclear
     context.currentPhase = 'problem_shifting';
     context.metadata.workType = 'problem';
-    return 'problem_shifting_intro';
+    return 'problem_shifting_intro_static';
   }
 
   private handleAnythingElseCheck(lastResponse: string, context: TreatmentContext, restateStep: string): string {
@@ -1822,7 +1822,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'problem_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Routing to Problem Shifting`);
-      return 'problem_shifting_intro';
+      return 'problem_shifting_intro_static';
     } else if (anythingElse1Input.includes('identity shifting') || anythingElse1Input === '2') {
       context.currentPhase = 'identity_shifting';
       context.metadata.selectedMethod = 'identity_shifting';
@@ -1846,7 +1846,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     context.currentPhase = 'problem_shifting';
     context.metadata.workType = 'problem';
     console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Defaulted to Problem Shifting`);
-    return 'problem_shifting_intro';
+    return 'problem_shifting_intro_static';
   }
 
   private handleRestateAnythingElseProblem2(context: TreatmentContext): string {
@@ -1887,7 +1887,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'problem_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Routing to Problem Shifting`);
-      return 'problem_shifting_intro';
+      return 'problem_shifting_intro_static';
     } else if (anythingElse2Input.includes('identity shifting') || anythingElse2Input === '2') {
       context.currentPhase = 'identity_shifting';
       context.metadata.selectedMethod = 'identity_shifting';
@@ -1911,7 +1911,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     context.currentPhase = 'problem_shifting';
     context.metadata.workType = 'problem';
     console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Defaulted to Problem Shifting`);
-    return 'problem_shifting_intro';
+    return 'problem_shifting_intro_static';
   }
 
   private handleAnythingElseCheck3(lastResponse: string, context: TreatmentContext): string {
