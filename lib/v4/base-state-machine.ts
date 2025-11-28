@@ -630,23 +630,17 @@ export abstract class BaseTreatmentStateMachine {
         // CRITICAL FIX (V2 parity): Check if this new step's response is also a signal that needs auto-progression
         // This handles cases like route_to_method returning "METHOD_SELECTION_NEEDED"
         const isSignalResponse = this.isInternalConfirmationSignal(scriptedResponse);
-        const isAutoStep = nextStep.expectedResponseType === 'auto';
 
-        if (isSignalResponse || isAutoStep) {
-          if (isSignalResponse) {
-            console.log(`║ ⚡ SIGNAL IN NEXT STEP: "${scriptedResponse}" - Auto-progressing one more time
+        if (isSignalResponse) {
+          console.log(`║ ⚡ SIGNAL IN NEXT STEP: "${scriptedResponse}" - Auto-progressing one more time
 ╚════════════════════════════════════════════════════════════════\n`);
-          } else {
-            console.log(`║ ⚡ AUTO STEP DETECTED: "${nextStepId}" (expectedResponseType: 'auto') - Auto-progressing
-╚════════════════════════════════════════════════════════════════\n`);
-          }
 
-          // This is a signal or auto step, we need to auto-progress ONE MORE time
+          // This is a signal, we need to auto-progress ONE MORE time
 
           // CRITICAL FIX: Check if this signal is a routing signal first
           let finalNextStepId: string | null = null;
 
-          if (isSignalResponse && this.handleInternalRoutingSignals(scriptedResponse, context)) {
+          if (this.handleInternalRoutingSignals(scriptedResponse, context)) {
             console.log(`║ ⚡ SIGNAL HANDLED BY ROUTING LOGIC: "${scriptedResponse}" -> "${context.currentStep}"`);
             finalNextStepId = context.currentStep;
           } else {
