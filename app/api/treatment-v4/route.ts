@@ -815,9 +815,7 @@ async function saveSessionToDatabase(
       ai_responses: 0,
       duration_minutes: 0,
       total_ai_cost: 0.00,
-      total_ai_tokens: 0,
-      // V4 specific metadata
-      treatment_version: 'v4'
+      total_ai_tokens: 0
     };
 
     console.log('Treatment V4 API: Inserting session data:', sessionData);
@@ -863,9 +861,7 @@ async function saveInteractionToDatabase(
       ai_tokens: response.aiTokens || 0,
       step_id: response.currentStep,
       phase_id: getPhaseForStep(response.currentStep || ''),
-      created_at: new Date().toISOString(),
-      // V4 specific metadata
-      treatment_version: 'v4'
+      created_at: new Date().toISOString()
     });
 
     // Update stats (non-blocking - fire and forget for performance)
