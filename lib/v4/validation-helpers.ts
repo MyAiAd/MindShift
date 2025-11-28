@@ -42,7 +42,7 @@ export class ValidationHelpers {
     }
 
     // Special validation for problem-focused method intros
-    const problemFocusedIntros = ['problem_shifting_intro_static', 'blockage_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'];
+    const problemFocusedIntros = ['problem_shifting_intro_static', 'blockage_shifting_intro_static', 'identity_shifting_intro_static', 'belief_shifting_intro_static'];
     if (problemFocusedIntros.includes(step.id)) {
       return this.validateProblemFocusedIntro(lowerInput);
     }

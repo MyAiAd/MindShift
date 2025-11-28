@@ -240,12 +240,12 @@ export abstract class BaseTreatmentStateMachine {
 
     // Steps that should never be cached due to dynamic context
     const neverCacheSteps = [
-      'identity_shifting_intro',
-      'belief_shifting_intro',
+      'identity_shifting_intro_static',
+      'belief_shifting_intro_static',
       'problem_shifting_intro_static',
-      'blockage_shifting_intro',
+      'blockage_shifting_intro_static',
       'goal_confirmation',
-      'reality_shifting_intro',
+      'reality_shifting_intro_static',
       'work_type_description'
     ];
 
@@ -727,11 +727,11 @@ export abstract class BaseTreatmentStateMachine {
     // All modality intro steps that need linguistic processing for user input contextualisation
     const linguisticSteps = [
       'problem_shifting_intro_static',  // Ensure problem is stated as a problem
-      'reality_shifting_intro',  // Ensure goal is stated as a goal  
-      // 'blockage_shifting_intro' REMOVED - scripted response already has correct problem statement logic, AI not needed
-      // 'identity_shifting_intro' REMOVED - should store identity response directly, not process with AI
+      'reality_shifting_intro_static',  // Ensure goal is stated as a goal  
+      // 'blockage_shifting_intro_static' REMOVED - scripted response already has correct problem statement logic, AI not needed
+      // 'identity_shifting_intro_static' REMOVED - should store identity response directly, not process with AI
       // 'trauma_shifting_intro' REMOVED - This is a simple yes/no question, no AI needed
-      'belief_shifting_intro'    // Ensure problem is stated as a problem
+      'belief_shifting_intro_static'    // Ensure problem is stated as a problem
     ];
     // REMOVED from V4 (were in V2's optimization):
     // - 'body_sensation_check' - V2 removed for performance

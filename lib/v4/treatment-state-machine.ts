@@ -97,7 +97,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleGoalConfirmation(lastResponse, context);
 
       case 'goal_certainty':
-        return 'reality_shifting_intro';
+        return 'reality_shifting_intro_static';
 
       // Problem Shifting routing
       case 'check_if_still_problem':
@@ -111,7 +111,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleBlockageCheckIfStillProblem(lastResponse, context);
 
       // Identity Shifting routing
-      case 'identity_shifting_intro':
+      case 'identity_shifting_intro_static':
         return this.handleIdentityShiftingIntro(context);
 
       case 'identity_dissolve_step_f':
@@ -368,19 +368,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
       case 'IDENTITY_SHIFTING_SELECTED':
         context.currentPhase = 'identity_shifting';
-        context.currentStep = 'identity_shifting_intro';
+        context.currentStep = 'identity_shifting_intro_static';
         context.metadata.selectedMethod = 'identity_shifting';
         return true;
 
       case 'BELIEF_SHIFTING_SELECTED':
         context.currentPhase = 'belief_shifting';
-        context.currentStep = 'belief_shifting_intro';
+        context.currentStep = 'belief_shifting_intro_static';
         context.metadata.selectedMethod = 'belief_shifting';
         return true;
 
       case 'BLOCKAGE_SHIFTING_SELECTED':
         context.currentPhase = 'blockage_shifting';
-        context.currentStep = 'blockage_shifting_intro';
+        context.currentStep = 'blockage_shifting_intro_static';
         context.metadata.selectedMethod = 'blockage_shifting';
         return true;
 
@@ -439,13 +439,13 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
           return 'problem_shifting_intro_static';
         } else if (selectedMethod === 'identity_shifting') {
           context.currentPhase = 'identity_shifting';
-          return 'identity_shifting_intro';
+          return 'identity_shifting_intro_static';
         } else if (selectedMethod === 'belief_shifting') {
           context.currentPhase = 'belief_shifting';
-          return 'belief_shifting_intro';
+          return 'belief_shifting_intro_static';
         } else if (selectedMethod === 'blockage_shifting') {
           context.currentPhase = 'blockage_shifting';
-          return 'blockage_shifting_intro';
+          return 'blockage_shifting_intro_static';
         } else {
           // Unknown method, default to problem shifting
           console.log(`🔍 MIND_SHIFTING_DETERMINE: Unknown method "${selectedMethod}", defaulting to problem_shifting`);
@@ -470,7 +470,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         console.log(`🔍 MIND_SHIFTING_DETERMINE: Goal and description provided, going to reality_shifting_intro`);
         context.currentPhase = 'reality_shifting';
         context.metadata.selectedMethod = 'reality_shifting';
-        return 'reality_shifting_intro';
+        return 'reality_shifting_intro_static';
       }
     } else if (selectedWorkType === 'negative_experience') {
       // Check if we have the negative experience description yet
@@ -537,10 +537,10 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private getIntroStepForMethod(method: string): string {
     const methodStepMap: Record<string, string> = {
       'problem_shifting': 'problem_shifting_intro_static',
-      'identity_shifting': 'identity_shifting_intro',
-      'belief_shifting': 'belief_shifting_intro',
-      'blockage_shifting': 'blockage_shifting_intro',
-      'reality_shifting': 'reality_shifting_intro',
+      'identity_shifting': 'identity_shifting_intro_static',
+      'belief_shifting': 'belief_shifting_intro_static',
+      'blockage_shifting': 'blockage_shifting_intro_static',
+      'reality_shifting': 'reality_shifting_intro_static',
       'trauma_shifting': 'trauma_shifting_intro'
     };
     return methodStepMap[method] || 'problem_shifting_intro_static';
@@ -573,16 +573,16 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       let nextStep = '';
       if (descSelectedMethod === 'identity_shifting') {
         context.currentPhase = 'identity_shifting';
-        nextStep = 'identity_shifting_intro';
+        nextStep = 'identity_shifting_intro_static';
       } else if (descSelectedMethod === 'problem_shifting') {
         context.currentPhase = 'problem_shifting';
         nextStep = 'problem_shifting_intro_static';
       } else if (descSelectedMethod === 'belief_shifting') {
         context.currentPhase = 'belief_shifting';
-        nextStep = 'belief_shifting_intro';
+        nextStep = 'belief_shifting_intro_static';
       } else if (descSelectedMethod === 'blockage_shifting') {
         context.currentPhase = 'blockage_shifting';
-        nextStep = 'blockage_shifting_intro';
+        nextStep = 'blockage_shifting_intro_static';
       }
       console.log(`║ 🚀 ROUTING TO: "${nextStep}" (phase: "${context.currentPhase}")
 ╚════════════════════════════════════════════════════════════════\n`);
@@ -591,7 +591,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.currentPhase = 'reality_shifting';
       console.log(`║ 🚀 ROUTING TO: "reality_shifting_intro" (phase: "${context.currentPhase}")
 ╚════════════════════════════════════════════════════════════════\n`);
-      return 'reality_shifting_intro';
+      return 'reality_shifting_intro_static';
     } else if (descWorkType === 'negative_experience') {
       context.currentPhase = 'trauma_shifting';
       console.log(`║ 🚀 ROUTING TO: "trauma_shifting_intro" (phase: "${context.currentPhase}")
@@ -734,15 +734,15 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       } else if (diggingSelectedMethod === 'identity_shifting') {
         context.currentPhase = 'identity_shifting';
         console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Identity Shifting`);
-        return 'identity_shifting_intro';
+        return 'identity_shifting_intro_static';
       } else if (diggingSelectedMethod === 'belief_shifting') {
         context.currentPhase = 'belief_shifting';
         console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Belief Shifting`);
-        return 'belief_shifting_intro';
+        return 'belief_shifting_intro_static';
       } else if (diggingSelectedMethod === 'blockage_shifting') {
         context.currentPhase = 'blockage_shifting';
         console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Blockage Shifting`);
-        return 'blockage_shifting_intro';
+        return 'blockage_shifting_intro_static';
       } else {
         // No valid method selected - stay on choose_method
         console.error(`❌ CHOOSE_METHOD_DIGGING: Invalid method selection: "${input}"`);
@@ -769,19 +769,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'blockage_shifting';
       // Clear previous modality metadata for clean state
       this.clearPreviousModalityMetadata(context);
-      return hasExistingProblem ? 'blockage_shifting_intro' : 'work_type_description';
+      return hasExistingProblem ? 'blockage_shifting_intro_static' : 'work_type_description';
     } else if (methodChoice.includes('identity shifting') || methodChoice.includes('2')) {
       context.currentPhase = hasExistingProblem ? 'identity_shifting' : 'work_type_selection';
       context.metadata.selectedMethod = 'identity_shifting';
       // Clear previous modality metadata for clean state
       this.clearPreviousModalityMetadata(context);
-      return hasExistingProblem ? 'identity_shifting_intro' : 'work_type_description';
+      return hasExistingProblem ? 'identity_shifting_intro_static' : 'work_type_description';
     } else if (methodChoice.includes('belief shifting') || methodChoice.includes('3')) {
       context.currentPhase = hasExistingProblem ? 'belief_shifting' : 'work_type_selection';
       context.metadata.selectedMethod = 'belief_shifting';
       // Clear previous modality metadata for clean state
       this.clearPreviousModalityMetadata(context);
-      return hasExistingProblem ? 'belief_shifting_intro' : 'work_type_description';
+      return hasExistingProblem ? 'belief_shifting_intro_static' : 'work_type_description';
     } else if (methodChoice.includes('reality shifting')) {
       context.currentPhase = 'reality_shifting';
       context.metadata.selectedMethod = 'reality_shifting';
@@ -871,7 +871,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       // Goals: go to reality_shifting_intro
       context.currentPhase = 'reality_shifting';
       context.metadata.selectedMethod = 'reality_shifting';
-      return 'reality_shifting_intro';
+      return 'reality_shifting_intro_static';
     } else if (workType === 'negative_experience') {
       // Negative experiences: we showed trauma_shifting_intro content, so go to trauma_dissolve_step_a next
       context.currentPhase = 'trauma_shifting';
@@ -994,7 +994,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
         console.log(`🔍 BLOCKAGE_STEP_E: Updated problem to "${newProblem}", cycling back to blockage_shifting_intro`);
       }
-      return 'blockage_shifting_intro';
+      return 'blockage_shifting_intro_static';
     }
   }
 
@@ -1047,7 +1047,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
       // Don't update the problem statement when cycling back from yes/no response
       // Keep the original problem statement intact
-      return 'blockage_shifting_intro';
+      return 'blockage_shifting_intro_static';
     }
   }
 
@@ -1055,7 +1055,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     if (context.metadata.identityResponse && context.metadata.identityResponse.type === 'IDENTITY') {
       return 'identity_dissolve_step_a';
     } else {
-      return 'identity_shifting_intro';
+      return 'identity_shifting_intro_static';
     }
   }
 
@@ -1160,7 +1160,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleConfirmIdentityProblem(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes')) {
       context.currentPhase = 'identity_shifting';
-      return 'identity_shifting_intro';
+      return 'identity_shifting_intro_static';
     }
     if (lastResponse.includes('no')) {
       return 'restate_identity_problem';
@@ -1283,7 +1283,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleConfirmBeliefProblem(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes')) {
       context.currentPhase = 'belief_shifting';
-      return 'belief_shifting_intro';
+      return 'belief_shifting_intro_static';
     }
     if (lastResponse.includes('no')) {
       return 'restate_belief_problem';
@@ -1367,7 +1367,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleTraumaShiftingIntro(lastResponse: string): string {
     if (lastResponse.includes('yes') || lastResponse.includes('y')) {
-      return 'trauma_identity_step';
+      return 'trauma_identity_step_static';
     }
     if (lastResponse.includes('no') || lastResponse.includes('n')) {
       return 'trauma_problem_redirect';
@@ -1442,7 +1442,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
 
       // Clear previous iteration responses to prevent cached identity/feelings
-      delete context.userResponses['trauma_identity_step'];
+      delete context.userResponses['trauma_identity_step_static'];
       delete context.userResponses['trauma_dissolve_step_a'];
       delete context.userResponses['trauma_dissolve_step_b'];
       delete context.userResponses['trauma_dissolve_step_c'];
@@ -1455,7 +1455,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         console.error('Failed to save cleared trauma responses to database:', error)
       );
 
-      return 'trauma_identity_step';
+      return 'trauma_identity_step_static';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
       // No longer a problem - check if we've already asked permission to dig deeper
@@ -1600,17 +1600,17 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.currentPhase = 'identity_shifting';
       context.metadata.workType = 'problem'; // Identity shifting also works with problems in digging deeper
       console.log(`🔍 MODALITY_SWITCH: Switched to Identity Shifting with problem: "${newDiggingProblem}"`);
-      return 'identity_shifting_intro';
+      return 'identity_shifting_intro_static';
     } else if (diggingSelectedMethod === 'belief_shifting') {
       context.currentPhase = 'belief_shifting';
       context.metadata.workType = 'problem'; // Belief shifting also works with problems in digging deeper
       console.log(`🔍 MODALITY_SWITCH: Switched to Belief Shifting with problem: "${newDiggingProblem}"`);
-      return 'belief_shifting_intro';
+      return 'belief_shifting_intro_static';
     } else if (diggingSelectedMethod === 'blockage_shifting') {
       context.currentPhase = 'blockage_shifting';
       context.metadata.workType = 'problem'; // Blockage shifting also works with problems in digging deeper
       console.log(`🔍 MODALITY_SWITCH: Switched to Blockage Shifting with problem: "${newDiggingProblem}"`);
-      return 'blockage_shifting_intro';
+      return 'blockage_shifting_intro_static';
     }
     // Default fallback
     context.currentPhase = 'problem_shifting';
@@ -1657,19 +1657,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'identity_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_1_ROUTE: Routing to Identity Shifting`);
-      return 'identity_shifting_intro';
+      return 'identity_shifting_intro_static';
     } else if (scenario1Input.includes('belief shifting') || scenario1Input === '3') {
       context.currentPhase = 'belief_shifting';
       context.metadata.selectedMethod = 'belief_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_1_ROUTE: Routing to Belief Shifting`);
-      return 'belief_shifting_intro';
+      return 'belief_shifting_intro_static';
     } else if (scenario1Input.includes('blockage shifting') || scenario1Input === '4') {
       context.currentPhase = 'blockage_shifting';
       context.metadata.selectedMethod = 'blockage_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_1_ROUTE: Routing to Blockage Shifting`);
-      return 'blockage_shifting_intro';
+      return 'blockage_shifting_intro_static';
     }
     // Default to problem shifting if unclear
     context.currentPhase = 'problem_shifting';
@@ -1704,19 +1704,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'identity_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_2_ROUTE: Routing to Identity Shifting`);
-      return 'identity_shifting_intro';
+      return 'identity_shifting_intro_static';
     } else if (scenario2Input.includes('belief shifting') || scenario2Input === '3') {
       context.currentPhase = 'belief_shifting';
       context.metadata.selectedMethod = 'belief_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_2_ROUTE: Routing to Belief Shifting`);
-      return 'belief_shifting_intro';
+      return 'belief_shifting_intro_static';
     } else if (scenario2Input.includes('blockage shifting') || scenario2Input === '4') {
       context.currentPhase = 'blockage_shifting';
       context.metadata.selectedMethod = 'blockage_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_2_ROUTE: Routing to Blockage Shifting`);
-      return 'blockage_shifting_intro';
+      return 'blockage_shifting_intro_static';
     }
     // Default to problem shifting if unclear
     context.currentPhase = 'problem_shifting';
@@ -1751,19 +1751,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'identity_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_3_ROUTE: Routing to Identity Shifting`);
-      return 'identity_shifting_intro';
+      return 'identity_shifting_intro_static';
     } else if (scenario3Input.includes('belief shifting') || scenario3Input === '3') {
       context.currentPhase = 'belief_shifting';
       context.metadata.selectedMethod = 'belief_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_3_ROUTE: Routing to Belief Shifting`);
-      return 'belief_shifting_intro';
+      return 'belief_shifting_intro_static';
     } else if (scenario3Input.includes('blockage shifting') || scenario3Input === '4') {
       context.currentPhase = 'blockage_shifting';
       context.metadata.selectedMethod = 'blockage_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 SCENARIO_3_ROUTE: Routing to Blockage Shifting`);
-      return 'blockage_shifting_intro';
+      return 'blockage_shifting_intro_static';
     }
     // Default to problem shifting if unclear
     context.currentPhase = 'problem_shifting';
@@ -1828,19 +1828,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'identity_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Routing to Identity Shifting`);
-      return 'identity_shifting_intro';
+      return 'identity_shifting_intro_static';
     } else if (anythingElse1Input.includes('belief shifting') || anythingElse1Input === '3') {
       context.currentPhase = 'belief_shifting';
       context.metadata.selectedMethod = 'belief_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Routing to Belief Shifting`);
-      return 'belief_shifting_intro';
+      return 'belief_shifting_intro_static';
     } else if (anythingElse1Input.includes('blockage shifting') || anythingElse1Input === '4') {
       context.currentPhase = 'blockage_shifting';
       context.metadata.selectedMethod = 'blockage_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Routing to Blockage Shifting`);
-      return 'blockage_shifting_intro';
+      return 'blockage_shifting_intro_static';
     }
     // Default to problem shifting if unclear
     context.currentPhase = 'problem_shifting';
@@ -1893,19 +1893,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       context.metadata.selectedMethod = 'identity_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Routing to Identity Shifting`);
-      return 'identity_shifting_intro';
+      return 'identity_shifting_intro_static';
     } else if (anythingElse2Input.includes('belief shifting') || anythingElse2Input === '3') {
       context.currentPhase = 'belief_shifting';
       context.metadata.selectedMethod = 'belief_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Routing to Belief Shifting`);
-      return 'belief_shifting_intro';
+      return 'belief_shifting_intro_static';
     } else if (anythingElse2Input.includes('blockage shifting') || anythingElse2Input === '4') {
       context.currentPhase = 'blockage_shifting';
       context.metadata.selectedMethod = 'blockage_shifting';
       context.metadata.workType = 'problem';
       console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Routing to Blockage Shifting`);
-      return 'blockage_shifting_intro';
+      return 'blockage_shifting_intro_static';
     }
     // Default to problem shifting if unclear
     context.currentPhase = 'problem_shifting';
