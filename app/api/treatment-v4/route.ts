@@ -822,7 +822,7 @@ async function saveSessionToDatabase(
 
     const { data, error } = await supabase
       .from('treatment_sessions')
-      .insert(sessionData);
+      .upsert(sessionData, { onConflict: 'session_id' });
 
     if (error) {
       console.error('Treatment V4 API: Database insert error:', error);
