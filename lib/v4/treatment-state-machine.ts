@@ -47,6 +47,9 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
     // Main routing logic based on current step
     switch (context.currentStep) {
+      case 'mind_shifting_explanation_static':
+        return null; // Stay on static step until auto-advance or user input
+
       case 'mind_shifting_explanation_dynamic':
         return this.handleMindShiftingExplanation(lastResponse, context);
 
