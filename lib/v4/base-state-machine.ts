@@ -82,7 +82,8 @@ export abstract class BaseTreatmentStateMachine {
       return {
         canContinue: true,
         nextStep: treatmentContext.currentStep,
-        scriptedResponse
+        scriptedResponse,
+        expectedResponseType: currentStep.expectedResponseType
       };
     }
 
@@ -115,7 +116,8 @@ export abstract class BaseTreatmentStateMachine {
             return {
               canContinue: true,
               nextStep: 'multiple_problems_selection',
-              scriptedResponse
+              scriptedResponse,
+              expectedResponseType: multipleProblemsStep.expectedResponseType
             };
           }
         }
@@ -590,7 +592,8 @@ export abstract class BaseTreatmentStateMachine {
           canContinue: true,
           nextStep: nextStepId,
           scriptedResponse: actualResponse,
-          needsLinguisticProcessing
+          needsLinguisticProcessing,
+          expectedResponseType: nextStep.expectedResponseType
         };
       } else {
         throw new Error(`Step '${nextStepId}' not found in phase '${context.currentPhase}'`);
@@ -669,7 +672,8 @@ export abstract class BaseTreatmentStateMachine {
                   canContinue: true,
                   nextStep: finalNextStepId,
                   scriptedResponse: finalResponse,
-                  needsLinguisticProcessing: finalNeedsLinguistic
+                  needsLinguisticProcessing: finalNeedsLinguistic,
+                  expectedResponseType: finalStep.expectedResponseType
                 };
               }
             }
@@ -686,7 +690,8 @@ export abstract class BaseTreatmentStateMachine {
           canContinue: true,
           nextStep: nextStepId,
           scriptedResponse,
-          needsLinguisticProcessing
+          needsLinguisticProcessing,
+          expectedResponseType: nextStep.expectedResponseType
         };
       } else {
         // ENHANCED ERROR: Show which steps are available in the current phase for debugging

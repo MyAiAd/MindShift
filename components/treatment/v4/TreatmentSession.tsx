@@ -111,20 +111,47 @@ export default function TreatmentSession({
     currentStep: currentStep
   });
 
-  // Ref to track the expected response type of the current step
+  // V4: Track expected response type for auto-advance
+  const [expectedResponseType, setExpectedResponseType] = useState<string | null>(null);
+
+  // Ref to track the expected response type of the current step (keep for ref access if needed)
   const currentStepTypeRef = useRef<string | null>(null);
 
   // Handle audio ended event for auto-advance steps
   const handleAudioEnded = useCallback(() => {
     console.log('🔊 Audio ended. Step type:', currentStepTypeRef.current);
     if (currentStepTypeRef.current === 'auto') {
-      console.log('⏩ Auto-advancing step...');
+      console.log('⏩ Auto-advancing step (Audio Ended)...');
       // Small delay to ensure natural flow
       setTimeout(() => {
         sendMessage(''); // Send empty message to trigger next step
       }, 500);
     }
   }, []);
+
+  // Auto-advance logic for Voice Off mode
+  useEffect(() => {
+    // Only run if we have an auto step and voice is disabled
+    // (If voice is enabled, handleAudioEnded takes care of it)
+    if (expectedResponseType === 'auto' && !isNaturalVoiceEnabled) {
+      console.log('⏩ Auto-advance timer started (Voice Off)...');
+
+      // Calculate delay based on last message length
+      const lastMessage = messages[messages.length - 1];
+      // Default to 3 seconds if no message, otherwise 200ms per word (min 2s, max 10s)
+      const wordCount = lastMessage?.content?.split(' ').length || 0;
+      const readingDelay = Math.min(Math.max(2000, wordCount * 250), 10000);
+
+      console.log(`⏱️ Waiting ${readingDelay}ms before auto-advancing`);
+
+      const timer = setTimeout(() => {
+        console.log('⏩ Auto-advancing step (Timer)...');
+        sendMessage('');
+      }, readingDelay);
+
+      return () => clearTimeout(timer);
+    }
+  }, [expectedResponseType, isNaturalVoiceEnabled, messages]);
 
   // Natural Voice Hook
   const naturalVoice = useNaturalVoice({
@@ -398,7 +425,7 @@ export default function TreatmentSession({
 
         // Update step type ref for auto-advance logic
         currentStepTypeRef.current = data.expectedResponseType || null;
-
+        setExpectedResponseType(data.expectedResponseType || null);
         // V3: Update enhanced performance metrics
         if (data.performanceMetrics) {
           setPerformanceMetrics(prev => ({
