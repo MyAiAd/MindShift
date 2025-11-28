@@ -57,6 +57,17 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       case 'mind_shifting_explanation_dynamic':
         return this.handleMindShiftingExplanation(lastResponse, context);
 
+      // Auto-advance logic for all modality static intro steps
+      case 'problem_shifting_intro_static':
+      case 'identity_shifting_intro_static':
+      case 'belief_shifting_intro_static':
+      case 'blockage_shifting_intro_static':
+      case 'reality_shifting_intro_static':
+      case 'trauma_identity_step_static':
+        // These steps have expectedResponseType: 'auto' and should auto-advance to their dynamic counterparts
+        // Return the dynamic step name (replace _static with _dynamic)
+        return context.currentStep.replace('_static', '_dynamic');
+
       case 'work_type_description':
         return this.handleWorkTypeDescription(lastResponse, context);
 
