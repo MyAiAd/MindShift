@@ -345,6 +345,21 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.currentStep = 'trauma_integration_awareness_1';
         return true;
 
+      case 'PROBLEM_SELECTION_CONFIRMED':
+        context.currentPhase = 'method_selection';
+        context.currentStep = 'choose_method';
+        return true;
+
+      case 'GOAL_SELECTION_CONFIRMED':
+        context.currentPhase = 'introduction';
+        context.currentStep = 'goal_description';
+        return true;
+
+      case 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED':
+        context.currentPhase = 'introduction';
+        context.currentStep = 'negative_experience_description';
+        return true;
+
       case 'PROBLEM_SHIFTING_SELECTED':
         context.currentPhase = 'problem_shifting';
         context.currentStep = 'problem_shifting_intro';
