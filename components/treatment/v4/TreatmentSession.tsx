@@ -124,7 +124,7 @@ export default function TreatmentSession({
       console.log('⏩ Auto-advancing step (Audio Ended)...');
       // Small delay to ensure natural flow
       setTimeout(() => {
-        sendMessage(''); // Send empty message to trigger next step
+        sendMessage('', true); // Send empty message to trigger next step
       }, 500);
     }
   }, []);
@@ -146,7 +146,7 @@ export default function TreatmentSession({
 
       const timer = setTimeout(() => {
         console.log('⏩ Auto-advancing step (Timer)...');
-        sendMessage('');
+        sendMessage('', true);
       }, readingDelay);
 
       return () => clearTimeout(timer);
@@ -340,8 +340,8 @@ export default function TreatmentSession({
   };
 
   // V3: Enhanced message sending
-  const sendMessage = async (content: string) => {
-    if (!content.trim() || isLoading) return;
+  const sendMessage = async (content: string, isAutoAdvance = false) => {
+    if ((!content.trim() && !isAutoAdvance) || isLoading) return;
 
     const userMessage: TreatmentMessage = {
       id: `user-${Date.now()}`,
