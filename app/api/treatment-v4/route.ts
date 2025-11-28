@@ -807,7 +807,7 @@ async function saveSessionToDatabase(
       tenant_id: profile?.tenant_id || null, // Allow null for super admins
       status: 'active',
       current_phase: 'introduction', // Use proper phase name from state machine
-      current_step: 'mind_shifting_explanation', // Use proper step name from state machine
+      current_step: result.nextStep || 'mind_shifting_explanation_static', // Use proper step name from state machine
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       avg_response_time: Math.round(responseTime),
