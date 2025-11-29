@@ -251,7 +251,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
 
       // V4: Handle auto-advance steps by chaining to next step and combining messages
       // This creates seamless two-part messages for voice playback
-      if (result.expectedResponseType === 'auto') {
+      if (result.expectedResponseType === 'auto' && result.scriptedResponse) {
         console.log('Treatment V4 API: Auto-advance step detected, chaining to next step immediately');
         const firstMessage = result.scriptedResponse;
         
