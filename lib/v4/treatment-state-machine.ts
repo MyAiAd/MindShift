@@ -373,26 +373,26 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
       case 'PROBLEM_SHIFTING_SELECTED':
         context.currentPhase = 'problem_shifting';
-        context.currentStep = 'problem_shifting_intro_static';
         context.metadata.selectedMethod = 'problem_shifting';
+        context.currentStep = this.getIntroStepForMethod('problem_shifting', context);
         return true;
 
       case 'IDENTITY_SHIFTING_SELECTED':
         context.currentPhase = 'identity_shifting';
-        context.currentStep = 'identity_shifting_intro_static';
         context.metadata.selectedMethod = 'identity_shifting';
+        context.currentStep = this.getIntroStepForMethod('identity_shifting', context);
         return true;
 
       case 'BELIEF_SHIFTING_SELECTED':
         context.currentPhase = 'belief_shifting';
-        context.currentStep = 'belief_shifting_intro_static';
         context.metadata.selectedMethod = 'belief_shifting';
+        context.currentStep = this.getIntroStepForMethod('belief_shifting', context);
         return true;
 
       case 'BLOCKAGE_SHIFTING_SELECTED':
         context.currentPhase = 'blockage_shifting';
-        context.currentStep = 'blockage_shifting_intro_static';
         context.metadata.selectedMethod = 'blockage_shifting';
+        context.currentStep = this.getIntroStepForMethod('blockage_shifting', context);
         return true;
 
       default:
