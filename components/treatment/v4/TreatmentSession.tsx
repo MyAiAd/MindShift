@@ -767,6 +767,29 @@ export default function TreatmentSession({
     return true;
   };
 
+  // V4: GENERIC Yes/No button helper - automatically detects any yes/no step
+  // This covers all 37 missing yes/no steps without needing individual helpers
+  const shouldShowGenericYesNoButtons = () => {
+    // Only show if expectedResponseType is 'yesno'
+    if (expectedResponseType !== 'yesno') return false;
+
+    // Don't show if we're loading or session isn't active
+    if (isLoading || !isSessionActive) return false;
+
+    // Exclude steps that have specific button implementations
+    const specificYesNoSteps = [
+      'trauma_shifting_intro',    // Has shouldShowTraumaYesNoButtons
+      'confirm_statement',          // Has shouldShowConfirmStatementButtons
+      'goal_deadline_check',        // Has shouldShowGoalYesNoButtons
+      'goal_confirmation'           // Has shouldShowGoalYesNoButtons
+    ];
+    
+    if (specificYesNoSteps.includes(currentStep)) return false;
+
+    console.log(`✅ GENERIC YES/NO BUTTONS: Showing for ${currentStep} step (expectedResponseType: yesno)`);
+    return true;
+  };
+
   // V3: Handle Yes/No button clicks for trauma intro and confirm statement
   const handleYesNoClick = (response: string) => {
     setClickedButton(response);
@@ -1120,6 +1143,27 @@ export default function TreatmentSession({
           </div>
         )}
 
+        {/* V4: GENERIC Yes/No Buttons - Auto-detects all yes/no steps */}
+        {/* Covers 37 steps: digging_deeper, trauma checks, identity checks, belief checks, etc. */}
+        {shouldShowGenericYesNoButtons() && (
+          <div className="mb-4 flex space-x-3 justify-center">
+            <button
+              onClick={() => handleYesNoClick('yes')}
+              disabled={isLoading}
+              className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold"
+            >
+              Yes
+            </button>
+            <button
+              onClick={() => handleYesNoClick('no')}
+              disabled={isLoading}
+              className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold"
+            >
+              No
+            </button>
+          </div>
+        )}
+
         {/* V3: Method Selection Buttons */}
         {shouldShowMethodSelection() && (
           <div className="mb-4">
@@ -1177,7 +1221,7 @@ export default function TreatmentSession({
         )}
 
         {/* V3: Text Input Form - Hidden when buttons are shown */}
-        {!showWorkTypeButtons && !shouldShowMethodSelection() && !shouldShowTraumaYesNoButtons() && !shouldShowConfirmStatementButtons() && !shouldShowGoalYesNoButtons() && (
+        {!showWorkTypeButtons && !shouldShowMethodSelection() && !shouldShowTraumaYesNoButtons() && !shouldShowConfirmStatementButtons() && !shouldShowGoalYesNoButtons() && !shouldShowGenericYesNoButtons() && (
           <form onSubmit={handleSubmit} className="flex space-x-2">
             <input
               ref={inputRef}
