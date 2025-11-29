@@ -100,13 +100,9 @@ export async function POST(request: NextRequest) {
         return await handleStartSession(sessionId, userId);
 
       case 'continue':
-        if (!userInput) {
-          return NextResponse.json(
-            { error: 'UserInput is required for continue action' },
-            { status: 400 }
-          );
-        }
-        return await handleContinueSession(sessionId, userInput, userId);
+        // V4: Allow empty userInput for auto-advance steps (e.g., expectedResponseType: 'auto')
+        // The state machine will handle step-specific validation based on the step's expectedResponseType
+        return await handleContinueSession(sessionId, userInput || '', userId);
 
       case 'resume':
         return await handleResumeSession(sessionId, userId);
