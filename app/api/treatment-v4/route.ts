@@ -249,6 +249,28 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         }
       }
 
+      // V4: Handle auto-advance steps by chaining to next step and combining messages
+      // This creates seamless two-part messages for voice playback
+      if (result.expectedResponseType === 'auto') {
+        console.log('Treatment V4 API: Auto-advance step detected, chaining to next step immediately');
+        const firstMessage = result.scriptedResponse;
+        
+        // Process the next step with empty input (auto-advance)
+        const nextResult = await treatmentMachine.processUserInput(sessionId, '', { userId });
+        if (nextResult.canContinue && nextResult.scriptedResponse) {
+          // Combine both messages with double newline for readability
+          result.scriptedResponse = `${firstMessage}\n\n${nextResult.scriptedResponse}`;
+          result.nextStep = nextResult.nextStep; // Use the second step's ID
+          result.expectedResponseType = nextResult.expectedResponseType; // Use the second step's response type
+          console.log('Treatment V4 API: Combined auto-advance messages:', {
+            firstMessage: firstMessage.substring(0, 50) + '...',
+            secondMessage: nextResult.scriptedResponse.substring(0, 50) + '...',
+            finalStep: result.nextStep,
+            finalResponseType: result.expectedResponseType
+          });
+        }
+      }
+
       let finalMessage = result.scriptedResponse;
       let usedAI = false;
       let aiCost = 0;
