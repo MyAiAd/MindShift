@@ -445,24 +445,8 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       // Only skip to treatment intro if we already have a problem statement
       if (context.problemStatement || context.metadata.problemStatement) {
         console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem, method, and problem statement all present - going directly to treatment intro`);
-        if (selectedMethod === 'problem_shifting') {
-          context.currentPhase = 'problem_shifting';
-          return 'problem_shifting_intro_static';
-        } else if (selectedMethod === 'identity_shifting') {
-          context.currentPhase = 'identity_shifting';
-          return 'identity_shifting_intro_static';
-        } else if (selectedMethod === 'belief_shifting') {
-          context.currentPhase = 'belief_shifting';
-          return 'belief_shifting_intro_static';
-        } else if (selectedMethod === 'blockage_shifting') {
-          context.currentPhase = 'blockage_shifting';
-          return 'blockage_shifting_intro_static';
-        } else {
-          // Unknown method, default to problem shifting
-          console.log(`🔍 MIND_SHIFTING_DETERMINE: Unknown method "${selectedMethod}", defaulting to problem_shifting`);
-          context.currentPhase = 'problem_shifting';
-          return 'problem_shifting_intro_static';
-        }
+        context.currentPhase = this.getPhaseForMethod(selectedMethod || 'problem_shifting');
+        return this.getIntroStepForMethod(selectedMethod || 'problem_shifting', context);
       } else {
         // Method selected but no problem statement yet - need to collect it
         console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem and method selected, but no problem statement - going to collect problem description`);
@@ -545,7 +529,31 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     return methodPhaseMap[method] || 'problem_shifting';
   }
 
-  private getIntroStepForMethod(method: string): string {
+  private getIntroStepForMethod(method: string, context?: TreatmentContext): string {
+    // V4: Check if we should skip intro instructions (digging deeper, cycling back)
+    const isFromDigging = context?.metadata?.currentDiggingProblem || context?.metadata?.newDiggingProblem;
+    const shouldSkipIntro = context?.metadata?.skipIntroInstructions || isFromDigging;
+    
+    if (shouldSkipIntro) {
+      // Clear the flag
+      if (context?.metadata) {
+        context.metadata.skipIntroInstructions = false;
+      }
+      console.log(`🔍 GET_INTRO_STEP: Skipping intro instructions, routing to dynamic step (isFromDigging: ${!!isFromDigging})`);
+      
+      // Route to _dynamic step (skip the _static intro)
+      const methodDynamicStepMap: Record<string, string> = {
+        'problem_shifting': 'problem_shifting_intro_dynamic',
+        'identity_shifting': 'identity_shifting_intro_dynamic',
+        'belief_shifting': 'belief_shifting_intro_dynamic',
+        'blockage_shifting': 'blockage_shifting_intro_dynamic',
+        'reality_shifting': 'reality_shifting_intro',  // Reality shifting doesn't have static/dynamic split
+        'trauma_shifting': 'trauma_shifting_intro'      // Trauma shifting doesn't have static/dynamic split
+      };
+      return methodDynamicStepMap[method] || 'problem_shifting_intro_dynamic';
+    }
+    
+    // First time - show full intro with _static step
     const methodStepMap: Record<string, string> = {
       'problem_shifting': 'problem_shifting_intro_static',
       'identity_shifting': 'identity_shifting_intro_static',
@@ -737,28 +745,10 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       // Store the selected method in metadata for reference
       context.metadata.selectedMethod = diggingSelectedMethod;
 
-      // Route to appropriate method intro
-      if (diggingSelectedMethod === 'problem_shifting') {
-        context.currentPhase = 'problem_shifting';
-        console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Problem Shifting`);
-        return 'problem_shifting_intro_static';
-      } else if (diggingSelectedMethod === 'identity_shifting') {
-        context.currentPhase = 'identity_shifting';
-        console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Identity Shifting`);
-        return 'identity_shifting_intro_static';
-      } else if (diggingSelectedMethod === 'belief_shifting') {
-        context.currentPhase = 'belief_shifting';
-        console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Belief Shifting`);
-        return 'belief_shifting_intro_static';
-      } else if (diggingSelectedMethod === 'blockage_shifting') {
-        context.currentPhase = 'blockage_shifting';
-        console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to Blockage Shifting`);
-        return 'blockage_shifting_intro_static';
-      } else {
-        // No valid method selected - stay on choose_method
-        console.error(`❌ CHOOSE_METHOD_DIGGING: Invalid method selection: "${input}"`);
-        return 'choose_method';
-      }
+      // Route to appropriate method intro (will use _dynamic step due to skipIntroInstructions)
+      context.currentPhase = this.getPhaseForMethod(diggingSelectedMethod);
+      console.log(`🔍 CHOOSE_METHOD_DIGGING: Routing to ${diggingSelectedMethod} intro`);
+      return this.getIntroStepForMethod(diggingSelectedMethod, context);
     }
 
     // NORMAL FLOW: Original choose_method logic for non-digging-deeper scenarios
@@ -877,7 +867,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
     if (workType === 'problem' && selectedMethod) {
       context.currentPhase = this.getPhaseForMethod(selectedMethod);
-      return this.getIntroStepForMethod(selectedMethod);
+      return this.getIntroStepForMethod(selectedMethod, context);
     } else if (workType === 'goal') {
       // Goals: go to reality_shifting_intro
       context.currentPhase = 'reality_shifting';
