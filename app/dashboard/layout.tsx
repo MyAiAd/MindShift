@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
+import V4AudioPreloader from '@/components/treatment/v4/V4AudioPreloader';
 import { 
   Brain, 
   Users, 
@@ -76,6 +77,9 @@ export default function DashboardLayout({
 
   return (
     <ThemeProvider>
+      {/* V4 Audio Preloader - starts loading intro audio in background */}
+      <V4AudioPreloader />
+      
       <div className="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900">
         {/* Mobile sidebar */}
         <div

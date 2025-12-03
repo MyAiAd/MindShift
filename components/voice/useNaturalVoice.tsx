@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { globalAudioCache } from '@/services/voice/audioCache';
 
 interface UseNaturalVoiceProps {
     onTranscript: (transcript: string) => void;
@@ -99,15 +100,24 @@ export const useNaturalVoice = ({
         }
     }, []);
 
-    // Cache for prefetched audio
-    const audioCache = useRef<Map<string, string>>(new Map());
+    // Stop speaking helper - immediately stops audio
+    const stopSpeaking = useCallback(() => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            audioRef.current = null;
+        }
+        setIsSpeaking(false);
+        isSpeakingRef.current = false;
+        stopListening();
+    }, [stopListening]);
 
-    // Prefetch audio for a given text
+    // Prefetch audio for a given text (uses global cache)
     const prefetch = useCallback(async (text: string) => {
-        if (!text || audioCache.current.has(text)) return;
+        if (!text || globalAudioCache.has(text)) return;
 
         try {
-            console.log('🗣️ Natural Voice: Prefetching:', text);
+            console.log('🗣️ Natural Voice: Prefetching (global cache):', text);
             const response = await fetch('/api/tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -122,14 +132,14 @@ export const useNaturalVoice = ({
 
             const audioBlob = await response.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
-            audioCache.current.set(text, audioUrl);
-            console.log('🗣️ Natural Voice: Prefetch complete for:', text);
+            globalAudioCache.set(text, audioUrl);
+            console.log('🗣️ Natural Voice: Prefetch complete (global cache):', text);
         } catch (err) {
             console.error('🗣️ Natural Voice: Prefetch error:', err);
         }
     }, [voiceProvider, elevenLabsVoiceId]);
 
-    // Speak text with streaming support and cache check
+    // Speak text with streaming support and global cache check
     const speak = useCallback(async (text: string) => {
         if (!text) return;
 
@@ -141,10 +151,10 @@ export const useNaturalVoice = ({
         try {
             let audioUrl: string;
 
-            // Check cache first
-            if (audioCache.current.has(text)) {
-                console.log('🗣️ Natural Voice: Playing from local prefetch cache');
-                audioUrl = audioCache.current.get(text)!;
+            // Check global cache first
+            if (globalAudioCache.has(text)) {
+                console.log('🗣️ Natural Voice: Playing from global cache');
+                audioUrl = globalAudioCache.get(text)!;
             } else {
                 console.log('🗣️ Natural Voice: Fetching TTS stream for:', text);
                 const response = await fetch('/api/tts', {
@@ -161,6 +171,8 @@ export const useNaturalVoice = ({
 
                 const audioBlob = await response.blob();
                 audioUrl = URL.createObjectURL(audioBlob);
+                // Store in global cache for future use
+                globalAudioCache.set(text, audioUrl);
             }
 
             if (audioRef.current) {
@@ -179,10 +191,6 @@ export const useNaturalVoice = ({
                 if (enabled) {
                     startListening();
                 }
-                // Only revoke if it wasn't from cache (keep cache valid)
-                if (!audioCache.current.has(text)) {
-                    URL.revokeObjectURL(audioUrl);
-                }
 
                 // Trigger callback
                 onAudioEnded?.();
@@ -199,7 +207,7 @@ export const useNaturalVoice = ({
                 startListening();
             }
         }
-    }, [enabled, voiceProvider, elevenLabsVoiceId, startListening, stopListening]);
+    }, [enabled, voiceProvider, elevenLabsVoiceId, startListening, stopListening, onAudioEnded]);
 
     // Handle enabled state changes
     useEffect(() => {
@@ -222,6 +230,7 @@ export const useNaturalVoice = ({
         prefetch,
         error,
         startListening,
-        stopListening
+        stopListening,
+        stopSpeaking
     };
 };

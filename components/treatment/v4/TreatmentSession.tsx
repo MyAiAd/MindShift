@@ -57,6 +57,12 @@ export default function TreatmentSession({
   // Toggle handler with Sticky Settings and Retroactive Play
   const toggleNaturalVoice = () => {
     const newState = !isNaturalVoiceEnabled;
+    
+    // If turning OFF, immediately stop any playing audio
+    if (!newState) {
+      naturalVoice.stopSpeaking();
+    }
+    
     setIsNaturalVoiceEnabled(newState);
 
     // Sticky Settings
@@ -192,12 +198,6 @@ export default function TreatmentSession({
       }
     }
   }, [sessionId, userId, shouldResume]);
-
-  // Prefetch the introduction message for instant playback
-  useEffect(() => {
-    const introText = "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
-    naturalVoice.prefetch(introText);
-  }, []);
 
   // V3: Enhanced session start with instant initial message
   const startSession = async () => {
