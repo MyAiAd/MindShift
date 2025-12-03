@@ -727,18 +727,28 @@ export abstract class BaseTreatmentStateMachine {
       return false;
     }
 
-    // PERFORMANCE FIX: Match V2's optimized linguistic processing configuration
-    // V2 removed most steps for performance - only use AI where absolutely necessary
-    // All modality intro steps that need linguistic processing for user input contextualisation
-    const linguisticSteps = [
-      'problem_shifting_intro_static',  // Ensure problem is stated as a problem
-      'reality_shifting_intro_static',  // Ensure goal is stated as a goal  
-      // 'blockage_shifting_intro_static' REMOVED - scripted response already has correct problem statement logic, AI not needed
-      // 'identity_shifting_intro_static' REMOVED - should store identity response directly, not process with AI
-      // 'trauma_shifting_intro' REMOVED - This is a simple yes/no question, no AI needed
-      'belief_shifting_intro_static'    // Ensure problem is stated as a problem
+    // V4 PERFORMANCE OPTIMIZATION: Following V2's lead, removed ALL intro_static steps from AI processing
+    // Investigation showed these steps are PURE static text that don't use the AI-processed results:
+    // - problem_shifting_intro_static: Static instructions, doesn't use problem statement in message
+    // - reality_shifting_intro_static: Static instructions, doesn't use goal in message  
+    // - belief_shifting_intro_static: Static instructions, doesn't use problem statement in message
+    // 
+    // The AI would process user input, try to find/replace it in static text, find nothing, and discard the result.
+    // All _dynamic steps use the original user input from context.problemStatement directly.
+    // This optimization eliminates 2-3 seconds latency + cost on every first-time entry.
+    //
+    // V2 already removed most steps for performance - V4 now matches this optimization:
+    const linguisticSteps: string[] = [
+      // Empty - no steps require linguistic processing in v4
+      // All scripted responses use original user input from context
     ];
-    // REMOVED from V4 (were in V2's optimization):
+    // REMOVED from V4 (following V2's optimization):
+    // - 'problem_shifting_intro_static' - Pure static text, AI result never used
+    // - 'reality_shifting_intro_static' - Pure static text, AI result never used
+    // - 'belief_shifting_intro_static' - Pure static text, AI result never used
+    // - 'blockage_shifting_intro_static' - Already removed
+    // - 'identity_shifting_intro_static' - Already removed
+    // - 'trauma_shifting_intro' - Already removed
     // - 'body_sensation_check' - V2 removed for performance
     // - 'feel_solution_state' - V2 removed for performance
     // - 'identity_dissolve_step_a' - V2 removed for performance

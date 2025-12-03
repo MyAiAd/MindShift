@@ -262,11 +262,13 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
           result.scriptedResponse = `${firstMessage}\n\n${nextResult.scriptedResponse}`;
           result.nextStep = nextResult.nextStep; // Use the second step's ID
           result.expectedResponseType = nextResult.expectedResponseType; // Use the second step's response type
+          result.needsLinguisticProcessing = nextResult.needsLinguisticProcessing; // V4 FIX: Use second step's flag to prevent AI processing combined messages
           console.log('Treatment V4 API: Combined auto-advance messages:', {
             firstMessage: firstMessage.substring(0, 50) + '...',
             secondMessage: nextResult.scriptedResponse.substring(0, 50) + '...',
             finalStep: result.nextStep,
-            finalResponseType: result.expectedResponseType
+            finalResponseType: result.expectedResponseType,
+            needsLinguisticProcessing: result.needsLinguisticProcessing
           });
         }
       }
