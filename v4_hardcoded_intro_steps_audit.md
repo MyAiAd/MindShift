@@ -3,8 +3,13 @@ Date: 2025-01-29
 Issue: Many functions return hardcoded `_intro_static` steps instead of using `getIntroStepForMethod()`
 
 ## Summary
-Found 45 return statements with hardcoded `_intro_static` steps across v4/treatment-state-machine.ts
+Found 49 return statements with hardcoded `_intro_static` steps across v4/treatment-state-machine.ts
 These should respect `skipIntroInstructions` flag for proper digging deeper behavior.
+
+**UPDATE:** Additional 4 instances found in handleWorkTypeDescription() after initial sweep (lines 595, 598, 601, 604)
+- These were CRITICAL as they handle the first-time problem statement entry
+- Caused truncated messages on initial flow (intro text without question)
+- Now fixed in commit 597974d
 
 ## ✅ ALREADY FIXED (4 instances)
 Lines 374-396: Signal handlers in `handleInternalRoutingSignals()`
@@ -229,4 +234,70 @@ After fixes, test:
 - Skip intro, just ask question: "Feel the problem 'X'... what does it feel like?"
 - Goes directly to _dynamic step
 - No split message, no AI truncation
+
+---
+
+## POST-SWEEP CRITICAL FIX (Commit 597974d)
+
+### ADDITIONAL BUG FOUND: handleWorkTypeDescription()
+
+**Location:** Lines 591-608
+
+**The Issue:**
+- After comprehensive sweep (commit 7811a6d), user reported truncated messages on FIRST problem entry
+- Investigation revealed 4 MORE hardcoded _intro_static returns in handleWorkTypeDescription()
+- This function handles the FIRST-TIME problem statement entry (after user selects method)
+- Was missed in grep because they were variable assignments, not direct returns
+
+**Lines Fixed:**
+- Line 595: `nextStep = 'identity_shifting_intro_static'`
+- Line 598: `nextStep = 'problem_shifting_intro_static'`
+- Line 601: `nextStep = 'belief_shifting_intro_static'`
+- Line 604: `nextStep = 'blockage_shifting_intro_static'`
+
+**Impact:**
+- CRITICAL: This broke the first-time user experience
+- Symptoms: AI-generated intro text without the actual question
+- Example: Shows "Alright, let's take a moment to focus..." but missing "Feel 'test'... what does it feel like?"
+- Backend returned only partial message, causing confusion
+
+**Fix Applied:**
+```typescript
+// BEFORE: Hardcoded nextStep assignments
+let nextStep = '';
+if (descSelectedMethod === 'identity_shifting') {
+  context.currentPhase = 'identity_shifting';
+  nextStep = 'identity_shifting_intro_static';
+}
+// ... repeat for each method
+
+// AFTER: Use getIntroStepForMethod()
+if (descSelectedMethod === 'identity_shifting') {
+  context.currentPhase = 'identity_shifting';
+}
+// ... set phases for each method
+const nextStep = this.getIntroStepForMethod(descSelectedMethod, context);
+```
+
+**Result:**
+- First-time flows now use auto-advance chaining correctly
+- Seamless combined messages: intro + question in one response
+- Consistent behavior across all entry points
+
+---
+
+## FINAL TALLY
+
+**Total Hardcoded Instances Found:** 49
+- Initial sweep: 45 instances (commit 7811a6d)
+- Post-sweep: 4 instances (commit 597974d)
+
+**All Fixed:** ✅
+- Signal handlers: 4 instances
+- Cycling functions: 3 instances  
+- Digging deeper routing: 30 instances
+- First-time flows: 7 instances
+- First problem entry: 4 instances (critical)
+- Reality shifting: 5 instances (no _static/_dynamic split, OK to leave)
+
 
