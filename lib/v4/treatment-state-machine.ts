@@ -589,20 +589,17 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const descSelectedMethod = context.metadata.selectedMethod;
 
     if (descWorkType === 'problem' && descSelectedMethod) {
-      let nextStep = '';
+      // Use getIntroStepForMethod to respect skipIntroInstructions flag
       if (descSelectedMethod === 'identity_shifting') {
         context.currentPhase = 'identity_shifting';
-        nextStep = 'identity_shifting_intro_static';
       } else if (descSelectedMethod === 'problem_shifting') {
         context.currentPhase = 'problem_shifting';
-        nextStep = 'problem_shifting_intro_static';
       } else if (descSelectedMethod === 'belief_shifting') {
         context.currentPhase = 'belief_shifting';
-        nextStep = 'belief_shifting_intro_static';
       } else if (descSelectedMethod === 'blockage_shifting') {
         context.currentPhase = 'blockage_shifting';
-        nextStep = 'blockage_shifting_intro_static';
       }
+      const nextStep = this.getIntroStepForMethod(descSelectedMethod, context);
       console.log(`║ 🚀 ROUTING TO: "${nextStep}" (phase: "${context.currentPhase}")
 ╚════════════════════════════════════════════════════════════════\n`);
       return nextStep;
