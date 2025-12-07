@@ -29,7 +29,30 @@ export const V4_STATIC_AUDIO_TEXTS = {
   REALITY_SHIFTING_INTRO: "Close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. If ever you feel your goal has changed just let me know.",
 
   // Trauma Shifting opener (lib/v4/treatment-modalities/trauma-shifting.ts)
-  TRAUMA_SHIFTING_INTRO: "Please close your eyes and keep them closed throughout the rest of the process."
+  TRAUMA_SHIFTING_INTRO: "Please close your eyes and keep them closed throughout the rest of the process.",
+
+  // Method Selection (lib/v4/treatment-modalities/method-selection.ts)
+  METHOD_SELECTION: "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting",
+
+  // Method Selection for Digging Deeper (lib/v4/treatment-modalities/digging-deeper.ts)
+  METHOD_SELECTION_DIGGING: "We need to clear this problem. Which method would you like to use?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting",
+
+  // Work Type Descriptions (lib/v4/treatment-modalities/work-type-selection.ts)
+  WORK_TYPE_PROBLEM_DESC: "Tell me what the problem is in a few words.",
+  WORK_TYPE_GOAL_DESC: "Tell me what the goal is in a few words.",
+  WORK_TYPE_NEGATIVE_EXP_DESC: "Tell me what the negative experience was in a few words.",
+
+  // Reality Shifting Questions (lib/v4/treatment-modalities/reality-shifting.ts)
+  REALITY_GOAL_CAPTURE: "What do you want?",
+  REALITY_DEADLINE_CHECK: "Is there a deadline?",
+  REALITY_DEADLINE_DATE: "When do you want to achieve this goal by?",
+  REALITY_CERTAINTY: "How certain are you between 0% and 100% that you will achieve this goal?",
+
+  // Discovery Phase (lib/v4/treatment-modalities/discovery.ts)
+  RESTATE_PROBLEM: "OK so it is important we use your own words for the problem statement so please tell me what the problem is in a few words",
+
+  // Digging Deeper (lib/v4/treatment-modalities/digging-deeper.ts)
+  RESTATE_PROBLEM_SHORT: "How would you state the problem in a few words?"
 } as const;
 
 /**
@@ -41,4 +64,5 @@ export function getAllUniqueStaticTexts(): string[] {
   // Remove duplicates by converting to Set and back to array
   return Array.from(new Set(texts));
 }
+
 
