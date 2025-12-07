@@ -345,6 +345,12 @@ export default function TreatmentSession({
   const sendMessage = async (content: string, isAutoAdvance = false) => {
     if ((!content.trim() && !isAutoAdvance) || isLoading) return;
 
+    // Stop current audio if user is advancing to next step
+    if (isNaturalVoiceEnabled && naturalVoice.isSpeaking) {
+      console.log('🛑 Stopping current audio - user advancing to next step');
+      naturalVoice.stopSpeaking();
+    }
+
     const userMessage: TreatmentMessage = {
       id: `user-${Date.now()}`,
       content: content.trim(),
@@ -549,6 +555,11 @@ export default function TreatmentSession({
 
   // Handle button clicks for emotion confirmation
   const handleButtonClick = (buttonText: string) => {
+    // Stop current audio if user is advancing to next step
+    if (isNaturalVoiceEnabled && naturalVoice.isSpeaking) {
+      console.log('🛑 Stopping current audio - user clicked button');
+      naturalVoice.stopSpeaking();
+    }
     setClickedButton(buttonText);
     sendMessage(buttonText);
   };
@@ -619,6 +630,12 @@ export default function TreatmentSession({
 
   // V3: Handle work type selection button clicks
   const handleWorkTypeSelection = (workType: string) => {
+    // Stop current audio if user is advancing to next step
+    if (isNaturalVoiceEnabled && naturalVoice.isSpeaking) {
+      console.log('🛑 Stopping current audio - user selected work type');
+      naturalVoice.stopSpeaking();
+    }
+    
     setClickedButton(workType);
 
     // Display the full work type name in the UI
@@ -794,12 +811,23 @@ export default function TreatmentSession({
 
   // V3: Handle Yes/No button clicks for trauma intro and confirm statement
   const handleYesNoClick = (response: string) => {
+    // Stop current audio if user is advancing to next step
+    if (isNaturalVoiceEnabled && naturalVoice.isSpeaking) {
+      console.log('🛑 Stopping current audio - user clicked yes/no');
+      naturalVoice.stopSpeaking();
+    }
     setClickedButton(response);
     sendMessage(response);
   };
 
   // V3: Handle method selection button clicks
   const handleMethodSelection = (method: string) => {
+    // Stop current audio if user is advancing to next step
+    if (isNaturalVoiceEnabled && naturalVoice.isSpeaking) {
+      console.log('🛑 Stopping current audio - user selected method');
+      naturalVoice.stopSpeaking();
+    }
+    
     setClickedButton(method);
     // Send the method number to backend but display full name to user
     const methodMap: { [key: string]: string } = {
