@@ -721,8 +721,14 @@ export default function TreatmentSession({
             }));
           }
 
-          if (voice.isVoiceOutputEnabled && data.message && !shouldSkipMessage) {
-            voice.speakGlobally(data.message);
+          // Speak the new message with Natural Voice or fallback to global voice
+          if (data.message && !shouldSkipMessage) {
+            if (isNaturalVoiceEnabled) {
+              console.log('🔊 Playing new audio after work type selection');
+              naturalVoice.speak(data.message);
+            } else if (voice.isVoiceOutputEnabled) {
+              voice.speakGlobally(data.message);
+            }
           }
         }
         setIsLoading(false);
@@ -906,8 +912,14 @@ export default function TreatmentSession({
             }));
           }
 
-          if (voice.isVoiceOutputEnabled && systemMessage.content) {
-            voice.speakGlobally(systemMessage.content);
+          // Speak the new message with Natural Voice or fallback to global voice
+          if (systemMessage.content) {
+            if (isNaturalVoiceEnabled) {
+              console.log('🔊 Playing new audio after method selection');
+              naturalVoice.speak(systemMessage.content);
+            } else if (voice.isVoiceOutputEnabled) {
+              voice.speakGlobally(systemMessage.content);
+            }
           }
         }
         setIsLoading(false);
