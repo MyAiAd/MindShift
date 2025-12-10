@@ -1084,42 +1084,43 @@ export default function TreatmentSession({
         {showWorkTypeButtons && (
           <div className="mb-4">
             <div className="text-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">
                 What do you want to work on?
               </h3>
             </div>
-            <div className="flex space-x-4 justify-center">
+            <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
               <button
                 onClick={() => handleWorkTypeSelection('1')}
                 disabled={isLoading}
-                className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === '1' ? 'scale-105 bg-blue-700 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
+                <span className="bg-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">1</span>
                 <span>PROBLEM</span>
               </button>
 
               <button
                 onClick={() => handleWorkTypeSelection('2')}
                 disabled={isLoading}
-                className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === '2' ? 'scale-105 bg-green-700 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
+                <span className="bg-green-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">2</span>
                 <span>GOAL</span>
               </button>
 
               <button
                 onClick={() => handleWorkTypeSelection('3')}
                 disabled={isLoading}
-                className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === '3' ? 'scale-105 bg-purple-700 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">3</span>
-                <span>NEGATIVE EXPERIENCE</span>
+                <span className="bg-purple-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">3</span>
+                <span className="hidden sm:inline">NEGATIVE EXPERIENCE</span>
+                <span className="sm:hidden">NEG. EXP.</span>
               </button>
             </div>
           </div>
@@ -1127,18 +1128,18 @@ export default function TreatmentSession({
 
         {/* V3: Yes/No Buttons for Trauma Intro */}
         {shouldShowTraumaYesNoButtons() && (
-          <div className="mb-4 flex space-x-3 justify-center">
+          <div className="mb-4 flex gap-2 sm:gap-3 justify-center">
             <button
               onClick={() => handleYesNoClick('yes')}
               disabled={isLoading}
-              className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               Yes
             </button>
             <button
               onClick={() => handleYesNoClick('no')}
               disabled={isLoading}
-              className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               No
             </button>
@@ -1147,18 +1148,18 @@ export default function TreatmentSession({
 
         {/* V3: Yes/No Buttons for Confirm Statement */}
         {shouldShowConfirmStatementButtons() && (
-          <div className="mb-4 flex space-x-3 justify-center">
+          <div className="mb-4 flex gap-2 sm:gap-3 justify-center">
             <button
               onClick={() => handleYesNoClick('yes')}
               disabled={isLoading}
-              className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               Yes
             </button>
             <button
               onClick={() => handleYesNoClick('no')}
               disabled={isLoading}
-              className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               No
             </button>
@@ -1167,18 +1168,18 @@ export default function TreatmentSession({
 
         {/* V3: Yes/No Buttons for Goal Steps (goal_deadline_check, goal_confirmation) */}
         {shouldShowGoalYesNoButtons() && (
-          <div className="mb-4 flex space-x-3 justify-center">
+          <div className="mb-4 flex gap-2 sm:gap-3 justify-center">
             <button
               onClick={() => handleYesNoClick('yes')}
               disabled={isLoading}
-              className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               Yes
             </button>
             <button
               onClick={() => handleYesNoClick('no')}
               disabled={isLoading}
-              className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               No
             </button>
@@ -1188,18 +1189,18 @@ export default function TreatmentSession({
         {/* V4: GENERIC Yes/No Buttons - Auto-detects all yes/no steps */}
         {/* Covers 37 steps: digging_deeper, trauma checks, identity checks, belief checks, etc. */}
         {shouldShowGenericYesNoButtons() && (
-          <div className="mb-4 flex space-x-3 justify-center">
+          <div className="mb-4 flex gap-2 sm:gap-3 justify-center">
             <button
               onClick={() => handleYesNoClick('yes')}
               disabled={isLoading}
-              className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               Yes
             </button>
             <button
               onClick={() => handleYesNoClick('no')}
               disabled={isLoading}
-              className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               No
             </button>
@@ -1210,53 +1211,57 @@ export default function TreatmentSession({
         {shouldShowMethodSelection() && (
           <div className="mb-4">
             <div className="text-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">
                 Choose a method:
               </h3>
             </div>
-            <div className="flex space-x-4 justify-center">
+            <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
               <button
                 onClick={() => handleMethodSelection('Problem Shifting')}
                 disabled={isLoading}
-                className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === 'Problem Shifting' ? 'scale-105 bg-blue-700 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-blue-700 px-2 py-1 rounded text-sm font-bold">1</span>
-                <span>Problem Shifting</span>
+                <span className="bg-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">1</span>
+                <span className="hidden sm:inline">Problem Shifting</span>
+                <span className="sm:hidden">Problem</span>
               </button>
 
               <button
                 onClick={() => handleMethodSelection('Identity Shifting')}
                 disabled={isLoading}
-                className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === 'Identity Shifting' ? 'scale-105 bg-green-700 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
-                <span>Identity Shifting</span>
+                <span className="bg-green-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">2</span>
+                <span className="hidden sm:inline">Identity Shifting</span>
+                <span className="sm:hidden">Identity</span>
               </button>
 
               <button
                 onClick={() => handleMethodSelection('Belief Shifting')}
                 disabled={isLoading}
-                className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === 'Belief Shifting' ? 'scale-105 bg-purple-700 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-purple-700 px-2 py-1 rounded text-sm font-bold">3</span>
-                <span>Belief Shifting</span>
+                <span className="bg-purple-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">3</span>
+                <span className="hidden sm:inline">Belief Shifting</span>
+                <span className="sm:hidden">Belief</span>
               </button>
 
               <button
                 onClick={() => handleMethodSelection('Blockage Shifting')}
                 disabled={isLoading}
-                className={`px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === 'Blockage Shifting' ? 'scale-105 bg-red-700 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-red-700 px-2 py-1 rounded text-sm font-bold">4</span>
-                <span>Blockage Shifting</span>
+                <span className="bg-red-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">4</span>
+                <span className="hidden sm:inline">Blockage Shifting</span>
+                <span className="sm:hidden">Blockage</span>
               </button>
             </div>
           </div>
