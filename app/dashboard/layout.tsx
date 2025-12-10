@@ -112,24 +112,24 @@ export default function DashboardLayout({
       {/* V4 Audio Preloader - starts loading intro audio in background */}
       <V4AudioPreloader />
       
-      <div className="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900">
+      <div className="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
+        {/* Hamburger menu button - fixed in top-left corner */}
+        <button
+          className="fixed top-4 left-4 z-50 h-10 w-10 inline-flex items-center justify-center rounded-md bg-indigo-600 hover:bg-indigo-700 text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors shadow-lg"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+        >
+          {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+
         {/* Mobile sidebar */}
         <div
-          className={`fixed inset-0 flex z-50 md:hidden ${
+          className={`fixed inset-0 flex z-40 md:hidden ${
             sidebarOpen ? 'block' : 'hidden'
           }`}
         >
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
           <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-gray-800">
-            <div className="absolute top-0 right-0 -mr-12 pt-2">
-              <button
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-                onClick={() => setSidebarOpen(false)}
-                title="Close sidebar"
-              >
-                <X className="h-6 w-6 text-white" />
-              </button>
-            </div>
             <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} />
           </div>
         </div>
@@ -151,15 +151,6 @@ export default function DashboardLayout({
 
         {/* Main content */}
         <div className="flex flex-col w-0 flex-1 overflow-hidden">
-          <div className="pl-1 pt-1 sm:pl-3 sm:pt-3">
-            <button
-              className="h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-            >
-              {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
           <main className="flex-1 relative z-0 overflow-y-auto focus:outline-none bg-white dark:bg-gray-900">
             {children}
           </main>
@@ -189,7 +180,7 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full">
       {/* Logo and tenant info */}
-      <div className="flex items-center h-16 flex-shrink-0 px-4 bg-indigo-600 dark:bg-indigo-700">
+      <div className="flex items-center h-16 flex-shrink-0 pl-16 pr-4 bg-indigo-600 dark:bg-indigo-700">
         <div className="flex items-center space-x-3">
           <img src="/logo.jpg" alt="MindShifting Logo" className="h-8 w-8 rounded" />
           <div>
