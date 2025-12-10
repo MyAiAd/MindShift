@@ -174,6 +174,14 @@ export default function TreatmentSession({
     onAudioEnded: handleAudioEnded
   });
 
+  // Cleanup: Stop audio when navigating away from treatment session
+  useEffect(() => {
+    return () => {
+      console.log('🧹 TreatmentSession: Cleaning up - stopping audio');
+      naturalVoice.stopSpeaking();
+    };
+  }, [naturalVoice]);
+
   // Helper function to format method names
   const formatMethodName = (methodName: string) => {
     if (!methodName) return 'Mind Shifting V4';

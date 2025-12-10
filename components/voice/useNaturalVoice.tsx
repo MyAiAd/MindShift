@@ -75,9 +75,20 @@ export const useNaturalVoice = ({
         }
 
         return () => {
+            // Cleanup: Stop speech recognition
             if (recognitionRef.current) {
                 recognitionRef.current.stop();
             }
+            // Cleanup: Stop and clear any playing audio to prevent overlap on navigation
+            if (audioRef.current) {
+                console.log('🧹 Natural Voice: Cleaning up audio on unmount');
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+                audioRef.current = null;
+            }
+            // Reset state
+            setIsSpeaking(false);
+            isSpeakingRef.current = false;
         };
     }, [enabled, onTranscript]);
 
