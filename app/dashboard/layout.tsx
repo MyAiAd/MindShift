@@ -39,7 +39,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, profile, tenant, signOut, loading } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -102,22 +102,30 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        {/* Desktop sidebar */}
-        <div className="hidden md:flex md:flex-shrink-0 z-40">
-          <div className="flex flex-col w-64">
+        {/* Desktop sidebar (toggleable) */}
+        <div 
+          className={`hidden md:flex md:flex-shrink-0 z-40 transition-all duration-300 ease-in-out ${
+            sidebarOpen ? 'md:w-64' : 'md:w-0'
+          }`}
+        >
+          <div 
+            className={`flex flex-col w-64 transition-transform duration-300 ease-in-out ${
+              sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
             <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} />
           </div>
         </div>
 
         {/* Main content */}
         <div className="flex flex-col w-0 flex-1 overflow-hidden">
-          <div className="md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3">
+          <div className="pl-1 pt-1 sm:pl-3 sm:pt-3">
             <button
-              className="h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-              onClick={() => setSidebarOpen(true)}
-              title="Open sidebar"
+              className="h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
             >
-              <Menu className="h-6 w-6" />
+              {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
           <main className="flex-1 relative z-0 overflow-y-auto focus:outline-none bg-white dark:bg-gray-900">
