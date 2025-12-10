@@ -126,26 +126,6 @@ function TreatmentSessionContent() {
           version="v4"
         />
       </div>
-
-      {/* Performance Info Footer */}
-      <div className="fixed bottom-24 left-0 right-0 md:left-64 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 px-4 py-2 z-20">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-            <div className="flex items-center space-x-4">
-              <span>Automation-First Architecture</span>
-              <span>•</span>
-              <span>95% Scripted Responses</span>
-              <span>•</span>
-              <span>5% AI Assistance</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span>Target: &lt;200ms Response</span>
-              <span>•</span>
-              <span>Cost: &lt;$0.05/session</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
