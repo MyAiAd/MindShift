@@ -21,7 +21,7 @@ import {
   Shield,
   UserCheck
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const sidebarItems = [
   { icon: Brain, label: 'Dashboard', href: '/dashboard' },
@@ -39,8 +39,40 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, profile, tenant, signOut, loading } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // Initialize sidebar state from localStorage or screen size
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebarOpen');
+      if (saved !== null) return saved === 'true';
+      // Default based on screen size: open on desktop, closed on mobile
+      return window.matchMedia('(min-width: 768px)').matches;
+    }
+    return false;
+  });
+  
   const router = useRouter();
+
+  // Save sidebar state to localStorage
+  useEffect(() => {
+    localStorage.setItem('sidebarOpen', String(sidebarOpen));
+  }, [sidebarOpen]);
+
+  // Handle screen size changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      // Only auto-adjust if user hasn't manually set a preference
+      const saved = localStorage.getItem('sidebarOpen');
+      if (saved === null) {
+        setSidebarOpen(e.matches);
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   const handleSignOut = async () => {
     try {
