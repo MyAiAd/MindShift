@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker, Brain } from 'lucide-react';
 import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
 import BeliefShiftingDemo from '@/components/labs/BeliefShiftingDemo';
@@ -561,11 +563,12 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your account settings and preferences.</p>
-      </div>
+    <TooltipProvider>
+      <div className="p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your account settings and preferences.</p>
+        </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Settings Navigation */}
@@ -882,7 +885,9 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600 dark:text-gray-400">Increase contrast for better visibility</p>
                     </div>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <label className="relative inline-flex items-center cursor-pointer">
                     <input 
                       type="checkbox" 
                       className="sr-only peer" 
@@ -891,6 +896,11 @@ export default function SettingsPage() {
                     />
                     <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Makes text and UI elements easier to see for people with low vision</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
 
                 {/* Font Size */}
@@ -902,16 +912,20 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600 dark:text-gray-400">Adjust text size for better readability</p>
                     </div>
                   </div>
-                  <select 
+                  <Select 
                     value={accessibilitySettings.fontSize}
-                    onChange={(e) => handleAccessibilityChange('fontSize', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                    onValueChange={(value) => handleAccessibilityChange('fontSize', value)}
                   >
-                    <option value="small">Small</option>
-                    <option value="medium">Medium</option>
-                    <option value="large">Large</option>
-                    <option value="xlarge">Extra Large</option>
-                  </select>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                      <SelectItem value="xlarge">Extra Large</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Reduced Motion */}
@@ -963,7 +977,9 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600 dark:text-gray-400">Optimize interface for screen readers</p>
                     </div>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <label className="relative inline-flex items-center cursor-pointer">
                     <input 
                       type="checkbox" 
                       className="sr-only peer" 
@@ -972,6 +988,11 @@ export default function SettingsPage() {
                     />
                     <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Adds ARIA labels and improves keyboard navigation for screen reader users</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             )}
@@ -1133,23 +1154,33 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Language</label>
-                <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white">
-                  <option>English</option>
-                  <option>Spanish</option>
-                  <option>French</option>
-                  <option>German</option>
-                </select>
+                <Label htmlFor="language">Language</Label>
+                <Select defaultValue="english">
+                  <SelectTrigger id="language">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="english">English</SelectItem>
+                    <SelectItem value="spanish">Spanish</SelectItem>
+                    <SelectItem value="french">French</SelectItem>
+                    <SelectItem value="german">German</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Timezone</label>
-                <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white">
-                  <option>Pacific Time (PT)</option>
-                  <option>Mountain Time (MT)</option>
-                  <option>Central Time (CT)</option>
-                  <option>Eastern Time (ET)</option>
-                </select>
+                <Label htmlFor="timezone">Timezone</Label>
+                <Select defaultValue="et">
+                  <SelectTrigger id="timezone">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pt">Pacific Time (PT)</SelectItem>
+                    <SelectItem value="mt">Mountain Time (MT)</SelectItem>
+                    <SelectItem value="ct">Central Time (CT)</SelectItem>
+                    <SelectItem value="et">Eastern Time (ET)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             </CardContent>
@@ -1353,5 +1384,6 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 } 
