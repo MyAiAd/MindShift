@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import FeatureGuard, { FeatureBanner } from '@/components/auth/FeatureGuard';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { 
   Brain, 
   Users, 
@@ -240,22 +242,26 @@ export default function DashboardPage() {
           ].map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.name} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.name}</p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stat.value}</p>
-                    <p className={`text-sm mt-2 ${
-                      stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {stat.change} from last month
-                    </p>
+              <Card key={stat.name} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-gray-600 dark:text-gray-300">{stat.name}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                      <p className={`text-xs mt-2 font-medium ${
+                        stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {stat.change} from last month
+                      </p>
+                    </div>
+                    <div className="p-3 bg-indigo-50 rounded-lg">
+                      <Icon className="h-6 w-6 text-indigo-600" />
+                    </div>
                   </div>
-                  <div className="p-3 bg-indigo-50 rounded-lg">
-                    <Icon className="h-6 w-6 text-indigo-600" />
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })
         )}
@@ -263,13 +269,15 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Quick Actions */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-            <Brain className="h-5 w-5 mr-2 text-indigo-600" />
-            Quick Actions
-          </h2>
-          <div className="space-y-3">
-            <Link href="/dashboard/goals" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors block">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Brain className="h-5 w-5 mr-2 text-indigo-600" />
+              Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Link href="/dashboard/goals" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <Target className="h-4 w-4 text-blue-600" />
@@ -281,7 +289,7 @@ export default function DashboardPage() {
               </div>
             </Link>
             
-            <Link href="/dashboard/sessions" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors block">
+            <Link href="/dashboard/sessions" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-green-50 rounded-lg">
                   <Calendar className="h-4 w-4 text-green-600" />
@@ -317,7 +325,7 @@ export default function DashboardPage() {
                 </div>
               }
             >
-              <Link href="/dashboard/sessions/analytics" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors block">
+              <Link href="/dashboard/sessions/analytics" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-purple-50 rounded-lg">
                     <Activity className="h-4 w-4 text-purple-600" />
@@ -352,7 +360,7 @@ export default function DashboardPage() {
                 </div>
               }
             >
-              <Link href="/dashboard/team/message" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors block">
+              <Link href="/dashboard/team/message" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-orange-50 rounded-lg">
                     <MessageCircle className="h-4 w-4 text-orange-600" />
@@ -364,100 +372,108 @@ export default function DashboardPage() {
                 </div>
               </Link>
             </FeatureGuard>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Recent Activity */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-            <Clock className="h-5 w-5 mr-2 text-indigo-600" />
-            Recent Activity
-          </h2>
-          {loading ? (
-            // Loading skeleton
-            <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center space-x-3">
-                  <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Clock className="h-5 w-5 mr-2 text-indigo-600" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              // Loading skeleton
+              <div className="space-y-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-3">
+                    <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : recentActivities.length > 0 ? (
-            <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center space-x-3">
-                  <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-medium text-indigo-600">
-                      {activity.avatar}
-                    </span>
+                ))}
+              </div>
+            ) : recentActivities.length > 0 ? (
+              <div className="space-y-4">
+                {recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-3">
+                    <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-medium text-indigo-600">
+                        {activity.avatar}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900 dark:text-white">
+                        <span className="font-medium">{activity.user}</span>
+                        {' '}{activity.action}{' '}
+                        <span className="font-medium">{activity.target}</span>
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      <span className="font-medium">{activity.user}</span>
-                      {' '}{activity.action}{' '}
-                      <span className="font-medium">{activity.target}</span>
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">No recent activity</p>
-              <p className="text-sm text-gray-400 mt-1">
-                Start using the platform to see your activities here!
-              </p>
-            </div>
-          )}
-          {!loading && recentActivities.length > 0 && (
-            <div className="mt-4 pt-4 border-t">
-              <Link 
-                href="/dashboard/progress" 
-                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-              >
-                View all activity →
-              </Link>
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400">No recent activity</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Start using the platform to see your activities here!
+                </p>
+              </div>
+            )}
+            {!loading && recentActivities.length > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <Link 
+                  href="/dashboard/progress" 
+                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  View all activity →
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Performance Overview */}
-      <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-          <Award className="h-5 w-5 mr-2 text-indigo-600" />
-          Performance Overview
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-indigo-600 mb-2">92%</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">User Satisfaction</div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '92%' }}></div>
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Award className="h-5 w-5 mr-2 text-indigo-600" />
+            Performance Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-indigo-600 mb-2">92%</div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">User Satisfaction</div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '92%' }}></div>
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600 mb-2">78%</div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">Goal Completion Rate</div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div className="bg-green-600 h-2 rounded-full" style={{ width: '78%' }}></div>
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-2">85%</div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">Session Attendance</div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+              </div>
             </div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">78%</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">Goal Completion Rate</div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div className="bg-green-600 h-2 rounded-full" style={{ width: '78%' }}></div>
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">85%</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">Session Attendance</div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
-            </div>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 } 
