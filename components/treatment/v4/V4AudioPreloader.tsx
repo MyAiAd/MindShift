@@ -40,8 +40,8 @@ export default function V4AudioPreloader() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               text,
-              provider: 'elevenlabs',
-              voice: '21m00Tcm4TlvDq8ikWAM', // Rachel voice
+              provider: 'openai', // Changed from elevenlabs to use OpenAI
+              voice: 'alloy', // OpenAI voice
             }),
           });
 
