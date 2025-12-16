@@ -8,6 +8,10 @@ import { useNotifications } from '@/services/notification/notification.service';
 import { AccessibilityService } from '@/services/accessibility/accessibility.service';
 import { GDPRService } from '@/services/gdpr/gdpr.service';
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker, Brain } from 'lucide-react';
 import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
 import BeliefShiftingDemo from '@/components/labs/BeliefShiftingDemo';
@@ -605,73 +609,81 @@ export default function SettingsPage() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Profile Settings */}
-          <div id="profile" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Profile Information</h3>
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
             
-            {/* Profile Status Messages */}
-            {profileState.success && (
-              <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md flex items-center">
-                <Check className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
-                <span className="text-sm text-green-800 dark:text-green-200">Profile updated successfully!</span>
-              </div>
-            )}
-            
-            {profileState.error && (
-              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md flex items-center">
-                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
-                <span className="text-sm text-red-800 dark:text-red-200">{profileState.error}</span>
-              </div>
-            )}
+              {/* Profile Status Messages */}
+              {profileState.success && (
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md flex items-center">
+                  <Check className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                  <span className="text-sm text-green-800 dark:text-green-200">Profile updated successfully!</span>
+                </div>
+              )}
+              
+              {profileState.error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
+                  <span className="text-sm text-red-800 dark:text-red-200">{profileState.error}</span>
+                </div>
+              )}
 
-            <form onSubmit={handleProfileSubmit} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
-                  <input 
-                    type="text" 
-                    value={profileData.firstName}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, firstName: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" 
+              <form onSubmit={handleProfileSubmit} className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input 
+                      id="firstName"
+                      type="text" 
+                      value={profileData.firstName}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, firstName: e.target.value }))}
+                      placeholder="Your first name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input 
+                      id="lastName"
+                      type="text" 
+                      value={profileData.lastName}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, lastName: e.target.value }))}
+                      placeholder="Your last name"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email"
+                    type="email" 
+                    value={profileData.email}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="your@email.com"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
-                  <input 
-                    type="text" 
-                    value={profileData.lastName}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, lastName: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" 
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <textarea 
+                    id="bio"
+                    rows={3} 
+                    value={profileData.bio}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                    placeholder="Tell us about yourself..."
                   />
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
-                <input 
-                  type="email" 
-                  value={profileData.email}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</label>
-                <textarea 
-                  rows={3} 
-                  value={profileData.bio}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Tell us about yourself..."
-                />
-              </div>
-              <button 
-                type="submit" 
-                disabled={profileState.loading}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {profileState.loading ? 'Saving...' : 'Save Changes'}
-              </button>
-            </form>
-          </div>
+                <Button 
+                  type="submit" 
+                  disabled={profileState.loading}
+                  className="w-full md:w-auto"
+                >
+                  {profileState.loading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
 
           {/* Notification Settings */}
           <div id="notifications" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -776,70 +788,85 @@ export default function SettingsPage() {
           </div>
 
           {/* Security Settings */}
-          <div id="security" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Security</h3>
+          <Card>
+            <CardHeader>
+              <CardTitle>Security</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
             
-            {/* Password Status Messages */}
-            {passwordState.success && (
-              <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md flex items-center">
-                <Check className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
-                <span className="text-sm text-green-800 dark:text-green-200">Password updated successfully!</span>
-              </div>
-            )}
-            
-            {passwordState.error && (
-              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md flex items-center">
-                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
-                <span className="text-sm text-red-800 dark:text-red-200">{passwordState.error}</span>
-              </div>
-            )}
+              {/* Password Status Messages */}
+              {passwordState.success && (
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md flex items-center">
+                  <Check className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                  <span className="text-sm text-green-800 dark:text-green-200">Password updated successfully!</span>
+                </div>
+              )}
+              
+              {passwordState.error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
+                  <span className="text-sm text-red-800 dark:text-red-200">{passwordState.error}</span>
+                </div>
+              )}
 
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">Change Password</h4>
-                <form onSubmit={handlePasswordSubmit} className="space-y-3">
-                  <input 
-                    type="password" 
-                    placeholder="Current password" 
-                    value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" 
-                  />
-                  <input 
-                    type="password" 
-                    placeholder="New password" 
-                    value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" 
-                  />
-                  <input 
-                    type="password" 
-                    placeholder="Confirm new password" 
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" 
-                  />
-                  <button 
-                    type="submit"
-                    disabled={passwordState.loading || !passwordData.newPassword || !passwordData.confirmPassword}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {passwordState.loading ? 'Updating...' : 'Update Password'}
-                  </button>
-                </form>
-              </div>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-4">Change Password</h4>
+                  <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="currentPassword">Current Password</Label>
+                      <Input 
+                        id="currentPassword"
+                        type="password" 
+                        placeholder="Enter your current password" 
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">New Password</Label>
+                      <Input 
+                        id="newPassword"
+                        type="password" 
+                        placeholder="Enter your new password" 
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                      <Input 
+                        id="confirmPassword"
+                        type="password" 
+                        placeholder="Confirm your new password" 
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      />
+                    </div>
+                    <Button 
+                      type="submit"
+                      disabled={passwordState.loading || !passwordData.newPassword || !passwordData.confirmPassword}
+                      className="w-full md:w-auto"
+                    >
+                      {passwordState.loading ? 'Updating...' : 'Update Password'}
+                    </Button>
+                  </form>
+                </div>
 
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <TwoFactorAuth />
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <TwoFactorAuth />
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Accessibility Settings */}
-          <div id="accessibility" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Accessibility Settings</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Customize your experience for better accessibility and usability.</p>
-            
+          <Card>
+            <CardHeader>
+              <CardTitle>Accessibility Settings</CardTitle>
+              <CardDescription>Customize your experience for better accessibility and usability.</CardDescription>
+            </CardHeader>
+            <CardContent>
             {accessibilitySettings.loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -948,13 +975,16 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Privacy & Data Settings */}
-          <div id="privacy" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Privacy & Data Settings</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Manage your privacy preferences and data according to GDPR requirements.</p>
-            
+          <Card>
+            <CardHeader>
+              <CardTitle>Privacy & Data Settings</CardTitle>
+              <CardDescription>Manage your privacy preferences and data according to GDPR requirements.</CardDescription>
+            </CardHeader>
+            <CardContent>
             {gdprSettings.loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -1073,12 +1103,16 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Preferences */}
-          <div id="preferences" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Preferences</h3>
-            <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Preferences</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   {isDarkMode ? <Moon className="h-5 w-5 text-gray-600 dark:text-gray-400" /> : <Sun className="h-5 w-5 text-gray-600 dark:text-gray-400" />}
@@ -1118,17 +1152,21 @@ export default function SettingsPage() {
                 </select>
               </div>
             </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Labs Section */}
-          <div id="labs" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <Beaker className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Labs</h3>
-              <span className="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400 rounded-full">
-                Experimental
-              </span>
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Beaker className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mr-2" />
+                Labs
+                <span className="ml-2 px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400 rounded-full">
+                  Experimental
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
               Experimental features and demos. These features are in development and may change or be removed.
             </p>
@@ -1289,23 +1327,29 @@ export default function SettingsPage() {
               <TraumaShiftingDemo />
               */}
             </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Danger Zone */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-red-200 dark:border-red-800 p-6">
-            <h3 className="text-lg font-semibold text-red-900 dark:text-red-400 mb-4">Danger Zone</h3>
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Once you delete your account, there is no going back. Please be certain.
-              </p>
-              <button 
-                onClick={handleDeleteAccount}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Delete Account
-              </button>
-            </div>
-          </div>
+          <Card className="border-red-200 dark:border-red-800">
+            <CardHeader>
+              <CardTitle className="text-red-900 dark:text-red-400">Danger Zone</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Once you delete your account, there is no going back. Please be certain.
+                </p>
+                <Button 
+                  onClick={handleDeleteAccount}
+                  variant="destructive"
+                  className="w-full md:w-auto"
+                >
+                  Delete Account
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
