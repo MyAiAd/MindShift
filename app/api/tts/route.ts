@@ -73,7 +73,11 @@ export async function POST(request: NextRequest) {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('ElevenLabs TTS API error:', errorText);
-        return NextResponse.json({ error: 'ElevenLabs TTS synthesis failed' }, { status: 500 });
+        return NextResponse.json({ 
+          error: 'ElevenLabs TTS synthesis failed', 
+          details: errorText,
+          status: response.status 
+        }, { status: 500 });
       }
 
       // Clone the response to save it while streaming
