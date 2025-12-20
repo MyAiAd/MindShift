@@ -102,6 +102,7 @@ export function PullToRefresh({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      aria-label="Pull down to refresh"
     >
       {/* Pull indicator */}
       <div
@@ -111,6 +112,9 @@ export function PullToRefresh({
           opacity: isRefreshing ? 1 : indicatorOpacity,
           height: `${threshold}px`,
         }}
+        role="status"
+        aria-live="polite"
+        aria-label={isRefreshing ? 'Refreshing content' : canRefresh ? 'Release to refresh' : 'Pull down to refresh'}
       >
         <div
           className={`

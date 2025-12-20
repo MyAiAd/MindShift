@@ -63,9 +63,11 @@ export function EmptyState({
         'flex flex-col items-center justify-center text-center p-6 sm:p-8 lg:p-12 min-h-[300px] sm:min-h-[400px]',
         className
       )}
+      role="status"
+      aria-live="polite"
     >
       {/* Icon */}
-      <div className="mb-4 sm:mb-6">
+      <div className="mb-4 sm:mb-6" aria-hidden="true">
         <Icon className={cn('w-12 h-12 sm:w-16 sm:h-16', variantColors[variant])} strokeWidth={1.5} />
       </div>
 
