@@ -634,9 +634,9 @@ export default function SettingsPage() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Profile Settings */}
-          <Card>
+          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
             <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Profile Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
             
@@ -813,9 +813,9 @@ export default function SettingsPage() {
           </div>
 
           {/* Security Settings */}
-          <Card>
+          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
             <CardHeader>
-              <CardTitle>Security</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Security</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
             
@@ -886,10 +886,10 @@ export default function SettingsPage() {
           </Card>
 
           {/* Accessibility Settings */}
-          <Card>
+          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
             <CardHeader>
-              <CardTitle>Accessibility Settings</CardTitle>
-              <CardDescription>Customize your experience for better accessibility and usability.</CardDescription>
+              <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Accessibility Settings</CardTitle>
+              <CardDescription className="text-gray-600 dark:text-[#839496]">Customize your experience for better accessibility and usability.</CardDescription>
             </CardHeader>
             <CardContent>
             {accessibilitySettings.loading ? (
@@ -1022,10 +1022,10 @@ export default function SettingsPage() {
           </Card>
 
           {/* Privacy & Data Settings */}
-          <Card>
+          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
             <CardHeader>
-              <CardTitle>Privacy & Data Settings</CardTitle>
-              <CardDescription>Manage your privacy preferences and data according to GDPR requirements.</CardDescription>
+              <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Privacy & Data Settings</CardTitle>
+              <CardDescription className="text-gray-600 dark:text-[#839496]">Manage your privacy preferences and data according to GDPR requirements.</CardDescription>
             </CardHeader>
             <CardContent>
             {gdprSettings.loading ? (
@@ -1150,9 +1150,9 @@ export default function SettingsPage() {
           </Card>
 
           {/* Preferences */}
-          <Card>
+          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
             <CardHeader>
-              <CardTitle>Preferences</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Preferences</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -1209,9 +1209,9 @@ export default function SettingsPage() {
           </Card>
 
           {/* Labs Section */}
-          <Card>
+          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <CardTitle className="flex items-center text-gray-900 dark:text-[#fdf6e3]">
                 <Beaker className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mr-2" />
                 Labs
                 <span className="ml-2 px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400 rounded-full">
@@ -1384,7 +1384,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Danger Zone */}
-          <Card className="border-red-200 dark:border-red-800">
+          <Card className="bg-white dark:bg-[#073642] border-red-200 dark:border-red-800">
             <CardHeader>
               <CardTitle className="text-red-900 dark:text-red-400">Danger Zone</CardTitle>
             </CardHeader>
