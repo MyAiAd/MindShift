@@ -3,10 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
-import V4AudioPreloader from '@/components/treatment/v4/V4AudioPreloader';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { 
   Brain, 
@@ -24,6 +24,12 @@ import {
   UserCheck
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+
+// Dynamic import for heavy audio preloader component
+const V4AudioPreloader = dynamic(() => import('@/components/treatment/v4/V4AudioPreloader'), {
+  ssr: false,
+  loading: () => null,
+});
 
 const sidebarItems = [
   { icon: Brain, label: 'Dashboard', href: '/dashboard' },
