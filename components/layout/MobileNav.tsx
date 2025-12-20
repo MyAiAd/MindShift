@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Brain, User, Menu } from 'lucide-react';
+import { Home, Calendar, Target, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -12,19 +12,19 @@ const navItems = [
     icon: Home,
   },
   {
-    label: 'Treatments',
-    href: '/dashboard/treatments',
-    icon: Brain,
+    label: 'Sessions',
+    href: '/dashboard/sessions',
+    icon: Calendar,
   },
   {
-    label: 'Profile',
-    href: '/dashboard/profile',
-    icon: User,
+    label: 'Goals',
+    href: '/dashboard/goals',
+    icon: Target,
   },
   {
-    label: 'Menu',
-    href: '/dashboard/menu',
-    icon: Menu,
+    label: 'Settings',
+    href: '/dashboard/settings',
+    icon: Settings,
   },
 ];
 

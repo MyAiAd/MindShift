@@ -564,7 +564,7 @@ export default function SettingsPage() {
 
   return (
     <TooltipProvider>
-      <div className="p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Manage your account settings and preferences.</p>
