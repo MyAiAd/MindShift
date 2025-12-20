@@ -2,6 +2,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { selectionFeedback } from "@/lib/haptics"
 
 const cardVariants = cva(
   "rounded-xl border bg-card text-card-foreground shadow",
@@ -20,16 +21,62 @@ const cardVariants = cva(
 
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {}
+    VariantProps<typeof cardVariants> {
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
+  swipeThreshold?: number;
+}
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(cardVariants({ variant }), className)}
-      {...props}
-    />
-  )
+  ({ className, variant, onSwipeLeft, onSwipeRight, swipeThreshold = 100, ...props }, ref) => {
+    const [touchStart, setTouchStart] = React.useState<number | null>(null);
+    const [touchEnd, setTouchEnd] = React.useState<number | null>(null);
+
+    // Minimum swipe distance to trigger action
+    const minSwipeDistance = swipeThreshold;
+
+    const onTouchStart = (e: React.TouchEvent) => {
+      setTouchEnd(null);
+      setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+      setTouchEnd(e.targetTouches[0].clientX);
+    };
+
+    const onTouchEnd = () => {
+      if (!touchStart || !touchEnd) return;
+      
+      const distance = touchStart - touchEnd;
+      const isLeftSwipe = distance > minSwipeDistance;
+      const isRightSwipe = distance < -minSwipeDistance;
+
+      if (isLeftSwipe && onSwipeLeft) {
+        selectionFeedback();
+        onSwipeLeft();
+      }
+      if (isRightSwipe && onSwipeRight) {
+        selectionFeedback();
+        onSwipeRight();
+      }
+    };
+
+    // Only add touch handlers if swipe callbacks are provided
+    const touchHandlers = (onSwipeLeft || onSwipeRight) ? {
+      onTouchStart,
+      onTouchMove,
+      onTouchEnd,
+    } : {};
+
+    return (
+      <div
+        ref={ref}
+        className={cn(cardVariants({ variant }), className)}
+        {...touchHandlers}
+        {...props}
+      />
+    );
+  }
 )
 Card.displayName = "Card"
 
