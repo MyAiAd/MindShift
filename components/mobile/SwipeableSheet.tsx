@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { FocusTrap } from 'focus-trap-react';
 import { cn } from '@/lib/utils';
 import { selectionFeedback, impactFeedback } from '@/lib/haptics';
 
@@ -93,49 +94,76 @@ export function SwipeableSheet({
     }
   }, [isOpen, initialSnapPoint]);
 
+  // Handle Escape key to close
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className={cn(
-          'fixed inset-0 z-50 bg-black/50 backdrop-blur-sm',
-          'transition-opacity duration-300',
-          isOpen ? 'opacity-100' : 'opacity-0'
-        )}
-        onClick={handleBackdropClick}
-      />
+    <FocusTrap
+      active={isOpen}
+      focusTrapOptions={{
+        initialFocus: false,
+        escapeDeactivates: true,
+        clickOutsideDeactivates: true,
+        returnFocusOnDeactivate: true,
+      }}
+    >
+      <div>
+        {/* Backdrop */}
+        <div
+          className={cn(
+            'fixed inset-0 z-50 bg-black/50 backdrop-blur-sm',
+            'transition-opacity duration-300',
+            isOpen ? 'opacity-100' : 'opacity-0'
+          )}
+          onClick={handleBackdropClick}
+          aria-hidden="true"
+        />
 
-      {/* Sheet */}
-      <div
-        ref={sheetRef}
-        className={cn(
-          'fixed bottom-0 left-0 right-0 z-50',
-          'bg-white dark:bg-gray-900',
-          'rounded-t-3xl shadow-2xl',
-          'transition-transform duration-300 ease-out',
-          isDragging && 'transition-none',
-          className
-        )}
-        style={{
-          height: `${currentHeight}px`,
-          transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* Drag Handle Area */}
-        <div className="sheet-handle-area sticky top-0 z-10 flex items-center justify-center py-3 bg-white dark:bg-gray-900 rounded-t-3xl border-b border-gray-200 dark:border-gray-800">
-          <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full" />
-        </div>
+        {/* Sheet */}
+        <div
+          ref={sheetRef}
+          role="dialog"
+          aria-modal="true"
+          className={cn(
+            'fixed bottom-0 left-0 right-0 z-50',
+            'bg-white dark:bg-gray-900',
+            'rounded-t-3xl shadow-2xl',
+            'transition-transform duration-300 ease-out',
+            isDragging && 'transition-none',
+            className
+          )}
+          style={{
+            height: `${currentHeight}px`,
+            transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Drag Handle Area */}
+          <div className="sheet-handle-area sticky top-0 z-10 flex items-center justify-center py-3 bg-white dark:bg-gray-900 rounded-t-3xl border-b border-gray-200 dark:border-gray-800">
+            <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full" aria-label="Drag to resize" />
+          </div>
 
-        {/* Content */}
-        <div className="overflow-y-auto h-full pb-safe">
-          {children}
+          {/* Content */}
+          <div className="overflow-y-auto h-full pb-safe">
+            {children}
+          </div>
         </div>
       </div>
-    </>
+    </FocusTrap>
   );
 }
