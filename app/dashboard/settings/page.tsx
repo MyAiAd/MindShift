@@ -564,45 +564,45 @@ export default function SettingsPage() {
 
   return (
     <TooltipProvider>
-      <div className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your account settings and preferences.</p>
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Manage your account settings and preferences.</p>
         </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Settings Navigation */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Settings</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">Settings</h2>
             <nav className="space-y-2">
-              <a href="#profile" className="flex items-center space-x-3 p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
-                <User className="h-5 w-5" />
-                <span>Profile</span>
+              <a href="#profile" className="flex items-center space-x-3 p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 touch-target text-sm sm:text-base">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Profile</span>
               </a>
-              <a href="#notifications" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                <Bell className="h-5 w-5" />
-                <span>Notifications</span>
+              <a href="#notifications" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 touch-target">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Notifications</span>
               </a>
-              <a href="#security" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                <Shield className="h-5 w-5" />
-                <span>Security</span>
+              <a href="#security" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 touch-target">
+                <Shield className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Security</span>
               </a>
-              <a href="#accessibility" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                <Eye className="h-5 w-5" />
-                <span>Accessibility</span>
+              <a href="#accessibility" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 touch-target">
+                <Eye className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Accessibility</span>
               </a>
-              <a href="#privacy" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                <Lock className="h-5 w-5" />
-                <span>Privacy & Data</span>
+              <a href="#privacy" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 touch-target">
+                <Lock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Privacy & Data</span>
               </a>
-              <a href="#preferences" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                <Settings className="h-5 w-5" />
-                <span>Preferences</span>
+              <a href="#preferences" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 touch-target">
+                <Settings className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Preferences</span>
               </a>
-              <a href="#labs" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 ml-8">
-                <Beaker className="h-4 w-4" />
-                <span className="text-sm">Labs</span>
+              <a href="#labs" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 ml-4 sm:ml-8 touch-target">
+                <Beaker className="h-4 w-4 flex-shrink-0" />
+                <span className="text-xs sm:text-sm">Labs</span>
               </a>
             </nav>
           </div>
@@ -634,7 +634,7 @@ export default function SettingsPage() {
               )}
 
               <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
                     <Input 
@@ -689,8 +689,8 @@ export default function SettingsPage() {
           </Card>
 
           {/* Notification Settings */}
-          <div id="notifications" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notification Preferences</h3>
+          <div id="notifications" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">Notification Preferences</h3>
             
             {/* Notification Status Messages */}
             {notificationState.success && (
@@ -1085,7 +1085,7 @@ export default function SettingsPage() {
                     Under GDPR, you have the right to access, correct, or delete your personal data.
                   </p>
                   
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
                     <button
                       onClick={handleDataExport}
                       className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
