@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
 import V4AudioPreloader from '@/components/treatment/v4/V4AudioPreloader';
+import { MobileNav } from '@/components/layout/MobileNav';
 import { 
   Brain, 
   Users, 
@@ -151,10 +152,13 @@ export default function DashboardLayout({
 
         {/* Main content */}
         <div className="flex flex-col w-0 flex-1 overflow-hidden min-w-0">
-          <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden focus:outline-none bg-white dark:bg-gray-900">
+          <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden focus:outline-none bg-white dark:bg-gray-900 pb-16 md:pb-0">
             {children}
           </main>
         </div>
+
+        {/* Mobile bottom navigation */}
+        <MobileNav />
       </div>
     </ThemeProvider>
   );
