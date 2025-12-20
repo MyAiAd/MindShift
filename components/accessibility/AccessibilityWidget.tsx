@@ -30,10 +30,6 @@ export default function AccessibilityWidget({
     }
     return 'bottom-right';
   });
-  const [isDragging, setIsDragging] = useState(false);
-  const [hasMoved, setHasMoved] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const buttonRef = useRef<HTMLButtonElement>(null);
   
   const { preferences, updatePreferences, isEnabled } = useAccessibility();
   const { preferences: voicePrefs, updatePreferences: updateVoicePrefs, getCapabilities } = useVoiceService();
@@ -50,90 +46,6 @@ export default function AccessibilityWidget({
     }
   }, [isEnabled]);
 
-  // Handle drag to reposition
-  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    
-    setDragStart({ x: clientX, y: clientY });
-    setHasMoved(false);
-  };
-
-  const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!hasMoved) {
-      // This was a click, not a drag
-      setIsDragging(false);
-      return;
-    }
-    
-    const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : e.clientX;
-    const clientY = 'changedTouches' in e ? e.changedTouches[0].clientY : e.clientY;
-    
-    // Determine which corner is closest
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-    
-    const isLeft = clientX < windowWidth / 2;
-    const isTop = clientY < windowHeight / 2;
-    
-    let newCorner: Corner;
-    if (isTop && isLeft) newCorner = 'top-left';
-    else if (isTop && !isLeft) newCorner = 'top-right';
-    else if (!isTop && isLeft) newCorner = 'bottom-left';
-    else newCorner = 'bottom-right';
-    
-    setCorner(newCorner);
-    setIsDragging(false);
-    setHasMoved(false);
-  };
-
-  const handleClick = () => {
-    if (!hasMoved && !isDragging) {
-      setIsOpen(!isOpen);
-    }
-  };
-
-  useEffect(() => {
-    if (!isDragging) return;
-    
-    const handleMove = (e: MouseEvent | TouchEvent) => {
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      
-      // Check if moved more than 5px (threshold for drag vs click)
-      const deltaX = Math.abs(clientX - dragStart.x);
-      const deltaY = Math.abs(clientY - dragStart.y);
-      
-      if (deltaX > 5 || deltaY > 5) {
-        setHasMoved(true);
-        e.preventDefault();
-        
-        if (buttonRef.current) {
-          buttonRef.current.style.left = `${clientX - 24}px`;
-          buttonRef.current.style.top = `${clientY - 24}px`;
-          buttonRef.current.style.right = 'auto';
-          buttonRef.current.style.bottom = 'auto';
-        }
-      }
-    };
-    
-    const handleEnd = (e: MouseEvent | TouchEvent) => {
-      handleDragEnd(e as any);
-    };
-    
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseup', handleEnd);
-    window.addEventListener('touchmove', handleMove, { passive: false });
-    window.addEventListener('touchend', handleEnd);
-    
-    return () => {
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseup', handleEnd);
-      window.removeEventListener('touchmove', handleMove);
-      window.removeEventListener('touchend', handleEnd);
-    };
-  }, [isDragging, dragStart]);
-
   if (!isVisible) return null;
 
   const handleToggle = (key: keyof typeof preferences, value: any) => {
@@ -141,13 +53,13 @@ export default function AccessibilityWidget({
   };
 
   const positionClasses = position === 'fixed' 
-    ? 'fixed z-50' 
+    ? 'fixed z-[9999]' 
     : 'relative';
 
   // Corner positioning
   const cornerClasses = {
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
+    'bottom-right': 'bottom-20 md:bottom-4 right-4',
+    'bottom-left': 'bottom-20 md:bottom-4 left-4',
     'top-right': 'top-4 right-4',
     'top-left': 'top-4 left-4',
   };
@@ -162,34 +74,21 @@ export default function AccessibilityWidget({
 
   return (
     <div 
-      className={`${positionClasses} ${isDragging ? '' : cornerClasses[corner]} ${className} transition-all duration-200`}
-      style={isDragging ? { transition: 'none' } : undefined}
+      className={`${positionClasses} ${cornerClasses[corner]} ${className}`}
     >
       {/* Accessibility Button */}
       <button
-        ref={buttonRef}
-        onClick={handleClick}
-        onMouseDown={(e) => {
-          setIsDragging(true);
-          handleDragStart(e);
-        }}
-        onTouchStart={(e) => {
-          setIsDragging(true);
-          handleDragStart(e);
-        }}
-        className={`bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-colors ${
-          hasMoved ? 'cursor-grabbing scale-110' : 'cursor-pointer'
-        }`}
-        aria-label="Accessibility settings (hold and drag to reposition)"
+        onClick={() => setIsOpen(!isOpen)}
+        className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
+        aria-label="Open accessibility settings"
         aria-expanded={isOpen}
         aria-controls="accessibility-widget"
-        title="Click to open, hold and drag to reposition"
       >
-        {hasMoved ? <Move className="h-5 w-5" /> : <Settings className="h-5 w-5" />}
+        <Settings className="h-5 w-5" />
       </button>
 
       {/* Accessibility Panel */}
-      {isOpen && !hasMoved && (
+      {isOpen && (
         <div
           id="accessibility-widget"
           className={`absolute ${panelPosition[corner]} w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 max-h-[80vh] overflow-y-auto`}
@@ -398,7 +297,56 @@ export default function AccessibilityWidget({
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+            {/* Widget Position */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+                Widget Position
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setCorner('top-left')}
+                  className={`px-3 py-2 text-xs rounded-md transition-colors ${
+                    corner === 'top-left'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Top Left
+                </button>
+                <button
+                  onClick={() => setCorner('top-right')}
+                  className={`px-3 py-2 text-xs rounded-md transition-colors ${
+                    corner === 'top-right'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Top Right
+                </button>
+                <button
+                  onClick={() => setCorner('bottom-left')}
+                  className={`px-3 py-2 text-xs rounded-md transition-colors ${
+                    corner === 'bottom-left'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Bottom Left
+                </button>
+                <button
+                  onClick={() => setCorner('bottom-right')}
+                  className={`px-3 py-2 text-xs rounded-md transition-colors ${
+                    corner === 'bottom-right'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Bottom Right
+                </button>
+              </div>
+            </div>
+            
             <button
               onClick={() => {
                 updatePreferences({
