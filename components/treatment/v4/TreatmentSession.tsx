@@ -942,48 +942,51 @@ export default function TreatmentSession({
 
   return (
     <div className="max-w-4xl mx-auto px-4">
-      {/* V4 Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2">
-                <Brain className="h-6 w-6 text-indigo-600" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {formatMethodName(sessionMethod)}
-                </h2>
-                <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full flex items-center space-x-1">
-                  <Sparkles className="h-3 w-3" />
-                  <span>V4</span>
-                </span>
-              </div>
-              {currentStep && (
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  Step: {currentStep}
-                </span>
-              )}
+      {/* V4 Header - Mobile Responsive */}
+      <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-gray-200 dark:border-[#586e75] mb-6">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-[#586e75]">
+          {/* Mobile Layout: Stack vertically */}
+          <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+            {/* Title Section */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+              <h2 className="text-base sm:text-xl font-semibold text-gray-900 dark:text-[#fdf6e3] truncate">
+                {formatMethodName(sessionMethod)}
+              </h2>
+              <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full flex items-center space-x-1 flex-shrink-0">
+                <Sparkles className="h-3 w-3" />
+                <span>V4</span>
+              </span>
             </div>
 
-            <div className="flex items-center space-x-4">
-              {/* V4 Performance Indicators */}
-              <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+            {/* Step Info - Full width on mobile */}
+            {currentStep && (
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-[#93a1a1] truncate">
+                Step: {currentStep}
+              </div>
+            )}
+
+            {/* Controls Section - Stack on mobile, row on desktop */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4">
+              {/* V4 Performance Indicators - Hide on very small screens */}
+              <div className="hidden sm:flex items-center space-x-2 text-xs sm:text-sm text-gray-500 dark:text-[#93a1a1]">
                 <Clock className="h-4 w-4" />
                 <span>{lastResponseTime}ms</span>
               </div>
 
               {performanceMetrics.cacheHitRate > 0 && (
-                <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                <div className="hidden sm:flex items-center space-x-2 text-xs sm:text-sm text-gray-500 dark:text-[#93a1a1]">
                   <Zap className="h-4 w-4 text-yellow-500" />
                   <span>{performanceMetrics.cacheHitRate.toFixed(0)}%</span>
                 </div>
               )}
 
-              {/* Natural Voice Toggle */}
+              {/* Natural Voice Toggle - Always visible, icon-only on mobile */}
               <button
                 onClick={toggleNaturalVoice}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${isNaturalVoiceEnabled
+                className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex-shrink-0 ${isNaturalVoiceEnabled
                   ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
-                  : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-gray-200 dark:hover:bg-[#657b83]'
                   }`}
                 title="Toggle Natural Voice (ElevenLabs)"
               >
@@ -996,28 +999,30 @@ export default function TreatmentSession({
                     ) : (
                       <Mic className="h-4 w-4" />
                     )}
-                    <span>Natural Voice On</span>
+                    <span className="hidden sm:inline">Voice On</span>
+                    <span className="sm:hidden">On</span>
                   </>
                 ) : (
                   <>
                     <Mic className="h-4 w-4" />
-                    <span>Natural Voice Off</span>
+                    <span className="hidden sm:inline">Voice Off</span>
+                    <span className="sm:hidden">Off</span>
                   </>
                 )}
               </button>
+
+              {/* Undo Button */}
+              {stepHistory.length > 0 && (
+                <button
+                  onClick={handleUndo}
+                  disabled={isLoading}
+                  className="flex items-center space-x-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 dark:text-[#93a1a1] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50 flex-shrink-0"
+                >
+                  <Undo2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Undo</span>
+                </button>
+              )}
             </div>
-
-
-            {stepHistory.length > 0 && (
-              <button
-                onClick={handleUndo}
-                disabled={isLoading}
-                className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
-              >
-                <Undo2 className="h-4 w-4" />
-                <span>Undo</span>
-              </button>
-            )}
           </div>
         </div>
       </div>
