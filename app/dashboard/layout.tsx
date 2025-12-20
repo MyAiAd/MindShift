@@ -159,7 +159,7 @@ export default function DashboardLayout({
 
         {/* Main content */}
         <div className="flex flex-col w-0 flex-1 overflow-hidden min-w-0">
-          <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden focus:outline-none bg-white dark:bg-gray-900 pb-16 md:pb-0">
+          <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden focus:outline-none bg-gray-50 dark:bg-gray-900 pb-16 md:pb-0">
             {children}
           </main>
         </div>

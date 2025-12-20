@@ -5,15 +5,17 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAccessibility } from '@/services/accessibility/accessibility.service';
 import { useVoiceService } from '@/services/voice/voice.service';
-import { Settings, Eye, Type, Keyboard, Volume2, Mic } from 'lucide-react';
+import { Settings, Eye, Type, Keyboard, Volume2, Mic, Move } from 'lucide-react';
 
 interface AccessibilityWidgetProps {
   position?: 'fixed' | 'relative';
   className?: string;
 }
+
+type Corner = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 
 export default function AccessibilityWidget({ 
   position = 'fixed',
@@ -21,8 +23,24 @@ export default function AccessibilityWidget({
 }: AccessibilityWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [corner, setCorner] = useState<Corner>(() => {
+    // Load saved position from localStorage
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('accessibility-widget-corner') as Corner) || 'bottom-right';
+    }
+    return 'bottom-right';
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  
   const { preferences, updatePreferences, isEnabled } = useAccessibility();
   const { preferences: voicePrefs, updatePreferences: updateVoicePrefs, getCapabilities } = useVoiceService();
+
+  // Save corner position to localStorage
+  useEffect(() => {
+    localStorage.setItem('accessibility-widget-corner', corner);
+  }, [corner]);
 
   useEffect(() => {
     // Hide widget if accessibility features are disabled
@@ -31,6 +49,73 @@ export default function AccessibilityWidget({
     }
   }, [isEnabled]);
 
+  // Handle drag to reposition
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : e.clientX;
+    const clientY = 'changedTouches' in e ? e.changedTouches[0].clientY : e.clientY;
+    
+    // Determine which corner is closest
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    const isLeft = clientX < windowWidth / 2;
+    const isTop = clientY < windowHeight / 2;
+    
+    let newCorner: Corner;
+    if (isTop && isLeft) newCorner = 'top-left';
+    else if (isTop && !isLeft) newCorner = 'top-right';
+    else if (!isTop && isLeft) newCorner = 'bottom-left';
+    else newCorner = 'bottom-right';
+    
+    setCorner(newCorner);
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+    
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+      if (buttonRef.current) {
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        
+        buttonRef.current.style.left = `${clientX - 24}px`;
+        buttonRef.current.style.top = `${clientY - 24}px`;
+        buttonRef.current.style.right = 'auto';
+        buttonRef.current.style.bottom = 'auto';
+      }
+    };
+    
+    const handleEnd = (e: MouseEvent | TouchEvent) => {
+      handleDragEnd(e as any);
+    };
+    
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleMove, { passive: false });
+    window.addEventListener('touchend', handleEnd);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleEnd);
+    };
+  }, [isDragging]);
+
   if (!isVisible) return null;
 
   const handleToggle = (key: keyof typeof preferences, value: any) => {
@@ -38,27 +123,52 @@ export default function AccessibilityWidget({
   };
 
   const positionClasses = position === 'fixed' 
-    ? 'fixed bottom-4 right-4 z-50' 
+    ? 'fixed z-50' 
     : 'relative';
 
+  // Corner positioning
+  const cornerClasses = {
+    'bottom-right': 'bottom-4 right-4',
+    'bottom-left': 'bottom-4 left-4',
+    'top-right': 'top-4 right-4',
+    'top-left': 'top-4 left-4',
+  };
+
+  // Panel positioning (opposite side of button)
+  const panelPosition = {
+    'bottom-right': 'bottom-16 right-0',
+    'bottom-left': 'bottom-16 left-0',
+    'top-right': 'top-16 right-0',
+    'top-left': 'top-16 left-0',
+  };
+
   return (
-    <div className={`${positionClasses} ${className}`}>
+    <div 
+      className={`${positionClasses} ${isDragging ? '' : cornerClasses[corner]} ${className} transition-all duration-200`}
+      style={isDragging ? { transition: 'none' } : undefined}
+    >
       {/* Accessibility Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors"
-        aria-label="Open accessibility settings"
+        ref={buttonRef}
+        onClick={() => !isDragging && setIsOpen(!isOpen)}
+        onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
+        className={`bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-colors ${
+          isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab'
+        } touch-none select-none`}
+        aria-label="Open accessibility settings (drag to reposition)"
         aria-expanded={isOpen}
         aria-controls="accessibility-widget"
+        title="Drag to reposition"
       >
-        <Settings className="h-5 w-5" />
+        {isDragging ? <Move className="h-5 w-5" /> : <Settings className="h-5 w-5" />}
       </button>
 
       {/* Accessibility Panel */}
-      {isOpen && (
+      {isOpen && !isDragging && (
         <div
           id="accessibility-widget"
-          className="absolute bottom-16 right-0 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4"
+          className={`absolute ${panelPosition[corner]} w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 max-h-[80vh] overflow-y-auto`}
           role="dialog"
           aria-labelledby="accessibility-title"
           aria-describedby="accessibility-description"
@@ -69,7 +179,7 @@ export default function AccessibilityWidget({
             </h2>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none"
               aria-label="Close accessibility settings"
             >
               ×
@@ -77,7 +187,7 @@ export default function AccessibilityWidget({
           </div>
 
           <p id="accessibility-description" className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Customize your experience for better accessibility
+            Customize your experience. Drag the gear icon to move it to any corner.
           </p>
 
           <div className="space-y-4">
