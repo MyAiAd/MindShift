@@ -565,9 +565,31 @@ export default function SettingsPage() {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-gray-50 dark:bg-[#002b36] p-4 sm:p-6 lg:p-8">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Settings</h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-[#839496] mt-1">Manage your account settings and preferences.</p>
+        {/* Header with Dark Mode Toggle */}
+        <div className="mb-6 sm:mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Settings</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-[#839496] mt-1">Manage your account settings and preferences.</p>
+          </div>
+          
+          {/* Quick Dark Mode Toggle */}
+          <button
+            onClick={toggleDarkMode}
+            className="flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg bg-white dark:bg-[#073642] border border-gray-200 dark:border-[#586e75] shadow-sm hover:shadow-md transition-all touch-target"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? (
+              <>
+                <Moon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                <span className="hidden sm:inline text-sm font-medium text-gray-900 dark:text-[#fdf6e3]">Dark</span>
+              </>
+            ) : (
+              <>
+                <Sun className="h-5 w-5 text-amber-500" />
+                <span className="hidden sm:inline text-sm font-medium text-gray-900">Light</span>
+              </>
+            )}
+          </button>
         </div>
 
       <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
