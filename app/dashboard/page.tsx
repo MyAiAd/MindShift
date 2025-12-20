@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import FeatureGuard, { FeatureBanner } from '@/components/auth/FeatureGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { 
   Brain, 
   Users, 
@@ -166,8 +167,82 @@ export default function DashboardPage() {
     return `${first}${last}`;
   };
 
+  // Pull-to-refresh handler
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      // Re-fetch dashboard data
+      const [goalsResponse, progressResponse, gamificationResponse] = await Promise.all([
+        fetch('/api/goals'),
+        fetch('/api/progress/stats'),
+        fetch('/api/gamification')
+      ]);
+
+      const [goalsData, progressData, gamificationData] = await Promise.all([
+        goalsResponse.ok ? goalsResponse.json() : { data: null },
+        progressResponse.ok ? progressResponse.json() : { data: null },
+        gamificationResponse.ok ? gamificationResponse.json() : { data: null }
+      ]);
+
+      // Calculate stats
+      const totalGoals = goalsData.data?.length || 0;
+      const completedGoals = goalsData.data?.filter((goal: any) => goal.status === 'completed').length || 0;
+      const totalSessions = progressData.data?.totalSessions || 0;
+      const avgProgress = progressData.data?.averageProgress || 0;
+
+      setDashboardStats({
+        totalUsers: 1,
+        completedGoals,
+        totalSessions,
+        avgProgress
+      });
+
+      // Update activities
+      const activities: Activity[] = [];
+      
+      if (goalsData.data?.slice(0, 3)) {
+        goalsData.data.slice(0, 3).forEach((goal: any) => {
+          activities.push({
+            id: goal.id,
+            user: `${profile?.first_name || 'User'} ${profile?.last_name || ''}`,
+            action: goal.status === 'completed' ? 'completed goal' : 'updated goal',
+            target: goal.title,
+            time: formatTimeAgo(goal.updated_at || goal.created_at),
+            avatar: generateAvatar(profile?.first_name || 'U', profile?.last_name || 'U')
+          });
+        });
+      }
+
+      if (gamificationData.data?.recentAchievements) {
+        gamificationData.data.recentAchievements
+          .slice(0, 2)
+          .forEach((achievement: any) => {
+            activities.push({
+              id: `achievement-${achievement.id}`,
+              user: `${profile?.first_name || 'User'} ${profile?.last_name || ''}`,
+              action: 'earned achievement',
+              target: achievement.title,
+              time: formatTimeAgo(achievement.earned_at),
+              avatar: generateAvatar(profile?.first_name || 'U', profile?.last_name || 'U')
+            });
+          });
+      }
+
+      const sortedActivities = activities
+        .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+        .slice(0, 5);
+
+      setRecentActivities(sortedActivities);
+    } catch (error) {
+      console.error('Error refreshing dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="p-4 sm:p-6 lg:p-8">\
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex justify-between items-start">
@@ -475,5 +550,6 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
     </div>
+    </PullToRefresh>
   );
 } 
