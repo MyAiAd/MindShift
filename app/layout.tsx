@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth'
+import { ThemeProvider } from '@/lib/theme'
 import SkipNavigation from '@/components/layout/SkipNavigation'
 import AccessibilityWidget from '@/components/accessibility/AccessibilityWidget'
 import CookieConsent from '@/components/gdpr/CookieConsent'
@@ -53,16 +54,34 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const savedTheme = localStorage.getItem('darkMode');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = savedTheme !== null ? savedTheme === 'true' : prefersDark;
+                if (isDark) {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <SkipNavigation />
-          <main id="main-content" className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-            {children}
-          </main>
-          <AccessibilityWidget />
-          <CookieConsent />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <SkipNavigation />
+            <main id="main-content" className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+              {children}
+            </main>
+            <AccessibilityWidget />
+            <CookieConsent />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
