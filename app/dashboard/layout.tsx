@@ -144,12 +144,12 @@ export default function DashboardLayout({
 
         {/* Desktop sidebar (toggleable) */}
         <div 
-          className={`hidden md:flex md:flex-shrink-0 z-40 transition-all duration-300 ease-in-out ${
+          className={`hidden md:flex md:flex-shrink-0 z-40 transition-all duration-300 ease-in-out bg-white dark:bg-gray-800 ${
             sidebarOpen ? 'md:w-64' : 'md:w-0'
           }`}
         >
           <div 
-            className={`flex flex-col w-64 transition-transform duration-300 ease-in-out overflow-y-auto ${
+            className={`flex flex-col w-64 transition-transform duration-300 ease-in-out overflow-y-auto bg-white dark:bg-gray-800 ${
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
           >

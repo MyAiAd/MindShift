@@ -31,6 +31,7 @@ export default function AccessibilityWidget({
     return 'bottom-right';
   });
   const [isDragging, setIsDragging] = useState(false);
+  const [hasMoved, setHasMoved] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   
@@ -51,17 +52,19 @@ export default function AccessibilityWidget({
 
   // Handle drag to reposition
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     
     setDragStart({ x: clientX, y: clientY });
+    setHasMoved(false);
   };
 
   const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDragging) return;
+    if (!hasMoved) {
+      // This was a click, not a drag
+      setIsDragging(false);
+      return;
+    }
     
     const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : e.clientX;
     const clientY = 'changedTouches' in e ? e.changedTouches[0].clientY : e.clientY;
@@ -81,21 +84,36 @@ export default function AccessibilityWidget({
     
     setCorner(newCorner);
     setIsDragging(false);
+    setHasMoved(false);
+  };
+
+  const handleClick = () => {
+    if (!hasMoved && !isDragging) {
+      setIsOpen(!isOpen);
+    }
   };
 
   useEffect(() => {
     if (!isDragging) return;
     
     const handleMove = (e: MouseEvent | TouchEvent) => {
-      e.preventDefault();
-      if (buttonRef.current) {
-        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      
+      // Check if moved more than 5px (threshold for drag vs click)
+      const deltaX = Math.abs(clientX - dragStart.x);
+      const deltaY = Math.abs(clientY - dragStart.y);
+      
+      if (deltaX > 5 || deltaY > 5) {
+        setHasMoved(true);
+        e.preventDefault();
         
-        buttonRef.current.style.left = `${clientX - 24}px`;
-        buttonRef.current.style.top = `${clientY - 24}px`;
-        buttonRef.current.style.right = 'auto';
-        buttonRef.current.style.bottom = 'auto';
+        if (buttonRef.current) {
+          buttonRef.current.style.left = `${clientX - 24}px`;
+          buttonRef.current.style.top = `${clientY - 24}px`;
+          buttonRef.current.style.right = 'auto';
+          buttonRef.current.style.bottom = 'auto';
+        }
       }
     };
     
@@ -114,7 +132,7 @@ export default function AccessibilityWidget({
       window.removeEventListener('touchmove', handleMove);
       window.removeEventListener('touchend', handleEnd);
     };
-  }, [isDragging]);
+  }, [isDragging, dragStart]);
 
   if (!isVisible) return null;
 
@@ -150,22 +168,28 @@ export default function AccessibilityWidget({
       {/* Accessibility Button */}
       <button
         ref={buttonRef}
-        onClick={() => !isDragging && setIsOpen(!isOpen)}
-        onMouseDown={handleDragStart}
-        onTouchStart={handleDragStart}
+        onClick={handleClick}
+        onMouseDown={(e) => {
+          setIsDragging(true);
+          handleDragStart(e);
+        }}
+        onTouchStart={(e) => {
+          setIsDragging(true);
+          handleDragStart(e);
+        }}
         className={`bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-colors ${
-          isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab'
-        } touch-none select-none`}
-        aria-label="Open accessibility settings (drag to reposition)"
+          hasMoved ? 'cursor-grabbing scale-110' : 'cursor-pointer'
+        }`}
+        aria-label="Accessibility settings (hold and drag to reposition)"
         aria-expanded={isOpen}
         aria-controls="accessibility-widget"
-        title="Drag to reposition"
+        title="Click to open, hold and drag to reposition"
       >
-        {isDragging ? <Move className="h-5 w-5" /> : <Settings className="h-5 w-5" />}
+        {hasMoved ? <Move className="h-5 w-5" /> : <Settings className="h-5 w-5" />}
       </button>
 
       {/* Accessibility Panel */}
-      {isOpen && !isDragging && (
+      {isOpen && !hasMoved && (
         <div
           id="accessibility-widget"
           className={`absolute ${panelPosition[corner]} w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 max-h-[80vh] overflow-y-auto`}
