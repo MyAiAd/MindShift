@@ -112,7 +112,7 @@ export default function DashboardLayout({
       {/* V4 Audio Preloader - starts loading intro audio in background */}
       <V4AudioPreloader />
       
-      <div className="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
+      <div className="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900 relative overflow-x-hidden">
         {/* Hamburger menu button - fixed in top-left corner */}
         <button
           className="fixed top-4 left-4 z-50 h-10 w-10 inline-flex items-center justify-center rounded-md bg-indigo-600 hover:bg-indigo-700 text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors shadow-lg"
@@ -129,7 +129,7 @@ export default function DashboardLayout({
           }`}
         >
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-gray-800">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-gray-800 overflow-y-auto">
             <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} />
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function DashboardLayout({
           }`}
         >
           <div 
-            className={`flex flex-col w-64 transition-transform duration-300 ease-in-out ${
+            className={`flex flex-col w-64 transition-transform duration-300 ease-in-out overflow-y-auto ${
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
           >
@@ -150,8 +150,8 @@ export default function DashboardLayout({
         </div>
 
         {/* Main content */}
-        <div className="flex flex-col w-0 flex-1 overflow-hidden">
-          <main className="flex-1 relative z-0 overflow-y-auto focus:outline-none bg-white dark:bg-gray-900">
+        <div className="flex flex-col w-0 flex-1 overflow-hidden min-w-0">
+          <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden focus:outline-none bg-white dark:bg-gray-900">
             {children}
           </main>
         </div>

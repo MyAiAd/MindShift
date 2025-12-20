@@ -167,21 +167,21 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
               Welcome back, {profile?.first_name}!
             </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1">
                               Here's what's happening with {tenant?.name || 'MindShifting'} today.
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600 dark:text-gray-300">Current Plan:</span>
-            <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium capitalize">
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:inline">Current Plan:</span>
+            <span className="px-2 sm:px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs sm:text-sm font-medium capitalize">
               {profile?.subscription_tier === 'level_1' ? 'Problem Shifting' : 
                profile?.subscription_tier === 'level_2' ? 'Complete Access' : 
                profile?.subscription_tier || 'Trial'}
@@ -191,13 +191,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 min-w-0">
         {loading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 sm:p-6 min-w-0">
               <div className="flex items-center justify-between">
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
                   <div className="h-8 bg-gray-200 rounded animate-pulse mb-2"></div>
                   <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
@@ -248,16 +248,16 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">{stat.value}</p>
                       <p className={`text-xs mt-2 font-medium ${
                         stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {stat.change} from last month
                       </p>
                     </div>
-                    <div className="p-3 bg-indigo-50 rounded-lg">
-                      <Icon className="h-6 w-6 text-indigo-600" />
+                    <div className="p-2 sm:p-3 bg-indigo-50 rounded-lg flex-shrink-0">
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                     </div>
                   </div>
                 </CardContent>
@@ -267,17 +267,17 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 min-w-0">
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Brain className="h-5 w-5 mr-2 text-indigo-600" />
+            <CardTitle className="flex items-center text-base sm:text-lg">
+              <Brain className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-indigo-600" />
               Quick Actions
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link href="/dashboard/goals" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block">
+            <Link href="/dashboard/goals" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block min-w-0">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <Target className="h-4 w-4 text-blue-600" />
