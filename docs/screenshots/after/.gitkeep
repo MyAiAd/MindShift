@@ -1,0 +1,15 @@
+# After Screenshots
+
+Screenshots of pages after mobile-first transformation.
+
+These screenshots demonstrate the improved mobile experience.
+
+## Naming Convention
+`[page-name]_[device]_[variant].png`
+
+Example: `dashboard_iphone-se_light.png`, `dashboard_iphone-se_dark.png`
+
+---
+
+*Note: Screenshots to be captured manually using Chrome DevTools or real devices.*
+*See ../CAPTURE_GUIDE.md for detailed instructions.*

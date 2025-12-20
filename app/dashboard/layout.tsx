@@ -2,10 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
-import V4AudioPreloader from '@/components/treatment/v4/V4AudioPreloader';
+import { MobileNav } from '@/components/layout/MobileNav';
 import { 
   Brain, 
   Users, 
@@ -22,6 +24,12 @@ import {
   UserCheck
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+
+// Dynamic import for heavy audio preloader component
+const V4AudioPreloader = dynamic(() => import('@/components/treatment/v4/V4AudioPreloader'), {
+  ssr: false,
+  loading: () => null,
+});
 
 const sidebarItems = [
   { icon: Brain, label: 'Dashboard', href: '/dashboard' },
@@ -112,7 +120,7 @@ export default function DashboardLayout({
       {/* V4 Audio Preloader - starts loading intro audio in background */}
       <V4AudioPreloader />
       
-      <div className="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
+      <div className="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900 relative overflow-x-hidden">
         {/* Hamburger menu button - fixed in top-left corner */}
         <button
           className="fixed top-4 left-4 z-50 h-10 w-10 inline-flex items-center justify-center rounded-md bg-indigo-600 hover:bg-indigo-700 text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors shadow-lg"
@@ -129,7 +137,7 @@ export default function DashboardLayout({
           }`}
         >
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-gray-800">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-gray-800 overflow-y-auto">
             <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} />
           </div>
         </div>
@@ -141,7 +149,7 @@ export default function DashboardLayout({
           }`}
         >
           <div 
-            className={`flex flex-col w-64 transition-transform duration-300 ease-in-out ${
+            className={`flex flex-col w-64 transition-transform duration-300 ease-in-out overflow-y-auto ${
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
           >
@@ -150,11 +158,14 @@ export default function DashboardLayout({
         </div>
 
         {/* Main content */}
-        <div className="flex flex-col w-0 flex-1 overflow-hidden">
-          <main className="flex-1 relative z-0 overflow-y-auto focus:outline-none bg-white dark:bg-gray-900">
+        <div className="flex flex-col w-0 flex-1 overflow-hidden min-w-0">
+          <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden focus:outline-none bg-white dark:bg-gray-900 pb-16 md:pb-0">
             {children}
           </main>
         </div>
+
+        {/* Mobile bottom navigation */}
+        <MobileNav />
       </div>
     </ThemeProvider>
   );
@@ -182,7 +193,7 @@ function SidebarContent({
       {/* Logo and tenant info */}
       <div className="flex items-center h-16 flex-shrink-0 pl-16 pr-4 bg-indigo-600 dark:bg-indigo-700">
         <div className="flex items-center space-x-3">
-          <img src="/logo.jpg" alt="MindShifting Logo" className="h-8 w-8 rounded" />
+          <Image src="/logo.jpg" alt="MindShifting Logo" width={32} height={32} className="h-8 w-8 rounded" />
           <div>
             <h1 className="text-white font-semibold">
                               {tenant ? tenant.name : 'MindShifting Admin'}

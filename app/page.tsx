@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { Brain, Target, TrendingUp, Users, Sparkles, ArrowRight } from 'lucide-react'
 
 export default function HomePage() {
@@ -9,7 +10,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-2">
-              <img src="/logo.jpg" alt="MindShifting Logo" className="h-8 w-8 rounded" />
+              <Image src="/logo.jpg" alt="MindShifting Logo" width={32} height={32} className="h-8 w-8 rounded" priority />
               <span className="text-2xl font-bold text-gray-900">MindShifting</span>
             </div>
             <nav className="hidden md:flex space-x-8">

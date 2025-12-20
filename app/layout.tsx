@@ -3,9 +3,11 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth'
+import { ThemeProvider } from '@/lib/theme'
 import SkipNavigation from '@/components/layout/SkipNavigation'
 import AccessibilityWidget from '@/components/accessibility/AccessibilityWidget'
 import CookieConsent from '@/components/gdpr/CookieConsent'
+import { InstallPrompt } from '@/components/mobile/InstallPrompt'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -14,14 +16,37 @@ export const metadata: Metadata = {
   description: 'A revolutionary AI-powered platform for mindset transformation and personal growth',
   keywords: 'mindset, personal growth, AI, coaching, transformation',
   authors: [{ name: 'MindShifting' }],
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.json',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+    viewportFit: 'cover',
+  },
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#4f46e5' },
+    { media: '(prefers-color-scheme: dark)', color: '#1f2937' },
+  ],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'MindShifting',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
     shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
   openGraph: {
     title: 'MindShifting - AI-Powered Mindset Transformation',
@@ -53,16 +78,35 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const savedTheme = localStorage.getItem('darkMode');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = savedTheme !== null ? savedTheme === 'true' : prefersDark;
+                if (isDark) {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <SkipNavigation />
-          <main id="main-content" className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-            {children}
-          </main>
-          <AccessibilityWidget />
-          <CookieConsent />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <SkipNavigation />
+            <main id="main-content" className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+              {children}
+            </main>
+            <AccessibilityWidget />
+            <CookieConsent />
+            <InstallPrompt />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -1,0 +1,14 @@
+# Responsive Screenshots
+
+Screenshots showing responsive layouts across breakpoints:
+- 375px (iPhone SE)
+- 390px (iPhone 14)
+- 768px (iPad portrait)
+- 1024px (iPad landscape)
+- 1440px (Desktop)
+
+Same page at different widths to demonstrate responsive design.
+
+---
+
+*Use Chrome DevTools responsive mode to capture exact widths.*

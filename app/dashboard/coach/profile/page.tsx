@@ -184,10 +184,10 @@ export default function CoachProfilePage() {
 
   if (authLoading || initialLoading) {
     return (
-      <div className="p-8 flex justify-center items-center min-h-[400px]">
+      <div className="p-4 sm:p-6 lg:p-8 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-gray-500">Loading coach profile...</p>
+          <p className="text-gray-500 text-sm sm:text-base">Loading coach profile...</p>
         </div>
       </div>
     );
@@ -195,24 +195,24 @@ export default function CoachProfilePage() {
 
   if (!hasCoachPermissions) {
     return (
-      <div className="p-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-red-900 mb-2">Access Denied</h3>
-          <p className="text-red-700">You need coach permissions to access this page.</p>
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 sm:p-8 text-center">
+          <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-red-900 mb-2">Access Denied</h3>
+          <p className="text-sm sm:text-base text-red-700">You need coach permissions to access this page.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center space-x-3">
-          <User className="h-8 w-8 text-indigo-600" />
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Coach Profile</h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-start space-x-3">
+          <User className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 flex-shrink-0" />
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Coach Profile</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1">
               Manage your coaching specialties, preferences, and professional information
             </p>
           </div>
@@ -220,28 +220,28 @@ export default function CoachProfilePage() {
       </div>
 
       {formState.error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-            <p className="text-red-700">{formState.error}</p>
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-sm sm:text-base text-red-700">{formState.error}</p>
           </div>
         </div>
       )}
 
       {formState.success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center">
-            <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-            <p className="text-green-700">Coach profile updated successfully!</p>
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-start">
+            <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-sm sm:text-base text-green-700">Coach profile updated successfully!</p>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
         {/* Basic Info */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Basic Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">Basic Information</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 First Name
@@ -251,7 +251,7 @@ export default function CoachProfilePage() {
                 value={coachProfile?.firstName || ''}
                 disabled
                 aria-label="First Name (read-only)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed text-sm sm:text-base"
               />
               <p className="text-xs text-gray-500 mt-1">Update in main settings</p>
             </div>
@@ -264,7 +264,7 @@ export default function CoachProfilePage() {
                 value={coachProfile?.lastName || ''}
                 disabled
                 aria-label="Last Name (read-only)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed text-sm sm:text-base"
               />
               <p className="text-xs text-gray-500 mt-1">Update in main settings</p>
             </div>
@@ -272,19 +272,19 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Specialties */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Star className="h-5 w-5 text-indigo-600" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Coaching Specialties</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 sm:p-6">
+          <div className="flex items-start space-x-2 mb-4">
+            <Star className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Coaching Specialties</h2>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">
             Select the areas you specialize in. Clients will see coaches filtered by these specialties when booking sessions.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {availableSpecialties.map(specialty => (
               <label
                 key={specialty}
-                className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors touch-target ${
                   formData.specialties.includes(specialty)
                     ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
                     : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
@@ -296,7 +296,7 @@ export default function CoachProfilePage() {
                   onChange={() => handleSpecialtyToggle(specialty)}
                   className="sr-only"
                 />
-                <div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center ${
+                <div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center flex-shrink-0 ${
                   formData.specialties.includes(specialty)
                     ? 'bg-indigo-600 border-indigo-600'
                     : 'border-gray-300'
@@ -314,21 +314,21 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Meeting Types */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Video className="h-5 w-5 text-indigo-600" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Preferred Meeting Types</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 sm:p-6">
+          <div className="flex items-start space-x-2 mb-4">
+            <Video className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Preferred Meeting Types</h2>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">
             Select your preferred meeting formats. Clients will only see these options when booking with you.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {meetingTypeOptions.map(type => {
               const Icon = type.icon;
               return (
                 <label
                   key={type.value}
-                  className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                  className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors touch-target ${
                     formData.preferredMeetingTypes.includes(type.value)
                       ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
                       : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
@@ -340,7 +340,7 @@ export default function CoachProfilePage() {
                     onChange={() => handleMeetingTypeToggle(type.value)}
                     className="sr-only"
                   />
-                  <div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center ${
+                  <div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center flex-shrink-0 ${
                     formData.preferredMeetingTypes.includes(type.value)
                       ? 'bg-indigo-600 border-indigo-600'
                       : 'border-gray-300'
@@ -349,7 +349,7 @@ export default function CoachProfilePage() {
                       <CheckCircle className="w-3 h-3 text-white" />
                     )}
                   </div>
-                  <Icon className="w-4 h-4 mr-2 text-gray-500" />
+                  <Icon className="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {type.label}
                   </span>
@@ -360,16 +360,16 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Bio */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Professional Bio</h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">Professional Bio</h2>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">
             Write a brief description of your coaching background and approach. This will be shown to clients.
           </p>
           <textarea
             rows={4}
             value={formData.bio}
             onChange={(e) => handleInputChange('bio', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             placeholder="Tell clients about your coaching experience, approach, and what makes you unique..."
             maxLength={500}
           />
@@ -379,19 +379,19 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Credentials */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Award className="h-5 w-5 text-indigo-600" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Credentials & Certifications</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 sm:p-6">
+          <div className="flex items-start space-x-2 mb-4">
+            <Award className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Credentials & Certifications</h2>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">
             List your relevant certifications, degrees, or professional qualifications.
           </p>
           <textarea
             rows={3}
             value={formData.credentials}
             onChange={(e) => handleInputChange('credentials', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             placeholder="e.g., Certified Life Coach (ICF), Master's in Psychology, 10+ years experience..."
             maxLength={300}
           />
@@ -401,7 +401,7 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Availability Calendar */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 sm:p-6">
           <AvailabilityCalendar 
             coachId={coachProfile?.id} 
             readOnly={!hasCoachPermissions}
@@ -409,11 +409,11 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-end">
+        <div className="flex justify-end pb-safe">
           <button
             type="submit"
             disabled={formState.loading}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
+            className="bg-indigo-600 text-white px-5 sm:px-6 py-2.5 sm:py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-all active:scale-[0.98] active:opacity-90 text-sm sm:text-base touch-target"
           >
             {formState.loading ? (
               <>
