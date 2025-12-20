@@ -1,0 +1,13 @@
+# PWA Feature Screenshots
+
+Screenshots demonstrating Progressive Web App capabilities:
+- iOS installation flow
+- Android installation flow
+- Standalone mode (no browser chrome)
+- Home screen icons
+- Offline functionality
+- Service worker registration
+
+---
+
+*See ../../CAPTURE_GUIDE.md for capture instructions.*

@@ -1,0 +1,11 @@
+# Gesture Screenshots
+
+Screenshots demonstrating touch gestures:
+- Pull-to-refresh (start, threshold, refreshing)
+- Swipe cards (left, right, actions)
+- Bottom sheet (collapsed, half, full)
+- Long press context menus
+
+---
+
+*Tip: Use video recording and extract frames for gesture sequences.*

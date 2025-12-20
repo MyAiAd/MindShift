@@ -1,0 +1,12 @@
+# Lighthouse Audit Screenshots
+
+Screenshots of Lighthouse audit results:
+- Before transformation scores
+- After transformation scores (target: 90+)
+- Performance metrics (Core Web Vitals)
+- Accessibility score (target: 95+)
+- PWA installability checks
+
+---
+
+*Run audits in Chrome DevTools → Lighthouse tab (Mobile device).*
