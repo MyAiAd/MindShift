@@ -564,43 +564,43 @@ export default function SettingsPage() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#002b36] p-4 sm:p-6 lg:p-8">
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Manage your account settings and preferences.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Settings</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-[#839496] mt-1">Manage your account settings and preferences.</p>
         </div>
 
       <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Settings Navigation */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">Settings</h2>
+          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-gray-200 dark:border-[#586e75] p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Settings</h2>
             <nav className="space-y-2">
               <a href="#profile" className="flex items-center space-x-3 p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 touch-target text-sm sm:text-base">
                 <User className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-sm sm:text-base">Profile</span>
               </a>
-              <a href="#notifications" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 touch-target">
+              <a href="#notifications" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
                 <Bell className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-sm sm:text-base">Notifications</span>
               </a>
-              <a href="#security" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 touch-target">
+              <a href="#security" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
                 <Shield className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-sm sm:text-base">Security</span>
               </a>
-              <a href="#accessibility" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 touch-target">
+              <a href="#accessibility" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
                 <Eye className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-sm sm:text-base">Accessibility</span>
               </a>
-              <a href="#privacy" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 touch-target">
+              <a href="#privacy" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
                 <Lock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-sm sm:text-base">Privacy & Data</span>
               </a>
-              <a href="#preferences" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 touch-target">
+              <a href="#preferences" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
                 <Settings className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-sm sm:text-base">Preferences</span>
               </a>
-              <a href="#labs" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 ml-4 sm:ml-8 touch-target">
+              <a href="#labs" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] ml-4 sm:ml-8 touch-target">
                 <Beaker className="h-4 w-4 flex-shrink-0" />
                 <span className="text-xs sm:text-sm">Labs</span>
               </a>
@@ -673,7 +673,7 @@ export default function SettingsPage() {
                     rows={3} 
                     value={profileData.bio}
                     onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#586e75] dark:text-[#fdf6e3] dark:border-[#657b83]"
                     placeholder="Tell us about yourself..."
                   />
                 </div>
@@ -689,8 +689,8 @@ export default function SettingsPage() {
           </Card>
 
           {/* Notification Settings */}
-          <div id="notifications" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">Notification Preferences</h3>
+          <div id="notifications" className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-gray-200 dark:border-[#586e75] p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Notification Preferences</h3>
             
             {/* Notification Status Messages */}
             {notificationState.success && (
@@ -716,8 +716,8 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">Email Notifications</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Receive notifications via email</p>
+                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Email Notifications</h4>
+                  <p className="text-sm text-gray-600 dark:text-[#839496]">Receive notifications via email</p>
                 </div>
                 <label className={`relative inline-flex items-center ${notifications.loading || notificationState.loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                   <input 
@@ -727,14 +727,14 @@ export default function SettingsPage() {
                     disabled={notifications.loading || notificationState.loading}
                     onChange={(e) => handleNotificationToggle('email', e.target.checked)}
                   />
-                  <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
+                  <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
                 </label>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">Push Notifications</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Push Notifications</h4>
+                  <p className="text-sm text-gray-600 dark:text-[#839496]">
                     Receive push notifications in your browser
                     {!isSupported && <span className="text-red-500 ml-1">(Not supported in this browser)</span>}
                     {isSupported && permission === 'denied' && <span className="text-orange-500 ml-1">(Permission denied)</span>}
@@ -748,14 +748,14 @@ export default function SettingsPage() {
                     disabled={notifications.loading || notificationState.loading || !isSupported}
                     onChange={(e) => handleNotificationToggle('push', e.target.checked)}
                   />
-                  <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
+                  <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
                 </label>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">SMS Notifications</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Receive text message notifications (Coming soon)</p>
+                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">SMS Notifications</h4>
+                  <p className="text-sm text-gray-600 dark:text-[#839496]">Receive text message notifications (Coming soon)</p>
                 </div>
                 <label className={`relative inline-flex items-center ${notifications.loading || notificationState.loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                   <input 
@@ -765,17 +765,17 @@ export default function SettingsPage() {
                     disabled={notifications.loading || notificationState.loading}
                     onChange={(e) => handleNotificationToggle('sms', e.target.checked)}
                   />
-                  <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
+                  <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
                 </label>
               </div>
 
               {/* Test Notification Button */}
               {notifications.push && isSupported && permission === 'granted' && (
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="pt-4 border-t border-gray-200 dark:border-[#586e75]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">Test Notifications</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Send a test notification to verify everything is working</p>
+                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Test Notifications</h4>
+                      <p className="text-sm text-gray-600 dark:text-[#839496]">Send a test notification to verify everything is working</p>
                     </div>
                     <button
                       onClick={handleTestNotification}
@@ -814,7 +814,7 @@ export default function SettingsPage() {
 
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4">Change Password</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-4">Change Password</h4>
                   <form onSubmit={handlePasswordSubmit} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="currentPassword">Current Password</Label>
@@ -856,7 +856,7 @@ export default function SettingsPage() {
                   </form>
                 </div>
 
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <div className="border-t border-gray-200 dark:border-[#586e75] pt-4">
                   <TwoFactorAuth />
                 </div>
               </div>
@@ -879,10 +879,10 @@ export default function SettingsPage() {
                 {/* High Contrast */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Contrast className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    <Contrast className="h-5 w-5 text-gray-600 dark:text-[#839496]" />
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">High Contrast Mode</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Increase contrast for better visibility</p>
+                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">High Contrast Mode</h4>
+                      <p className="text-sm text-gray-600 dark:text-[#839496]">Increase contrast for better visibility</p>
                     </div>
                   </div>
                   <Tooltip>
@@ -894,7 +894,7 @@ export default function SettingsPage() {
                       checked={accessibilitySettings.highContrast}
                       onChange={(e) => handleAccessibilityChange('highContrast', e.target.checked)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -906,10 +906,10 @@ export default function SettingsPage() {
                 {/* Font Size */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Type className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    <Type className="h-5 w-5 text-gray-600 dark:text-[#839496]" />
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">Font Size</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Adjust text size for better readability</p>
+                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Font Size</h4>
+                      <p className="text-sm text-gray-600 dark:text-[#839496]">Adjust text size for better readability</p>
                     </div>
                   </div>
                   <Select 
@@ -931,10 +931,10 @@ export default function SettingsPage() {
                 {/* Reduced Motion */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <MousePointer className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    <MousePointer className="h-5 w-5 text-gray-600 dark:text-[#839496]" />
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">Reduced Motion</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Minimize animations and motion effects</p>
+                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Reduced Motion</h4>
+                      <p className="text-sm text-gray-600 dark:text-[#839496]">Minimize animations and motion effects</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -944,17 +944,17 @@ export default function SettingsPage() {
                       checked={accessibilitySettings.reducedMotion}
                       onChange={(e) => handleAccessibilityChange('reducedMotion', e.target.checked)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
 
                 {/* Keyboard Navigation */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Settings className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    <Settings className="h-5 w-5 text-gray-600 dark:text-[#839496]" />
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">Enhanced Keyboard Navigation</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Show focus indicators and enable keyboard shortcuts</p>
+                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Enhanced Keyboard Navigation</h4>
+                      <p className="text-sm text-gray-600 dark:text-[#839496]">Show focus indicators and enable keyboard shortcuts</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -964,17 +964,17 @@ export default function SettingsPage() {
                       checked={accessibilitySettings.keyboardNavigation}
                       onChange={(e) => handleAccessibilityChange('keyboardNavigation', e.target.checked)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
 
                 {/* Screen Reader Mode */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Eye className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    <Eye className="h-5 w-5 text-gray-600 dark:text-[#839496]" />
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">Screen Reader Optimization</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Optimize interface for screen readers</p>
+                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Screen Reader Optimization</h4>
+                      <p className="text-sm text-gray-600 dark:text-[#839496]">Optimize interface for screen readers</p>
                     </div>
                   </div>
                   <Tooltip>
@@ -986,7 +986,7 @@ export default function SettingsPage() {
                       checked={accessibilitySettings.screenReaderMode}
                       onChange={(e) => handleAccessibilityChange('screenReaderMode', e.target.checked)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -1013,25 +1013,25 @@ export default function SettingsPage() {
             ) : (
               <div className="space-y-6">
                 {/* Cookie Consent Management */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                    <Cookie className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
+                <div className="border-b border-gray-200 dark:border-[#586e75] pb-4">
+                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3 flex items-center">
+                    <Cookie className="h-5 w-5 text-gray-600 dark:text-[#839496] mr-2" />
                     Cookie Preferences
                   </h4>
                   
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">Essential Cookies</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Required for basic site functionality</p>
+                        <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Essential Cookies</p>
+                        <p className="text-sm text-gray-600 dark:text-[#839496]">Required for basic site functionality</p>
                       </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Always Active</span>
+                      <span className="text-sm text-gray-500 dark:text-[#839496]">Always Active</span>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">Functional Cookies</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Enable enhanced features and functionality</p>
+                        <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Functional Cookies</p>
+                        <p className="text-sm text-gray-600 dark:text-[#839496]">Enable enhanced features and functionality</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -1040,14 +1040,14 @@ export default function SettingsPage() {
                           checked={gdprSettings.functionalConsent}
                           onChange={(e) => handleGDPRConsentChange('functional', e.target.checked)}
                         />
-                        <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                       </label>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">Analytics Cookies</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Help us understand how you use our site</p>
+                        <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Analytics Cookies</p>
+                        <p className="text-sm text-gray-600 dark:text-[#839496]">Help us understand how you use our site</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -1056,14 +1056,14 @@ export default function SettingsPage() {
                           checked={gdprSettings.analyticsConsent}
                           onChange={(e) => handleGDPRConsentChange('analytics', e.target.checked)}
                         />
-                        <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                       </label>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">Marketing Cookies</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Used for personalized advertising</p>
+                        <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Marketing Cookies</p>
+                        <p className="text-sm text-gray-600 dark:text-[#839496]">Used for personalized advertising</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -1072,23 +1072,23 @@ export default function SettingsPage() {
                           checked={gdprSettings.marketingConsent}
                           onChange={(e) => handleGDPRConsentChange('marketing', e.target.checked)}
                         />
-                        <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                       </label>
                     </div>
                   </div>
                 </div>
 
                 {/* Data Rights */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-3">Your Data Rights</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <div className="border-b border-gray-200 dark:border-[#586e75] pb-4">
+                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3">Your Data Rights</h4>
+                  <p className="text-sm text-gray-600 dark:text-[#839496] mb-4">
                     Under GDPR, you have the right to access, correct, or delete your personal data.
                   </p>
                   
                   <div className="grid sm:grid-cols-2 gap-4">
                     <button
                       onClick={handleDataExport}
-                      className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 dark:border-[#657b83] rounded-lg hover:bg-gray-50 dark:hover:bg-[#586e75] transition-colors"
                     >
                       <Download className="h-4 w-4" />
                       <span>Export My Data</span>
@@ -1106,8 +1106,8 @@ export default function SettingsPage() {
 
                 {/* Privacy Information */}
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-3">Privacy Information</h4>
-                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3">Privacy Information</h4>
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-[#839496]">
                     <p>• We process your data based on your consent and legitimate interests</p>
                     <p>• Your data is stored securely and only shared with necessary service providers</p>
                     <p>• You can withdraw consent at any time</p>
@@ -1136,10 +1136,10 @@ export default function SettingsPage() {
               <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  {isDarkMode ? <Moon className="h-5 w-5 text-gray-600 dark:text-gray-400" /> : <Sun className="h-5 w-5 text-gray-600 dark:text-gray-400" />}
+                  {isDarkMode ? <Moon className="h-5 w-5 text-gray-600 dark:text-[#839496]" /> : <Sun className="h-5 w-5 text-gray-600 dark:text-[#839496]" />}
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">Dark Mode</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Switch to {isDarkMode ? 'light' : 'dark'} theme</p>
+                    <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Dark Mode</h4>
+                    <p className="text-sm text-gray-600 dark:text-[#839496]">Switch to {isDarkMode ? 'light' : 'dark'} theme</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1149,7 +1149,7 @@ export default function SettingsPage() {
                     checked={isDarkMode}
                     onChange={toggleDarkMode}
                   />
-                  <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                 </label>
               </div>
 
@@ -1198,17 +1198,17 @@ export default function SettingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-sm text-gray-600 dark:text-[#839496] mb-6">
               Experimental features and demos. These features are in development and may change or be removed.
             </p>
             
             <div className="space-y-6">
               {/* V3 Treatment Demo with Toggle - HIDDEN FOR LABS FOCUS */}
               {/* 
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div className="border border-gray-200 dark:border-[#586e75] rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-gray-900 dark:text-white">V3 Treatment Demo</h4>
+                    <h4 className="text-md font-medium text-gray-900 dark:text-[#fdf6e3]">V3 Treatment Demo</h4>
                     <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full">
                       Latest
                     </span>
@@ -1219,7 +1219,7 @@ export default function SettingsPage() {
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
                       labsToggles.v3TreatmentDemo
                         ? 'bg-indigo-600'
-                        : 'bg-gray-200 dark:bg-gray-700'
+                        : 'bg-gray-200 dark:bg-[#586e75]'
                     }`}
                   >
                     <span
@@ -1230,15 +1230,15 @@ export default function SettingsPage() {
                   </button>
                 </div>
                 {labsToggles.v3TreatmentDemo && (
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                  <div className="bg-gray-50 dark:bg-[#002b36]/50 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-2">
                       <Brain className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                      <h5 className="font-medium text-gray-900 dark:text-white">V3 Treatment System</h5>
+                      <h5 className="font-medium text-gray-900 dark:text-[#fdf6e3]">V3 Treatment System</h5>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                    <p className="text-sm text-gray-600 dark:text-[#839496] mb-3">
                       Next-generation treatment engine with enhanced state management and improved therapeutic protocols.
                     </p>
-                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-[#839496] mb-4">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span>Enhanced state machine architecture</span>
@@ -1278,10 +1278,10 @@ export default function SettingsPage() {
               */}
 
               {/* V4 Treatment Demo with Toggle */}
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div className="border border-gray-200 dark:border-[#586e75] rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-gray-900 dark:text-white">V4 Treatment (Labs)</h4>
+                    <h4 className="text-md font-medium text-gray-900 dark:text-[#fdf6e3]">V4 Treatment (Labs)</h4>
                     <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full">
                       Experimental
                     </span>
@@ -1292,7 +1292,7 @@ export default function SettingsPage() {
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
                       labsToggles.v4TreatmentDemo
                         ? 'bg-indigo-600'
-                        : 'bg-gray-200 dark:bg-gray-700'
+                        : 'bg-gray-200 dark:bg-[#586e75]'
                     }`}
                   >
                     <span
@@ -1303,15 +1303,15 @@ export default function SettingsPage() {
                   </button>
                 </div>
                 {labsToggles.v4TreatmentDemo && (
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                  <div className="bg-gray-50 dark:bg-[#002b36]/50 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-2">
                       <Brain className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                      <h5 className="font-medium text-gray-900 dark:text-white">V4 Treatment System (Labs)</h5>
+                      <h5 className="font-medium text-gray-900 dark:text-[#fdf6e3]">V4 Treatment System (Labs)</h5>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                    <p className="text-sm text-gray-600 dark:text-[#839496] mb-3">
                       Experimental copy of V3 for testing new features (voice integration, etc). Based on the latest stable V3 codebase with bug fixes.
                     </p>
-                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-[#839496] mb-4">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         <span>Based on latest V3 with all bug fixes</span>
@@ -1368,7 +1368,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-[#839496]">
                   Once you delete your account, there is no going back. Please be certain.
                 </p>
                 <Button 

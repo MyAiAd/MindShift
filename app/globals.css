@@ -399,30 +399,31 @@
     --radius: 0.5rem;
   }
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Solarized Dark Theme */
+    --background: 192 100% 11%;        /* base03: #002b36 */
+    --foreground: 44 87% 94%;          /* base0: #839496 */
+    --card: 193 100% 13%;              /* base02: #073642 */
+    --card-foreground: 44 87% 94%;     /* base0: #839496 */
+    --popover: 193 100% 13%;           /* base02: #073642 */
+    --popover-foreground: 44 87% 94%;  /* base0: #839496 */
+    --primary: 205 69% 67%;            /* blue: #268bd2 */
+    --primary-foreground: 192 100% 11%; /* base03: #002b36 */
+    --secondary: 192 90% 21%;          /* base01: #586e75 */
+    --secondary-foreground: 186 13% 75%; /* base1: #93a1a1 */
+    --muted: 192 90% 21%;              /* base01: #586e75 */
+    --muted-foreground: 186 13% 75%;   /* base1: #93a1a1 */
+    --accent: 68 100% 30%;             /* green: #859900 */
+    --accent-foreground: 44 11% 93%;   /* base3: #fdf6e3 */
+    --destructive: 1 71% 52%;          /* red: #dc322f */
+    --destructive-foreground: 44 11% 93%; /* base3: #fdf6e3 */
+    --border: 192 81% 27%;             /* base01 lighter */
+    --input: 192 81% 27%;              /* base01 lighter */
+    --ring: 205 69% 67%;               /* blue: #268bd2 */
+    --chart-1: 205 69% 67%;            /* blue: #268bd2 */
+    --chart-2: 175 74% 63%;            /* cyan: #2aa198 */
+    --chart-3: 68 100% 30%;            /* green: #859900 */
+    --chart-4: 45 100% 51%;            /* yellow: #b58900 */
+    --chart-5: 18 89% 60%;             /* orange: #cb4b16 */
   }
 }
 

@@ -242,20 +242,20 @@ export default function DashboardPage() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#002b36] p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">
               Welcome back, {profile?.first_name}!
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-[#93a1a1] mt-1">
                               Here's what's happening with {tenant?.name || 'MindShifting'} today.
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:inline">Current Plan:</span>
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-[#93a1a1] hidden sm:inline">Current Plan:</span>
             <span className="px-2 sm:px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs sm:text-sm font-medium capitalize">
               {profile?.subscription_tier === 'level_1' ? 'Problem Shifting' : 
                profile?.subscription_tier === 'level_2' ? 'Complete Access' : 
@@ -270,7 +270,7 @@ export default function DashboardPage() {
         {loading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 sm:p-6 min-w-0">
+            <div key={i} className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-4 sm:p-6 min-w-0">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
@@ -319,12 +319,12 @@ export default function DashboardPage() {
             return (
               <Card key={stat.name} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-gray-600 dark:text-gray-300">{stat.name}</CardDescription>
+                  <CardDescription className="text-gray-600 dark:text-[#93a1a1]">{stat.name}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div className="min-w-0 flex-1">
-                      <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">{stat.value}</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#fdf6e3] truncate">{stat.value}</p>
                       <p className={`text-xs mt-2 font-medium ${
                         stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
                       }`}>
@@ -352,26 +352,26 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link href="/dashboard/goals" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block min-w-0">
+            <Link href="/dashboard/goals" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-[#586e75] transition-colors block min-w-0">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <Target className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Create New Goal</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Set up a new mindset goal for users</p>
+                  <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Create New Goal</p>
+                  <p className="text-sm text-gray-600 dark:text-[#93a1a1]">Set up a new mindset goal for users</p>
                 </div>
               </div>
             </Link>
             
-            <Link href="/dashboard/sessions" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block">
+            <Link href="/dashboard/sessions" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-[#586e75] transition-colors block">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-green-50 rounded-lg">
                   <Calendar className="h-4 w-4 text-green-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Schedule Session</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Book a coaching session</p>
+                  <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Schedule Session</p>
+                  <p className="text-sm text-gray-600 dark:text-[#93a1a1]">Book a coaching session</p>
                 </div>
               </div>
             </Link>
@@ -400,14 +400,14 @@ export default function DashboardPage() {
                 </div>
               }
             >
-              <Link href="/dashboard/sessions/analytics" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block">
+              <Link href="/dashboard/sessions/analytics" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-[#586e75] transition-colors block">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-purple-50 rounded-lg">
                     <Activity className="h-4 w-4 text-purple-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">View Analytics</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">Check detailed progress reports</p>
+                    <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">View Analytics</p>
+                    <p className="text-sm text-gray-600 dark:text-[#93a1a1]">Check detailed progress reports</p>
                   </div>
                 </div>
               </Link>
@@ -435,14 +435,14 @@ export default function DashboardPage() {
                 </div>
               }
             >
-              <Link href="/dashboard/team/message" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block">
+              <Link href="/dashboard/team/message" className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-[#586e75] transition-colors block">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-orange-50 rounded-lg">
                     <MessageCircle className="h-4 w-4 text-orange-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Message a Client</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">Send a message to your clients</p>
+                    <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Message a Client</p>
+                    <p className="text-sm text-gray-600 dark:text-[#93a1a1]">Send a message to your clients</p>
                   </div>
                 </div>
               </Link>
@@ -482,12 +482,12 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900 dark:text-white">
+                      <p className="text-sm text-gray-900 dark:text-[#fdf6e3]">
                         <span className="font-medium">{activity.user}</span>
                         {' '}{activity.action}{' '}
                         <span className="font-medium">{activity.target}</span>
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
+                      <p className="text-xs text-gray-500 dark:text-[#839496]">{activity.time}</p>
                     </div>
                   </div>
                 ))}
@@ -495,7 +495,7 @@ export default function DashboardPage() {
             ) : (
               <div className="text-center py-8">
                 <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">No recent activity</p>
+                <p className="text-gray-500 dark:text-[#839496]">No recent activity</p>
                 <p className="text-sm text-gray-400 mt-1">
                   Start using the platform to see your activities here!
                 </p>
@@ -527,21 +527,21 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-indigo-600 mb-2">92%</div>
-              <div className="text-sm text-gray-600 dark:text-gray-300">User Satisfaction</div>
+              <div className="text-sm text-gray-600 dark:text-[#93a1a1]">User Satisfaction</div>
               <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                 <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '92%' }}></div>
               </div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600 mb-2">78%</div>
-              <div className="text-sm text-gray-600 dark:text-gray-300">Goal Completion Rate</div>
+              <div className="text-sm text-gray-600 dark:text-[#93a1a1]">Goal Completion Rate</div>
               <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                 <div className="bg-green-600 h-2 rounded-full" style={{ width: '78%' }}></div>
               </div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600 mb-2">85%</div>
-              <div className="text-sm text-gray-600 dark:text-gray-300">Session Attendance</div>
+              <div className="text-sm text-gray-600 dark:text-[#93a1a1]">Session Attendance</div>
               <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                 <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
               </div>

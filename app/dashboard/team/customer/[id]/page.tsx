@@ -588,13 +588,13 @@ export default function CustomerDetailPage() {
               {(customer.first_name?.[0] || '') + (customer.last_name?.[0] || customer.email[0].toUpperCase())}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">
                 {customer.first_name && customer.last_name 
                   ? `${customer.first_name} ${customer.last_name}`
                   : customer.email
                 }
               </h1>
-              <p className="text-gray-600 dark:text-gray-300">{customer.email}</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">{customer.email}</p>
               <div className="flex items-center space-x-4 mt-2">
                 {subscription && getStatusBadge(subscription.status)}
                 {profile?.role === 'super_admin' && customer.tenants && (
@@ -636,10 +636,10 @@ export default function CustomerDetailPage() {
               <Calendar className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
                 {analytics?.subscription_length_days || 0}
               </p>
-              <p className="text-gray-600 dark:text-gray-300">Days as Customer</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Days as Customer</p>
             </div>
           </div>
         </div>
@@ -650,10 +650,10 @@ export default function CustomerDetailPage() {
               <DollarSign className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
                 {formatCurrency(analytics?.lifetime_value_cents || 0)}
               </p>
-              <p className="text-gray-600 dark:text-gray-300">Lifetime Value</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Lifetime Value</p>
             </div>
           </div>
         </div>
@@ -664,10 +664,10 @@ export default function CustomerDetailPage() {
               <TrendingUp className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
                 {analytics?.total_transactions || 0}
               </p>
-              <p className="text-gray-600 dark:text-gray-300">Total Transactions</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Total Transactions</p>
             </div>
           </div>
         </div>
@@ -678,10 +678,10 @@ export default function CustomerDetailPage() {
               <Clock className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
                 {analytics?.days_since_last_payment || 0}
               </p>
-              <p className="text-gray-600 dark:text-gray-300">Days Since Last Payment</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Days Since Last Payment</p>
             </div>
           </div>
         </div>
@@ -711,11 +711,11 @@ export default function CustomerDetailPage() {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Customer Information</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Customer Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1]">Full Name</label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-[#fdf6e3]">
                     {customer.first_name && customer.last_name 
                       ? `${customer.first_name} ${customer.last_name}`
                       : 'Not provided'
@@ -723,25 +723,25 @@ export default function CustomerDetailPage() {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{customer.email}</p>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1]">Email</label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-[#fdf6e3]">{customer.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Account Status</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1]">Account Status</label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-[#fdf6e3]">
                     {customer.is_active ? 'Active' : 'Inactive'}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Join Date</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{formatDate(customer.created_at)}</p>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1]">Join Date</label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-[#fdf6e3]">{formatDate(customer.created_at)}</p>
                 </div>
               </div>
             </div>
 
             {subscription && (
               <div>
-                                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Current Subscription</h3>
+                                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Current Subscription</h3>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center space-x-3 mb-3">
                     {getSubscriptionIcon(subscription.subscription_plans.tier)}
@@ -750,11 +750,11 @@ export default function CustomerDetailPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-600 dark:text-gray-300">Monthly Price:</span>
+                      <span className="text-gray-600 dark:text-[#93a1a1]">Monthly Price:</span>
                       <span className="ml-2 font-medium">{formatCurrency(subscription.subscription_plans.price_monthly * 100)}</span>
                     </div>
                     <div>
-                      <span className="text-gray-600 dark:text-gray-300">Current Period:</span>
+                      <span className="text-gray-600 dark:text-[#93a1a1]">Current Period:</span>
                       <span className="ml-2 font-medium">
                         {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
                       </span>
@@ -768,7 +768,7 @@ export default function CustomerDetailPage() {
 
         {activeTab === 'subscription' && (
           <div>
-                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Subscription History</h3>
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Subscription History</h3>
             {customer.user_subscriptions?.length ? (
               <div className="space-y-4">
                 {customer.user_subscriptions.map((sub) => (
@@ -780,7 +780,7 @@ export default function CustomerDetailPage() {
                       </div>
                       {getStatusBadge(sub.status)}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-300">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-[#93a1a1]">
                       <div>
                         <span className="font-medium">Period:</span> {formatDate(sub.current_period_start)} - {formatDate(sub.current_period_end)}
                       </div>
@@ -803,19 +803,19 @@ export default function CustomerDetailPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">No subscription history found.</p>
+              <p className="text-gray-500 dark:text-[#839496]">No subscription history found.</p>
             )}
           </div>
         )}
 
         {activeTab === 'billing' && (
           <div>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Billing Information</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Billing Information</h3>
             {customer.billing_info ? (
               <div className="space-y-4">
                 <div>
-                                      <h4 className="font-medium text-gray-900 dark:text-white mb-2">Billing Address</h4>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
+                                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-2">Billing Address</h4>
+                  <div className="text-sm text-gray-600 dark:text-[#93a1a1]">
                     <p>{customer.billing_info.address_line1}</p>
                     {customer.billing_info.address_line2 && <p>{customer.billing_info.address_line2}</p>}
                     <p>{customer.billing_info.city}, {customer.billing_info.state} {customer.billing_info.postal_code}</p>
@@ -823,15 +823,15 @@ export default function CustomerDetailPage() {
                   </div>
                 </div>
                 <div>
-                                      <h4 className="font-medium text-gray-900 dark:text-white mb-2">Payment Method</h4>
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-2">Payment Method</h4>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-[#93a1a1]">
                     <CreditCard className="h-4 w-4" />
                     <span>{customer.billing_info.payment_method_type} ending in {customer.billing_info.payment_method_last4}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">No billing information on file.</p>
+              <p className="text-gray-500 dark:text-[#839496]">No billing information on file.</p>
             )}
           </div>
         )}
@@ -839,7 +839,7 @@ export default function CustomerDetailPage() {
         {activeTab === 'notes' && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Customer Communication</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Customer Communication</h3>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setShowNoteModal(true)}
@@ -917,8 +917,8 @@ export default function CustomerDetailPage() {
                     .map(note => (
                       <div key={note.id} className="flex items-center justify-between bg-white p-3 rounded border">
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">{note.content.substring(0, 100)}...</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Due: {formatDate(note.follow_up_date)}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-[#fdf6e3]">{note.content.substring(0, 100)}...</p>
+                          <p className="text-xs text-gray-500 dark:text-[#839496]">Due: {formatDate(note.follow_up_date)}</p>
                         </div>
                         <button
                           onClick={() => markFollowUpComplete(note.id)}
@@ -954,7 +954,7 @@ export default function CustomerDetailPage() {
                           </div>
                           <div>
                             <div className="flex items-center space-x-2 mb-1">
-                              <span className="font-medium text-gray-900 dark:text-white">
+                              <span className="font-medium text-gray-900 dark:text-[#fdf6e3]">
                                 {getCommunicationTypeLabel(note.note_type || 'note')}
                               </span>
                               {getPriorityBadge(note.priority)}
@@ -964,7 +964,7 @@ export default function CustomerDetailPage() {
                                 </span>
                               ))}
                             </div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-gray-500 dark:text-[#839496]">
                               By {note.profiles.first_name} {note.profiles.last_name} • {formatDateTime(note.created_at)}
                             </p>
                           </div>
@@ -987,11 +987,11 @@ export default function CustomerDetailPage() {
                       </div>
 
                       <div className="mb-3">
-                        <p className="text-gray-900 dark:text-white">{note.content}</p>
+                        <p className="text-gray-900 dark:text-[#fdf6e3]">{note.content}</p>
                       </div>
 
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-[#839496]">
                           {note.follow_up_date && !note.resolved_at && (
                             <span className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
@@ -1023,7 +1023,7 @@ export default function CustomerDetailPage() {
             ) : (
               <div className="text-center py-8">
                 <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Communication History</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-2">No Communication History</h3>
                 <p className="text-gray-600 mb-4">Start building a communication history with this customer.</p>
                 <button
                   onClick={() => setShowNoteModal(true)}
@@ -1038,7 +1038,7 @@ export default function CustomerDetailPage() {
 
         {activeTab === 'transactions' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Transaction History</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Transaction History</h3>
             {customer.transactions?.length ? (
               <div className="space-y-4">
                 {customer.transactions.map((transaction) => (
@@ -1059,30 +1059,30 @@ export default function CustomerDetailPage() {
                         </div>
                         <div>
                           <p className="font-medium">{formatCurrency(transaction.amount_cents)}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{transaction.description || transaction.transaction_type}</p>
+                          <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{transaction.description || transaction.transaction_type}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-900 dark:text-white">{formatDateTime(transaction.created_at)}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{transaction.processor}</p>
+                        <p className="text-sm text-gray-900 dark:text-[#fdf6e3]">{formatDateTime(transaction.created_at)}</p>
+                        <p className="text-sm text-gray-500 dark:text-[#839496]">{transaction.processor}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">No transactions found for this customer.</p>
+              <p className="text-gray-500 dark:text-[#839496]">No transactions found for this customer.</p>
             )}
           </div>
         )}
 
         {activeTab === 'admin_logs' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Admin Action Logs</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Admin Action Logs</h3>
             {logsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <span className="ml-2 text-gray-600 dark:text-gray-300">Loading admin logs...</span>
+                <span className="ml-2 text-gray-600 dark:text-[#93a1a1]">Loading admin logs...</span>
               </div>
             ) : adminLogs.length ? (
               <div className="space-y-4">
@@ -1094,36 +1094,36 @@ export default function CustomerDetailPage() {
                           <Shield className="h-5 w-5 text-indigo-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white">{log.action}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{log.description}</p>
+                          <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{log.action}</p>
+                          <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{log.description}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-900 dark:text-white">{formatDateTime(log.created_at)}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{log.performed_by}</p>
+                        <p className="text-sm text-gray-900 dark:text-[#fdf6e3]">{formatDateTime(log.created_at)}</p>
+                        <p className="text-sm text-gray-500 dark:text-[#839496]">{log.performed_by}</p>
                       </div>
                     </div>
                     {log.details && (
                       <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-700 dark:text-gray-300">{log.details}</p>
+                        <p className="text-sm text-gray-700 dark:text-[#93a1a1]">{log.details}</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">No admin actions recorded for this customer.</p>
+              <p className="text-gray-500 dark:text-[#839496]">No admin actions recorded for this customer.</p>
             )}
           </div>
         )}
 
         {activeTab === 'permissions' && (
           <div>
-                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Feature Permissions</h3>
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Feature Permissions</h3>
             {permissionsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <span className="ml-2 text-gray-600 dark:text-gray-300">Loading permissions...</span>
+                <span className="ml-2 text-gray-600 dark:text-[#93a1a1]">Loading permissions...</span>
               </div>
             ) : (
               <div className="space-y-6">
@@ -1139,7 +1139,7 @@ export default function CustomerDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Core Features */}
                   <div className="bg-white border rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 dark:text-white mb-3">Core Features</h4>
+                    <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3">Core Features</h4>
                     <div className="space-y-3">
                       {[
                         { key: 'goal_setting', name: 'Goal Setting', description: 'Create and manage personal goals' },
@@ -1149,8 +1149,8 @@ export default function CustomerDetailPage() {
                       ].map((feature) => (
                         <div key={feature.key} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900 dark:text-white">{feature.name}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">{feature.description}</p>
+                            <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{feature.name}</p>
+                            <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{feature.description}</p>
                           </div>
                           <button
                             onClick={() => handlePermissionToggle(feature.key, !permissions[feature.key])}
@@ -1172,7 +1172,7 @@ export default function CustomerDetailPage() {
 
                   {/* Advanced Features */}
                   <div className="bg-white border rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 dark:text-white mb-3">Advanced Features</h4>
+                    <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3">Advanced Features</h4>
                     <div className="space-y-3">
                       {[
                         { key: 'team_management', name: 'Team Management', description: 'Manage team members and collaboration' },
@@ -1182,8 +1182,8 @@ export default function CustomerDetailPage() {
                       ].map((feature) => (
                         <div key={feature.key} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900 dark:text-white">{feature.name}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">{feature.description}</p>
+                            <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{feature.name}</p>
+                            <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{feature.description}</p>
                           </div>
                           <button
                             onClick={() => handlePermissionToggle(feature.key, !permissions[feature.key])}
@@ -1206,7 +1206,7 @@ export default function CustomerDetailPage() {
 
                 {/* Role & Subscription Override */}
                 <div className="bg-white border rounded-lg p-4">
-                                      <h4 className="font-medium text-gray-900 dark:text-white mb-3">Role & Subscription Override</h4>
+                                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3">Role & Subscription Override</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Customer Role</label>
@@ -1257,8 +1257,8 @@ export default function CustomerDetailPage() {
       {/* Add Note Modal */}
       {showNoteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Customer Note</h3>
+          <div className="bg-white dark:bg-[#073642] rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Add Customer Note</h3>
             <form onSubmit={handleAddNote} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Note Content</label>
@@ -1298,7 +1298,7 @@ export default function CustomerDetailPage() {
                 <button 
                   type="button" 
                   onClick={() => setShowNoteModal(false)} 
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-gray-900"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-[#002b36]"
                 >
                   Cancel
                 </button>
@@ -1317,8 +1317,8 @@ export default function CustomerDetailPage() {
       {/* Email Log Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Log Email Communication</h3>
+          <div className="bg-white dark:bg-[#073642] rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Log Email Communication</h3>
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.target as HTMLFormElement);
@@ -1386,7 +1386,7 @@ export default function CustomerDetailPage() {
                 <button 
                   type="button" 
                   onClick={() => setShowEmailModal(false)} 
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-gray-900"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-[#002b36]"
                 >
                   Cancel
                 </button>
@@ -1405,8 +1405,8 @@ export default function CustomerDetailPage() {
       {/* Subscription Management Modal */}
       {showSubscriptionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Manage Subscription</h3>
+          <div className="bg-white dark:bg-[#073642] rounded-lg p-6 w-full max-w-lg">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Manage Subscription</h3>
             
             {actionMessage && (
               <div className={`mb-4 p-3 rounded-lg ${
@@ -1502,7 +1502,7 @@ export default function CustomerDetailPage() {
                     setSubscriptionAction('');
                     setActionMessage('');
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-gray-900"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-[#002b36]"
                   disabled={actionLoading}
                 >
                   Cancel

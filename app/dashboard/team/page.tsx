@@ -202,8 +202,8 @@ export default function CustomerManagementPage() {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Customer Management</h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Customer Management</h1>
+            <p className="text-gray-600 dark:text-[#93a1a1] mt-1">
               Manage your customers, subscriptions, and billing. 
               {profile?.role === 'super_admin' ? ' (Super Admin - All Tenants)' : ' (Tenant Admin)'}
             </p>
@@ -216,14 +216,14 @@ export default function CustomerManagementPage() {
         <>
           {/* Key Metrics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <Users className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{analytics.total_customers || 0}</p>
-                  <p className="text-gray-600 dark:text-gray-300">Total Customers</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{analytics.total_customers || 0}</p>
+                  <p className="text-gray-600 dark:text-[#93a1a1]">Total Customers</p>
                   <div className="flex items-center mt-1">
                     <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                     <span className="text-sm text-green-600">+{analytics.new_customers_this_month || 0} this month</span>
@@ -232,16 +232,16 @@ export default function CustomerManagementPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-green-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{analytics.active_subscriptions || 0}</p>
-                  <p className="text-gray-600 dark:text-gray-300">Active Subscriptions</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{analytics.active_subscriptions || 0}</p>
+                  <p className="text-gray-600 dark:text-[#93a1a1]">Active Subscriptions</p>
                   <div className="flex items-center mt-1">
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                    <span className="text-sm text-gray-600 dark:text-[#93a1a1]">
                       {((analytics.active_subscriptions || 0) / (analytics.total_customers || 1) * 100).toFixed(1)}% conversion rate
                     </span>
                   </div>
@@ -249,16 +249,16 @@ export default function CustomerManagementPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-purple-50 rounded-lg">
                   <DollarSign className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
                     {formatCurrency(analytics.monthly_recurring_revenue_cents || 0)}
                   </p>
-                  <p className="text-gray-600 dark:text-gray-300">Monthly Revenue</p>
+                  <p className="text-gray-600 dark:text-[#93a1a1]">Monthly Revenue</p>
                   <div className="flex items-center mt-1">
                     <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                     <span className="text-sm text-green-600">
@@ -269,16 +269,16 @@ export default function CustomerManagementPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-yellow-50 rounded-lg">
                   <Clock className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{analytics.trial_users || 0}</p>
-                  <p className="text-gray-600 dark:text-gray-300">Trial Users</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{analytics.trial_users || 0}</p>
+                  <p className="text-gray-600 dark:text-[#93a1a1]">Trial Users</p>
                   <div className="flex items-center mt-1">
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                    <span className="text-sm text-gray-600 dark:text-[#93a1a1]">
                       {analytics.trial_conversion_rate || 0}% convert to paid
                     </span>
                   </div>
@@ -290,47 +290,47 @@ export default function CustomerManagementPage() {
           {/* Advanced Analytics Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {/* Revenue Trend Chart */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Revenue Trends</h3>
-                <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-3 py-1 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Revenue Trends</h3>
+                <div className="text-sm text-gray-500 dark:text-[#839496] bg-gray-50 dark:bg-[#586e75] px-3 py-1 rounded-lg">
                   Current Period
                 </div>
               </div>
-              <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg">
+              <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-[#657b83] rounded-lg">
                 <div className="text-center">
                   <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500 dark:text-gray-400">Historical trend tracking coming soon</p>
+                  <p className="text-gray-500 dark:text-[#839496]">Historical trend tracking coming soon</p>
                   <p className="text-sm text-gray-400">We're building comprehensive revenue analytics</p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{formatCurrency(analytics.total_revenue_cents || 0)}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Total Revenue</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{formatCurrency(analytics.total_revenue_cents || 0)}</p>
+                  <p className="text-sm text-gray-600 dark:text-[#93a1a1]">Total Revenue</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{formatCurrency(analytics.average_revenue_per_user_cents || 0)}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">ARPU</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{formatCurrency(analytics.average_revenue_per_user_cents || 0)}</p>
+                  <p className="text-sm text-gray-600 dark:text-[#93a1a1]">ARPU</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{analytics.churn_rate || 0}%</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Churn Rate</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{analytics.churn_rate || 0}%</p>
+                  <p className="text-sm text-gray-600 dark:text-[#93a1a1]">Churn Rate</p>
                 </div>
               </div>
             </div>
 
             {/* Customer Lifecycle Chart */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Customer Lifecycle</h3>
+            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-6">Customer Lifecycle</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
-                  <span className="text-gray-700 dark:text-gray-300">New Signups</span>
+                  <span className="text-gray-700 dark:text-[#93a1a1]">New Signups</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="text-lg font-semibold text-gray-900 dark:text-white mr-2">{analytics.new_signups || 0}</span>
+                  <span className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mr-2">{analytics.new_signups || 0}</span>
                     <div className="w-24 bg-gray-200 rounded-full h-2">
                       <div className="bg-blue-500 h-2 rounded-full" style={{width: '80%'}}></div>
                     </div>
@@ -339,10 +339,10 @@ export default function CustomerManagementPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-4 h-4 bg-yellow-500 rounded-full mr-3"></div>
-                    <span className="text-gray-700 dark:text-gray-300">Trial Users</span>
+                    <span className="text-gray-700 dark:text-[#93a1a1]">Trial Users</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-lg font-semibold text-gray-900 dark:text-white mr-2">{analytics.trial_users || 0}</span>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mr-2">{analytics.trial_users || 0}</span>
                     <div className="w-24 bg-gray-200 rounded-full h-2">
                       <div className="bg-yellow-500 h-2 rounded-full" style={{width: '60%'}}></div>
                     </div>
@@ -351,10 +351,10 @@ export default function CustomerManagementPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
-                    <span className="text-gray-700 dark:text-gray-300">Paid Customers</span>
+                    <span className="text-gray-700 dark:text-[#93a1a1]">Paid Customers</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-lg font-semibold text-gray-900 dark:text-white mr-2">{analytics.active_subscriptions || 0}</span>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mr-2">{analytics.active_subscriptions || 0}</span>
                     <div className="w-24 bg-gray-200 rounded-full h-2">
                       <div className="bg-green-500 h-2 rounded-full" style={{width: '90%'}}></div>
                     </div>
@@ -363,25 +363,25 @@ export default function CustomerManagementPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-4 h-4 bg-red-500 rounded-full mr-3"></div>
-                    <span className="text-gray-700 dark:text-gray-300">Churned</span>
+                    <span className="text-gray-700 dark:text-[#93a1a1]">Churned</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-lg font-semibold text-gray-900 dark:text-white mr-2">{analytics.churned_customers || 0}</span>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mr-2">{analytics.churned_customers || 0}</span>
                     <div className="w-24 bg-gray-200 rounded-full h-2">
                       <div className="bg-red-500 h-2 rounded-full" style={{width: '20%'}}></div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-[#586e75]">
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{analytics.customer_lifetime_value_cents ? formatCurrency(analytics.customer_lifetime_value_cents) : '$0'}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">Avg. CLV</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">{analytics.customer_lifetime_value_cents ? formatCurrency(analytics.customer_lifetime_value_cents) : '$0'}</p>
+                    <p className="text-sm text-gray-600 dark:text-[#93a1a1]">Avg. CLV</p>
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{analytics.average_subscription_length_days || 0} days</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">Avg. Subscription</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">{analytics.average_subscription_length_days || 0} days</p>
+                    <p className="text-sm text-gray-600 dark:text-[#93a1a1]">Avg. Subscription</p>
                   </div>
                 </div>
               </div>
@@ -389,15 +389,15 @@ export default function CustomerManagementPage() {
           </div>
 
           {/* Subscription Tier Breakdown */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 mb-8">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Subscription Tier Analysis</h3>
+          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6 mb-8">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-6">Subscription Tier Analysis</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center p-4 border rounded-lg">
                 <div className="flex items-center justify-center mb-2">
                   <Star className="h-8 w-8 text-gray-400" />
                 </div>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{analytics.trial_customers || 0}</p>
-                <p className="text-gray-600 dark:text-gray-300">Trial Customers</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{analytics.trial_customers || 0}</p>
+                <p className="text-gray-600 dark:text-[#93a1a1]">Trial Customers</p>
                 <p className="text-sm text-gray-500 mt-1">{formatCurrency(0)}/month each</p>
                 <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
                   <div 
@@ -411,8 +411,8 @@ export default function CustomerManagementPage() {
                 <div className="flex items-center justify-center mb-2">
                   <Zap className="h-8 w-8 text-blue-500" />
                 </div>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{analytics.level_1_customers || 0}</p>
-                <p className="text-gray-600 dark:text-gray-300">Level 1 Customers</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{analytics.level_1_customers || 0}</p>
+                <p className="text-gray-600 dark:text-[#93a1a1]">Level 1 Customers</p>
                 <p className="text-sm text-gray-500 mt-1">{formatCurrency(2999)}/month each</p>
                 <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
                   <div 
@@ -426,8 +426,8 @@ export default function CustomerManagementPage() {
                 <div className="flex items-center justify-center mb-2">
                   <Crown className="h-8 w-8 text-purple-500" />
                 </div>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{analytics.level_2_customers || 0}</p>
-                <p className="text-gray-600 dark:text-gray-300">Level 2 Customers</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{analytics.level_2_customers || 0}</p>
+                <p className="text-gray-600 dark:text-[#93a1a1]">Level 2 Customers</p>
                 <p className="text-sm text-gray-500 mt-1">{formatCurrency(4999)}/month each</p>
                 <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
                   <div 
@@ -442,7 +442,7 @@ export default function CustomerManagementPage() {
       )}
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 mb-6">
+      <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6 mb-6">
         <form onSubmit={handleSearch} className="flex items-center space-x-4 mb-4">
           <div className="flex-1">
             <div className="relative">
@@ -459,7 +459,7 @@ export default function CustomerManagementPage() {
           <button
             type="button"
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-900"
+            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-[#002b36]"
           >
             <Filter className="h-4 w-4 mr-2" />
             Filters
@@ -508,7 +508,7 @@ export default function CustomerManagementPage() {
                 <button
                   type="button"
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-900"
+                  className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-[#002b36]"
                 >
                   <ArrowUpDown className="h-4 w-4 mr-2" />
                   {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
@@ -523,16 +523,16 @@ export default function CustomerManagementPage() {
       <FeatureGuard 
         featureKey="team_management"
         fallback={
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">
+          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-8 text-center">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Customer Management Not Available</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-2">Customer Management Not Available</h3>
             <p className="text-gray-600 mb-4">Upgrade your subscription to access customer management features.</p>
           </div>
         }
       >
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">
               Customers ({pagination.total})
             </h2>
           </div>
@@ -545,28 +545,28 @@ export default function CustomerManagementPage() {
           ) : customers.length === 0 ? (
             <div className="p-8 text-center">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No customers found</h3>
-              <p className="text-gray-600 dark:text-gray-300">Try adjusting your search or filter criteria.</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-2">No customers found</h3>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Try adjusting your search or filter criteria.</p>
             </div>
           ) : (
             <>
               <div className="divide-y divide-gray-200">
                 {customers.map((customer) => (
-                  <div key={customer.id} className="p-6 hover:bg-gray-50 dark:bg-gray-900">
+                  <div key={customer.id} className="p-6 hover:bg-gray-50 dark:bg-[#002b36]">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-semibold">
                           {(customer.first_name?.[0] || '') + (customer.last_name?.[0] || customer.email[0].toUpperCase())}
                         </div>
                         <div>
-                          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                          <h3 className="text-lg font-medium text-gray-900 dark:text-[#fdf6e3]">
                             {customer.first_name && customer.last_name 
                               ? `${customer.first_name} ${customer.last_name}`
                               : customer.email
                             }
                           </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{customer.email}</p>
-                          <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{customer.email}</p>
+                          <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500 dark:text-[#839496]">
                             <span className="flex items-center">
                               {getSubscriptionIcon(customer.subscription_tier)}
                               <span className="ml-1">
@@ -618,7 +618,7 @@ export default function CustomerManagementPage() {
 
               {/* Pagination */}
               <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                <div className="text-sm text-gray-700 dark:text-gray-300">
+                <div className="text-sm text-gray-700 dark:text-[#93a1a1]">
                   Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} customers
                 </div>
                 <div className="flex items-center space-x-2">

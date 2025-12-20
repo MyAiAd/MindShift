@@ -325,8 +325,8 @@ export default function ProgressPage() {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Progress</h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">Track your mindset transformation journey and celebrate your achievements.</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Progress</h1>
+            <p className="text-gray-600 dark:text-[#93a1a1] mt-1">Track your mindset transformation journey and celebrate your achievements.</p>
           </div>
           <button 
             onClick={() => setShowNewEntryModal(true)}
@@ -347,85 +347,85 @@ export default function ProgressPage() {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-50 rounded-lg">
               <TrendingUp className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.overview.overallProgress || 0}%</p>
-              <p className="text-gray-600 dark:text-gray-300">Overall Progress</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.overallProgress || 0}%</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Overall Progress</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-50 rounded-lg">
               <Target className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.overview.completedGoals || 0}</p>
-              <p className="text-gray-600 dark:text-gray-300">Goals Achieved</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.completedGoals || 0}</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Goals Achieved</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-50 rounded-lg">
               <Activity className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.overview.totalProgressEntries || 0}</p>
-              <p className="text-gray-600 dark:text-gray-300">Progress Entries</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.totalProgressEntries || 0}</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Progress Entries</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-50 rounded-lg">
               <Award className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.overview.completedMilestones || 0}</p>
-              <p className="text-gray-600 dark:text-gray-300">Milestones</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.completedMilestones || 0}</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Milestones</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Wellbeing Scores */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 mb-8">
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Average Wellbeing Scores</h2>
+      <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6 mb-8">
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-6">Average Wellbeing Scores</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgMoodScore || 0)} dark:bg-gray-700`}>
+          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgMoodScore || 0)} dark:bg-[#586e75]`}>
             <div className="flex items-center">
               <Heart className={`h-6 w-6 ${getScoreColor(stats?.overview.avgMoodScore || 0)} mr-3`} />
               <div>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.overview.avgMoodScore || 0}/10</p>
-                <p className="text-gray-600 dark:text-gray-300">Mood Score</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.avgMoodScore || 0}/10</p>
+                <p className="text-gray-600 dark:text-[#93a1a1]">Mood Score</p>
               </div>
             </div>
           </div>
           
-          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgEnergyLevel || 0)} dark:bg-gray-700`}>
+          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgEnergyLevel || 0)} dark:bg-[#586e75]`}>
             <div className="flex items-center">
               <Zap className={`h-6 w-6 ${getScoreColor(stats?.overview.avgEnergyLevel || 0)} mr-3`} />
               <div>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.overview.avgEnergyLevel || 0}/10</p>
-                <p className="text-gray-600 dark:text-gray-300">Energy Level</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.avgEnergyLevel || 0}/10</p>
+                <p className="text-gray-600 dark:text-[#93a1a1]">Energy Level</p>
               </div>
             </div>
           </div>
           
-          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgConfidenceLevel || 0)} dark:bg-gray-700`}>
+          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgConfidenceLevel || 0)} dark:bg-[#586e75]`}>
             <div className="flex items-center">
               <Shield className={`h-6 w-6 ${getScoreColor(stats?.overview.avgConfidenceLevel || 0)} mr-3`} />
               <div>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats?.overview.avgConfidenceLevel || 0}/10</p>
-                <p className="text-gray-600 dark:text-gray-300">Confidence Level</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.avgConfidenceLevel || 0}/10</p>
+                <p className="text-gray-600 dark:text-[#93a1a1]">Confidence Level</p>
               </div>
             </div>
           </div>
@@ -437,9 +437,9 @@ export default function ProgressPage() {
         {/* Column 1: Level Progress & Recent Achievements */}
         <div className="space-y-6">
           {/* Level Progress */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Your Level Progress</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Your Level Progress</h2>
               {gamificationData?.levelProgress && (
                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${getLevelColor(gamificationData.levelProgress.currentLevel)}`}>
                   Level {gamificationData.levelProgress.currentLevel}
@@ -454,7 +454,7 @@ export default function ProgressPage() {
             ) : gamificationData?.levelProgress ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-300">
+                  <span className="text-gray-600 dark:text-[#93a1a1]">
                     {gamificationData.levelProgress.levelProgress} / {gamificationData.levelProgress.levelProgressMax} XP
                   </span>
                   <span className="font-medium text-indigo-600">
@@ -469,7 +469,7 @@ export default function ProgressPage() {
                   ></div>
                 </div>
                 
-                <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+                <div className="flex items-center justify-between text-sm text-gray-600 dark:text-[#93a1a1]">
                   <span>{gamificationData.userStats.total_points} Total XP</span>
                   <span>{gamificationData.userStats.achievements_earned} Achievements</span>
                 </div>
@@ -477,14 +477,14 @@ export default function ProgressPage() {
             ) : (
               <div className="text-center py-8">
                 <Star className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 dark:text-gray-400">Start your journey to earn XP and level up!</p>
+                <p className="text-gray-500 dark:text-[#839496]">Start your journey to earn XP and level up!</p>
               </div>
             )}
           </div>
 
           {/* Recent Achievements */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Achievements</h2>
+          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Recent Achievements</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
@@ -501,12 +501,12 @@ export default function ProgressPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center space-x-2">
-                          <p className="font-medium text-gray-900 dark:text-white">{achievement.title}</p>
+                          <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{achievement.title}</p>
                           <span className="text-xs font-medium px-2 py-1 rounded-full bg-white bg-opacity-50">
                             +{achievement.points} XP
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">{achievement.description}</p>
+                        <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{achievement.description}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           {formatDate(achievement.earned_at)}
                         </p>
@@ -518,7 +518,7 @@ export default function ProgressPage() {
             ) : (
               <div className="text-center py-8">
                 <Award className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 dark:text-gray-400">No recent achievements</p>
+                <p className="text-gray-500 dark:text-[#839496]">No recent achievements</p>
                 <p className="text-sm text-gray-400">Complete goals and log progress to earn achievements!</p>
               </div>
             )}
@@ -526,9 +526,9 @@ export default function ProgressPage() {
         </div>
 
         {/* Column 2: Progress Chart */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Progress Over Time</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Progress Over Time</h2>
             <select 
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
@@ -601,10 +601,10 @@ export default function ProgressPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-[#586e75] rounded-lg">
               <div className="text-center">
                 <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 dark:text-gray-400">No progress data yet</p>
+                <p className="text-gray-500 dark:text-[#839496]">No progress data yet</p>
                 <p className="text-sm text-gray-400 mt-1">
                   Start logging progress entries to see your trends over time
                 </p>
@@ -620,8 +620,8 @@ export default function ProgressPage() {
         {/* Column 3: Streaks & Quick Stats */}
         <div className="space-y-6">
           {/* Current Streaks */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Current Streaks</h2>
+          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Current Streaks</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
@@ -636,13 +636,13 @@ export default function ProgressPage() {
                       <StreakIcon className="h-6 w-6 text-orange-600" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="font-medium text-gray-900 dark:text-white">{formatStreakType(streak.streak_type)}</p>
+                          <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{formatStreakType(streak.streak_type)}</p>
                           <div className="flex items-center space-x-1">
                             <Flame className="h-4 w-4 text-orange-500" />
                             <span className="font-bold text-orange-600">{streak.current_count}</span>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Best: {streak.best_count} days</p>
+                        <p className="text-sm text-gray-600 dark:text-[#93a1a1]">Best: {streak.best_count} days</p>
                       </div>
                     </div>
                   );
@@ -651,15 +651,15 @@ export default function ProgressPage() {
             ) : (
               <div className="text-center py-8">
                 <Flame className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 dark:text-gray-400">No active streaks</p>
+                <p className="text-gray-500 dark:text-[#839496]">No active streaks</p>
                 <p className="text-sm text-gray-400">Stay consistent to build streaks!</p>
               </div>
             )}
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Stats</h2>
+          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Quick Stats</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
@@ -668,32 +668,32 @@ export default function ProgressPage() {
             ) : gamificationData?.userStats ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Goals Completed</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{gamificationData.userStats.goals_completed}</span>
+                  <span className="text-gray-600 dark:text-[#93a1a1]">Goals Completed</span>
+                  <span className="font-semibold text-gray-900 dark:text-[#fdf6e3]">{gamificationData.userStats.goals_completed}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Progress Entries</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{gamificationData.userStats.progress_entries_count}</span>
+                  <span className="text-gray-600 dark:text-[#93a1a1]">Progress Entries</span>
+                  <span className="font-semibold text-gray-900 dark:text-[#fdf6e3]">{gamificationData.userStats.progress_entries_count}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Treatment Sessions</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{gamificationData.userStats.treatment_sessions_count}</span>
+                  <span className="text-gray-600 dark:text-[#93a1a1]">Treatment Sessions</span>
+                  <span className="font-semibold text-gray-900 dark:text-[#fdf6e3]">{gamificationData.userStats.treatment_sessions_count}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Best Streak</span>
+                  <span className="text-gray-600 dark:text-[#93a1a1]">Best Streak</span>
                   <div className="flex items-center space-x-1">
                     <Flame className="h-4 w-4 text-orange-500" />
-                    <span className="font-semibold text-gray-900 dark:text-white">{gamificationData.userStats.best_streak_days} days</span>
+                    <span className="font-semibold text-gray-900 dark:text-[#fdf6e3]">{gamificationData.userStats.best_streak_days} days</span>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="text-center py-8">
                 <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 dark:text-gray-400">No stats yet</p>
+                <p className="text-gray-500 dark:text-[#839496]">No stats yet</p>
                 <p className="text-sm text-gray-400">Start your journey to see stats!</p>
               </div>
             )}
@@ -704,12 +704,12 @@ export default function ProgressPage() {
       {/* New Progress Entry Modal */}
       {showNewEntryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white dark:bg-[#073642] rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Log Progress Entry</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Log Progress Entry</h3>
               <button
                 onClick={() => setShowNewEntryModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:text-gray-300"
+                className="text-gray-400 hover:text-gray-600 dark:text-[#93a1a1]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -800,7 +800,7 @@ export default function ProgressPage() {
                 <button
                   type="button"
                   onClick={() => setShowNewEntryModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-gray-900"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-[#002b36]"
                 >
                   Cancel
                 </button>

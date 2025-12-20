@@ -441,8 +441,8 @@ export default function SessionsPage() {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Coaching Sessions</h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">Manage your coaching sessions and track your progress with AI and human coaches.</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Coaching Sessions</h1>
+            <p className="text-gray-600 dark:text-[#93a1a1] mt-1">Manage your coaching sessions and track your progress with AI and human coaches.</p>
           </div>
           <div className="flex space-x-3">
             <button 
@@ -469,7 +469,7 @@ export default function SessionsPage() {
         {loading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div key={i} className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-gray-100 rounded-lg">
                   <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
@@ -483,16 +483,16 @@ export default function SessionsPage() {
           ))
         ) : (
           <>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <Activity className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
                     {(stats?.total_sessions || 0) + (stats?.treatment_sessions || 0)}
                   </p>
-                  <p className="text-gray-600 dark:text-gray-300">Total Sessions</p>
+                  <p className="text-gray-600 dark:text-[#93a1a1]">Total Sessions</p>
                   <p className="text-xs text-gray-500 mt-1">
                     {stats?.total_sessions || 0} coaching + {stats?.treatment_sessions || 0} treatment
                   </p>
@@ -500,16 +500,16 @@ export default function SessionsPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-green-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
                     {(stats?.completed_sessions || 0) + (stats?.completed_treatment_sessions || 0)}
                   </p>
-                  <p className="text-gray-600 dark:text-gray-300">Completed</p>
+                  <p className="text-gray-600 dark:text-[#93a1a1]">Completed</p>
                   <p className="text-xs text-gray-500 mt-1">
                     {stats?.completed_sessions || 0} coaching + {stats?.completed_treatment_sessions || 0} treatment
                   </p>
@@ -517,16 +517,16 @@ export default function SessionsPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-purple-50 rounded-lg">
                   <Calendar className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
                     {(stats?.upcoming_sessions || 0) + (stats?.active_treatment_sessions || 0)}
                   </p>
-                  <p className="text-gray-600 dark:text-gray-300">Active Sessions</p>
+                  <p className="text-gray-600 dark:text-[#93a1a1]">Active Sessions</p>
                   <p className="text-xs text-gray-500 mt-1">
                     {stats?.upcoming_sessions || 0} scheduled + {stats?.active_treatment_sessions || 0} in-progress
                   </p>
@@ -534,16 +534,16 @@ export default function SessionsPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-yellow-50 rounded-lg">
                   <Clock className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
                     {((stats?.total_hours_this_month || 0) + (stats?.total_treatment_hours_this_month || 0)).toFixed(1)}
                   </p>
-                  <p className="text-gray-600 dark:text-gray-300">Hours This Month</p>
+                  <p className="text-gray-600 dark:text-[#93a1a1]">Hours This Month</p>
                   <p className="text-xs text-gray-500 mt-1">
                     {stats?.total_hours_this_month?.toFixed(1) || '0.0'} coaching + {stats?.total_treatment_hours_this_month?.toFixed(1) || '0.0'} treatment
                   </p>
@@ -559,9 +559,9 @@ export default function SessionsPage() {
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-700 rounded-lg p-6 flex flex-col">
           <div className="flex items-center space-x-3 mb-4">
             <Video className="h-8 w-8 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Mind Shifting Session</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Mind Shifting Session</h3>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">Start an automated Mind Shifting treatment session with 95% scripted responses for optimal performance.</p>
+          <p className="text-gray-600 dark:text-[#93a1a1] mb-4">Start an automated Mind Shifting treatment session with 95% scripted responses for optimal performance.</p>
           <div className="text-xs text-blue-600 mb-6 space-y-1 flex-grow">
             <div>• Instant responses (&lt;200ms)</div>
             <div>• Proven Mind Shifting protocols</div>
@@ -583,9 +583,9 @@ export default function SessionsPage() {
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-100 dark:border-green-700 rounded-lg p-6 flex flex-col">
           <div className="flex items-center space-x-3 mb-4">
             <User className="h-8 w-8 text-green-600" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Human Coach</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Human Coach</h3>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 mb-6 flex-grow">Book a session with one of our certified human coaches.</p>
+          <p className="text-gray-600 dark:text-[#93a1a1] mb-6 flex-grow">Book a session with one of our certified human coaches.</p>
           <button 
             onClick={() => setShowBookModal(true)}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors w-full mt-auto"
@@ -596,10 +596,10 @@ export default function SessionsPage() {
       </div>
 
       {/* Sessions List */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border dark:border-[#586e75] overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200 dark:border-[#586e75]">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Sessions</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Recent Sessions</h2>
             {(sessions.length > 0 || treatmentSessions.length > 0) && (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -610,7 +610,7 @@ export default function SessionsPage() {
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="select-all" className="text-sm text-gray-700 dark:text-gray-300">
+                  <label htmlFor="select-all" className="text-sm text-gray-700 dark:text-[#93a1a1]">
                     Select All
                   </label>
                 </div>
@@ -679,7 +679,7 @@ export default function SessionsPage() {
                       </div>
                       
                       <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">{session.title}</h3>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-[#fdf6e3]">{session.title}</h3>
                         <p className="text-sm text-gray-600">with {coachName}</p>
                         <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                           <div className="flex items-center">
@@ -739,7 +739,7 @@ export default function SessionsPage() {
                 : 0;
               
               return (
-                <div key={`treatment-${session.id}`} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/30 border-l-4 border-l-blue-500">
+                <div key={`treatment-${session.id}`} className="p-6 hover:bg-gray-50 dark:hover:bg-[#586e75]/30 border-l-4 border-l-blue-500">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <input
@@ -754,7 +754,7 @@ export default function SessionsPage() {
                       </div>
                       
                       <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-[#fdf6e3]">
                           {getTreatmentSessionTitle(session)}
                         </h3>
                         <p className="text-sm text-gray-600">

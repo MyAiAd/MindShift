@@ -228,8 +228,8 @@ export default function GoalsPage() {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Goals</h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Goals</h1>
+            <p className="text-gray-600 dark:text-[#93a1a1] mt-1">
               Track your personal growth journey and achieve your mindset transformation goals.
             </p>
           </div>
@@ -252,57 +252,57 @@ export default function GoalsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-50 rounded-lg">
               <Target className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.total}</p>
-              <p className="text-gray-600 dark:text-gray-300">Total Goals</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats.total}</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Total Goals</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-50 rounded-lg">
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.completed}</p>
-              <p className="text-gray-600 dark:text-gray-300">Completed</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats.completed}</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Completed</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-orange-50 rounded-lg">
               <Clock className="h-6 w-6 text-orange-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.inProgress}</p>
-              <p className="text-gray-600 dark:text-gray-300">In Progress</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats.inProgress}</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">In Progress</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-50 rounded-lg">
               <TrendingUp className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.avgProgress}%</p>
-              <p className="text-gray-600 dark:text-gray-300">Avg Progress</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats.avgProgress}%</p>
+              <p className="text-gray-600 dark:text-[#93a1a1]">Avg Progress</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 mb-6">
+      <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="flex items-center space-x-2">
             <Filter className="h-5 w-5 text-gray-400" />
@@ -356,11 +356,11 @@ export default function GoalsPage() {
       {/* Goals Grid */}
       <div className="grid gap-6">
         {filteredGoals.map((goal) => (
-          <div key={goal.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+          <div key={goal.id} className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{goal.title}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">{goal.title}</h3>
                   {getStatusBadge(goal.status)}
                 </div>
                 <p className="text-gray-600 mb-3">{goal.description}</p>
@@ -450,9 +450,9 @@ export default function GoalsPage() {
 
       {/* Empty State */}
       {filteredGoals.length === 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-12 text-center">
+        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-12 text-center">
           <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No goals found</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-2">No goals found</h3>
           <p className="text-gray-600 mb-6">
             {filterStatus === 'all' 
               ? "You haven't created any goals yet. Start your transformation journey by setting your first goal."
@@ -473,9 +473,9 @@ export default function GoalsPage() {
       {/* Create Goal Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
+          <div className="bg-white dark:bg-[#073642] rounded-lg p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Create New Goal</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Create New Goal</h3>
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -554,9 +554,9 @@ export default function GoalsPage() {
       {/* Edit Goal Modal */}
       {showEditModal && editingGoal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
+          <div className="bg-white dark:bg-[#073642] rounded-lg p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Goal</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Edit Goal</h3>
               <button
                 onClick={() => setShowEditModal(false)}
                 className="text-gray-400 hover:text-gray-600"
