@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/lib/theme'
 import SkipNavigation from '@/components/layout/SkipNavigation'
 import AccessibilityWidget from '@/components/accessibility/AccessibilityWidget'
 import CookieConsent from '@/components/gdpr/CookieConsent'
+import { InstallPrompt } from '@/components/mobile/InstallPrompt'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -103,6 +104,7 @@ export default function RootLayout({
             </main>
             <AccessibilityWidget />
             <CookieConsent />
+            <InstallPrompt />
           </AuthProvider>
         </ThemeProvider>
       </body>
