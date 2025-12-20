@@ -317,7 +317,7 @@ export default function DashboardPage() {
           ].map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.name} className="hover:shadow-md transition-shadow">
+              <Card key={stat.name} className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardDescription className="text-gray-600 dark:text-[#93a1a1]">{stat.name}</CardDescription>
                 </CardHeader>
@@ -344,9 +344,9 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 min-w-0">
         {/* Quick Actions */}
-        <Card>
+        <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
           <CardHeader>
-            <CardTitle className="flex items-center text-base sm:text-lg">
+            <CardTitle className="flex items-center text-base sm:text-lg text-gray-900 dark:text-[#fdf6e3]">
               <Brain className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-indigo-600" />
               Quick Actions
             </CardTitle>
@@ -451,9 +451,9 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Activity */}
-        <Card>
+        <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
           <CardHeader>
-            <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center text-gray-900 dark:text-[#fdf6e3]">
               <Clock className="h-5 w-5 mr-2 text-indigo-600" />
               Recent Activity
             </CardTitle>
@@ -516,9 +516,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Performance Overview */}
-      <Card className="mt-8">
+      <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] mt-8">
         <CardHeader>
-          <CardTitle className="flex items-center">
+          <CardTitle className="flex items-center text-gray-900 dark:text-[#fdf6e3]">
             <Award className="h-5 w-5 mr-2 text-indigo-600" />
             Performance Overview
           </CardTitle>
