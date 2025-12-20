@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
@@ -186,7 +187,7 @@ function SidebarContent({
       {/* Logo and tenant info */}
       <div className="flex items-center h-16 flex-shrink-0 pl-16 pr-4 bg-indigo-600 dark:bg-indigo-700">
         <div className="flex items-center space-x-3">
-          <img src="/logo.jpg" alt="MindShifting Logo" className="h-8 w-8 rounded" />
+          <Image src="/logo.jpg" alt="MindShifting Logo" width={32} height={32} className="h-8 w-8 rounded" />
           <div>
             <h1 className="text-white font-semibold">
                               {tenant ? tenant.name : 'MindShifting Admin'}
