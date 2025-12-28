@@ -599,43 +599,43 @@ export default function SettingsPage() {
             <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Settings</h2>
             <nav className="grid grid-cols-2 gap-2 items-start">
               {/* Column 1 */}
-              <a href="#profile" className="flex items-center justify-start space-x-2 p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 touch-target w-full">
+              <a href="#profile" className="flex items-center !justify-start space-x-2 p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 w-full min-w-[44px] min-h-[44px]">
                 <User className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Profile</span>
               </a>
               
               {/* Column 2 */}
-              <a href="#notifications" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
+              <a href="#notifications" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
                 <Bell className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Notifications</span>
               </a>
               
               {/* Column 1 */}
-              <a href="#security" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
+              <a href="#security" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
                 <Shield className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Security</span>
               </a>
               
               {/* Column 2 */}
-              <a href="#labs" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
+              <a href="#labs" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
                 <Beaker className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Labs</span>
               </a>
               
               {/* Column 1 */}
-              <a href="#preferences" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
+              <a href="#preferences" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
                 <Settings className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Preferences</span>
               </a>
               
               {/* Column 2 */}
-              <a href="#accessibility" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
+              <a href="#accessibility" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
                 <Eye className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Accessibility</span>
               </a>
               
               {/* Column 1 */}
-              <a href="#privacy" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
+              <a href="#privacy" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
                 <Lock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Privacy & Data</span>
               </a>
