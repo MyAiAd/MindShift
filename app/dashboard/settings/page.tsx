@@ -597,45 +597,45 @@ export default function SettingsPage() {
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-gray-200 dark:border-[#586e75] p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Settings</h2>
-            <nav className="grid grid-cols-2 gap-2">
+            <nav className="grid grid-cols-2 gap-2 items-start">
               {/* Column 1 */}
-              <a href="#profile" className="flex items-center justify-start space-x-2 p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 touch-target">
+              <a href="#profile" className="flex items-center justify-start space-x-2 p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 touch-target w-full">
                 <User className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Profile</span>
               </a>
               
               {/* Column 2 */}
-              <a href="#notifications" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+              <a href="#notifications" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
                 <Bell className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Notifications</span>
               </a>
               
               {/* Column 1 */}
-              <a href="#security" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+              <a href="#security" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
                 <Shield className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Security</span>
               </a>
               
               {/* Column 2 */}
-              <a href="#labs" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+              <a href="#labs" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
                 <Beaker className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Labs</span>
               </a>
               
               {/* Column 1 */}
-              <a href="#preferences" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+              <a href="#preferences" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
                 <Settings className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Preferences</span>
               </a>
               
               {/* Column 2 */}
-              <a href="#accessibility" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+              <a href="#accessibility" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
                 <Eye className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Accessibility</span>
               </a>
               
               {/* Column 1 */}
-              <a href="#privacy" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+              <a href="#privacy" className="flex items-center justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target w-full">
                 <Lock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Privacy & Data</span>
               </a>
@@ -647,7 +647,7 @@ export default function SettingsPage() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Profile Settings */}
-          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
+          <Card id="profile" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
             <CardHeader>
               <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Profile Information</CardTitle>
             </CardHeader>
@@ -724,7 +724,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Notification Settings */}
-          <div id="notifications" className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-gray-200 dark:border-[#586e75] p-4 sm:p-6">
+          <div id="notifications" className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-gray-200 dark:border-[#586e75] p-4 sm:p-6 scroll-mt-20">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Notification Preferences</h3>
             
             {/* Notification Status Messages */}
@@ -826,7 +826,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Security Settings */}
-          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
+          <Card id="security" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
             <CardHeader>
               <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Security</CardTitle>
             </CardHeader>
@@ -899,7 +899,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Accessibility Settings */}
-          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
+          <Card id="accessibility" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
             <CardHeader>
               <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Accessibility Settings</CardTitle>
               <CardDescription className="text-gray-600 dark:text-[#839496]">Customize your experience for better accessibility and usability.</CardDescription>
@@ -1035,7 +1035,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Privacy & Data Settings */}
-          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
+          <Card id="privacy" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
             <CardHeader>
               <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Privacy & Data Settings</CardTitle>
               <CardDescription className="text-gray-600 dark:text-[#839496]">Manage your privacy preferences and data according to GDPR requirements.</CardDescription>
@@ -1163,7 +1163,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Preferences */}
-          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
+          <Card id="preferences" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
             <CardHeader>
               <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Preferences</CardTitle>
             </CardHeader>
@@ -1222,7 +1222,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Labs Section */}
-          <Card className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75]">
+          <Card id="labs" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
             <CardHeader>
               <CardTitle className="flex items-center text-gray-900 dark:text-[#fdf6e3]">
                 <Beaker className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mr-2" />
