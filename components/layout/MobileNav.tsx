@@ -33,7 +33,7 @@ export function MobileNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#002b36] border-t border-gray-200 dark:border-[#073642] pb-safe"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border pb-safe"
       role="navigation"
       aria-label="Mobile bottom navigation"
     >
@@ -50,8 +50,8 @@ export function MobileNav() {
                 'flex flex-col items-center justify-center gap-1 touch-target transition-colors',
                 'active:scale-95 active:opacity-80',
                 isActive
-                  ? 'text-primary dark:text-primary'
-                  : 'text-gray-600 dark:text-[#839496] hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
