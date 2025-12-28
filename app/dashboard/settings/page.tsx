@@ -622,9 +622,9 @@ export default function SettingsPage() {
                 <Settings className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-sm sm:text-base">Preferences</span>
               </a>
-              <a href="#labs" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] ml-4 sm:ml-8 touch-target">
-                <Beaker className="h-4 w-4 flex-shrink-0" />
-                <span className="text-xs sm:text-sm">Labs</span>
+              <a href="#labs" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+                <Beaker className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Labs</span>
               </a>
             </nav>
           </div>
