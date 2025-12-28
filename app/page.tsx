@@ -1,6 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { Brain, Target, TrendingUp, Users, Sparkles, ArrowRight } from 'lucide-react'
+import MobileAuthControl from '@/components/auth/MobileAuthControl'
 
 export default function HomePage() {
   return (
@@ -19,11 +20,18 @@ export default function HomePage() {
               <a href="/about" className="text-gray-700 hover:text-indigo-600 transition-colors">About</a>
               <a href="/contact" className="text-gray-700 hover:text-indigo-600 transition-colors">Contact</a>
             </nav>
-            <div className="flex space-x-4">
-              <a href="/auth" className="text-gray-700 hover:text-indigo-600 transition-colors">Sign In</a>
-              <a href="/auth" className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
-                Get Started
-              </a>
+            <div className="flex items-center">
+              {/* Mobile: Compact auth control */}
+              <div className="md:hidden">
+                <MobileAuthControl />
+              </div>
+              {/* Desktop: Traditional buttons */}
+              <div className="hidden md:flex space-x-4">
+                <a href="/auth" className="text-gray-700 hover:text-indigo-600 transition-colors">Sign In</a>
+                <a href="/auth" className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                  Get Started
+                </a>
+              </div>
             </div>
           </div>
         </div>

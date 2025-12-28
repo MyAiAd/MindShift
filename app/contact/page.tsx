@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Brain, Mail, Phone, MapPin, MessageSquare, Clock, ArrowRight } from 'lucide-react'
+import MobileAuthControl from '@/components/auth/MobileAuthControl'
 
 export default function ContactPage() {
   return (
@@ -19,11 +20,18 @@ export default function ContactPage() {
               <Link href="/about" className="text-gray-700 hover:text-indigo-600 transition-colors">About</Link>
               <Link href="/contact" className="text-indigo-600 font-medium">Contact</Link>
             </nav>
-            <div className="flex space-x-4">
-              <Link href="/auth" className="text-gray-700 hover:text-indigo-600 transition-colors">Sign In</Link>
-              <Link href="/auth" className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
-                Get Started
-              </Link>
+            <div className="flex items-center">
+              {/* Mobile: Compact auth control */}
+              <div className="md:hidden">
+                <MobileAuthControl />
+              </div>
+              {/* Desktop: Traditional buttons */}
+              <div className="hidden md:flex space-x-4">
+                <Link href="/auth" className="text-gray-700 hover:text-indigo-600 transition-colors">Sign In</Link>
+                <Link href="/auth" className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                  Get Started
+                </Link>
+              </div>
             </div>
           </div>
         </div>
