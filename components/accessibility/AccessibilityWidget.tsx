@@ -79,7 +79,7 @@ export default function AccessibilityWidget({
       {/* Accessibility Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
+        className="bg-primary hover:bg-primary/90 text-white p-3 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
         aria-label="Open accessibility settings"
         aria-expanded={isOpen}
         aria-controls="accessibility-widget"
@@ -91,13 +91,13 @@ export default function AccessibilityWidget({
       {isOpen && (
         <div
           id="accessibility-widget"
-          className={`absolute ${panelPosition[corner]} w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 max-h-[80vh] overflow-y-auto`}
+          className={`absolute ${panelPosition[corner]} w-80 max-w-[calc(100vw-2rem)] bg-card border border-border rounded-lg shadow-xl p-4 max-h-[80vh] overflow-y-auto`}
           role="dialog"
           aria-labelledby="accessibility-title"
           aria-describedby="accessibility-description"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 id="accessibility-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 id="accessibility-title" className="text-lg font-semibold text-foreground">
               Accessibility Settings
             </h2>
             <button
@@ -178,7 +178,7 @@ export default function AccessibilityWidget({
                 id="font-size"
                 value={preferences.fontSize}
                 onChange={(e) => handleToggle('fontSize', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-foreground"
               >
                 <option value="small">Small</option>
                 <option value="medium">Medium</option>
@@ -297,7 +297,7 @@ export default function AccessibilityWidget({
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+          <div className="mt-4 pt-4 border-t border-border space-y-3">
             {/* Widget Position */}
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
@@ -309,7 +309,7 @@ export default function AccessibilityWidget({
                   className={`px-3 py-2 text-xs rounded-md transition-colors ${
                     corner === 'top-left'
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   Top Left
@@ -319,7 +319,7 @@ export default function AccessibilityWidget({
                   className={`px-3 py-2 text-xs rounded-md transition-colors ${
                     corner === 'top-right'
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   Top Right
@@ -329,7 +329,7 @@ export default function AccessibilityWidget({
                   className={`px-3 py-2 text-xs rounded-md transition-colors ${
                     corner === 'bottom-left'
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   Bottom Left
@@ -339,7 +339,7 @@ export default function AccessibilityWidget({
                   className={`px-3 py-2 text-xs rounded-md transition-colors ${
                     corner === 'bottom-right'
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-secondary text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   Bottom Right
@@ -357,7 +357,7 @@ export default function AccessibilityWidget({
                   screenReaderOptimized: true,
                 });
               }}
-              className="w-full px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-secondary text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               Reset to Default
             </button>

@@ -564,29 +564,29 @@ export default function SettingsPage() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-[#002b36] p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
         {/* Header with Dark Mode Toggle */}
         <div className="mb-6 sm:mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Settings</h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-[#839496] mt-1">Manage your account settings and preferences.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Settings</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage your account settings and preferences.</p>
           </div>
           
           {/* Quick Dark Mode Toggle */}
           <button
             onClick={toggleDarkMode}
-            className="flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg bg-white dark:bg-[#073642] border border-gray-200 dark:border-[#586e75] shadow-sm hover:shadow-md transition-all touch-target"
+            className="flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg bg-card border border-border shadow-sm hover:shadow-md transition-all touch-target"
             aria-label="Toggle dark mode"
           >
             {isDarkMode ? (
               <>
-                <Moon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                <span className="hidden sm:inline text-sm font-medium text-gray-900 dark:text-[#fdf6e3]">Dark</span>
+                <Moon className="h-5 w-5 text-primary" />
+                <span className="hidden sm:inline text-sm font-medium text-foreground">Dark</span>
               </>
             ) : (
               <>
                 <Sun className="h-5 w-5 text-amber-500" />
-                <span className="hidden sm:inline text-sm font-medium text-gray-900">Light</span>
+                <span className="hidden sm:inline text-sm font-medium text-foreground">Light</span>
               </>
             )}
           </button>
@@ -595,8 +595,8 @@ export default function SettingsPage() {
       <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Settings Navigation */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-gray-200 dark:border-[#586e75] p-4 sm:p-6">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Settings</h2>
+          <div className="bg-card rounded-lg shadow-sm border border-border p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground mb-4">Settings</h2>
             <nav className="grid grid-cols-2 gap-2 items-start">
               {/* Column 1 */}
               <a href="#profile" className="flex items-center !justify-start space-x-2 p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 w-full min-w-[44px] min-h-[44px]">
@@ -605,37 +605,37 @@ export default function SettingsPage() {
               </a>
               
               {/* Column 2 */}
-              <a href="#notifications" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
+              <a href="#notifications" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
                 <Bell className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Notifications</span>
               </a>
               
               {/* Column 1 */}
-              <a href="#security" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
+              <a href="#security" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
                 <Shield className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Security</span>
               </a>
               
               {/* Column 2 */}
-              <a href="#labs" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
+              <a href="#labs" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
                 <Beaker className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Labs</span>
               </a>
               
               {/* Column 1 */}
-              <a href="#preferences" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
+              <a href="#preferences" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
                 <Settings className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Preferences</span>
               </a>
               
               {/* Column 2 */}
-              <a href="#accessibility" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
+              <a href="#accessibility" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
                 <Eye className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Accessibility</span>
               </a>
               
               {/* Column 1 */}
-              <a href="#privacy" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] w-full min-w-[44px] min-h-[44px]">
+              <a href="#privacy" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
                 <Lock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Privacy & Data</span>
               </a>
@@ -647,9 +647,9 @@ export default function SettingsPage() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Profile Settings */}
-          <Card id="profile" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
+          <Card id="profile" className="bg-card border-border scroll-mt-20">
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Profile Information</CardTitle>
+              <CardTitle className="text-foreground">Profile Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
             
@@ -724,8 +724,8 @@ export default function SettingsPage() {
           </Card>
 
           {/* Notification Settings */}
-          <div id="notifications" className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-gray-200 dark:border-[#586e75] p-4 sm:p-6 scroll-mt-20">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Notification Preferences</h3>
+          <div id="notifications" className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-border p-4 sm:p-6 scroll-mt-20">
+            <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4">Notification Preferences</h3>
             
             {/* Notification Status Messages */}
             {notificationState.success && (
@@ -751,8 +751,8 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Email Notifications</h4>
-                  <p className="text-sm text-gray-600 dark:text-[#839496]">Receive notifications via email</p>
+                  <h4 className="font-medium text-foreground">Email Notifications</h4>
+                  <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                 </div>
                 <label className={`relative inline-flex items-center ${notifications.loading || notificationState.loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                   <input 
@@ -768,8 +768,8 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Push Notifications</h4>
-                  <p className="text-sm text-gray-600 dark:text-[#839496]">
+                  <h4 className="font-medium text-foreground">Push Notifications</h4>
+                  <p className="text-sm text-muted-foreground">
                     Receive push notifications in your browser
                     {!isSupported && <span className="text-red-500 ml-1">(Not supported in this browser)</span>}
                     {isSupported && permission === 'denied' && <span className="text-orange-500 ml-1">(Permission denied)</span>}
@@ -789,8 +789,8 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">SMS Notifications</h4>
-                  <p className="text-sm text-gray-600 dark:text-[#839496]">Receive text message notifications (Coming soon)</p>
+                  <h4 className="font-medium text-foreground">SMS Notifications</h4>
+                  <p className="text-sm text-muted-foreground">Receive text message notifications (Coming soon)</p>
                 </div>
                 <label className={`relative inline-flex items-center ${notifications.loading || notificationState.loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                   <input 
@@ -806,11 +806,11 @@ export default function SettingsPage() {
 
               {/* Test Notification Button */}
               {notifications.push && isSupported && permission === 'granted' && (
-                <div className="pt-4 border-t border-gray-200 dark:border-[#586e75]">
+                <div className="pt-4 border-t border-border">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Test Notifications</h4>
-                      <p className="text-sm text-gray-600 dark:text-[#839496]">Send a test notification to verify everything is working</p>
+                      <h4 className="font-medium text-foreground">Test Notifications</h4>
+                      <p className="text-sm text-muted-foreground">Send a test notification to verify everything is working</p>
                     </div>
                     <button
                       onClick={handleTestNotification}
@@ -826,9 +826,9 @@ export default function SettingsPage() {
           </div>
 
           {/* Security Settings */}
-          <Card id="security" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
+          <Card id="security" className="bg-card border-border scroll-mt-20">
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Security</CardTitle>
+              <CardTitle className="text-foreground">Security</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
             
@@ -849,7 +849,7 @@ export default function SettingsPage() {
 
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-4">Change Password</h4>
+                  <h4 className="font-medium text-foreground mb-4">Change Password</h4>
                   <form onSubmit={handlePasswordSubmit} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="currentPassword">Current Password</Label>
@@ -891,7 +891,7 @@ export default function SettingsPage() {
                   </form>
                 </div>
 
-                <div className="border-t border-gray-200 dark:border-[#586e75] pt-4">
+                <div className="border-t border-border pt-4">
                   <TwoFactorAuth />
                 </div>
               </div>
@@ -899,10 +899,10 @@ export default function SettingsPage() {
           </Card>
 
           {/* Accessibility Settings */}
-          <Card id="accessibility" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
+          <Card id="accessibility" className="bg-card border-border scroll-mt-20">
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Accessibility Settings</CardTitle>
-              <CardDescription className="text-gray-600 dark:text-[#839496]">Customize your experience for better accessibility and usability.</CardDescription>
+              <CardTitle className="text-foreground">Accessibility Settings</CardTitle>
+              <CardDescription className="text-muted-foreground">Customize your experience for better accessibility and usability.</CardDescription>
             </CardHeader>
             <CardContent>
             {accessibilitySettings.loading ? (
@@ -914,10 +914,10 @@ export default function SettingsPage() {
                 {/* High Contrast */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Contrast className="h-5 w-5 text-gray-600 dark:text-[#839496]" />
+                    <Contrast className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">High Contrast Mode</h4>
-                      <p className="text-sm text-gray-600 dark:text-[#839496]">Increase contrast for better visibility</p>
+                      <h4 className="font-medium text-foreground">High Contrast Mode</h4>
+                      <p className="text-sm text-muted-foreground">Increase contrast for better visibility</p>
                     </div>
                   </div>
                   <Tooltip>
@@ -941,10 +941,10 @@ export default function SettingsPage() {
                 {/* Font Size */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Type className="h-5 w-5 text-gray-600 dark:text-[#839496]" />
+                    <Type className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Font Size</h4>
-                      <p className="text-sm text-gray-600 dark:text-[#839496]">Adjust text size for better readability</p>
+                      <h4 className="font-medium text-foreground">Font Size</h4>
+                      <p className="text-sm text-muted-foreground">Adjust text size for better readability</p>
                     </div>
                   </div>
                   <Select 
@@ -966,10 +966,10 @@ export default function SettingsPage() {
                 {/* Reduced Motion */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <MousePointer className="h-5 w-5 text-gray-600 dark:text-[#839496]" />
+                    <MousePointer className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Reduced Motion</h4>
-                      <p className="text-sm text-gray-600 dark:text-[#839496]">Minimize animations and motion effects</p>
+                      <h4 className="font-medium text-foreground">Reduced Motion</h4>
+                      <p className="text-sm text-muted-foreground">Minimize animations and motion effects</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -986,10 +986,10 @@ export default function SettingsPage() {
                 {/* Keyboard Navigation */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Settings className="h-5 w-5 text-gray-600 dark:text-[#839496]" />
+                    <Settings className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Enhanced Keyboard Navigation</h4>
-                      <p className="text-sm text-gray-600 dark:text-[#839496]">Show focus indicators and enable keyboard shortcuts</p>
+                      <h4 className="font-medium text-foreground">Enhanced Keyboard Navigation</h4>
+                      <p className="text-sm text-muted-foreground">Show focus indicators and enable keyboard shortcuts</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -1006,10 +1006,10 @@ export default function SettingsPage() {
                 {/* Screen Reader Mode */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Eye className="h-5 w-5 text-gray-600 dark:text-[#839496]" />
+                    <Eye className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Screen Reader Optimization</h4>
-                      <p className="text-sm text-gray-600 dark:text-[#839496]">Optimize interface for screen readers</p>
+                      <h4 className="font-medium text-foreground">Screen Reader Optimization</h4>
+                      <p className="text-sm text-muted-foreground">Optimize interface for screen readers</p>
                     </div>
                   </div>
                   <Tooltip>
@@ -1035,10 +1035,10 @@ export default function SettingsPage() {
           </Card>
 
           {/* Privacy & Data Settings */}
-          <Card id="privacy" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
+          <Card id="privacy" className="bg-card border-border scroll-mt-20">
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Privacy & Data Settings</CardTitle>
-              <CardDescription className="text-gray-600 dark:text-[#839496]">Manage your privacy preferences and data according to GDPR requirements.</CardDescription>
+              <CardTitle className="text-foreground">Privacy & Data Settings</CardTitle>
+              <CardDescription className="text-muted-foreground">Manage your privacy preferences and data according to GDPR requirements.</CardDescription>
             </CardHeader>
             <CardContent>
             {gdprSettings.loading ? (
@@ -1048,25 +1048,25 @@ export default function SettingsPage() {
             ) : (
               <div className="space-y-6">
                 {/* Cookie Consent Management */}
-                <div className="border-b border-gray-200 dark:border-[#586e75] pb-4">
-                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3 flex items-center">
-                    <Cookie className="h-5 w-5 text-gray-600 dark:text-[#839496] mr-2" />
+                <div className="border-b border-border pb-4">
+                  <h4 className="font-medium text-foreground mb-3 flex items-center">
+                    <Cookie className="h-5 w-5 text-muted-foreground mr-2" />
                     Cookie Preferences
                   </h4>
                   
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Essential Cookies</p>
-                        <p className="text-sm text-gray-600 dark:text-[#839496]">Required for basic site functionality</p>
+                        <p className="font-medium text-foreground">Essential Cookies</p>
+                        <p className="text-sm text-muted-foreground">Required for basic site functionality</p>
                       </div>
                       <span className="text-sm text-gray-500 dark:text-[#839496]">Always Active</span>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Functional Cookies</p>
-                        <p className="text-sm text-gray-600 dark:text-[#839496]">Enable enhanced features and functionality</p>
+                        <p className="font-medium text-foreground">Functional Cookies</p>
+                        <p className="text-sm text-muted-foreground">Enable enhanced features and functionality</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -1081,8 +1081,8 @@ export default function SettingsPage() {
                     
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Analytics Cookies</p>
-                        <p className="text-sm text-gray-600 dark:text-[#839496]">Help us understand how you use our site</p>
+                        <p className="font-medium text-foreground">Analytics Cookies</p>
+                        <p className="text-sm text-muted-foreground">Help us understand how you use our site</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -1097,8 +1097,8 @@ export default function SettingsPage() {
                     
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">Marketing Cookies</p>
-                        <p className="text-sm text-gray-600 dark:text-[#839496]">Used for personalized advertising</p>
+                        <p className="font-medium text-foreground">Marketing Cookies</p>
+                        <p className="text-sm text-muted-foreground">Used for personalized advertising</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -1114,9 +1114,9 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Data Rights */}
-                <div className="border-b border-gray-200 dark:border-[#586e75] pb-4">
-                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3">Your Data Rights</h4>
-                  <p className="text-sm text-gray-600 dark:text-[#839496] mb-4">
+                <div className="border-b border-border pb-4">
+                  <h4 className="font-medium text-foreground mb-3">Your Data Rights</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
                     Under GDPR, you have the right to access, correct, or delete your personal data.
                   </p>
                   
@@ -1141,8 +1141,8 @@ export default function SettingsPage() {
 
                 {/* Privacy Information */}
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3">Privacy Information</h4>
-                  <div className="space-y-2 text-sm text-gray-600 dark:text-[#839496]">
+                  <h4 className="font-medium text-foreground mb-3">Privacy Information</h4>
+                  <div className="space-y-2 text-sm text-muted-foreground">
                     <p>• We process your data based on your consent and legitimate interests</p>
                     <p>• Your data is stored securely and only shared with necessary service providers</p>
                     <p>• You can withdraw consent at any time</p>
@@ -1163,18 +1163,18 @@ export default function SettingsPage() {
           </Card>
 
           {/* Preferences */}
-          <Card id="preferences" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
+          <Card id="preferences" className="bg-card border-border scroll-mt-20">
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-[#fdf6e3]">Preferences</CardTitle>
+              <CardTitle className="text-foreground">Preferences</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  {isDarkMode ? <Moon className="h-5 w-5 text-gray-600 dark:text-[#839496]" /> : <Sun className="h-5 w-5 text-gray-600 dark:text-[#839496]" />}
+                  {isDarkMode ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-muted-foreground" />}
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3]">Dark Mode</h4>
-                    <p className="text-sm text-gray-600 dark:text-[#839496]">Switch to {isDarkMode ? 'light' : 'dark'} theme</p>
+                    <h4 className="font-medium text-foreground">Dark Mode</h4>
+                    <p className="text-sm text-muted-foreground">Switch to {isDarkMode ? 'light' : 'dark'} theme</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1222,9 +1222,9 @@ export default function SettingsPage() {
           </Card>
 
           {/* Labs Section */}
-          <Card id="labs" className="bg-white dark:bg-[#073642] border-gray-200 dark:border-[#586e75] scroll-mt-20">
+          <Card id="labs" className="bg-card border-border scroll-mt-20">
             <CardHeader>
-              <CardTitle className="flex items-center text-gray-900 dark:text-[#fdf6e3]">
+              <CardTitle className="flex items-center text-foreground">
                 <Beaker className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mr-2" />
                 Labs
                 <span className="ml-2 px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400 rounded-full">
@@ -1233,17 +1233,17 @@ export default function SettingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-            <p className="text-sm text-gray-600 dark:text-[#839496] mb-6">
+            <p className="text-sm text-muted-foreground mb-6">
               Experimental features and demos. These features are in development and may change or be removed.
             </p>
             
             <div className="space-y-6">
               {/* V3 Treatment Demo with Toggle - HIDDEN FOR LABS FOCUS */}
               {/* 
-              <div className="border border-gray-200 dark:border-[#586e75] rounded-lg p-4">
+              <div className="border border-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-gray-900 dark:text-[#fdf6e3]">V3 Treatment Demo</h4>
+                    <h4 className="text-md font-medium text-foreground">V3 Treatment Demo</h4>
                     <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full">
                       Latest
                     </span>
@@ -1268,12 +1268,12 @@ export default function SettingsPage() {
                   <div className="bg-gray-50 dark:bg-[#002b36]/50 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-2">
                       <Brain className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                      <h5 className="font-medium text-gray-900 dark:text-[#fdf6e3]">V3 Treatment System</h5>
+                      <h5 className="font-medium text-foreground">V3 Treatment System</h5>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-[#839496] mb-3">
+                    <p className="text-sm text-muted-foreground mb-3">
                       Next-generation treatment engine with enhanced state management and improved therapeutic protocols.
                     </p>
-                    <div className="space-y-2 text-sm text-gray-600 dark:text-[#839496] mb-4">
+                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span>Enhanced state machine architecture</span>
@@ -1313,10 +1313,10 @@ export default function SettingsPage() {
               */}
 
               {/* V4 Treatment Demo with Toggle */}
-              <div className="border border-gray-200 dark:border-[#586e75] rounded-lg p-4">
+              <div className="border border-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-gray-900 dark:text-[#fdf6e3]">V4 Treatment (Labs)</h4>
+                    <h4 className="text-md font-medium text-foreground">V4 Treatment (Labs)</h4>
                     <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full">
                       Experimental
                     </span>
@@ -1341,12 +1341,12 @@ export default function SettingsPage() {
                   <div className="bg-gray-50 dark:bg-[#002b36]/50 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-2">
                       <Brain className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                      <h5 className="font-medium text-gray-900 dark:text-[#fdf6e3]">V4 Treatment System (Labs)</h5>
+                      <h5 className="font-medium text-foreground">V4 Treatment System (Labs)</h5>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-[#839496] mb-3">
+                    <p className="text-sm text-muted-foreground mb-3">
                       Experimental copy of V3 for testing new features (voice integration, etc). Based on the latest stable V3 codebase with bug fixes.
                     </p>
-                    <div className="space-y-2 text-sm text-gray-600 dark:text-[#839496] mb-4">
+                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         <span>Based on latest V3 with all bug fixes</span>
@@ -1403,7 +1403,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <p className="text-sm text-gray-600 dark:text-[#839496]">
+                <p className="text-sm text-muted-foreground">
                   Once you delete your account, there is no going back. Please be certain.
                 </p>
                 <Button 

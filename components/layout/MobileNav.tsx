@@ -39,7 +39,9 @@ export function MobileNav() {
     >
       <div className="grid grid-cols-4 h-16">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+          // Fix highlighting logic: only highlight if exact match OR starts with path for non-dashboard pages
+          const isActive = pathname === item.href || 
+            (item.href !== '/dashboard' && pathname?.startsWith(item.href + '/'));
           const Icon = item.icon;
 
           return (
