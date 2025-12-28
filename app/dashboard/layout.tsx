@@ -138,7 +138,7 @@ export default function DashboardLayout({
         >
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
           <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-[#073642] overflow-y-auto">
-            <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} />
+            <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} onNavigate={() => setSidebarOpen(false)} />
           </div>
         </div>
 
@@ -174,11 +174,13 @@ export default function DashboardLayout({
 function SidebarContent({ 
   tenant, 
   profile, 
-  signOut 
+  signOut,
+  onNavigate
 }: { 
   tenant: any; 
   profile: any; 
-  signOut: () => Promise<void>; 
+  signOut: () => Promise<void>;
+  onNavigate?: () => void;
 }) {
   const pathname = usePathname();
 
@@ -186,6 +188,13 @@ function SidebarContent({
     e.preventDefault();
     e.stopPropagation();
     await signOut();
+  };
+
+  const handleNavClick = () => {
+    // Close sidebar on mobile after navigation
+    if (onNavigate) {
+      onNavigate();
+    }
   };
 
   return (
@@ -215,6 +224,7 @@ function SidebarContent({
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={handleNavClick}
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                   isActive
                     ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-700 dark:border-indigo-300'
@@ -240,6 +250,7 @@ function SidebarContent({
               <div className="space-y-1">
                 <Link
                   href="/dashboard/coach/profile"
+                  onClick={handleNavClick}
                   className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                     pathname === '/dashboard/coach/profile'
                       ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-700 dark:border-indigo-300'
@@ -266,6 +277,7 @@ function SidebarContent({
               <div className="space-y-1">
                 <Link
                   href="/dashboard/admin/data-management"
+                  onClick={handleNavClick}
                   className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                     pathname === '/dashboard/admin/data-management'
                       ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-700 dark:border-indigo-300'
