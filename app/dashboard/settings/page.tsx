@@ -597,34 +597,47 @@ export default function SettingsPage() {
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-gray-200 dark:border-[#586e75] p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Settings</h2>
-            <nav className="space-y-2">
-              <a href="#profile" className="flex items-center space-x-3 p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 touch-target text-sm sm:text-base">
+            <nav className="grid grid-cols-2 gap-2">
+              {/* Column 1 */}
+              <a href="#profile" className="flex items-center space-x-2 p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 touch-target">
                 <User className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Profile</span>
+                <span className="text-xs sm:text-sm">Profile</span>
               </a>
-              <a href="#notifications" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+              
+              {/* Column 2 */}
+              <a href="#notifications" className="flex items-center space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
                 <Bell className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Notifications</span>
+                <span className="text-xs sm:text-sm">Notifications</span>
               </a>
-              <a href="#security" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+              
+              {/* Column 1 */}
+              <a href="#security" className="flex items-center space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
                 <Shield className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Security</span>
+                <span className="text-xs sm:text-sm">Security</span>
               </a>
-              <a href="#accessibility" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
-                <Eye className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Accessibility</span>
-              </a>
-              <a href="#privacy" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
-                <Lock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Privacy & Data</span>
-              </a>
-              <a href="#preferences" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
-                <Settings className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Preferences</span>
-              </a>
-              <a href="#labs" className="flex items-center space-x-3 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+              
+              {/* Column 2 */}
+              <a href="#labs" className="flex items-center space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
                 <Beaker className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Labs</span>
+                <span className="text-xs sm:text-sm">Labs</span>
+              </a>
+              
+              {/* Column 1 */}
+              <a href="#preferences" className="flex items-center space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+                <Settings className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-xs sm:text-sm">Preferences</span>
+              </a>
+              
+              {/* Column 2 */}
+              <a href="#accessibility" className="flex items-center space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+                <Eye className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-xs sm:text-sm">Accessibility</span>
+              </a>
+              
+              {/* Column 1 */}
+              <a href="#privacy" className="flex items-center space-x-2 p-2 rounded-lg text-gray-700 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] touch-target">
+                <Lock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-xs sm:text-sm">Privacy & Data</span>
               </a>
             </nav>
           </div>
