@@ -191,8 +191,8 @@ CREATE POLICY "Users can view published videos in their tenant" ON tutorial_vide
         status = 'published' AND
         (
             required_subscription_tier IS NULL OR
-            required_subscription_tier IN (
-                SELECT subscription_tier FROM profiles 
+            required_subscription_tier::text IN (
+                SELECT subscription_tier::text FROM profiles 
                 WHERE id = auth.uid()
             )
         )
