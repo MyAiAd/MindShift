@@ -9,13 +9,13 @@ import { useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { ThemeDropdown } from '@/components/theme/ThemeDropdown';
-import { 
-  Brain, 
-  Users, 
-  Target, 
-  TrendingUp, 
-  Calendar, 
-  Settings, 
+import {
+  Brain,
+  Users,
+  Target,
+  TrendingUp,
+  Calendar,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -23,7 +23,8 @@ import {
   Database,
   Shield,
   UserCheck,
-  Video
+  Video,
+  PlayCircle
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -281,6 +282,20 @@ function SidebarContent({
                 </p>
               </div>
               <div className="space-y-1">
+                <Link
+                  href="/dashboard/admin/videos"
+                  onClick={handleNavClick}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname?.startsWith('/dashboard/admin/videos')
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  <PlayCircle className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname?.startsWith('/dashboard/admin/videos') ? 'text-primary' : ''
+                  }`} />
+                  Videos
+                </Link>
                 <Link
                   href="/dashboard/admin/data-management"
                   onClick={handleNavClick}
