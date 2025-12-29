@@ -137,7 +137,7 @@ export default function DashboardLayout({
           }`}
         >
           <div className="fixed inset-0 bg-background/75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full h-full bg-card">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full h-full pb-20 bg-card">
             <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} onNavigate={() => setSidebarOpen(false)} />
           </div>
         </div>
