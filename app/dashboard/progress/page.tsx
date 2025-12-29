@@ -264,12 +264,12 @@ export default function ProgressPage() {
   // Gamification helper functions
   const getRarityColor = (rarity: AchievementRarity) => {
     switch (rarity) {
-      case 'common': return 'text-gray-600 bg-gray-100';
+      case 'common': return 'text-muted-foreground bg-secondary';
       case 'uncommon': return 'text-green-600 bg-green-100';
       case 'rare': return 'text-blue-600 bg-blue-100';
       case 'epic': return 'text-purple-600 bg-purple-100';
       case 'legendary': return 'text-yellow-600 bg-yellow-100';
-      default: return 'text-gray-600 bg-gray-100';
+      default: return 'text-muted-foreground bg-secondary';
     }
   };
 
@@ -307,7 +307,7 @@ export default function ProgressPage() {
     if (level >= 15) return 'text-purple-600 bg-purple-100';
     if (level >= 10) return 'text-blue-600 bg-blue-100';
     if (level >= 5) return 'text-green-600 bg-green-100';
-    return 'text-gray-600 bg-gray-100';
+    return 'text-muted-foreground bg-secondary';
   };
 
   if (loading) {
@@ -325,8 +325,8 @@ export default function ProgressPage() {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Progress</h1>
-            <p className="text-gray-600 dark:text-[#93a1a1] mt-1">Track your mindset transformation journey and celebrate your achievements.</p>
+            <h1 className="text-3xl font-bold text-foreground">Progress</h1>
+            <p className="text-muted-foreground mt-1">Track your mindset transformation journey and celebrate your achievements.</p>
           </div>
           <button 
             onClick={() => setShowNewEntryModal(true)}
@@ -347,65 +347,65 @@ export default function ProgressPage() {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-50 rounded-lg">
               <TrendingUp className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.overallProgress || 0}%</p>
-              <p className="text-gray-600 dark:text-[#93a1a1]">Overall Progress</p>
+              <p className="text-2xl font-semibold text-foreground">{stats?.overview.overallProgress || 0}%</p>
+              <p className="text-muted-foreground">Overall Progress</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-50 rounded-lg">
               <Target className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.completedGoals || 0}</p>
-              <p className="text-gray-600 dark:text-[#93a1a1]">Goals Achieved</p>
+              <p className="text-2xl font-semibold text-foreground">{stats?.overview.completedGoals || 0}</p>
+              <p className="text-muted-foreground">Goals Achieved</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-50 rounded-lg">
               <Activity className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.totalProgressEntries || 0}</p>
-              <p className="text-gray-600 dark:text-[#93a1a1]">Progress Entries</p>
+              <p className="text-2xl font-semibold text-foreground">{stats?.overview.totalProgressEntries || 0}</p>
+              <p className="text-muted-foreground">Progress Entries</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-50 rounded-lg">
               <Award className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.completedMilestones || 0}</p>
-              <p className="text-gray-600 dark:text-[#93a1a1]">Milestones</p>
+              <p className="text-2xl font-semibold text-foreground">{stats?.overview.completedMilestones || 0}</p>
+              <p className="text-muted-foreground">Milestones</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Wellbeing Scores */}
-      <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6 mb-8">
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-6">Average Wellbeing Scores</h2>
+      <div className="bg-card rounded-lg shadow-sm border p-6 mb-8">
+                      <h2 className="text-lg font-semibold text-foreground mb-6">Average Wellbeing Scores</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgMoodScore || 0)} dark:bg-[#586e75]`}>
             <div className="flex items-center">
               <Heart className={`h-6 w-6 ${getScoreColor(stats?.overview.avgMoodScore || 0)} mr-3`} />
               <div>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.avgMoodScore || 0}/10</p>
-                <p className="text-gray-600 dark:text-[#93a1a1]">Mood Score</p>
+                <p className="text-2xl font-semibold text-foreground">{stats?.overview.avgMoodScore || 0}/10</p>
+                <p className="text-muted-foreground">Mood Score</p>
               </div>
             </div>
           </div>
@@ -414,8 +414,8 @@ export default function ProgressPage() {
             <div className="flex items-center">
               <Zap className={`h-6 w-6 ${getScoreColor(stats?.overview.avgEnergyLevel || 0)} mr-3`} />
               <div>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.avgEnergyLevel || 0}/10</p>
-                <p className="text-gray-600 dark:text-[#93a1a1]">Energy Level</p>
+                <p className="text-2xl font-semibold text-foreground">{stats?.overview.avgEnergyLevel || 0}/10</p>
+                <p className="text-muted-foreground">Energy Level</p>
               </div>
             </div>
           </div>
@@ -424,8 +424,8 @@ export default function ProgressPage() {
             <div className="flex items-center">
               <Shield className={`h-6 w-6 ${getScoreColor(stats?.overview.avgConfidenceLevel || 0)} mr-3`} />
               <div>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">{stats?.overview.avgConfidenceLevel || 0}/10</p>
-                <p className="text-gray-600 dark:text-[#93a1a1]">Confidence Level</p>
+                <p className="text-2xl font-semibold text-foreground">{stats?.overview.avgConfidenceLevel || 0}/10</p>
+                <p className="text-muted-foreground">Confidence Level</p>
               </div>
             </div>
           </div>
@@ -437,9 +437,9 @@ export default function ProgressPage() {
         {/* Column 1: Level Progress & Recent Achievements */}
         <div className="space-y-6">
           {/* Level Progress */}
-          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+          <div className="bg-card rounded-lg shadow-sm border p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Your Level Progress</h2>
+              <h2 className="text-lg font-semibold text-foreground">Your Level Progress</h2>
               {gamificationData?.levelProgress && (
                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${getLevelColor(gamificationData.levelProgress.currentLevel)}`}>
                   Level {gamificationData.levelProgress.currentLevel}
@@ -454,7 +454,7 @@ export default function ProgressPage() {
             ) : gamificationData?.levelProgress ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-[#93a1a1]">
+                  <span className="text-muted-foreground">
                     {gamificationData.levelProgress.levelProgress} / {gamificationData.levelProgress.levelProgressMax} XP
                   </span>
                   <span className="font-medium text-indigo-600">
@@ -469,7 +469,7 @@ export default function ProgressPage() {
                   ></div>
                 </div>
                 
-                <div className="flex items-center justify-between text-sm text-gray-600 dark:text-[#93a1a1]">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>{gamificationData.userStats.total_points} Total XP</span>
                   <span>{gamificationData.userStats.achievements_earned} Achievements</span>
                 </div>
@@ -483,8 +483,8 @@ export default function ProgressPage() {
           </div>
 
           {/* Recent Achievements */}
-          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Recent Achievements</h2>
+          <div className="bg-card rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Recent Achievements</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
@@ -501,12 +501,12 @@ export default function ProgressPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center space-x-2">
-                          <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{achievement.title}</p>
-                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-white bg-opacity-50">
+                          <p className="font-medium text-foreground">{achievement.title}</p>
+                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-card bg-opacity-50">
                             +{achievement.points} XP
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{achievement.description}</p>
+                        <p className="text-sm text-muted-foreground">{achievement.description}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           {formatDate(achievement.earned_at)}
                         </p>
@@ -526,9 +526,9 @@ export default function ProgressPage() {
         </div>
 
         {/* Column 2: Progress Chart */}
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Progress Over Time</h2>
+            <h2 className="text-lg font-semibold text-foreground">Progress Over Time</h2>
             <select 
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
@@ -601,7 +601,7 @@ export default function ProgressPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-[#586e75] rounded-lg">
+            <div className="h-64 flex items-center justify-center bg-secondary/20 dark:bg-[#586e75] rounded-lg">
               <div className="text-center">
                 <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-500 dark:text-[#839496]">No progress data yet</p>
@@ -620,8 +620,8 @@ export default function ProgressPage() {
         {/* Column 3: Streaks & Quick Stats */}
         <div className="space-y-6">
           {/* Current Streaks */}
-          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Current Streaks</h2>
+          <div className="bg-card rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Current Streaks</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
@@ -636,13 +636,13 @@ export default function ProgressPage() {
                       <StreakIcon className="h-6 w-6 text-orange-600" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{formatStreakType(streak.streak_type)}</p>
+                          <p className="font-medium text-foreground">{formatStreakType(streak.streak_type)}</p>
                           <div className="flex items-center space-x-1">
                             <Flame className="h-4 w-4 text-orange-500" />
                             <span className="font-bold text-orange-600">{streak.current_count}</span>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-[#93a1a1]">Best: {streak.best_count} days</p>
+                        <p className="text-sm text-muted-foreground">Best: {streak.best_count} days</p>
                       </div>
                     </div>
                   );
@@ -658,8 +658,8 @@ export default function ProgressPage() {
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Quick Stats</h2>
+          <div className="bg-card rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Quick Stats</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
@@ -668,25 +668,25 @@ export default function ProgressPage() {
             ) : gamificationData?.userStats ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-[#93a1a1]">Goals Completed</span>
-                  <span className="font-semibold text-gray-900 dark:text-[#fdf6e3]">{gamificationData.userStats.goals_completed}</span>
+                  <span className="text-muted-foreground">Goals Completed</span>
+                  <span className="font-semibold text-foreground">{gamificationData.userStats.goals_completed}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-[#93a1a1]">Progress Entries</span>
-                  <span className="font-semibold text-gray-900 dark:text-[#fdf6e3]">{gamificationData.userStats.progress_entries_count}</span>
+                  <span className="text-muted-foreground">Progress Entries</span>
+                  <span className="font-semibold text-foreground">{gamificationData.userStats.progress_entries_count}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-[#93a1a1]">Treatment Sessions</span>
-                  <span className="font-semibold text-gray-900 dark:text-[#fdf6e3]">{gamificationData.userStats.treatment_sessions_count}</span>
+                  <span className="text-muted-foreground">Treatment Sessions</span>
+                  <span className="font-semibold text-foreground">{gamificationData.userStats.treatment_sessions_count}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-[#93a1a1]">Best Streak</span>
+                  <span className="text-muted-foreground">Best Streak</span>
                   <div className="flex items-center space-x-1">
                     <Flame className="h-4 w-4 text-orange-500" />
-                    <span className="font-semibold text-gray-900 dark:text-[#fdf6e3]">{gamificationData.userStats.best_streak_days} days</span>
+                    <span className="font-semibold text-foreground">{gamificationData.userStats.best_streak_days} days</span>
                   </div>
                 </div>
               </div>
@@ -704,19 +704,19 @@ export default function ProgressPage() {
       {/* New Progress Entry Modal */}
       {showNewEntryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-[#073642] rounded-lg p-6 w-full max-w-md">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Log Progress Entry</h3>
+              <h3 className="text-lg font-semibold text-foreground">Log Progress Entry</h3>
               <button
                 onClick={() => setShowNewEntryModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:text-[#93a1a1]"
+                className="text-gray-400 hover:text-muted-foreground"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={handleCreateProgressEntry} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Goal *</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Goal *</label>
                 <select
                   required
                   value={newEntry.goalId}
@@ -733,7 +733,7 @@ export default function ProgressPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Date *</label>
                 <input
                   type="date"
                   required
@@ -744,7 +744,7 @@ export default function ProgressPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Mood Score: {newEntry.moodScore}/10
                 </label>
                 <input
@@ -758,7 +758,7 @@ export default function ProgressPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Energy Level: {newEntry.energyLevel}/10
                 </label>
                 <input
@@ -772,7 +772,7 @@ export default function ProgressPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Confidence Level: {newEntry.confidenceLevel}/10
                 </label>
                 <input
@@ -786,7 +786,7 @@ export default function ProgressPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Notes</label>
                 <textarea
                   rows={3}
                   value={newEntry.notes}
@@ -800,7 +800,7 @@ export default function ProgressPage() {
                 <button
                   type="button"
                   onClick={() => setShowNewEntryModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-[#002b36]"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-foreground hover:bg-secondary/20 dark:bg-[#002b36]"
                 >
                   Cancel
                 </button>
