@@ -48,43 +48,43 @@ export async function GET(request: NextRequest) {
       videoViews,
       topVideos,
     ] = await Promise.all([
-      // Total users
+      // Total users - filter by tenant
       supabase
         .from('profiles')
         .select('id', { count: 'exact', head: true })
         .match(tenantFilter),
       
-      // Total videos
+      // Total videos - filter by tenant
       supabase
         .from('tutorial_videos')
         .select('id', { count: 'exact', head: true })
         .match(tenantFilter),
       
-      // Total community posts
+      // Total community posts - filter by tenant
       supabase
         .from('community_posts')
         .select('id', { count: 'exact', head: true })
         .match(tenantFilter),
       
-      // Total sessions
+      // Total sessions - filter by tenant
       supabase
         .from('mind_shifting_sessions')
         .select('id', { count: 'exact', head: true })
         .match(tenantFilter),
       
-      // Recent users (last 30 days)
+      // Recent users (last 30 days) - filter by tenant
       supabase
         .from('profiles')
         .select('id', { count: 'exact', head: true })
         .match(tenantFilter)
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
       
-      // Total video views
+      // Total video views - needs tenant filter via join
       supabase
         .from('tutorial_video_progress')
         .select('id', { count: 'exact', head: true }),
       
-      // Top 5 videos by views
+      // Top 5 videos by views - filter by tenant
       supabase
         .from('tutorial_videos')
         .select('id, title, view_count')
@@ -92,6 +92,15 @@ export async function GET(request: NextRequest) {
         .order('view_count', { ascending: false })
         .limit(5),
     ]);
+
+    // Log for debugging
+    console.log('Analytics Debug:', {
+      tenant_id: profile.tenant_id,
+      role: profile.role,
+      tenantFilter,
+      usersCount: usersCount.count,
+      usersError: usersCount.error,
+    });
 
     // Calculate growth rates (simplified - comparing with all-time data)
     const usersGrowth = recentUsers.count && usersCount.count
