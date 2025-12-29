@@ -20,6 +20,9 @@ import BeliefShiftingDemo from '@/components/labs/BeliefShiftingDemo';
 import IdentityShiftingDemo from '@/components/labs/IdentityShiftingDemo';
 import BlockageShiftingDemo from '@/components/labs/BlockageShiftingDemo';
 import TraumaShiftingDemo from '@/components/labs/TraumaShiftingDemo';
+import { ThemeDropdown } from '@/components/theme/ThemeDropdown';
+import { ThemePreviewCard } from '@/components/theme/ThemePreviewCard';
+import { themes } from '@/lib/themes';
 
 interface FormState {
   loading: boolean;
@@ -60,7 +63,7 @@ interface GDPRSettings {
 
 export default function SettingsPage() {
   const { profile, user, loading } = useAuth();
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const { isDarkMode, toggleDarkMode, theme, setTheme } = useTheme();
   const supabase = createClient();
   
   // Services
@@ -565,31 +568,15 @@ export default function SettingsPage() {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
-        {/* Header with Dark Mode Toggle */}
+        {/* Header with Theme Dropdown */}
         <div className="mb-6 sm:mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Settings</h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage your account settings and preferences.</p>
           </div>
           
-          {/* Quick Dark Mode Toggle */}
-          <button
-            onClick={toggleDarkMode}
-            className="flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg bg-card border border-border shadow-sm hover:shadow-md transition-all touch-target"
-            aria-label="Toggle dark mode"
-          >
-            {isDarkMode ? (
-              <>
-                <Moon className="h-5 w-5 text-primary" />
-                <span className="hidden sm:inline text-sm font-medium text-foreground">Dark</span>
-              </>
-            ) : (
-              <>
-                <Sun className="h-5 w-5 text-amber-500" />
-                <span className="hidden sm:inline text-sm font-medium text-foreground">Light</span>
-              </>
-            )}
-          </button>
+          {/* Quick Theme Dropdown */}
+          <ThemeDropdown />
         </div>
 
       <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
@@ -1218,6 +1205,34 @@ export default function SettingsPage() {
                 </Select>
               </div>
             </div>
+            </CardContent>
+          </Card>
+
+          {/* Color Theme Section */}
+          <Card id="theme" className="bg-card border-border scroll-mt-20">
+            <CardHeader>
+              <CardTitle className="text-foreground">Color Theme</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Choose your preferred color scheme. All themes are optimized for accessibility and readability.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.values(themes).map((themeOption) => (
+                  <ThemePreviewCard
+                    key={themeOption.id}
+                    theme={themeOption}
+                    isSelected={theme === themeOption.id}
+                    onSelect={() => setTheme(themeOption.id)}
+                  />
+                ))}
+              </div>
+              <div className="mt-6 p-4 bg-secondary/20 rounded-lg border border-border">
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-foreground">Tip:</strong> You can also quickly switch themes using the theme menu in the header (sun/moon icon).
+                  Your theme preference is automatically saved and will persist across sessions.
+                </p>
+              </div>
             </CardContent>
           </Card>
 

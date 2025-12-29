@@ -8,6 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { ThemeDropdown } from '@/components/theme/ThemeDropdown';
 import { 
   Brain, 
   Users, 
@@ -200,7 +201,7 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full">
       {/* Logo and tenant info */}
-      <div className="flex items-center h-16 flex-shrink-0 pl-16 pr-4 bg-primary">
+      <div className="flex items-center justify-between h-16 flex-shrink-0 pl-16 pr-4 bg-primary">
         <div className="flex items-center space-x-3">
           <Image src="/logo.jpg" alt="MindShifting Logo" width={32} height={32} className="h-8 w-8 rounded" />
           <div>
@@ -210,6 +211,8 @@ function SidebarContent({
             <p className="text-primary-foreground/70 text-sm pl-4 pr-4 mt-1 mb-1 whitespace-nowrap">{profile.role}</p>
           </div>
         </div>
+        {/* Theme Dropdown */}
+        <ThemeDropdown />
       </div>
 
       {/* Navigation - Made scrollable with flex-1 and overflow-y-auto */}

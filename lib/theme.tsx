@@ -1,8 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { ThemeId, getDefaultTheme, getThemeById, themes } from '@/lib/themes';
 
 interface ThemeContextType {
+  theme: ThemeId;
+  setTheme: (theme: ThemeId) => void;
+  mode: 'light' | 'dark';
+  // Legacy compatibility
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   setDarkMode: (isDark: boolean) => void;
@@ -11,40 +16,100 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [theme, setThemeState] = useState<ThemeId>(getDefaultTheme());
+  const [mounted, setMounted] = useState(false);
 
-  // Load theme preference from localStorage on mount
+  // Load theme from localStorage on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('darkMode');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setMounted(true);
     
-    if (savedTheme !== null) {
-      setIsDarkMode(savedTheme === 'true');
+    // Try to load theme preference
+    const savedTheme = localStorage.getItem('theme') as ThemeId;
+    if (savedTheme && themes[savedTheme]) {
+      setThemeState(savedTheme);
     } else {
-      setIsDarkMode(prefersDark);
+      // Migration: Check old darkMode setting
+      const oldDarkMode = localStorage.getItem('darkMode');
+      if (oldDarkMode === 'true') {
+        setThemeState('solarized-dark');
+      } else if (oldDarkMode === 'false') {
+        setThemeState('solarized-light');
+      } else {
+        // Default: use system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setThemeState(prefersDark ? 'solarized-dark' : 'solarized-light');
+      }
     }
   }, []);
 
-  // Apply theme to document
+  // Apply theme when it changes
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', isDarkMode.toString());
-  }, [isDarkMode]);
+    if (!mounted) return;
 
+    const root = document.documentElement;
+    const themeConfig = getThemeById(theme);
+
+    // Remove all theme-related classes and attributes
+    root.removeAttribute('data-theme');
+    root.classList.remove('light', 'dark');
+
+    // Set new theme
+    root.setAttribute('data-theme', theme);
+    root.classList.add(themeConfig.mode);
+
+    // Save to localStorage
+    localStorage.setItem('theme', theme);
+    
+    // Update old darkMode for backward compatibility
+    localStorage.setItem('darkMode', (themeConfig.mode === 'dark').toString());
+  }, [theme, mounted]);
+
+  const setTheme = (newTheme: ThemeId) => {
+    setThemeState(newTheme);
+  };
+
+  // Get current theme mode
+  const mode = getThemeById(theme).mode;
+  const isDarkMode = mode === 'dark';
+
+  // Legacy compatibility functions
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+    // Toggle between light and dark variants of current theme family
+    if (theme === 'solarized-dark') {
+      setTheme('solarized-light');
+    } else if (theme === 'solarized-light') {
+      setTheme('solarized-dark');
+    } else if (theme === 'gruvbox-dark') {
+      setTheme('gruvbox-light');
+    } else if (theme === 'gruvbox-light') {
+      setTheme('gruvbox-dark');
+    } else {
+      // For themes without light variant, switch to solarized
+      setTheme(isDarkMode ? 'solarized-light' : 'solarized-dark');
+    }
   };
 
   const setDarkMode = (isDark: boolean) => {
-    setIsDarkMode(isDark);
+    // Legacy compatibility: set to solarized variant
+    setTheme(isDark ? 'solarized-dark' : 'solarized-light');
   };
 
+  // Prevent flash of unstyled content
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode, setDarkMode }}>
+    <ThemeContext.Provider 
+      value={{ 
+        theme, 
+        setTheme, 
+        mode, 
+        isDarkMode, 
+        toggleDarkMode, 
+        setDarkMode 
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
