@@ -552,21 +552,87 @@ export default function CustomerManagementPage() {
             <>
               <div className="divide-y divide-gray-200">
                 {customers.map((customer) => (
-                  <div key={customer.id} className="p-6 hover:bg-secondary/20 dark:bg-[#002b36]">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-semibold">
+                  <div key={customer.id} className="p-4 md:p-6 hover:bg-secondary/20">
+                    {/* Mobile Layout (stacked) */}
+                    <div className="flex flex-col space-y-4 md:hidden">
+                      {/* Top row: Avatar, Name, Email */}
+                      <div className="flex items-start space-x-3">
+                        <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-semibold flex-shrink-0">
                           {(customer.first_name?.[0] || '') + (customer.last_name?.[0] || customer.email[0].toUpperCase())}
                         </div>
-                        <div>
-                          <h3 className="text-lg font-medium text-foreground dark:text-[#fdf6e3]">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base font-medium text-foreground truncate">
                             {customer.first_name && customer.last_name 
                               ? `${customer.first_name} ${customer.last_name}`
                               : customer.email
                             }
                           </h3>
-                          <p className="text-sm text-muted-foreground dark:text-[#93a1a1]">{customer.email}</p>
-                          <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground dark:text-[#839496]">
+                          <p className="text-sm text-muted-foreground truncate">{customer.email}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Subscription and Join Date */}
+                      <div className="flex flex-col space-y-2 text-sm">
+                        <span className="flex items-center text-muted-foreground">
+                          {getSubscriptionIcon(customer.subscription_tier)}
+                          <span className="ml-2">
+                            {customer.user_subscriptions?.[0]?.subscription_plans?.name || 'No Plan'}
+                          </span>
+                        </span>
+                        <span className="flex items-center text-muted-foreground">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Joined {new Date(customer.created_at).toLocaleDateString()}
+                        </span>
+                        {profile?.role === 'super_admin' && customer.tenants && (
+                          <span className="text-purple-600 text-sm">
+                            {customer.tenants.name}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Status and Actions */}
+                      <div className="flex items-center justify-between pt-2 border-t border-border">
+                        <div>
+                          {getStatusBadge(customer)}
+                          {customer.user_subscriptions?.[0] && (
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {formatCurrency(customer.user_subscriptions[0].subscription_plans?.price_monthly * 100 || 0)}/month
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => window.location.href = `/dashboard/team/customer/${customer.id}`}
+                            className="p-2 text-muted-foreground hover:text-indigo-600 hover:bg-accent rounded-lg transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="h-5 w-5" />
+                          </button>
+                          <button
+                            className="p-2 text-muted-foreground hover:text-green-600 hover:bg-accent rounded-lg transition-colors"
+                            title="Add Note"
+                          >
+                            <MessageSquare className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Desktop Layout (horizontal) */}
+                    <div className="hidden md:flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-semibold">
+                          {(customer.first_name?.[0] || '') + (customer.last_name?.[0] || customer.email[0].toUpperCase())}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-medium text-foreground">
+                            {customer.first_name && customer.last_name 
+                              ? `${customer.first_name} ${customer.last_name}`
+                              : customer.email
+                            }
+                          </h3>
+                          <p className="text-sm text-muted-foreground">{customer.email}</p>
+                          <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground">
                             <span className="flex items-center">
                               {getSubscriptionIcon(customer.subscription_tier)}
                               <span className="ml-1">
@@ -598,13 +664,13 @@ export default function CustomerManagementPage() {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => window.location.href = `/dashboard/team/customer/${customer.id}`}
-                            className="p-2 text-muted-foreground hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className="p-2 text-muted-foreground hover:text-indigo-600 hover:bg-accent rounded-lg transition-colors"
                             title="View Details"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
-                            className="p-2 text-muted-foreground hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            className="p-2 text-muted-foreground hover:text-green-600 hover:bg-accent rounded-lg transition-colors"
                             title="Add Note"
                           >
                             <MessageSquare className="h-4 w-4" />
