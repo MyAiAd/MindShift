@@ -593,13 +593,13 @@ export default function SessionsPage() {
 
         <div className="bg-card border border-border rounded-lg p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center space-x-3 mb-4">
-            <User className="h-8 w-8 text-accent" />
+            <User className="h-8 w-8 text-primary" />
             <h3 className="text-lg font-semibold text-foreground">Human Coach</h3>
           </div>
           <p className="text-muted-foreground mb-6 flex-grow">Book a session with one of our certified human coaches.</p>
           <button 
             onClick={() => setShowBookModal(true)}
-            className="bg-accent text-accent-foreground px-4 py-2 rounded-lg hover:bg-accent/90 transition-colors w-full mt-auto"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors w-full mt-auto"
           >
             Book with Coach
           </button>
