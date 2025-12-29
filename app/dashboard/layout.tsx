@@ -297,6 +297,20 @@ function SidebarContent({
                   Videos
                 </Link>
                 <Link
+                  href="/dashboard/admin/users"
+                  onClick={handleNavClick}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname?.startsWith('/dashboard/admin/users')
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  <Shield className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname?.startsWith('/dashboard/admin/users') ? 'text-primary' : ''
+                  }`} />
+                  Users
+                </Link>
+                <Link
                   href="/dashboard/admin/data-management"
                   onClick={handleNavClick}
                   className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
