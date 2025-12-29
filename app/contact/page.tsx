@@ -67,7 +67,7 @@ export default function ContactPage() {
                     <input
                       type="text"
                       id="firstName"
-                      className="w-full px-4 py-3 border border-border rounded-lg focus:ring-indigo-500 focus:border-primary"
+                      className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                       placeholder="John"
                     />
                   </div>
@@ -78,7 +78,7 @@ export default function ContactPage() {
                     <input
                       type="text"
                       id="lastName"
-                      className="w-full px-4 py-3 border border-border rounded-lg focus:ring-indigo-500 focus:border-primary"
+                      className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                       placeholder="Doe"
                     />
                   </div>
@@ -91,7 +91,7 @@ export default function ContactPage() {
                   <input
                     type="email"
                     id="email"
-                    className="w-full px-4 py-3 border border-border rounded-lg focus:ring-indigo-500 focus:border-primary"
+                    className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                     placeholder="john@example.com"
                   />
                 </div>
@@ -102,7 +102,7 @@ export default function ContactPage() {
                   </label>
                   <select
                     id="subject"
-                    className="w-full px-4 py-3 border border-border rounded-lg focus:ring-indigo-500 focus:border-primary"
+                    className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                   >
                     <option>General Inquiry</option>
                     <option>Technical Support</option>
@@ -119,7 +119,7 @@ export default function ContactPage() {
                   <textarea
                     id="message"
                     rows={6}
-                    className="w-full px-4 py-3 border border-border rounded-lg focus:ring-indigo-500 focus:border-primary"
+                    className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                     placeholder="Tell us how we can help you..."
                   ></textarea>
                 </div>

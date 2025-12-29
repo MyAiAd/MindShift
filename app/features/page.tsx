@@ -63,7 +63,7 @@ export default function FeaturesPage() {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="p-8 rounded-xl bg-card border-primary/20">
+            <div className="p-8 rounded-xl bg-card border border-primary/20">
               <Brain className="h-12 w-12 text-primary mb-6" />
               <h3 className="text-xl font-semibold text-foreground mb-4">AI-Powered Analysis</h3>
               <p className="text-muted-foreground mb-4">
@@ -76,7 +76,7 @@ export default function FeaturesPage() {
               </ul>
             </div>
             
-            <div className="p-8 rounded-xl bg-card border-accent/20">
+            <div className="p-8 rounded-xl bg-card border border-accent/20">
               <Target className="h-12 w-12 text-accent mb-6" />
               <h3 className="text-xl font-semibold text-foreground mb-4">Smart Goal Setting</h3>
               <p className="text-muted-foreground mb-4">
@@ -89,7 +89,7 @@ export default function FeaturesPage() {
               </ul>
             </div>
             
-            <div className="p-8 rounded-xl bg-card border-primary/20">
+            <div className="p-8 rounded-xl bg-card border border-primary/20">
               <TrendingUp className="h-12 w-12 text-primary mb-6" />
               <h3 className="text-xl font-semibold text-foreground mb-4">Progress Analytics</h3>
               <p className="text-muted-foreground mb-4">
@@ -102,7 +102,7 @@ export default function FeaturesPage() {
               </ul>
             </div>
 
-            <div className="p-8 rounded-xl bg-card border-accent/20">
+            <div className="p-8 rounded-xl bg-card border border-accent/20">
               <Users className="h-12 w-12 text-accent mb-6" />
               <h3 className="text-xl font-semibold text-foreground mb-4">Team Collaboration</h3>
               <p className="text-muted-foreground mb-4">
@@ -115,7 +115,7 @@ export default function FeaturesPage() {
               </ul>
             </div>
 
-            <div className="p-8 rounded-xl bg-card border-primary/20">
+            <div className="p-8 rounded-xl bg-card border border-primary/20">
               <Zap className="h-12 w-12 text-primary mb-6" />
               <h3 className="text-xl font-semibold text-foreground mb-4">Instant Insights</h3>
               <p className="text-muted-foreground mb-4">
@@ -128,7 +128,7 @@ export default function FeaturesPage() {
               </ul>
             </div>
 
-            <div className="p-8 rounded-xl bg-card border-accent/20">
+            <div className="p-8 rounded-xl bg-card border border-accent/20">
               <BookOpen className="h-12 w-12 text-accent mb-6" />
               <h3 className="text-xl font-semibold text-foreground mb-4">Learning Resources</h3>
               <p className="text-muted-foreground mb-4">
