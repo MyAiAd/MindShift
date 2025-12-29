@@ -332,8 +332,8 @@ export default function DataManagementPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Data Management</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Data Management</h1>
+        <p className="text-muted-foreground mt-1">
           Import, export, and manage customer data and system configuration.
           {profile?.role === 'super_admin' ? ' (Super Admin - All Tenants)' : ' (Tenant Admin)'}
         </p>
@@ -365,7 +365,7 @@ export default function DataManagementPage() {
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab
                   ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-500 hover:text-foreground hover:border-gray-300'
               }`}
             >
               {tab === 'import_export' ? 'Import/Export' : 
@@ -382,10 +382,10 @@ export default function DataManagementPage() {
           <>
             {/* Tenant Selection */}
             {profile?.role === 'super_admin' && (
-              <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Tenant Selection</h3>
+              <div className="bg-card rounded-lg shadow-sm border p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Tenant Selection</h3>
                 <div className="max-w-md">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Target Tenant</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Target Tenant</label>
                   <select
                     value={selectedTenant}
                     onChange={(e) => setSelectedTenant(e.target.value)}
@@ -413,15 +413,15 @@ export default function DataManagementPage() {
             )}
 
             {/* Import Section */}
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Upload className="h-6 w-6 text-indigo-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Import Customer Data</h3>
+                <h3 className="text-lg font-semibold text-foreground">Import Customer Data</h3>
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">
+                  <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1] mb-2">
                     Select File (JSON or CSV)
                   </label>
                   <input
@@ -431,7 +431,7 @@ export default function DataManagementPage() {
                     className="block w-full text-sm text-gray-500 dark:text-[#839496] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                   />
                   {importFile && (
-                    <p className="mt-2 text-sm text-gray-600 dark:text-[#93a1a1]">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       Selected: {importFile.name} ({(importFile.size / 1024).toFixed(2)} KB)
                     </p>
                   )}
@@ -459,15 +459,15 @@ export default function DataManagementPage() {
             </div>
 
             {/* Export Section */}
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Download className="h-6 w-6 text-green-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Export Data</h3>
+                <h3 className="text-lg font-semibold text-foreground">Export Data</h3>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">Export Type</label>
+                  <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1] mb-2">Export Type</label>
                   <select
                     value={exportType}
                     onChange={(e) => setExportType(e.target.value)}
@@ -480,7 +480,7 @@ export default function DataManagementPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">Format</label>
+                  <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1] mb-2">Format</label>
                   <select
                     value={exportFormat}
                     onChange={(e) => setExportFormat(e.target.value)}
@@ -507,10 +507,10 @@ export default function DataManagementPage() {
         )}
 
         {activeTab === 'subscription_plans' && (
-          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+          <div className="bg-card rounded-lg shadow-sm border p-6">
             <div className="flex items-center mb-4">
               <Settings className="h-6 w-6 text-purple-600 mr-3" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Subscription Plan Management</h3>
+              <h3 className="text-lg font-semibold text-foreground">Subscription Plan Management</h3>
             </div>
 
             {profile?.role !== 'super_admin' && (
@@ -547,16 +547,16 @@ export default function DataManagementPage() {
         {activeTab === 'test_data' && (
           <>
             {/* Generate Test Data */}
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Users className="h-6 w-6 text-blue-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Generate Test Data</h3>
+                <h3 className="text-lg font-semibold text-foreground">Generate Test Data</h3>
               </div>
               
               <div className="space-y-4">
                 {profile?.role === 'super_admin' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">Target Tenant</label>
+                    <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1] mb-2">Target Tenant</label>
                     <select
                       value={selectedTenant}
                       onChange={(e) => setSelectedTenant(e.target.value)}
@@ -574,7 +574,7 @@ export default function DataManagementPage() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">
+                  <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1] mb-2">
                     Number of Test Customers (Max 200)
                   </label>
                   <input
@@ -610,10 +610,10 @@ export default function DataManagementPage() {
             </div>
 
             {/* Cleanup Test Data */}
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
                 <Trash2 className="h-6 w-6 text-red-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Cleanup Test Data</h3>
+                <h3 className="text-lg font-semibold text-foreground">Cleanup Test Data</h3>
               </div>
               
               <div className="space-y-4">
@@ -650,10 +650,10 @@ export default function DataManagementPage() {
 
       {/* Results Display */}
       {results && (
-        <div className="mt-8 bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+        <div className="mt-8 bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center mb-4">
-            <BarChart3 className="h-6 w-6 text-gray-600 mr-3" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Operation Results</h3>
+            <BarChart3 className="h-6 w-6 text-muted-foreground mr-3" />
+            <h3 className="text-lg font-semibold text-foreground">Operation Results</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
