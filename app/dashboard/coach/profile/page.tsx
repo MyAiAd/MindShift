@@ -284,10 +284,10 @@ export default function CoachProfilePage() {
             {availableSpecialties.map(specialty => (
               <label
                 key={specialty}
-                className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors touch-target ${
+                className={`flex items-center justify-start p-3 border rounded-lg cursor-pointer transition-colors touch-target ${
                   formData.specialties.includes(specialty)
                     ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                    : 'border-border dark:border-[#657b83] hover:border-primary'
+                    : 'border-border hover:border-primary'
                 }`}
               >
                 <input
@@ -328,10 +328,10 @@ export default function CoachProfilePage() {
               return (
                 <label
                   key={type.value}
-                  className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors touch-target ${
+                  className={`flex items-center justify-start p-3 border rounded-lg cursor-pointer transition-colors touch-target ${
                     formData.preferredMeetingTypes.includes(type.value)
                       ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                      : 'border-border dark:border-[#657b83] hover:border-primary'
+                      : 'border-border hover:border-primary'
                   }`}
                 >
                   <input
@@ -369,7 +369,7 @@ export default function CoachProfilePage() {
             rows={4}
             value={formData.bio}
             onChange={(e) => handleInputChange('bio', e.target.value)}
-            className="w-full px-3 py-2 border border-border dark:border-[#657b83] rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-[#586e75] dark:text-[#fdf6e3] text-sm sm:text-base"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground text-sm sm:text-base"
             placeholder="Tell clients about your coaching experience, approach, and what makes you unique..."
             maxLength={500}
           />
@@ -391,7 +391,7 @@ export default function CoachProfilePage() {
             rows={3}
             value={formData.credentials}
             onChange={(e) => handleInputChange('credentials', e.target.value)}
-            className="w-full px-3 py-2 border border-border dark:border-[#657b83] rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-[#586e75] dark:text-[#fdf6e3] text-sm sm:text-base"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground text-sm sm:text-base"
             placeholder="e.g., Certified Life Coach (ICF), Master's in Psychology, 10+ years experience..."
             maxLength={300}
           />
