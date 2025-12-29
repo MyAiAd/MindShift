@@ -101,14 +101,14 @@ export function InstallPrompt() {
 
   return (
     <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50 animate-in slide-in-from-bottom duration-300">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-card rounded-2xl shadow-2xl border border-border p-4">
         {/* Close button */}
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          className="absolute top-3 right-3 p-1 rounded-full hover:bg-secondary transition-colors"
           aria-label="Dismiss install prompt"
         >
-          <X size={16} className="text-gray-500 dark:text-gray-400" />
+          <X size={16} className="text-muted-foreground dark:text-muted-foreground" />
         </button>
 
         {/* Content */}
@@ -117,10 +117,10 @@ export function InstallPrompt() {
             <Download size={24} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+            <h3 className="text-lg font-semibold text-foreground mb-1">
               Install MindShifting
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
+            <p className="text-sm text-muted-foreground">
               {isIOS 
                 ? 'Add to your home screen for a better experience!'
                 : 'Install our app for offline access and faster loading!'
@@ -130,7 +130,7 @@ export function InstallPrompt() {
         </div>
 
         {/* Benefits */}
-        <div className="mb-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
+        <div className="mb-4 space-y-2 text-sm text-muted-foreground">
           <div className="flex items-center space-x-2">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
             <span>Works offline</span>
@@ -207,7 +207,7 @@ export function InstallPrompt() {
 
         {/* Android/Desktop hint */}
         {!isIOS && (
-          <p className="mt-3 text-xs text-center text-gray-500 dark:text-gray-400">
+          <p className="mt-3 text-xs text-center text-muted-foreground dark:text-muted-foreground">
             You can also click the <Plus size={12} className="inline mx-1" /> icon in your browser's address bar
           </p>
         )}

@@ -71,7 +71,7 @@ const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
               'block text-sm font-medium mb-1.5 transition-colors',
               error
                 ? 'text-red-600 dark:text-red-400'
-                : 'text-gray-700 dark:text-gray-300'
+                : 'text-foreground'
             )}
           >
             {label}
@@ -87,7 +87,7 @@ const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
         <div className="relative">
           {/* Left Icon */}
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground dark:text-muted-foreground pointer-events-none">
               {leftIcon}
             </div>
           )}
@@ -100,7 +100,7 @@ const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
             disabled={disabled}
             className={cn(
               // Base styles
-              'flex w-full rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm transition-all',
+              'flex w-full rounded-lg border bg-card dark:bg-background text-foreground shadow-sm transition-all',
               // Spacing - mobile-optimized touch targets
               'h-12 px-4 py-3 text-base',
               // Add padding for icons
@@ -113,11 +113,11 @@ const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
                 ? 'border-red-300 dark:border-red-700 focus:border-red-500 focus:ring-red-500/30'
                 : isFocused
                 ? 'border-indigo-500 dark:border-indigo-500 ring-2 ring-indigo-500/30'
-                : 'border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500/30',
+                : 'border-border focus:border-indigo-500 focus:ring-indigo-500/30',
               // Disabled states
-              disabled && 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800',
+              disabled && 'opacity-50 cursor-not-allowed bg-secondary/20',
               // Placeholder
-              'placeholder:text-gray-400 dark:placeholder:text-gray-500',
+              'placeholder:text-muted-foreground dark:placeholder:text-muted-foreground',
               className
             )}
             aria-invalid={error ? 'true' : 'false'}
@@ -136,7 +136,7 @@ const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
               <button
                 type="button"
                 onClick={handleClear}
-                className="touch-target p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-md active:scale-95"
+                className="touch-target p-2 text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground transition-colors rounded-md active:scale-95"
                 aria-label="Clear input"
                 tabIndex={-1}
               >
@@ -149,7 +149,7 @@ const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                className="touch-target p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-md active:scale-95"
+                className="touch-target p-2 text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground transition-colors rounded-md active:scale-95"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 tabIndex={-1}
               >
@@ -163,7 +163,7 @@ const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
 
             {/* Custom Right Icon */}
             {rightIcon && !isPasswordType && !showClearButton && (
-              <div className="text-gray-400 dark:text-gray-500 pointer-events-none px-2">
+              <div className="text-muted-foreground dark:text-muted-foreground pointer-events-none px-2">
                 {rightIcon}
               </div>
             )}
@@ -186,7 +186,7 @@ const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
         {helperText && !error && (
           <p
             id={helperId}
-            className="mt-1.5 text-sm text-gray-500 dark:text-gray-400"
+            className="mt-1.5 text-sm text-muted-foreground dark:text-muted-foreground"
           >
             {helperText}
           </p>

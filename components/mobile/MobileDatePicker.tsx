@@ -55,7 +55,7 @@ export function MobileDatePicker({
             'block text-sm font-medium mb-1.5 transition-colors',
             error
               ? 'text-red-600 dark:text-red-400'
-              : 'text-gray-700 dark:text-gray-300'
+              : 'text-foreground'
           )}
         >
           {label}
@@ -82,7 +82,7 @@ export function MobileDatePicker({
           placeholder={placeholder}
           className={cn(
             // Base styles
-            'w-full rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm transition-all',
+            'w-full rounded-lg border bg-card dark:bg-background text-foreground shadow-sm transition-all',
             // Spacing - mobile-optimized touch targets
             'h-12 px-4 py-3 pr-10 text-base',
             // Focus states
@@ -92,9 +92,9 @@ export function MobileDatePicker({
               ? 'border-red-300 dark:border-red-700 focus:border-red-500 focus:ring-red-500/30'
               : isFocused
               ? 'border-indigo-500 dark:border-indigo-500 ring-2 ring-indigo-500/30'
-              : 'border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500/30',
+              : 'border-border focus:border-indigo-500 focus:ring-indigo-500/30',
             // Disabled states
-            disabled && 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800',
+            disabled && 'opacity-50 cursor-not-allowed bg-secondary/20',
             // Hide default calendar icon on some browsers, we'll show our own
             '[&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-10 [&::-webkit-calendar-picker-indicator]:cursor-pointer'
           )}
@@ -107,7 +107,7 @@ export function MobileDatePicker({
         />
 
         {/* Calendar Icon */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-500">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground dark:text-muted-foreground">
           <Calendar className="h-5 w-5" aria-hidden="true" />
         </div>
       </div>
@@ -128,7 +128,7 @@ export function MobileDatePicker({
       {helperText && !error && (
         <p
           id={helperId}
-          className="mt-1.5 text-sm text-gray-500 dark:text-gray-400"
+          className="mt-1.5 text-sm text-muted-foreground dark:text-muted-foreground"
         >
           {helperText}
         </p>
@@ -187,7 +187,7 @@ export function MobileTimePicker({
             'block text-sm font-medium mb-1.5 transition-colors',
             error
               ? 'text-red-600 dark:text-red-400'
-              : 'text-gray-700 dark:text-gray-300'
+              : 'text-foreground'
           )}
         >
           {label}
@@ -213,7 +213,7 @@ export function MobileTimePicker({
         placeholder={placeholder}
         className={cn(
           // Base styles
-          'w-full rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm transition-all',
+          'w-full rounded-lg border bg-card dark:bg-background text-foreground shadow-sm transition-all',
           // Spacing - mobile-optimized touch targets
           'h-12 px-4 py-3 text-base',
           // Focus states
@@ -223,9 +223,9 @@ export function MobileTimePicker({
             ? 'border-red-300 dark:border-red-700 focus:border-red-500 focus:ring-red-500/30'
             : isFocused
             ? 'border-indigo-500 dark:border-indigo-500 ring-2 ring-indigo-500/30'
-            : 'border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500/30',
+            : 'border-border focus:border-indigo-500 focus:ring-indigo-500/30',
           // Disabled states
-          disabled && 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800'
+          disabled && 'opacity-50 cursor-not-allowed bg-secondary/20'
         )}
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={
@@ -251,7 +251,7 @@ export function MobileTimePicker({
       {helperText && !error && (
         <p
           id={helperId}
-          className="mt-1.5 text-sm text-gray-500 dark:text-gray-400"
+          className="mt-1.5 text-sm text-muted-foreground dark:text-muted-foreground"
         >
           {helperText}
         </p>

@@ -383,13 +383,13 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-card rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Book a Coaching Session</h3>
+            <h3 className="text-xl font-semibold text-foreground">Book a Coaching Session</h3>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="text-muted-foreground hover:text-muted-foreground"
               disabled={submitting}
             >
               <X className="h-5 w-5" />
@@ -411,13 +411,13 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Session Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Session Type *
               </label>
               <select
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 required
                 disabled={submitting}
               >
@@ -431,14 +431,14 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
             {/* Custom title if "Custom Session" is selected */}
             {formData.title === 'Custom Session' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Custom Session Title *
                 </label>
                 <input
                   type="text"
                   value={formData.description}
                   onChange={(e) => handleInputChange('title', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Enter custom session title..."
                   required
                   disabled={submitting}
@@ -448,14 +448,14 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Session Description
               </label>
               <textarea
                 rows={3}
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Describe what you'd like to focus on in this session..."
                 disabled={submitting}
               />
@@ -463,7 +463,7 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
 
             {/* Coach Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Preferred Coach *
                 {formData.title && formData.title !== 'Custom Session' && (
                   <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">
@@ -472,7 +472,7 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
                 )}
               </label>
               {loading ? (
-                <div className="flex items-center space-x-2 text-gray-500">
+                <div className="flex items-center space-x-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Loading coaches...</span>
                 </div>
@@ -480,7 +480,7 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
                 <select
                   value={formData.coachId}
                   onChange={(e) => handleInputChange('coachId', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   required
                   disabled={submitting}
                 >
@@ -507,13 +507,13 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Date & Time */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Date & Time *
                 </label>
                 <select
                   value={formData.scheduledAt}
                   onChange={(e) => handleInputChange('scheduledAt', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   required
                   disabled={submitting}
                 >
@@ -528,13 +528,13 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
 
               {/* Duration */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Duration *
                 </label>
                 <select
                   value={formData.durationMinutes}
                   onChange={(e) => handleInputChange('durationMinutes', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   required
                   disabled={submitting}
                 >
@@ -549,7 +549,7 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
 
             {/* Meeting Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Meeting Type *
                 {formData.coachId && filteredMeetingTypes.length < meetingTypes.length && (
                   <span className="ml-2 text-xs text-green-600 dark:text-green-400">
@@ -568,7 +568,7 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
                       className={`p-3 border rounded-lg flex flex-col items-center space-y-2 transition-colors ${
                         formData.meetingType === type.value
                           ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
-                          : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                          : 'border-border hover:border-primary'
                       }`}
                       disabled={submitting}
                     >
@@ -603,11 +603,11 @@ export default function BookingModal({ isOpen, onClose, onBookingComplete }: Boo
             )}
 
             {/* Action Buttons */}
-            <div className="flex space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex space-x-3 pt-6 border-t border-border">
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary/20 transition-colors"
                 disabled={submitting}
               >
                 Cancel

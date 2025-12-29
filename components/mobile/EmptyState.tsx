@@ -50,11 +50,11 @@ export function EmptyState({
   const Icon = icon || defaultIcons[variant];
 
   const variantColors = {
-    default: 'text-gray-400 dark:text-gray-600',
+    default: 'text-muted-foreground dark:text-muted-foreground',
     search: 'text-blue-400 dark:text-blue-600',
     error: 'text-red-400 dark:text-red-600',
     success: 'text-green-400 dark:text-green-600',
-    custom: 'text-gray-400 dark:text-gray-600',
+    custom: 'text-muted-foreground dark:text-muted-foreground',
   };
 
   return (
@@ -72,13 +72,13 @@ export function EmptyState({
       </div>
 
       {/* Title */}
-      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
+      <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
         {title}
       </h3>
 
       {/* Description */}
       {description && (
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-md mb-6">
+        <p className="text-sm sm:text-base text-muted-foreground dark:text-muted-foreground max-w-md mb-6">
           {description}
         </p>
       )}

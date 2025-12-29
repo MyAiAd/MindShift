@@ -206,7 +206,7 @@ function CoachSignupContent() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-300">Validating invitation...</p>
+          <p className="text-muted-foreground">Validating invitation...</p>
         </div>
       </div>
     );
@@ -216,12 +216,12 @@ function CoachSignupContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="max-w-md w-full mx-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 text-center">
+          <div className="bg-card rounded-lg shadow-xl p-8 text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-xl font-semibold text-foreground dark:text-white mb-4">
               Invalid Invitation
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">{error}</p>
+            <p className="text-muted-foreground mb-6">{error}</p>
             <button
               onClick={() => router.push('/auth')}
               className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
@@ -237,14 +237,14 @@ function CoachSignupContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-md w-full mx-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
+        <div className="bg-card rounded-lg shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <UserCheck className="h-8 w-8 text-indigo-600" />
               <Brain className="h-8 w-8 text-indigo-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-foreground dark:text-white">
               Complete Your Coach Registration
             </h1>
             {invitation && (
@@ -287,16 +287,16 @@ function CoachSignupContent() {
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   First Name *
                 </label>
                 <div className="relative">
-                  <User className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+                  <User className="h-5 w-5 text-muted-foreground absolute left-3 top-3" />
                   <input
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 "
                     placeholder="First name"
                     required
                     disabled={submitting}
@@ -304,16 +304,16 @@ function CoachSignupContent() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Last Name *
                 </label>
                 <div className="relative">
-                  <User className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+                  <User className="h-5 w-5 text-muted-foreground absolute left-3 top-3" />
                   <input
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 "
                     placeholder="Last name"
                     required
                     disabled={submitting}
@@ -324,57 +324,57 @@ function CoachSignupContent() {
 
             {/* Email Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+                <Mail className="h-5 w-5 text-muted-foreground absolute left-3 top-3" />
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white bg-gray-50"
+                  className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500  bg-secondary/20"
                   placeholder="your@email.com"
                   required
                   disabled={true} // Email is pre-filled from invitation
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">Email is pre-filled from your invitation</p>
+              <p className="text-xs text-muted-foreground mt-1">Email is pre-filled from your invitation</p>
             </div>
 
             {/* Password Fields */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Password *
               </label>
               <div className="relative">
-                <Lock className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+                <Lock className="h-5 w-5 text-muted-foreground absolute left-3 top-3" />
                 <input
                   type="password"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 "
                   placeholder="Create a strong password"
                   required
                   disabled={submitting}
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Must be 8+ characters with uppercase, lowercase, number, and special character
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Confirm Password *
               </label>
               <div className="relative">
-                <Lock className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+                <Lock className="h-5 w-5 text-muted-foreground absolute left-3 top-3" />
                 <input
                   type="password"
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 "
                   placeholder="Confirm your password"
                   required
                   disabled={submitting}
@@ -401,7 +401,7 @@ function CoachSignupContent() {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               Already have an account?{' '}
               <button
                 onClick={() => router.push('/auth')}
@@ -423,7 +423,7 @@ export default function CoachSignupPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     }>

@@ -104,7 +104,7 @@ export default function CookieConsent({
   if (!isVisible) return null;
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50 ${className}`}>
+    <div className={`fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 ${className}`}>
       {!showDetails ? (
         // Main consent banner
         <div className="max-w-7xl mx-auto p-4">
@@ -112,10 +112,10 @@ export default function CookieConsent({
             <div className="flex items-center space-x-2">
               <Cookie className="h-5 w-5 text-blue-600" />
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-foreground dark:text-white">
                   We use cookies
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                   We use cookies to enhance your experience, analyze site traffic, and personalize content. 
                   By clicking "Accept All", you consent to our use of cookies.
                 </p>
@@ -125,14 +125,14 @@ export default function CookieConsent({
             <div className="flex flex-col sm:flex-row gap-2 md:ml-auto">
               <button
                 onClick={() => setShowDetails(true)}
-                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 text-sm text-foreground hover:text-foreground border border-border rounded-md hover:bg-secondary/20 transition-colors"
               >
                 <Settings className="h-4 w-4 inline mr-1" />
                 Customize
               </button>
               <button
                 onClick={handleRejectAll}
-                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 text-sm text-foreground hover:text-foreground border border-border rounded-md hover:bg-secondary/20 transition-colors"
               >
                 Reject All
               </button>
@@ -149,12 +149,12 @@ export default function CookieConsent({
         // Detailed consent options
         <div className="max-w-4xl mx-auto p-4 max-h-96 overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-foreground dark:text-white">
               Cookie Preferences
             </h3>
             <button
               onClick={() => setShowDetails(false)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="text-muted-foreground hover:text-muted-foreground"
               aria-label="Close cookie preferences"
             >
               <X className="h-5 w-5" />
@@ -163,11 +163,11 @@ export default function CookieConsent({
 
           <div className="space-y-4">
             {categories.map(category => (
-              <div key={category.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div key={category.name} className="border border-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <Shield className="h-4 w-4 text-gray-500" />
-                    <h4 className="font-medium text-gray-900 dark:text-white">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <h4 className="font-medium text-foreground dark:text-white">
                       {category.name}
                     </h4>
                     {category.essential && (
@@ -182,35 +182,35 @@ export default function CookieConsent({
                     onClick={() => handleToggleConsent(category.name, !customConsents[category.name])}
                     disabled={category.essential}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      customConsents[category.name] ? 'bg-blue-600' : 'bg-gray-200'
+                      customConsents[category.name] ? 'bg-blue-600' : 'bg-secondary'
                     } ${category.essential ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <span className="sr-only">
                       Toggle {category.name}
                     </span>
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
                         customConsents[category.name] ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />
                   </button>
                 </div>
                 
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-3">
                   {category.purpose}
                 </p>
 
                 {/* Cookie details */}
-                <div className="bg-gray-50 dark:bg-gray-700 rounded p-3">
-                  <h5 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <div className="bg-secondary/20 rounded p-3">
+                  <h5 className="text-xs font-medium text-foreground mb-2">
                     Cookie details:
                   </h5>
                   <div className="space-y-1">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-muted-foreground dark:text-muted-foreground">
                         {category.name}
                       </span>
-                      <span className="text-gray-500 dark:text-gray-500">
+                      <span className="text-muted-foreground dark:text-muted-foreground">
                         {category.duration}
                       </span>
                     </div>
@@ -221,16 +221,16 @@ export default function CookieConsent({
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row gap-2 mt-6 pt-4 border-t border-border">
             <button
               onClick={handleRejectAll}
-              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 text-sm text-foreground hover:text-foreground border border-border rounded-md hover:bg-secondary/20 transition-colors"
             >
               Reject All
             </button>
             <button
               onClick={handleAcceptAll}
-              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 text-sm text-foreground hover:text-foreground border border-border rounded-md hover:bg-secondary/20 transition-colors"
             >
               Accept All
             </button>

@@ -111,7 +111,7 @@ export function ActionSheet({
       <div
         ref={sheetRef}
         className={cn(
-          'relative w-full max-w-lg bg-white dark:bg-gray-900 shadow-xl',
+          'relative w-full max-w-lg bg-card dark:bg-background shadow-xl',
           'md:rounded-lg md:mb-0',
           'rounded-t-2xl pb-safe',
           'transition-transform duration-300 ease-out',
@@ -124,20 +124,20 @@ export function ActionSheet({
         {/* Handle (Mobile only) */}
         <div className="md:hidden flex justify-center pt-3 pb-2">
           <div
-            className="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full"
+            className="w-10 h-1 bg-border rounded-full"
             aria-hidden="true"
           />
         </div>
 
         {/* Header */}
         {(title || description) && (
-          <div className="px-4 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
+          <div className="px-4 pt-4 pb-3 border-b border-border">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 {title && (
                   <h2
                     id="action-sheet-title"
-                    className="text-lg font-semibold text-gray-900 dark:text-white"
+                    className="text-lg font-semibold text-foreground"
                   >
                     {title}
                   </h2>
@@ -145,7 +145,7 @@ export function ActionSheet({
                 {description && (
                   <p
                     id="action-sheet-description"
-                    className="mt-1 text-sm text-gray-600 dark:text-gray-400"
+                    className="mt-1 text-sm text-muted-foreground dark:text-muted-foreground"
                   >
                     {description}
                   </p>
@@ -155,7 +155,7 @@ export function ActionSheet({
               {/* Close button (Desktop) */}
               <button
                 onClick={handleClose}
-                className="hidden md:block touch-target p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md transition-colors active:scale-95"
+                className="hidden md:block touch-target p-2 text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground rounded-md transition-colors active:scale-95"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -176,7 +176,7 @@ export function ActionSheet({
                 'active:scale-[0.99] active:opacity-90',
                 action.variant === 'destructive'
                   ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
-                  : 'text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800',
+                  : 'text-foreground hover:bg-secondary/20 dark:hover:bg-card',
                 action.disabled &&
                   'opacity-50 cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent'
               )}
@@ -188,7 +188,7 @@ export function ActionSheet({
                     'flex-shrink-0',
                     action.variant === 'destructive'
                       ? 'text-red-600 dark:text-red-400'
-                      : 'text-gray-600 dark:text-gray-400'
+                      : 'text-muted-foreground dark:text-muted-foreground'
                   )}
                 >
                   {action.icon}
@@ -211,11 +211,11 @@ export function ActionSheet({
         {/* Cancel Button */}
         {showCancelButton && (
           <>
-            <div className="h-2 bg-gray-100 dark:bg-gray-800" />
+            <div className="h-2 bg-secondary" />
             <div className="p-2">
               <button
                 onClick={handleClose}
-                className="w-full touch-target px-4 py-3 text-base font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors active:scale-[0.99]"
+                className="w-full touch-target px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary/20 dark:hover:bg-card rounded-lg transition-colors active:scale-[0.99]"
               >
                 {cancelLabel}
               </button>

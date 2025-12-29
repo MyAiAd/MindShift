@@ -14,27 +14,27 @@ export default function OfflinePage() {
       <div className="max-w-md w-full text-center">
         {/* Icon */}
         <div className="mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
-            <WifiOff className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 dark:text-gray-600" strokeWidth={1.5} />
+          <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-secondary mb-4">
+            <WifiOff className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground" strokeWidth={1.5} />
           </div>
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground dark:text-white mb-3 sm:mb-4">
           You're Offline
         </h1>
 
         {/* Description */}
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 sm:mb-8">
+        <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8">
           It looks like you've lost your internet connection. Don't worry, you can still access some features while offline.
         </p>
 
         {/* Features Available Offline */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6 sm:mb-8 text-left">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-4 sm:p-6 mb-6 sm:mb-8 text-left">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground dark:text-white mb-3 sm:mb-4">
             Available Offline:
           </h2>
-          <ul className="space-y-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          <ul className="space-y-2 text-sm sm:text-base text-muted-foreground">
             <li className="flex items-start">
               <span className="mr-2">✓</span>
               <span>View previously loaded pages</span>
@@ -61,15 +61,15 @@ export default function OfflinePage() {
             Try Again
           </Button>
 
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-500">
+          <p className="text-xs sm:text-sm text-muted-foreground dark:text-muted-foreground">
             We'll automatically reconnect when your internet is back
           </p>
         </div>
 
         {/* Online Status Indicator */}
-        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500 dark:text-gray-500">
-            <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+        <div className="mt-8 pt-6 border-t border-border">
+          <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground dark:text-muted-foreground">
+            <div className="w-2 h-2 rounded-full bg-muted-foreground"></div>
             <span>Connection Status: Offline</span>
           </div>
         </div>
