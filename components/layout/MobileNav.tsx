@@ -28,8 +28,18 @@ const navItems = [
   },
 ];
 
-export function MobileNav() {
+interface MobileNavProps {
+  onNavigate?: () => void;
+}
+
+export function MobileNav({ onNavigate }: MobileNavProps = {}) {
   const pathname = usePathname();
+
+  const handleNavClick = () => {
+    if (onNavigate) {
+      onNavigate();
+    }
+  };
 
   return (
     <nav
@@ -48,6 +58,7 @@ export function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleNavClick}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 touch-target transition-colors',
                 'active:scale-95 active:opacity-80',

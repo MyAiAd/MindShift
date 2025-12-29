@@ -165,7 +165,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Mobile bottom navigation */}
-        <MobileNav />
+        <MobileNav onNavigate={() => setSidebarOpen(false)} />
       </div>
     </ThemeProvider>
   );
@@ -213,7 +213,7 @@ function SidebarContent({
       </div>
 
       {/* Navigation - Made scrollable with flex-1 and overflow-y-auto */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <nav className="px-2 py-4 bg-card space-y-1">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
