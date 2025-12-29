@@ -137,7 +137,7 @@ export default function DashboardLayout({
           }`}
         >
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-card overflow-y-auto">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full h-full bg-card">
             <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} onNavigate={() => setSidebarOpen(false)} />
           </div>
         </div>
@@ -149,7 +149,7 @@ export default function DashboardLayout({
           }`}
         >
           <div 
-            className={`flex flex-col w-64 transition-transform duration-300 ease-in-out overflow-y-auto bg-card ${
+            className={`flex flex-col w-64 h-full transition-transform duration-300 ease-in-out bg-card ${
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
           >
