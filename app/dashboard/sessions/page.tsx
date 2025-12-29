@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity, Zap, RotateCcw } from 'lucide-react';
+import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity, Zap, RotateCcw, MoreVertical } from 'lucide-react';
 import EnhancedBookingModal from '@/components/sessions/EnhancedBookingModal';
 
 interface CoachingSession {
@@ -444,7 +444,8 @@ export default function SessionsPage() {
             <h1 className="text-3xl font-bold text-foreground">Coaching Sessions</h1>
             <p className="text-muted-foreground mt-1">Manage your coaching sessions and track your progress with AI and human coaches.</p>
           </div>
-          <div className="flex space-x-3">
+          {/* Desktop buttons - hidden on mobile */}
+          <div className="hidden md:flex space-x-3">
             <button 
               onClick={handleClearStats}
               disabled={clearingStats}
@@ -461,6 +462,15 @@ export default function SessionsPage() {
               Book Session
             </button>
           </div>
+
+          {/* Mobile menu icon */}
+          <button
+            onClick={() => setShowMobileMenu(true)}
+            className="md:hidden p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            aria-label="Open actions menu"
+          >
+            <MoreVertical className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
