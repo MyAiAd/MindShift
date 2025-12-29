@@ -25,7 +25,8 @@ import {
   UserCheck,
   Video,
   PlayCircle,
-  Flag
+  Flag,
+  BarChart3
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -283,6 +284,20 @@ function SidebarContent({
                 </p>
               </div>
               <div className="space-y-1">
+                <Link
+                  href="/dashboard/admin/analytics"
+                  onClick={handleNavClick}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname?.startsWith('/dashboard/admin/analytics')
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  <BarChart3 className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname?.startsWith('/dashboard/admin/analytics') ? 'text-primary' : ''
+                  }`} />
+                  Analytics
+                </Link>
                 <Link
                   href="/dashboard/admin/videos"
                   onClick={handleNavClick}
