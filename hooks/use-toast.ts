@@ -7,6 +7,8 @@ type ToasterToast = {
   description?: string
   action?: ToastActionElement
   variant?: 'default' | 'destructive'
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const TOAST_LIMIT = 1
