@@ -556,11 +556,11 @@ export default function DataManagementPage() {
               <div className="space-y-4">
                 {profile?.role === 'super_admin' && (
                   <div>
-                    <label className="block text-sm font-medium text-foreground text-foreground mb-2">Target Tenant</label>
+                    <label className="block text-sm font-medium text-foreground mb-2">Target Tenant</label>
                     <select
                       value={selectedTenant}
                       onChange={(e) => setSelectedTenant(e.target.value)}
-                      className="w-full max-w-md px-3 py-2 border border-border border-border bg-background text-foreground rounded-lg focus:ring-primary focus:border-primary"
+                      className="w-full max-w-md px-3 py-2 border border-border bg-background text-foreground rounded-lg focus:ring-primary focus:border-primary"
                       required
                     >
                       <option value="">Select Tenant</option>
