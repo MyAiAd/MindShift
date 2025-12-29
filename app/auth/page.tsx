@@ -178,7 +178,7 @@ export default function AuthPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center">
-            <Brain className="h-12 w-12 text-indigo-600" />
+            <Brain className="h-12 w-12 text-primary" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
             {isSignUp ? 'Create your account' : 'Sign in to your account'}
@@ -189,13 +189,13 @@ export default function AuthPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md">
             {error}
           </div>
         )}
         
         {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+          <div className="bg-accent/10 border border-accent text-accent px-4 py-3 rounded-md">
             {success}
           </div>
         )}
@@ -217,7 +217,7 @@ export default function AuthPage() {
                         required
                         value={formData.firstName}
                         onChange={(e) => handleInputChange('firstName', e.target.value)}
-                        className="appearance-none rounded-md relative block w-full px-10 py-3 border border-border placeholder-gray-500 text-foreground focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                        className="appearance-none rounded-md relative block w-full px-10 py-3 bg-background border border-border placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                         placeholder="John"
                       />
                     </div>
@@ -234,7 +234,7 @@ export default function AuthPage() {
                         required
                         value={formData.lastName}
                         onChange={(e) => handleInputChange('lastName', e.target.value)}
-                        className="appearance-none rounded-md relative block w-full px-10 py-3 border border-border placeholder-gray-500 text-foreground focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                        className="appearance-none rounded-md relative block w-full px-10 py-3 bg-background border border-border placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                         placeholder="Doe"
                       />
                     </div>
@@ -253,7 +253,7 @@ export default function AuthPage() {
                       required
                       value={formData.tenantName}
                       onChange={(e) => handleInputChange('tenantName', e.target.value)}
-                      className="appearance-none rounded-md relative block w-full px-10 py-3 border border-border placeholder-gray-500 text-foreground focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      className="appearance-none rounded-md relative block w-full px-10 py-3 bg-background border border-border placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                       placeholder="Acme Corporation"
                     />
                   </div>
@@ -273,7 +273,7 @@ export default function AuthPage() {
                       required
                       value={formData.tenantSlug}
                       onChange={(e) => handleInputChange('tenantSlug', e.target.value)}
-                      className="appearance-none rounded-none rounded-r-md relative block w-full px-3 py-3 border border-border placeholder-gray-500 text-foreground focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      className="appearance-none rounded-none rounded-r-md relative block w-full px-3 py-3 bg-background border border-border placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                       placeholder="acme-corp"
                     />
                   </div>
@@ -293,7 +293,7 @@ export default function AuthPage() {
                   required
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="appearance-none rounded-md relative block w-full px-10 py-3 border border-border placeholder-gray-500 text-foreground focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-md relative block w-full px-10 py-3 bg-background border border-border placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                   placeholder="john@acme.com"
                 />
               </div>
@@ -311,7 +311,7 @@ export default function AuthPage() {
                   required
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="appearance-none rounded-md relative block w-full px-10 py-3 border border-border placeholder-gray-500 text-foreground focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-md relative block w-full px-10 py-3 bg-background border border-border placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                   placeholder="••••••••"
                 />
               </div>
@@ -322,7 +322,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               {isSignUp ? 'Create Account' : 'Sign In'}
@@ -333,7 +333,7 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-indigo-600 hover:text-indigo-500 text-sm"
+              className="text-primary hover:text-primary/90 text-sm"
             >
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>
