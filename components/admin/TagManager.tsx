@@ -37,8 +37,12 @@ import { useToast } from '@/hooks/use-toast';
 interface Tag {
   id: string;
   name: string;
-  slug: string;
-  usage_count?: number;
+  description?: string | null;
+  color?: string | null;
+  use_count?: number;
+  created_by?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface TagManagerProps {
@@ -247,9 +251,9 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
                     >
                       <div className="flex items-center gap-3">
                         <Badge variant="outline">{tag.name}</Badge>
-                        {tag.usage_count !== undefined && (
+                        {tag.use_count !== undefined && (
                           <span className="text-sm text-muted-foreground">
-                            {tag.usage_count} {tag.usage_count === 1 ? 'post' : 'posts'}
+                            {tag.use_count} {tag.use_count === 1 ? 'post' : 'posts'}
                           </span>
                         )}
                       </div>
@@ -339,12 +343,12 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
             <AlertDialogTitle>Delete Tag?</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete the tag <strong>{deletingTag?.name}</strong>?
-              {deletingTag?.usage_count && deletingTag.usage_count > 0 && (
+              {deletingTag?.use_count && deletingTag.use_count > 0 && (
                 <>
                   <br />
                   <br />
-                  This tag is currently used by {deletingTag.usage_count}{' '}
-                  {deletingTag.usage_count === 1 ? 'post' : 'posts'}. The tag will be removed
+                  This tag is currently used by {deletingTag.use_count}{' '}
+                  {deletingTag.use_count === 1 ? 'post' : 'posts'}. The tag will be removed
                   from all posts.
                 </>
               )}

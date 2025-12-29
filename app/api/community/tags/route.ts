@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log('GET tags - returning:', { count: tags?.length || 0 });
     return NextResponse.json({ tags: tags || [] });
   } catch (error) {
     console.error('Error in tags fetch:', error);
@@ -78,11 +79,13 @@ export async function GET(request: NextRequest) {
 
 // POST /api/community/tags - Create a new tag
 export async function POST(request: NextRequest) {
+  console.log('POST /api/community/tags - Request received');
   try {
     const supabase = createServerClient();
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log('User authenticated:', { userId: user?.id, hasError: !!authError });
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -95,12 +98,19 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
+    console.log('Profile fetched:', { 
+      hasProfile: !!profile, 
+      tenantId: profile?.tenant_id, 
+      role: profile?.role 
+    });
+
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     const body = await request.json();
     const { name, description, color } = body;
+    console.log('Request body:', { name, description, color });
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -170,8 +180,10 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error creating tag:', insertError);
+      console.error('Tag data attempted:', tagData);
+      console.error('User profile:', profile);
       return NextResponse.json(
-        { error: 'Failed to create tag' },
+        { error: insertError.message || 'Failed to create tag', details: insertError },
         { status: 500 }
       );
     }
