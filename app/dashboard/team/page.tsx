@@ -452,7 +452,7 @@ export default function CustomerManagementPage() {
                 placeholder="Search customers by name or email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground"
               />
             </div>
           </div>
@@ -481,7 +481,7 @@ export default function CustomerManagementPage() {
                 <select
                   value={subscriptionTier}
                   onChange={(e) => setSubscriptionTier(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground"
                 >
                   <option value="">All Tiers</option>
                   <option value="trial">Trial</option>
@@ -495,7 +495,7 @@ export default function CustomerManagementPage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground"
                 >
                   <option value="created_at">Join Date</option>
                   <option value="email">Email</option>
