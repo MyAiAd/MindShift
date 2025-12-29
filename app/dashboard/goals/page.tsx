@@ -572,7 +572,7 @@ export default function GoalsPage() {
                   required
                   value={editFormData.title}
                   onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground"
                 />
               </div>
               <div>
@@ -581,7 +581,7 @@ export default function GoalsPage() {
                   rows={3}
                   value={editFormData.description}
                   onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -590,7 +590,7 @@ export default function GoalsPage() {
                   <select 
                     value={editFormData.status}
                     onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground"
                   >
                     <option value="not_started">Not Started</option>
                     <option value="in_progress">In Progress</option>
@@ -606,7 +606,7 @@ export default function GoalsPage() {
                     max="100"
                     value={editFormData.progress}
                     onChange={(e) => setEditFormData({ ...editFormData, progress: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground"
                   />
                 </div>
               </div>
@@ -616,7 +616,7 @@ export default function GoalsPage() {
                   type="date"
                   value={editFormData.targetDate}
                   onChange={(e) => setEditFormData({ ...editFormData, targetDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground"
                 />
               </div>
               <div className="flex space-x-3 pt-4">
