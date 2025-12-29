@@ -37,6 +37,7 @@ interface Video {
   completion_count: number;
   average_watch_percentage: number;
   category?: {
+    id: string;
     name: string;
   };
   tags?: string[];
