@@ -182,14 +182,17 @@ export default function VideoManagementPage() {
             <Button
               variant="outline"
               onClick={() => setShowCategoryManager(true)}
-              className="gap-2"
+              size="icon"
+              title="Manage Categories"
             >
               <Filter className="h-4 w-4" />
-              Categories
             </Button>
-            <Button onClick={() => router.push('/dashboard/admin/videos/new')} className="gap-2">
+            <Button 
+              onClick={() => router.push('/dashboard/admin/videos/new')} 
+              size="icon"
+              title="New Video"
+            >
               <Plus className="h-4 w-4" />
-              New Video
             </Button>
           </div>
         </div>
