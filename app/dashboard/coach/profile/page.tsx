@@ -211,8 +211,8 @@ export default function CoachProfilePage() {
         <div className="flex items-start space-x-3">
           <User className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 flex-shrink-0" />
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Coach Profile</h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-[#93a1a1] mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Coach Profile</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Manage your coaching specialties, preferences, and professional information
             </p>
           </div>
@@ -239,11 +239,11 @@ export default function CoachProfilePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
         {/* Basic Info */}
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-4 sm:p-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Basic Information</h2>
+        <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-4">Basic Information</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">
+              <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1] mb-2">
                 First Name
               </label>
               <input
@@ -251,12 +251,12 @@ export default function CoachProfilePage() {
                 value={coachProfile?.firstName || ''}
                 disabled
                 aria-label="First Name (read-only)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-secondary/20 text-gray-500 cursor-not-allowed text-sm sm:text-base"
               />
               <p className="text-xs text-gray-500 mt-1">Update in main settings</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">
+              <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1] mb-2">
                 Last Name
               </label>
               <input
@@ -264,7 +264,7 @@ export default function CoachProfilePage() {
                 value={coachProfile?.lastName || ''}
                 disabled
                 aria-label="Last Name (read-only)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-secondary/20 text-gray-500 cursor-not-allowed text-sm sm:text-base"
               />
               <p className="text-xs text-gray-500 mt-1">Update in main settings</p>
             </div>
@@ -272,12 +272,12 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Specialties */}
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-4 sm:p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
           <div className="flex items-start space-x-2 mb-4">
             <Star className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-[#fdf6e3]">Coaching Specialties</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">Coaching Specialties</h2>
           </div>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-[#93a1a1] mb-4">
+          <p className="text-sm sm:text-base text-muted-foreground mb-4">
             Select the areas you specialize in. Clients will see coaches filtered by these specialties when booking sessions.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -305,7 +305,7 @@ export default function CoachProfilePage() {
                     <CheckCircle className="w-3 h-3 text-white" />
                   )}
                 </div>
-                <span className="text-sm font-medium text-gray-900 dark:text-[#fdf6e3]">
+                <span className="text-sm font-medium text-foreground">
                   {specialty}
                 </span>
               </label>
@@ -314,12 +314,12 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Meeting Types */}
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-4 sm:p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
           <div className="flex items-start space-x-2 mb-4">
             <Video className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-[#fdf6e3]">Preferred Meeting Types</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">Preferred Meeting Types</h2>
           </div>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-[#93a1a1] mb-4">
+          <p className="text-sm sm:text-base text-muted-foreground mb-4">
             Select your preferred meeting formats. Clients will only see these options when booking with you.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -350,7 +350,7 @@ export default function CoachProfilePage() {
                     )}
                   </div>
                   <Icon className="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
-                  <span className="text-sm font-medium text-gray-900 dark:text-[#fdf6e3]">
+                  <span className="text-sm font-medium text-foreground">
                     {type.label}
                   </span>
                 </label>
@@ -360,9 +360,9 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Bio */}
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-4 sm:p-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Professional Bio</h2>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-[#93a1a1] mb-4">
+        <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-4">Professional Bio</h2>
+          <p className="text-sm sm:text-base text-muted-foreground mb-4">
             Write a brief description of your coaching background and approach. This will be shown to clients.
           </p>
           <textarea
@@ -379,12 +379,12 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Credentials */}
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-4 sm:p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
           <div className="flex items-start space-x-2 mb-4">
             <Award className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-[#fdf6e3]">Credentials & Certifications</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">Credentials & Certifications</h2>
           </div>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-[#93a1a1] mb-4">
+          <p className="text-sm sm:text-base text-muted-foreground mb-4">
             List your relevant certifications, degrees, or professional qualifications.
           </p>
           <textarea
@@ -401,7 +401,7 @@ export default function CoachProfilePage() {
         </div>
 
         {/* Availability Calendar */}
-        <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-4 sm:p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
           <AvailabilityCalendar 
             coachId={coachProfile?.id} 
             readOnly={!hasCoachPermissions}
