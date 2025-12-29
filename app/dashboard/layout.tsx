@@ -22,7 +22,8 @@ import {
   CreditCard,
   Database,
   Shield,
-  UserCheck
+  UserCheck,
+  Video
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -38,6 +39,8 @@ const sidebarItems = [
   { icon: Target, label: 'Goals', href: '/dashboard/goals' },
   { icon: TrendingUp, label: 'Progress', href: '/dashboard/progress' },
   { icon: Calendar, label: 'Sessions', href: '/dashboard/sessions' },
+  { icon: Video, label: 'Tutorials', href: '/dashboard/tutorials' },
+  { icon: Users, label: 'Community', href: '/dashboard/community' },
   { icon: CreditCard, label: 'Subscription', href: '/dashboard/subscription' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
