@@ -724,7 +724,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Notification Settings */}
-          <div id="notifications" className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border border-border p-4 sm:p-6 scroll-mt-20">
+          <div id="notifications" className="bg-card rounded-lg shadow-sm border border-border p-4 sm:p-6 scroll-mt-20">
             <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4">Notification Preferences</h3>
             
             {/* Notification Status Messages */}
@@ -1060,7 +1060,7 @@ export default function SettingsPage() {
                         <p className="font-medium text-foreground">Essential Cookies</p>
                         <p className="text-sm text-muted-foreground">Required for basic site functionality</p>
                       </div>
-                      <span className="text-sm text-gray-500 dark:text-[#839496]">Always Active</span>
+                      <span className="text-sm text-muted-foreground">Always Active</span>
                     </div>
                     
                     <div className="flex items-center justify-between">
@@ -1397,7 +1397,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Danger Zone */}
-          <Card className="bg-white dark:bg-[#073642] border-red-200 dark:border-red-800">
+          <Card className="bg-card border-red-200 dark:border-red-800">
             <CardHeader>
               <CardTitle className="text-red-900 dark:text-red-400">Danger Zone</CardTitle>
             </CardHeader>
