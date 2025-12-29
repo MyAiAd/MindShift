@@ -276,7 +276,7 @@ export default function SubscriptionManager() {
     switch (tier) {
       case 'level_1': return <Zap className="h-6 w-6 text-blue-500" />;
       case 'level_2': return <Crown className="h-6 w-6 text-purple-500" />;
-      default: return <Star className="h-6 w-6 text-gray-500" />;
+      default: return <Star className="h-6 w-6 text-muted-foreground" />;
     }
   };
 
@@ -339,7 +339,7 @@ export default function SubscriptionManager() {
               {getTierIcon(subscription.current_tier)}
               <div>
                 <h3 className="font-medium text-foreground">{subscription.subscription_plans.name}</h3>
-                <p className="text-sm text-muted-foreground dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Status: {subscription.status} • 
                   {subscription.cancel_at_period_end 
                     ? ` Cancels on ${new Date(subscription.current_period_end).toLocaleDateString()}`
@@ -418,7 +418,7 @@ export default function SubscriptionManager() {
             className={`bg-card rounded-lg shadow-sm border-2 p-6 flex flex-col h-full ${
               subscription?.current_tier === plan.tier 
                 ? 'border-indigo-500 ring-2 ring-indigo-100 dark:ring-indigo-900' 
-                : 'border-border dark:border-gray-700'
+                : 'border-border'
             }`}
           >
             {/* Header */}
@@ -441,7 +441,7 @@ export default function SubscriptionManager() {
             <div className="mb-6">
               <div className="text-3xl font-bold text-foreground">
                 ${isYearly ? plan.price_yearly : plan.price_monthly}
-                <span className="text-lg font-normal text-muted-foreground dark:text-gray-400">
+                <span className="text-lg font-normal text-muted-foreground">
                   /{isYearly ? 'year' : 'month'}
                 </span>
               </div>
@@ -473,7 +473,7 @@ export default function SubscriptionManager() {
                   <h5 className="font-medium text-sm text-foreground mb-2">Limits:</h5>
                   <ul className="space-y-1">
                     {Object.entries(plan.limits).map(([limit, value]) => (
-                      <li key={limit} className="text-xs text-muted-foreground dark:text-gray-400">
+                      <li key={limit} className="text-xs text-muted-foreground">
                         {limit.replace(/_/g, ' ')}: {value === -1 ? 'Unlimited' : value}
                       </li>
                     ))}

@@ -462,7 +462,7 @@ export default function ProgressPage() {
                   </span>
                 </div>
                 
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-secondary rounded-full h-3">
                   <div 
                     className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
                     style={{ width: `${gamificationData.levelProgress.levelProgressPercentage}%` }}
@@ -476,8 +476,8 @@ export default function ProgressPage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <Star className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 dark:text-[#839496]">Start your journey to earn XP and level up!</p>
+                <Star className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground dark:text-[#839496]">Start your journey to earn XP and level up!</p>
               </div>
             )}
           </div>
@@ -507,7 +507,7 @@ export default function ProgressPage() {
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {formatDate(achievement.earned_at)}
                         </p>
                       </div>
@@ -517,9 +517,9 @@ export default function ProgressPage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <Award className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 dark:text-[#839496]">No recent achievements</p>
-                <p className="text-sm text-gray-400">Complete goals and log progress to earn achievements!</p>
+                <Award className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground dark:text-[#839496]">No recent achievements</p>
+                <p className="text-sm text-muted-foreground">Complete goals and log progress to earn achievements!</p>
               </div>
             )}
           </div>
@@ -532,7 +532,7 @@ export default function ProgressPage() {
             <select 
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             >
               <option value="30">30d</option>
               <option value="90">3m</option>
@@ -603,16 +603,16 @@ export default function ProgressPage() {
           ) : (
             <div className="h-64 flex items-center justify-center bg-secondary/20 dark:bg-[#586e75] rounded-lg">
               <div className="text-center">
-                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 dark:text-[#839496]">No progress data yet</p>
-                <p className="text-sm text-gray-400 mt-1">
+                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground dark:text-[#839496]">No progress data yet</p>
+                <p className="text-sm text-muted-foreground mt-1">
                   Start logging progress entries to see your trends over time
                 </p>
               </div>
             </div>
           )}
           
-          <div className="mt-4 text-sm text-gray-500 text-center">
+          <div className="mt-4 text-sm text-muted-foreground text-center">
             Showing {stats?.progressTrends.length || 0} entries in the {getTimeRangeLabel(timeRange).toLowerCase()}
           </div>
         </div>
@@ -650,9 +650,9 @@ export default function ProgressPage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <Flame className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 dark:text-[#839496]">No active streaks</p>
-                <p className="text-sm text-gray-400">Stay consistent to build streaks!</p>
+                <Flame className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground dark:text-[#839496]">No active streaks</p>
+                <p className="text-sm text-muted-foreground">Stay consistent to build streaks!</p>
               </div>
             )}
           </div>
@@ -692,9 +692,9 @@ export default function ProgressPage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500 dark:text-[#839496]">No stats yet</p>
-                <p className="text-sm text-gray-400">Start your journey to see stats!</p>
+                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground dark:text-[#839496]">No stats yet</p>
+                <p className="text-sm text-muted-foreground">Start your journey to see stats!</p>
               </div>
             )}
           </div>
@@ -709,7 +709,7 @@ export default function ProgressPage() {
               <h3 className="text-lg font-semibold text-foreground">Log Progress Entry</h3>
               <button
                 onClick={() => setShowNewEntryModal(false)}
-                className="text-gray-400 hover:text-muted-foreground"
+                className="text-muted-foreground hover:text-muted-foreground"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -721,7 +721,7 @@ export default function ProgressPage() {
                   required
                   value={newEntry.goalId}
                   onChange={(e) => setNewEntry({ ...newEntry, goalId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">Select a goal...</option>
                   {goals.map((goal) => (
@@ -739,7 +739,7 @@ export default function ProgressPage() {
                   required
                   value={newEntry.entryDate}
                   onChange={(e) => setNewEntry({ ...newEntry, entryDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
@@ -791,7 +791,7 @@ export default function ProgressPage() {
                   rows={3}
                   value={newEntry.notes}
                   onChange={(e) => setNewEntry({ ...newEntry, notes: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="How are you feeling today? Any insights or challenges?"
                 />
               </div>
@@ -800,7 +800,7 @@ export default function ProgressPage() {
                 <button
                   type="button"
                   onClick={() => setShowNewEntryModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-foreground hover:bg-secondary/20 dark:bg-[#002b36]"
+                  className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary/20 dark:bg-[#002b36]"
                 >
                   Cancel
                 </button>

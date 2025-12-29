@@ -83,7 +83,7 @@ export default function RealityShifting({
       {/* V3 Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-foreground">
             Reality Shifting
           </h3>
           <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full flex items-center space-x-1">
@@ -96,7 +96,7 @@ export default function RealityShifting({
           <button
             onClick={onUndo}
             disabled={isLoading}
-            className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
+            className="flex items-center space-x-1 px-3 py-1 text-sm text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
           >
             <Undo2 className="h-4 w-4" />
             <span>Undo</span>
@@ -134,7 +134,7 @@ export default function RealityShifting({
               onChange={(e) => setUserInput(e.target.value)}
               placeholder="Type your response..."
               disabled={isLoading}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
+              className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
               onKeyPress={(e) => {
                 if (e.key === 'Enter' && userInput.trim() && !isLoading) {
                   onSendMessage(userInput.trim());
@@ -142,7 +142,7 @@ export default function RealityShifting({
               }}
             />
             <div className="absolute right-3 top-3">
-              <span className="text-xs text-gray-400">Press Enter to send</span>
+              <span className="text-xs text-muted-foreground">Press Enter to send</span>
             </div>
           </div>
           

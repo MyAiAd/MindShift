@@ -34,7 +34,7 @@ export default function MobileAuthControl() {
         className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-all ${
           selected === 'signin'
             ? 'bg-indigo-600 text-white'
-            : 'text-gray-700 hover:bg-indigo-50 active:bg-indigo-100'
+            : 'text-foreground hover:bg-accent active:bg-accent'
         }`}
         onMouseDown={() => setSelected('signin')}
       >
@@ -49,7 +49,7 @@ export default function MobileAuthControl() {
         className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-all ${
           selected === 'signup'
             ? 'bg-indigo-600 text-white'
-            : 'text-gray-700 hover:bg-indigo-50 active:bg-indigo-100'
+            : 'text-foreground hover:bg-accent active:bg-accent'
         }`}
         onMouseDown={() => setSelected('signup')}
       >
@@ -61,7 +61,7 @@ export default function MobileAuthControl() {
       
       <button
         onClick={() => setSelected('none')}
-        className="px-2 py-1.5 text-gray-500 hover:bg-indigo-50 active:bg-indigo-100 transition-colors"
+        className="px-2 py-1.5 text-muted-foreground hover:bg-accent active:bg-accent transition-colors"
         aria-label="Collapse authentication options"
       >
         <X className="h-3.5 w-3.5" />

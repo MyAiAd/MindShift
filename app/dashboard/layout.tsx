@@ -136,7 +136,7 @@ export default function DashboardLayout({
             sidebarOpen ? 'block' : 'hidden'
           }`}
         >
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
+          <div className="fixed inset-0 bg-background/75" onClick={() => setSidebarOpen(false)} />
           <div className="relative flex-1 flex flex-col max-w-xs w-full h-full bg-card">
             <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} onNavigate={() => setSidebarOpen(false)} />
           </div>

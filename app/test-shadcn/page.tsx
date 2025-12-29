@@ -5,10 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function TestShadcnPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">shadcn/ui Component Test</h1>
-        <p className="text-gray-600 mb-8">Testing Button and Card components from shadcn/ui</p>
+        <h1 className="text-4xl font-bold text-foreground mb-2">shadcn/ui Component Test</h1>
+        <p className="text-muted-foreground mb-8">Testing Button and Card components from shadcn/ui</p>
 
         {/* Test Card 1 */}
         <Card className="mb-8">
@@ -51,7 +51,7 @@ export default function TestShadcnPage() {
             <CardDescription>This is a test of the Card component from shadcn/ui</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700 mb-4">
+            <p className="text-foreground mb-4">
               If you can see this card with proper styling, the shadcn/ui components are working correctly!
             </p>
             <Button onClick={() => alert('Button works!')}>Click Me</Button>

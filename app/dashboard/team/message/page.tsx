@@ -198,7 +198,7 @@ export default function MessageClientPage() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-indigo-600" />
-          <p className="text-gray-600 dark:text-[#93a1a1]">Loading messaging interface...</p>
+          <p className="text-muted-foreground dark:text-[#93a1a1]">Loading messaging interface...</p>
         </div>
       </div>
     );
@@ -223,36 +223,36 @@ export default function MessageClientPage() {
         <div className="flex items-center space-x-4 mb-4">
           <Link 
             href="/dashboard/team"
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="flex items-center space-x-2">
             <MessageCircle className="h-6 w-6 text-indigo-600" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Message a Client</h1>
+            <h1 className="text-3xl font-bold text-foreground dark:text-[#fdf6e3]">Message a Client</h1>
           </div>
         </div>
-        <p className="text-gray-600 dark:text-[#93a1a1]">Send messages and check-ins to your clients.</p>
+        <p className="text-muted-foreground dark:text-[#93a1a1]">Send messages and check-ins to your clients.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Client List */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4 flex items-center">
+          <div className="bg-card rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4 flex items-center">
               <Users className="h-5 w-5 mr-2 text-indigo-600" />
               Select Client
             </h2>
             
             {/* Search */}
             <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search clients..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
 
@@ -260,8 +260,8 @@ export default function MessageClientPage() {
             <div className="space-y-2">
               {filteredClients.length === 0 ? (
                 <div className="text-center py-8">
-                  <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-[#839496]">
+                  <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground dark:text-[#839496]">
                     {searchTerm ? 'No clients found matching your search.' : 'No clients available.'}
                   </p>
                 </div>
@@ -273,7 +273,7 @@ export default function MessageClientPage() {
                     className={`w-full text-left p-3 rounded-lg border transition-colors ${
                       selectedClient?.id === client.id
                         ? 'bg-indigo-50 border-indigo-200'
-                        : 'hover:bg-gray-50 border-gray-200'
+                        : 'hover:bg-secondary/20 border-border'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
@@ -283,14 +283,14 @@ export default function MessageClientPage() {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-[#fdf6e3] truncate">{client.name}</p>
+                        <p className="font-medium text-foreground dark:text-[#fdf6e3] truncate">{client.name}</p>
                         <div className="flex items-center space-x-2">
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                             client.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
                           }`}>
                             {client.status}
                           </span>
-                          <p className="text-xs text-gray-500 dark:text-[#839496]">{client.lastActive}</p>
+                          <p className="text-xs text-muted-foreground dark:text-[#839496]">{client.lastActive}</p>
                         </div>
                       </div>
                     </div>
@@ -303,8 +303,8 @@ export default function MessageClientPage() {
 
         {/* Message Composer */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4 flex items-center">
+          <div className="bg-card rounded-lg shadow-sm border p-6">
+            <h2 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4 flex items-center">
               <Send className="h-5 w-5 mr-2 text-indigo-600" />
               Compose Message
             </h2>
@@ -320,15 +320,15 @@ export default function MessageClientPage() {
                       </span>
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{selectedClient.name}</p>
-                      <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{selectedClient.email}</p>
+                      <p className="font-medium text-foreground dark:text-[#fdf6e3]">{selectedClient.name}</p>
+                      <p className="text-sm text-muted-foreground dark:text-[#93a1a1]">{selectedClient.email}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Message Templates */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Quick Templates
                   </label>
                   <select
@@ -339,7 +339,7 @@ export default function MessageClientPage() {
                         handleTemplateSelect(template.content);
                       }
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">Select a template...</option>
                     {messageTemplates.map((template) => (
@@ -352,14 +352,14 @@ export default function MessageClientPage() {
 
                 {/* Message Input */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Message
                   </label>
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="Type your message here..."
                   />
                 </div>
@@ -382,8 +382,8 @@ export default function MessageClientPage() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-[#839496]">Select a client to compose a message</p>
+                <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground dark:text-[#839496]">Select a client to compose a message</p>
               </div>
             )}
           </div>
@@ -391,8 +391,8 @@ export default function MessageClientPage() {
       </div>
 
       {/* Recent Messages */}
-      <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4 flex items-center">
+      <div className="mt-8 bg-card rounded-lg shadow-sm border p-6">
+        <h2 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4 flex items-center">
           <Clock className="h-5 w-5 mr-2 text-indigo-600" />
           Recent Messages
         </h2>
@@ -400,9 +400,9 @@ export default function MessageClientPage() {
         <div className="space-y-4">
           {recentMessages.length === 0 ? (
             <div className="text-center py-8">
-              <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-[#839496]">No recent messages yet.</p>
-              <p className="text-sm text-gray-400 mt-1">Your sent and received messages will appear here.</p>
+              <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground dark:text-[#839496]">No recent messages yet.</p>
+              <p className="text-sm text-muted-foreground mt-1">Your sent and received messages will appear here.</p>
             </div>
           ) : (
             recentMessages.map((message) => (
@@ -410,10 +410,10 @@ export default function MessageClientPage() {
                 message.is_sender ? 'border-indigo-500' : 'border-green-500'
               }`}>
                 <div className="flex items-center space-x-2 mb-1">
-                  <span className="font-medium text-gray-900 dark:text-[#fdf6e3]">
+                  <span className="font-medium text-foreground dark:text-[#fdf6e3]">
                     {message.is_sender ? message.receiver_name : message.sender_name}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-[#839496]">
+                  <span className="text-xs text-muted-foreground dark:text-[#839496]">
                     {formatTime(message.created_at)}
                   </span>
                   {message.status === 'read' && (
@@ -427,7 +427,7 @@ export default function MessageClientPage() {
                     {message.is_sender ? 'Sent' : 'Received'}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{message.message_preview}</p>
+                <p className="text-sm text-muted-foreground dark:text-[#93a1a1]">{message.message_preview}</p>
               </div>
             ))
           )}

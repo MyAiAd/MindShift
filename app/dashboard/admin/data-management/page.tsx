@@ -365,7 +365,7 @@ export default function DataManagementPage() {
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab
                   ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-foreground hover:border-gray-300'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               {tab === 'import_export' ? 'Import/Export' : 
@@ -389,7 +389,7 @@ export default function DataManagementPage() {
                   <select
                     value={selectedTenant}
                     onChange={(e) => setSelectedTenant(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">All Tenants</option>
                     {tenants.map((tenant) => (
@@ -405,7 +405,7 @@ export default function DataManagementPage() {
                       <option value="filter:super_admin">Super Admin Accounts</option>
                     </optgroup>
                   </select>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-muted-foreground mt-2">
                     Select a specific tenant or filter by subscription tier
                   </p>
                 </div>
@@ -428,7 +428,7 @@ export default function DataManagementPage() {
                     type="file"
                     accept=".json,.csv"
                     onChange={handleFileUpload}
-                    className="block w-full text-sm text-gray-500 dark:text-[#839496] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                    className="block w-full text-sm text-muted-foreground dark:text-[#839496] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                   />
                   {importFile && (
                     <p className="mt-2 text-sm text-muted-foreground">
@@ -471,7 +471,7 @@ export default function DataManagementPage() {
                   <select
                     value={exportType}
                     onChange={(e) => setExportType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="customers">Customer Data</option>
                     <option value="subscription_plans">Subscription Plans</option>
@@ -484,7 +484,7 @@ export default function DataManagementPage() {
                   <select
                     value={exportFormat}
                     onChange={(e) => setExportFormat(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="json">JSON</option>
                     <option value="csv">CSV</option>
@@ -560,7 +560,7 @@ export default function DataManagementPage() {
                     <select
                       value={selectedTenant}
                       onChange={(e) => setSelectedTenant(e.target.value)}
-                      className="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full max-w-md px-3 py-2 border border-border dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                       required
                     >
                       <option value="">Select Tenant</option>
@@ -583,7 +583,7 @@ export default function DataManagementPage() {
                     max="200"
                     value={testDataCount}
                     onChange={(e) => setTestDataCount(parseInt(e.target.value))}
-                    className="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full max-w-md px-3 py-2 border border-border dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
 

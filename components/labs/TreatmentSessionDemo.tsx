@@ -671,15 +671,15 @@ export default function TreatmentSessionDemo({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="bg-card dark:bg-card rounded-lg border border-border dark:border-border">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700 p-4">
+      <div className="border-b border-border dark:border-border p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Brain className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Treatment Session Demo</h3>
-              <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+              <h3 className="text-lg font-semibold text-foreground">Treatment Session Demo</h3>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-muted-foreground">
                 <span>Method: {formatMethodName(sessionMethod)}</span>
                 {currentStep && (
                   <>
@@ -693,7 +693,7 @@ export default function TreatmentSessionDemo({
           
           {/* Session Stats */}
           {isSessionActive && (
-            <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center space-x-4 text-sm text-muted-foreground dark:text-muted-foreground">
               <div className="flex items-center space-x-1">
                 <MessageSquare className="h-4 w-4" />
                 <span>{sessionStats.totalResponses}</span>
@@ -717,27 +717,27 @@ export default function TreatmentSessionDemo({
           // Loading authentication state
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-500 dark:text-gray-400">Checking authentication...</p>
+            <p className="text-muted-foreground dark:text-muted-foreground">Checking authentication...</p>
           </div>
         ) : !actualUserId ? (
           // Not authenticated
           <div className="text-center py-8">
             <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-400" />
-            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <h4 className="text-lg font-medium text-foreground mb-2">
               Authentication Required
             </h4>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
+            <p className="text-muted-foreground dark:text-muted-foreground mb-6">
               Please sign in to use the treatment session demo.
             </p>
           </div>
         ) : !isSessionActive && !sessionComplete ? (
           // Start Session View
           <div className="text-center py-8">
-            <Brain className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
-            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <Brain className="h-12 w-12 mx-auto mb-4 text-muted-foreground dark:text-muted-foreground" />
+            <h4 className="text-lg font-medium text-foreground mb-2">
               Treatment Session Demo
             </h4>
-            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            <p className="text-muted-foreground dark:text-muted-foreground mb-6 max-w-md mx-auto">
               Experience a complete treatment session workflow. This demo uses the real 
               treatment API and provides the full authentic experience.
             </p>
@@ -752,7 +752,7 @@ export default function TreatmentSessionDemo({
           // Active Session View
           <div>
             {/* Messages Area */}
-            <div className="h-96 overflow-y-auto mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+            <div className="h-96 overflow-y-auto mb-4 p-4 bg-secondary/20 dark:bg-background rounded-lg">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -762,7 +762,7 @@ export default function TreatmentSessionDemo({
                     className={`inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                       message.isUser
                         ? 'bg-indigo-600 text-white'
-                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                        : 'bg-card dark:bg-card text-foreground border border-border dark:border-border'
                     }`}
                   >
                     <p className="text-sm">{message.content}</p>
@@ -772,7 +772,7 @@ export default function TreatmentSessionDemo({
                       </p>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                     {message.timestamp.toLocaleTimeString()}
                   </p>
                 </div>
@@ -780,10 +780,10 @@ export default function TreatmentSessionDemo({
               
               {isLoading && (
                 <div className="text-left mb-4">
-                  <div className="inline-block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2">
+                  <div className="inline-block bg-card dark:bg-card border border-border dark:border-border rounded-lg px-4 py-2">
                     <div className="flex items-center space-x-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Processing...</span>
+                      <span className="text-sm text-muted-foreground dark:text-muted-foreground">Processing...</span>
                     </div>
                   </div>
                 </div>
@@ -797,28 +797,28 @@ export default function TreatmentSessionDemo({
               {/* Work Type Selection */}
               {shouldShowWorkTypeSelection() && (
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
                     What would you like to work on?
                   </h3>
                   <div className="flex justify-center space-x-3">
                     <button
                       onClick={() => handleWorkTypeSelection('PROBLEM')}
                       disabled={isLoading}
-                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors"
                     >
                       Problem
                     </button>
                     <button
                       onClick={() => handleWorkTypeSelection('GOAL')}
                       disabled={isLoading}
-                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors"
                     >
                       Goal
                     </button>
                     <button
                       onClick={() => handleWorkTypeSelection('EXPERIENCE')}
                       disabled={isLoading}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors"
                     >
                       Negative Experience
                     </button>
@@ -832,7 +832,7 @@ export default function TreatmentSessionDemo({
                   <button
                     onClick={() => handleYesNoResponse('yes')}
                     disabled={isLoading}
-                    className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+                    className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
                   >
                     <span className="bg-red-700 px-2 py-1 rounded text-sm font-bold">1</span>
                     <span>Yes</span>
@@ -841,7 +841,7 @@ export default function TreatmentSessionDemo({
                   <button
                     onClick={() => handleYesNoResponse('no')}
                     disabled={isLoading}
-                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
                   >
                     <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
                     <span>No</span>
@@ -852,7 +852,7 @@ export default function TreatmentSessionDemo({
               {/* Method Selection Buttons */}
               {shouldShowMethodSelection() && (
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
                     Choose your Mind Shifting method:
                   </h3>
                   {selectedWorkType === 'PROBLEM' ? (
@@ -862,7 +862,7 @@ export default function TreatmentSessionDemo({
                         <button
                           onClick={() => handleMethodSelection('Problem Shifting')}
                           disabled={isLoading}
-                          className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                         >
                           <span className="bg-blue-700 px-2 py-1 rounded text-xs font-bold">1</span>
                           <span>Problem Shifting</span>
@@ -871,7 +871,7 @@ export default function TreatmentSessionDemo({
                         <button
                           onClick={() => handleMethodSelection('Identity Shifting')}
                           disabled={isLoading}
-                          className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                         >
                           <span className="bg-purple-700 px-2 py-1 rounded text-xs font-bold">2</span>
                           <span>Identity Shifting</span>
@@ -880,7 +880,7 @@ export default function TreatmentSessionDemo({
                         <button
                           onClick={() => handleMethodSelection('Belief Shifting')}
                           disabled={isLoading}
-                          className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                         >
                           <span className="bg-green-700 px-2 py-1 rounded text-xs font-bold">3</span>
                           <span>Belief Shifting</span>
@@ -889,7 +889,7 @@ export default function TreatmentSessionDemo({
                         <button
                           onClick={() => handleMethodSelection('Blockage Shifting')}
                           disabled={isLoading}
-                          className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                         >
                           <span className="bg-orange-700 px-2 py-1 rounded text-xs font-bold">4</span>
                           <span>Blockage Shifting</span>
@@ -902,7 +902,7 @@ export default function TreatmentSessionDemo({
                       <button
                         onClick={() => handleMethodSelection('Reality Shifting')}
                         disabled={isLoading}
-                        className="px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                        className="px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                       >
                         <span className="bg-indigo-700 px-2 py-1 rounded text-xs font-bold">1</span>
                         <span>Reality Shifting</span>
@@ -911,7 +911,7 @@ export default function TreatmentSessionDemo({
                       <button
                         onClick={() => handleMethodSelection('Trauma Shifting')}
                         disabled={isLoading}
-                        className="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                        className="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                       >
                         <span className="bg-red-700 px-2 py-1 rounded text-xs font-bold">2</span>
                         <span>Trauma Shifting</span>
@@ -920,7 +920,7 @@ export default function TreatmentSessionDemo({
                       <button
                         onClick={() => handleMethodSelection('Belief Shifting')}
                         disabled={isLoading}
-                        className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                        className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                       >
                         <span className="bg-green-700 px-2 py-1 rounded text-xs font-bold">3</span>
                         <span>Belief Shifting</span>
@@ -968,10 +968,10 @@ export default function TreatmentSessionDemo({
                     <button
                       onClick={handleUndo}
                       disabled={isLoading}
-                      className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                      className="flex items-center justify-center w-10 h-10 bg-secondary hover:bg-secondary disabled:bg-secondary/20 disabled:cursor-not-allowed border border-border rounded-lg transition-colors dark:bg-secondary dark:border-border"
                       title="Undo last step"
                     >
-                      <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                      <Undo2 className="h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
                     </button>
                   )}
                   
@@ -982,7 +982,7 @@ export default function TreatmentSessionDemo({
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
                       placeholder="Type your response..."
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                      className="flex-1 px-3 py-2 border border-border dark:border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-secondary"
                       disabled={isLoading}
                     />
                     <button
@@ -1028,12 +1028,12 @@ export default function TreatmentSessionDemo({
 
             {/* Session Controls */}
             {isSessionActive && (
-              <div className="mt-4 flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-4 flex justify-between items-center pt-4 border-t border-border dark:border-border">
                 <div className="flex items-center space-x-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                     Session: <span className="font-mono">{sessionId.slice(-8)}</span>
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                     Performance: {Math.round(performanceMetrics.averageResponseTime)}ms avg
                   </div>
                 </div>

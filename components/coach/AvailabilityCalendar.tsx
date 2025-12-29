@@ -234,7 +234,7 @@ export default function AvailabilityCalendar({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Calendar className="h-5 w-5 text-indigo-600" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-foreground">
             Weekly Availability
           </h3>
         </div>
@@ -242,13 +242,13 @@ export default function AvailabilityCalendar({
         {!readOnly && (
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-foreground dark:text-muted-foreground">
                 Timezone:
               </label>
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                className="px-3 py-1 border border-border dark:border-border rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-secondary"
                 aria-label="Select timezone"
               >
                 {TIMEZONES.map(tz => (
@@ -299,9 +299,9 @@ export default function AvailabilityCalendar({
           const daySlots = getSlotsByDay(day.value);
           
           return (
-            <div key={day.value} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div key={day.value} className="bg-card dark:bg-card rounded-lg border border-border dark:border-border p-4">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-gray-900 dark:text-white">
+                <h4 className="font-medium text-foreground">
                   {day.label}
                 </h4>
                 {!readOnly && (
@@ -317,22 +317,22 @@ export default function AvailabilityCalendar({
 
               <div className="space-y-2">
                 {daySlots.length === 0 ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground text-center py-4">
                     No availability set
                   </p>
                 ) : (
                   daySlots.map(slot => (
-                    <div key={slot.index} className="border border-gray-200 dark:border-gray-600 rounded p-3 space-y-2">
+                    <div key={slot.index} className="border border-border dark:border-border rounded p-3 space-y-2">
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          <label className="block text-xs font-medium text-foreground dark:text-muted-foreground mb-1">
                             Start
                           </label>
                                                      <select
                              value={slot.start_time}
                              onChange={(e) => updateTimeSlot(slot.index, 'start_time', e.target.value)}
                              disabled={readOnly}
-                             className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                             className="w-full px-2 py-1 text-xs border border-border dark:border-border rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-secondary"
                              aria-label={`Start time for ${DAYS_OF_WEEK[slot.day_of_week]?.label}`}
                            >
                             {timeOptions.map(time => (
@@ -344,14 +344,14 @@ export default function AvailabilityCalendar({
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          <label className="block text-xs font-medium text-foreground dark:text-muted-foreground mb-1">
                             End
                           </label>
                           <select
                             value={slot.end_time}
                             onChange={(e) => updateTimeSlot(slot.index, 'end_time', e.target.value)}
                             disabled={readOnly}
-                            className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                            className="w-full px-2 py-1 text-xs border border-border dark:border-border rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-secondary"
                             aria-label={`End time for ${DAYS_OF_WEEK[slot.day_of_week]?.label}`}
                           >
                             {timeOptions.map(time => (
@@ -365,7 +365,7 @@ export default function AvailabilityCalendar({
 
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          <label className="block text-xs font-medium text-foreground dark:text-muted-foreground mb-1">
                             Buffer (min)
                           </label>
                           <input
@@ -375,7 +375,7 @@ export default function AvailabilityCalendar({
                             value={slot.buffer_minutes}
                             onChange={(e) => updateTimeSlot(slot.index, 'buffer_minutes', parseInt(e.target.value) || 0)}
                             disabled={readOnly}
-                            className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                            className="w-full px-2 py-1 text-xs border border-border dark:border-border rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-secondary"
                             aria-label={`Buffer minutes for ${DAYS_OF_WEEK[slot.day_of_week]?.label}`}
                           />
                         </div>

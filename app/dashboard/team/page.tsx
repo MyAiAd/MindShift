@@ -143,7 +143,7 @@ export default function CustomerManagementPage() {
     switch (tier) {
       case 'level_2': return <Crown className="h-4 w-4 text-purple-500" />;
       case 'level_1': return <Zap className="h-4 w-4 text-blue-500" />;
-      default: return <Star className="h-4 w-4 text-gray-400" />;
+      default: return <Star className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -154,7 +154,7 @@ export default function CustomerManagementPage() {
     
     const subscription = customer.user_subscriptions?.[0];
     if (!subscription) {
-      return <span className="px-2 py-1 text-xs bg-secondary text-gray-800 rounded-full">No Subscription</span>;
+      return <span className="px-2 py-1 text-xs bg-secondary text-foreground rounded-full">No Subscription</span>;
     }
 
     if (subscription.cancel_at_period_end) {
@@ -169,7 +169,7 @@ export default function CustomerManagementPage() {
       case 'past_due':
         return <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">Past Due</span>;
       default:
-        return <span className="px-2 py-1 text-xs bg-secondary text-gray-800 rounded-full">{subscription.status}</span>;
+        return <span className="px-2 py-1 text-xs bg-secondary text-foreground rounded-full">{subscription.status}</span>;
     }
   };
 
@@ -293,15 +293,15 @@ export default function CustomerManagementPage() {
             <div className="bg-card dark:bg-[#073642] rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3]">Revenue Trends</h3>
-                <div className="text-sm text-gray-500 dark:text-[#839496] bg-secondary/20 dark:bg-[#586e75] px-3 py-1 rounded-lg">
+                <div className="text-sm text-muted-foreground dark:text-[#839496] bg-secondary/20 dark:bg-[#586e75] px-3 py-1 rounded-lg">
                   Current Period
                 </div>
               </div>
               <div className="h-64 flex items-center justify-center border-2 border-dashed border-border dark:border-[#657b83] rounded-lg">
                 <div className="text-center">
-                  <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500 dark:text-[#839496]">Historical trend tracking coming soon</p>
-                  <p className="text-sm text-gray-400">We're building comprehensive revenue analytics</p>
+                  <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground dark:text-[#839496]">Historical trend tracking coming soon</p>
+                  <p className="text-sm text-muted-foreground">We're building comprehensive revenue analytics</p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-4 text-center">
@@ -331,7 +331,7 @@ export default function CustomerManagementPage() {
                 </div>
                 <div className="flex items-center">
                   <span className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mr-2">{analytics.new_signups || 0}</span>
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div className="w-24 bg-secondary rounded-full h-2">
                       <div className="bg-blue-500 h-2 rounded-full" style={{width: '80%'}}></div>
                     </div>
                   </div>
@@ -343,7 +343,7 @@ export default function CustomerManagementPage() {
                   </div>
                   <div className="flex items-center">
                     <span className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mr-2">{analytics.trial_users || 0}</span>
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div className="w-24 bg-secondary rounded-full h-2">
                       <div className="bg-yellow-500 h-2 rounded-full" style={{width: '60%'}}></div>
                     </div>
                   </div>
@@ -355,7 +355,7 @@ export default function CustomerManagementPage() {
                   </div>
                   <div className="flex items-center">
                     <span className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mr-2">{analytics.active_subscriptions || 0}</span>
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div className="w-24 bg-secondary rounded-full h-2">
                       <div className="bg-green-500 h-2 rounded-full" style={{width: '90%'}}></div>
                     </div>
                   </div>
@@ -367,7 +367,7 @@ export default function CustomerManagementPage() {
                   </div>
                   <div className="flex items-center">
                     <span className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mr-2">{analytics.churned_customers || 0}</span>
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div className="w-24 bg-secondary rounded-full h-2">
                       <div className="bg-red-500 h-2 rounded-full" style={{width: '20%'}}></div>
                     </div>
                   </div>
@@ -394,14 +394,14 @@ export default function CustomerManagementPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center p-4 border rounded-lg">
                 <div className="flex items-center justify-center mb-2">
-                  <Star className="h-8 w-8 text-gray-400" />
+                  <Star className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <p className="text-2xl font-semibold text-foreground dark:text-[#fdf6e3]">{analytics.trial_customers || 0}</p>
                 <p className="text-muted-foreground dark:text-[#93a1a1]">Trial Customers</p>
-                <p className="text-sm text-gray-500 mt-1">{formatCurrency(0)}/month each</p>
-                <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                <p className="text-sm text-muted-foreground mt-1">{formatCurrency(0)}/month each</p>
+                <div className="mt-3 w-full bg-secondary rounded-full h-2">
                   <div 
-                    className="bg-gray-400 h-2 rounded-full" 
+                    className="bg-secondary h-2 rounded-full" 
                     style={{width: `${((analytics.trial_customers || 0) / (analytics.total_customers || 1)) * 100}%`}}
                   ></div>
                 </div>
@@ -413,8 +413,8 @@ export default function CustomerManagementPage() {
                 </div>
                 <p className="text-2xl font-semibold text-foreground dark:text-[#fdf6e3]">{analytics.level_1_customers || 0}</p>
                 <p className="text-muted-foreground dark:text-[#93a1a1]">Level 1 Customers</p>
-                <p className="text-sm text-gray-500 mt-1">{formatCurrency(2999)}/month each</p>
-                <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                <p className="text-sm text-muted-foreground mt-1">{formatCurrency(2999)}/month each</p>
+                <div className="mt-3 w-full bg-secondary rounded-full h-2">
                   <div 
                     className="bg-blue-500 h-2 rounded-full" 
                     style={{width: `${((analytics.level_1_customers || 0) / (analytics.total_customers || 1)) * 100}%`}}
@@ -428,8 +428,8 @@ export default function CustomerManagementPage() {
                 </div>
                 <p className="text-2xl font-semibold text-foreground dark:text-[#fdf6e3]">{analytics.level_2_customers || 0}</p>
                 <p className="text-muted-foreground dark:text-[#93a1a1]">Level 2 Customers</p>
-                <p className="text-sm text-gray-500 mt-1">{formatCurrency(4999)}/month each</p>
-                <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                <p className="text-sm text-muted-foreground mt-1">{formatCurrency(4999)}/month each</p>
+                <div className="mt-3 w-full bg-secondary rounded-full h-2">
                   <div 
                     className="bg-purple-500 h-2 rounded-full" 
                     style={{width: `${((analytics.level_2_customers || 0) / (analytics.total_customers || 1)) * 100}%`}}
@@ -446,20 +446,20 @@ export default function CustomerManagementPage() {
         <form onSubmit={handleSearch} className="flex items-center space-x-4 mb-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+              <Search className="h-5 w-5 text-muted-foreground absolute left-3 top-3" />
               <input
                 type="text"
                 placeholder="Search customers by name or email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
           </div>
           <button
             type="button"
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-secondary/20 dark:bg-[#002b36]"
+            className="flex items-center px-4 py-2 border border-border rounded-lg hover:bg-secondary/20 dark:bg-[#002b36]"
           >
             <Filter className="h-4 w-4 mr-2" />
             Filters
@@ -481,7 +481,7 @@ export default function CustomerManagementPage() {
                 <select
                   value={subscriptionTier}
                   onChange={(e) => setSubscriptionTier(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">All Tiers</option>
                   <option value="trial">Trial</option>
@@ -495,7 +495,7 @@ export default function CustomerManagementPage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="created_at">Join Date</option>
                   <option value="email">Email</option>
@@ -508,7 +508,7 @@ export default function CustomerManagementPage() {
                 <button
                   type="button"
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-secondary/20 dark:bg-[#002b36]"
+                  className="w-full flex items-center justify-center px-3 py-2 border border-border rounded-lg hover:bg-secondary/20 dark:bg-[#002b36]"
                 >
                   <ArrowUpDown className="h-4 w-4 mr-2" />
                   {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
@@ -524,7 +524,7 @@ export default function CustomerManagementPage() {
         featureKey="team_management"
         fallback={
           <div className="bg-card dark:bg-[#073642] rounded-lg shadow-sm border p-8 text-center">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-2">Customer Management Not Available</h3>
             <p className="text-muted-foreground mb-4">Upgrade your subscription to access customer management features.</p>
           </div>
@@ -540,11 +540,11 @@ export default function CustomerManagementPage() {
           {loading ? (
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-              <p className="text-gray-500 mt-2">Loading customers...</p>
+              <p className="text-muted-foreground mt-2">Loading customers...</p>
             </div>
           ) : customers.length === 0 ? (
             <div className="p-8 text-center">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-2">No customers found</h3>
               <p className="text-muted-foreground dark:text-[#93a1a1]">Try adjusting your search or filter criteria.</p>
             </div>
@@ -566,7 +566,7 @@ export default function CustomerManagementPage() {
                             }
                           </h3>
                           <p className="text-sm text-muted-foreground dark:text-[#93a1a1]">{customer.email}</p>
-                          <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500 dark:text-[#839496]">
+                          <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground dark:text-[#839496]">
                             <span className="flex items-center">
                               {getSubscriptionIcon(customer.subscription_tier)}
                               <span className="ml-1">
@@ -598,13 +598,13 @@ export default function CustomerManagementPage() {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => window.location.href = `/dashboard/team/customer/${customer.id}`}
-                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className="p-2 text-muted-foreground hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                             title="View Details"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
-                            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            className="p-2 text-muted-foreground hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                             title="Add Note"
                           >
                             <MessageSquare className="h-4 w-4" />
@@ -625,7 +625,7 @@ export default function CustomerManagementPage() {
                   <button
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={pagination.page === 1}
-                    className="p-2 border border-gray-300 rounded-lg hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 border border-border rounded-lg hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -635,7 +635,7 @@ export default function CustomerManagementPage() {
                   <button
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page === pagination.totalPages}
-                    className="p-2 border border-gray-300 rounded-lg hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 border border-border rounded-lg hover:bg-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>

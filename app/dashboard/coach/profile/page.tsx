@@ -187,7 +187,7 @@ export default function CoachProfilePage() {
       <div className="p-4 sm:p-6 lg:p-8 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-gray-500 text-sm sm:text-base">Loading coach profile...</p>
+          <p className="text-muted-foreground text-sm sm:text-base">Loading coach profile...</p>
         </div>
       </div>
     );
@@ -251,9 +251,9 @@ export default function CoachProfilePage() {
                 value={coachProfile?.firstName || ''}
                 disabled
                 aria-label="First Name (read-only)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-secondary/20 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-secondary/20 text-muted-foreground cursor-not-allowed text-sm sm:text-base"
               />
-              <p className="text-xs text-gray-500 mt-1">Update in main settings</p>
+              <p className="text-xs text-muted-foreground mt-1">Update in main settings</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1] mb-2">
@@ -264,9 +264,9 @@ export default function CoachProfilePage() {
                 value={coachProfile?.lastName || ''}
                 disabled
                 aria-label="Last Name (read-only)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-secondary/20 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-secondary/20 text-muted-foreground cursor-not-allowed text-sm sm:text-base"
               />
-              <p className="text-xs text-gray-500 mt-1">Update in main settings</p>
+              <p className="text-xs text-muted-foreground mt-1">Update in main settings</p>
             </div>
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function CoachProfilePage() {
                 className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors touch-target ${
                   formData.specialties.includes(specialty)
                     ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                    : 'border-gray-300 dark:border-[#657b83] hover:border-gray-400'
+                    : 'border-border dark:border-[#657b83] hover:border-primary'
                 }`}
               >
                 <input
@@ -299,7 +299,7 @@ export default function CoachProfilePage() {
                 <div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center flex-shrink-0 ${
                   formData.specialties.includes(specialty)
                     ? 'bg-indigo-600 border-indigo-600'
-                    : 'border-gray-300'
+                    : 'border-border'
                 }`}>
                   {formData.specialties.includes(specialty) && (
                     <CheckCircle className="w-3 h-3 text-white" />
@@ -331,7 +331,7 @@ export default function CoachProfilePage() {
                   className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors touch-target ${
                     formData.preferredMeetingTypes.includes(type.value)
                       ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                      : 'border-gray-300 dark:border-[#657b83] hover:border-gray-400'
+                      : 'border-border dark:border-[#657b83] hover:border-primary'
                   }`}
                 >
                   <input
@@ -343,13 +343,13 @@ export default function CoachProfilePage() {
                   <div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center flex-shrink-0 ${
                     formData.preferredMeetingTypes.includes(type.value)
                       ? 'bg-indigo-600 border-indigo-600'
-                      : 'border-gray-300'
+                      : 'border-border'
                   }`}>
                     {formData.preferredMeetingTypes.includes(type.value) && (
                       <CheckCircle className="w-3 h-3 text-white" />
                     )}
                   </div>
-                  <Icon className="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+                  <Icon className="w-4 h-4 mr-2 text-muted-foreground flex-shrink-0" />
                   <span className="text-sm font-medium text-foreground">
                     {type.label}
                   </span>
@@ -369,11 +369,11 @@ export default function CoachProfilePage() {
             rows={4}
             value={formData.bio}
             onChange={(e) => handleInputChange('bio', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-[#657b83] rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-[#586e75] dark:text-[#fdf6e3] text-sm sm:text-base"
+            className="w-full px-3 py-2 border border-border dark:border-[#657b83] rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-[#586e75] dark:text-[#fdf6e3] text-sm sm:text-base"
             placeholder="Tell clients about your coaching experience, approach, and what makes you unique..."
             maxLength={500}
           />
-          <div className="text-right text-xs text-gray-500 mt-1">
+          <div className="text-right text-xs text-muted-foreground mt-1">
             {formData.bio.length}/500 characters
           </div>
         </div>
@@ -391,11 +391,11 @@ export default function CoachProfilePage() {
             rows={3}
             value={formData.credentials}
             onChange={(e) => handleInputChange('credentials', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-[#657b83] rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-[#586e75] dark:text-[#fdf6e3] text-sm sm:text-base"
+            className="w-full px-3 py-2 border border-border dark:border-[#657b83] rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-[#586e75] dark:text-[#fdf6e3] text-sm sm:text-base"
             placeholder="e.g., Certified Life Coach (ICF), Master's in Psychology, 10+ years experience..."
             maxLength={300}
           />
-          <div className="text-right text-xs text-gray-500 mt-1">
+          <div className="text-right text-xs text-muted-foreground mt-1">
             {formData.credentials.length}/300 characters
           </div>
         </div>

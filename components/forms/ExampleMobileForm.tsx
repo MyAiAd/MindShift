@@ -293,7 +293,7 @@ export function ExampleMobileForm() {
           <div className="w-full">
             <label
               htmlFor="bio"
-              className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300"
+              className="block text-sm font-medium mb-1.5 text-foreground dark:text-muted-foreground"
             >
               Bio
             </label>
@@ -301,12 +301,12 @@ export function ExampleMobileForm() {
               id="bio"
               rows={4}
               placeholder="Share a bit about yourself..."
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
+              className="w-full rounded-lg border border-border dark:border-border bg-card dark:bg-background text-foreground px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
               value={formState.bio?.value || ''}
               onChange={(e) => getFieldProps('bio').onChange(e)}
               onBlur={getFieldProps('bio').onBlur}
             />
-            <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1.5 text-sm text-muted-foreground dark:text-muted-foreground">
               {formState.bio?.value?.length || 0} / 500 characters
             </p>
           </div>
@@ -327,11 +327,11 @@ export function ExampleMobileForm() {
               getFieldProps('agreeToTerms').onChange(event);
             }}
             onBlur={getFieldProps('agreeToTerms').onBlur}
-            className="mt-1 h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/30"
+            className="mt-1 h-5 w-5 rounded border-border text-indigo-600 focus:ring-2 focus:ring-indigo-500/30"
           />
           <label
             htmlFor="agreeToTerms"
-            className="text-sm text-gray-700 dark:text-gray-300"
+            className="text-sm text-foreground dark:text-muted-foreground"
           >
             I agree to the{' '}
             <a href="#" className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 underline">

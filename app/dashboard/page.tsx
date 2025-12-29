@@ -273,12 +273,12 @@ export default function DashboardPage() {
             <div key={i} className="bg-card rounded-lg shadow-sm border border-border p-4 sm:p-6 min-w-0">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 bg-secondary rounded animate-pulse mb-2"></div>
+                  <div className="h-8 bg-secondary rounded animate-pulse mb-2"></div>
+                  <div className="h-3 bg-secondary rounded animate-pulse"></div>
                 </div>
-                <div className="p-3 bg-gray-100 rounded-lg">
-                  <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
+                <div className="p-3 bg-secondary rounded-lg">
+                  <div className="h-6 w-6 bg-secondary rounded animate-pulse"></div>
                 </div>
               </div>
             </div>
@@ -464,10 +464,10 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="flex items-center space-x-3">
-                    <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div className="h-8 w-8 bg-secondary rounded-full animate-pulse"></div>
                     <div className="flex-1 min-w-0">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                      <div className="h-4 bg-secondary rounded animate-pulse mb-2"></div>
+                      <div className="h-3 bg-secondary rounded animate-pulse w-1/2"></div>
                     </div>
                   </div>
                 ))}
@@ -496,7 +496,7 @@ export default function DashboardPage() {
               <div className="text-center py-8">
                 <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No recent activity</p>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Start using the platform to see your activities here!
                 </p>
               </div>
@@ -528,21 +528,21 @@ export default function DashboardPage() {
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">92%</div>
               <div className="text-sm text-muted-foreground">User Satisfaction</div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div className="w-full bg-secondary rounded-full h-2 mt-2">
                 <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '92%' }}></div>
               </div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-accent mb-2">78%</div>
               <div className="text-sm text-muted-foreground">Goal Completion Rate</div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div className="w-full bg-secondary rounded-full h-2 mt-2">
                 <div className="bg-green-600 h-2 rounded-full" style={{ width: '78%' }}></div>
               </div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">85%</div>
               <div className="text-sm text-muted-foreground">Session Attendance</div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div className="w-full bg-secondary rounded-full h-2 mt-2">
                 <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
               </div>
             </div>

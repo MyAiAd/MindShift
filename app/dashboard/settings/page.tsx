@@ -762,7 +762,7 @@ export default function SettingsPage() {
                     disabled={notifications.loading || notificationState.loading}
                     onChange={(e) => handleNotificationToggle('email', e.target.checked)}
                   />
-                  <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
+                  <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
                 </label>
               </div>
 
@@ -783,7 +783,7 @@ export default function SettingsPage() {
                     disabled={notifications.loading || notificationState.loading || !isSupported}
                     onChange={(e) => handleNotificationToggle('push', e.target.checked)}
                   />
-                  <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
+                  <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
                 </label>
               </div>
 
@@ -800,7 +800,7 @@ export default function SettingsPage() {
                     disabled={notifications.loading || notificationState.loading}
                     onChange={(e) => handleNotificationToggle('sms', e.target.checked)}
                   />
-                  <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
+                  <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
                 </label>
               </div>
 
@@ -929,7 +929,7 @@ export default function SettingsPage() {
                       checked={accessibilitySettings.highContrast}
                       onChange={(e) => handleAccessibilityChange('highContrast', e.target.checked)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -979,7 +979,7 @@ export default function SettingsPage() {
                       checked={accessibilitySettings.reducedMotion}
                       onChange={(e) => handleAccessibilityChange('reducedMotion', e.target.checked)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
 
@@ -999,7 +999,7 @@ export default function SettingsPage() {
                       checked={accessibilitySettings.keyboardNavigation}
                       onChange={(e) => handleAccessibilityChange('keyboardNavigation', e.target.checked)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
 
@@ -1021,7 +1021,7 @@ export default function SettingsPage() {
                       checked={accessibilitySettings.screenReaderMode}
                       onChange={(e) => handleAccessibilityChange('screenReaderMode', e.target.checked)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -1075,7 +1075,7 @@ export default function SettingsPage() {
                           checked={gdprSettings.functionalConsent}
                           onChange={(e) => handleGDPRConsentChange('functional', e.target.checked)}
                         />
-                        <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                       </label>
                     </div>
                     
@@ -1091,7 +1091,7 @@ export default function SettingsPage() {
                           checked={gdprSettings.analyticsConsent}
                           onChange={(e) => handleGDPRConsentChange('analytics', e.target.checked)}
                         />
-                        <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                       </label>
                     </div>
                     
@@ -1107,7 +1107,7 @@ export default function SettingsPage() {
                           checked={gdprSettings.marketingConsent}
                           onChange={(e) => handleGDPRConsentChange('marketing', e.target.checked)}
                         />
-                        <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                       </label>
                     </div>
                   </div>
@@ -1123,7 +1123,7 @@ export default function SettingsPage() {
                   <div className="grid sm:grid-cols-2 gap-4">
                     <button
                       onClick={handleDataExport}
-                      className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 dark:border-[#657b83] rounded-lg hover:bg-gray-50 dark:hover:bg-[#586e75] transition-colors"
+                      className="flex items-center justify-center space-x-2 px-4 py-2 border border-border dark:border-[#657b83] rounded-lg hover:bg-secondary/20 dark:hover:bg-[#586e75] transition-colors"
                     >
                       <Download className="h-4 w-4" />
                       <span>Export My Data</span>
@@ -1184,7 +1184,7 @@ export default function SettingsPage() {
                     checked={isDarkMode}
                     onChange={toggleDarkMode}
                   />
-                  <div className="w-11 h-6 bg-gray-200 dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                 </label>
               </div>
 
@@ -1254,11 +1254,11 @@ export default function SettingsPage() {
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
                       labsToggles.v3TreatmentDemo
                         ? 'bg-indigo-600'
-                        : 'bg-gray-200 dark:bg-[#586e75]'
+                        : 'bg-secondary dark:bg-[#586e75]'
                     }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
                         labsToggles.v3TreatmentDemo ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />
@@ -1302,7 +1302,7 @@ export default function SettingsPage() {
                         href="https://github.com/yourusername/mindshifting/tree/main/lib/v3"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 px-4 py-2 bg-gray-600 text-white text-center rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
+                        className="flex-1 px-4 py-2 bg-primary text-primary-foreground text-center rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
                       >
                         View V3 Code
                       </a>
@@ -1327,11 +1327,11 @@ export default function SettingsPage() {
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
                       labsToggles.v4TreatmentDemo
                         ? 'bg-indigo-600'
-                        : 'bg-gray-200 dark:bg-[#586e75]'
+                        : 'bg-secondary dark:bg-[#586e75]'
                     }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
                         labsToggles.v4TreatmentDemo ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />
@@ -1375,7 +1375,7 @@ export default function SettingsPage() {
                         href="https://github.com/yourusername/mindshifting/tree/main/lib/v4"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 px-4 py-2 bg-gray-600 text-white text-center rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
+                        className="flex-1 px-4 py-2 bg-primary text-primary-foreground text-center rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
                       >
                         View V4 Code
                       </a>

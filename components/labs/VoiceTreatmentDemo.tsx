@@ -504,7 +504,7 @@ export default function VoiceTreatmentDemo() {
     switch (state) {
       case 'idle':
         return { 
-          color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
+          color: 'bg-secondary text-foreground dark:bg-background/20 dark:text-muted-foreground',
           icon: '⏸️',
           canSpeak: false
         };
@@ -540,7 +540,7 @@ export default function VoiceTreatmentDemo() {
         };
       default:
         return { 
-          color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
+          color: 'bg-secondary text-foreground dark:bg-background/20 dark:text-muted-foreground',
           icon: '❓',
           canSpeak: false
         };
@@ -1507,11 +1507,11 @@ export default function VoiceTreatmentDemo() {
   const stateInfo = getStateDisplayInfo(interactionState);
   
   return (
-    <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div className="relative bg-card dark:bg-card rounded-lg shadow-sm border border-border dark:border-border p-6">
       {/* Beautiful Pre-loading Overlay */}
       {responseCache.isPreloading && (
         <div className="absolute inset-0 rounded-lg transition-all duration-300 bg-indigo-50/90 dark:bg-indigo-900/90 backdrop-blur-sm z-20 flex items-center justify-center">
-          <div className="px-8 py-6 rounded-xl shadow-lg border-2 bg-white border-indigo-300 dark:bg-gray-800 dark:border-indigo-600">
+          <div className="px-8 py-6 rounded-xl shadow-lg border-2 bg-card border-indigo-300 dark:bg-card dark:border-indigo-600">
             <div className="text-center">
               <div className="text-4xl mb-3">🧠</div>
               <div className="text-xl font-semibold mb-2 text-indigo-800 dark:text-indigo-200">
@@ -1541,7 +1541,7 @@ export default function VoiceTreatmentDemo() {
               ? 'bg-purple-100 border-purple-300 dark:bg-purple-900/40 dark:border-purple-600'
               : stateInfo.canSpeak 
               ? 'bg-green-100 border-green-300 dark:bg-green-900/40 dark:border-green-600' 
-              : 'bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-600'
+              : 'bg-card border-border dark:bg-card dark:border-border'
           }`}>
             <div className="text-center">
               <div className="text-4xl mb-3">{needsMethodSelection ? '🎯' : stateInfo.icon}</div>
@@ -1550,7 +1550,7 @@ export default function VoiceTreatmentDemo() {
                   ? 'text-purple-800 dark:text-purple-200'
                   : stateInfo.canSpeak 
                   ? 'text-green-800 dark:text-green-200' 
-                  : 'text-gray-800 dark:text-gray-200'
+                  : 'text-foreground'
               }`}>
                 {needsMethodSelection ? 'Choose Your Method' : stateMessage}
               </div>
@@ -1569,7 +1569,7 @@ export default function VoiceTreatmentDemo() {
                   ) : '🎙️ You can speak now'}
                 </div>
               ) : (
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                   Please wait...
                 </div>
               )}
@@ -1582,12 +1582,12 @@ export default function VoiceTreatmentDemo() {
           <Brain className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
           <div>
             <div className="flex items-center space-x-2">
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Voice Treatment Demo</h4>
+              <h4 className="text-lg font-semibold text-foreground">Voice Treatment Demo</h4>
               <span className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 rounded-full font-medium">
                 v{VOICE_DEMO_VERSION}
               </span>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               Voice-guided Mind Shifting treatment with strict script adherence and pre-loaded responses
             </p>
           </div>
@@ -1604,7 +1604,7 @@ export default function VoiceTreatmentDemo() {
             status === 'connected' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
             status === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
             status === 'starting' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-            'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+            'bg-secondary text-foreground dark:bg-background/20 dark:text-muted-foreground'
           }`}>
             {status}
           </div>
@@ -1646,7 +1646,7 @@ export default function VoiceTreatmentDemo() {
                 className={`p-2 text-sm rounded-md border transition-colors ${
                   selectedModality === modality
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                    : 'bg-card dark:bg-card text-foreground dark:text-muted-foreground border-border dark:border-border hover:bg-blue-50 dark:hover:bg-blue-900/20'
                 }`}
               >
                 {TREATMENT_MODALITIES[modality].name}
@@ -1790,7 +1790,7 @@ export default function VoiceTreatmentDemo() {
 
         <button
           onClick={resetDemo}
-          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 border border-border dark:border-border text-foreground dark:text-muted-foreground rounded-lg hover:bg-secondary/20 dark:hover:bg-secondary transition-colors"
         >
           <RotateCcw className="h-4 w-4" />
           <span>Reset Demo</span>
@@ -1853,28 +1853,28 @@ export default function VoiceTreatmentDemo() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => handleMethodSelection('1')}
-              className="p-3 text-left bg-white dark:bg-gray-800 border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+              className="p-3 text-left bg-card dark:bg-card border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
             >
               <div className="font-medium text-purple-900 dark:text-purple-200">1. Problem Shifting</div>
               <div className="text-xs text-purple-600 dark:text-purple-400">Transform problems into solutions</div>
             </button>
             <button
               onClick={() => handleMethodSelection('2')}
-              className="p-3 text-left bg-white dark:bg-gray-800 border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+              className="p-3 text-left bg-card dark:bg-card border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
             >
               <div className="font-medium text-purple-900 dark:text-purple-200">2. Identity Shifting</div>
               <div className="text-xs text-purple-600 dark:text-purple-400">Transform your sense of self</div>
             </button>
             <button
               onClick={() => handleMethodSelection('3')}
-              className="p-3 text-left bg-white dark:bg-gray-800 border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+              className="p-3 text-left bg-card dark:bg-card border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
             >
               <div className="font-medium text-purple-900 dark:text-purple-200">3. Belief Shifting</div>
               <div className="text-xs text-purple-600 dark:text-purple-400">Change limiting beliefs</div>
             </button>
             <button
               onClick={() => handleMethodSelection('4')}
-              className="p-3 text-left bg-white dark:bg-gray-800 border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+              className="p-3 text-left bg-card dark:bg-card border border-purple-300 dark:border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
             >
               <div className="font-medium text-purple-900 dark:text-purple-200">4. Blockage Shifting</div>
               <div className="text-xs text-purple-600 dark:text-purple-400">Remove internal obstacles</div>
@@ -1886,8 +1886,8 @@ export default function VoiceTreatmentDemo() {
       {/* Messages */}
       {messages.length > 0 && (
         <div>
-          <h5 className="font-medium text-gray-900 dark:text-white mb-3">Session Conversation</h5>
-          <div className="space-y-3 max-h-60 overflow-y-auto bg-gray-50 dark:bg-gray-900/20 rounded-lg p-4">
+          <h5 className="font-medium text-foreground mb-3">Session Conversation</h5>
+          <div className="space-y-3 max-h-60 overflow-y-auto bg-secondary/20 dark:bg-background/20 rounded-lg p-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -1897,7 +1897,7 @@ export default function VoiceTreatmentDemo() {
                   className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-sm ${
                     message.isUser
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                      : 'bg-card dark:bg-card text-foreground border border-border dark:border-border'
                   }`}
                 >
                   <div className="flex items-center space-x-1 mb-1">

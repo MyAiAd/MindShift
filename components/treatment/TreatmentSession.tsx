@@ -882,20 +882,20 @@ export default function TreatmentSession({
   // If there's an error starting the session, show error state
   if (hasError && !isSessionActive && messages.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 min-h-96">
+      <div className="max-w-4xl mx-auto bg-card min-h-96">
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               Session Error
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               {errorMessage || 'There seems to be an issue with the session flow. Please try again or contact support.'}
             </p>
             <button
               onClick={startSession}
               disabled={isLoading}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-secondary transition-colors"
             >
               {isLoading ? 'Retrying...' : 'Retry Session'}
             </button>
@@ -906,22 +906,22 @@ export default function TreatmentSession({
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900">
+    <div className="max-w-4xl mx-auto bg-card">
       {/* Header with Session Stats */}
       <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-400 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Brain className="h-6 w-6 text-indigo-600" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{formatMethodName(sessionMethod)} Session</h2>
-            <span className="text-sm text-gray-500 dark:text-gray-300">Step: {currentStep}</span>
+            <h2 className="text-lg font-semibold text-foreground">{formatMethodName(sessionMethod)} Session</h2>
+            <span className="text-sm text-muted-foreground">Step: {currentStep}</span>
           </div>
           
           <div className="flex items-center space-x-4 text-sm">
             {/* AI Usage Indicator */}
             <div className="flex items-center space-x-1">
               <Zap className="h-4 w-4 text-yellow-500" />
-              <span className="text-gray-600 dark:text-gray-300">AI: {sessionStats.aiUsagePercent}%</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-muted-foreground">AI: {sessionStats.aiUsagePercent}%</span>
+              <span className="text-xs text-muted-foreground dark:text-muted-foreground">
                 (Target: &lt;5%)
               </span>
             </div>
@@ -932,7 +932,7 @@ export default function TreatmentSession({
               <span className={`font-medium ${getResponseTimeColor(lastResponseTime)}`}>
                 {lastResponseTime}ms
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-muted-foreground dark:text-muted-foreground">
                 ({getResponseTimeLabel(lastResponseTime)})
               </span>
             </div>
@@ -982,14 +982,14 @@ export default function TreatmentSession({
               className={`max-w-3xl px-4 py-3 rounded-lg ${
                 message.isUser
                   ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                  : 'bg-secondary text-foreground'
               }`}
             >
               <div className="whitespace-pre-wrap">{message.content}</div>
               
               {/* Message metadata for bot responses */}
               {!message.isUser && (
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border text-xs text-muted-foreground dark:text-muted-foreground">
                   <div className="flex items-center space-x-3">
                     {message.usedAI ? (
                       <div className="flex items-center space-x-1 text-amber-600">
@@ -1029,7 +1029,7 @@ export default function TreatmentSession({
 
       {/* Fixed Input Area at Bottom */}
       {isSessionActive && (
-        <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 px-4 py-3 shadow-lg z-30">
+        <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-card border-t border-border px-4 py-3 shadow-lg z-30">
           <div className="max-w-4xl mx-auto flex justify-end">
             {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'identity_dissolve_step_f' || currentStep === 'identity_future_check' || currentStep === 'identity_scenario_check' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'reality_certainty_check' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'trauma_shifting_intro' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem' || currentStep === 'goal_deadline_check' || currentStep === 'goal_confirmation') ? (
               /* Yes/No Button Interface */
@@ -1039,10 +1039,10 @@ export default function TreatmentSession({
                   <button
                     onClick={handleUndo}
                     disabled={isLoading || stepHistory.length === 0}
-                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    className="flex items-center justify-center w-10 h-10 bg-secondary hover:bg-secondary disabled:bg-secondary/20 disabled:cursor-not-allowed border border-border rounded-lg transition-colors"
                     title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
                   >
-                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    <Undo2 className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
 
@@ -1076,10 +1076,10 @@ export default function TreatmentSession({
                     onKeyPress={handleKeyPress}
                     placeholder="Please select Yes or No below..."
                     disabled={true}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-4 py-3 border border-border rounded-lg bg-secondary text-muted-foreground cursor-not-allowed"
                     maxLength={500}
                   />
-                  <div className="absolute right-3 top-3 text-xs text-gray-400">
+                  <div className="absolute right-3 top-3 text-xs text-muted-foreground">
                     Disabled
                   </div>
                 </div>
@@ -1088,7 +1088,7 @@ export default function TreatmentSession({
                   <button
                     onClick={() => handleYesNoResponse('yes')}
                     disabled={isLoading}
-                    className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
                   >
                     <span className="bg-red-700 px-2 py-1 rounded text-sm font-bold">1</span>
                     <span>Yes</span>
@@ -1097,7 +1097,7 @@ export default function TreatmentSession({
                   <button
                     onClick={() => handleYesNoResponse('no')}
                     disabled={isLoading}
-                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
                   >
                     <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
                     <span>No</span>
@@ -1113,10 +1113,10 @@ export default function TreatmentSession({
                   <button
                     onClick={handleUndo}
                     disabled={isLoading || stepHistory.length === 0}
-                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    className="flex items-center justify-center w-10 h-10 bg-secondary hover:bg-secondary disabled:bg-secondary/20 disabled:cursor-not-allowed border border-border rounded-lg transition-colors"
                     title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
                   >
-                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    <Undo2 className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
 
@@ -1150,10 +1150,10 @@ export default function TreatmentSession({
                     onKeyPress={handleKeyPress}
                     placeholder="Please select Yes or No below..."
                     disabled={true}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-4 py-3 border border-border rounded-lg bg-secondary text-muted-foreground cursor-not-allowed"
                     maxLength={500}
                   />
-                  <div className="absolute right-3 top-3 text-xs text-gray-400">
+                  <div className="absolute right-3 top-3 text-xs text-muted-foreground">
                     Disabled
                   </div>
                 </div>
@@ -1162,7 +1162,7 @@ export default function TreatmentSession({
                   <button
                     onClick={() => handleYesNoResponse('yes')}
                     disabled={isLoading}
-                    className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
                   >
                     <span className="bg-red-700 px-2 py-1 rounded text-sm font-bold">1</span>
                     <span>Yes</span>
@@ -1171,7 +1171,7 @@ export default function TreatmentSession({
                   <button
                     onClick={() => handleYesNoResponse('no')}
                     disabled={isLoading}
-                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
                   >
                     <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">2</span>
                     <span>No</span>
@@ -1187,10 +1187,10 @@ export default function TreatmentSession({
                   <button
                     onClick={handleUndo}
                     disabled={isLoading || stepHistory.length === 0}
-                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    className="flex items-center justify-center w-10 h-10 bg-secondary hover:bg-secondary disabled:bg-secondary/20 disabled:cursor-not-allowed border border-border rounded-lg transition-colors"
                     title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
                   >
-                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    <Undo2 className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
 
@@ -1224,10 +1224,10 @@ export default function TreatmentSession({
                     onKeyPress={handleKeyPress}
                     placeholder="Please select Yes, No, or Maybe below..."
                     disabled={true}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-4 py-3 border border-border rounded-lg bg-secondary text-muted-foreground cursor-not-allowed"
                     maxLength={500}
                   />
-                  <div className="absolute right-3 top-3 text-xs text-gray-400">
+                  <div className="absolute right-3 top-3 text-xs text-muted-foreground">
                     Disabled
                   </div>
                 </div>
@@ -1236,7 +1236,7 @@ export default function TreatmentSession({
                   <button
                     onClick={() => handleYesNoMaybeResponse('yes')}
                     disabled={isLoading}
-                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
                   >
                     <span className="bg-red-700 px-2 py-1 rounded text-sm font-bold">1</span>
                     <span>Yes</span>
@@ -1245,7 +1245,7 @@ export default function TreatmentSession({
                   <button
                     onClick={() => handleYesNoMaybeResponse('maybe')}
                     disabled={isLoading}
-                    className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
                   >
                     <span className="bg-orange-700 px-2 py-1 rounded text-sm font-bold">2</span>
                     <span>Maybe</span>
@@ -1254,7 +1254,7 @@ export default function TreatmentSession({
                   <button
                     onClick={() => handleYesNoMaybeResponse('no')}
                     disabled={isLoading}
-                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
                   >
                     <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">3</span>
                     <span>No</span>
@@ -1270,10 +1270,10 @@ export default function TreatmentSession({
                   <button
                     onClick={handleUndo}
                     disabled={isLoading || stepHistory.length === 0}
-                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    className="flex items-center justify-center w-10 h-10 bg-secondary hover:bg-secondary disabled:bg-secondary/20 disabled:cursor-not-allowed border border-border rounded-lg transition-colors"
                     title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
                   >
-                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    <Undo2 className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
 
@@ -1299,7 +1299,7 @@ export default function TreatmentSession({
 
                 <div className="flex flex-col space-y-4 flex-1">
                   <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                    <h3 className="text-lg font-semibold text-foreground mb-3">
                       Choose your Mind Shifting method:
                     </h3>
                     {selectedWorkType === 'PROBLEM' ? (
@@ -1309,7 +1309,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Problem Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-blue-700 px-2 py-1 rounded text-xs font-bold">1</span>
                             <span>Problem Shifting</span>
@@ -1318,7 +1318,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Identity Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-purple-700 px-2 py-1 rounded text-xs font-bold">2</span>
                             <span>Identity Shifting</span>
@@ -1327,7 +1327,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Belief Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-green-700 px-2 py-1 rounded text-xs font-bold">3</span>
                             <span>Belief Shifting</span>
@@ -1336,7 +1336,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Blockage Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-orange-700 px-2 py-1 rounded text-xs font-bold">4</span>
                             <span>Blockage Shifting</span>
@@ -1351,7 +1351,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Problem Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-blue-700 px-2 py-1 rounded text-xs font-bold">1</span>
                             <span>Problem Shifting</span>
@@ -1360,7 +1360,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Blockage Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-orange-700 px-2 py-1 rounded text-xs font-bold">2</span>
                             <span>Blockage Shifting</span>
@@ -1369,7 +1369,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Identity Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-purple-700 px-2 py-1 rounded text-xs font-bold">3</span>
                             <span>Identity Shifting</span>
@@ -1381,7 +1381,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Reality Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-cyan-700 px-2 py-1 rounded text-xs font-bold">4</span>
                             <span>Reality Shifting</span>
@@ -1390,7 +1390,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Trauma Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-red-700 px-2 py-1 rounded text-xs font-bold">5</span>
                             <span>Trauma Shifting</span>
@@ -1399,7 +1399,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Belief Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-green-700 px-2 py-1 rounded text-xs font-bold">6</span>
                             <span>Belief Shifting</span>
@@ -1418,10 +1418,10 @@ export default function TreatmentSession({
                   <button
                     onClick={handleUndo}
                     disabled={isLoading || stepHistory.length === 0}
-                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    className="flex items-center justify-center w-10 h-10 bg-secondary hover:bg-secondary disabled:bg-secondary/20 disabled:cursor-not-allowed border border-border rounded-lg transition-colors"
                     title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
                   >
-                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    <Undo2 className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
 
@@ -1447,7 +1447,7 @@ export default function TreatmentSession({
 
                 <div className="flex flex-col space-y-4 flex-1">
                   <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                    <h3 className="text-lg font-semibold text-foreground mb-3">
                       Choose your method to clear this problem:
                     </h3>
                     <div className="flex justify-center">
@@ -1455,7 +1455,7 @@ export default function TreatmentSession({
                         <button
                           onClick={() => handleMethodSelection('Problem Shifting')}
                           disabled={isLoading}
-                          className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                         >
                           <span className="bg-blue-700 px-2 py-1 rounded text-xs font-bold">1</span>
                           <span>Problem Shifting</span>
@@ -1464,7 +1464,7 @@ export default function TreatmentSession({
                         <button
                           onClick={() => handleMethodSelection('Identity Shifting')}
                           disabled={isLoading}
-                          className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                         >
                           <span className="bg-purple-700 px-2 py-1 rounded text-xs font-bold">2</span>
                           <span>Identity Shifting</span>
@@ -1473,7 +1473,7 @@ export default function TreatmentSession({
                         <button
                           onClick={() => handleMethodSelection('Belief Shifting')}
                           disabled={isLoading}
-                          className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                         >
                           <span className="bg-green-700 px-2 py-1 rounded text-xs font-bold">3</span>
                           <span>Belief Shifting</span>
@@ -1482,7 +1482,7 @@ export default function TreatmentSession({
                         <button
                           onClick={() => handleMethodSelection('Blockage Shifting')}
                           disabled={isLoading}
-                          className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                          className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                         >
                           <span className="bg-orange-700 px-2 py-1 rounded text-xs font-bold">4</span>
                           <span>Blockage Shifting</span>
@@ -1500,10 +1500,10 @@ export default function TreatmentSession({
                   <button
                     onClick={handleUndo}
                     disabled={isLoading || stepHistory.length === 0}
-                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    className="flex items-center justify-center w-10 h-10 bg-secondary hover:bg-secondary disabled:bg-secondary/20 disabled:cursor-not-allowed border border-border rounded-lg transition-colors"
                     title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
                   >
-                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    <Undo2 className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
 
@@ -1531,14 +1531,14 @@ export default function TreatmentSession({
                   {/* Work Type Selection Section - Only show when no work type selected */}
                   {!selectedWorkType && (
                     <div className="text-center">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                      <h3 className="text-lg font-semibold text-foreground mb-3">
                         What do you want to work on?
                       </h3>
                       <div className="flex space-x-4 justify-center mb-4">
                         <button
                           onClick={() => handleWorkTypeSelection('1')}
                           disabled={isLoading}
-                          className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                          className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
                             isLoading ? 'opacity-50' : ''
                           } ${
                             clickedButton === '1' ? 'scale-105 bg-blue-700 shadow-lg' : ''
@@ -1551,7 +1551,7 @@ export default function TreatmentSession({
                         <button
                           onClick={() => handleWorkTypeSelection('2')}
                           disabled={isLoading}
-                          className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                          className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
                             isLoading ? 'opacity-50' : ''
                           } ${
                             clickedButton === '2' ? 'scale-105 bg-green-700 shadow-lg' : ''
@@ -1564,7 +1564,7 @@ export default function TreatmentSession({
                         <button
                           onClick={() => handleWorkTypeSelection('3')}
                           disabled={isLoading}
-                          className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                          className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
                             isLoading ? 'opacity-50' : ''
                           } ${
                             clickedButton === '3' ? 'scale-105 bg-purple-700 shadow-lg' : ''
@@ -1580,7 +1580,7 @@ export default function TreatmentSession({
                   {/* Method Selection Section - Only show for PROBLEM work type */}
                   {selectedWorkType === 'PROBLEM' && (
                     <div className="text-center">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                      <h3 className="text-lg font-semibold text-foreground mb-3">
                         Choose your preferred problem-clearing method:
                       </h3>
                       <div className="flex justify-center">
@@ -1589,7 +1589,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Problem Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-blue-700 px-2 py-1 rounded text-xs font-bold">1</span>
                             <span>Problem Shifting</span>
@@ -1598,7 +1598,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Identity Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-purple-700 px-2 py-1 rounded text-xs font-bold">2</span>
                             <span>Identity Shifting</span>
@@ -1607,7 +1607,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Belief Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-green-700 px-2 py-1 rounded text-xs font-bold">3</span>
                             <span>Belief Shifting</span>
@@ -1616,7 +1616,7 @@ export default function TreatmentSession({
                           <button
                             onClick={() => handleMethodSelection('Blockage Shifting')}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                            className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                           >
                             <span className="bg-orange-700 px-2 py-1 rounded text-xs font-bold">4</span>
                             <span>Blockage Shifting</span>
@@ -1635,10 +1635,10 @@ export default function TreatmentSession({
                   <button
                     onClick={handleUndo}
                     disabled={isLoading || stepHistory.length === 0}
-                    className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+                    className="flex items-center justify-center w-10 h-10 bg-secondary hover:bg-secondary disabled:bg-secondary/20 disabled:cursor-not-allowed border border-border rounded-lg transition-colors"
                     title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
                   >
-                    <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    <Undo2 className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
 
@@ -1672,10 +1672,10 @@ export default function TreatmentSession({
                     onKeyPress={handleKeyPress}
                     placeholder="Type your response..."
                     disabled={isLoading}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-secondary/20 disabled:text-muted-foreground"
                     maxLength={500}
                   />
-                  <div className="absolute right-3 top-3 text-xs text-gray-400">
+                  <div className="absolute right-3 top-3 text-xs text-muted-foreground">
                     {userInput.length}/500
                   </div>
                 </div>
@@ -1683,7 +1683,7 @@ export default function TreatmentSession({
                 <button
                   onClick={sendMessage}
                   disabled={!userInput.trim() || isLoading}
-                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                 >
                   <MessageSquare className="h-4 w-4" />
                   <span>Send</span>
@@ -1692,7 +1692,7 @@ export default function TreatmentSession({
             )}
           </div>
           
-          <div className="max-w-4xl mx-auto mt-2 text-xs text-gray-500 text-center">
+          <div className="max-w-4xl mx-auto mt-2 text-xs text-muted-foreground text-center">
             {(currentStep === 'check_if_still_problem' || currentStep === 'blockage_check_if_still_problem' || currentStep === 'identity_check' || currentStep === 'identity_problem_check' || currentStep === 'confirm_identity_problem' || currentStep === 'reality_step_b' || currentStep === 'reality_doubts_check' || currentStep === 'trauma_identity_check' || currentStep === 'trauma_experience_check' || currentStep === 'trauma_dig_deeper' || currentStep === 'belief_step_f' || currentStep === 'belief_check_1' || currentStep === 'belief_check_2' || currentStep === 'belief_check_3' || currentStep === 'belief_check_4' || currentStep === 'belief_problem_check' || currentStep === 'confirm_belief_problem' || currentStep === 'goal_deadline_check' || currentStep === 'goal_confirmation') ? (
               'Select your answer using the buttons above'
             ) : shouldShowDiggingDeeperButtons() ? (
@@ -1716,7 +1716,7 @@ export default function TreatmentSession({
 
       {/* Session Complete State - Fixed at Bottom */}
       {!isSessionActive && messages.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-green-50 dark:bg-green-900/20 border-t border-gray-200 dark:border-gray-600 px-4 py-3 shadow-lg z-30">
+        <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-green-50 dark:bg-green-900/20 border-t border-border px-4 py-3 shadow-lg z-30">
           <div className="max-w-4xl mx-auto text-center">
             <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
             <h3 className="text-lg font-semibold text-green-900 dark:text-green-200">Session Complete!</h3>

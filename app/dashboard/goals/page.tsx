@@ -191,7 +191,7 @@ export default function GoalsPage() {
       case 'in_progress':
         return <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">In Progress</span>;
       case 'not_started':
-        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Not Started</span>;
+        return <span className="px-2 py-1 text-xs bg-secondary text-foreground rounded-full">Not Started</span>;
       case 'paused':
         return <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">Paused</span>;
       default:
@@ -305,8 +305,8 @@ export default function GoalsPage() {
       <div className="bg-card rounded-lg shadow-sm border p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="flex items-center space-x-2">
-            <Filter className="h-5 w-5 text-gray-400" />
-            <span className="text-sm font-medium text-gray-700">Filter by status:</span>
+            <Filter className="h-5 w-5 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Filter by status:</span>
           </div>
           <div className="flex space-x-2">
             <button
@@ -314,7 +314,7 @@ export default function GoalsPage() {
               className={`px-3 py-1 rounded-lg text-sm ${
                 filterStatus === 'all' 
                   ? 'bg-indigo-100 text-indigo-800' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-secondary text-muted-foreground hover:bg-secondary'
               }`}
             >
               All
@@ -324,7 +324,7 @@ export default function GoalsPage() {
               className={`px-3 py-1 rounded-lg text-sm ${
                 filterStatus === 'in_progress' 
                   ? 'bg-indigo-100 text-indigo-800' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-secondary text-muted-foreground hover:bg-secondary'
               }`}
             >
               In Progress
@@ -334,7 +334,7 @@ export default function GoalsPage() {
               className={`px-3 py-1 rounded-lg text-sm ${
                 filterStatus === 'completed' 
                   ? 'bg-indigo-100 text-indigo-800' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-secondary text-muted-foreground hover:bg-secondary'
               }`}
             >
               Completed
@@ -344,7 +344,7 @@ export default function GoalsPage() {
               className={`px-3 py-1 rounded-lg text-sm ${
                 filterStatus === 'not_started' 
                   ? 'bg-indigo-100 text-indigo-800' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-secondary text-muted-foreground hover:bg-secondary'
               }`}
             >
               Not Started
@@ -363,8 +363,8 @@ export default function GoalsPage() {
                   <h3 className="text-lg font-semibold text-foreground">{goal.title}</h3>
                   {getStatusBadge(goal.status)}
                 </div>
-                <p className="text-gray-600 mb-3">{goal.description}</p>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                <p className="text-muted-foreground mb-3">{goal.description}</p>
+                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                   {goal.target_date && (
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-1" />
@@ -377,15 +377,15 @@ export default function GoalsPage() {
               <div className="relative">
                 <button 
                   onClick={() => setShowDropdown(showDropdown === goal.id ? null : goal.id)}
-                  className="text-gray-400 hover:text-gray-600 p-1"
+                  className="text-muted-foreground hover:text-muted-foreground p-1"
                 >
                   <MoreVertical className="h-5 w-5" />
                 </button>
                 {showDropdown === goal.id && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-10">
+                  <div className="absolute right-0 mt-2 w-48 bg-card rounded-lg shadow-lg border z-10">
                     <button
                       onClick={() => openEditModal(goal)}
-                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-secondary/20"
                     >
                       <Edit className="h-4 w-4 mr-2" />
                       Edit Goal
@@ -405,10 +405,10 @@ export default function GoalsPage() {
             {/* Progress Bar */}
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">Progress</span>
-                <span className="text-sm text-gray-500">{goal.progress}%</span>
+                <span className="text-sm font-medium text-foreground">Progress</span>
+                <span className="text-sm text-muted-foreground">{goal.progress}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-secondary rounded-full h-2">
                 <div 
                   className="bg-indigo-600 h-2 rounded-full transition-all duration-300" 
                   style={{ width: `${goal.progress}%` }}
@@ -438,7 +438,7 @@ export default function GoalsPage() {
               )}
               <button 
                 onClick={() => openEditModal(goal)}
-                className="flex items-center px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                className="flex items-center px-3 py-2 border border-border text-foreground rounded-lg hover:bg-secondary/20 transition-colors text-sm"
               >
                 <TrendingUp className="h-4 w-4 mr-2" />
                 View Details
@@ -451,9 +451,9 @@ export default function GoalsPage() {
       {/* Empty State */}
       {filteredGoals.length === 0 && (
         <div className="bg-card rounded-lg shadow-sm border p-12 text-center">
-          <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-semibold text-foreground mb-2">No goals found</h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-muted-foreground mb-6">
             {filterStatus === 'all' 
               ? "You haven't created any goals yet. Start your transformation journey by setting your first goal."
               : `No goals with status "${filterStatus.replace('_', ' ')}" found.`
@@ -478,51 +478,51 @@ export default function GoalsPage() {
               <h3 className="text-lg font-semibold text-foreground">Create New Goal</h3>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-muted-foreground hover:text-muted-foreground"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={handleCreateGoal} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Goal Title *</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Goal Title *</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="e.g., Improve public speaking confidence"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Description</label>
                 <textarea
                   rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Describe what you want to achieve and why it's important to you..."
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Start Date</label>
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Target Date</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Target Date</label>
                   <input
                     type="date"
                     value={formData.targetDate}
                     onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -530,7 +530,7 @@ export default function GoalsPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary/20"
                 >
                   Cancel
                 </button>
@@ -559,38 +559,38 @@ export default function GoalsPage() {
               <h3 className="text-lg font-semibold text-foreground">Edit Goal</h3>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-muted-foreground hover:text-muted-foreground"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={handleEditGoal} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Goal Title *</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Goal Title *</label>
                 <input
                   type="text"
                   required
                   value={editFormData.title}
                   onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Description</label>
                 <textarea
                   rows={3}
                   value={editFormData.description}
                   onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Status</label>
                   <select 
                     value={editFormData.status}
                     onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="not_started">Not Started</option>
                     <option value="in_progress">In Progress</option>
@@ -599,31 +599,31 @@ export default function GoalsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Progress (%)</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Progress (%)</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={editFormData.progress}
                     onChange={(e) => setEditFormData({ ...editFormData, progress: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Target Date</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Target Date</label>
                 <input
                   type="date"
                   value={editFormData.targetDate}
                   onChange={(e) => setEditFormData({ ...editFormData, targetDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="flex space-x-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary/20"
                 >
                   Cancel
                 </button>

@@ -39,11 +39,11 @@ export default function FeatureGuard({
         </div>
       </div>
       
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <h3 className="text-lg font-semibold text-foreground mb-2">
         Premium Feature
       </h3>
       
-      <p className="text-gray-600 mb-4">
+      <p className="text-muted-foreground mb-4">
         This feature requires a {getRequiredTier(featureKey)} subscription or higher.
       </p>
       

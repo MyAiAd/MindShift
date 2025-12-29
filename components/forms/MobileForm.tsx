@@ -45,7 +45,7 @@ export function MobileForm({
           className={cn(
             'flex gap-3 pt-6',
             stickyFooter &&
-              'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 pb-safe md:relative md:border-t-0 md:bg-transparent md:dark:bg-transparent md:pb-0'
+              'fixed bottom-0 left-0 right-0 bg-card dark:bg-background border-t border-border p-4 pb-safe md:relative md:border-t-0 md:bg-transparent md:dark:bg-transparent md:pb-0'
           )}
         >
           {footer}
@@ -73,12 +73,12 @@ export function FormSection({
       {(title || description) && (
         <div className="space-y-1">
           {title && (
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-semibold text-foreground">
               {title}
             </h3>
           )}
           {description && (
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               {description}
             </p>
           )}
@@ -247,11 +247,11 @@ export function FormDivider({ label, className }: FormDividerProps) {
   return (
     <div className={cn('relative py-4', className)}>
       <div className="absolute inset-0 flex items-center">
-        <div className="w-full border-t border-gray-200 dark:border-gray-800" />
+        <div className="w-full border-t border-border" />
       </div>
       {label && (
         <div className="relative flex justify-center">
-          <span className="bg-white dark:bg-gray-900 px-3 text-sm text-gray-500 dark:text-gray-400">
+          <span className="bg-card dark:bg-background px-3 text-sm text-muted-foreground dark:text-muted-foreground">
             {label}
           </span>
         </div>

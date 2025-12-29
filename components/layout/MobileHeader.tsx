@@ -33,7 +33,7 @@ export function MobileHeader({
   return (
     <header
       className={cn(
-        'md:hidden sticky top-0 z-40 bg-white/90 dark:bg-[#002b36]/90 backdrop-blur-lg border-b border-gray-200 dark:border-[#073642] pt-safe',
+        'md:hidden sticky top-0 z-40 bg-white/90 dark:bg-[#002b36]/90 backdrop-blur-lg border-b border-border pt-safe',
         className
       )}
     >
