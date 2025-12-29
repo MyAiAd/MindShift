@@ -79,7 +79,7 @@ export default function AboutPage() {
               </div>
             </div>
             <div className="relative">
-              <div className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-8">
+              <div className="bg-card border border-border rounded-2xl p-8">
                 <div className="space-y-6">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
@@ -91,8 +91,8 @@ export default function AboutPage() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
-                      <Target className="h-6 w-6 text-primary-foreground" />
+                    <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center">
+                      <Target className="h-6 w-6 text-accent-foreground" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground">Evidence-Based</h3>
