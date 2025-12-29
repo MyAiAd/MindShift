@@ -75,10 +75,9 @@ export async function GET(request: NextRequest) {
       // Recent users (last 30 days)
       supabase
         .from('profiles')
-        .select('created_at')
+        .select('id', { count: 'exact', head: true })
         .match(tenantFilter)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-        .select('id', { count: 'exact', head: true }),
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
       
       // Total video views
       supabase
