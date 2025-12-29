@@ -11,14 +11,14 @@ export default function PricingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-2">
-              <Brain className="h-8 w-8 text-indigo-600" />
+              <Brain className="h-8 w-8 text-primary" />
               <span className="text-2xl font-bold text-foreground">MindShifting</span>
             </Link>
             <nav className="hidden md:flex space-x-8">
-              <Link href="/features" className="text-foreground hover:text-indigo-600 transition-colors">Features</Link>
-              <Link href="/pricing" className="text-indigo-600 font-medium">Pricing</Link>
-              <Link href="/about" className="text-foreground hover:text-indigo-600 transition-colors">About</Link>
-              <Link href="/contact" className="text-foreground hover:text-indigo-600 transition-colors">Contact</Link>
+              <Link href="/features" className="text-foreground hover:text-primary transition-colors">Features</Link>
+              <Link href="/pricing" className="text-primary font-medium">Pricing</Link>
+              <Link href="/about" className="text-foreground hover:text-primary transition-colors">About</Link>
+              <Link href="/contact" className="text-foreground hover:text-primary transition-colors">Contact</Link>
             </nav>
             <div className="flex items-center">
               {/* Mobile: Compact auth control */}
@@ -27,8 +27,8 @@ export default function PricingPage() {
               </div>
               {/* Desktop: Traditional buttons */}
               <div className="hidden md:flex space-x-4">
-                <Link href="/auth" className="text-foreground hover:text-indigo-600 transition-colors">Sign In</Link>
-                <Link href="/auth" className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                <Link href="/auth" className="text-foreground hover:text-primary transition-colors">Sign In</Link>
+                <Link href="/auth" className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
                   Get Started
                 </Link>
               </div>
@@ -38,10 +38,10 @@ export default function PricingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 to-purple-50">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-secondary/10">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
-            Choose Your <span className="text-indigo-600">Transformation</span> Level
+            Choose Your <span className="text-primary">Transformation</span> Level
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
                             Start with Problem Shifting or unlock the complete MindShifting experience. 
@@ -75,19 +75,19 @@ export default function PricingPage() {
               
               <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Access to core features</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Basic progress tracking</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Up to 3 coaching sessions</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Community support</span>
                 </li>
               </ul>
@@ -100,8 +100,8 @@ export default function PricingPage() {
             {/* Level 1 Plan */}
             <div className="bg-card rounded-xl shadow-lg p-8 border border-border flex flex-col h-full">
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                  <Target className="h-8 w-8 text-blue-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+                  <Target className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">Problem Shifting</h3>
                 <p className="text-muted-foreground">Perfect for getting started with mindset transformation</p>
@@ -117,43 +117,43 @@ export default function PricingPage() {
               
               <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Core Problem Shifting methodology</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Basic assessments and progress tracking</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Up to 10 coaching sessions per month</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Email support</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Mobile app access</span>
                 </li>
               </ul>
               
-              <Link href="/auth" className="block w-full bg-blue-600 text-white text-center py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold mt-auto">
+              <Link href="/auth" className="block w-full bg-primary text-primary-foreground text-center py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors font-semibold mt-auto">
                 Start Problem Shifting
               </Link>
             </div>
 
             {/* Level 2 Plan */}
-            <div className="bg-card rounded-xl shadow-lg p-8 border-2 border-indigo-500 relative flex flex-col h-full">
+            <div className="bg-card rounded-xl shadow-lg p-8 border-2 border-primary relative flex flex-col h-full">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-indigo-500 text-white px-4 py-2 rounded-full text-sm font-medium">
+                <span className="bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-medium">
                   Most Popular
                 </span>
               </div>
               
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-                  <Brain className="h-8 w-8 text-indigo-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+                  <Brain className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">Complete MindShifting</h3>
                 <p className="text-muted-foreground">Full access to all methodologies and premium features</p>
@@ -169,32 +169,32 @@ export default function PricingPage() {
               
               <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Everything in Problem Shifting</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                                       <span className="text-foreground">All 7 MindShifting methodologies</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Unlimited coaching sessions</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Advanced analytics and reporting</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Team management and collaboration</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <Check className="h-5 w-5 text-accent mt-0.5 mr-3 flex-shrink-0" />
                   <span className="text-foreground">Priority support</span>
                 </li>
               </ul>
               
-              <Link href="/auth" className="block w-full bg-indigo-600 text-white text-center py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors font-semibold mt-auto">
+              <Link href="/auth" className="block w-full bg-primary text-primary-foreground text-center py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors font-semibold mt-auto">
                 Start Complete Access
               </Link>
             </div>
@@ -203,15 +203,15 @@ export default function PricingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-indigo-600">
+      <section className="py-20 bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
             Ready to Start Your Transformation?
           </h2>
-          <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-primary-foreground/70 mb-8 max-w-2xl mx-auto">
             Join thousands of others who have already started their journey to personal growth and success.
           </p>
-          <Link href="/auth" className="inline-flex items-center bg-card text-indigo-600 px-8 py-4 rounded-lg hover:bg-secondary transition-colors text-lg font-semibold">
+          <Link href="/auth" className="inline-flex items-center bg-card text-primary px-8 py-4 rounded-lg hover:bg-secondary transition-colors text-lg font-semibold">
             Start Your Free Trial
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
@@ -224,7 +224,7 @@ export default function PricingPage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Brain className="h-6 w-6 text-indigo-400" />
+                <Brain className="h-6 w-6 text-primary" />
                 <span className="text-xl font-bold">MindShifting</span>
               </div>
               <p className="text-muted-foreground">
@@ -235,27 +235,27 @@ export default function PricingPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
+                <li><Link href="/features" className="hover:text-foreground transition-colors">Features</Link></li>
+                <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">API</a></li>
               </ul>
             </div>
             
             <div>
               <h3 className="text-lg font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
+                <li><Link href="/about" className="hover:text-foreground transition-colors">About</Link></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Careers</a></li>
               </ul>
             </div>
             
             <div>
               <h3 className="text-lg font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Help Center</a></li>
+                <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Privacy</a></li>
               </ul>
             </div>
           </div>
