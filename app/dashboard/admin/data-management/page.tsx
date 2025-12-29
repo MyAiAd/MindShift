@@ -389,7 +389,7 @@ export default function DataManagementPage() {
                   <select
                     value={selectedTenant}
                     onChange={(e) => setSelectedTenant(e.target.value)}
-                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg focus:ring-primary focus:border-primary"
                   >
                     <option value="">All Tenants</option>
                     {tenants.map((tenant) => (
