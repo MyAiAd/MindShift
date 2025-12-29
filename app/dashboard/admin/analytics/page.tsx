@@ -61,6 +61,7 @@ export default function AnalyticsPage() {
       
       if (response.ok) {
         const analyticsData = await response.json();
+        console.log('Analytics data received:', analyticsData);
         setData(analyticsData);
       } else {
         toast({
