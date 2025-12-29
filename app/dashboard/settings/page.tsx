@@ -1265,7 +1265,7 @@ export default function SettingsPage() {
                   </button>
                 </div>
                 {labsToggles.v3TreatmentDemo && (
-                  <div className="bg-gray-50 dark:bg-[#002b36]/50 rounded-lg p-4">
+                  <div className="bg-secondary/20 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-2">
                       <Brain className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                       <h5 className="font-medium text-foreground">V3 Treatment System</h5>
@@ -1338,7 +1338,7 @@ export default function SettingsPage() {
                   </button>
                 </div>
                 {labsToggles.v4TreatmentDemo && (
-                  <div className="bg-gray-50 dark:bg-[#002b36]/50 rounded-lg p-4">
+                  <div className="bg-secondary/20 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-2">
                       <Brain className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                       <h5 className="font-medium text-foreground">V4 Treatment System (Labs)</h5>
