@@ -433,25 +433,25 @@
 
   /* Solarized Light */
   [data-theme="solarized-light"] {
-    --background: 44 11% 93%;        /* base3: #fdf6e3 */
-    --foreground: 192 100% 11%;      /* base03: #002b36 */
-    --card: 44 87% 94%;              /* base2: #eee8d5 */
-    --card-foreground: 192 100% 11%; /* base03: #002b36 */
+    --background: 44 11% 93%;        /* base3: #fdf6e3 - light background */
+    --foreground: 192 100% 11%;      /* base03: #002b36 - dark text */
+    --card: 44 87% 94%;              /* base2: #eee8d5 - slightly darker bg */
+    --card-foreground: 192 100% 11%; /* base03: #002b36 - dark text */
     --popover: 44 87% 94%;           /* base2: #eee8d5 */
-    --popover-foreground: 192 100% 11%; /* base03: #002b36 */
+    --popover-foreground: 192 100% 11%; /* base03: #002b36 - dark text */
     --primary: 205 69% 67%;          /* blue: #268bd2 */
-    --primary-foreground: 44 11% 93%; /* base3: #fdf6e3 */
-    --secondary: 44 11% 93%;         /* base3: #fdf6e3 */
-    --secondary-foreground: 192 100% 11%; /* base03: #002b36 */
-    --muted: 192 81% 27%;            /* base01: #586e75 */
-    --muted-foreground: 44 87% 94%;  /* base2: #eee8d5 */
+    --primary-foreground: 44 11% 93%; /* base3: #fdf6e3 - light text on blue */
+    --secondary: 44 87% 94%;         /* base2: #eee8d5 - slightly darker bg */
+    --secondary-foreground: 192 100% 11%; /* base03: #002b36 - dark text */
+    --muted: 44 87% 94%;             /* base2: #eee8d5 - muted background */
+    --muted-foreground: 186 8% 60%;  /* base1: #93a1a1 - medium dark text */
     --accent: 68 100% 30%;           /* green: #859900 */
-    --accent-foreground: 44 11% 93%; /* base3: #fdf6e3 */
+    --accent-foreground: 44 11% 93%; /* base3: #fdf6e3 - light text on green */
     --destructive: 1 71% 52%;        /* red: #dc322f */
-    --destructive-foreground: 44 11% 93%; /* base3: #fdf6e3 */
-    --border: 192 81% 27%;           /* base01: #586e75 */
-    --input: 192 81% 27%;            /* base01: #586e75 */
-    --ring: 205 69% 67%;             /* blue: #268bd2 */
+    --destructive-foreground: 44 11% 93%; /* base3: #fdf6e3 - light text on red */
+    --border: 192 13% 45%;           /* base0: #839496 - visible border */
+    --input: 192 13% 45%;            /* base0: #839496 - visible input border */
+    --ring: 205 69% 67%;             /* blue: #268bd2 - focus ring */
   }
 
   /* Solarized Dark */
