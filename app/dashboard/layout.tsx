@@ -144,7 +144,7 @@ export default function DashboardLayout({
 
         {/* Desktop sidebar (toggleable) */}
         <div 
-          className={`hidden md:flex md:flex-shrink-0 z-40 transition-all duration-300 ease-in-out bg-card ${
+          className={`hidden md:flex md:flex-shrink-0 h-screen z-40 transition-all duration-300 ease-in-out bg-card ${
             sidebarOpen ? 'md:w-64' : 'md:w-0'
           }`}
         >
