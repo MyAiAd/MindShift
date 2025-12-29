@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/database-server';
 
 // GET /api/tutorials/categories - Fetch all categories for the user's tenant
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = createServerClient();
     
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 // POST /api/tutorials/categories - Create a new category (admin only)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = createServerClient();
     
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();

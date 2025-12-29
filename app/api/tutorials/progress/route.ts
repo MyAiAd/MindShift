@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/database-server';
 
 // POST /api/tutorials/progress - Update video progress
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = createServerClient();
     
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
 // GET /api/tutorials/progress - Get user's progress stats
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = createServerClient();
     
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
