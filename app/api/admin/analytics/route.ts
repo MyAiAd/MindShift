@@ -35,8 +35,43 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build tenant filter
-    const tenantFilter = profile.role === 'super_admin' ? {} : { tenant_id: profile.tenant_id };
+    // Build base queries with consistent tenant filtering
+    let usersQuery = supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true });
+    
+    let videosQuery = supabase
+      .from('tutorial_videos')
+      .select('id', { count: 'exact', head: true });
+    
+    let postsQuery = supabase
+      .from('community_posts')
+      .select('id', { count: 'exact', head: true });
+    
+    let sessionsQuery = supabase
+      .from('mind_shifting_sessions')
+      .select('id', { count: 'exact', head: true });
+    
+    let recentUsersQuery = supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+    
+    let topVideosQuery = supabase
+      .from('tutorial_videos')
+      .select('id, title, view_count')
+      .order('view_count', { ascending: false })
+      .limit(5);
+
+    // Apply tenant filter consistently (same as Users API)
+    if (profile.role !== 'super_admin') {
+      usersQuery = usersQuery.eq('tenant_id', profile.tenant_id);
+      videosQuery = videosQuery.eq('tenant_id', profile.tenant_id);
+      postsQuery = postsQuery.eq('tenant_id', profile.tenant_id);
+      sessionsQuery = sessionsQuery.eq('tenant_id', profile.tenant_id);
+      recentUsersQuery = recentUsersQuery.eq('tenant_id', profile.tenant_id);
+      topVideosQuery = topVideosQuery.eq('tenant_id', profile.tenant_id);
+    }
 
     // Fetch overview analytics in parallel
     const [
@@ -49,35 +84,19 @@ export async function GET(request: NextRequest) {
       topVideos,
     ] = await Promise.all([
       // Total users - filter by tenant
-      supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true })
-        .match(tenantFilter),
+      usersQuery,
       
       // Total videos - filter by tenant
-      supabase
-        .from('tutorial_videos')
-        .select('id', { count: 'exact', head: true })
-        .match(tenantFilter),
+      videosQuery,
       
       // Total community posts - filter by tenant
-      supabase
-        .from('community_posts')
-        .select('id', { count: 'exact', head: true })
-        .match(tenantFilter),
+      postsQuery,
       
       // Total sessions - filter by tenant
-      supabase
-        .from('mind_shifting_sessions')
-        .select('id', { count: 'exact', head: true })
-        .match(tenantFilter),
+      sessionsQuery,
       
       // Recent users (last 30 days) - filter by tenant
-      supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true })
-        .match(tenantFilter)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
+      recentUsersQuery,
       
       // Total video views - needs tenant filter via join
       supabase
@@ -85,19 +104,13 @@ export async function GET(request: NextRequest) {
         .select('id', { count: 'exact', head: true }),
       
       // Top 5 videos by views - filter by tenant
-      supabase
-        .from('tutorial_videos')
-        .select('id, title, view_count')
-        .match(tenantFilter)
-        .order('view_count', { ascending: false })
-        .limit(5),
+      topVideosQuery,
     ]);
 
     // Log for debugging
     console.log('Analytics Debug:', {
       tenant_id: profile.tenant_id,
       role: profile.role,
-      tenantFilter,
       usersCount: usersCount.count,
       usersError: usersCount.error,
     });
