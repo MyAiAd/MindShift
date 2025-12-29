@@ -443,9 +443,9 @@ export default function TutorialsPage() {
                 <Icon className={`h-4 w-4 ${isSelected ? category.color : ''}`} />
                 <span className="text-sm">{category.name}</span>
                 <span className="text-xs bg-background px-1.5 py-0.5 rounded-full">
-                  {category.name === 'All Videos' 
-                    ? tutorialVideos.length 
-                    : tutorialVideos.filter(v => v.category === category.name).length
+                  {category.name === 'All Videos'
+                    ? videos.length
+                    : videos.filter(v => v.category_name === category.name).length
                   }
                 </span>
               </button>
