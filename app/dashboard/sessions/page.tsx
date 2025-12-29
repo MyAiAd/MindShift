@@ -80,6 +80,7 @@ export default function SessionsPage() {
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [clearingStats, setClearingStats] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -829,6 +830,68 @@ export default function SessionsPage() {
           </div>
         )}
       </div>
+
+      {/* Mobile Actions Menu */}
+      {showMobileMenu && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-background/75 backdrop-blur-sm"
+            onClick={() => setShowMobileMenu(false)}
+          />
+          
+          {/* Drawer */}
+          <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl shadow-xl border-t border-border pb-safe">
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-12 h-1.5 bg-border rounded-full" />
+            </div>
+            
+            {/* Title */}
+            <div className="px-4 py-3 border-b border-border">
+              <h3 className="text-lg font-semibold text-foreground">Actions</h3>
+            </div>
+            
+            {/* Menu Items */}
+            <div className="p-2">
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  setShowBookModal(true);
+                }}
+                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors text-left"
+              >
+                <Plus className="h-5 w-5 text-primary" />
+                <span className="text-foreground font-medium">Book Session</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  handleClearStats();
+                }}
+                disabled={clearingStats}
+                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors text-left disabled:opacity-50"
+              >
+                <RotateCcw className={`h-5 w-5 text-primary ${clearingStats ? 'animate-spin' : ''}`} />
+                <span className="text-foreground font-medium">
+                  {clearingStats ? 'Clearing Stats...' : 'Clear Stats'}
+                </span>
+              </button>
+            </div>
+            
+            {/* Cancel button */}
+            <div className="p-4 pt-2">
+              <button
+                onClick={() => setShowMobileMenu(false)}
+                className="w-full py-3 text-center text-muted-foreground font-medium rounded-lg hover:bg-secondary/20 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Book Session Modal */}
       <EnhancedBookingModal
