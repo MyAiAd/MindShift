@@ -1008,12 +1008,24 @@ export default function SessionsPage() {
               <button
                 onClick={() => {
                   setShowMobileMenu(false);
+                  const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                  router.push(`/dashboard/sessions/treatment-v4?sessionId=${sessionId}`);
+                }}
+                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors text-left"
+              >
+                <Video className="h-5 w-5 text-primary" />
+                <span className="text-foreground font-medium">Start Session in-app</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
                   setShowBookModal(true);
                 }}
                 className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors text-left"
               >
-                <Plus className="h-5 w-5 text-primary" />
-                <span className="text-foreground font-medium">Book Session</span>
+                <User className="h-5 w-5 text-primary" />
+                <span className="text-foreground font-medium">Book a Live Session</span>
               </button>
               
               <button
