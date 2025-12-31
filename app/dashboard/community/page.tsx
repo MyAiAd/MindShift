@@ -65,6 +65,12 @@ interface Comment {
   };
 }
 
+interface CommunityStats {
+  memberCount: number;
+  activeToday: number;
+  totalPosts: number;
+}
+
 export default function CommunityPage() {
   const { user, profile } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -75,6 +81,11 @@ export default function CommunityPage() {
   const [comments, setComments] = useState<Record<string, Comment[]>>({});
   const [newComment, setNewComment] = useState('');
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [communityStats, setCommunityStats] = useState<CommunityStats>({
+    memberCount: 0,
+    activeToday: 0,
+    totalPosts: 0
+  });
 
   // New post form state
   const [newPost, setNewPost] = useState({
@@ -85,6 +96,7 @@ export default function CommunityPage() {
 
   useEffect(() => {
     fetchPosts();
+    fetchCommunityStats();
   }, []);
 
   const fetchPosts = async () => {
@@ -102,6 +114,25 @@ export default function CommunityPage() {
       console.error('Error fetching posts:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCommunityStats = async () => {
+    try {
+      const response = await fetch('/api/community/stats');
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCommunityStats(data.stats || {
+          memberCount: 0,
+          activeToday: 0,
+          totalPosts: 0
+        });
+      } else {
+        console.error('Failed to fetch community stats');
+      }
+    } catch (error) {
+      console.error('Error fetching community stats:', error);
     }
   };
 
@@ -289,7 +320,13 @@ export default function CommunityPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">1,234</div>
+            <div className="text-2xl font-bold text-foreground">
+              {loading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              ) : (
+                communityStats.memberCount.toLocaleString()
+              )}
+            </div>
           </CardContent>
         </Card>
         
@@ -301,7 +338,13 @@ export default function CommunityPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{posts.length}</div>
+            <div className="text-2xl font-bold text-foreground">
+              {loading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              ) : (
+                communityStats.totalPosts.toLocaleString()
+              )}
+            </div>
           </CardContent>
         </Card>
         
@@ -313,7 +356,13 @@ export default function CommunityPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">156</div>
+            <div className="text-2xl font-bold text-foreground">
+              {loading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              ) : (
+                communityStats.activeToday.toLocaleString()
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

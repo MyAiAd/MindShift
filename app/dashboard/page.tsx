@@ -35,27 +35,43 @@ interface DashboardStats {
   avgProgress: number;
 }
 
+interface PerformanceMetrics {
+  userSatisfaction: number;
+  goalCompletionRate: number;
+  sessionAttendance: number;
+}
+
 export default function DashboardPage() {
   const { profile, tenant } = useAuth();
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [metricsLoading, setMetricsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         // Fetch real data from existing APIs
-        const [goalsResponse, progressResponse, gamificationResponse] = await Promise.all([
+        const [goalsResponse, progressResponse, gamificationResponse, performanceResponse] = await Promise.all([
           fetch('/api/goals'),
           fetch('/api/progress/stats'),
-          fetch('/api/gamification')
+          fetch('/api/gamification'),
+          fetch('/api/dashboard/performance')
         ]);
 
-        const [goalsData, progressData, gamificationData] = await Promise.all([
+        const [goalsData, progressData, gamificationData, performanceData] = await Promise.all([
           goalsResponse.json(),
           progressResponse.json(),
-          gamificationResponse.json()
+          gamificationResponse.json(),
+          performanceResponse.json()
         ]);
+
+        // Set performance metrics
+        if (performanceData.metrics) {
+          setPerformanceMetrics(performanceData.metrics);
+        }
+        setMetricsLoading(false);
 
         // Calculate stats from real data
         const stats = {
@@ -170,19 +186,28 @@ export default function DashboardPage() {
   // Pull-to-refresh handler
   const handleRefresh = async () => {
     setLoading(true);
+    setMetricsLoading(true);
     try {
       // Re-fetch dashboard data
-      const [goalsResponse, progressResponse, gamificationResponse] = await Promise.all([
+      const [goalsResponse, progressResponse, gamificationResponse, performanceResponse] = await Promise.all([
         fetch('/api/goals'),
         fetch('/api/progress/stats'),
-        fetch('/api/gamification')
+        fetch('/api/gamification'),
+        fetch('/api/dashboard/performance')
       ]);
 
-      const [goalsData, progressData, gamificationData] = await Promise.all([
+      const [goalsData, progressData, gamificationData, performanceData] = await Promise.all([
         goalsResponse.ok ? goalsResponse.json() : { data: null },
         progressResponse.ok ? progressResponse.json() : { data: null },
-        gamificationResponse.ok ? gamificationResponse.json() : { data: null }
+        gamificationResponse.ok ? gamificationResponse.json() : { data: null },
+        performanceResponse.ok ? performanceResponse.json() : { metrics: null }
       ]);
+
+      // Update performance metrics
+      if (performanceData.metrics) {
+        setPerformanceMetrics(performanceData.metrics);
+      }
+      setMetricsLoading(false);
 
       // Calculate stats
       const totalGoals = goalsData.data?.length || 0;
@@ -524,29 +549,67 @@ export default function DashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">92%</div>
-              <div className="text-sm text-muted-foreground">User Satisfaction</div>
-              <div className="w-full bg-secondary rounded-full h-2 mt-2">
-                <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '92%' }}></div>
+          {metricsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+          ) : performanceMetrics ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-primary mb-2">
+                  {performanceMetrics.userSatisfaction}%
+                </div>
+                <div className="text-sm text-muted-foreground">User Satisfaction</div>
+                <div className="w-full bg-secondary rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-indigo-600 h-2 rounded-full transition-all" 
+                    style={{ width: `${performanceMetrics.userSatisfaction}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Based on mood & confidence scores
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-accent mb-2">
+                  {performanceMetrics.goalCompletionRate}%
+                </div>
+                <div className="text-sm text-muted-foreground">Goal Completion Rate</div>
+                <div className="w-full bg-secondary rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-green-600 h-2 rounded-full transition-all" 
+                    style={{ width: `${performanceMetrics.goalCompletionRate}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Completed vs total goals
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-primary mb-2">
+                  {performanceMetrics.sessionAttendance}%
+                </div>
+                <div className="text-sm text-muted-foreground">Session Attendance</div>
+                <div className="w-full bg-secondary rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all" 
+                    style={{ width: `${performanceMetrics.sessionAttendance}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Completed vs scheduled sessions
+                </div>
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-accent mb-2">78%</div>
-              <div className="text-sm text-muted-foreground">Goal Completion Rate</div>
-              <div className="w-full bg-secondary rounded-full h-2 mt-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: '78%' }}></div>
-              </div>
+          ) : (
+            <div className="text-center py-8">
+              <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No performance data available yet</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Start tracking goals and progress to see your performance metrics
+              </p>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">85%</div>
-              <div className="text-sm text-muted-foreground">Session Attendance</div>
-              <div className="w-full bg-secondary rounded-full h-2 mt-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
-              </div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -1,11 +1,14 @@
 # Sample Data Investigation Report
 
 **Date:** December 31, 2025  
-**Branch:** cursor/sample-data-investigation-a996
+**Branch:** cursor/sample-data-investigation-a996  
+**Status:** ✅ **ALL FIXES COMPLETED**
 
 ## Executive Summary
 
 This report documents all hardcoded/sample data found across the application. The investigation confirms that **most data comes from the database**, with only a few specific UI elements containing hardcoded placeholder values.
+
+**UPDATE:** All sample data has been replaced with real database queries. The application is now 100% database-driven.
 
 ---
 
@@ -152,15 +155,15 @@ const sessionAttendance = (attendedSessions / scheduledSessions) * 100;
 
 ## Summary Table
 
-| Location | Type | Status | Action Needed |
-|----------|------|--------|---------------|
-| Community - Posts | Database | ✅ Good | None |
-| Community - Members | Hardcoded | ⚠️ | Create API endpoint |
-| Community - Active Today | Hardcoded | ⚠️ | Create API endpoint |
-| Dashboard - User Stats | Database | ✅ Good | None |
-| Dashboard - Performance | Hardcoded | ⚠️ | Calculate from DB |
-| Goals Page | Database | ✅ Good | None |
-| Progress Page | Database | ✅ Good | None |
+| Location | Type | Status | Action Taken |
+|----------|------|--------|--------------|
+| Community - Posts | Database | ✅ Good | None needed |
+| Community - Members | Database | ✅ **FIXED** | Created `/api/community/stats` |
+| Community - Active Today | Database | ✅ **FIXED** | Created `/api/community/stats` |
+| Dashboard - User Stats | Database | ✅ Good | None needed |
+| Dashboard - Performance | Database | ✅ **FIXED** | Created `/api/dashboard/performance` |
+| Goals Page | Database | ✅ Good | None needed |
+| Progress Page | Database | ✅ Good | None needed |
 
 ---
 
@@ -176,13 +179,54 @@ The core functionality (posts, comments, goals, progress, gamification) is fully
 
 ---
 
-## Next Steps
+## ✅ Completed Changes
 
-1. **Do NOT modify yet** (per user request)
-2. Create API endpoints for member count and activity
-3. Implement performance metrics calculations
-4. Update frontend to use new endpoints
-5. Test all changes thoroughly
+### New API Endpoints Created:
+
+1. **`/app/api/community/stats/route.ts`** - Community statistics
+   - Member count (from profiles table)
+   - Active users today (last 24 hours)
+   - Total posts count
+   - All queries respect tenant isolation
+
+2. **`/app/api/dashboard/performance/route.ts`** - Performance metrics
+   - User Satisfaction: Calculated from average mood/confidence scores
+   - Goal Completion Rate: Completed goals / total goals * 100
+   - Session Attendance: Attended sessions / scheduled sessions * 100
+   - Returns metadata about calculations
+
+### Frontend Updates:
+
+1. **Community Page** (`/app/dashboard/community/page.tsx`)
+   - Added `communityStats` state
+   - Added `fetchCommunityStats()` function
+   - Stats cards now display real data with loading states
+   - Numbers formatted with `.toLocaleString()` for readability
+
+2. **Main Dashboard** (`/app/dashboard/page.tsx`)
+   - Added `performanceMetrics` state
+   - Performance metrics fetched on load and refresh
+   - All three metrics now show real calculated data
+   - Added helpful tooltips explaining each metric
+   - Graceful empty state if no data available
+
+### Database Queries:
+All queries properly filter by `tenant_id` for multi-tenant isolation.
+
+## Testing Recommendations
+
+1. **Community Page:**
+   - Verify member count matches profile records
+   - Check "Active Today" updates as users sign in
+   - Confirm stats refresh when new posts are created
+
+2. **Dashboard:**
+   - Verify goal completion rate calculation
+   - Check session attendance reflects actual sessions
+   - Confirm user satisfaction based on progress entries
+
+3. **Multi-tenant:**
+   - Ensure different tenants see their own stats only
 
 ---
 
