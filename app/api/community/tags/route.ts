@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's profile to check role and tenant
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
@@ -101,7 +101,8 @@ export async function POST(request: NextRequest) {
     console.log('Profile fetched:', { 
       hasProfile: !!profile, 
       tenantId: profile?.tenant_id, 
-      role: profile?.role 
+      role: profile?.role,
+      profileError: profileError 
     });
 
     if (!profile) {
@@ -109,8 +110,40 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, color } = body;
-    console.log('Request body:', { name, description, color });
+    const { name, description, color, tenant_id } = body;
+    console.log('Request body:', { name, description, color, tenant_id });
+
+    // Determine which tenant_id to use
+    let targetTenantId = profile.tenant_id;
+    
+    // Super admins can specify a tenant_id in the request body
+    if (profile.role === 'super_admin' && tenant_id) {
+      targetTenantId = tenant_id;
+    }
+    
+    // If still no tenant_id, check if there's a default tenant we can use
+    if (!targetTenantId) {
+      // For super_admin without specified tenant, try to get the first available tenant
+      if (profile.role === 'super_admin') {
+        const { data: firstTenant } = await supabase
+          .from('tenants')
+          .select('id')
+          .limit(1)
+          .single();
+        
+        if (firstTenant) {
+          targetTenantId = firstTenant.id;
+          console.log('Super admin creating tag in first available tenant:', targetTenantId);
+        }
+      }
+      
+      if (!targetTenantId) {
+        console.error('No tenant_id available:', { profile, tenant_id });
+        return NextResponse.json({ 
+          error: 'Cannot create tag: no tenant specified. Please contact support.' 
+        }, { status: 400 });
+      }
+    }
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -148,7 +181,7 @@ export async function POST(request: NextRequest) {
     const { data: existingTag } = await supabase
       .from('community_tags')
       .select('id')
-      .eq('tenant_id', profile.tenant_id)
+      .eq('tenant_id', targetTenantId)
       .eq('name', tagName)
       .single();
 
@@ -161,12 +194,14 @@ export async function POST(request: NextRequest) {
 
     // Create tag data
     const tagData = {
-      tenant_id: profile.tenant_id,
+      tenant_id: targetTenantId,
       name: tagName,
       description: description?.trim() || null,
       color: color || null,
       created_by: user.id,
     };
+    
+    console.log('Creating tag with data:', tagData);
 
     // Insert tag
     const { data: tag, error: insertError } = await supabase
