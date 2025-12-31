@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
@@ -29,12 +28,6 @@ import {
   BarChart3
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
-// Dynamic import for heavy audio preloader component
-const V4AudioPreloader = dynamic(() => import('@/components/treatment/v4/V4AudioPreloader'), {
-  ssr: false,
-  loading: () => null,
-});
 
 const sidebarItems = [
   { icon: Brain, label: 'Dashboard', href: '/dashboard' },
@@ -124,9 +117,6 @@ export default function DashboardLayout({
 
   return (
     <ThemeProvider>
-      {/* V4 Audio Preloader - starts loading intro audio in background */}
-      <V4AudioPreloader />
-      
       <div className="h-screen flex overflow-hidden bg-secondary/20 relative overflow-x-hidden">
         {/* Hamburger menu button - fixed in top-left corner */}
         <button

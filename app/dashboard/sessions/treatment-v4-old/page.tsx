@@ -82,6 +82,9 @@ function TreatmentSessionContent() {
 
   return (
     <div className="min-h-screen bg-secondary/20 dark:bg-[#002b36]">
+      {/* V4 Audio Preloader */}
+      <V4AudioPreloader />
+      
       {/* Header */}
       <div className="bg-card dark:bg-[#073642] border-b border-border dark:border-[#586e75]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

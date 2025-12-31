@@ -1,10 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity, Zap, RotateCcw, MoreVertical } from 'lucide-react';
 import EnhancedBookingModal from '@/components/sessions/EnhancedBookingModal';
+
+// Dynamic import for audio preloader - loads treatment audio in background
+const V4AudioPreloader = dynamic(() => import('@/components/treatment/v4/V4AudioPreloader'), {
+  ssr: false,
+  loading: () => null,
+});
 
 interface CoachingSession {
   id: string;
@@ -439,6 +446,9 @@ export default function SessionsPage() {
 
   return (
     <div className="p-8">
+      {/* V4 Audio Preloader - starts loading audio for treatment sessions */}
+      <V4AudioPreloader />
+      
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>

@@ -1,11 +1,18 @@
 'use client';
 
 import React, { Suspense, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import TreatmentSession from '@/components/treatment/v2/TreatmentSession';
 import { Brain, ArrowLeft, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
+
+// Dynamic import for audio preloader
+const V4AudioPreloader = dynamic(() => import('@/components/treatment/v4/V4AudioPreloader'), {
+  ssr: false,
+  loading: () => null,
+});
 
 function TreatmentSessionContent() {
   const searchParams = useSearchParams();
@@ -82,6 +89,9 @@ function TreatmentSessionContent() {
 
   return (
     <div className="min-h-screen bg-secondary/20 dark:bg-[#002b36]">
+      {/* V4 Audio Preloader */}
+      <V4AudioPreloader />
+      
       {/* Header */}
       <div className="bg-card dark:bg-[#073642] border-b border-border dark:border-[#586e75]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
