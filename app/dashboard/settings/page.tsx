@@ -129,6 +129,7 @@ export default function SettingsPage() {
 
   // Labs toggle states
   const [labsToggles, setLabsToggles] = useState({
+    v2TreatmentDemo: true,
     v3TreatmentDemo: true,
     v4TreatmentDemo: true
   });
@@ -1249,18 +1250,81 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
             <p className="text-sm text-muted-foreground mb-6">
-              Experimental features and demos. These features are in development and may change or be removed.
+              Compare all treatment versions for testing and migration purposes. V4 is the current production version.
             </p>
             
             <div className="space-y-6">
-              {/* V3 Treatment Demo with Toggle - HIDDEN FOR LABS FOCUS */}
-              {/* 
+              {/* V2 Treatment Demo */}
               <div className="border border-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-foreground">V3 Treatment Demo</h4>
+                    <h4 className="text-md font-medium text-foreground">V2 Treatment</h4>
+                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 rounded-full">
+                      Legacy
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleLabsToggle('v2TreatmentDemo')}
+                    aria-label={`${labsToggles.v2TreatmentDemo ? 'Disable' : 'Enable'} V2 Treatment Demo`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                      labsToggles.v2TreatmentDemo
+                        ? 'bg-indigo-600'
+                        : 'bg-secondary dark:bg-[#586e75]'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
+                        labsToggles.v2TreatmentDemo ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                {labsToggles.v2TreatmentDemo && (
+                  <div className="bg-secondary/20 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      <h5 className="font-medium text-foreground">V2 Treatment System (Text-Only)</h5>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Original monolithic treatment system. Text-only with perfect therapy practice parity.
+                    </p>
+                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span>Text-only interface</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span>Monolithic codebase</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span>Perfect therapy parity</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span>95% scripted responses</span>
+                      </div>
+                    </div>
+                    <div className="flex space-x-3">
+                      <a
+                        href="/dashboard/sessions/treatment-v2"
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                      >
+                        Try V2 Treatment
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* V3 Treatment Demo */}
+              <div className="border border-border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <h4 className="text-md font-medium text-foreground">V3 Treatment</h4>
                     <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full">
-                      Latest
+                      Testing
                     </span>
                   </div>
                   <button
@@ -1282,58 +1346,45 @@ export default function SettingsPage() {
                 {labsToggles.v3TreatmentDemo && (
                   <div className="bg-secondary/20 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-2">
-                      <Brain className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                      <Brain className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                       <h5 className="font-medium text-foreground">V3 Treatment System</h5>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
-                      Next-generation treatment engine with enhanced state management and improved therapeutic protocols.
+                      Experimental version with mixed results. Some areas improved, others need work.
                     </p>
                     <div className="space-y-2 text-sm text-muted-foreground mb-4">
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                         <span>Enhanced state machine architecture</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Improved validation and text processing</span>
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <span>Mixed therapy parity results</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Advanced integration capabilities</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>All 6 treatment modalities available</span>
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <span>All 6 treatment modalities</span>
                       </div>
                     </div>
                     <div className="flex space-x-3">
                       <a
                         href="/dashboard/sessions/treatment-v3"
-                        className="flex-1 px-4 py-2 bg-indigo-600 text-white text-center rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm"
+                        className="flex-1 px-4 py-2 bg-orange-600 text-white text-center rounded-lg hover:bg-orange-700 transition-colors font-medium text-sm"
                       >
                         Try V3 Treatment
-                      </a>
-                      <a
-                        href="https://github.com/yourusername/mindshifting/tree/main/lib/v3"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 px-4 py-2 bg-primary text-primary-foreground text-center rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
-                      >
-                        View V3 Code
                       </a>
                     </div>
                   </div>
                 )}
               </div>
-              */}
 
-              {/* V4 Treatment Demo with Toggle */}
+              {/* V4 Treatment Demo */}
               <div className="border border-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-foreground">V4 Treatment (Labs)</h4>
-                    <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full">
-                      Experimental
+                    <h4 className="text-md font-medium text-foreground">V4 Treatment</h4>
+                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded-full">
+                      Current Production
                     </span>
                   </div>
                   <button
@@ -1355,44 +1406,36 @@ export default function SettingsPage() {
                 {labsToggles.v4TreatmentDemo && (
                   <div className="bg-secondary/20 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-2">
-                      <Brain className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                      <h5 className="font-medium text-foreground">V4 Treatment System (Labs)</h5>
+                      <Brain className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <h5 className="font-medium text-foreground">V4 Treatment System</h5>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
-                      Experimental copy of V3 for testing new features (voice integration, etc). Based on the latest stable V3 codebase with bug fixes.
+                      Current production version. Modular architecture with voice support, pre-loaded audio, and mobile optimization.
                     </p>
                     <div className="space-y-2 text-sm text-muted-foreground mb-4">
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        <span>Based on latest V3 with all bug fixes</span>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>Modular architecture (each modality separate)</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        <span>Isolated environment for experimentation</span>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>Voice support with pre-loaded audio</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        <span>Voice module integration testing</span>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>Mobile-optimized interface</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span>All 6 treatment modalities available</span>
                       </div>
                     </div>
                     <div className="flex space-x-3">
                       <a
                         href="/dashboard/sessions/treatment-v4"
-                        className="flex-1 px-4 py-2 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm"
+                        className="flex-1 px-4 py-2 bg-green-600 text-white text-center rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
                       >
-                        Try V4 Treatment (Labs)
-                      </a>
-                      <a
-                        href="https://github.com/yourusername/mindshifting/tree/main/lib/v4"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 px-4 py-2 bg-primary text-primary-foreground text-center rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
-                      >
-                        View V4 Code
+                        Try V4 Treatment
                       </a>
                     </div>
                   </div>

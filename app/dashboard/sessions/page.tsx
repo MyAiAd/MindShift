@@ -570,23 +570,23 @@ export default function SessionsPage() {
         <div className="bg-card border border-border rounded-lg p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center space-x-3 mb-4">
             <Video className="h-8 w-8 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground">Mind Shifting Session</h3>
+            <h3 className="text-lg font-semibold text-foreground">Treatment Session</h3>
           </div>
-          <p className="text-muted-foreground mb-4">Start an automated Mind Shifting treatment session with 95% scripted responses for optimal performance.</p>
+          <p className="text-muted-foreground mb-4">Start an automated treatment session with voice support, modular design, and mobile optimization.</p>
           <div className="text-xs text-primary mb-6 space-y-1 flex-grow">
             <div>• Instant responses (&lt;200ms)</div>
-            <div>• Proven Mind Shifting protocols</div>
+            <div>• Voice-enabled with pre-loaded audio</div>
             <div>• Minimal AI usage (&lt;5%)</div>
-            <div>• Cost effective (&lt;$0.05/session)</div>
+            <div>• Mobile-optimized experience</div>
           </div>
           <button 
             onClick={() => {
               const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              router.push(`/dashboard/sessions/treatment-v3?sessionId=${sessionId}`);
+              router.push(`/dashboard/sessions/treatment-v4?sessionId=${sessionId}`);
             }}
             className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors w-full mt-auto"
           >
-            Start Mind Shifting Session
+            Start Treatment Session
           </button>
         </div>
 
@@ -872,7 +872,7 @@ export default function SessionsPage() {
                       {session.status === 'active' && (
                         <div className="flex items-center space-x-2">
                           <button 
-                            onClick={() => router.push(`/dashboard/sessions/treatment-v3?sessionId=${session.session_id}&resume=true`)}
+                            onClick={() => router.push(`/dashboard/sessions/treatment-v4?sessionId=${session.session_id}&resume=true`)}
                             className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm inline-flex items-center"
                           >
                             Continue
@@ -953,7 +953,7 @@ export default function SessionsPage() {
                     {session.status === 'active' && (
                       <div className="flex flex-col space-y-2 pl-14">
                         <button 
-                          onClick={() => router.push(`/dashboard/sessions/treatment-v3?sessionId=${session.session_id}&resume=true`)}
+                          onClick={() => router.push(`/dashboard/sessions/treatment-v4?sessionId=${session.session_id}&resume=true`)}
                           className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm inline-flex items-center justify-center"
                         >
                           Continue
