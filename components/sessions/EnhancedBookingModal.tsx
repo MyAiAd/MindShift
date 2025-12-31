@@ -447,7 +447,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-background/75 flex items-center justify-center z-50 p-4">
       <div className="bg-card rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
@@ -462,14 +462,14 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center">
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-lg text-destructive flex items-center">
               <AlertCircle className="h-4 w-4 mr-2" />
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
+            <div className="mb-4 p-3 bg-accent/10 border border-accent rounded-lg text-accent">
               {success}
             </div>
           )}
@@ -483,7 +483,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
               <select
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg focus:ring-primary focus:border-primary"
                 required
                 disabled={submitting}
               >
@@ -499,7 +499,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
               <label className="block text-sm font-medium text-foreground mb-2">
                 Preferred Coach *
                 {formData.title && formData.title !== 'Custom Session' && (
-                  <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">
+                  <span className="ml-2 text-xs text-primary">
                     (Showing {formData.title} specialists)
                   </span>
                 )}
@@ -513,7 +513,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
                 <select
                   value={formData.coachId}
                   onChange={(e) => handleInputChange('coachId', e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg focus:ring-primary focus:border-primary"
                   required
                   disabled={submitting}
                 >
@@ -541,7 +541,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
                 <select
                   value={formData.selectedDate}
                   onChange={(e) => handleInputChange('selectedDate', e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg focus:ring-primary focus:border-primary"
                   required
                   disabled={submitting || !formData.coachId}
                 >
@@ -562,7 +562,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
                 <select
                   value={formData.durationMinutes}
                   onChange={(e) => handleInputChange('durationMinutes', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg focus:ring-primary focus:border-primary"
                   required
                   disabled={submitting}
                 >
@@ -588,7 +588,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
                   <select
                     value={formData.selectedSlot}
                     onChange={(e) => handleInputChange('selectedSlot', e.target.value)}
-                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg focus:ring-primary focus:border-primary"
                     required
                     disabled={submitting || !formData.selectedDate || availableSlots.length === 0}
                   >
@@ -614,7 +614,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
                 rows={3}
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg focus:ring-primary focus:border-primary"
                 placeholder="Describe what you'd like to focus on in this session..."
                 disabled={submitting}
               />
@@ -625,7 +625,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
               <label className="block text-sm font-medium text-foreground mb-2">
                 Meeting Type *
                 {formData.coachId && filteredMeetingTypes.length < meetingTypes.length && (
-                  <span className="ml-2 text-xs text-green-600 dark:text-green-400">
+                  <span className="ml-2 text-xs text-accent">
                     (Coach's preferred options)
                   </span>
                 )}
@@ -640,7 +640,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
                       onClick={() => handleInputChange('meetingType', type.value)}
                       className={`p-3 border rounded-lg flex flex-col items-center space-y-2 transition-colors ${
                         formData.meetingType === type.value
-                          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
+                          ? 'border-primary bg-primary/10 text-primary'
                           : 'border-border hover:border-primary'
                       }`}
                       disabled={submitting}
@@ -658,7 +658,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-foreground hover:text-foreground dark:hover:text-white"
+                className="px-4 py-2 text-foreground hover:text-foreground dark:hover:text-primary-foreground"
                 disabled={submitting}
               >
                 Cancel
@@ -666,7 +666,7 @@ export default function EnhancedBookingModal({ isOpen, onClose, onBookingComplet
               <button
                 type="submit"
                 disabled={submitting || !formData.selectedSlot}
-                className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 {submitting ? (
                   <>
