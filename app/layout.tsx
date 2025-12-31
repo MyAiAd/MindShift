@@ -96,6 +96,7 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
+        {/* Version: 2025-12-31 - Community Tags Fix (Migration 048) */}
         <ThemeProvider>
           <AuthProvider>
             <SkipNavigation />
