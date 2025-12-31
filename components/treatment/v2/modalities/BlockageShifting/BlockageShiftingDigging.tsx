@@ -106,10 +106,10 @@ export default function BlockageShiftingDigging({
           <button
             onClick={onUndo}
             disabled={isLoading || stepHistory.length === 0}
-            className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+            className="flex items-center justify-center w-10 h-10 bg-secondary hover:bg-secondary disabled:bg-secondary/20 disabled:cursor-not-allowed border border-border rounded-lg transition-colors"
             title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
           >
-            <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            <Undo2 className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
 
@@ -141,10 +141,10 @@ export default function BlockageShiftingDigging({
               onChange={(e) => setUserInput(e.target.value)}
               placeholder="Please select Yes, No, or Maybe below..."
               disabled={true}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-3 border border-border rounded-lg bg-secondary text-muted-foreground cursor-not-allowed"
               maxLength={500}
             />
-            <div className="absolute right-3 top-3 text-xs text-gray-400">
+            <div className="absolute right-3 top-3 text-xs text-muted-foreground">
               Disabled
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function BlockageShiftingDigging({
             <button
               onClick={() => handleYesNoMaybeResponse('yes')}
               disabled={isLoading}
-              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
             >
               <span className="bg-red-700 px-2 py-1 rounded text-sm font-bold">1</span>
               <span>Yes</span>
@@ -162,7 +162,7 @@ export default function BlockageShiftingDigging({
             <button
               onClick={() => handleYesNoMaybeResponse('maybe')}
               disabled={isLoading}
-              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
             >
               <span className="bg-orange-700 px-2 py-1 rounded text-sm font-bold">2</span>
               <span>Maybe</span>
@@ -171,7 +171,7 @@ export default function BlockageShiftingDigging({
             <button
               onClick={() => handleYesNoMaybeResponse('no')}
               disabled={isLoading}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold"
             >
               <span className="bg-green-700 px-2 py-1 rounded text-sm font-bold">3</span>
               <span>No</span>
@@ -192,10 +192,10 @@ export default function BlockageShiftingDigging({
           <button
             onClick={onUndo}
             disabled={isLoading || stepHistory.length === 0}
-            className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed border border-gray-300 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+            className="flex items-center justify-center w-10 h-10 bg-secondary hover:bg-secondary disabled:bg-secondary/20 disabled:cursor-not-allowed border border-border rounded-lg transition-colors"
             title={stepHistory.length === 0 ? "No previous steps to undo" : "Undo last step"}
           >
-            <Undo2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            <Undo2 className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
 
@@ -226,7 +226,7 @@ export default function BlockageShiftingDigging({
                 <button
                   onClick={() => handleMethodSelection('Problem Shifting')}
                   disabled={isLoading}
-                  className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                  className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                 >
                   <span className="bg-blue-700 px-2 py-1 rounded text-xs font-bold">1</span>
                   <span>Problem Shifting</span>
@@ -235,7 +235,7 @@ export default function BlockageShiftingDigging({
                 <button
                   onClick={() => handleMethodSelection('Identity Shifting')}
                   disabled={isLoading}
-                  className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                  className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                 >
                   <span className="bg-purple-700 px-2 py-1 rounded text-xs font-bold">2</span>
                   <span>Identity Shifting</span>
@@ -244,7 +244,7 @@ export default function BlockageShiftingDigging({
                 <button
                   onClick={() => handleMethodSelection('Belief Shifting')}
                   disabled={isLoading}
-                  className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                  className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                 >
                   <span className="bg-green-700 px-2 py-1 rounded text-xs font-bold">3</span>
                   <span>Belief Shifting</span>
@@ -253,7 +253,7 @@ export default function BlockageShiftingDigging({
                 <button
                   onClick={() => handleMethodSelection('Blockage Shifting')}
                   disabled={isLoading}
-                  className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
+                  className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-secondary disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-semibold text-sm"
                 >
                   <span className="bg-orange-700 px-2 py-1 rounded text-xs font-bold">4</span>
                   <span>Blockage Shifting</span>

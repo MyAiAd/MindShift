@@ -139,7 +139,7 @@ export function SwipeableSheet({
           aria-modal="true"
           className={cn(
             'fixed bottom-0 left-0 right-0 z-50',
-            'bg-white dark:bg-gray-900',
+            'bg-card dark:bg-background',
             'rounded-t-3xl shadow-2xl',
             'transition-transform duration-300 ease-out',
             isDragging && 'transition-none',
@@ -154,8 +154,8 @@ export function SwipeableSheet({
           onTouchEnd={handleTouchEnd}
         >
           {/* Drag Handle Area */}
-          <div className="sheet-handle-area sticky top-0 z-10 flex items-center justify-center py-3 bg-white dark:bg-gray-900 rounded-t-3xl border-b border-gray-200 dark:border-gray-800">
-            <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full" aria-label="Drag to resize" />
+          <div className="sheet-handle-area sticky top-0 z-10 flex items-center justify-center py-3 bg-card dark:bg-background rounded-t-3xl border-b border-border">
+            <div className="w-12 h-1.5 bg-border rounded-full" aria-label="Drag to resize" />
           </div>
 
           {/* Content */}

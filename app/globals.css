@@ -400,18 +400,74 @@
   }
   .dark {
     /* Solarized Dark Theme */
+    --background: 192 100% 11%;        /* base03: #002b36 - darkest background */
+    --foreground: 186 13% 75%;         /* base1: #93a1a1 - primary content */
+    --card: 193 100% 13%;              /* base02: #073642 - card background */
+    --card-foreground: 186 13% 75%;    /* base1: #93a1a1 - card text */
+    --popover: 193 100% 13%;           /* base02: #073642 - popover background */
+    --popover-foreground: 186 13% 75%; /* base1: #93a1a1 - popover text */
+    --primary: 205 69% 67%;            /* blue: #268bd2 - primary actions */
+    --primary-foreground: 44 11% 93%;  /* base3: #fdf6e3 - text on primary */
+    --secondary: 192 90% 21%;          /* base01: #586e75 - secondary background */
+    --secondary-foreground: 186 13% 75%; /* base1: #93a1a1 - secondary text */
+    --muted: 192 90% 21%;              /* base01: #586e75 - muted background */
+    --muted-foreground: 44 87% 94%;    /* base0: #839496 - muted text */
+    --accent: 68 100% 30%;             /* green: #859900 - accent color */
+    --accent-foreground: 44 11% 93%;   /* base3: #fdf6e3 - text on accent */
+    --destructive: 1 71% 52%;          /* red: #dc322f - destructive actions */
+    --destructive-foreground: 44 11% 93%; /* base3: #fdf6e3 - text on destructive */
+    --border: 192 81% 27%;             /* base01 lighter - borders */
+    --input: 192 81% 27%;              /* base01 lighter - input borders */
+    --ring: 205 69% 67%;               /* blue: #268bd2 - focus rings */
+    --chart-1: 205 69% 67%;            /* blue: #268bd2 */
+    --chart-2: 175 74% 63%;            /* cyan: #2aa198 */
+    --chart-3: 68 100% 30%;            /* green: #859900 */
+    --chart-4: 45 100% 51%;            /* yellow: #b58900 */
+    --chart-5: 18 89% 60%;             /* orange: #cb4b16 */
+  }
+
+  /* ===============================================
+   * MULTI-THEME SUPPORT
+   * Each theme defines the same semantic variables
+   * =============================================== */
+
+  /* Solarized Light */
+  [data-theme="solarized-light"] {
+    --background: 44 11% 93%;        /* base3: #fdf6e3 - light background */
+    --foreground: 192 100% 11%;      /* base03: #002b36 - dark text */
+    --card: 44 87% 94%;              /* base2: #eee8d5 - slightly darker bg */
+    --card-foreground: 192 100% 11%; /* base03: #002b36 - dark text */
+    --popover: 44 87% 94%;           /* base2: #eee8d5 */
+    --popover-foreground: 192 100% 11%; /* base03: #002b36 - dark text */
+    --primary: 205 69% 67%;          /* blue: #268bd2 */
+    --primary-foreground: 44 11% 93%; /* base3: #fdf6e3 - light text on blue */
+    --secondary: 44 87% 94%;         /* base2: #eee8d5 - slightly darker bg */
+    --secondary-foreground: 192 100% 11%; /* base03: #002b36 - dark text */
+    --muted: 44 87% 94%;             /* base2: #eee8d5 - muted background */
+    --muted-foreground: 186 8% 60%;  /* base1: #93a1a1 - medium dark text */
+    --accent: 68 100% 30%;           /* green: #859900 */
+    --accent-foreground: 44 11% 93%; /* base3: #fdf6e3 - light text on green */
+    --destructive: 1 71% 52%;        /* red: #dc322f */
+    --destructive-foreground: 44 11% 93%; /* base3: #fdf6e3 - light text on red */
+    --border: 192 13% 45%;           /* base0: #839496 - visible border */
+    --input: 192 13% 45%;            /* base0: #839496 - visible input border */
+    --ring: 205 69% 67%;             /* blue: #268bd2 - focus ring */
+  }
+
+  /* Solarized Dark */
+  [data-theme="solarized-dark"] {
     --background: 192 100% 11%;        /* base03: #002b36 */
-    --foreground: 44 87% 94%;          /* base0: #839496 */
+    --foreground: 186 13% 75%;         /* base1: #93a1a1 */
     --card: 193 100% 13%;              /* base02: #073642 */
-    --card-foreground: 44 87% 94%;     /* base0: #839496 */
+    --card-foreground: 186 13% 75%;    /* base1: #93a1a1 */
     --popover: 193 100% 13%;           /* base02: #073642 */
-    --popover-foreground: 44 87% 94%;  /* base0: #839496 */
+    --popover-foreground: 186 13% 75%; /* base1: #93a1a1 */
     --primary: 205 69% 67%;            /* blue: #268bd2 */
-    --primary-foreground: 192 100% 11%; /* base03: #002b36 */
+    --primary-foreground: 44 11% 93%;  /* base3: #fdf6e3 */
     --secondary: 192 90% 21%;          /* base01: #586e75 */
     --secondary-foreground: 186 13% 75%; /* base1: #93a1a1 */
     --muted: 192 90% 21%;              /* base01: #586e75 */
-    --muted-foreground: 186 13% 75%;   /* base1: #93a1a1 */
+    --muted-foreground: 44 87% 94%;    /* base0: #839496 */
     --accent: 68 100% 30%;             /* green: #859900 */
     --accent-foreground: 44 11% 93%;   /* base3: #fdf6e3 */
     --destructive: 1 71% 52%;          /* red: #dc322f */
@@ -419,11 +475,144 @@
     --border: 192 81% 27%;             /* base01 lighter */
     --input: 192 81% 27%;              /* base01 lighter */
     --ring: 205 69% 67%;               /* blue: #268bd2 */
-    --chart-1: 205 69% 67%;            /* blue: #268bd2 */
-    --chart-2: 175 74% 63%;            /* cyan: #2aa198 */
-    --chart-3: 68 100% 30%;            /* green: #859900 */
-    --chart-4: 45 100% 51%;            /* yellow: #b58900 */
-    --chart-5: 18 89% 60%;             /* orange: #cb4b16 */
+  }
+
+  /* Gruvbox Light */
+  [data-theme="gruvbox-light"] {
+    --background: 48 87% 94%;        /* #fbf1c7 */
+    --foreground: 25 18% 23%;        /* #3c3836 */
+    --card: 36 65% 90%;              /* #ebdbb2 */
+    --card-foreground: 25 18% 23%;   /* #3c3836 */
+    --popover: 36 65% 90%;           /* #ebdbb2 */
+    --popover-foreground: 25 18% 23%; /* #3c3836 */
+    --primary: 39 83% 49%;           /* #d79921 */
+    --primary-foreground: 48 87% 94%; /* #fbf1c7 */
+    --secondary: 36 65% 90%;         /* #ebdbb2 */
+    --secondary-foreground: 25 18% 23%; /* #3c3836 */
+    --muted: 36 46% 76%;             /* #d5c4a1 */
+    --muted-foreground: 25 43% 35%;  /* #504945 */
+    --accent: 142 60% 40%;           /* #98971a */
+    --accent-foreground: 48 87% 94%; /* #fbf1c7 */
+    --destructive: 4 69% 55%;        /* #cc241d */
+    --destructive-foreground: 48 87% 94%; /* #fbf1c7 */
+    --border: 36 46% 76%;            /* #d5c4a1 */
+    --input: 36 46% 76%;             /* #d5c4a1 */
+    --ring: 39 83% 49%;              /* #d79921 */
+  }
+
+  /* Gruvbox Dark */
+  [data-theme="gruvbox-dark"] {
+    --background: 25 18% 16%;        /* #282828 */
+    --foreground: 36 65% 90%;        /* #ebdbb2 */
+    --card: 25 43% 20%;              /* #3c3836 */
+    --card-foreground: 36 65% 90%;   /* #ebdbb2 */
+    --popover: 25 43% 20%;           /* #3c3836 */
+    --popover-foreground: 36 65% 90%; /* #ebdbb2 */
+    --primary: 39 100% 58%;          /* #fabd2f */
+    --primary-foreground: 25 18% 16%; /* #282828 */
+    --secondary: 25 43% 20%;         /* #3c3836 */
+    --secondary-foreground: 36 65% 90%; /* #ebdbb2 */
+    --muted: 25 43% 35%;             /* #504945 */
+    --muted-foreground: 36 46% 76%;  /* #d5c4a1 */
+    --accent: 142 60% 40%;           /* #98971a */
+    --accent-foreground: 25 18% 16%; /* #282828 */
+    --destructive: 4 90% 58%;        /* #fb4934 */
+    --destructive-foreground: 36 65% 90%; /* #ebdbb2 */
+    --border: 25 43% 35%;            /* #504945 */
+    --input: 25 43% 35%;             /* #504945 */
+    --ring: 39 100% 58%;             /* #fabd2f */
+  }
+
+  /* Nord */
+  [data-theme="nord"] {
+    --background: 220 16% 22%;       /* #2e3440 */
+    --foreground: 219 28% 88%;       /* #d8dee9 */
+    --card: 220 17% 28%;             /* #3b4252 */
+    --card-foreground: 219 28% 88%;  /* #d8dee9 */
+    --popover: 220 17% 28%;          /* #3b4252 */
+    --popover-foreground: 219 28% 88%; /* #d8dee9 */
+    --primary: 193 43% 67%;          /* #88c0d0 */
+    --primary-foreground: 220 16% 22%; /* #2e3440 */
+    --secondary: 220 17% 28%;        /* #3b4252 */
+    --secondary-foreground: 219 28% 88%; /* #d8dee9 */
+    --muted: 220 16% 36%;            /* #434c5e */
+    --muted-foreground: 218 27% 92%; /* #eceff4 */
+    --accent: 179 25% 65%;           /* #8fbcbb */
+    --accent-foreground: 220 16% 22%; /* #2e3440 */
+    --destructive: 354 42% 56%;      /* #bf616a */
+    --destructive-foreground: 219 28% 88%; /* #d8dee9 */
+    --border: 220 16% 36%;           /* #434c5e */
+    --input: 220 16% 36%;            /* #434c5e */
+    --ring: 193 43% 67%;             /* #88c0d0 */
+  }
+
+  /* Dracula */
+  [data-theme="dracula"] {
+    --background: 231 15% 18%;       /* #282a36 */
+    --foreground: 60 30% 96%;        /* #f8f8f2 */
+    --card: 232 14% 31%;             /* #44475a */
+    --card-foreground: 60 30% 96%;   /* #f8f8f2 */
+    --popover: 232 14% 31%;          /* #44475a */
+    --popover-foreground: 60 30% 96%; /* #f8f8f2 */
+    --primary: 265 89% 78%;          /* #bd93f9 */
+    --primary-foreground: 231 15% 18%; /* #282a36 */
+    --secondary: 232 14% 31%;        /* #44475a */
+    --secondary-foreground: 60 30% 96%; /* #f8f8f2 */
+    --muted: 230 15% 36%;            /* #6272a4 */
+    --muted-foreground: 60 30% 96%;  /* #f8f8f2 */
+    --accent: 135 94% 65%;           /* #50fa7b */
+    --accent-foreground: 231 15% 18%; /* #282a36 */
+    --destructive: 0 100% 67%;       /* #ff5555 */
+    --destructive-foreground: 60 30% 96%; /* #f8f8f2 */
+    --border: 230 15% 36%;           /* #6272a4 */
+    --input: 230 15% 36%;            /* #6272a4 */
+    --ring: 265 89% 78%;             /* #bd93f9 */
+  }
+
+  /* Catppuccin Mocha */
+  [data-theme="catppuccin-mocha"] {
+    --background: 240 21% 15%;       /* #1e1e2e */
+    --foreground: 226 64% 88%;       /* #cdd6f4 */
+    --card: 237 16% 23%;             /* #313244 */
+    --card-foreground: 226 64% 88%;  /* #cdd6f4 */
+    --popover: 237 16% 23%;          /* #313244 */
+    --popover-foreground: 226 64% 88%; /* #cdd6f4 */
+    --primary: 217 92% 76%;          /* #89b4fa */
+    --primary-foreground: 240 21% 15%; /* #1e1e2e */
+    --secondary: 237 16% 23%;        /* #313244 */
+    --secondary-foreground: 226 64% 88%; /* #cdd6f4 */
+    --muted: 233 12% 39%;            /* #585b70 */
+    --muted-foreground: 227 68% 88%; /* #bac2de */
+    --accent: 189 71% 73%;           /* #89dceb */
+    --accent-foreground: 240 21% 15%; /* #1e1e2e */
+    --destructive: 343 81% 75%;      /* #f38ba8 */
+    --destructive-foreground: 240 21% 15%; /* #1e1e2e */
+    --border: 233 12% 39%;           /* #585b70 */
+    --input: 233 12% 39%;            /* #585b70 */
+    --ring: 217 92% 76%;             /* #89b4fa */
+  }
+
+  /* Tokyo Night */
+  [data-theme="tokyo-night"] {
+    --background: 235 18% 13%;       /* #1a1b26 */
+    --foreground: 224 16% 74%;       /* #a9b1d6 */
+    --card: 235 23% 21%;             /* #24283b */
+    --card-foreground: 224 16% 74%;  /* #a9b1d6 */
+    --popover: 235 23% 21%;          /* #24283b */
+    --popover-foreground: 224 16% 74%; /* #a9b1d6 */
+    --primary: 217 92% 76%;          /* #7aa2f7 */
+    --primary-foreground: 235 18% 13%; /* #1a1b26 */
+    --secondary: 235 23% 21%;        /* #24283b */
+    --secondary-foreground: 224 16% 74%; /* #a9b1d6 */
+    --muted: 235 18% 24%;            /* #292e42 */
+    --muted-foreground: 223 18% 85%; /* #c0caf5 */
+    --accent: 172 67% 60%;           /* #7dcfff */
+    --accent-foreground: 235 18% 13%; /* #1a1b26 */
+    --destructive: 3 87% 67%;        /* #f7768e */
+    --destructive-foreground: 235 18% 13%; /* #1a1b26 */
+    --border: 235 18% 24%;           /* #292e42 */
+    --input: 235 18% 24%;            /* #292e42 */
+    --ring: 217 92% 76%;             /* #7aa2f7 */
   }
 }
 

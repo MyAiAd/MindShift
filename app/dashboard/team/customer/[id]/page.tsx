@@ -348,7 +348,7 @@ export default function CustomerDetailPage() {
     switch (tier) {
       case 'level_2': return <Crown className="h-5 w-5 text-purple-500" />;
       case 'level_1': return <Zap className="h-5 w-5 text-blue-500" />;
-      default: return <Star className="h-5 w-5 text-gray-400" />;
+      default: return <Star className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -363,7 +363,7 @@ export default function CustomerDetailPage() {
       case 'cancelled':
         return <span className="px-3 py-1 text-sm bg-red-100 text-red-800 rounded-full">Cancelled</span>;
       default:
-        return <span className="px-3 py-1 text-sm bg-gray-100 text-gray-800 rounded-full">{status}</span>;
+        return <span className="px-3 py-1 text-sm bg-secondary text-foreground rounded-full">{status}</span>;
     }
   };
 
@@ -376,7 +376,7 @@ export default function CustomerDetailPage() {
       case 'low':
         return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Low</span>;
       default:
-        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">{priority}</span>;
+        return <span className="px-2 py-1 text-xs bg-secondary text-foreground rounded-full">{priority}</span>;
     }
   };
 
@@ -412,7 +412,7 @@ export default function CustomerDetailPage() {
       case 'call': return 'bg-blue-50 text-blue-600';
       case 'meeting': return 'bg-purple-50 text-purple-600';
       case 'note': 
-      default: return 'bg-gray-50 text-gray-600';
+      default: return 'bg-secondary/20 text-muted-foreground';
     }
   };
 
@@ -537,12 +537,12 @@ export default function CustomerDetailPage() {
     return (
       <div className="p-8">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+          <div className="h-8 bg-secondary rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-secondary rounded w-1/2 mb-8"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="h-32 bg-gray-200 rounded"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-secondary rounded"></div>
+            <div className="h-32 bg-secondary rounded"></div>
+            <div className="h-32 bg-secondary rounded"></div>
           </div>
         </div>
       </div>
@@ -576,7 +576,7 @@ export default function CustomerDetailPage() {
       <div className="mb-8">
         <button
           onClick={() => router.back()}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center text-muted-foreground hover:text-foreground mb-4"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back to Customer Management
@@ -588,13 +588,13 @@ export default function CustomerDetailPage() {
               {(customer.first_name?.[0] || '') + (customer.last_name?.[0] || customer.email[0].toUpperCase())}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">
+              <h1 className="text-3xl font-bold text-foreground dark:text-[#fdf6e3]">
                 {customer.first_name && customer.last_name 
                   ? `${customer.first_name} ${customer.last_name}`
                   : customer.email
                 }
               </h1>
-              <p className="text-gray-600 dark:text-[#93a1a1]">{customer.email}</p>
+              <p className="text-muted-foreground dark:text-[#93a1a1]">{customer.email}</p>
               <div className="flex items-center space-x-4 mt-2">
                 {subscription && getStatusBadge(subscription.status)}
                 {profile?.role === 'super_admin' && customer.tenants && (
@@ -630,58 +630,58 @@ export default function CustomerDetailPage() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-50 rounded-lg">
               <Calendar className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
+              <p className="text-2xl font-semibold text-foreground dark:text-[#fdf6e3]">
                 {analytics?.subscription_length_days || 0}
               </p>
-              <p className="text-gray-600 dark:text-[#93a1a1]">Days as Customer</p>
+              <p className="text-muted-foreground dark:text-[#93a1a1]">Days as Customer</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-50 rounded-lg">
               <DollarSign className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
+              <p className="text-2xl font-semibold text-foreground dark:text-[#fdf6e3]">
                 {formatCurrency(analytics?.lifetime_value_cents || 0)}
               </p>
-              <p className="text-gray-600 dark:text-[#93a1a1]">Lifetime Value</p>
+              <p className="text-muted-foreground dark:text-[#93a1a1]">Lifetime Value</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-50 rounded-lg">
               <TrendingUp className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
+              <p className="text-2xl font-semibold text-foreground dark:text-[#fdf6e3]">
                 {analytics?.total_transactions || 0}
               </p>
-              <p className="text-gray-600 dark:text-[#93a1a1]">Total Transactions</p>
+              <p className="text-muted-foreground dark:text-[#93a1a1]">Total Transactions</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-50 rounded-lg">
               <Clock className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
+              <p className="text-2xl font-semibold text-foreground dark:text-[#fdf6e3]">
                 {analytics?.days_since_last_payment || 0}
               </p>
-              <p className="text-gray-600 dark:text-[#93a1a1]">Days Since Last Payment</p>
+              <p className="text-muted-foreground dark:text-[#93a1a1]">Days Since Last Payment</p>
             </div>
           </div>
         </div>
@@ -697,7 +697,7 @@ export default function CustomerDetailPage() {
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab
                   ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               {tab === 'admin_logs' ? 'Admin Logs' : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -707,15 +707,15 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-card rounded-lg shadow-sm border p-6">
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Customer Information</h3>
+                                <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4">Customer Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1]">Full Name</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-[#fdf6e3]">
+                  <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1]">Full Name</label>
+                  <p className="mt-1 text-sm text-foreground dark:text-[#fdf6e3]">
                     {customer.first_name && customer.last_name 
                       ? `${customer.first_name} ${customer.last_name}`
                       : 'Not provided'
@@ -723,26 +723,26 @@ export default function CustomerDetailPage() {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1]">Email</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-[#fdf6e3]">{customer.email}</p>
+                  <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1]">Email</label>
+                  <p className="mt-1 text-sm text-foreground dark:text-[#fdf6e3]">{customer.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1]">Account Status</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-[#fdf6e3]">
+                  <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1]">Account Status</label>
+                  <p className="mt-1 text-sm text-foreground dark:text-[#fdf6e3]">
                     {customer.is_active ? 'Active' : 'Inactive'}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1]">Join Date</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-[#fdf6e3]">{formatDate(customer.created_at)}</p>
+                  <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1]">Join Date</label>
+                  <p className="mt-1 text-sm text-foreground dark:text-[#fdf6e3]">{formatDate(customer.created_at)}</p>
                 </div>
               </div>
             </div>
 
             {subscription && (
               <div>
-                                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Current Subscription</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
+                                  <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4">Current Subscription</h3>
+                <div className="bg-secondary/20 rounded-lg p-4">
                   <div className="flex items-center space-x-3 mb-3">
                     {getSubscriptionIcon(subscription.subscription_plans.tier)}
                     <span className="font-medium">{subscription.subscription_plans.name}</span>
@@ -750,11 +750,11 @@ export default function CustomerDetailPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-600 dark:text-[#93a1a1]">Monthly Price:</span>
+                      <span className="text-muted-foreground dark:text-[#93a1a1]">Monthly Price:</span>
                       <span className="ml-2 font-medium">{formatCurrency(subscription.subscription_plans.price_monthly * 100)}</span>
                     </div>
                     <div>
-                      <span className="text-gray-600 dark:text-[#93a1a1]">Current Period:</span>
+                      <span className="text-muted-foreground dark:text-[#93a1a1]">Current Period:</span>
                       <span className="ml-2 font-medium">
                         {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
                       </span>
@@ -768,7 +768,7 @@ export default function CustomerDetailPage() {
 
         {activeTab === 'subscription' && (
           <div>
-                              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Subscription History</h3>
+                              <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4">Subscription History</h3>
             {customer.user_subscriptions?.length ? (
               <div className="space-y-4">
                 {customer.user_subscriptions.map((sub) => (
@@ -780,7 +780,7 @@ export default function CustomerDetailPage() {
                       </div>
                       {getStatusBadge(sub.status)}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-[#93a1a1]">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground dark:text-[#93a1a1]">
                       <div>
                         <span className="font-medium">Period:</span> {formatDate(sub.current_period_start)} - {formatDate(sub.current_period_end)}
                       </div>
@@ -803,19 +803,19 @@ export default function CustomerDetailPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-[#839496]">No subscription history found.</p>
+              <p className="text-muted-foreground dark:text-[#839496]">No subscription history found.</p>
             )}
           </div>
         )}
 
         {activeTab === 'billing' && (
           <div>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Billing Information</h3>
+                            <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4">Billing Information</h3>
             {customer.billing_info ? (
               <div className="space-y-4">
                 <div>
-                                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-2">Billing Address</h4>
-                  <div className="text-sm text-gray-600 dark:text-[#93a1a1]">
+                                      <h4 className="font-medium text-foreground dark:text-[#fdf6e3] mb-2">Billing Address</h4>
+                  <div className="text-sm text-muted-foreground dark:text-[#93a1a1]">
                     <p>{customer.billing_info.address_line1}</p>
                     {customer.billing_info.address_line2 && <p>{customer.billing_info.address_line2}</p>}
                     <p>{customer.billing_info.city}, {customer.billing_info.state} {customer.billing_info.postal_code}</p>
@@ -823,15 +823,15 @@ export default function CustomerDetailPage() {
                   </div>
                 </div>
                 <div>
-                                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-2">Payment Method</h4>
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-[#93a1a1]">
+                                      <h4 className="font-medium text-foreground dark:text-[#fdf6e3] mb-2">Payment Method</h4>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-[#93a1a1]">
                     <CreditCard className="h-4 w-4" />
                     <span>{customer.billing_info.payment_method_type} ending in {customer.billing_info.payment_method_last4}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-[#839496]">No billing information on file.</p>
+              <p className="text-muted-foreground dark:text-[#839496]">No billing information on file.</p>
             )}
           </div>
         )}
@@ -839,7 +839,7 @@ export default function CustomerDetailPage() {
         {activeTab === 'notes' && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Customer Communication</h3>
+              <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3]">Customer Communication</h3>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setShowNoteModal(true)}
@@ -859,14 +859,14 @@ export default function CustomerDetailPage() {
             </div>
 
             {/* Communication Filter */}
-            <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+            <div className="mb-6 bg-secondary/20 p-4 rounded-lg">
               <div className="flex items-center space-x-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Type</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Filter by Type</label>
                   <select
                     value={communicationFilter}
                     onChange={(e) => setCommunicationFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="px-3 py-2 border border-border rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="all">All Communications</option>
                     <option value="note">Notes Only</option>
@@ -876,11 +876,11 @@ export default function CustomerDetailPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Priority</label>
                   <select
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="px-3 py-2 border border-border rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="all">All Priorities</option>
                     <option value="high">High Priority</option>
@@ -889,11 +889,11 @@ export default function CustomerDetailPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Status</label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="px-3 py-2 border border-border rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="all">All</option>
                     <option value="open">Open</option>
@@ -915,10 +915,10 @@ export default function CustomerDetailPage() {
                   {customer.notes
                     ?.filter(note => note.follow_up_date && new Date(note.follow_up_date) <= new Date() && !note.resolved_at)
                     .map(note => (
-                      <div key={note.id} className="flex items-center justify-between bg-white p-3 rounded border">
+                      <div key={note.id} className="flex items-center justify-between bg-card p-3 rounded border">
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-[#fdf6e3]">{note.content.substring(0, 100)}...</p>
-                          <p className="text-xs text-gray-500 dark:text-[#839496]">Due: {formatDate(note.follow_up_date)}</p>
+                          <p className="text-sm font-medium text-foreground dark:text-[#fdf6e3]">{note.content.substring(0, 100)}...</p>
+                          <p className="text-xs text-muted-foreground dark:text-[#839496]">Due: {formatDate(note.follow_up_date)}</p>
                         </div>
                         <button
                           onClick={() => markFollowUpComplete(note.id)}
@@ -946,7 +946,7 @@ export default function CustomerDetailPage() {
                     return true;
                   })
                   .map((note) => (
-                    <div key={note.id} className="border rounded-lg p-4 bg-white shadow-sm">
+                    <div key={note.id} className="border rounded-lg p-4 bg-card shadow-sm">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <div className={`p-2 rounded-lg ${getCommunicationTypeColor(note.note_type || 'note')}`}>
@@ -954,7 +954,7 @@ export default function CustomerDetailPage() {
                           </div>
                           <div>
                             <div className="flex items-center space-x-2 mb-1">
-                              <span className="font-medium text-gray-900 dark:text-[#fdf6e3]">
+                              <span className="font-medium text-foreground dark:text-[#fdf6e3]">
                                 {getCommunicationTypeLabel(note.note_type || 'note')}
                               </span>
                               {getPriorityBadge(note.priority)}
@@ -964,7 +964,7 @@ export default function CustomerDetailPage() {
                                 </span>
                               ))}
                             </div>
-                            <p className="text-sm text-gray-500 dark:text-[#839496]">
+                            <p className="text-sm text-muted-foreground dark:text-[#839496]">
                               By {note.profiles.first_name} {note.profiles.last_name} • {formatDateTime(note.created_at)}
                             </p>
                           </div>
@@ -987,11 +987,11 @@ export default function CustomerDetailPage() {
                       </div>
 
                       <div className="mb-3">
-                        <p className="text-gray-900 dark:text-[#fdf6e3]">{note.content}</p>
+                        <p className="text-foreground dark:text-[#fdf6e3]">{note.content}</p>
                       </div>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-[#839496]">
+                      <div className="flex items-center justify-between pt-3 border-t border-border">
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground dark:text-[#839496]">
                           {note.follow_up_date && !note.resolved_at && (
                             <span className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
@@ -1022,9 +1022,9 @@ export default function CustomerDetailPage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-2">No Communication History</h3>
-                <p className="text-gray-600 mb-4">Start building a communication history with this customer.</p>
+                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-2">No Communication History</h3>
+                <p className="text-muted-foreground mb-4">Start building a communication history with this customer.</p>
                 <button
                   onClick={() => setShowNoteModal(true)}
                   className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
@@ -1038,7 +1038,7 @@ export default function CustomerDetailPage() {
 
         {activeTab === 'transactions' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Transaction History</h3>
+            <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4">Transaction History</h3>
             {customer.transactions?.length ? (
               <div className="space-y-4">
                 {customer.transactions.map((transaction) => (
@@ -1059,30 +1059,30 @@ export default function CustomerDetailPage() {
                         </div>
                         <div>
                           <p className="font-medium">{formatCurrency(transaction.amount_cents)}</p>
-                          <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{transaction.description || transaction.transaction_type}</p>
+                          <p className="text-sm text-muted-foreground dark:text-[#93a1a1]">{transaction.description || transaction.transaction_type}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-900 dark:text-[#fdf6e3]">{formatDateTime(transaction.created_at)}</p>
-                        <p className="text-sm text-gray-500 dark:text-[#839496]">{transaction.processor}</p>
+                        <p className="text-sm text-foreground dark:text-[#fdf6e3]">{formatDateTime(transaction.created_at)}</p>
+                        <p className="text-sm text-muted-foreground dark:text-[#839496]">{transaction.processor}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-[#839496]">No transactions found for this customer.</p>
+              <p className="text-muted-foreground dark:text-[#839496]">No transactions found for this customer.</p>
             )}
           </div>
         )}
 
         {activeTab === 'admin_logs' && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Admin Action Logs</h3>
+            <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4">Admin Action Logs</h3>
             {logsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <span className="ml-2 text-gray-600 dark:text-[#93a1a1]">Loading admin logs...</span>
+                <span className="ml-2 text-muted-foreground dark:text-[#93a1a1]">Loading admin logs...</span>
               </div>
             ) : adminLogs.length ? (
               <div className="space-y-4">
@@ -1094,36 +1094,36 @@ export default function CustomerDetailPage() {
                           <Shield className="h-5 w-5 text-indigo-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{log.action}</p>
-                          <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{log.description}</p>
+                          <p className="font-medium text-foreground dark:text-[#fdf6e3]">{log.action}</p>
+                          <p className="text-sm text-muted-foreground dark:text-[#93a1a1]">{log.description}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-900 dark:text-[#fdf6e3]">{formatDateTime(log.created_at)}</p>
-                        <p className="text-sm text-gray-500 dark:text-[#839496]">{log.performed_by}</p>
+                        <p className="text-sm text-foreground dark:text-[#fdf6e3]">{formatDateTime(log.created_at)}</p>
+                        <p className="text-sm text-muted-foreground dark:text-[#839496]">{log.performed_by}</p>
                       </div>
                     </div>
                     {log.details && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-700 dark:text-[#93a1a1]">{log.details}</p>
+                      <div className="mt-3 p-3 bg-secondary/20 rounded-lg">
+                        <p className="text-sm text-foreground dark:text-[#93a1a1]">{log.details}</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-[#839496]">No admin actions recorded for this customer.</p>
+              <p className="text-muted-foreground dark:text-[#839496]">No admin actions recorded for this customer.</p>
             )}
           </div>
         )}
 
         {activeTab === 'permissions' && (
           <div>
-                              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Feature Permissions</h3>
+                              <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4">Feature Permissions</h3>
             {permissionsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <span className="ml-2 text-gray-600 dark:text-[#93a1a1]">Loading permissions...</span>
+                <span className="ml-2 text-muted-foreground dark:text-[#93a1a1]">Loading permissions...</span>
               </div>
             ) : (
               <div className="space-y-6">
@@ -1138,8 +1138,8 @@ export default function CustomerDetailPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Core Features */}
-                  <div className="bg-white border rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3">Core Features</h4>
+                  <div className="bg-card border rounded-lg p-4">
+                    <h4 className="font-medium text-foreground dark:text-[#fdf6e3] mb-3">Core Features</h4>
                     <div className="space-y-3">
                       {[
                         { key: 'goal_setting', name: 'Goal Setting', description: 'Create and manage personal goals' },
@@ -1147,20 +1147,20 @@ export default function CustomerDetailPage() {
                         { key: 'treatment_sessions', name: 'Treatment Sessions', description: 'Access therapy sessions' },
                         { key: 'ai_assistance', name: 'AI Assistance', description: 'Get AI-powered insights and recommendations' }
                       ].map((feature) => (
-                        <div key={feature.key} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div key={feature.key} className="flex items-center justify-between p-3 border border-border rounded-lg">
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{feature.name}</p>
-                            <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{feature.description}</p>
+                            <p className="font-medium text-foreground dark:text-[#fdf6e3]">{feature.name}</p>
+                            <p className="text-sm text-muted-foreground dark:text-[#93a1a1]">{feature.description}</p>
                           </div>
                           <button
                             onClick={() => handlePermissionToggle(feature.key, !permissions[feature.key])}
                             disabled={permissionsUpdating}
                             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                              permissions[feature.key] ? 'bg-indigo-600' : 'bg-gray-200'
+                              permissions[feature.key] ? 'bg-indigo-600' : 'bg-secondary'
                             } ${permissionsUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <span
-                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out ${
                                 permissions[feature.key] ? 'translate-x-5' : 'translate-x-0'
                               }`}
                             />
@@ -1171,8 +1171,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   {/* Advanced Features */}
-                  <div className="bg-white border rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3">Advanced Features</h4>
+                  <div className="bg-card border rounded-lg p-4">
+                    <h4 className="font-medium text-foreground dark:text-[#fdf6e3] mb-3">Advanced Features</h4>
                     <div className="space-y-3">
                       {[
                         { key: 'team_management', name: 'Team Management', description: 'Manage team members and collaboration' },
@@ -1180,20 +1180,20 @@ export default function CustomerDetailPage() {
                         { key: 'custom_treatments', name: 'Custom Treatments', description: 'Create personalized treatment plans' },
                         { key: 'data_export', name: 'Data Export', description: 'Export personal data and reports' }
                       ].map((feature) => (
-                        <div key={feature.key} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div key={feature.key} className="flex items-center justify-between p-3 border border-border rounded-lg">
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900 dark:text-[#fdf6e3]">{feature.name}</p>
-                            <p className="text-sm text-gray-600 dark:text-[#93a1a1]">{feature.description}</p>
+                            <p className="font-medium text-foreground dark:text-[#fdf6e3]">{feature.name}</p>
+                            <p className="text-sm text-muted-foreground dark:text-[#93a1a1]">{feature.description}</p>
                           </div>
                           <button
                             onClick={() => handlePermissionToggle(feature.key, !permissions[feature.key])}
                             disabled={permissionsUpdating}
                             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                              permissions[feature.key] ? 'bg-indigo-600' : 'bg-gray-200'
+                              permissions[feature.key] ? 'bg-indigo-600' : 'bg-secondary'
                             } ${permissionsUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <span
-                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out ${
                                 permissions[feature.key] ? 'translate-x-5' : 'translate-x-0'
                               }`}
                             />
@@ -1205,18 +1205,18 @@ export default function CustomerDetailPage() {
                 </div>
 
                 {/* Role & Subscription Override */}
-                <div className="bg-white border rounded-lg p-4">
-                                      <h4 className="font-medium text-gray-900 dark:text-[#fdf6e3] mb-3">Role & Subscription Override</h4>
+                <div className="bg-card border rounded-lg p-4">
+                                      <h4 className="font-medium text-foreground dark:text-[#fdf6e3] mb-3">Role & Subscription Override</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Customer Role</label>
+                      <label className="block text-sm font-medium text-foreground mb-2">Customer Role</label>
                       <select
                         value={customer.role || 'user'}
                         onChange={(e) => {
                           // Handle role change
                           console.log('Role change:', e.target.value);
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option value="user">User</option>
                         <option value="coach">Coach</option>
@@ -1226,14 +1226,14 @@ export default function CustomerDetailPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Subscription Tier Override</label>
+                      <label className="block text-sm font-medium text-foreground mb-2">Subscription Tier Override</label>
                       <select
                         value={customer.subscription_tier || 'trial'}
                         onChange={(e) => {
                           // Handle tier change
                           console.log('Tier change:', e.target.value);
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option value="trial">Trial</option>
                         <option value="level_1">Level 1</option>
@@ -1257,15 +1257,15 @@ export default function CustomerDetailPage() {
       {/* Add Note Modal */}
       {showNoteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-[#073642] rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Add Customer Note</h3>
+          <div className="bg-card dark:bg-[#073642] rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4">Add Customer Note</h3>
             <form onSubmit={handleAddNote} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Note Content</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Note Content</label>
                 <textarea
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   rows={4}
                   placeholder="Enter your note here..."
                   required
@@ -1273,11 +1273,11 @@ export default function CustomerDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Priority</label>
                   <select
                     value={notePriority}
                     onChange={(e) => setNotePriority(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -1285,12 +1285,12 @@ export default function CustomerDetailPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Follow-up Date</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Follow-up Date</label>
                   <input
                     type="date"
                     value={noteFollowUp}
                     onChange={(e) => setNoteFollowUp(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -1298,7 +1298,7 @@ export default function CustomerDetailPage() {
                 <button 
                   type="button" 
                   onClick={() => setShowNoteModal(false)} 
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-[#002b36]"
+                  className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary/20 dark:bg-[#002b36]"
                 >
                   Cancel
                 </button>
@@ -1317,8 +1317,8 @@ export default function CustomerDetailPage() {
       {/* Email Log Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-[#073642] rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Log Email Communication</h3>
+          <div className="bg-card dark:bg-[#073642] rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4">Log Email Communication</h3>
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.target as HTMLFormElement);
@@ -1331,20 +1331,20 @@ export default function CustomerDetailPage() {
               });
             }} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Subject</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Email Subject</label>
                 <input
                   type="text"
                   name="subject"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Email subject line..."
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Direction</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Direction</label>
                 <select
                   name="direction"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   required
                 >
                   <option value="sent">Sent to Customer</option>
@@ -1352,10 +1352,10 @@ export default function CustomerDetailPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Content/Summary</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Email Content/Summary</label>
                 <textarea
                   name="content"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   rows={4}
                   placeholder="Summarize the email content or key points discussed..."
                   required
@@ -1363,10 +1363,10 @@ export default function CustomerDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Priority</label>
                   <select
                     name="priority"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -1374,11 +1374,11 @@ export default function CustomerDetailPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Follow-up Date</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Follow-up Date</label>
                   <input
                     type="date"
                     name="follow_up_date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -1386,7 +1386,7 @@ export default function CustomerDetailPage() {
                 <button 
                   type="button" 
                   onClick={() => setShowEmailModal(false)} 
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-[#002b36]"
+                  className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary/20 dark:bg-[#002b36]"
                 >
                   Cancel
                 </button>
@@ -1405,8 +1405,8 @@ export default function CustomerDetailPage() {
       {/* Subscription Management Modal */}
       {showSubscriptionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-[#073642] rounded-lg p-6 w-full max-w-lg">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Manage Subscription</h3>
+          <div className="bg-card dark:bg-[#073642] rounded-lg p-6 w-full max-w-lg">
+            <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] mb-4">Manage Subscription</h3>
             
             {actionMessage && (
               <div className={`mb-4 p-3 rounded-lg ${
@@ -1420,11 +1420,11 @@ export default function CustomerDetailPage() {
 
             <form onSubmit={handleSubscriptionAction} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Action</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Action</label>
                 <select
                   value={subscriptionAction}
                   onChange={(e) => setSubscriptionAction(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   required
                 >
                   <option value="">Select an action...</option>
@@ -1437,18 +1437,18 @@ export default function CustomerDetailPage() {
 
               {subscriptionAction === 'extend_trial' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Extend Trial by (days)
                   </label>
                   <input
                     type="number"
                     value={trialDays}
                     onChange={(e) => setTrialDays(parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                     min="1"
                     max="365"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Current trial will be extended by this many days
                   </p>
                 </div>
@@ -1456,13 +1456,13 @@ export default function CustomerDetailPage() {
 
               {subscriptionAction === 'manual_status_change' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     New Status
                   </label>
                   <select
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                     required
                   >
                     <option value="">Select new status...</option>
@@ -1472,7 +1472,7 @@ export default function CustomerDetailPage() {
                     <option value="cancelled">Cancelled</option>
                     <option value="paused">Paused</option>
                   </select>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Manually override the subscription status
                   </p>
                 </div>
@@ -1502,7 +1502,7 @@ export default function CustomerDetailPage() {
                     setSubscriptionAction('');
                     setActionMessage('');
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-[#002b36]"
+                  className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary/20 dark:bg-[#002b36]"
                   disabled={actionLoading}
                 >
                   Cancel

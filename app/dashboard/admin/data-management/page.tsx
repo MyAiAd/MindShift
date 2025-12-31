@@ -320,10 +320,10 @@ export default function DataManagementPage() {
   if (!profile || !['tenant_admin', 'super_admin'].includes(profile.role || '')) {
     return (
       <div className="p-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-          <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-red-900 mb-2">Access Denied</h3>
-          <p className="text-red-700">You need admin permissions to access data management tools.</p>
+        <div className="bg-destructive/10 border border-destructive rounded-lg p-8 text-center">
+          <XCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">Access Denied</h3>
+          <p className="text-destructive">You need admin permissions to access data management tools.</p>
         </div>
       </div>
     );
@@ -332,8 +332,8 @@ export default function DataManagementPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Data Management</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Data Management</h1>
+        <p className="text-muted-foreground mt-1">
           Import, export, and manage customer data and system configuration.
           {profile?.role === 'super_admin' ? ' (Super Admin - All Tenants)' : ' (Tenant Admin)'}
         </p>
@@ -342,9 +342,9 @@ export default function DataManagementPage() {
       {/* Message Display */}
       {message && (
         <div className={`mb-6 p-4 rounded-lg border ${
-          messageType === 'success' ? 'bg-green-50 border-green-200 text-green-700' :
-          messageType === 'error' ? 'bg-red-50 border-red-200 text-red-700' :
-          'bg-blue-50 border-blue-200 text-blue-700'
+          messageType === 'success' ? 'bg-accent/10 border-accent text-accent' :
+          messageType === 'error' ? 'bg-destructive/10 border-destructive text-destructive' :
+          'bg-primary/10 border-primary text-primary'
         }`}>
           <div className="flex items-center">
             {messageType === 'success' && <CheckCircle className="h-5 w-5 mr-2" />}
@@ -364,8 +364,8 @@ export default function DataManagementPage() {
               onClick={() => setActiveTab(tab)}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               {tab === 'import_export' ? 'Import/Export' : 
@@ -382,14 +382,14 @@ export default function DataManagementPage() {
           <>
             {/* Tenant Selection */}
             {profile?.role === 'super_admin' && (
-              <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3] mb-4">Tenant Selection</h3>
+              <div className="bg-card rounded-lg shadow-sm border p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Tenant Selection</h3>
                 <div className="max-w-md">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Target Tenant</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Target Tenant</label>
                   <select
                     value={selectedTenant}
                     onChange={(e) => setSelectedTenant(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg focus:ring-primary focus:border-primary"
                   >
                     <option value="">All Tenants</option>
                     {tenants.map((tenant) => (
@@ -405,7 +405,7 @@ export default function DataManagementPage() {
                       <option value="filter:super_admin">Super Admin Accounts</option>
                     </optgroup>
                   </select>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-muted-foreground mt-2">
                     Select a specific tenant or filter by subscription tier
                   </p>
                 </div>
@@ -413,33 +413,33 @@ export default function DataManagementPage() {
             )}
 
             {/* Import Section */}
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
-                <Upload className="h-6 w-6 text-indigo-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Import Customer Data</h3>
+                <Upload className="h-6 w-6 text-primary mr-3" />
+                <h3 className="text-lg font-semibold text-foreground">Import Customer Data</h3>
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">
+                  <label className="block text-sm font-medium text-foreground text-foreground mb-2">
                     Select File (JSON or CSV)
                   </label>
                   <input
                     type="file"
                     accept=".json,.csv"
                     onChange={handleFileUpload}
-                    className="block w-full text-sm text-gray-500 dark:text-[#839496] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                    className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                   />
                   {importFile && (
-                    <p className="mt-2 text-sm text-gray-600 dark:text-[#93a1a1]">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       Selected: {importFile.name} ({(importFile.size / 1024).toFixed(2)} KB)
                     </p>
                   )}
                 </div>
                 
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Import Format Requirements:</h4>
-                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                <div className="bg-primary/5 p-4 rounded-lg">
+                  <h4 className="font-medium text-foreground mb-2">Import Format Requirements:</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• <strong>JSON:</strong> Array of customer objects with email, first_name, last_name, subscription_tier</li>
                     <li>• <strong>CSV:</strong> Headers: Email, First Name, Last Name, Subscription Tier</li>
                     <li>• Email is required for all customers</li>
@@ -450,7 +450,7 @@ export default function DataManagementPage() {
                 <button
                   onClick={handleImportCustomers}
                   disabled={!importFile || loading}
-                  className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? <Loader className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
                   Import Customers
@@ -459,19 +459,19 @@ export default function DataManagementPage() {
             </div>
 
             {/* Export Section */}
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
-                <Download className="h-6 w-6 text-green-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Export Data</h3>
+                <Download className="h-6 w-6 text-accent mr-3" />
+                <h3 className="text-lg font-semibold text-foreground">Export Data</h3>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">Export Type</label>
+                  <label className="block text-sm font-medium text-foreground text-foreground mb-2">Export Type</label>
                   <select
                     value={exportType}
                     onChange={(e) => setExportType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border border-border bg-background text-foreground rounded-lg focus:ring-primary focus:border-primary"
                   >
                     <option value="customers">Customer Data</option>
                     <option value="subscription_plans">Subscription Plans</option>
@@ -480,11 +480,11 @@ export default function DataManagementPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">Format</label>
+                  <label className="block text-sm font-medium text-foreground text-foreground mb-2">Format</label>
                   <select
                     value={exportFormat}
                     onChange={(e) => setExportFormat(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border border-border bg-background text-foreground rounded-lg focus:ring-primary focus:border-primary"
                   >
                     <option value="json">JSON</option>
                     <option value="csv">CSV</option>
@@ -495,7 +495,7 @@ export default function DataManagementPage() {
                   <button
                     onClick={handleExportCustomers}
                     disabled={loading}
-                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center px-4 py-2 bg-accent text-primary-foreground rounded-lg hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? <Loader className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                     Export Data
@@ -507,25 +507,25 @@ export default function DataManagementPage() {
         )}
 
         {activeTab === 'subscription_plans' && (
-          <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+          <div className="bg-card rounded-lg shadow-sm border p-6">
             <div className="flex items-center mb-4">
-              <Settings className="h-6 w-6 text-purple-600 mr-3" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Subscription Plan Management</h3>
+              <Settings className="h-6 w-6 text-accent mr-3" />
+              <h3 className="text-lg font-semibold text-foreground">Subscription Plan Management</h3>
             </div>
 
             {profile?.role !== 'super_admin' && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="bg-secondary/20 border border-border rounded-lg p-4 mb-6">
                 <div className="flex items-center">
-                  <Shield className="h-5 w-5 text-yellow-600 mr-2" />
-                  <p className="text-yellow-800">Super admin access required for subscription plan management.</p>
+                  <Shield className="h-5 w-5 text-muted-foreground mr-2" />
+                  <p className="text-foreground">Super admin access required for subscription plan management.</p>
                 </div>
               </div>
             )}
 
             <div className="space-y-4">
-                              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                <h4 className="font-medium text-purple-900 dark:text-purple-100 mb-2">Default Subscription Plans:</h4>
-                <ul className="text-sm text-purple-800 dark:text-purple-200 space-y-1">
+                              <div className="bg-accent/5 p-4 rounded-lg">
+                <h4 className="font-medium text-foreground mb-2">Default Subscription Plans:</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• <strong>Trial Plan:</strong> Free trial with basic features</li>
                                   <li>• <strong>Essential MyAi:</strong> $29.00/month - Individual plan with core features</li>
                 <li>• <strong>Complete MyAi:</strong> $49.00/month - Full featured plan with team management</li>
@@ -535,7 +535,7 @@ export default function DataManagementPage() {
               <button
                 onClick={handleSeedSubscriptionPlans}
                 disabled={loading || profile?.role !== 'super_admin'}
-                className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-4 py-2 bg-accent text-primary-foreground rounded-lg hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? <Loader className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}
                 Seed Subscription Plans
@@ -547,20 +547,20 @@ export default function DataManagementPage() {
         {activeTab === 'test_data' && (
           <>
             {/* Generate Test Data */}
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
-                <Users className="h-6 w-6 text-blue-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Generate Test Data</h3>
+                <Users className="h-6 w-6 text-primary mr-3" />
+                <h3 className="text-lg font-semibold text-foreground">Generate Test Data</h3>
               </div>
               
               <div className="space-y-4">
                 {profile?.role === 'super_admin' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">Target Tenant</label>
+                    <label className="block text-sm font-medium text-foreground mb-2">Target Tenant</label>
                     <select
                       value={selectedTenant}
                       onChange={(e) => setSelectedTenant(e.target.value)}
-                      className="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full max-w-md px-3 py-2 border border-border bg-background text-foreground rounded-lg focus:ring-primary focus:border-primary"
                       required
                     >
                       <option value="">Select Tenant</option>
@@ -574,7 +574,7 @@ export default function DataManagementPage() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-[#93a1a1] mb-2">
+                  <label className="block text-sm font-medium text-foreground text-foreground mb-2">
                     Number of Test Customers (Max 200)
                   </label>
                   <input
@@ -583,13 +583,13 @@ export default function DataManagementPage() {
                     max="200"
                     value={testDataCount}
                     onChange={(e) => setTestDataCount(parseInt(e.target.value))}
-                    className="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-[#657b83] dark:bg-[#586e75] dark:text-[#fdf6e3] rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full max-w-md px-3 py-2 border border-border border-border bg-background text-foreground rounded-lg focus:ring-primary focus:border-primary"
                   />
                 </div>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Test Data Includes:</h4>
-                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                <div className="bg-primary/5 p-4 rounded-lg">
+                  <h4 className="font-medium text-foreground mb-2">Test Data Includes:</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• Realistic customer names and email addresses (@example.com)</li>
                     <li>• Random subscription tiers (trial, level_1, level_2)</li>
                     <li>• Active subscriptions for paid tiers (70% chance)</li>
@@ -601,7 +601,7 @@ export default function DataManagementPage() {
                 <button
                   onClick={handleGenerateTestData}
                   disabled={loading || (!selectedTenant && profile?.role !== 'tenant_admin')}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? <Loader className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
                   Generate Test Data
@@ -610,24 +610,24 @@ export default function DataManagementPage() {
             </div>
 
             {/* Cleanup Test Data */}
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center mb-4">
-                <Trash2 className="h-6 w-6 text-red-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Cleanup Test Data</h3>
+                <Trash2 className="h-6 w-6 text-destructive mr-3" />
+                <h3 className="text-lg font-semibold text-foreground">Cleanup Test Data</h3>
               </div>
               
               <div className="space-y-4">
-                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+                <div className="bg-destructive/5 p-4 rounded-lg">
                   <div className="flex items-center mb-3">
-                    <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-                    <p className="text-red-800 dark:text-red-200">
+                    <AlertCircle className="h-5 w-5 text-destructive mr-2" />
+                    <p className="text-foreground">
                       <strong>Warning:</strong> This will permanently delete all customers with @example.com email addresses. This action cannot be undone.
                     </p>
                   </div>
-                  <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-md mt-2">
+                  <div className="bg-accent/10 p-3 rounded-md mt-2">
                     <div className="flex items-center">
-                      <Shield className="h-4 w-4 text-green-600 mr-2" />
-                      <p className="text-green-800 dark:text-green-200 text-sm">
+                      <Shield className="h-4 w-4 text-accent mr-2" />
+                      <p className="text-accent text-sm">
                         <strong>Safe:</strong> Super admin accounts (like admin@yourdomain.com) and real customers will NEVER be deleted. Only test data with @example.com emails is affected.
                       </p>
                     </div>
@@ -637,7 +637,7 @@ export default function DataManagementPage() {
                 <button
                   onClick={handleCleanupTestData}
                   disabled={loading || (!selectedTenant && profile?.role !== 'tenant_admin')}
-                  className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-4 py-2 bg-destructive text-primary-foreground rounded-lg hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? <Loader className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
                   Cleanup Test Data
@@ -650,92 +650,92 @@ export default function DataManagementPage() {
 
       {/* Results Display */}
       {results && (
-        <div className="mt-8 bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+        <div className="mt-8 bg-card rounded-lg shadow-sm border p-6">
           <div className="flex items-center mb-4">
-            <BarChart3 className="h-6 w-6 text-gray-600 mr-3" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Operation Results</h3>
+            <BarChart3 className="h-6 w-6 text-muted-foreground mr-3" />
+            <h3 className="text-lg font-semibold text-foreground">Operation Results</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {results.imported !== undefined && (
-              <div className="bg-green-50 p-4 rounded-lg">
+              <div className="bg-accent/10 p-4 rounded-lg">
                 <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                  <CheckCircle className="h-5 w-5 text-accent mr-2" />
                   <div>
-                    <p className="font-semibold text-green-900">{results.imported}</p>
-                    <p className="text-sm text-green-700">Imported</p>
+                    <p className="font-semibold text-foreground">{results.imported}</p>
+                    <p className="text-sm text-accent">Imported</p>
                   </div>
                 </div>
               </div>
             )}
 
             {results.created !== undefined && (
-              <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="bg-primary/10 p-4 rounded-lg">
                 <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
+                  <CheckCircle className="h-5 w-5 text-primary mr-2" />
                   <div>
-                    <p className="font-semibold text-blue-900">{results.created}</p>
-                    <p className="text-sm text-blue-700">Created</p>
+                    <p className="font-semibold text-foreground">{results.created}</p>
+                    <p className="text-sm text-primary">Created</p>
                   </div>
                 </div>
               </div>
             )}
 
             {results.customers_created !== undefined && (
-              <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="bg-primary/10 p-4 rounded-lg">
                 <div className="flex items-center">
-                  <Users className="h-5 w-5 text-blue-600 mr-2" />
+                  <Users className="h-5 w-5 text-primary mr-2" />
                   <div>
-                    <p className="font-semibold text-blue-900">{results.customers_created}</p>
-                    <p className="text-sm text-blue-700">Customers Created</p>
+                    <p className="font-semibold text-foreground">{results.customers_created}</p>
+                    <p className="text-sm text-primary">Customers Created</p>
                   </div>
                 </div>
               </div>
             )}
 
             {results.subscriptions_created !== undefined && (
-              <div className="bg-purple-50 p-4 rounded-lg">
+              <div className="bg-accent/10 p-4 rounded-lg">
                 <div className="flex items-center">
-                  <Settings className="h-5 w-5 text-purple-600 mr-2" />
+                  <Settings className="h-5 w-5 text-accent mr-2" />
                   <div>
-                    <p className="font-semibold text-purple-900">{results.subscriptions_created}</p>
-                    <p className="text-sm text-purple-700">Subscriptions Created</p>
+                    <p className="font-semibold text-foreground">{results.subscriptions_created}</p>
+                    <p className="text-sm text-accent">Subscriptions Created</p>
                   </div>
                 </div>
               </div>
             )}
 
             {results.notes_created !== undefined && (
-              <div className="bg-green-50 p-4 rounded-lg">
+              <div className="bg-accent/10 p-4 rounded-lg">
                 <div className="flex items-center">
-                  <FileText className="h-5 w-5 text-green-600 mr-2" />
+                  <FileText className="h-5 w-5 text-accent mr-2" />
                   <div>
-                    <p className="font-semibold text-green-900">{results.notes_created}</p>
-                    <p className="text-sm text-green-700">Notes Created</p>
+                    <p className="font-semibold text-foreground">{results.notes_created}</p>
+                    <p className="text-sm text-accent">Notes Created</p>
                   </div>
                 </div>
               </div>
             )}
 
             {results.skipped !== undefined && results.skipped > 0 && (
-              <div className="bg-yellow-50 p-4 rounded-lg">
+              <div className="bg-secondary/20 p-4 rounded-lg">
                 <div className="flex items-center">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
+                  <AlertCircle className="h-5 w-5 text-muted-foreground mr-2" />
                   <div>
-                    <p className="font-semibold text-yellow-900">{results.skipped}</p>
-                    <p className="text-sm text-yellow-700">Skipped</p>
+                    <p className="font-semibold text-foreground">{results.skipped}</p>
+                    <p className="text-sm text-muted-foreground">Skipped</p>
                   </div>
                 </div>
               </div>
             )}
 
             {results.deleted_count !== undefined && (
-              <div className="bg-red-50 p-4 rounded-lg">
+              <div className="bg-destructive/10 p-4 rounded-lg">
                 <div className="flex items-center">
-                  <Trash2 className="h-5 w-5 text-red-600 mr-2" />
+                  <Trash2 className="h-5 w-5 text-destructive mr-2" />
                   <div>
-                    <p className="font-semibold text-red-900">{results.deleted_count}</p>
-                    <p className="text-sm text-red-700">Deleted</p>
+                    <p className="font-semibold text-foreground">{results.deleted_count}</p>
+                    <p className="text-sm text-destructive">Deleted</p>
                   </div>
                 </div>
               </div>
@@ -745,11 +745,11 @@ export default function DataManagementPage() {
           {/* Errors Display */}
           {results.errors && results.errors.length > 0 && (
             <div className="mt-4">
-              <h4 className="font-medium text-red-900 mb-2">Errors ({results.errors.length}):</h4>
-              <div className="bg-red-50 rounded-lg p-4 max-h-60 overflow-y-auto">
+              <h4 className="font-medium text-foreground mb-2">Errors ({results.errors.length}):</h4>
+              <div className="bg-destructive/10 rounded-lg p-4 max-h-60 overflow-y-auto">
                 <div className="space-y-2">
                   {results.errors.slice(0, 10).map((error, index) => (
-                    <div key={index} className="text-sm text-red-700">
+                    <div key={index} className="text-sm text-destructive">
                       {error.email && <span className="font-medium">{error.email}:</span>}
                       {error.tier && <span className="font-medium">{error.tier}:</span>}
                       {error.index !== undefined && <span className="font-medium">Row {error.index}:</span>}
@@ -757,7 +757,7 @@ export default function DataManagementPage() {
                     </div>
                   ))}
                   {results.errors.length > 10 && (
-                    <p className="text-sm text-red-600 font-medium">
+                    <p className="text-sm text-destructive font-medium">
                       ... and {results.errors.length - 10} more errors
                     </p>
                   )}

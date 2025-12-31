@@ -8,20 +8,25 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { 
-  Brain, 
-  Users, 
-  Target, 
-  TrendingUp, 
-  Calendar, 
-  Settings, 
+import { ThemeDropdown } from '@/components/theme/ThemeDropdown';
+import {
+  Brain,
+  Users,
+  Target,
+  TrendingUp,
+  Calendar,
+  Settings,
   LogOut,
   Menu,
   X,
   CreditCard,
   Database,
   Shield,
-  UserCheck
+  UserCheck,
+  Video,
+  PlayCircle,
+  Flag,
+  BarChart3
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -37,6 +42,8 @@ const sidebarItems = [
   { icon: Target, label: 'Goals', href: '/dashboard/goals' },
   { icon: TrendingUp, label: 'Progress', href: '/dashboard/progress' },
   { icon: Calendar, label: 'Sessions', href: '/dashboard/sessions' },
+  { icon: Video, label: 'Tutorials', href: '/dashboard/tutorials' },
+  { icon: Users, label: 'Community', href: '/dashboard/community' },
   { icon: CreditCard, label: 'Subscription', href: '/dashboard/subscription' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
@@ -94,8 +101,8 @@ export default function DashboardLayout({
   if (loading) {
     return (
       <ThemeProvider>
-        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#002b36]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       </ThemeProvider>
     );
@@ -105,10 +112,10 @@ export default function DashboardLayout({
   if (!user || !profile || (!tenant && profile?.role !== 'super_admin')) {
     return (
       <ThemeProvider>
-        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#002b36]">
+        <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-[#fdf6e3] mb-4">Access Denied</h1>
-            <p className="text-gray-600 dark:text-[#839496]">Please sign in to access the dashboard.</p>
+            <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
+            <p className="text-muted-foreground">Please sign in to access the dashboard.</p>
           </div>
         </div>
       </ThemeProvider>
@@ -120,10 +127,10 @@ export default function DashboardLayout({
       {/* V4 Audio Preloader - starts loading intro audio in background */}
       <V4AudioPreloader />
       
-      <div className="h-screen flex overflow-hidden bg-gray-100 dark:bg-[#002b36] relative overflow-x-hidden">
+      <div className="h-screen flex overflow-hidden bg-secondary/20 relative overflow-x-hidden">
         {/* Hamburger menu button - fixed in top-left corner */}
         <button
-          className="fixed top-4 left-4 z-50 h-10 w-10 inline-flex items-center justify-center rounded-md bg-indigo-600 hover:bg-indigo-700 text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors shadow-lg"
+          className="fixed top-4 left-4 z-50 h-10 w-10 inline-flex items-center justify-center rounded-md bg-primary hover:bg-primary/90 text-primary-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring transition-colors shadow-lg"
           onClick={() => setSidebarOpen(!sidebarOpen)}
           title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
         >
@@ -136,20 +143,20 @@ export default function DashboardLayout({
             sidebarOpen ? 'block' : 'hidden'
           }`}
         >
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-[#073642] overflow-y-auto">
-            <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} />
+          <div className="fixed inset-0 bg-background/75" onClick={() => setSidebarOpen(false)} />
+          <div className="relative flex-1 flex flex-col max-w-xs w-full h-full pb-20 bg-card">
+            <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} onNavigate={() => setSidebarOpen(false)} />
           </div>
         </div>
 
         {/* Desktop sidebar (toggleable) */}
         <div 
-          className={`hidden md:flex md:flex-shrink-0 z-40 transition-all duration-300 ease-in-out bg-white dark:bg-[#073642] ${
+          className={`hidden md:flex md:flex-shrink-0 h-screen z-40 transition-all duration-300 ease-in-out bg-card ${
             sidebarOpen ? 'md:w-64' : 'md:w-0'
           }`}
         >
           <div 
-            className={`flex flex-col w-64 transition-transform duration-300 ease-in-out overflow-y-auto bg-white dark:bg-[#073642] ${
+            className={`flex flex-col w-64 h-full transition-transform duration-300 ease-in-out bg-card ${
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
           >
@@ -159,13 +166,13 @@ export default function DashboardLayout({
 
         {/* Main content */}
         <div className="flex flex-col w-0 flex-1 overflow-hidden min-w-0">
-          <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden focus:outline-none bg-gray-50 dark:bg-[#002b36] pb-16 md:pb-0">
+          <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden focus:outline-none bg-background pb-16 md:pb-0">
             {children}
           </main>
         </div>
 
         {/* Mobile bottom navigation */}
-        <MobileNav />
+        <MobileNav onNavigate={() => setSidebarOpen(false)} />
       </div>
     </ThemeProvider>
   );
@@ -174,11 +181,13 @@ export default function DashboardLayout({
 function SidebarContent({ 
   tenant, 
   profile, 
-  signOut 
+  signOut,
+  onNavigate
 }: { 
   tenant: any; 
   profile: any; 
-  signOut: () => Promise<void>; 
+  signOut: () => Promise<void>;
+  onNavigate?: () => void;
 }) {
   const pathname = usePathname();
 
@@ -188,24 +197,33 @@ function SidebarContent({
     await signOut();
   };
 
+  const handleNavClick = () => {
+    // Close sidebar on mobile after navigation
+    if (onNavigate) {
+      onNavigate();
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Logo and tenant info */}
-      <div className="flex items-center h-16 flex-shrink-0 pl-16 pr-4 bg-indigo-600 dark:bg-indigo-700">
+      <div className="flex items-center justify-between h-16 flex-shrink-0 pl-16 pr-4 bg-primary">
         <div className="flex items-center space-x-3">
           <Image src="/logo.jpg" alt="MindShifting Logo" width={32} height={32} className="h-8 w-8 rounded" />
           <div>
-            <h1 className="text-white font-semibold">
+            <h1 className="text-primary-foreground font-semibold">
                               {tenant ? tenant.name : 'MindShifting Admin'}
             </h1>
-            <p className="text-indigo-200 text-sm pl-4 pr-4 mt-1 mb-1 whitespace-nowrap">{profile.role}</p>
+            <p className="text-primary-foreground/70 text-sm pl-4 pr-4 mt-1 mb-1 whitespace-nowrap">{profile.role}</p>
           </div>
         </div>
+        {/* Theme Dropdown */}
+        <ThemeDropdown />
       </div>
 
-      {/* Navigation */}
-      <div className="flex-1 flex flex-col overflow-y-auto">
-        <nav className="flex-1 px-2 py-4 bg-white dark:bg-[#073642] space-y-1">
+      {/* Navigation - Made scrollable with flex-1 and overflow-y-auto */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <nav className="px-2 py-4 bg-card space-y-1">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || 
@@ -215,14 +233,15 @@ function SidebarContent({
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={handleNavClick}
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                   isActive
-                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-700 dark:border-indigo-300'
-                    : 'text-gray-600 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] hover:text-gray-900 dark:hover:text-white'
+                    ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                 }`}
               >
                 <Icon className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                  isActive ? 'text-indigo-700 dark:text-indigo-300' : ''
+                  isActive ? 'text-primary' : ''
                 }`} />
                 {item.label}
               </Link>
@@ -233,21 +252,22 @@ function SidebarContent({
           {profile?.role && ['coach', 'manager', 'tenant_admin', 'super_admin'].includes(profile.role) && (
             <div className="pt-6">
               <div className="px-3 pb-2">
-                <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Coaching
                 </p>
               </div>
               <div className="space-y-1">
                 <Link
                   href="/dashboard/coach/profile"
+                  onClick={handleNavClick}
                   className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                     pathname === '/dashboard/coach/profile'
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-700 dark:border-indigo-300'
-                      : 'text-gray-600 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] hover:text-gray-900 dark:hover:text-white'
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}
                 >
                   <UserCheck className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    pathname === '/dashboard/coach/profile' ? 'text-indigo-700 dark:text-indigo-300' : ''
+                    pathname === '/dashboard/coach/profile' ? 'text-primary' : ''
                   }`} />
                   Coach Profile
                 </Link>
@@ -259,21 +279,92 @@ function SidebarContent({
           {profile?.role && ['tenant_admin', 'super_admin'].includes(profile.role) && (
             <div className="pt-6">
               <div className="px-3 pb-2">
-                <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Administration
                 </p>
               </div>
               <div className="space-y-1">
                 <Link
+                  href="/dashboard/admin/analytics"
+                  onClick={handleNavClick}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname?.startsWith('/dashboard/admin/analytics')
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  <BarChart3 className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname?.startsWith('/dashboard/admin/analytics') ? 'text-primary' : ''
+                  }`} />
+                  Analytics
+                </Link>
+                <Link
+                  href="/dashboard/admin/videos"
+                  onClick={handleNavClick}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname?.startsWith('/dashboard/admin/videos')
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  <PlayCircle className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname?.startsWith('/dashboard/admin/videos') ? 'text-primary' : ''
+                  }`} />
+                  Videos
+                </Link>
+                <Link
+                  href="/dashboard/admin/users"
+                  onClick={handleNavClick}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname?.startsWith('/dashboard/admin/users')
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  <Shield className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname?.startsWith('/dashboard/admin/users') ? 'text-primary' : ''
+                  }`} />
+                  Users
+                </Link>
+                <Link
+                  href="/dashboard/admin/community-moderation/posts"
+                  onClick={handleNavClick}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname?.startsWith('/dashboard/admin/community-moderation')
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  <Flag className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname?.startsWith('/dashboard/admin/community-moderation') ? 'text-primary' : ''
+                  }`} />
+                  Community
+                </Link>
+                <Link
+                  href="/dashboard/admin/settings"
+                  onClick={handleNavClick}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname?.startsWith('/dashboard/admin/settings')
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  <Settings className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname?.startsWith('/dashboard/admin/settings') ? 'text-primary' : ''
+                  }`} />
+                  Admin Settings
+                </Link>
+                <Link
                   href="/dashboard/admin/data-management"
+                  onClick={handleNavClick}
                   className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                     pathname === '/dashboard/admin/data-management'
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-700 dark:border-indigo-300'
-                      : 'text-gray-600 dark:text-[#93a1a1] hover:bg-gray-50 dark:hover:bg-[#586e75] hover:text-gray-900 dark:hover:text-white'
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}
                 >
                   <Database className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    pathname === '/dashboard/admin/data-management' ? 'text-indigo-700 dark:text-indigo-300' : ''
+                    pathname === '/dashboard/admin/data-management' ? 'text-primary' : ''
                   }`} />
                   Data Management
                 </Link>
@@ -283,26 +374,26 @@ function SidebarContent({
         </nav>
       </div>
 
-      {/* User info and sign out */}
-      <div className="flex-shrink-0 flex border-t border-gray-200 dark:border-[#586e75] p-4">
+      {/* User info and sign out - Fixed at bottom, always visible */}
+      <div className="flex-shrink-0 flex border-t border-border p-4 bg-card">
         <div className="flex items-center space-x-3 w-full">
           <div className="flex-shrink-0">
-            <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900/20 flex items-center justify-center">
-              <span className="text-indigo-600 dark:text-indigo-300 font-medium">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <span className="text-primary font-medium">
                 {profile.first_name?.[0] || profile.email[0].toUpperCase()}
               </span>
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-[#fdf6e3]">
+            <p className="text-sm font-medium text-foreground">
               {profile.first_name} {profile.last_name}
             </p>
-            <p className="text-sm text-gray-500 dark:text-[#839496] truncate">{profile.email}</p>
+            <p className="text-sm text-muted-foreground truncate">{profile.email}</p>
           </div>
           <button
             type="button"
             onClick={handleSignOutClick}
-            className="flex-shrink-0 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 transition-colors"
+            className="flex-shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors"
             title="Sign out"
           >
             <LogOut className="h-5 w-5" />

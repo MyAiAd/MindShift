@@ -9,20 +9,20 @@ import { Brain, Shield, Lock, Eye, FileText, Clock, Globe, Mail } from 'lucide-r
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-secondary/20 py-12">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-2">
               <Brain className="h-8 w-8 text-indigo-600" />
-              <span className="text-2xl font-bold text-gray-900">MindShifting</span>
+              <span className="text-2xl font-bold text-foreground">MindShifting</span>
             </Link>
             <nav className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-700 hover:text-indigo-600 transition-colors">
+              <Link href="/" className="text-foreground hover:text-indigo-600 transition-colors">
                 Home
               </Link>
-              <Link href="/contact" className="text-gray-700 hover:text-indigo-600 transition-colors">
+              <Link href="/contact" className="text-foreground hover:text-indigo-600 transition-colors">
                 Contact
               </Link>
             </nav>
@@ -36,14 +36,14 @@ export default function PrivacyPolicyPage() {
           <div className="flex items-center justify-center mb-4">
             <Shield className="h-12 w-12 text-indigo-600" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
             Privacy Policy
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             We respect your privacy and are committed to protecting your personal data. 
             This privacy policy explains how we collect, use, and protect your information.
           </p>
-          <div className="mt-4 text-sm text-gray-500">
+          <div className="mt-4 text-sm text-muted-foreground">
             Last updated: {new Date().toLocaleDateString('en-US', { 
               year: 'numeric', 
               month: 'long', 
@@ -69,7 +69,7 @@ export default function PrivacyPolicyPage() {
         <div className="space-y-8">
           {/* 1. Introduction */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <FileText className="h-6 w-6 text-indigo-600" />
               <span>1. Introduction</span>
             </h2>
@@ -89,7 +89,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 2. Data Controller */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <Globe className="h-6 w-6 text-indigo-600" />
               <span>2. Data Controller</span>
             </h2>
@@ -98,7 +98,7 @@ export default function PrivacyPolicyPage() {
                 For the purposes of GDPR, MindShifting is the data controller of your personal information. 
                 You can contact us at:
               </p>
-              <div className="bg-gray-100 p-4 rounded-lg">
+              <div className="bg-secondary p-4 rounded-lg">
                 <p className="mb-2"><strong>MindShifting</strong></p>
                 <p className="mb-2">Email: <a href="mailto:privacy@myai.com" className="text-indigo-600 hover:text-indigo-700">privacy@myai.com</a></p>
                 <p className="mb-2">Data Protection Officer: <a href="mailto:dpo@myai.com" className="text-indigo-600 hover:text-indigo-700">dpo@myai.com</a></p>
@@ -108,7 +108,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 3. Information We Collect */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <Lock className="h-6 w-6 text-indigo-600" />
               <span>3. Information We Collect</span>
             </h2>
@@ -144,7 +144,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 4. How We Use Information */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">4. How We Use Information</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">4. How We Use Information</h2>
             <div className="prose prose-gray max-w-none">
               <p>We use your information to:</p>
               <ul>
@@ -161,7 +161,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 5. Data Sharing */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Data Sharing and Disclosure</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">5. Data Sharing and Disclosure</h2>
             <div className="prose prose-gray max-w-none">
               <p>We do not sell your personal information. We may share your information in the following circumstances:</p>
               <ul>
@@ -182,7 +182,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 6. Your Rights */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Your Rights (GDPR)</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">6. Your Rights (GDPR)</h2>
             <div className="prose prose-gray max-w-none">
               <p>Under GDPR, you have the following rights:</p>
               <div className="grid md:grid-cols-2 gap-4">
@@ -223,7 +223,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 7. Data Retention */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <Clock className="h-6 w-6 text-indigo-600" />
               <span>7. Data Retention</span>
             </h2>
@@ -245,7 +245,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 8. Security */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Security</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">8. Security</h2>
             <div className="prose prose-gray max-w-none">
               <p>We implement appropriate technical and organizational measures to protect your data:</p>
               <ul>
@@ -264,7 +264,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 9. Cookies */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Cookies and Tracking</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">9. Cookies and Tracking</h2>
             <div className="prose prose-gray max-w-none">
               <p>We use cookies and similar technologies to:</p>
               <ul>
@@ -283,7 +283,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 10. Children's Privacy */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Children's Privacy</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">10. Children's Privacy</h2>
             <div className="prose prose-gray max-w-none">
               <p>
                 Our services are not intended for children under 16 years old. We do not 
@@ -295,7 +295,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 11. Changes to Privacy Policy */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Changes to This Privacy Policy</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">11. Changes to This Privacy Policy</h2>
             <div className="prose prose-gray max-w-none">
               <p>
                 We may update this privacy policy from time to time. We will notify you of 
@@ -308,7 +308,7 @@ export default function PrivacyPolicyPage() {
 
           {/* 12. Contact Information */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <Mail className="h-6 w-6 text-indigo-600" />
               <span>12. Contact Us</span>
             </h2>
@@ -317,23 +317,23 @@ export default function PrivacyPolicyPage() {
                 If you have any questions about this privacy policy or our data practices, 
                 please contact us:
               </p>
-              <div className="bg-gray-100 p-6 rounded-lg">
+              <div className="bg-secondary p-6 rounded-lg">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">General Privacy Questions</h4>
-                    <p className="text-gray-700">Email: <a href="mailto:privacy@myai.com" className="text-indigo-600 hover:text-indigo-700">privacy@myai.com</a></p>
+                    <h4 className="font-semibold text-foreground mb-2">General Privacy Questions</h4>
+                    <p className="text-foreground">Email: <a href="mailto:privacy@myai.com" className="text-indigo-600 hover:text-indigo-700">privacy@myai.com</a></p>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Data Protection Officer</h4>
-                    <p className="text-gray-700">Email: <a href="mailto:dpo@myai.com" className="text-indigo-600 hover:text-indigo-700">dpo@myai.com</a></p>
+                    <h4 className="font-semibold text-foreground mb-2">Data Protection Officer</h4>
+                    <p className="text-foreground">Email: <a href="mailto:dpo@myai.com" className="text-indigo-600 hover:text-indigo-700">dpo@myai.com</a></p>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Data Subject Rights</h4>
-                    <p className="text-gray-700">Email: <a href="mailto:rights@myai.com" className="text-indigo-600 hover:text-indigo-700">rights@myai.com</a></p>
+                    <h4 className="font-semibold text-foreground mb-2">Data Subject Rights</h4>
+                    <p className="text-foreground">Email: <a href="mailto:rights@myai.com" className="text-indigo-600 hover:text-indigo-700">rights@myai.com</a></p>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">General Support</h4>
-                    <p className="text-gray-700">Email: <a href="mailto:support@myai.com" className="text-indigo-600 hover:text-indigo-700">support@myai.com</a></p>
+                    <h4 className="font-semibold text-foreground mb-2">General Support</h4>
+                    <p className="text-foreground">Email: <a href="mailto:support@myai.com" className="text-indigo-600 hover:text-indigo-700">support@myai.com</a></p>
                   </div>
                 </div>
               </div>
@@ -346,21 +346,21 @@ export default function PrivacyPolicyPage() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-16 pt-8 border-t border-gray-200">
+        <footer className="mt-16 pt-8 border-t border-border">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <Brain className="h-6 w-6 text-indigo-600" />
-              <span className="text-xl font-bold text-gray-900">MindShifting</span>
+              <span className="text-xl font-bold text-foreground">MindShifting</span>
             </div>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Committed to protecting your privacy and ensuring GDPR compliance.
             </p>
             <div className="flex justify-center space-x-6 text-sm">
-              <Link href="/" className="text-gray-500 hover:text-indigo-600">Home</Link>
-              <Link href="/contact" className="text-gray-500 hover:text-indigo-600">Contact</Link>
-              <Link href="/privacy" className="text-gray-500 hover:text-indigo-600">Privacy</Link>
+              <Link href="/" className="text-muted-foreground hover:text-indigo-600">Home</Link>
+              <Link href="/contact" className="text-muted-foreground hover:text-indigo-600">Contact</Link>
+              <Link href="/privacy" className="text-muted-foreground hover:text-indigo-600">Privacy</Link>
             </div>
-            <p className="text-gray-500 text-sm mt-4">
+            <p className="text-muted-foreground text-sm mt-4">
               © 2024 MindShifting. All rights reserved.
             </p>
           </div>

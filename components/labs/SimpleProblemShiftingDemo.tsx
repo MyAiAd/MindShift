@@ -906,13 +906,13 @@ export default function UnifiedTreatmentDemo() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-card dark:bg-card rounded-lg shadow-sm border border-border dark:border-border p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Brain className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
           <div>
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Voice Treatment Demo</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <h4 className="text-lg font-semibold text-foreground">Voice Treatment Demo</h4>
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               Voice-guided Mind Shifting treatment with manual speech control
             </p>
           </div>
@@ -933,7 +933,7 @@ export default function UnifiedTreatmentDemo() {
           <div className={`px-3 py-1 rounded-full text-sm font-medium ${
             status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
             status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
-            'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+            'bg-secondary text-foreground dark:bg-background/20 dark:text-muted-foreground'
           }`}>
             {status}
           </div>
@@ -972,7 +972,7 @@ export default function UnifiedTreatmentDemo() {
                 className={`p-3 text-left rounded-lg border transition-colors ${
                   selectedModality === key
                     ? 'bg-indigo-100 dark:bg-indigo-800 border-indigo-300 dark:border-indigo-600 text-indigo-900 dark:text-indigo-100'
-                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    : 'bg-card dark:bg-card border-border dark:border-border text-foreground dark:text-muted-foreground hover:bg-secondary/20 dark:hover:bg-secondary'
                 }`}
               >
                 <div className="font-medium">{modality.name}</div>
@@ -1076,7 +1076,7 @@ export default function UnifiedTreatmentDemo() {
 
         <button
           onClick={resetDemo}
-          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 border border-border dark:border-border text-foreground dark:text-muted-foreground rounded-lg hover:bg-secondary/20 dark:hover:bg-secondary transition-colors"
         >
           <RotateCcw className="h-4 w-4" />
           <span>Reset</span>
@@ -1113,8 +1113,8 @@ export default function UnifiedTreatmentDemo() {
       {/* Messages */}
       {messages.length > 0 && (
         <div>
-          <h5 className="font-medium text-gray-900 dark:text-white mb-3">Session Conversation</h5>
-          <div className="space-y-3 max-h-80 overflow-y-auto bg-gray-50 dark:bg-gray-900/20 rounded-lg p-4">
+          <h5 className="font-medium text-foreground mb-3">Session Conversation</h5>
+          <div className="space-y-3 max-h-80 overflow-y-auto bg-secondary/20 dark:bg-background/20 rounded-lg p-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -1124,7 +1124,7 @@ export default function UnifiedTreatmentDemo() {
                   className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-sm ${
                     message.isUser
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                      : 'bg-card dark:bg-card text-foreground border border-border dark:border-border'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
@@ -1144,11 +1144,11 @@ export default function UnifiedTreatmentDemo() {
       )}
 
       {/* Step Guide */}
-      <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
-        <h6 className="font-medium text-gray-900 dark:text-white mb-2">
+      <div className="mt-4 p-3 bg-secondary/20 dark:bg-background/20 rounded-lg">
+        <h6 className="font-medium text-foreground mb-2">
           {TREATMENT_MODALITIES[selectedModality].name} Steps:
         </h6>
-        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+        <div className="space-y-2 text-sm text-muted-foreground dark:text-muted-foreground">
           {TREATMENT_MODALITY_STEPS[selectedModality].map((step, index) => (
             <div key={index} className={`flex items-start space-x-3 p-2 rounded ${
               selectedModality === 'problem_shifting' && index === currentStepIndex 
@@ -1160,7 +1160,7 @@ export default function UnifiedTreatmentDemo() {
               <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
                 selectedModality === 'problem_shifting' && index < currentStepIndex ? 'bg-green-500 text-white' :
                 selectedModality === 'problem_shifting' && index === currentStepIndex ? 'bg-indigo-500 text-white' :
-                'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                'bg-secondary text-muted-foreground'
               }`}>
                 {selectedModality === 'problem_shifting' && index < currentStepIndex ? '✓' : index + 1}
               </span>

@@ -118,7 +118,7 @@ export default function VoiceControls({
           className={`p-2 rounded-full transition-all duration-200 ${
             status.isSpeaking
               ? 'bg-green-100 text-green-600 hover:bg-green-200 animate-pulse'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              : 'bg-secondary text-muted-foreground hover:bg-secondary'
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           aria-label={status.isSpeaking ? 'Stop speaking' : 'Voice output enabled'}
           title={status.isSpeaking ? 'Click to stop speaking' : 'Voice output active'}
@@ -132,7 +132,7 @@ export default function VoiceControls({
         <button
           onClick={() => setShowSettingsPanel(!showSettingsPanel)}
           disabled={disabled}
-          className={`p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors ${
+          className={`p-2 rounded-full bg-secondary text-muted-foreground hover:bg-secondary transition-colors ${
             disabled ? 'opacity-50 cursor-not-allowed' : ''
           }`}
           aria-label="Voice settings"
@@ -163,8 +163,8 @@ export default function VoiceControls({
 
       {/* Settings Panel */}
       {showSettingsPanel && (
-        <div className="absolute top-full mt-2 right-0 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 z-50">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+        <div className="absolute top-full mt-2 right-0 w-64 bg-card dark:bg-card border border-border dark:border-border rounded-lg shadow-lg p-4 z-50">
+          <h3 className="text-sm font-semibold text-foreground mb-3">
             Voice Settings
           </h3>
 
@@ -172,7 +172,7 @@ export default function VoiceControls({
           <div className="mb-3">
             <div className="flex items-center justify-between">
               <div>
-                <label className="text-xs text-gray-700 dark:text-gray-300 block">
+                <label className="text-xs text-foreground dark:text-muted-foreground block">
                   Auto-speak responses
                 </label>
                 {!capabilities.speechSynthesis && (
@@ -186,11 +186,11 @@ export default function VoiceControls({
                 onClick={() => updatePreferences({ autoSpeak: !preferences.autoSpeak })}
                 disabled={!capabilities.speechSynthesis}
                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                  preferences.autoSpeak && capabilities.speechSynthesis ? 'bg-blue-600' : 'bg-gray-200'
+                  preferences.autoSpeak && capabilities.speechSynthesis ? 'bg-blue-600' : 'bg-secondary'
                 } ${!capabilities.speechSynthesis ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <span
-                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-3 w-3 transform rounded-full bg-card transition-transform ${
                     preferences.autoSpeak && capabilities.speechSynthesis ? 'translate-x-5' : 'translate-x-1'
                   }`}
                 />
@@ -210,7 +210,7 @@ export default function VoiceControls({
 
           {/* Speech rate */}
           <div className="mb-3">
-            <label className="text-xs text-gray-700 dark:text-gray-300 block mb-1">
+            <label className="text-xs text-foreground dark:text-muted-foreground block mb-1">
               Speech Rate: {preferences.voiceRate.toFixed(1)}x
             </label>
             <input
@@ -220,13 +220,13 @@ export default function VoiceControls({
               step="0.1"
               value={preferences.voiceRate}
               onChange={(e) => updatePreferences({ voiceRate: parseFloat(e.target.value) })}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
             />
           </div>
 
           {/* Volume */}
           <div className="mb-3">
-            <label className="text-xs text-gray-700 dark:text-gray-300 block mb-1">
+            <label className="text-xs text-foreground dark:text-muted-foreground block mb-1">
               Volume: {Math.round(preferences.voiceVolume * 100)}%
             </label>
             <input
@@ -236,20 +236,20 @@ export default function VoiceControls({
               step="0.1"
               value={preferences.voiceVolume}
               onChange={(e) => updatePreferences({ voiceVolume: parseFloat(e.target.value) })}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
             />
           </div>
 
           {/* Voice selection */}
           {capabilities.availableVoices.length > 0 && (
             <div>
-              <label className="text-xs text-gray-700 dark:text-gray-300 block mb-1">
+              <label className="text-xs text-foreground dark:text-muted-foreground block mb-1">
                 Voice
               </label>
               <select
                 value={preferences.selectedVoice || ''}
                 onChange={(e) => updatePreferences({ selectedVoice: e.target.value || null })}
-                className="w-full text-xs p-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full text-xs p-2 border border-border dark:border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card dark:bg-secondary text-foreground"
               >
                 <option value="">Default</option>
                 {capabilities.availableVoices.map((voice, index) => (

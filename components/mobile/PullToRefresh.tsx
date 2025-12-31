@@ -120,7 +120,7 @@ export function PullToRefresh({
           className={`
             flex items-center justify-center
             w-10 h-10 rounded-full
-            bg-white dark:bg-gray-800
+            bg-card
             shadow-lg
             transition-colors duration-200
             ${canRefresh ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}
@@ -130,7 +130,7 @@ export function PullToRefresh({
             <Loader2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400 animate-spin" />
           ) : (
             <svg
-              className="h-5 w-5 text-gray-600 dark:text-gray-400 transition-colors"
+              className="h-5 w-5 text-muted-foreground dark:text-muted-foreground transition-colors"
               style={{
                 transform: `rotate(${indicatorRotation}deg)`,
                 color: canRefresh ? 'rgb(79 70 229)' : undefined,

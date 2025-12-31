@@ -756,13 +756,13 @@ export default function TreatmentSession({
   return (
     <div className="max-w-4xl mx-auto px-4">
       {/* V3 Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-card rounded-lg shadow-sm border border-border mb-6">
+        <div className="px-6 py-4 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
                 <Brain className="h-6 w-6 text-indigo-600" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold text-foreground">
                   {formatMethodName(sessionMethod)}
                 </h2>
                 <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full flex items-center space-x-1">
@@ -771,7 +771,7 @@ export default function TreatmentSession({
                 </span>
               </div>
               {currentStep && (
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-muted-foreground dark:text-muted-foreground">
                   Step: {currentStep}
                 </span>
               )}
@@ -779,13 +779,13 @@ export default function TreatmentSession({
             
             <div className="flex items-center space-x-4">
               {/* V3 Performance Indicators */}
-              <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-muted-foreground">
                 <Clock className="h-4 w-4" />
                 <span>{lastResponseTime}ms</span>
               </div>
               
               {performanceMetrics.cacheHitRate > 0 && (
-                <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-muted-foreground">
                   <Zap className="h-4 w-4" />
                   <span>{performanceMetrics.cacheHitRate.toFixed(1)}% cache</span>
                 </div>
@@ -795,7 +795,7 @@ export default function TreatmentSession({
                 <button
                   onClick={handleUndo}
                   disabled={isLoading}
-                  className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
+                  className="flex items-center space-x-1 px-3 py-1 text-sm text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
                 >
                   <Undo2 className="h-4 w-4" />
                   <span>Undo</span>
@@ -816,7 +816,7 @@ export default function TreatmentSession({
                 className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                   message.isUser
                     ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                    : 'bg-secondary text-foreground'
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -834,7 +834,7 @@ export default function TreatmentSession({
         </div>
 
         {/* V3 Input Area */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-t border-border">
           {hasError && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               <div className="flex items-center space-x-2">
@@ -876,7 +876,7 @@ export default function TreatmentSession({
           {showWorkTypeButtons && (
             <div className="mb-4">
               <div className="text-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                <h3 className="text-lg font-semibold text-foreground mb-3">
                   What do you want to work on?
                 </h3>
               </div>
@@ -884,7 +884,7 @@ export default function TreatmentSession({
                 <button
                   onClick={() => handleWorkTypeSelection('1')}
                   disabled={isLoading}
-                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
                     isLoading ? 'opacity-50' : ''
                   } ${
                     clickedButton === '1' ? 'scale-105 bg-blue-700 shadow-lg' : ''
@@ -897,7 +897,7 @@ export default function TreatmentSession({
                 <button
                   onClick={() => handleWorkTypeSelection('2')}
                   disabled={isLoading}
-                  className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                  className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
                     isLoading ? 'opacity-50' : ''
                   } ${
                     clickedButton === '2' ? 'scale-105 bg-green-700 shadow-lg' : ''
@@ -910,7 +910,7 @@ export default function TreatmentSession({
                 <button
                   onClick={() => handleWorkTypeSelection('3')}
                   disabled={isLoading}
-                  className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                  className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
                     isLoading ? 'opacity-50' : ''
                   } ${
                     clickedButton === '3' ? 'scale-105 bg-purple-700 shadow-lg' : ''
@@ -967,7 +967,7 @@ export default function TreatmentSession({
           {shouldShowMethodSelection() && (
             <div className="mb-4">
               <div className="text-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                <h3 className="text-lg font-semibold text-foreground mb-3">
                   Choose a method:
                 </h3>
               </div>
@@ -975,7 +975,7 @@ export default function TreatmentSession({
                 <button
                   onClick={() => handleMethodSelection('Problem Shifting')}
                   disabled={isLoading}
-                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
                     isLoading ? 'opacity-50' : ''
                   } ${
                     clickedButton === 'Problem Shifting' ? 'scale-105 bg-blue-700 shadow-lg' : ''
@@ -988,7 +988,7 @@ export default function TreatmentSession({
                 <button
                   onClick={() => handleMethodSelection('Identity Shifting')}
                   disabled={isLoading}
-                  className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                  className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
                     isLoading ? 'opacity-50' : ''
                   } ${
                     clickedButton === 'Identity Shifting' ? 'scale-105 bg-green-700 shadow-lg' : ''
@@ -1001,7 +1001,7 @@ export default function TreatmentSession({
                 <button
                   onClick={() => handleMethodSelection('Belief Shifting')}
                   disabled={isLoading}
-                  className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                  className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
                     isLoading ? 'opacity-50' : ''
                   } ${
                     clickedButton === 'Belief Shifting' ? 'scale-105 bg-purple-700 shadow-lg' : ''
@@ -1014,7 +1014,7 @@ export default function TreatmentSession({
                 <button
                   onClick={() => handleMethodSelection('Blockage Shifting')}
                   disabled={isLoading}
-                  className={`px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
+                  className={`px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold ${
                     isLoading ? 'opacity-50' : ''
                   } ${
                     clickedButton === 'Blockage Shifting' ? 'scale-105 bg-red-700 shadow-lg' : ''
@@ -1037,7 +1037,7 @@ export default function TreatmentSession({
                 onChange={(e) => setUserInput(e.target.value)}
                 placeholder="Type your response..."
                 disabled={isLoading || !isSessionActive}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
+                className="flex-1 px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
               />
               <button
                 type="submit"

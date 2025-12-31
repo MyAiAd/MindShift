@@ -226,7 +226,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
             className={cn(
               'text-sm font-semibold touch-target px-3 py-1 rounded-md transition-colors',
               config.textClass,
-              'hover:bg-black/10 dark:hover:bg-white/10 active:scale-95'
+              'hover:bg-black/10 dark:hover:bg-card/10 active:scale-95'
             )}
           >
             {toast.action.label}
@@ -239,7 +239,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
           className={cn(
             'touch-target p-1 rounded-md transition-colors flex-shrink-0',
             config.textClass,
-            'hover:bg-black/10 dark:hover:bg-white/10 active:scale-95'
+            'hover:bg-black/10 dark:hover:bg-card/10 active:scale-95'
           )}
           aria-label="Dismiss notification"
         >

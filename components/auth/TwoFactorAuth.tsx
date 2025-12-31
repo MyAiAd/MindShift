@@ -311,7 +311,7 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
     <div className="space-y-6">
       {/* Debug state info - remove after fixing */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+        <div className="text-xs text-muted-foreground p-2 bg-secondary/20 rounded">
           Debug: isSetupMode={String(isSetupMode)}, showBackupCodes={String(showBackupCodes)}, 
           mfaEnabled={String(mfaStatus?.isEnabled)}, loading={String(loading)}
         </div>
@@ -344,13 +344,13 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
 
       {/* Main Content */}
       {!isSetupMode && !showBackupCodes && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
               <Shield className="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-3" />
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Two-Factor Authentication</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <h3 className="text-lg font-semibold text-foreground">Two-Factor Authentication</h3>
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                   Add an extra layer of security to your account
                 </p>
               </div>
@@ -368,15 +368,15 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
             <div className="space-y-4">
               {/* Active Factors */}
               <div>
-                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Active Authenticators</h4>
+                <h4 className="font-medium text-foreground mb-3">Active Authenticators</h4>
                 <div className="space-y-2">
                   {mfaStatus.factors.map((factor) => (
-                    <div key={factor.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div key={factor.id} className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                       <div className="flex items-center">
-                        <Smartphone className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-3" />
+                        <Smartphone className="h-5 w-5 text-muted-foreground dark:text-muted-foreground mr-3" />
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white">{factor.friendlyName}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p className="font-medium text-foreground">{factor.friendlyName}</p>
+                          <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                             Added {safeFormatDate(factor.createdAt)}
                             {factor.lastUsed && ` • Last used ${safeFormatDate(factor.lastUsed)}`}
                           </p>
@@ -395,18 +395,18 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
               </div>
 
               {/* Backup Codes */}
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="border-t border-border pt-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">Backup Codes</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <h4 className="font-medium text-foreground">Backup Codes</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                       Use these codes if you lose access to your authenticator app
                     </p>
                   </div>
                   <button
                     onClick={handleRegenerateBackupCodes}
                     disabled={actionLoading}
-                    className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                    className="flex items-center space-x-2 px-4 py-2 border border-border rounded-lg hover:bg-secondary/20 transition-colors disabled:opacity-50"
                   >
                     <RefreshCw className="h-4 w-4" />
                     <span>Regenerate</span>
@@ -415,11 +415,11 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
               </div>
 
               {/* Disable 2FA Section */}
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="border-t border-border pt-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">Disable Two-Factor Authentication</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <h4 className="font-medium text-foreground">Disable Two-Factor Authentication</h4>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                       This will remove all authenticators and disable 2FA for your account
                     </p>
                   </div>
@@ -441,8 +441,8 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
           ) : (
             <div className="text-center">
               <div className="mb-4">
-                <QrCode className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <QrCode className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground dark:text-muted-foreground mb-6">
                   Two-factor authentication is not enabled. Protect your account by enabling 2FA.
                 </p>
               </div>
@@ -460,35 +460,35 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
 
       {/* Setup Mode */}
       {isSetupMode && setupData && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Setup Two-Factor Authentication</h3>
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-6">Setup Two-Factor Authentication</h3>
           
           <div className="space-y-6">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4">
                 1. Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
               </p>
-              <div className="flex justify-center p-4 bg-white rounded-lg border-2 border-gray-200 dark:border-gray-600">
+              <div className="flex justify-center p-4 bg-card rounded-lg border-2 border-border">
                 {setupData.qrCodeDataUrl && setupData.qrCodeDataUrl.length > 0 ? (
                   <img src={setupData.qrCodeDataUrl} alt="QR Code for 2FA setup" className="w-48 h-48" />
                 ) : (
                   <div className="text-center py-8">
-                    <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400 mb-2">
+                    <Key className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground dark:text-muted-foreground mb-2">
                       Could not generate QR code. Please manually enter the secret key:
                     </p>
-                    <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-3 mb-4">
-                      <Key className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
-                      <code className="font-mono text-sm text-gray-900 dark:text-white flex-1">{setupData.secret}</code>
+                    <div className="flex items-center bg-secondary rounded-lg p-3 mb-4">
+                      <Key className="h-5 w-5 text-muted-foreground dark:text-muted-foreground mr-2" />
+                      <code className="font-mono text-sm text-foreground flex-1">{setupData.secret}</code>
                       <button
                         onClick={() => copyToClipboard(setupData.secret)}
-                        className="ml-2 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                        className="ml-2 text-muted-foreground dark:text-muted-foreground hover:text-foreground"
                         title="Copy secret key"
                       >
                         <Copy className="h-4 w-4" />
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                       Enter this secret key manually in your authenticator app
                     </p>
                   </div>
@@ -497,7 +497,7 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
             </div>
 
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4">
                 2. Enter the 6-digit code from your authenticator app
               </p>
               <div className="flex space-x-4">
@@ -506,7 +506,7 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
                   placeholder="000000"
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white text-center text-lg font-mono"
+                  className="flex-1 px-4 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center text-lg font-mono"
                   maxLength={6}
                 />
                 <button
@@ -522,7 +522,7 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
             <div className="flex justify-between">
               <button
                 onClick={resetToMainInterface}
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                className="text-muted-foreground dark:text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -533,12 +533,12 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
 
       {/* Backup Codes Display */}
       {showBackupCodes && backupCodes.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Backup Codes</h3>
+            <h3 className="text-lg font-semibold text-foreground">Backup Codes</h3>
             <button
               onClick={() => setShowBackupCodes(false)}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              className="text-muted-foreground dark:text-muted-foreground hover:text-foreground"
             >
               <X className="h-5 w-5" />
             </button>
@@ -560,11 +560,11 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
 
           <div className="grid grid-cols-2 gap-3 mb-4">
             {backupCodes.map((code, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <code className="font-mono text-sm text-gray-900 dark:text-white">{code}</code>
+              <div key={index} className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
+                <code className="font-mono text-sm text-foreground">{code}</code>
                 <button
                   onClick={() => copyToClipboard(code)}
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 ml-2"
+                  className="text-muted-foreground dark:text-muted-foreground hover:text-foreground ml-2"
                 >
                   <Copy className="h-4 w-4" />
                 </button>
@@ -575,14 +575,14 @@ export default function TwoFactorAuth({ onStatusChange }: TwoFactorAuthProps) {
           <div className="flex flex-wrap gap-3 justify-between">
             <button
               onClick={downloadBackupCodes}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 border border-border rounded-lg hover:bg-secondary/20 transition-colors"
             >
               <Download className="h-4 w-4" />
               <span>Download</span>
             </button>
             <button
               onClick={() => copyToClipboard(backupCodes.join('\n'))}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 border border-border rounded-lg hover:bg-secondary/20 transition-colors"
             >
               <Copy className="h-4 w-4" />
               <span>Copy All</span>

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity, Zap, RotateCcw } from 'lucide-react';
+import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity, Zap, RotateCcw, MoreVertical } from 'lucide-react';
 import EnhancedBookingModal from '@/components/sessions/EnhancedBookingModal';
 
 interface CoachingSession {
@@ -80,6 +80,7 @@ export default function SessionsPage() {
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [clearingStats, setClearingStats] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -169,7 +170,7 @@ export default function SessionsPage() {
       case 'completed':
         return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Completed</span>;
       case 'paused':
-        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Paused</span>;
+        return <span className="px-2 py-1 text-xs bg-secondary text-foreground rounded-full">Paused</span>;
       case 'cancelled':
         return <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Cancelled</span>;
       default:
@@ -441,14 +442,15 @@ export default function SessionsPage() {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#fdf6e3]">Coaching Sessions</h1>
-            <p className="text-gray-600 dark:text-[#93a1a1] mt-1">Manage your coaching sessions and track your progress with AI and human coaches.</p>
+            <h1 className="text-3xl font-bold text-foreground">Coaching Sessions</h1>
+            <p className="text-muted-foreground mt-1">Manage your coaching sessions and track your progress with AI and human coaches.</p>
           </div>
-          <div className="flex space-x-3">
+          {/* Desktop buttons - hidden on mobile */}
+          <div className="hidden md:flex space-x-3">
             <button 
               onClick={handleClearStats}
               disabled={clearingStats}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RotateCcw className={`h-5 w-5 mr-2 ${clearingStats ? 'animate-spin' : ''}`} />
               {clearingStats ? 'Clearing...' : 'Clear Stats'}
@@ -461,6 +463,15 @@ export default function SessionsPage() {
               Book Session
             </button>
           </div>
+
+          {/* Mobile menu icon */}
+          <button
+            onClick={() => setShowMobileMenu(true)}
+            className="md:hidden p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            aria-label="Open actions menu"
+          >
+            <MoreVertical className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
@@ -469,82 +480,82 @@ export default function SessionsPage() {
         {loading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div key={i} className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
+                <div className="p-2 bg-secondary rounded-lg">
+                  <div className="h-6 w-6 bg-secondary rounded animate-pulse"></div>
                 </div>
                 <div className="ml-4 flex-1">
-                  <div className="h-8 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-8 bg-secondary rounded animate-pulse mb-2"></div>
+                  <div className="h-4 bg-secondary rounded animate-pulse"></div>
                 </div>
               </div>
             </div>
           ))
         ) : (
           <>
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <Activity className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
+                  <p className="text-2xl font-semibold text-foreground">
                     {(stats?.total_sessions || 0) + (stats?.treatment_sessions || 0)}
                   </p>
-                  <p className="text-gray-600 dark:text-[#93a1a1]">Total Sessions</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-muted-foreground">Total Sessions</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {stats?.total_sessions || 0} coaching + {stats?.treatment_sessions || 0} treatment
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-green-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
+                  <p className="text-2xl font-semibold text-foreground">
                     {(stats?.completed_sessions || 0) + (stats?.completed_treatment_sessions || 0)}
                   </p>
-                  <p className="text-gray-600 dark:text-[#93a1a1]">Completed</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-muted-foreground">Completed</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {stats?.completed_sessions || 0} coaching + {stats?.completed_treatment_sessions || 0} treatment
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-purple-50 rounded-lg">
                   <Calendar className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
+                  <p className="text-2xl font-semibold text-foreground">
                     {(stats?.upcoming_sessions || 0) + (stats?.active_treatment_sessions || 0)}
                   </p>
-                  <p className="text-gray-600 dark:text-[#93a1a1]">Active Sessions</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-muted-foreground">Active Sessions</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {stats?.upcoming_sessions || 0} scheduled + {stats?.active_treatment_sessions || 0} in-progress
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border p-6">
+            <div className="bg-card rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-yellow-50 rounded-lg">
                   <Clock className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-[#fdf6e3]">
+                  <p className="text-2xl font-semibold text-foreground">
                     {((stats?.total_hours_this_month || 0) + (stats?.total_treatment_hours_this_month || 0)).toFixed(1)}
                   </p>
-                  <p className="text-gray-600 dark:text-[#93a1a1]">Hours This Month</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-muted-foreground">Hours This Month</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {stats?.total_hours_this_month?.toFixed(1) || '0.0'} coaching + {stats?.total_treatment_hours_this_month?.toFixed(1) || '0.0'} treatment
                   </p>
                 </div>
@@ -556,39 +567,39 @@ export default function SessionsPage() {
 
       {/* Quick Actions */}
       <div className="mt-8 mb-8 grid md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-700 rounded-lg p-6 flex flex-col">
+        <div className="bg-card border border-border rounded-lg p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center space-x-3 mb-4">
-            <Video className="h-8 w-8 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Mind Shifting Session</h3>
+            <Video className="h-8 w-8 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground">Treatment Session</h3>
           </div>
-          <p className="text-gray-600 dark:text-[#93a1a1] mb-4">Start an automated Mind Shifting treatment session with 95% scripted responses for optimal performance.</p>
-          <div className="text-xs text-blue-600 mb-6 space-y-1 flex-grow">
+          <p className="text-muted-foreground mb-4">Start an automated treatment session with voice support, modular design, and mobile optimization.</p>
+          <div className="text-xs text-primary mb-6 space-y-1 flex-grow">
             <div>• Instant responses (&lt;200ms)</div>
-            <div>• Proven Mind Shifting protocols</div>
+            <div>• Voice-enabled with pre-loaded audio</div>
             <div>• Minimal AI usage (&lt;5%)</div>
-            <div>• Cost effective (&lt;$0.05/session)</div>
+            <div>• Mobile-optimized experience</div>
           </div>
           <button 
             onClick={() => {
               const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              router.push(`/dashboard/sessions/treatment-v3?sessionId=${sessionId}`);
+              router.push(`/dashboard/sessions/treatment-v4?sessionId=${sessionId}`);
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full mt-auto"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors w-full mt-auto"
           >
-            Start Mind Shifting Session
+            Start Treatment Session
           </button>
         </div>
 
 
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-100 dark:border-green-700 rounded-lg p-6 flex flex-col">
+        <div className="bg-card border border-border rounded-lg p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center space-x-3 mb-4">
-            <User className="h-8 w-8 text-green-600" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Human Coach</h3>
+            <User className="h-8 w-8 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground">Human Coach</h3>
           </div>
-          <p className="text-gray-600 dark:text-[#93a1a1] mb-6 flex-grow">Book a session with one of our certified human coaches.</p>
+          <p className="text-muted-foreground mb-6 flex-grow">Book a session with one of our certified human coaches.</p>
           <button 
             onClick={() => setShowBookModal(true)}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors w-full mt-auto"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors w-full mt-auto"
           >
             Book with Coach
           </button>
@@ -596,10 +607,10 @@ export default function SessionsPage() {
       </div>
 
       {/* Sessions List */}
-              <div className="bg-white dark:bg-[#073642] rounded-lg shadow-sm border dark:border-[#586e75] overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-200 dark:border-[#586e75]">
+              <div className="bg-card rounded-lg shadow-sm border dark:border-[#586e75] overflow-hidden">
+                  <div className="px-6 py-4 border-b border-border dark:border-[#586e75]">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#fdf6e3]">Recent Sessions</h2>
+            <h2 className="text-lg font-semibold text-foreground">Recent Sessions</h2>
             {(sessions.length > 0 || treatmentSessions.length > 0) && (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -608,9 +619,9 @@ export default function SessionsPage() {
                     id="select-all"
                     checked={selectedSessions.size > 0 && selectedSessions.size === (sessions.length + treatmentSessions.length)}
                     onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-border rounded"
                   />
-                  <label htmlFor="select-all" className="text-sm text-gray-700 dark:text-[#93a1a1]">
+                  <label htmlFor="select-all" className="text-sm text-foreground dark:text-[#93a1a1]">
                     Select All
                   </label>
                 </div>
@@ -641,13 +652,13 @@ export default function SessionsPage() {
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="p-6">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+                  <div className="w-12 h-12 bg-secondary rounded-lg animate-pulse"></div>
                   <div className="flex-1">
-                    <div className="h-5 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-1/3"></div>
+                    <div className="h-5 bg-secondary rounded animate-pulse mb-2"></div>
+                    <div className="h-4 bg-secondary rounded animate-pulse w-1/2 mb-2"></div>
+                    <div className="h-3 bg-secondary rounded animate-pulse w-1/3"></div>
                   </div>
-                  <div className="h-8 w-20 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-8 w-20 bg-secondary rounded animate-pulse"></div>
                 </div>
               </div>
             ))}
@@ -660,28 +671,29 @@ export default function SessionsPage() {
               const coachName = `${session.coach.first_name} ${session.coach.last_name}`;
               
               return (
-                <div key={`coaching-${session.id}`} className="p-6 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
+                <div key={`coaching-${session.id}`} className="p-4 md:p-6 hover:bg-secondary/20">
+                  {/* Desktop Layout (md and up) */}
+                  <div className="hidden md:flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <input
                         type="checkbox"
                         checked={selectedSessions.has(`coaching-${session.id}`)}
                         onChange={(e) => handleSessionSelect(`coaching-${session.id}`, e.target.checked)}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                         aria-label={`Select ${session.title} session`}
                       />
-                      <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
                         {session.meeting_type === 'video' || session.meeting_type === 'zoom' || session.meeting_type === 'google_meet' ? (
-                          <Video className="h-6 w-6 text-indigo-600" />
+                          <Video className="h-6 w-6 text-primary" />
                         ) : (
-                          <User className="h-6 w-6 text-indigo-600" />
+                          <User className="h-6 w-6 text-primary" />
                         )}
                       </div>
                       
                       <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-[#fdf6e3]">{session.title}</h3>
-                        <p className="text-sm text-gray-600">with {coachName}</p>
-                        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                        <h3 className="text-lg font-medium text-foreground">{session.title}</h3>
+                        <p className="text-sm text-muted-foreground">with {coachName}</p>
+                        <div className="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
                           <div className="flex items-center">
                             <Calendar className="h-4 w-4 mr-1" />
                             {date}
@@ -699,7 +711,7 @@ export default function SessionsPage() {
                       {isUpcoming(session) && (
                         <button 
                           onClick={() => handleJoinSession(session)}
-                          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm inline-flex items-center"
+                          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm inline-flex items-center"
                         >
                           {session.meeting_link ? (
                             <>
@@ -712,14 +724,88 @@ export default function SessionsPage() {
                         </button>
                       )}
                       {session.status === 'completed' && (
-                        <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                        <button className="border border-border text-foreground px-4 py-2 rounded-lg hover:bg-secondary/20 transition-colors text-sm">
                           View Notes
                         </button>
                       )}
                       {(session.status === 'cancelled' || session.status === 'completed') && (
                         <button 
                           onClick={() => handleDeleteCoachingSession(session.id)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm inline-flex items-center"
+                          className="bg-destructive text-destructive-foreground px-4 py-2 rounded-lg hover:bg-destructive/90 transition-colors text-sm inline-flex items-center"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Mobile Layout */}
+                  <div className="md:hidden space-y-3">
+                    {/* Header: Checkbox + Icon + Title */}
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedSessions.has(`coaching-${session.id}`)}
+                        onChange={(e) => handleSessionSelect(`coaching-${session.id}`, e.target.checked)}
+                        className="h-5 w-5 mt-1 text-primary focus:ring-primary border-border rounded"
+                        aria-label={`Select ${session.title} session`}
+                      />
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        {session.meeting_type === 'video' || session.meeting_type === 'zoom' || session.meeting_type === 'google_meet' ? (
+                          <Video className="h-5 w-5 text-primary" />
+                        ) : (
+                          <User className="h-5 w-5 text-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground">{session.title}</h3>
+                        <p className="text-sm text-muted-foreground">with {coachName}</p>
+                      </div>
+                    </div>
+
+                    {/* Date & Time */}
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground pl-14">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+                        <span>{date}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
+                        <span>{time} ({session.duration_minutes}m)</span>
+                      </div>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div className="pl-14">
+                      {getStatusBadge(session.status)}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col space-y-2 pl-14">
+                      {isUpcoming(session) && (
+                        <button 
+                          onClick={() => handleJoinSession(session)}
+                          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm inline-flex items-center justify-center"
+                        >
+                          {session.meeting_link ? (
+                            <>
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              Join Session
+                            </>
+                          ) : (
+                            'Join Session'
+                          )}
+                        </button>
+                      )}
+                      {session.status === 'completed' && (
+                        <button className="border border-border text-foreground px-4 py-2 rounded-lg hover:bg-secondary/20 transition-colors text-sm">
+                          View Notes
+                        </button>
+                      )}
+                      {(session.status === 'cancelled' || session.status === 'completed') && (
+                        <button 
+                          onClick={() => handleDeleteCoachingSession(session.id)}
+                          className="bg-destructive text-destructive-foreground px-4 py-2 rounded-lg hover:bg-destructive/90 transition-colors text-sm inline-flex items-center justify-center"
                         >
                           Delete
                         </button>
@@ -739,31 +825,32 @@ export default function SessionsPage() {
                 : 0;
               
               return (
-                <div key={`treatment-${session.id}`} className="p-6 hover:bg-gray-50 dark:hover:bg-[#586e75]/30 border-l-4 border-l-blue-500">
-                  <div className="flex items-center justify-between">
+                <div key={`treatment-${session.id}`} className="p-4 md:p-6 hover:bg-secondary/20 border-l-4 border-l-primary">
+                  {/* Desktop Layout (md and up) */}
+                  <div className="hidden md:flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <input
                         type="checkbox"
                         checked={selectedSessions.has(`treatment-${session.session_id}`)}
                         onChange={(e) => handleSessionSelect(`treatment-${session.session_id}`, e.target.checked)}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                         aria-label={`Select ${getTreatmentSessionTitle(session)} session`}
                       />
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Activity className="h-6 w-6 text-blue-600" />
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Activity className="h-6 w-6 text-primary" />
                       </div>
                       
                       <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-[#fdf6e3]">
+                        <h3 className="text-lg font-medium text-foreground">
                           {getTreatmentSessionTitle(session)}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {profile?.role === 'super_admin' ? `by ${userName}` : 'Self-guided session'}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {getTreatmentSessionDescription(session)}
                         </p>
-                        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                        <div className="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
                           <div className="flex items-center">
                             <Calendar className="h-4 w-4 mr-1" />
                             {date}
@@ -785,25 +872,100 @@ export default function SessionsPage() {
                       {session.status === 'active' && (
                         <div className="flex items-center space-x-2">
                           <button 
-                            onClick={() => router.push(`/dashboard/sessions/treatment-v3?sessionId=${session.session_id}&resume=true`)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm inline-flex items-center"
+                            onClick={() => router.push(`/dashboard/sessions/treatment-v4?sessionId=${session.session_id}&resume=true`)}
+                            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm inline-flex items-center"
                           >
                             Continue
                           </button>
                           <button 
                             onClick={() => handleDeleteTreatmentSession(session.session_id)}
-                            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm inline-flex items-center"
+                            className="bg-destructive text-destructive-foreground px-4 py-2 rounded-lg hover:bg-destructive/90 transition-colors text-sm inline-flex items-center"
                           >
                             Delete
                           </button>
                         </div>
                       )}
                       {session.status === 'completed' && (
-                        <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                        <div className="text-xs text-accent bg-accent/10 px-2 py-1 rounded">
                           ${session.total_ai_cost?.toFixed(4) || '0.00'}
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Mobile Layout */}
+                  <div className="md:hidden space-y-3">
+                    {/* Header: Checkbox + Icon + Title */}
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedSessions.has(`treatment-${session.session_id}`)}
+                        onChange={(e) => handleSessionSelect(`treatment-${session.session_id}`, e.target.checked)}
+                        className="h-5 w-5 mt-1 text-primary focus:ring-primary border-border rounded"
+                        aria-label={`Select ${getTreatmentSessionTitle(session)} session`}
+                      />
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Activity className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground">
+                          {getTreatmentSessionTitle(session)}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {profile?.role === 'super_admin' ? `by ${userName}` : 'Self-guided session'}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {getTreatmentSessionDescription(session)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Date, Time & AI Usage */}
+                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pl-14">
+                      <div className="flex items-center">
+                        <Calendar className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
+                        <span className="truncate">{date}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
+                        <span>{time}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Zap className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
+                        <span>{aiUsagePercent}% AI</span>
+                      </div>
+                      <div>
+                        {session.duration_minutes || 'N/A'} min
+                      </div>
+                    </div>
+
+                    {/* Status Badge & Cost */}
+                    <div className="flex items-center space-x-2 pl-14">
+                      {getTreatmentStatusBadge(session.status)}
+                      {session.status === 'completed' && (
+                        <div className="text-xs text-accent bg-accent/10 px-2 py-1 rounded">
+                          ${session.total_ai_cost?.toFixed(4) || '0.00'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    {session.status === 'active' && (
+                      <div className="flex flex-col space-y-2 pl-14">
+                        <button 
+                          onClick={() => router.push(`/dashboard/sessions/treatment-v4?sessionId=${session.session_id}&resume=true`)}
+                          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm inline-flex items-center justify-center"
+                        >
+                          Continue
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteTreatmentSession(session.session_id)}
+                          className="bg-destructive text-destructive-foreground px-4 py-2 rounded-lg hover:bg-destructive/90 transition-colors text-sm inline-flex items-center justify-center"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -811,14 +973,76 @@ export default function SessionsPage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">Your sessions will appear here</p>
-            <p className="text-sm text-gray-400 mt-1">
+            <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground text-lg">Your sessions will appear here</p>
+            <p className="text-sm text-muted-foreground mt-1">
               Book your first coaching session to get started!
             </p>
           </div>
         )}
       </div>
+
+      {/* Mobile Actions Menu */}
+      {showMobileMenu && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-background/75 backdrop-blur-sm"
+            onClick={() => setShowMobileMenu(false)}
+          />
+          
+          {/* Drawer */}
+          <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl shadow-xl border-t border-border pb-safe">
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-12 h-1.5 bg-border rounded-full" />
+            </div>
+            
+            {/* Title */}
+            <div className="px-4 py-3 border-b border-border">
+              <h3 className="text-lg font-semibold text-foreground">Actions</h3>
+            </div>
+            
+            {/* Menu Items */}
+            <div className="p-2">
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  setShowBookModal(true);
+                }}
+                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors text-left"
+              >
+                <Plus className="h-5 w-5 text-primary" />
+                <span className="text-foreground font-medium">Book Session</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  handleClearStats();
+                }}
+                disabled={clearingStats}
+                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors text-left disabled:opacity-50"
+              >
+                <RotateCcw className={`h-5 w-5 text-primary ${clearingStats ? 'animate-spin' : ''}`} />
+                <span className="text-foreground font-medium">
+                  {clearingStats ? 'Clearing Stats...' : 'Clear Stats'}
+                </span>
+              </button>
+            </div>
+            
+            {/* Cancel button */}
+            <div className="p-4 pt-2">
+              <button
+                onClick={() => setShowMobileMenu(false)}
+                className="w-full py-3 text-center text-muted-foreground font-medium rounded-lg hover:bg-secondary/20 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Book Session Modal */}
       <EnhancedBookingModal

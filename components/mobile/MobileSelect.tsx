@@ -111,7 +111,7 @@ export function MobileSelect({
             'block text-sm font-medium mb-1.5 transition-colors',
             error
               ? 'text-red-600 dark:text-red-400'
-              : 'text-gray-700 dark:text-gray-300'
+              : 'text-foreground'
           )}
         >
           {label}
@@ -134,7 +134,7 @@ export function MobileSelect({
             required={required}
             className={cn(
               // Base styles
-              'w-full appearance-none rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm transition-all',
+              'w-full appearance-none rounded-lg border bg-card dark:bg-background text-foreground shadow-sm transition-all',
               // Spacing - mobile-optimized touch targets
               'h-12 px-4 py-3 pr-10 text-base',
               // Focus states
@@ -142,9 +142,9 @@ export function MobileSelect({
               // Error states
               error
                 ? 'border-red-300 dark:border-red-700 focus:border-red-500 focus:ring-red-500/30'
-                : 'border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500/30',
+                : 'border-border focus:border-indigo-500 focus:ring-indigo-500/30',
               // Disabled states
-              disabled && 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800'
+              disabled && 'opacity-50 cursor-not-allowed bg-secondary/20'
             )}
             aria-invalid={error ? 'true' : 'false'}
             aria-describedby={
@@ -170,7 +170,7 @@ export function MobileSelect({
           </select>
 
           {/* Chevron Icon */}
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-500">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground dark:text-muted-foreground">
             <ChevronDown className="h-5 w-5" />
           </div>
         </div>
@@ -185,7 +185,7 @@ export function MobileSelect({
             disabled={disabled}
             className={cn(
               // Base styles
-              'w-full flex items-center justify-between rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm transition-all',
+              'w-full flex items-center justify-between rounded-lg border bg-card dark:bg-background text-foreground shadow-sm transition-all',
               // Spacing
               'h-12 px-4 py-3 text-base text-left',
               // Focus states
@@ -195,9 +195,9 @@ export function MobileSelect({
                 ? 'border-red-300 dark:border-red-700 focus:border-red-500 focus:ring-red-500/30'
                 : isOpen || isFocused
                 ? 'border-indigo-500 dark:border-indigo-500 ring-2 ring-indigo-500/30'
-                : 'border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500/30',
+                : 'border-border focus:border-indigo-500 focus:ring-indigo-500/30',
               // Disabled states
-              disabled && 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800',
+              disabled && 'opacity-50 cursor-not-allowed bg-secondary/20',
               // Active states
               !disabled && 'active:scale-[0.99]'
             )}
@@ -210,12 +210,12 @@ export function MobileSelect({
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
           >
-            <span className={selectedOption ? '' : 'text-gray-400 dark:text-gray-500'}>
+            <span className={selectedOption ? '' : 'text-muted-foreground dark:text-muted-foreground'}>
               {selectedOption?.label || placeholder}
             </span>
             <ChevronDown
               className={cn(
-                'h-5 w-5 text-gray-400 dark:text-gray-500 transition-transform duration-200',
+                'h-5 w-5 text-muted-foreground dark:text-muted-foreground transition-transform duration-200',
                 isOpen && 'rotate-180'
               )}
             />
@@ -225,7 +225,7 @@ export function MobileSelect({
           {isOpen && (
             <div
               className={cn(
-                'absolute z-50 w-full mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden',
+                'absolute z-50 w-full mt-2 bg-card dark:bg-background border border-border rounded-lg shadow-lg overflow-hidden',
                 'animate-in fade-in-0 slide-in-from-top-2 duration-200'
               )}
               role="listbox"
@@ -246,7 +246,7 @@ export function MobileSelect({
                         'w-full flex items-center justify-between px-4 py-3 text-left text-base transition-colors touch-target',
                         isSelected
                           ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                          : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800',
+                          : 'text-foreground hover:bg-secondary/20 dark:hover:bg-card',
                         option.disabled && 'opacity-50 cursor-not-allowed'
                       )}
                     >
@@ -277,7 +277,7 @@ export function MobileSelect({
       {helperText && !error && (
         <p
           id={helperId}
-          className="mt-1.5 text-sm text-gray-500 dark:text-gray-400"
+          className="mt-1.5 text-sm text-muted-foreground dark:text-muted-foreground"
         >
           {helperText}
         </p>

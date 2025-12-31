@@ -732,13 +732,13 @@ export default function ProblemShiftingVoiceDemo() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-card dark:bg-card rounded-lg shadow-sm border border-border dark:border-border p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Brain className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
           <div>
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Problem Shifting Voice Demo</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <h4 className="text-lg font-semibold text-foreground">Problem Shifting Voice Demo</h4>
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               Hybrid Voice Demo: Browser TTS for EXACT scripts + OpenAI for listening
             </p>
           </div>
@@ -761,7 +761,7 @@ export default function ProblemShiftingVoiceDemo() {
             status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
             status === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
             status === 'starting' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-            'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+            'bg-secondary text-foreground dark:bg-background/20 dark:text-muted-foreground'
           }`}>
             {status}
           </div>
@@ -851,7 +851,7 @@ export default function ProblemShiftingVoiceDemo() {
 
         <button
           onClick={resetDemo}
-          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 border border-border dark:border-border text-foreground dark:text-muted-foreground rounded-lg hover:bg-secondary/20 dark:hover:bg-secondary transition-colors"
         >
           <RotateCcw className="h-4 w-4" />
           <span>Reset Demo</span>
@@ -867,7 +867,7 @@ export default function ProblemShiftingVoiceDemo() {
             testUtterance.onerror = (e) => console.error('🎯 PROBLEM_SHIFTING: Test TTS error:', e);
             speechSynthesis.speak(testUtterance);
           }}
-          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 border border-border dark:border-border text-foreground dark:text-muted-foreground rounded-lg hover:bg-secondary/20 dark:hover:bg-secondary transition-colors"
         >
           <Volume2 className="h-4 w-4" />
           <span>Test TTS</span>
@@ -903,8 +903,8 @@ export default function ProblemShiftingVoiceDemo() {
       {/* Messages */}
       {messages.length > 0 && (
         <div>
-          <h5 className="font-medium text-gray-900 dark:text-white mb-3">Session Conversation</h5>
-          <div className="space-y-3 max-h-80 overflow-y-auto bg-gray-50 dark:bg-gray-900/20 rounded-lg p-4">
+          <h5 className="font-medium text-foreground mb-3">Session Conversation</h5>
+          <div className="space-y-3 max-h-80 overflow-y-auto bg-secondary/20 dark:bg-background/20 rounded-lg p-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -914,7 +914,7 @@ export default function ProblemShiftingVoiceDemo() {
                   className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-sm ${
                     message.isUser
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                      : 'bg-card dark:bg-card text-foreground border border-border dark:border-border'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
@@ -934,15 +934,15 @@ export default function ProblemShiftingVoiceDemo() {
       )}
 
       {/* Step Guide */}
-      <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
-        <h6 className="font-medium text-gray-900 dark:text-white mb-2">EXACT Problem Shifting Steps:</h6>
-        <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+      <div className="mt-4 p-3 bg-secondary/20 dark:bg-background/20 rounded-lg">
+        <h6 className="font-medium text-foreground mb-2">EXACT Problem Shifting Steps:</h6>
+        <div className="space-y-1 text-sm text-muted-foreground dark:text-muted-foreground">
           {PROBLEM_SHIFTING_STEPS.map((step, index) => (
             <div key={step.id} className={`flex items-center space-x-2 ${index === currentStepIndex ? 'text-indigo-600 dark:text-indigo-400 font-medium' : ''}`}>
               <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                 index < currentStepIndex ? 'bg-green-500 text-white' :
                 index === currentStepIndex ? 'bg-indigo-500 text-white' :
-                'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                'bg-secondary text-muted-foreground'
               }`}>
                 {index < currentStepIndex ? '✓' : index + 1}
               </span>

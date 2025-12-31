@@ -79,7 +79,7 @@ export default function AccessibilityWidget({
       {/* Accessibility Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
+        className="bg-primary hover:bg-primary/90 text-primary-foreground p-3 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
         aria-label="Open accessibility settings"
         aria-expanded={isOpen}
         aria-controls="accessibility-widget"
@@ -91,25 +91,25 @@ export default function AccessibilityWidget({
       {isOpen && (
         <div
           id="accessibility-widget"
-          className={`absolute ${panelPosition[corner]} w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 max-h-[80vh] overflow-y-auto`}
+          className={`absolute ${panelPosition[corner]} w-80 max-w-[calc(100vw-2rem)] bg-card border border-border rounded-lg shadow-xl p-4 max-h-[80vh] overflow-y-auto`}
           role="dialog"
           aria-labelledby="accessibility-title"
           aria-describedby="accessibility-description"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 id="accessibility-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 id="accessibility-title" className="text-lg font-semibold text-foreground">
               Accessibility Settings
             </h2>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none"
+              className="text-muted-foreground hover:text-foreground text-2xl leading-none"
               aria-label="Close accessibility settings"
             >
               ×
             </button>
           </div>
 
-          <p id="accessibility-description" className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <p id="accessibility-description" className="text-sm text-muted-foreground mb-4">
             Customize your experience. Drag the gear icon to move it to any corner.
           </p>
 
@@ -117,8 +117,8 @@ export default function AccessibilityWidget({
             {/* High Contrast */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Eye className="h-4 w-4 text-gray-500" />
-                <label htmlFor="high-contrast" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Eye className="h-4 w-4 text-muted-foreground" />
+                <label htmlFor="high-contrast" className="text-sm font-medium text-foreground">
                   High Contrast
                 </label>
               </div>
@@ -128,7 +128,7 @@ export default function AccessibilityWidget({
                 aria-checked={preferences.highContrast}
                 onClick={() => handleToggle('highContrast', !preferences.highContrast)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  preferences.highContrast ? 'bg-blue-600' : 'bg-gray-200'
+                  preferences.highContrast ? 'bg-primary' : 'bg-secondary'
                 }`}
               >
                 <span className="sr-only">Toggle high contrast</span>
@@ -143,8 +143,8 @@ export default function AccessibilityWidget({
             {/* Reduced Motion */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Volume2 className="h-4 w-4 text-gray-500" />
-                <label htmlFor="reduced-motion" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Volume2 className="h-4 w-4 text-muted-foreground" />
+                <label htmlFor="reduced-motion" className="text-sm font-medium text-foreground">
                   Reduced Motion
                 </label>
               </div>
@@ -154,7 +154,7 @@ export default function AccessibilityWidget({
                 aria-checked={preferences.reducedMotion}
                 onClick={() => handleToggle('reducedMotion', !preferences.reducedMotion)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  preferences.reducedMotion ? 'bg-blue-600' : 'bg-gray-200'
+                  preferences.reducedMotion ? 'bg-primary' : 'bg-secondary'
                 }`}
               >
                 <span className="sr-only">Toggle reduced motion</span>
@@ -169,8 +169,8 @@ export default function AccessibilityWidget({
             {/* Font Size */}
             <div>
               <div className="flex items-center space-x-2 mb-2">
-                <Type className="h-4 w-4 text-gray-500" />
-                <label htmlFor="font-size" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Type className="h-4 w-4 text-muted-foreground" />
+                <label htmlFor="font-size" className="text-sm font-medium text-foreground">
                   Font Size
                 </label>
               </div>
@@ -178,7 +178,7 @@ export default function AccessibilityWidget({
                 id="font-size"
                 value={preferences.fontSize}
                 onChange={(e) => handleToggle('fontSize', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card text-foreground"
               >
                 <option value="small">Small</option>
                 <option value="medium">Medium</option>
@@ -190,8 +190,8 @@ export default function AccessibilityWidget({
             {/* Keyboard Navigation */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Keyboard className="h-4 w-4 text-gray-500" />
-                <label htmlFor="keyboard-nav" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Keyboard className="h-4 w-4 text-muted-foreground" />
+                <label htmlFor="keyboard-nav" className="text-sm font-medium text-foreground">
                   Keyboard Navigation
                 </label>
               </div>
@@ -201,7 +201,7 @@ export default function AccessibilityWidget({
                 aria-checked={preferences.keyboardNavigation}
                 onClick={() => handleToggle('keyboardNavigation', !preferences.keyboardNavigation)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  preferences.keyboardNavigation ? 'bg-blue-600' : 'bg-gray-200'
+                  preferences.keyboardNavigation ? 'bg-primary' : 'bg-secondary'
                 }`}
               >
                 <span className="sr-only">Toggle keyboard navigation</span>
@@ -216,8 +216,8 @@ export default function AccessibilityWidget({
             {/* Screen Reader Optimization */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Eye className="h-4 w-4 text-gray-500" />
-                <label htmlFor="screen-reader" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Eye className="h-4 w-4 text-muted-foreground" />
+                <label htmlFor="screen-reader" className="text-sm font-medium text-foreground">
                   Screen Reader Mode
                 </label>
               </div>
@@ -227,7 +227,7 @@ export default function AccessibilityWidget({
                 aria-checked={preferences.screenReaderOptimized}
                 onClick={() => handleToggle('screenReaderOptimized', !preferences.screenReaderOptimized)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  preferences.screenReaderOptimized ? 'bg-blue-600' : 'bg-gray-200'
+                  preferences.screenReaderOptimized ? 'bg-primary' : 'bg-secondary'
                 }`}
               >
                 <span className="sr-only">Toggle screen reader optimization</span>
@@ -243,8 +243,8 @@ export default function AccessibilityWidget({
             {getCapabilities().speechRecognition && (
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Mic className="h-4 w-4 text-gray-500" />
-                  <label htmlFor="voice-input" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Mic className="h-4 w-4 text-muted-foreground" />
+                  <label htmlFor="voice-input" className="text-sm font-medium text-foreground">
                     Voice Input
                   </label>
                 </div>
@@ -254,7 +254,7 @@ export default function AccessibilityWidget({
                   aria-checked={voicePrefs.listeningEnabled}
                   onClick={() => updateVoicePrefs({ listeningEnabled: !voicePrefs.listeningEnabled })}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    voicePrefs.listeningEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                    voicePrefs.listeningEnabled ? 'bg-primary' : 'bg-secondary'
                   }`}
                 >
                   <span className="sr-only">Toggle voice input</span>
@@ -271,8 +271,8 @@ export default function AccessibilityWidget({
             {getCapabilities().speechSynthesis && (
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Volume2 className="h-4 w-4 text-gray-500" />
-                  <label htmlFor="voice-output" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Volume2 className="h-4 w-4 text-muted-foreground" />
+                  <label htmlFor="voice-output" className="text-sm font-medium text-foreground">
                     Voice Output
                   </label>
                 </div>
@@ -282,7 +282,7 @@ export default function AccessibilityWidget({
                   aria-checked={voicePrefs.speechEnabled}
                   onClick={() => updateVoicePrefs({ speechEnabled: !voicePrefs.speechEnabled })}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    voicePrefs.speechEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                    voicePrefs.speechEnabled ? 'bg-primary' : 'bg-secondary'
                   }`}
                 >
                   <span className="sr-only">Toggle voice output</span>
@@ -297,10 +297,10 @@ export default function AccessibilityWidget({
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+          <div className="mt-4 pt-4 border-t border-border space-y-3">
             {/* Widget Position */}
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+              <label className="text-sm font-medium text-foreground block mb-2">
                 Widget Position
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -308,8 +308,8 @@ export default function AccessibilityWidget({
                   onClick={() => setCorner('top-left')}
                   className={`px-3 py-2 text-xs rounded-md transition-colors ${
                     corner === 'top-left'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-foreground hover:bg-accent'
                   }`}
                 >
                   Top Left
@@ -318,8 +318,8 @@ export default function AccessibilityWidget({
                   onClick={() => setCorner('top-right')}
                   className={`px-3 py-2 text-xs rounded-md transition-colors ${
                     corner === 'top-right'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-foreground hover:bg-accent'
                   }`}
                 >
                   Top Right
@@ -328,8 +328,8 @@ export default function AccessibilityWidget({
                   onClick={() => setCorner('bottom-left')}
                   className={`px-3 py-2 text-xs rounded-md transition-colors ${
                     corner === 'bottom-left'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-foreground hover:bg-accent'
                   }`}
                 >
                   Bottom Left
@@ -338,8 +338,8 @@ export default function AccessibilityWidget({
                   onClick={() => setCorner('bottom-right')}
                   className={`px-3 py-2 text-xs rounded-md transition-colors ${
                     corner === 'bottom-right'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-foreground hover:bg-accent'
                   }`}
                 >
                   Bottom Right
@@ -357,7 +357,7 @@ export default function AccessibilityWidget({
                   screenReaderOptimized: true,
                 });
               }}
-              className="w-full px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-secondary text-foreground rounded-md hover:bg-accent transition-colors"
             >
               Reset to Default
             </button>
