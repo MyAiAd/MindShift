@@ -25,9 +25,20 @@ export const useNaturalVoice = ({
     const recognitionRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const isSpeakingRef = useRef(false); // Ref for immediate access in callbacks
+    const isMountedRef = useRef(true); // Track if component is mounted
+    const onTranscriptRef = useRef(onTranscript); // Ref to prevent effect re-runs
+    const onAudioEndedRef = useRef(onAudioEnded); // Ref to prevent effect re-runs
+    
+    // Update refs when callbacks change (without triggering effects)
+    useEffect(() => {
+        onTranscriptRef.current = onTranscript;
+        onAudioEndedRef.current = onAudioEnded;
+    }, [onTranscript, onAudioEnded]);
 
     // Initialize Speech Recognition
     useEffect(() => {
+        isMountedRef.current = true; // Mark as mounted
+        
         if (typeof window !== 'undefined') {
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             if (SpeechRecognition) {
@@ -45,10 +56,10 @@ export const useNaturalVoice = ({
                     console.log('🎤 Natural Voice: Listening ended');
                     setIsListening(false);
                     // Auto-restart listening if enabled and not speaking
-                    if (enabled && !isSpeakingRef.current) {
+                    if (enabled && !isSpeakingRef.current && isMountedRef.current) {
                         // Small delay to prevent CPU hogging if it fails repeatedly
                         setTimeout(() => {
-                            if (enabled && !isSpeakingRef.current) {
+                            if (enabled && !isSpeakingRef.current && isMountedRef.current) {
                                 startListening();
                             }
                         }, 500);
@@ -59,7 +70,7 @@ export const useNaturalVoice = ({
                     const transcript = event.results[0][0].transcript;
                     console.log('🎤 Natural Voice: Transcript received:', transcript);
                     if (transcript.trim()) {
-                        onTranscript(transcript.trim());
+                        onTranscriptRef.current(transcript.trim());
                     }
                 };
 
@@ -75,6 +86,9 @@ export const useNaturalVoice = ({
         }
 
         return () => {
+            // Mark as unmounted to prevent auto-restart loops
+            isMountedRef.current = false;
+            
             // Cleanup: Stop speech recognition
             if (recognitionRef.current) {
                 recognitionRef.current.stop();
@@ -90,7 +104,7 @@ export const useNaturalVoice = ({
             setIsSpeaking(false);
             isSpeakingRef.current = false;
         };
-    }, [enabled, onTranscript]);
+    }, [enabled]); // Removed onTranscript from deps - now using ref
 
     // Start listening helper
     const startListening = useCallback(() => {
@@ -198,13 +212,13 @@ export const useNaturalVoice = ({
                 console.log('🗣️ Natural Voice: Playback ended');
                 setIsSpeaking(false);
                 isSpeakingRef.current = false;
-                // Resume listening after speaking
-                if (enabled) {
+                // Resume listening after speaking (only if still mounted)
+                if (enabled && isMountedRef.current) {
                     startListening();
                 }
 
                 // Trigger callback
-                onAudioEnded?.();
+                onAudioEndedRef.current?.();
             };
 
             await audio.play();
@@ -213,16 +227,16 @@ export const useNaturalVoice = ({
             console.error('🗣️ Natural Voice: TTS error:', err);
             setIsSpeaking(false);
             isSpeakingRef.current = false;
-            // Resume listening even on error
-            if (enabled) {
+            // Resume listening even on error (only if still mounted)
+            if (enabled && isMountedRef.current) {
                 startListening();
             }
         }
-    }, [enabled, voiceProvider, elevenLabsVoiceId, startListening, stopListening, onAudioEnded]);
+    }, [enabled, voiceProvider, elevenLabsVoiceId, startListening, stopListening]); // Removed onAudioEnded - using ref
 
     // Handle enabled state changes
     useEffect(() => {
-        if (enabled && !isSpeaking) {
+        if (enabled && !isSpeaking && isMountedRef.current) {
             startListening();
         } else if (!enabled) {
             stopListening();

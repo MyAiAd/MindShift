@@ -180,7 +180,7 @@ export default function TreatmentSession({
       console.log('🧹 TreatmentSession: Cleaning up - stopping audio');
       naturalVoice.stopSpeaking();
     };
-  }, [naturalVoice]);
+  }, []); // Empty deps - only run on unmount, not on every render
 
   // Helper function to format method names
   const formatMethodName = (methodName: string) => {
