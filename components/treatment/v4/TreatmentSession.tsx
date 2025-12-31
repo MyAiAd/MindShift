@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, Send } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, Send, Play } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 // Natural voice integration (ElevenLabs + Web Speech)
@@ -41,6 +41,7 @@ export default function TreatmentSession({
   const [currentStep, setCurrentStep] = useState<string>('');
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showReadyOverlay, setShowReadyOverlay] = useState(true); // New: Start with overlay visible
   const [sessionStats, setSessionStats] = useState<SessionStats>({
     totalResponses: 0,
     avgResponseTime: 0,
@@ -198,16 +199,21 @@ export default function TreatmentSession({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Initialize session on component mount
-  useEffect(() => {
-    if (sessionId && userId) {
+  // Handler for starting the session (clicking the play button)
+  const handleStartSession = () => {
+    setShowReadyOverlay(false);
+    // Start session immediately after hiding overlay
+    if (sessionId && userId && !isSessionActive) {
       if (shouldResume) {
         resumeSession();
       } else {
         startSession();
       }
     }
-  }, [sessionId, userId, shouldResume]);
+  };
+
+  // Initialize session on component mount - but wait for user to click Start
+  // Removed auto-start useEffect - now controlled by play button
 
   // V3: Enhanced session start with instant initial message
   const startSession = async () => {
@@ -941,7 +947,34 @@ export default function TreatmentSession({
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4">
+    <div className="max-w-4xl mx-auto px-4 relative">
+      {/* Ready Overlay - Shows before session starts */}
+      {showReadyOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
+          <div className="text-center px-4">
+            <div className="mb-8">
+              <Brain className="h-16 w-16 sm:h-20 sm:w-20 text-indigo-600 mx-auto mb-4 animate-pulse" />
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+                Ready to Begin?
+              </h2>
+              <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
+                Audio is preloaded and ready. Click the button below to start your treatment session.
+              </p>
+            </div>
+            <button
+              onClick={handleStartSession}
+              className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              <Play className="h-6 w-6 mr-2 group-hover:scale-110 transition-transform" />
+              Start Session
+            </button>
+            <p className="mt-6 text-xs text-muted-foreground">
+              Make sure you're in a quiet space where you can focus
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* V4 Header - Mobile Responsive */}
       <div className="bg-card dark:bg-[#073642] rounded-lg shadow-sm border border-border dark:border-[#586e75] mb-6">
         <div className="px-4 sm:px-6 py-4 border-b border-border dark:border-[#586e75]">
