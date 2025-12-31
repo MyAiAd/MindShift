@@ -50,6 +50,43 @@ export abstract class BaseTreatmentStateMachine {
   protected abstract handleInternalRoutingSignals(signal: string, context: TreatmentContext): boolean;
 
   /**
+   * Migrate old v2/v3 step names to v4 equivalents
+   * This ensures sessions created in older versions can continue in v4
+   */
+  private migrateStepNameToV4(stepName: string): string {
+    const stepMigrationMap: Record<string, string> = {
+      // Problem Shifting: v2/v3 had single intro step, v4 splits into static + dynamic
+      'problem_shifting_intro': 'problem_shifting_intro_static',
+      
+      // Identity Shifting: v2/v3 had single intro step, v4 splits into static + dynamic
+      'identity_shifting_intro': 'identity_shifting_intro_static',
+      
+      // Belief Shifting: v2/v3 had single intro step, v4 splits into static + dynamic
+      'belief_shifting_intro': 'belief_shifting_intro_static',
+      
+      // Blockage Shifting: v2/v3 had single intro step, v4 splits into static + dynamic
+      'blockage_shifting_intro': 'blockage_shifting_intro_static',
+      
+      // Reality Shifting: v2/v3 had single intro step, v4 splits into static + dynamic
+      'reality_shifting_intro': 'reality_shifting_intro_static',
+      
+      // Trauma/Identity Bridge: v2/v3 had single step, v4 splits into static + dynamic
+      'trauma_identity_step': 'trauma_identity_step_static',
+      
+      // Mind Shifting Explanation: v2/v3 had single step, v4 splits into static + dynamic
+      'mind_shifting_explanation': 'mind_shifting_explanation_static',
+    };
+
+    const migratedStep = stepMigrationMap[stepName] || stepName;
+    
+    if (migratedStep !== stepName) {
+      console.log(`🔄 STEP_MIGRATION: Migrating step "${stepName}" → "${migratedStep}"`);
+    }
+    
+    return migratedStep;
+  }
+
+  /**
    * Main processing function - handles 95% of interactions without AI
    */
   async processUserInput(
@@ -60,6 +97,17 @@ export abstract class BaseTreatmentStateMachine {
   ): Promise<ProcessingResult> {
     // CRITICAL FIX: Ensure context is loaded from database before processing
     await this.getOrCreateContextAsync(sessionId, context);
+
+    // Migrate step name if needed (for v2/v3 → v4 session compatibility)
+    const treatmentContext = this.getOrCreateContext(sessionId, context);
+    const originalStep = treatmentContext.currentStep;
+    treatmentContext.currentStep = this.migrateStepNameToV4(treatmentContext.currentStep);
+    
+    if (originalStep !== treatmentContext.currentStep) {
+      console.log(`🔄 CONTEXT_MIGRATED: Session ${sessionId} step migrated from "${originalStep}" to "${treatmentContext.currentStep}"`);
+      // Save the migrated context back to database
+      await DatabaseOperations.saveContextToDatabase(treatmentContext);
+    }
 
     // Special handling for session initialization
     if (userInput === 'start') {
