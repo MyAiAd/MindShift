@@ -241,9 +241,12 @@ export default function TreatmentSession({
       // Focus input immediately for user interaction
       setTimeout(() => {
         inputRef.current?.focus();
-        // Speak initial message if enabled
+        // Speak initial message if enabled - with delay to ensure state is settled
         if (isNaturalVoiceEnabled) {
-          naturalVoice.speak(instantMessage.content);
+          // Use setTimeout to ensure all React state updates and cleanups are complete
+          setTimeout(() => {
+            naturalVoice.speak(instantMessage.content);
+          }, 150);
         }
       }, 100);
 

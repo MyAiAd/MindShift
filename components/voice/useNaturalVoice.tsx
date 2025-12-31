@@ -26,6 +26,7 @@ export const useNaturalVoice = ({
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const isSpeakingRef = useRef(false); // Ref for immediate access in callbacks
     const isMountedRef = useRef(true); // Track if component is mounted
+    const isAudioPlayingRef = useRef(false); // Track if audio is actually playing (prevents feedback loop)
     const onTranscriptRef = useRef(onTranscript); // Ref to prevent effect re-runs
     const onAudioEndedRef = useRef(onAudioEnded); // Ref to prevent effect re-runs
     
@@ -108,13 +109,16 @@ export const useNaturalVoice = ({
 
     // Start listening helper
     const startListening = useCallback(() => {
-        if (recognitionRef.current && !isSpeakingRef.current) {
+        // Don't start if audio is currently playing (prevents feedback loop)
+        if (recognitionRef.current && !isSpeakingRef.current && !isAudioPlayingRef.current) {
             try {
                 recognitionRef.current.start();
             } catch (e) {
                 // Ignore errors if already started
                 console.log('🎤 Natural Voice: Already listening or error starting:', e);
             }
+        } else if (isAudioPlayingRef.current) {
+            console.log('🎤 Natural Voice: Skipping start - audio is playing (feedback prevention)');
         }
     }, []);
 
@@ -134,6 +138,7 @@ export const useNaturalVoice = ({
         }
         setIsSpeaking(false);
         isSpeakingRef.current = false;
+        isAudioPlayingRef.current = false; // Clear audio playing flag
         stopListening();
     }, [stopListening]);
 
@@ -172,6 +177,7 @@ export const useNaturalVoice = ({
         stopListening();
         setIsSpeaking(true);
         isSpeakingRef.current = true;
+        isAudioPlayingRef.current = false; // Will be set to true once audio actually starts playing
 
         try {
             let audioUrl: string;
@@ -208,10 +214,17 @@ export const useNaturalVoice = ({
             const audio = new Audio(audioUrl);
             audioRef.current = audio;
 
+            // Set flag when audio actually starts playing
+            audio.onplay = () => {
+                isAudioPlayingRef.current = true;
+                console.log('🔊 Natural Voice: Audio playback started');
+            };
+
             audio.onended = () => {
                 console.log('🗣️ Natural Voice: Playback ended');
                 setIsSpeaking(false);
                 isSpeakingRef.current = false;
+                isAudioPlayingRef.current = false; // Clear audio playing flag
                 // Resume listening after speaking (only if still mounted)
                 if (enabled && isMountedRef.current) {
                     startListening();
@@ -227,6 +240,7 @@ export const useNaturalVoice = ({
             console.error('🗣️ Natural Voice: TTS error:', err);
             setIsSpeaking(false);
             isSpeakingRef.current = false;
+            isAudioPlayingRef.current = false; // Clear audio playing flag on error
             // Resume listening even on error (only if still mounted)
             if (enabled && isMountedRef.current) {
                 startListening();
