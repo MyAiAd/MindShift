@@ -186,7 +186,7 @@ export default function CoachProfilePage() {
     return (
       <div className="p-4 sm:p-6 lg:p-8 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground text-sm sm:text-base">Loading coach profile...</p>
         </div>
       </div>
@@ -196,10 +196,10 @@ export default function CoachProfilePage() {
   if (!hasCoachPermissions) {
     return (
       <div className="p-4 sm:p-6 lg:p-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 sm:p-8 text-center">
-          <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-base sm:text-lg font-semibold text-red-900 mb-2">Access Denied</h3>
-          <p className="text-sm sm:text-base text-red-700">You need coach permissions to access this page.</p>
+        <div className="bg-destructive/10 border border-destructive rounded-lg p-6 sm:p-8 text-center">
+          <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-destructive mx-auto mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">Access Denied</h3>
+          <p className="text-sm sm:text-base text-destructive">You need coach permissions to access this page.</p>
         </div>
       </div>
     );
@@ -209,7 +209,7 @@ export default function CoachProfilePage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
       <div className="mb-6 sm:mb-8">
         <div className="flex items-start space-x-3">
-          <User className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 flex-shrink-0" />
+          <User className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Coach Profile</h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1">
@@ -220,19 +220,19 @@ export default function CoachProfilePage() {
       </div>
 
       {formState.error && (
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-destructive/10 border border-destructive rounded-lg">
           <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-            <p className="text-sm sm:text-base text-red-700">{formState.error}</p>
+            <AlertCircle className="h-5 w-5 text-destructive mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-sm sm:text-base text-destructive">{formState.error}</p>
           </div>
         </div>
       )}
 
       {formState.success && (
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-accent/10 border border-accent rounded-lg">
           <div className="flex items-start">
-            <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-            <p className="text-sm sm:text-base text-green-700">Coach profile updated successfully!</p>
+            <CheckCircle className="h-5 w-5 text-accent mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-sm sm:text-base text-accent">Coach profile updated successfully!</p>
           </div>
         </div>
       )}
@@ -243,7 +243,7 @@ export default function CoachProfilePage() {
           <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-4">Basic Information</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1] mb-2">
+              <label className="block text-sm font-medium text-foreground text-foreground mb-2">
                 First Name
               </label>
               <input
@@ -256,7 +256,7 @@ export default function CoachProfilePage() {
               <p className="text-xs text-muted-foreground mt-1">Update in main settings</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground dark:text-[#93a1a1] mb-2">
+              <label className="block text-sm font-medium text-foreground text-foreground mb-2">
                 Last Name
               </label>
               <input
@@ -274,7 +274,7 @@ export default function CoachProfilePage() {
         {/* Specialties */}
         <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
           <div className="flex items-start space-x-2 mb-4">
-            <Star className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+            <Star className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <h2 className="text-lg sm:text-xl font-semibold text-foreground">Coaching Specialties</h2>
           </div>
           <p className="text-sm sm:text-base text-muted-foreground mb-4">
@@ -286,7 +286,7 @@ export default function CoachProfilePage() {
                 key={specialty}
                 className={`flex items-center justify-start p-3 border rounded-lg cursor-pointer transition-colors touch-target ${
                   formData.specialties.includes(specialty)
-                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                    ? 'border-primary bg-primary/10'
                     : 'border-border hover:border-primary'
                 }`}
               >
@@ -298,11 +298,11 @@ export default function CoachProfilePage() {
                 />
                 <div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center flex-shrink-0 ${
                   formData.specialties.includes(specialty)
-                    ? 'bg-indigo-600 border-indigo-600'
+                    ? 'bg-primary border-indigo-600'
                     : 'border-border'
                 }`}>
                   {formData.specialties.includes(specialty) && (
-                    <CheckCircle className="w-3 h-3 text-white" />
+                    <CheckCircle className="w-3 h-3 text-primary-foreground" />
                   )}
                 </div>
                 <span className="text-sm font-medium text-foreground">
@@ -316,7 +316,7 @@ export default function CoachProfilePage() {
         {/* Meeting Types */}
         <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
           <div className="flex items-start space-x-2 mb-4">
-            <Video className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+            <Video className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <h2 className="text-lg sm:text-xl font-semibold text-foreground">Preferred Meeting Types</h2>
           </div>
           <p className="text-sm sm:text-base text-muted-foreground mb-4">
@@ -330,7 +330,7 @@ export default function CoachProfilePage() {
                   key={type.value}
                   className={`flex items-center justify-start p-3 border rounded-lg cursor-pointer transition-colors touch-target ${
                     formData.preferredMeetingTypes.includes(type.value)
-                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                      ? 'border-primary bg-primary/10'
                       : 'border-border hover:border-primary'
                   }`}
                 >
@@ -342,11 +342,11 @@ export default function CoachProfilePage() {
                   />
                   <div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center flex-shrink-0 ${
                     formData.preferredMeetingTypes.includes(type.value)
-                      ? 'bg-indigo-600 border-indigo-600'
+                      ? 'bg-primary border-indigo-600'
                       : 'border-border'
                   }`}>
                     {formData.preferredMeetingTypes.includes(type.value) && (
-                      <CheckCircle className="w-3 h-3 text-white" />
+                      <CheckCircle className="w-3 h-3 text-primary-foreground" />
                     )}
                   </div>
                   <Icon className="w-4 h-4 mr-2 text-muted-foreground flex-shrink-0" />
@@ -369,7 +369,7 @@ export default function CoachProfilePage() {
             rows={4}
             value={formData.bio}
             onChange={(e) => handleInputChange('bio', e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground text-sm sm:text-base"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-primary focus:border-primary bg-background text-foreground text-sm sm:text-base"
             placeholder="Tell clients about your coaching experience, approach, and what makes you unique..."
             maxLength={500}
           />
@@ -381,7 +381,7 @@ export default function CoachProfilePage() {
         {/* Credentials */}
         <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
           <div className="flex items-start space-x-2 mb-4">
-            <Award className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+            <Award className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <h2 className="text-lg sm:text-xl font-semibold text-foreground">Credentials & Certifications</h2>
           </div>
           <p className="text-sm sm:text-base text-muted-foreground mb-4">
@@ -391,7 +391,7 @@ export default function CoachProfilePage() {
             rows={3}
             value={formData.credentials}
             onChange={(e) => handleInputChange('credentials', e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground text-sm sm:text-base"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-primary focus:border-primary bg-background text-foreground text-sm sm:text-base"
             placeholder="e.g., Certified Life Coach (ICF), Master's in Psychology, 10+ years experience..."
             maxLength={300}
           />
@@ -413,7 +413,7 @@ export default function CoachProfilePage() {
           <button
             type="submit"
             disabled={formState.loading}
-            className="bg-indigo-600 text-white px-5 sm:px-6 py-2.5 sm:py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-all active:scale-[0.98] active:opacity-90 text-sm sm:text-base touch-target"
+            className="bg-primary text-primary-foreground px-5 sm:px-6 py-2.5 sm:py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-all active:scale-[0.98] active:opacity-90 text-sm sm:text-base touch-target"
           >
             {formState.loading ? (
               <>
