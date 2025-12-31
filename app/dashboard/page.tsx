@@ -16,7 +16,8 @@ import {
   Award,
   Clock,
   Activity,
-  MessageCircle
+  MessageCircle,
+  Loader2
 } from 'lucide-react';
 
 interface Activity {
