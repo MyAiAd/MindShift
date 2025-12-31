@@ -298,7 +298,7 @@ export default function CoachProfilePage() {
                 />
                 <div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center flex-shrink-0 ${
                   formData.specialties.includes(specialty)
-                    ? 'bg-primary border-indigo-600'
+                    ? 'bg-primary border-primary'
                     : 'border-border'
                 }`}>
                   {formData.specialties.includes(specialty) && (
@@ -342,7 +342,7 @@ export default function CoachProfilePage() {
                   />
                   <div className={`w-4 h-4 rounded border mr-3 flex items-center justify-center flex-shrink-0 ${
                     formData.preferredMeetingTypes.includes(type.value)
-                      ? 'bg-primary border-indigo-600'
+                      ? 'bg-primary border-primary'
                       : 'border-border'
                   }`}>
                     {formData.preferredMeetingTypes.includes(type.value) && (
