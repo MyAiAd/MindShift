@@ -1,11 +1,18 @@
 'use client';
 
 import React, { Suspense, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import TreatmentSession from '@/components/treatment/v4/TreatmentSession';
 import { Brain, ArrowLeft, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
+
+// Dynamic import for audio preloader
+const V4AudioPreloader = dynamic(() => import('@/components/treatment/v4/V4AudioPreloader'), {
+  ssr: false,
+  loading: () => null,
+});
 
 function TreatmentSessionContent() {
   const searchParams = useSearchParams();
