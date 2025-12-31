@@ -57,7 +57,9 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
   const [newTagName, setNewTagName] = useState('');
+  const [editTagName, setEditTagName] = useState('');
   const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -123,14 +125,17 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
     }
   };
 
-  const handleUpdateTag = async (tag: Tag, newName: string) => {
-    if (!newName.trim()) return;
+  const handleUpdateTag = async () => {
+    if (!editingTag || !editTagName.trim()) return;
 
     try {
-      const response = await fetch(`/api/community/tags/${tag.id}`, {
+      setUpdating(true);
+      console.log('Updating tag:', { id: editingTag.id, name: editTagName.trim() });
+      
+      const response = await fetch(`/api/community/tags/${editingTag.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName.trim() }),
+        body: JSON.stringify({ name: editTagName.trim() }),
       });
 
       if (response.ok) {
@@ -139,9 +144,11 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
           description: 'Tag updated successfully',
         });
         setEditingTag(null);
+        setEditTagName('');
         fetchTags();
       } else {
         const error = await response.json();
+        console.error('Update tag error response:', error);
         toast({
           title: 'Error',
           description: error.error || 'Failed to update tag',
@@ -155,6 +162,8 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
         description: 'Failed to update tag',
         variant: 'destructive',
       });
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -265,7 +274,10 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditingTag(tag)}>
+                          <DropdownMenuItem onClick={() => {
+                            setEditingTag(tag);
+                            setEditTagName(tag.name);
+                          }}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
@@ -296,7 +308,10 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
 
       {/* Edit Tag Dialog */}
       {editingTag && (
-        <Dialog open={!!editingTag} onOpenChange={() => setEditingTag(null)}>
+        <Dialog open={!!editingTag} onOpenChange={() => {
+          setEditingTag(null);
+          setEditTagName('');
+        }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Tag</DialogTitle>
@@ -306,30 +321,39 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
                 <Label htmlFor="tag-name">Tag Name</Label>
                 <Input
                   id="tag-name"
-                  defaultValue={editingTag.name}
+                  value={editTagName}
+                  onChange={(e) => setEditTagName(e.target.value)}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
-                      handleUpdateTag(editingTag, e.currentTarget.value);
+                      handleUpdateTag();
                     }
                   }}
+                  placeholder="Enter tag name..."
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingTag(null)}>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setEditingTag(null);
+                  setEditTagName('');
+                }}
+              >
                 Cancel
               </Button>
               <Button
-                onClick={(e) => {
-                  const input = e.currentTarget
-                    .closest('.space-y-4')
-                    ?.querySelector('input') as HTMLInputElement;
-                  if (input) {
-                    handleUpdateTag(editingTag, input.value);
-                  }
-                }}
+                onClick={handleUpdateTag}
+                disabled={updating || !editTagName.trim()}
               >
-                Save
+                {updating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save'
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
