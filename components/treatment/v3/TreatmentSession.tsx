@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Send } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 
@@ -1074,10 +1074,10 @@ export default function TreatmentSession({
               <button
                 type="submit"
                 disabled={isLoading || !userInput.trim() || !isSessionActive}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center space-x-2"
+                className="px-4 sm:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center justify-center sm:space-x-2"
               >
-                <MessageSquare className="h-4 w-4" />
-                <span>Send</span>
+                <Send className="h-5 w-5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Send</span>
               </button>
             </form>
           )}
