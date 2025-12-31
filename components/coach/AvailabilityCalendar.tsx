@@ -233,7 +233,7 @@ export default function AvailabilityCalendar({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <Calendar className="h-5 w-5 text-indigo-600" />
+          <Calendar className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold text-foreground">
             Weekly Availability
           </h3>
@@ -242,13 +242,13 @@ export default function AvailabilityCalendar({
         {!readOnly && (
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-foreground dark:text-muted-foreground">
+              <label className="text-sm font-medium text-foreground text-muted-foreground">
                 Timezone:
               </label>
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="px-3 py-1 border border-border dark:border-border rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-secondary"
+                className="px-3 py-1 border border-border border-border rounded-md text-sm focus:ring-primary focus:border-primary bg-background text-foreground"
                 aria-label="Select timezone"
               >
                 {TIMEZONES.map(tz => (
@@ -260,7 +260,7 @@ export default function AvailabilityCalendar({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
             >
               {saving ? (
                 <>
@@ -280,14 +280,14 @@ export default function AvailabilityCalendar({
 
       {/* Status Messages */}
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center">
+        <div className="p-3 bg-destructive/10 border border-destructive rounded-lg text-destructive flex items-center">
           <AlertCircle className="h-4 w-4 mr-2" />
           {error}
         </div>
       )}
 
       {success && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center">
+        <div className="p-3 bg-accent/10 border border-accent rounded-lg text-accent flex items-center">
           <Clock className="h-4 w-4 mr-2" />
           {success}
         </div>
@@ -299,7 +299,7 @@ export default function AvailabilityCalendar({
           const daySlots = getSlotsByDay(day.value);
           
           return (
-            <div key={day.value} className="bg-card dark:bg-card rounded-lg border border-border dark:border-border p-4">
+            <div key={day.value} className="bg-card bg-card rounded-lg border border-border border-border p-4">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-medium text-foreground">
                   {day.label}
@@ -307,7 +307,7 @@ export default function AvailabilityCalendar({
                 {!readOnly && (
                   <button
                     onClick={() => addTimeSlot(day.value)}
-                    className="text-indigo-600 hover:text-indigo-700 p-1 rounded"
+                    className="text-primary hover:text-primary/90 p-1 rounded"
                     title="Add time slot"
                   >
                     <Plus className="h-4 w-4" />
@@ -317,22 +317,22 @@ export default function AvailabilityCalendar({
 
               <div className="space-y-2">
                 {daySlots.length === 0 ? (
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground text-center py-4">
+                  <p className="text-sm text-muted-foreground text-muted-foreground text-center py-4">
                     No availability set
                   </p>
                 ) : (
                   daySlots.map(slot => (
-                    <div key={slot.index} className="border border-border dark:border-border rounded p-3 space-y-2">
+                    <div key={slot.index} className="border border-border border-border rounded p-3 space-y-2">
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-xs font-medium text-foreground dark:text-muted-foreground mb-1">
+                          <label className="block text-xs font-medium text-foreground text-muted-foreground mb-1">
                             Start
                           </label>
                                                      <select
                              value={slot.start_time}
                              onChange={(e) => updateTimeSlot(slot.index, 'start_time', e.target.value)}
                              disabled={readOnly}
-                             className="w-full px-2 py-1 text-xs border border-border dark:border-border rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-secondary"
+                             className="w-full px-2 py-1 text-xs border border-border border-border rounded focus:ring-primary focus:border-primary bg-background text-foreground"
                              aria-label={`Start time for ${DAYS_OF_WEEK[slot.day_of_week]?.label}`}
                            >
                             {timeOptions.map(time => (
@@ -344,14 +344,14 @@ export default function AvailabilityCalendar({
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-foreground dark:text-muted-foreground mb-1">
+                          <label className="block text-xs font-medium text-foreground text-muted-foreground mb-1">
                             End
                           </label>
                           <select
                             value={slot.end_time}
                             onChange={(e) => updateTimeSlot(slot.index, 'end_time', e.target.value)}
                             disabled={readOnly}
-                            className="w-full px-2 py-1 text-xs border border-border dark:border-border rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-secondary"
+                            className="w-full px-2 py-1 text-xs border border-border border-border rounded focus:ring-primary focus:border-primary bg-background text-foreground"
                             aria-label={`End time for ${DAYS_OF_WEEK[slot.day_of_week]?.label}`}
                           >
                             {timeOptions.map(time => (
@@ -365,7 +365,7 @@ export default function AvailabilityCalendar({
 
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-xs font-medium text-foreground dark:text-muted-foreground mb-1">
+                          <label className="block text-xs font-medium text-foreground text-muted-foreground mb-1">
                             Buffer (min)
                           </label>
                           <input
@@ -375,7 +375,7 @@ export default function AvailabilityCalendar({
                             value={slot.buffer_minutes}
                             onChange={(e) => updateTimeSlot(slot.index, 'buffer_minutes', parseInt(e.target.value) || 0)}
                             disabled={readOnly}
-                            className="w-full px-2 py-1 text-xs border border-border dark:border-border rounded focus:ring-indigo-500 focus:border-indigo-500 dark:bg-secondary"
+                            className="w-full px-2 py-1 text-xs border border-border border-border rounded focus:ring-primary focus:border-primary bg-background text-foreground"
                             aria-label={`Buffer minutes for ${DAYS_OF_WEEK[slot.day_of_week]?.label}`}
                           />
                         </div>
@@ -384,7 +384,7 @@ export default function AvailabilityCalendar({
                           <div className="flex items-end">
                             <button
                               onClick={() => removeTimeSlot(slot.index)}
-                              className="text-red-600 hover:text-red-700 p-1 rounded"
+                              className="text-destructive hover:text-destructive/90 p-1 rounded"
                               title="Remove time slot"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -402,11 +402,11 @@ export default function AvailabilityCalendar({
       </div>
 
       {/* Instructions */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <h4 className="font-medium text-blue-900 dark:text-blue-200 mb-2">
+      <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+        <h4 className="font-medium text-foreground mb-2">
           How to set your availability:
         </h4>
-        <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+        <ul className="text-sm text-muted-foreground space-y-1">
           <li>• Click the + button to add time slots for each day</li>
           <li>• Set your start and end times for each available period</li>
           <li>• Buffer time is added between sessions to prevent back-to-back bookings</li>
