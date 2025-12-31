@@ -58,11 +58,13 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  console.log('PUT /api/community/tags/[id] - Request received', { tagId: params.id });
   try {
     const supabase = createServerClient();
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log('User authenticated:', { userId: user?.id, hasError: !!authError });
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -75,6 +77,12 @@ export async function PUT(
       .eq('id', user.id)
       .single();
 
+    console.log('Profile fetched:', { 
+      hasProfile: !!profile, 
+      tenantId: profile?.tenant_id, 
+      role: profile?.role 
+    });
+
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
@@ -82,6 +90,7 @@ export async function PUT(
     const tagId = params.id;
     const body = await request.json();
     const { name, description, color } = body;
+    console.log('Update request body:', { name, description, color });
 
     // Get existing tag to verify ownership/permissions
     const { data: existingTag, error: fetchError } = await supabase
@@ -125,13 +134,21 @@ export async function PUT(
 
       // Check if new name conflicts with existing tag (excluding current tag)
       if (tagName !== existingTag.name) {
+        // Use the existing tag's tenant_id for the conflict check
+        // (This handles super_admin users who may have NULL tenant_id in profile)
         const { data: conflictingTag } = await supabase
           .from('community_tags')
           .select('id')
-          .eq('tenant_id', profile.tenant_id)
+          .eq('tenant_id', existingTag.tenant_id)
           .eq('name', tagName)
           .neq('id', tagId)
           .single();
+
+        console.log('Duplicate check:', { 
+          conflictingTag: !!conflictingTag, 
+          existingTenantId: existingTag.tenant_id,
+          newName: tagName 
+        });
 
         if (conflictingTag) {
           return NextResponse.json(
@@ -159,6 +176,7 @@ export async function PUT(
     }
 
     // Update tag
+    console.log('Updating tag with data:', { tagId, updateData });
     const { data: updatedTag, error: updateError } = await supabase
       .from('community_tags')
       .update(updateData)
@@ -172,11 +190,12 @@ export async function PUT(
     if (updateError) {
       console.error('Error updating tag:', updateError);
       return NextResponse.json(
-        { error: 'Failed to update tag' },
+        { error: updateError.message || 'Failed to update tag', details: updateError },
         { status: 500 }
       );
     }
 
+    console.log('Tag updated successfully:', { tagId, newName: updatedTag?.name });
     return NextResponse.json({ tag: updatedTag });
   } catch (error) {
     console.error('Error updating tag:', error);
