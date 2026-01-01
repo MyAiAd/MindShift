@@ -50,10 +50,15 @@ export abstract class BaseTreatmentStateMachine {
   protected abstract handleInternalRoutingSignals(signal: string, context: TreatmentContext): boolean;
 
   /**
-   * Migrate old v2/v3 step names to v4 equivalents
+   * Migrate old v2/v3 step/phase to v4 equivalents
    * This ensures sessions created in older versions can continue in v4
    */
-  private migrateStepNameToV4(stepName: string): string {
+  private migrateContextToV4(context: TreatmentContext): boolean {
+    let migrated = false;
+    const originalStep = context.currentStep;
+    const originalPhase = context.currentPhase;
+
+    // Step name migrations
     const stepMigrationMap: Record<string, string> = {
       // Problem Shifting: v2/v3 had single intro step, v4 splits into static + dynamic
       'problem_shifting_intro': 'problem_shifting_intro_static',
@@ -77,13 +82,63 @@ export abstract class BaseTreatmentStateMachine {
       'mind_shifting_explanation': 'mind_shifting_explanation_static',
     };
 
-    const migratedStep = stepMigrationMap[stepName] || stepName;
-    
-    if (migratedStep !== stepName) {
-      console.log(`🔄 STEP_MIGRATION: Migrating step "${stepName}" → "${migratedStep}"`);
+    // Step-to-Phase mapping: Maps step names to their correct v4 phase
+    const stepToPhaseMap: Record<string, string> = {
+      // Problem Shifting steps belong to problem_shifting phase
+      'problem_shifting_intro_static': 'problem_shifting',
+      'problem_shifting_intro_dynamic': 'problem_shifting',
+      'body_sensation_check': 'problem_shifting',
+      'what_needs_to_happen_step': 'problem_shifting',
+      'feel_solution_state': 'problem_shifting',
+      'feel_good_state': 'problem_shifting',
+      'what_happens_step': 'problem_shifting',
+      'check_if_still_problem': 'problem_shifting',
+      
+      // Identity Shifting steps belong to identity_shifting phase
+      'identity_shifting_intro_static': 'identity_shifting',
+      'identity_shifting_intro_dynamic': 'identity_shifting',
+      
+      // Belief Shifting steps belong to belief_shifting phase
+      'belief_shifting_intro_static': 'belief_shifting',
+      'belief_shifting_intro_dynamic': 'belief_shifting',
+      
+      // Blockage Shifting steps belong to blockage_shifting phase
+      'blockage_shifting_intro_static': 'blockage_shifting',
+      'blockage_shifting_intro_dynamic': 'blockage_shifting',
+      
+      // Reality Shifting steps belong to reality_shifting phase
+      'reality_shifting_intro_static': 'reality_shifting',
+      'reality_shifting_intro_dynamic': 'reality_shifting',
+      
+      // Trauma Shifting steps belong to trauma_shifting phase
+      'trauma_identity_step_static': 'trauma_shifting',
+      'trauma_identity_step_dynamic': 'trauma_shifting',
+    };
+
+    // Migrate step name if needed
+    const migratedStep = stepMigrationMap[context.currentStep] || context.currentStep;
+    if (migratedStep !== context.currentStep) {
+      console.log(`🔄 STEP_MIGRATION: Migrating step "${context.currentStep}" → "${migratedStep}"`);
+      context.currentStep = migratedStep;
+      migrated = true;
+    }
+
+    // Migrate phase if step belongs to a different phase
+    const correctPhase = stepToPhaseMap[context.currentStep];
+    if (correctPhase && correctPhase !== context.currentPhase) {
+      console.log(`🔄 PHASE_MIGRATION: Migrating phase "${context.currentPhase}" → "${correctPhase}" for step "${context.currentStep}"`);
+      context.currentPhase = correctPhase;
+      migrated = true;
     }
     
-    return migratedStep;
+    if (migrated) {
+      console.log(`🔄 CONTEXT_MIGRATED: Session ${context.sessionId}:`, {
+        step: `${originalStep} → ${context.currentStep}`,
+        phase: `${originalPhase} → ${context.currentPhase}`
+      });
+    }
+    
+    return migrated;
   }
 
   /**
@@ -98,13 +153,11 @@ export abstract class BaseTreatmentStateMachine {
     // CRITICAL FIX: Ensure context is loaded from database before processing
     await this.getOrCreateContextAsync(sessionId, context);
 
-    // Migrate step name if needed (for v2/v3 → v4 session compatibility)
+    // Migrate step name and phase if needed (for v2/v3 → v4 session compatibility)
     const treatmentContext = this.getOrCreateContext(sessionId, context);
-    const originalStep = treatmentContext.currentStep;
-    treatmentContext.currentStep = this.migrateStepNameToV4(treatmentContext.currentStep);
+    const wasMigrated = this.migrateContextToV4(treatmentContext);
     
-    if (originalStep !== treatmentContext.currentStep) {
-      console.log(`🔄 CONTEXT_MIGRATED: Session ${sessionId} step migrated from "${originalStep}" to "${treatmentContext.currentStep}"`);
+    if (wasMigrated) {
       // Save the migrated context back to database
       await DatabaseOperations.saveContextToDatabase(treatmentContext);
     }
