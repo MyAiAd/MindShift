@@ -13,31 +13,41 @@ When users attempted to start a v4 session, they received an immediate **500 Int
 
 The issue occurred because:
 
-1. **Session Persistence**: The session was previously created using v2/v3 and stored in the database with step name `problem_shifting_intro_dynamic`
-2. **Step Name Changes in V4**: V4 refactored many steps to split them into "static" (auto-advancing, instructions-only) and "dynamic" (user interaction) pairs
+1. **Session Persistence**: The session was previously created using v2/v3 and stored in the database with:
+   - Phase: `introduction`
+   - Step: `problem_shifting_intro_dynamic`
+
+2. **Phase/Step Mismatch in V4**: In v4, step `problem_shifting_intro_dynamic` belongs to the `problem_shifting` phase, not the `introduction` phase
+   - v2/v3: Steps could exist in wrong phases (less strict phase boundaries)
+   - v4: Each step must be in its correct phase (strict modular architecture)
+
+3. **Step Name Changes in V4**: V4 also refactored many steps to split them into "static" (auto-advancing, instructions-only) and "dynamic" (user interaction) pairs
    - v2/v3: `problem_shifting_intro` (single step)
    - v4: `problem_shifting_intro_static` + `problem_shifting_intro_dynamic` (two steps)
-3. **No Migration**: When v4 loaded the old session from the database, it tried to find step `problem_shifting_intro_dynamic` in its phase definitions
-4. **Step Not Found**: Since this exact step name didn't exist in v4's definitions, the `processUserInput` method threw an "Invalid step" error at line 76-77 of `base-state-machine.ts`
+
+4. **No Migration**: When v4 loaded the old session from the database, it tried to find step `problem_shifting_intro_dynamic` in the `introduction` phase, but this step doesn't exist there
+
+5. **Step Not Found**: The `processUserInput` method threw an "Invalid step" error at line 123 of `base-state-machine.ts`
 
 ## Solution
 
-Added automatic step name migration in `lib/v4/base-state-machine.ts`:
+Added automatic step name AND phase migration in `lib/v4/base-state-machine.ts`:
 
 ### Implementation
 
-1. **Migration Function** (`migrateStepNameToV4`):
+1. **Migration Function** (`migrateContextToV4`):
    - Maps all v2/v3 step names to their v4 equivalents
+   - Maps steps to their correct v4 phase
    - Logs migrations for debugging
-   - Returns unchanged name if no migration needed
+   - Returns boolean indicating if migration occurred
 
 2. **Integration Point**:
    - Called in `processUserInput()` immediately after loading context from database
-   - Migrates the `currentStep` in the context
+   - Migrates both `currentStep` and `currentPhase` in the context
    - Saves migrated context back to database
-   - Proceeds with v4 processing using migrated step name
+   - Proceeds with v4 processing using migrated step/phase
 
-### Step Migrations
+### Step Name Migrations
 
 The following v2/v3 step names are automatically migrated to v4:
 
@@ -51,6 +61,25 @@ The following v2/v3 step names are automatically migrated to v4:
 | `trauma_identity_step` | `trauma_identity_step_static` |
 | `mind_shifting_explanation` | `mind_shifting_explanation_static` |
 
+### Phase Migrations
+
+Steps are automatically assigned to their correct v4 phase:
+
+| Step Name Pattern | Correct V4 Phase |
+|------------------|------------------|
+| `problem_shifting_intro_*` | `problem_shifting` |
+| `body_sensation_check` | `problem_shifting` |
+| `what_needs_to_happen_step` | `problem_shifting` |
+| `feel_solution_state` | `problem_shifting` |
+| `feel_good_state` | `problem_shifting` |
+| `what_happens_step` | `problem_shifting` |
+| `check_if_still_problem` | `problem_shifting` |
+| `identity_shifting_intro_*` | `identity_shifting` |
+| `belief_shifting_intro_*` | `belief_shifting` |
+| `blockage_shifting_intro_*` | `blockage_shifting` |
+| `reality_shifting_intro_*` | `reality_shifting` |
+| `trauma_identity_step_*` | `trauma_shifting` |
+
 ## Code Changes
 
 **File**: `lib/v4/base-state-machine.ts`
@@ -59,10 +88,15 @@ The following v2/v3 step names are automatically migrated to v4:
 
 ```typescript
 /**
- * Migrate old v2/v3 step names to v4 equivalents
+ * Migrate old v2/v3 step/phase to v4 equivalents
  * This ensures sessions created in older versions can continue in v4
  */
-private migrateStepNameToV4(stepName: string): string {
+private migrateContextToV4(context: TreatmentContext): boolean {
+  let migrated = false;
+  const originalStep = context.currentStep;
+  const originalPhase = context.currentPhase;
+
+  // Step name migrations
   const stepMigrationMap: Record<string, string> = {
     'problem_shifting_intro': 'problem_shifting_intro_static',
     'identity_shifting_intro': 'identity_shifting_intro_static',
@@ -73,13 +107,52 @@ private migrateStepNameToV4(stepName: string): string {
     'mind_shifting_explanation': 'mind_shifting_explanation_static',
   };
 
-  const migratedStep = stepMigrationMap[stepName] || stepName;
-  
-  if (migratedStep !== stepName) {
-    console.log(`🔄 STEP_MIGRATION: Migrating step "${stepName}" → "${migratedStep}"`);
+  // Step-to-Phase mapping: Maps step names to their correct v4 phase
+  const stepToPhaseMap: Record<string, string> = {
+    'problem_shifting_intro_static': 'problem_shifting',
+    'problem_shifting_intro_dynamic': 'problem_shifting',
+    'body_sensation_check': 'problem_shifting',
+    'what_needs_to_happen_step': 'problem_shifting',
+    'feel_solution_state': 'problem_shifting',
+    'feel_good_state': 'problem_shifting',
+    'what_happens_step': 'problem_shifting',
+    'check_if_still_problem': 'problem_shifting',
+    'identity_shifting_intro_static': 'identity_shifting',
+    'identity_shifting_intro_dynamic': 'identity_shifting',
+    'belief_shifting_intro_static': 'belief_shifting',
+    'belief_shifting_intro_dynamic': 'belief_shifting',
+    'blockage_shifting_intro_static': 'blockage_shifting',
+    'blockage_shifting_intro_dynamic': 'blockage_shifting',
+    'reality_shifting_intro_static': 'reality_shifting',
+    'reality_shifting_intro_dynamic': 'reality_shifting',
+    'trauma_identity_step_static': 'trauma_shifting',
+    'trauma_identity_step_dynamic': 'trauma_shifting',
+  };
+
+  // Migrate step name if needed
+  const migratedStep = stepMigrationMap[context.currentStep] || context.currentStep;
+  if (migratedStep !== context.currentStep) {
+    console.log(`🔄 STEP_MIGRATION: Migrating step "${context.currentStep}" → "${migratedStep}"`);
+    context.currentStep = migratedStep;
+    migrated = true;
+  }
+
+  // Migrate phase if step belongs to a different phase
+  const correctPhase = stepToPhaseMap[context.currentStep];
+  if (correctPhase && correctPhase !== context.currentPhase) {
+    console.log(`🔄 PHASE_MIGRATION: Migrating phase "${context.currentPhase}" → "${correctPhase}" for step "${context.currentStep}"`);
+    context.currentPhase = correctPhase;
+    migrated = true;
   }
   
-  return migratedStep;
+  if (migrated) {
+    console.log(`🔄 CONTEXT_MIGRATED: Session ${context.sessionId}:`, {
+      step: `${originalStep} → ${context.currentStep}`,
+      phase: `${originalPhase} → ${context.currentPhase}`
+    });
+  }
+  
+  return migrated;
 }
 ```
 
@@ -95,13 +168,11 @@ async processUserInput(
   // Load context from database
   await this.getOrCreateContextAsync(sessionId, context);
 
-  // Migrate step name if needed (NEW)
+  // Migrate step name and phase if needed (NEW)
   const treatmentContext = this.getOrCreateContext(sessionId, context);
-  const originalStep = treatmentContext.currentStep;
-  treatmentContext.currentStep = this.migrateStepNameToV4(treatmentContext.currentStep);
+  const wasMigrated = this.migrateContextToV4(treatmentContext);
   
-  if (originalStep !== treatmentContext.currentStep) {
-    console.log(`🔄 CONTEXT_MIGRATED: Session ${sessionId} step migrated from "${originalStep}" to "${treatmentContext.currentStep}"`);
+  if (wasMigrated) {
     // Save the migrated context back to database
     await DatabaseOperations.saveContextToDatabase(treatmentContext);
   }
@@ -112,11 +183,12 @@ async processUserInput(
 
 ## Benefits
 
-1. **Backward Compatibility**: Users can continue sessions that were started in v2/v3
+1. **Complete Backward Compatibility**: Users can continue sessions that were started in v2/v3, even if they're mid-treatment
 2. **Seamless Migration**: Automatic, no user intervention required
-3. **Database Persistence**: Migrated step names are saved, so migration only happens once per session
+3. **Database Persistence**: Migrated step/phase names are saved, so migration only happens once per session
 4. **Debugging Support**: Clear console logs show when and what migrations occur
-5. **Future-Proof**: Easy to add more step migrations as needed
+5. **Future-Proof**: Easy to add more step/phase migrations as needed
+6. **Modular Architecture Preserved**: V4's strict phase boundaries are maintained while supporting legacy data
 
 ## Testing
 
@@ -125,8 +197,11 @@ After deployment, test by:
 1. Starting a v4 session that was previously created in v2/v3
 2. Check server logs for migration messages:
    ```
-   🔄 STEP_MIGRATION: Migrating step "problem_shifting_intro" → "problem_shifting_intro_static"
-   🔄 CONTEXT_MIGRATED: Session session-xxx step migrated from "problem_shifting_intro" to "problem_shifting_intro_static"
+   🔄 PHASE_MIGRATION: Migrating phase "introduction" → "problem_shifting" for step "problem_shifting_intro_dynamic"
+   🔄 CONTEXT_MIGRATED: Session session-xxx: {
+     step: 'problem_shifting_intro_dynamic → problem_shifting_intro_dynamic',
+     phase: 'introduction → problem_shifting'
+   }
    ```
 3. Verify session continues without 500 errors
 4. Confirm audio preloading works
@@ -145,7 +220,7 @@ After deployment, test by:
 1. Monitor Vercel logs for successful migrations
 2. Verify no new 500 errors occur
 3. Test voice features (audio preload, speech recognition, feedback loop prevention)
-4. Consider adding migration for other step names if needed (check logs for "Invalid step" errors)
+4. Consider adding migration for other step/phase combinations if needed (check logs for "Invalid step" or "Invalid phase" errors)
 
 ## Additional Context
 
