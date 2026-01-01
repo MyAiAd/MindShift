@@ -234,7 +234,16 @@ export const useNaturalVoice = ({
                 onAudioEndedRef.current?.();
             };
 
-            await audio.play();
+            try {
+                await audio.play();
+            } catch (playError) {
+                // AbortError is expected when audio is interrupted (e.g., component unmount, voice toggle)
+                if (playError instanceof Error && playError.name === 'AbortError') {
+                    console.log('🔊 Natural Voice: Audio playback interrupted (expected during cleanup)');
+                    return; // Not an error, just cleanup in progress
+                }
+                throw playError; // Re-throw other errors
+            }
 
         } catch (err) {
             console.error('🗣️ Natural Voice: TTS error:', err);
