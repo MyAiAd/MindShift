@@ -11,8 +11,37 @@ export class ValidationHelpers {
     
     console.log(`🚨 VALIDATION_CALLED: step="${step.id}", input="${userInput}", trimmed="${trimmed}", words=${words}`);
     
-    // Special validation for introduction phase
-    if (step.id === 'mind_shifting_explanation') {
+    // ============================================================================
+    // PRIORITY 1: Button-based selections bypass ALL validation
+    // Following v2 pattern (treatment-state-machine.ts lines 980-983)
+    // These are UI button clicks that must proceed without interference
+    // ============================================================================
+    
+    // Work type selection buttons (1=Problem, 2=Goal, 3=Negative Experience)
+    // Method selection buttons (1=Problem Shifting, 2=Identity, 3=Belief, 4=Blockage)
+    if (trimmed === '1' || trimmed === '2' || trimmed === '3' || trimmed === '4') {
+      console.log(`✅ BUTTON_SELECTION_BYPASS: Input "${trimmed}" recognized as button selection - bypassing all validation`);
+      return { isValid: true };
+    }
+    
+    // Yes/No button responses - bypass length/complexity validation
+    // These are explicit user choices, not stuck responses
+    if (lowerInput === 'yes' || lowerInput === 'no') {
+      console.log(`✅ YES_NO_BYPASS: Input "${lowerInput}" recognized as yes/no response - bypassing validation`);
+      return { isValid: true };
+    }
+    
+    // ============================================================================
+    // PRIORITY 2: Step-specific validation for complex inputs
+    // ============================================================================
+    
+    // Special validation for introduction phase (both static and dynamic variants)
+    const introPhaseSteps = [
+      'mind_shifting_explanation',
+      'mind_shifting_explanation_static', 
+      'mind_shifting_explanation_dynamic'
+    ];
+    if (introPhaseSteps.includes(step.id)) {
       return this.validateMindShiftingExplanation(trimmed, words, lowerInput, context);
     }
     
@@ -41,8 +70,17 @@ export class ValidationHelpers {
       return this.validateWorkTypeDescriptionNegativeExperience(lowerInput);
     }
 
-    // Special validation for problem-focused method intros
-    const problemFocusedIntros = ['problem_shifting_intro_static', 'blockage_shifting_intro_static', 'identity_shifting_intro_static', 'belief_shifting_intro_static'];
+    // Special validation for problem-focused method intros (both static and dynamic)
+    const problemFocusedIntros = [
+      'problem_shifting_intro_static', 
+      'problem_shifting_intro_dynamic',
+      'blockage_shifting_intro_static',
+      'blockage_shifting_intro_dynamic',
+      'identity_shifting_intro_static',
+      'identity_shifting_intro_dynamic',
+      'belief_shifting_intro_static',
+      'belief_shifting_intro_dynamic'
+    ];
     if (problemFocusedIntros.includes(step.id)) {
       return this.validateProblemFocusedIntro(lowerInput);
     }
@@ -52,10 +90,8 @@ export class ValidationHelpers {
   }
 
   private static validateMindShiftingExplanation(trimmed: string, words: number, lowerInput: string, context?: TreatmentContext): ValidationResult {
-    // Skip validation for work type selection inputs (1, 2, 3)
-    if (trimmed === '1' || trimmed === '2' || trimmed === '3') {
-      return { isValid: true };
-    }
+    // Note: Button selections (1, 2, 3) are already handled by top-level bypass
+    // This function only validates actual problem descriptions
     
     // Check if user stated it as a goal instead of problem
     const goalResult = this.detectGoalLanguageInProblemContext(lowerInput, trimmed);

@@ -583,6 +583,17 @@ export abstract class BaseTreatmentStateMachine {
     const words = trimmed.split(' ').length;
     const lowerInput = trimmed.toLowerCase();
 
+    // DEFENSE IN DEPTH: Never trigger AI for button-based selections
+    // Following v2 pattern - these are explicit user choices, not stuck responses
+    // Button selections: 1, 2, 3, 4
+    // Yes/No responses: yes, no
+    if (['1', '2', '3', '4'].includes(trimmed) || 
+        lowerInput === 'yes' || 
+        lowerInput === 'no') {
+      console.log(`🛡️ AI_TRIGGER_BYPASS: Input "${trimmed}" is a button/yes-no selection - skipping AI triggers`);
+      return null;
+    }
+
     for (const trigger of step.aiTriggers) {
       switch (trigger.condition) {
         case 'userStuck':
