@@ -33,6 +33,7 @@ export const useNaturalVoice = ({
     const isAudioPlayingRef = useRef(false); // Track if audio is actually playing (prevents feedback loop)
     const onTranscriptRef = useRef(onTranscript); // Ref to prevent effect re-runs
     const onAudioEndedRef = useRef(onAudioEnded); // Ref to prevent effect re-runs
+    const prevEnabledRef = useRef(enabled); // Track previous enabled state
     
     // Update refs when callbacks change (without triggering effects)
     useEffect(() => {
@@ -40,7 +41,7 @@ export const useNaturalVoice = ({
         onAudioEndedRef.current = onAudioEnded;
     }, [onTranscript, onAudioEnded]);
 
-    // Initialize Speech Recognition
+    // Initialize Speech Recognition (only runs once on mount)
     useEffect(() => {
         isMountedRef.current = true; // Mark as mounted
         
@@ -61,10 +62,10 @@ export const useNaturalVoice = ({
                     console.log('🎤 Natural Voice: Listening ended');
                     setIsListening(false);
                     // Auto-restart listening if enabled and not speaking
-                    if (enabled && !isSpeakingRef.current && isMountedRef.current) {
+                    if (prevEnabledRef.current && !isSpeakingRef.current && isMountedRef.current) {
                         // Small delay to prevent CPU hogging if it fails repeatedly
                         setTimeout(() => {
-                            if (enabled && !isSpeakingRef.current && isMountedRef.current) {
+                            if (prevEnabledRef.current && !isSpeakingRef.current && isMountedRef.current) {
                                 startListening();
                             }
                         }, 500);
@@ -90,26 +91,51 @@ export const useNaturalVoice = ({
             }
         }
 
+        // Cleanup only on actual unmount
         return () => {
-            // Mark as unmounted to prevent auto-restart loops
+            console.log('🧹 Natural Voice: Component unmounting');
             isMountedRef.current = false;
             
-            // Cleanup: Stop speech recognition
+            // Stop speech recognition
             if (recognitionRef.current) {
                 recognitionRef.current.stop();
             }
-            // Cleanup: Stop and clear any playing audio to prevent overlap on navigation
+            // Stop any playing audio
             if (audioRef.current) {
-                console.log('🧹 Natural Voice: Cleaning up audio on unmount');
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
                 audioRef.current = null;
             }
-            // Reset state
             setIsSpeaking(false);
             isSpeakingRef.current = false;
         };
-    }, [enabled]); // Removed onTranscript from deps - now using ref
+    }, []); // Empty deps - only run on mount/unmount
+
+    // Handle enabled state changes (separate effect)
+    useEffect(() => {
+        const wasEnabled = prevEnabledRef.current;
+        const isEnabled = enabled;
+        prevEnabledRef.current = enabled; // Update ref
+        
+        // Only cleanup audio when DISABLING (true -> false), not when ENABLING (false -> true)
+        if (wasEnabled && !isEnabled) {
+            console.log('🔇 Natural Voice: Disabling - stopping audio');
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+                audioRef.current = null;
+            }
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+            setIsSpeaking(false);
+            isSpeakingRef.current = false;
+            isAudioPlayingRef.current = false;
+        } else if (!wasEnabled && isEnabled) {
+            console.log('🔊 Natural Voice: Enabling - ready for playback');
+            // Don't stop anything when enabling - let audio play!
+        }
+    }, [enabled]);
 
     // Start listening helper
     const startListening = useCallback(() => {
