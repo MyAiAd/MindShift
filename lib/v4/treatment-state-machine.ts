@@ -305,13 +305,16 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
    * Handle internal routing signals that bypass normal step progression
    */
   protected handleInternalRoutingSignals(response: string, context: TreatmentContext): boolean {
+    console.log(`🚦 handleInternalRoutingSignals: response="${response}"`);
     switch (response) {
       case 'PROBLEM_SELECTION_CONFIRMED':
+        console.log(`🚦 PROBLEM_SELECTION_CONFIRMED → choose_method`);
         context.currentPhase = 'method_selection';
         context.currentStep = 'choose_method';
         return true;
 
       case 'GOAL_SELECTION_CONFIRMED':
+        console.log(`🚦 GOAL_SELECTION_CONFIRMED → goal_description`);
         context.currentPhase = 'introduction';
         context.currentStep = 'goal_description';
         return true;
@@ -356,20 +359,8 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.currentStep = 'trauma_integration_awareness_1';
         return true;
 
-      case 'PROBLEM_SELECTION_CONFIRMED':
-        context.currentPhase = 'method_selection';
-        context.currentStep = 'choose_method';
-        return true;
-
-      case 'GOAL_SELECTION_CONFIRMED':
-        context.currentPhase = 'introduction';
-        context.currentStep = 'goal_description';
-        return true;
-
-      case 'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED':
-        context.currentPhase = 'introduction';
-        context.currentStep = 'negative_experience_description';
-        return true;
+      // NOTE: PROBLEM_SELECTION_CONFIRMED, GOAL_SELECTION_CONFIRMED, NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED
+      // are already handled at the top of this switch - removed duplicate cases
 
       case 'PROBLEM_SHIFTING_SELECTED':
         context.currentPhase = 'problem_shifting';

@@ -40,7 +40,10 @@ export class IntroductionPhase {
             const input = userInput.toLowerCase();
 
             // Handle initial work type selection FIRST (reset state for fresh selection)
-            console.log(`🔍 WORK_TYPE_CHECK: input="${input}", contains '1': ${input.includes('1')}, contains 'problem': ${input.includes('problem')}, contains 'shifting': ${input.includes('shifting')}`);
+            console.log(`🔍 WORK_TYPE_CHECK [introduction.ts]: input="${input}", rawInput="${userInput}"`);
+            console.log(`🔍 WORK_TYPE_CHECK [introduction.ts]: contains '1': ${input.includes('1')}, contains '2': ${input.includes('2')}, contains '3': ${input.includes('3')}`);
+            console.log(`🔍 WORK_TYPE_CHECK [introduction.ts]: current workType: ${context.metadata?.workType}, selectedMethod: ${context.metadata?.selectedMethod}`);
+            
             if (input.includes('1') || (input.includes('problem') && !input.includes('shifting'))) {
               // Reset all work type metadata for fresh selection
               context.metadata.workType = 'problem';
@@ -50,7 +53,7 @@ export class IntroductionPhase {
             } else if (input.includes('2') || (input.includes('goal') && !input.includes('shifting'))) {
               context.metadata.workType = 'goal';
               context.metadata.selectedMethod = undefined;
-              console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'goal'`);
+              console.log(`🎯 WORK_TYPE_SELECTION: Set workType to 'goal', returning GOAL_SELECTION_CONFIRMED`);
               return "GOAL_SELECTION_CONFIRMED";
             } else if (input.includes('3') || (input.includes('negative') && !input.includes('shifting')) || (input.includes('experience') && !input.includes('shifting'))) {
               context.metadata.workType = 'negative_experience';
