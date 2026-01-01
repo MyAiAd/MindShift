@@ -936,10 +936,15 @@ export abstract class BaseTreatmentStateMachine {
   }
 
   /**
-   * Clear context for fresh session start
+   * Clear context for fresh session start (from memory AND database)
    */
   public async clearContext(sessionId: string): Promise<void> {
+    // Clear from memory
     this.contexts.delete(sessionId);
+    
+    // Clear from database to ensure fresh start
+    await DatabaseOperations.deleteContextFromDatabase(sessionId);
+    console.log(`🧹 Context cleared for session: ${sessionId}`);
   }
 
   // FIXED: Change from private to protected so it can be overridden

@@ -124,4 +124,37 @@ export class DatabaseOperations {
       console.error('Error saving context to database:', error);
     }
   }
+
+  /**
+   * Delete treatment context from database for fresh session start
+   */
+  static async deleteContextFromDatabase(sessionId: string): Promise<void> {
+    try {
+      const supabase = createServerClient();
+
+      // Delete user responses from treatment_progress first (foreign key constraint)
+      const { error: progressError } = await supabase
+        .from('treatment_progress')
+        .delete()
+        .eq('session_id', sessionId);
+
+      if (progressError) {
+        console.error('Error deleting progress data:', progressError);
+      }
+
+      // Delete session data
+      const { error: sessionError } = await supabase
+        .from('treatment_sessions')
+        .delete()
+        .eq('session_id', sessionId);
+
+      if (sessionError) {
+        console.error('Error deleting session data:', sessionError);
+      }
+
+      console.log('Context deleted from database:', sessionId);
+    } catch (error) {
+      console.error('Error deleting context from database:', error);
+    }
+  }
 }
