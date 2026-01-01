@@ -43,13 +43,12 @@ export default function V4AudioPreloader() {
         const manifestResponse = await fetch('/audio/v4/static/manifest.json');
         
         if (!manifestResponse.ok) {
-          console.warn('⚠️ Static audio manifest not found. Falling back to dynamic TTS.');
-          console.warn('   To use static audio:');
-          console.warn('   1. Run: node scripts/generate-static-audio.js');
-          console.warn('   2. Commit the generated files');
-          console.warn('   3. Redeploy');
-          // Fallback to old behavior
-          await preloadDynamicAudio();
+          console.error('❌ Static audio manifest not found. Audio preloading disabled.');
+          console.error('   To fix this:');
+          console.error('   1. Run: ELEVENLABS_API_KEY=xxx npx tsx scripts/generate-static-audio.js');
+          console.error('   2. Commit the generated files');
+          console.error('   3. Redeploy');
+          // No fallback to dynamic TTS - prevents accidental API charges
           return;
         }
 
@@ -105,67 +104,12 @@ export default function V4AudioPreloader() {
         console.log(`   💰 Cost: $0 (using static files)`);
       } catch (err) {
         console.error('❌ Failed to load audio manifest:', err);
-        console.warn('   Falling back to dynamic TTS (will incur API costs)');
-        await preloadDynamicAudio();
+        console.error('   Audio preloading disabled - no dynamic TTS fallback (prevents charges)');
+        // No fallback to dynamic TTS - prevents accidental API charges
       }
     };
 
-    /**
-     * Fallback to dynamic TTS generation if static files aren't available
-     * This is the old behavior - kept for backwards compatibility
-     */
-    const preloadDynamicAudio = async () => {
-      const textsToPreload = Object.values(V4_STATIC_AUDIO_TEXTS);
-      let successCount = 0;
-      let skipCount = 0;
-      let failCount = 0;
-
-      console.log(`🎵 V4: Using dynamic TTS (will incur API costs)`);
-      console.log(`   Preloading ${textsToPreload.length} segments...`);
-
-      for (const text of textsToPreload) {
-        if (globalAudioCache.has(text)) {
-          skipCount++;
-          continue;
-        }
-
-        try {
-          const response = await fetch('/api/tts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              text,
-              provider: 'elevenlabs',
-              voice: '21m00Tcm4TlvDq8ikWAM', // Rachel
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error(`TTS request failed: ${response.status}`);
-          }
-
-          const audioBlob = await response.blob();
-          const audioUrl = URL.createObjectURL(audioBlob);
-          globalAudioCache.set(text, audioUrl);
-          successCount++;
-          
-          const preview = text.substring(0, 50).replace(/\n/g, ' ') + '...';
-          console.log(`   ✓ Cached: "${preview}"`);
-        } catch (err) {
-          failCount++;
-          const preview = text.substring(0, 50).replace(/\n/g, ' ') + '...';
-          console.error(`   ✗ Failed: "${preview}"`, err);
-        }
-      }
-
-      console.log(`✅ V4 Audio preload complete!`);
-      console.log(`   Successfully cached: ${successCount} segment(s)`);
-      console.log(`   Already cached: ${skipCount} segment(s)`);
-      console.log(`   Failed: ${failCount} segment(s)`);
-      console.log(`   💰 Cost: ~${successCount * 632} credits`);
-    };
-
-    // Start preloading
+    // Start preloading (static files only - no API fallback)
     preloadStaticAudio();
   }, []); // Empty deps = runs once on mount
 
