@@ -258,6 +258,14 @@ export const useNaturalVoice = ({
             audio.play().catch((playError) => {
                 if (playError instanceof Error && playError.name === 'AbortError') {
                     console.log('🔊 Natural Voice: Audio playback interrupted (expected during cleanup)');
+                    // CRITICAL: Clear the audio playing flags so listening can restart!
+                    isAudioPlayingRef.current = false;
+                    isSpeakingRef.current = false;
+                    setIsSpeaking(false);
+                    // Restart listening after a brief delay
+                    if (enabled && isMountedRef.current) {
+                        setTimeout(() => startListening(), 300);
+                    }
                     resolve(); // Not an error, just cleanup
                 } else {
                     reject(playError);

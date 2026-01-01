@@ -175,6 +175,28 @@ export default function TreatmentSession({
     onAudioEnded: handleAudioEnded
   });
 
+  // V4: Keep focus on input for voice input to work properly
+  // This ensures the user can always speak and have their input registered
+  useEffect(() => {
+    // Only refocus when loading completes and session is active
+    if (!isLoading && isSessionActive) {
+      // Small delay to let button animations complete
+      const focusTimer = setTimeout(() => {
+        // Don't steal focus if user is actively typing somewhere else
+        const activeElement = document.activeElement;
+        const isTypingElsewhere = activeElement?.tagName === 'INPUT' || 
+                                   activeElement?.tagName === 'TEXTAREA';
+        
+        // Focus the input if not already focused on an input
+        if (!isTypingElsewhere || activeElement === inputRef.current) {
+          inputRef.current?.focus();
+        }
+      }, 200);
+      
+      return () => clearTimeout(focusTimer);
+    }
+  }, [isLoading, isSessionActive]);
+
   // Cleanup: Stop audio when navigating away from treatment session
   useEffect(() => {
     return () => {
