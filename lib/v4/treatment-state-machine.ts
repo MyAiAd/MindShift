@@ -122,8 +122,8 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleBlockageCheckIfStillProblem(lastResponse, context);
 
       // Identity Shifting routing
-      case 'identity_shifting_intro_static':
-        return this.handleIdentityShiftingIntro(context);
+      // NOTE: identity_shifting_intro_static is handled at lines 61-69 (auto-advance group)
+      // Do NOT add a duplicate case here - it causes the auto-advance to fail
 
       case 'identity_dissolve_step_f':
         return this.handleIdentityDissolveStepF(lastResponse, context);

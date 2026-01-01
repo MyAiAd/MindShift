@@ -253,22 +253,37 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       // This creates seamless two-part messages for voice playback
       if (result.expectedResponseType === 'auto' && result.scriptedResponse) {
         console.log('Treatment V4 API: Auto-advance step detected, chaining to next step immediately');
+        console.log('Treatment V4 API: First step:', result.nextStep, 'First message:', result.scriptedResponse.substring(0, 80) + '...');
         const firstMessage = result.scriptedResponse;
         
         // Process the next step with empty input (auto-advance)
         const nextResult = await treatmentMachine.processUserInput(sessionId, '', { userId });
+        console.log('Treatment V4 API: Auto-advance chain result:', {
+          canContinue: nextResult.canContinue,
+          hasScriptedResponse: !!nextResult.scriptedResponse,
+          nextStep: nextResult.nextStep,
+          scriptedResponsePreview: nextResult.scriptedResponse?.substring(0, 80) + '...'
+        });
+        
         if (nextResult.canContinue && nextResult.scriptedResponse) {
           // Combine both messages with double newline for readability
           result.scriptedResponse = `${firstMessage}\n\n${nextResult.scriptedResponse}`;
           result.nextStep = nextResult.nextStep; // Use the second step's ID
           result.expectedResponseType = nextResult.expectedResponseType; // Use the second step's response type
           result.needsLinguisticProcessing = nextResult.needsLinguisticProcessing; // V4 FIX: Use second step's flag to prevent AI processing combined messages
-          console.log('Treatment V4 API: Combined auto-advance messages:', {
+          console.log('Treatment V4 API: ✅ Combined auto-advance messages:', {
             firstMessage: firstMessage.substring(0, 50) + '...',
             secondMessage: nextResult.scriptedResponse.substring(0, 50) + '...',
             finalStep: result.nextStep,
             finalResponseType: result.expectedResponseType,
             needsLinguisticProcessing: result.needsLinguisticProcessing
+          });
+        } else {
+          console.error('Treatment V4 API: ❌ Auto-advance chain FAILED!', {
+            canContinue: nextResult.canContinue,
+            hasScriptedResponse: !!nextResult.scriptedResponse,
+            reason: nextResult.reason,
+            nextStep: nextResult.nextStep
           });
         }
       }
