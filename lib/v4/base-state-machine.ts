@@ -919,8 +919,10 @@ export abstract class BaseTreatmentStateMachine {
       metadata: {
         cycleCount: 0,
         problemStatement: '',
-        lastResponse: '',
-        workType: 'problem'
+        lastResponse: ''
+        // NOTE: workType is intentionally NOT set here - it should be undefined
+        // until the user selects it. Setting it to 'problem' by default caused
+        // incorrect routing when users selected GOAL.
       }
     };
 
