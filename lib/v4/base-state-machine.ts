@@ -111,7 +111,6 @@ export abstract class BaseTreatmentStateMachine {
 
     // Special handling for session initialization
     if (userInput === 'start') {
-      const treatmentContext = this.getOrCreateContext(sessionId, context);
       const currentPhase = this.phases.get(treatmentContext.currentPhase);
 
       console.log(`🔍 PROCESS_INPUT_START: sessionId="${sessionId}", currentPhase="${treatmentContext.currentPhase}", currentStep="${treatmentContext.currentStep}", userInput="${userInput}"`);
@@ -135,7 +134,6 @@ export abstract class BaseTreatmentStateMachine {
       };
     }
 
-    const treatmentContext = this.getOrCreateContext(sessionId, context);
     const currentPhase = this.phases.get(treatmentContext.currentPhase);
 
     if (!currentPhase) {
