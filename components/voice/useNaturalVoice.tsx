@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { globalAudioCache } from '@/services/voice/audioCache';
+import { V4_STATIC_AUDIO_TEXTS } from '@/lib/v4/static-audio-texts';
+
+// Get all static texts for prefix matching
+const STATIC_TEXTS = Object.values(V4_STATIC_AUDIO_TEXTS);
 
 interface UseNaturalVoiceProps {
     onTranscript: (transcript: string) => void;
@@ -169,43 +173,31 @@ export const useNaturalVoice = ({
         }
     }, [voiceProvider, elevenLabsVoiceId]);
 
-    // Speak text with streaming support and global cache check
-    const speak = useCallback(async (text: string) => {
-        if (!text) return;
-
-        // Stop listening while speaking
-        stopListening();
-        setIsSpeaking(true);
-        isSpeakingRef.current = true;
-        isAudioPlayingRef.current = false; // Will be set to true once audio actually starts playing
-
-        try {
-            let audioUrl: string;
-
-            // Check global cache first
-            if (globalAudioCache.has(text)) {
-                console.log('🗣️ Natural Voice: Playing from global cache');
-                audioUrl = globalAudioCache.get(text)!;
-            } else {
-                console.log('🗣️ Natural Voice: Fetching TTS stream for:', text);
-                const response = await fetch('/api/tts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        text,
-                        provider: voiceProvider,
-                        voice: elevenLabsVoiceId,
-                    }),
-                });
-
-                if (!response.ok) throw new Error('TTS request failed');
-
-                const audioBlob = await response.blob();
-                audioUrl = URL.createObjectURL(audioBlob);
-                // Store in global cache for future use
-                globalAudioCache.set(text, audioUrl);
+    /**
+     * Find if text starts with any cached static text
+     * Returns { prefix, suffix } if found, null otherwise
+     */
+    const findCachedPrefix = useCallback((text: string): { prefix: string; suffix: string } | null => {
+        // Check each static text to see if our text starts with it
+        for (const staticText of STATIC_TEXTS) {
+            if (text.startsWith(staticText) && globalAudioCache.has(staticText)) {
+                const suffix = text.slice(staticText.length).trim();
+                if (suffix.length > 0) {
+                    console.log('🎵 Found cached prefix match!');
+                    console.log(`   Prefix (cached): "${staticText.substring(0, 50)}..."`);
+                    console.log(`   Suffix (to stream): "${suffix.substring(0, 50)}..."`);
+                    return { prefix: staticText, suffix };
+                }
             }
+        }
+        return null;
+    }, []);
 
+    /**
+     * Play a single audio segment and return a promise that resolves when done
+     */
+    const playAudioSegment = useCallback(async (audioUrl: string, isLast: boolean): Promise<void> => {
+        return new Promise((resolve, reject) => {
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current = null;
@@ -214,48 +206,121 @@ export const useNaturalVoice = ({
             const audio = new Audio(audioUrl);
             audioRef.current = audio;
 
-            // Set flag when audio actually starts playing
             audio.onplay = () => {
                 isAudioPlayingRef.current = true;
-                console.log('🔊 Natural Voice: Audio playback started');
+                console.log('🔊 Natural Voice: Audio segment started');
             };
 
             audio.onended = () => {
-                console.log('🗣️ Natural Voice: Playback ended');
-                setIsSpeaking(false);
-                isSpeakingRef.current = false;
-                isAudioPlayingRef.current = false; // Clear audio playing flag
-                // Resume listening after speaking (only if still mounted)
-                if (enabled && isMountedRef.current) {
-                    startListening();
+                console.log('🗣️ Natural Voice: Audio segment ended');
+                if (isLast) {
+                    setIsSpeaking(false);
+                    isSpeakingRef.current = false;
+                    isAudioPlayingRef.current = false;
+                    if (enabled && isMountedRef.current) {
+                        startListening();
+                    }
+                    onAudioEndedRef.current?.();
                 }
-
-                // Trigger callback
-                onAudioEndedRef.current?.();
+                resolve();
             };
 
-            try {
-                await audio.play();
-            } catch (playError) {
-                // AbortError is expected when audio is interrupted (e.g., component unmount, voice toggle)
+            audio.onerror = (e) => {
+                reject(new Error('Audio playback error'));
+            };
+
+            audio.play().catch((playError) => {
                 if (playError instanceof Error && playError.name === 'AbortError') {
                     console.log('🔊 Natural Voice: Audio playback interrupted (expected during cleanup)');
-                    return; // Not an error, just cleanup in progress
+                    resolve(); // Not an error, just cleanup
+                } else {
+                    reject(playError);
                 }
-                throw playError; // Re-throw other errors
+            });
+        });
+    }, [enabled, startListening]);
+
+    /**
+     * Fetch TTS audio for text and return the audio URL
+     */
+    const fetchTTSAudio = useCallback(async (text: string): Promise<string> => {
+        const response = await fetch('/api/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text,
+                provider: voiceProvider,
+                voice: elevenLabsVoiceId,
+            }),
+        });
+
+        if (!response.ok) throw new Error('TTS request failed');
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        globalAudioCache.set(text, audioUrl);
+        return audioUrl;
+    }, [voiceProvider, elevenLabsVoiceId]);
+
+    // Speak text with streaming support, global cache check, AND smart prefix matching
+    const speak = useCallback(async (text: string) => {
+        if (!text) return;
+
+        // Stop listening while speaking
+        stopListening();
+        setIsSpeaking(true);
+        isSpeakingRef.current = true;
+        isAudioPlayingRef.current = false;
+
+        try {
+            // 1. Check if FULL text is cached
+            if (globalAudioCache.has(text)) {
+                console.log('🗣️ Natural Voice: Playing FULL text from cache');
+                console.log('   💰 Cost: $0');
+                const audioUrl = globalAudioCache.get(text)!;
+                await playAudioSegment(audioUrl, true);
+                return;
             }
+
+            // 2. Check if text STARTS WITH a cached prefix (combined auto-advance messages)
+            const prefixMatch = findCachedPrefix(text);
+            if (prefixMatch) {
+                console.log('🗣️ Natural Voice: Smart split - playing cached prefix then streaming suffix');
+                console.log('   💰 Cost: Only suffix streamed (prefix from cache)');
+                
+                // Play cached prefix first
+                const prefixUrl = globalAudioCache.get(prefixMatch.prefix)!;
+                await playAudioSegment(prefixUrl, false);
+
+                // Check if still mounted/speaking before continuing
+                if (!isMountedRef.current || !isSpeakingRef.current) {
+                    console.log('🗣️ Natural Voice: Stopped before suffix playback');
+                    return;
+                }
+
+                // Now fetch and play the suffix (only part that costs $)
+                console.log('🗣️ Natural Voice: Streaming suffix only:', prefixMatch.suffix.substring(0, 50) + '...');
+                const suffixUrl = await fetchTTSAudio(prefixMatch.suffix);
+                await playAudioSegment(suffixUrl, true);
+                return;
+            }
+
+            // 3. No cache match - stream the whole thing
+            console.log('🗣️ Natural Voice: No cache match - streaming full text');
+            console.log('   Text:', text.substring(0, 80) + '...');
+            const audioUrl = await fetchTTSAudio(text);
+            await playAudioSegment(audioUrl, true);
 
         } catch (err) {
             console.error('🗣️ Natural Voice: TTS error:', err);
             setIsSpeaking(false);
             isSpeakingRef.current = false;
-            isAudioPlayingRef.current = false; // Clear audio playing flag on error
-            // Resume listening even on error (only if still mounted)
+            isAudioPlayingRef.current = false;
             if (enabled && isMountedRef.current) {
                 startListening();
             }
         }
-    }, [enabled, voiceProvider, elevenLabsVoiceId, startListening, stopListening]); // Removed onAudioEnded - using ref
+    }, [enabled, stopListening, findCachedPrefix, playAudioSegment, fetchTTSAudio, startListening]);
 
     // Handle enabled state changes
     useEffect(() => {
