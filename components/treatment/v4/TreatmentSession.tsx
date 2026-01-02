@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, Send, Play, Settings, Gauge } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, Send, Play, Settings, Gauge, User } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 // Natural voice integration (ElevenLabs + Web Speech)
@@ -66,7 +66,20 @@ export default function TreatmentSession({
     }
     return 1.0;
   });
+  const [selectedVoice, setSelectedVoice] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('v4_selected_voice') || 'rachel';
+    }
+    return 'rachel';
+  });
   const voiceSettingsRef = useRef<HTMLDivElement>(null);
+
+  // Available voices - Add new voices here
+  const AVAILABLE_VOICES = [
+    { id: 'rachel', name: 'Rachel', elevenLabsId: '21m00Tcm4TlvDq8ikWAM', description: 'Warm, professional female voice' },
+    // PLACEHOLDER: Add new voice here when ready
+    // { id: 'new_voice', name: 'New Voice Name', elevenLabsId: 'ELEVENLABS_VOICE_ID', description: 'Description here' },
+  ] as const;
 
   // Toggle handler with Sticky Settings and Retroactive Play
   const toggleNaturalVoice = () => {
@@ -104,6 +117,20 @@ export default function TreatmentSession({
     if (typeof window !== 'undefined') {
       localStorage.setItem('v4_playback_speed', String(newSpeed));
     }
+  };
+
+  // Handle voice selection change
+  const handleVoiceChange = (voiceId: string) => {
+    setSelectedVoice(voiceId);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('v4_selected_voice', voiceId);
+    }
+  };
+
+  // Get the ElevenLabs voice ID for the selected voice
+  const getElevenLabsVoiceId = () => {
+    const voice = AVAILABLE_VOICES.find(v => v.id === selectedVoice);
+    return voice?.elevenLabsId || '21m00Tcm4TlvDq8ikWAM'; // Default to Rachel
   };
 
   // Get speed label for display
@@ -216,6 +243,7 @@ export default function TreatmentSession({
       }
     },
     voiceProvider: 'elevenlabs',
+    elevenLabsVoiceId: getElevenLabsVoiceId(),
     onAudioEnded: handleAudioEnded,
     playbackRate: playbackSpeed
   });
@@ -1145,6 +1173,32 @@ export default function TreatmentSession({
                         ×
                       </button>
                     </div>
+
+                    {/* Voice Selector */}
+                    {AVAILABLE_VOICES.length > 1 && (
+                      <div className="space-y-2 mb-4 pb-4 border-b border-border dark:border-[#586e75]">
+                        <div className="flex items-center space-x-2 text-sm font-medium text-foreground dark:text-[#fdf6e3]">
+                          <User className="h-4 w-4 text-indigo-500" />
+                          <span>Voice</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {AVAILABLE_VOICES.map((voice) => (
+                            <button
+                              key={voice.id}
+                              onClick={() => handleVoiceChange(voice.id)}
+                              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                                selectedVoice === voice.id
+                                  ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500'
+                                  : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                              }`}
+                            >
+                              <div className="font-medium">{voice.name}</div>
+                              <div className="text-xs opacity-75">{voice.description}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Speed Slider */}
                     <div className="space-y-3">
