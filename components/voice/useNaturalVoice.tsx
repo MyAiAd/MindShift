@@ -299,6 +299,10 @@ export const useNaturalVoice = ({
         return audioUrl;
     }, [voiceProvider, elevenLabsVoiceId]);
 
+    // Default voice ID (Rachel) - static audio is pre-generated for this voice only
+    const DEFAULT_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
+    const isDefaultVoice = elevenLabsVoiceId === DEFAULT_VOICE_ID;
+
     // Speak text with streaming support, global cache check, AND smart prefix matching
     const speak = useCallback(async (text: string) => {
         if (!text) return;
@@ -310,40 +314,45 @@ export const useNaturalVoice = ({
         isAudioPlayingRef.current = false;
 
         try {
-            // 1. Check if FULL text is cached
-            if (globalAudioCache.has(text)) {
-                console.log('🗣️ Natural Voice: Playing FULL text from cache');
-                console.log('   💰 Cost: $0');
-                const audioUrl = globalAudioCache.get(text)!;
-                await playAudioSegment(audioUrl, true);
-                return;
-            }
-
-            // 2. Check if text STARTS WITH a cached prefix (combined auto-advance messages)
-            const prefixMatch = findCachedPrefix(text);
-            if (prefixMatch) {
-                console.log('🗣️ Natural Voice: Smart split - playing cached prefix then streaming suffix');
-                console.log('   💰 Cost: Only suffix streamed (prefix from cache)');
-                
-                // Play cached prefix first
-                const prefixUrl = globalAudioCache.get(prefixMatch.prefix)!;
-                await playAudioSegment(prefixUrl, false);
-
-                // Check if still mounted/speaking before continuing
-                if (!isMountedRef.current || !isSpeakingRef.current) {
-                    console.log('🗣️ Natural Voice: Stopped before suffix playback');
+            // Only use cache for default voice (Rachel) - static audio is pre-generated for her only
+            if (isDefaultVoice) {
+                // 1. Check if FULL text is cached
+                if (globalAudioCache.has(text)) {
+                    console.log('🗣️ Natural Voice: Playing FULL text from cache (Rachel)');
+                    console.log('   💰 Cost: $0');
+                    const audioUrl = globalAudioCache.get(text)!;
+                    await playAudioSegment(audioUrl, true);
                     return;
                 }
 
-                // Now fetch and play the suffix (only part that costs $)
-                console.log('🗣️ Natural Voice: Streaming suffix only:', prefixMatch.suffix.substring(0, 50) + '...');
-                const suffixUrl = await fetchTTSAudio(prefixMatch.suffix);
-                await playAudioSegment(suffixUrl, true);
-                return;
+                // 2. Check if text STARTS WITH a cached prefix (combined auto-advance messages)
+                const prefixMatch = findCachedPrefix(text);
+                if (prefixMatch) {
+                    console.log('🗣️ Natural Voice: Smart split - playing cached prefix then streaming suffix');
+                    console.log('   💰 Cost: Only suffix streamed (prefix from cache)');
+                    
+                    // Play cached prefix first
+                    const prefixUrl = globalAudioCache.get(prefixMatch.prefix)!;
+                    await playAudioSegment(prefixUrl, false);
+
+                    // Check if still mounted/speaking before continuing
+                    if (!isMountedRef.current || !isSpeakingRef.current) {
+                        console.log('🗣️ Natural Voice: Stopped before suffix playback');
+                        return;
+                    }
+
+                    // Now fetch and play the suffix (only part that costs $)
+                    console.log('🗣️ Natural Voice: Streaming suffix only:', prefixMatch.suffix.substring(0, 50) + '...');
+                    const suffixUrl = await fetchTTSAudio(prefixMatch.suffix);
+                    await playAudioSegment(suffixUrl, true);
+                    return;
+                }
+            } else {
+                console.log(`🗣️ Natural Voice: Using non-default voice (${elevenLabsVoiceId}) - streaming all audio`);
             }
 
-            // 3. No cache match - stream the whole thing
-            console.log('🗣️ Natural Voice: No cache match - streaming full text');
+            // 3. No cache match OR non-default voice - stream the whole thing
+            console.log('🗣️ Natural Voice: Streaming full text');
             console.log('   Text:', text.substring(0, 80) + '...');
             const audioUrl = await fetchTTSAudio(text);
             await playAudioSegment(audioUrl, true);
@@ -357,7 +366,7 @@ export const useNaturalVoice = ({
                 startListening();
             }
         }
-    }, [enabled, stopListening, findCachedPrefix, playAudioSegment, fetchTTSAudio, startListening]);
+    }, [enabled, stopListening, findCachedPrefix, playAudioSegment, fetchTTSAudio, startListening, isDefaultVoice, elevenLabsVoiceId]);
 
     // Handle enabled state changes
     useEffect(() => {
