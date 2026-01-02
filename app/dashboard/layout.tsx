@@ -108,7 +108,9 @@ export default function DashboardLayout({
         <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
-            <p className="text-muted-foreground">Please sign in to access the dashboard.</p>
+            <p className="text-muted-foreground">
+              Please <Link href="/auth" className="text-primary hover:underline">sign in</Link> to access the dashboard.
+            </p>
           </div>
         </div>
       </ThemeProvider>
