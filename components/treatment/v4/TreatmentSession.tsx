@@ -1158,98 +1158,115 @@ export default function TreatmentSession({
                   <span className="hidden sm:inline">Settings</span>
                 </button>
 
-                {/* Settings Popover */}
+                {/* Settings Popover - Mobile: Fixed bottom sheet, Desktop: Dropdown */}
                 {showVoiceSettings && (
-                  <div className="absolute top-full mt-2 right-0 sm:right-auto sm:left-0 w-64 bg-card dark:bg-[#073642] border border-border dark:border-[#586e75] rounded-lg shadow-xl p-4 z-50">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-foreground dark:text-[#fdf6e3] flex items-center space-x-2">
-                        <Gauge className="h-4 w-4 text-indigo-500" />
-                        <span>Voice Speed</span>
-                      </h3>
-                      <button
-                        onClick={() => setShowVoiceSettings(false)}
-                        className="text-muted-foreground hover:text-foreground text-lg leading-none"
-                        aria-label="Close settings"
-                      >
-                        ×
-                      </button>
-                    </div>
+                  <>
+                    {/* Mobile overlay backdrop */}
+                    <div 
+                      className="fixed inset-0 bg-black/30 z-40 sm:hidden"
+                      onClick={() => setShowVoiceSettings(false)}
+                    />
+                    
+                    {/* Popover content */}
+                    <div className="fixed bottom-0 left-0 right-0 sm:absolute sm:bottom-auto sm:top-full sm:mt-2 sm:left-0 sm:right-auto w-full sm:w-72 bg-card dark:bg-[#073642] border-t sm:border border-border dark:border-[#586e75] sm:rounded-lg shadow-xl p-4 pb-6 sm:pb-4 z-50 max-h-[80vh] sm:max-h-none overflow-y-auto rounded-t-2xl sm:rounded-t-lg">
+                      {/* Mobile drag handle */}
+                      <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mb-4 sm:hidden" />
+                      
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-base sm:text-sm font-semibold text-foreground dark:text-[#fdf6e3] flex items-center space-x-2">
+                          <Settings className="h-5 w-5 sm:h-4 sm:w-4 text-indigo-500" />
+                          <span>Voice Settings</span>
+                        </h3>
+                        <button
+                          onClick={() => setShowVoiceSettings(false)}
+                          className="text-muted-foreground hover:text-foreground text-2xl sm:text-xl leading-none p-1 -mr-1"
+                          aria-label="Close settings"
+                        >
+                          ×
+                        </button>
+                      </div>
 
-                    {/* Voice Selector */}
-                    {AVAILABLE_VOICES.length > 1 && (
-                      <div className="space-y-2 mb-4 pb-4 border-b border-border dark:border-[#586e75]">
-                        <div className="flex items-center space-x-2 text-sm font-medium text-foreground dark:text-[#fdf6e3]">
-                          <User className="h-4 w-4 text-indigo-500" />
-                          <span>Voice</span>
+                      {/* Voice Selector */}
+                      {AVAILABLE_VOICES.length > 1 && (
+                        <div className="space-y-3 mb-4 pb-4 border-b border-border dark:border-[#586e75]">
+                          <div className="flex items-center space-x-2 text-sm font-medium text-foreground dark:text-[#fdf6e3]">
+                            <User className="h-4 w-4 text-indigo-500" />
+                            <span>Voice Actor</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {AVAILABLE_VOICES.map((voice) => (
+                              <button
+                                key={voice.id}
+                                onClick={() => handleVoiceChange(voice.id)}
+                                className={`w-full text-left px-3 py-3 sm:py-2 rounded-lg text-sm transition-colors ${
+                                  selectedVoice === voice.id
+                                    ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500'
+                                    : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                                }`}
+                              >
+                                <div className="font-medium">{voice.name}</div>
+                                <div className="text-xs opacity-75 truncate">{voice.description}</div>
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                        <div className="space-y-1.5">
-                          {AVAILABLE_VOICES.map((voice) => (
+                      )}
+
+                      {/* Speed Slider */}
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2 text-sm font-medium text-foreground dark:text-[#fdf6e3]">
+                          <Gauge className="h-4 w-4 text-indigo-500" />
+                          <span>Playback Speed</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
+                          <span>Speed: {playbackSpeed.toFixed(2)}x</span>
+                          <span className={`font-medium ${
+                            playbackSpeed === 1.0 ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
+                          }`}>
+                            {getSpeedLabel(playbackSpeed)}
+                          </span>
+                        </div>
+                        
+                        <input
+                          type="range"
+                          min="0.75"
+                          max="1.5"
+                          step="0.05"
+                          value={playbackSpeed}
+                          onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                          className="w-full h-3 sm:h-2 bg-secondary dark:bg-[#586e75] rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        
+                        <div className="flex justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
+                          <span>0.75x</span>
+                          <span className="text-green-600 dark:text-green-400">1.0x</span>
+                          <span>1.5x</span>
+                        </div>
+
+                        {/* Quick preset buttons */}
+                        <div className="grid grid-cols-5 gap-2 pt-3 border-t border-border dark:border-[#586e75]">
+                          {[0.75, 0.9, 1.0, 1.15, 1.5].map((speed) => (
                             <button
-                              key={voice.id}
-                              onClick={() => handleVoiceChange(voice.id)}
-                              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                                selectedVoice === voice.id
-                                  ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500'
+                              key={speed}
+                              onClick={() => handleSpeedChange(speed)}
+                              className={`px-2 py-2.5 sm:py-1.5 text-xs rounded-lg transition-colors ${
+                                Math.abs(playbackSpeed - speed) < 0.01
+                                  ? 'bg-indigo-600 text-white'
                                   : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
                               }`}
                             >
-                              <div className="font-medium">{voice.name}</div>
-                              <div className="text-xs opacity-75">{voice.description}</div>
+                              {speed === 1.0 ? '1x' : `${speed}x`}
                             </button>
                           ))}
                         </div>
                       </div>
-                    )}
 
-                    {/* Speed Slider */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
-                        <span>Speed: {playbackSpeed.toFixed(2)}x</span>
-                        <span className={`font-medium ${
-                          playbackSpeed === 1.0 ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
-                        }`}>
-                          {getSpeedLabel(playbackSpeed)}
-                        </span>
-                      </div>
-                      
-                      <input
-                        type="range"
-                        min="0.75"
-                        max="1.5"
-                        step="0.05"
-                        value={playbackSpeed}
-                        onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
-                        className="w-full h-2 bg-secondary dark:bg-[#586e75] rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                      />
-                      
-                      <div className="flex justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
-                        <span>0.75x</span>
-                        <span className="text-green-600 dark:text-green-400">1.0x</span>
-                        <span>1.5x</span>
-                      </div>
-
-                      {/* Quick preset buttons */}
-                      <div className="flex gap-1.5 pt-2 border-t border-border dark:border-[#586e75]">
-                        {[0.75, 0.9, 1.0, 1.15, 1.5].map((speed) => (
-                          <button
-                            key={speed}
-                            onClick={() => handleSpeedChange(speed)}
-                            className={`flex-1 px-1.5 py-1.5 text-xs rounded transition-colors ${
-                              Math.abs(playbackSpeed - speed) < 0.01
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
-                            }`}
-                          >
-                            {speed === 1.0 ? '1x' : `${speed}x`}
-                          </button>
-                        ))}
-                      </div>
+                      <p className="mt-4 text-xs text-muted-foreground dark:text-[#93a1a1] text-center sm:text-left">
+                        Adjust voice and speed for your session.
+                      </p>
                     </div>
-
-                    <p className="mt-3 text-xs text-muted-foreground dark:text-[#93a1a1]">
-                      Adjust how fast the voice speaks during your session.
-                    </p>
-                  </div>
+                  </>
                 )}
               </div>
 
