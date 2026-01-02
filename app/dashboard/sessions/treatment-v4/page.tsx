@@ -20,6 +20,15 @@ function TreatmentSessionContent() {
   const { user, profile, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string>('');
   const [shouldResume, setShouldResume] = useState<boolean>(false);
+  const [selectedVoice, setSelectedVoice] = useState<string>('rachel');
+
+  // Load voice preference from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedVoice = localStorage.getItem('v4_selected_voice') || 'rachel';
+      setSelectedVoice(savedVoice);
+    }
+  }, []);
 
   useEffect(() => {
     const id = searchParams.get('sessionId');
@@ -89,8 +98,8 @@ function TreatmentSessionContent() {
 
   return (
     <div className="min-h-screen bg-secondary/20 dark:bg-[#002b36]">
-      {/* V4 Audio Preloader */}
-      <V4AudioPreloader />
+      {/* V4 Audio Preloader - loads static audio for selected voice */}
+      <V4AudioPreloader voice={selectedVoice} />
       
       {/* Header */}
       <div className="bg-card dark:bg-[#073642] border-b border-border dark:border-[#586e75]">

@@ -77,8 +77,7 @@ export default function TreatmentSession({
   // Available voices - Add new voices here
   const AVAILABLE_VOICES = [
     { id: 'rachel', name: 'Rachel', elevenLabsId: '21m00Tcm4TlvDq8ikWAM', description: 'Warm, professional female voice' },
-    // PLACEHOLDER: Add new voice here when ready
-    // { id: 'new_voice', name: 'New Voice Name', elevenLabsId: 'ELEVENLABS_VOICE_ID', description: 'Description here' },
+    { id: 'adam', name: 'Adam', elevenLabsId: 'pNInz6obpgDQGcFmaJgB', description: 'Deep, mature male voice' },
   ] as const;
 
   // Toggle handler with Sticky Settings and Retroactive Play
