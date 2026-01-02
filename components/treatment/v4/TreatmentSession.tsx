@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, Send, Play } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, Send, Play, Settings, Gauge } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 // Natural voice integration (ElevenLabs + Web Speech)
@@ -57,6 +57,17 @@ export default function TreatmentSession({
     return false;
   });
 
+  // Voice Settings State
+  const [showVoiceSettings, setShowVoiceSettings] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('v4_playback_speed');
+      return saved ? parseFloat(saved) : 1.0;
+    }
+    return 1.0;
+  });
+  const voiceSettingsRef = useRef<HTMLDivElement>(null);
+
   // Toggle handler with Sticky Settings and Retroactive Play
   const toggleNaturalVoice = () => {
     const newState = !isNaturalVoiceEnabled;
@@ -86,6 +97,39 @@ export default function TreatmentSession({
       // (The hook handles this via the enabled prop, but explicit is good)
     }
   };
+
+  // Handle playback speed change
+  const handleSpeedChange = (newSpeed: number) => {
+    setPlaybackSpeed(newSpeed);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('v4_playback_speed', String(newSpeed));
+    }
+  };
+
+  // Get speed label for display
+  const getSpeedLabel = (speed: number) => {
+    if (speed <= 0.75) return 'Slower';
+    if (speed <= 0.9) return 'Slow';
+    if (speed <= 1.1) return 'Normal';
+    if (speed <= 1.25) return 'Fast';
+    return 'Faster';
+  };
+
+  // Close voice settings when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (voiceSettingsRef.current && !voiceSettingsRef.current.contains(event.target as Node)) {
+        setShowVoiceSettings(false);
+      }
+    };
+
+    if (showVoiceSettings) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showVoiceSettings]);
 
   // V4: Enhanced performance metrics state
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
@@ -172,7 +216,8 @@ export default function TreatmentSession({
       }
     },
     voiceProvider: 'elevenlabs',
-    onAudioEnded: handleAudioEnded
+    onAudioEnded: handleAudioEnded,
+    playbackRate: playbackSpeed
   });
 
   // V4: Keep focus on input for voice input to work properly
@@ -1068,6 +1113,90 @@ export default function TreatmentSession({
                   </>
                 )}
               </button>
+
+              {/* Voice Settings Button with Popover */}
+              <div className="relative" ref={voiceSettingsRef}>
+                <button
+                  onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+                  className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex-shrink-0 ${
+                    showVoiceSettings
+                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                      : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                  }`}
+                  title="Voice Settings"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden sm:inline">Settings</span>
+                </button>
+
+                {/* Settings Popover */}
+                {showVoiceSettings && (
+                  <div className="absolute top-full mt-2 right-0 sm:right-auto sm:left-0 w-64 bg-card dark:bg-[#073642] border border-border dark:border-[#586e75] rounded-lg shadow-xl p-4 z-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-foreground dark:text-[#fdf6e3] flex items-center space-x-2">
+                        <Gauge className="h-4 w-4 text-indigo-500" />
+                        <span>Voice Speed</span>
+                      </h3>
+                      <button
+                        onClick={() => setShowVoiceSettings(false)}
+                        className="text-muted-foreground hover:text-foreground text-lg leading-none"
+                        aria-label="Close settings"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    {/* Speed Slider */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
+                        <span>Speed: {playbackSpeed.toFixed(2)}x</span>
+                        <span className={`font-medium ${
+                          playbackSpeed === 1.0 ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
+                        }`}>
+                          {getSpeedLabel(playbackSpeed)}
+                        </span>
+                      </div>
+                      
+                      <input
+                        type="range"
+                        min="0.75"
+                        max="1.5"
+                        step="0.05"
+                        value={playbackSpeed}
+                        onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                        className="w-full h-2 bg-secondary dark:bg-[#586e75] rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                      />
+                      
+                      <div className="flex justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
+                        <span>0.75x</span>
+                        <span className="text-green-600 dark:text-green-400">1.0x</span>
+                        <span>1.5x</span>
+                      </div>
+
+                      {/* Quick preset buttons */}
+                      <div className="flex gap-1.5 pt-2 border-t border-border dark:border-[#586e75]">
+                        {[0.75, 0.9, 1.0, 1.15, 1.5].map((speed) => (
+                          <button
+                            key={speed}
+                            onClick={() => handleSpeedChange(speed)}
+                            className={`flex-1 px-1.5 py-1.5 text-xs rounded transition-colors ${
+                              Math.abs(playbackSpeed - speed) < 0.01
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                            }`}
+                          >
+                            {speed === 1.0 ? '1x' : `${speed}x`}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <p className="mt-3 text-xs text-muted-foreground dark:text-[#93a1a1]">
+                      Adjust how fast the voice speaks during your session.
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {/* Undo Button */}
               {stepHistory.length > 0 && (

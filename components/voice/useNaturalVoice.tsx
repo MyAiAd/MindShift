@@ -13,6 +13,7 @@ interface UseNaturalVoiceProps {
     voiceProvider?: 'openai' | 'elevenlabs';
     elevenLabsVoiceId?: string;
     onAudioEnded?: () => void;
+    playbackRate?: number; // 0.5 to 2.0, default 1.0
 }
 
 export const useNaturalVoice = ({
@@ -21,6 +22,7 @@ export const useNaturalVoice = ({
     voiceProvider = 'elevenlabs',
     elevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM', // Rachel
     onAudioEnded,
+    playbackRate = 1.0,
 }: UseNaturalVoiceProps) => {
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -230,6 +232,7 @@ export const useNaturalVoice = ({
             }
 
             const audio = new Audio(audioUrl);
+            audio.playbackRate = playbackRate; // Apply user's speed preference
             audioRef.current = audio;
 
             audio.onplay = () => {
@@ -272,7 +275,7 @@ export const useNaturalVoice = ({
                 }
             });
         });
-    }, [enabled, startListening]);
+    }, [enabled, startListening, playbackRate]);
 
     /**
      * Fetch TTS audio for text and return the audio URL
