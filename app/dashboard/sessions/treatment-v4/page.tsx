@@ -22,11 +22,32 @@ function TreatmentSessionContent() {
   const [shouldResume, setShouldResume] = useState<boolean>(false);
   const [selectedVoice, setSelectedVoice] = useState<string>('rachel');
 
-  // Load voice preference from localStorage
+  // Load voice preference from localStorage and listen for changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedVoice = localStorage.getItem('v4_selected_voice') || 'rachel';
       setSelectedVoice(savedVoice);
+
+      // Listen for voice changes from TreatmentSession settings (same-tab)
+      const handleVoiceChange = (e: CustomEvent<string>) => {
+        console.log('🎵 Voice changed to:', e.detail);
+        setSelectedVoice(e.detail);
+      };
+
+      // Listen for storage changes (cross-tab)
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === 'v4_selected_voice' && e.newValue) {
+          console.log('🎵 Voice changed (storage) to:', e.newValue);
+          setSelectedVoice(e.newValue);
+        }
+      };
+
+      window.addEventListener('v4-voice-changed', handleVoiceChange as EventListener);
+      window.addEventListener('storage', handleStorageChange);
+      return () => {
+        window.removeEventListener('v4-voice-changed', handleVoiceChange as EventListener);
+        window.removeEventListener('storage', handleStorageChange);
+      };
     }
   }, []);
 

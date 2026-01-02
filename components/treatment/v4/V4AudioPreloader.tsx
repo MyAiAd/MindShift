@@ -70,8 +70,11 @@ export default function V4AudioPreloader({ voice = 'rachel' }: V4AudioPreloaderP
             continue;
           }
 
+          // Use voice-prefixed cache key to support multiple voices
+          const cacheKey = `${voice}:${text}`;
+
           // Skip if already in cache
-          if (globalAudioCache.has(text)) {
+          if (globalAudioCache.has(cacheKey)) {
             skipCount++;
             continue;
           }
@@ -86,7 +89,7 @@ export default function V4AudioPreloader({ voice = 'rachel' }: V4AudioPreloaderP
 
             const audioBlob = await audioResponse.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
-            globalAudioCache.set(text, audioUrl);
+            globalAudioCache.set(cacheKey, audioUrl);
             successCount++;
             
             // Log preview of what was cached
@@ -113,10 +116,8 @@ export default function V4AudioPreloader({ voice = 'rachel' }: V4AudioPreloaderP
       }
     };
 
-    // Clear cache when voice changes to ensure correct voice audio is loaded
-    globalAudioCache.clear();
-    
     // Start preloading (static files only - no API fallback)
+    // Note: Using voice-prefixed cache keys allows multiple voices to be cached simultaneously
     preloadStaticAudio();
   }, [voice]); // Re-run when voice changes
 

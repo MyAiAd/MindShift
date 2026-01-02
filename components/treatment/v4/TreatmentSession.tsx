@@ -123,6 +123,8 @@ export default function TreatmentSession({
     setSelectedVoice(voiceId);
     if (typeof window !== 'undefined') {
       localStorage.setItem('v4_selected_voice', voiceId);
+      // Dispatch custom event to notify parent components (same-tab updates)
+      window.dispatchEvent(new CustomEvent('v4-voice-changed', { detail: voiceId }));
     }
   };
 
