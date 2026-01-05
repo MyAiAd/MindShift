@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/database-server';
+import { emailService } from '@/services/email/email.service';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -154,10 +155,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
+    // Get inviter's name for the email
+    const { data: inviterProfile } = await supabase
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('id', user.id)
+      .single();
+    
+    const inviterName = inviterProfile 
+      ? `${inviterProfile.first_name || ''} ${inviterProfile.last_name || ''}`.trim() || 'A team member'
+      : 'A team member';
+
+    // Get tenant/organization name
+    const { data: tenant } = await supabase
+      .from('tenants')
+      .select('name')
+      .eq('id', tenantId || profile.tenant_id)
+      .single();
+    
+    const organizationName = tenant?.name || 'MindShifting';
+
+    // Send invitation email
+    const emailResult = await emailService.sendCoachInvitation({
+      email: email.trim().toLowerCase(),
+      firstName: firstName?.trim(),
+      lastName: lastName?.trim(),
+      inviterName,
+      organizationName,
+      invitationToken: result.invitation?.token || result.token,
+    });
+
+    if (!emailResult.success) {
+      console.error('Failed to send coach invitation email:', emailResult.error);
+      // Don't fail the request - invitation is created, but email failed
+      return NextResponse.json({ 
+        invitation: result,
+        message: 'Coach invitation created but email delivery failed',
+        emailError: emailResult.error
+      });
+    }
+
     // Return success with invitation details
     return NextResponse.json({ 
       invitation: result,
-      message: 'Coach invitation sent successfully'
+      message: 'Coach invitation sent successfully',
+      emailSent: true
     });
   } catch (error) {
     console.error('Error in coach invitation creation:', error);

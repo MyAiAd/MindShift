@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/database-server';
+import { emailService } from '@/services/email/email.service';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -101,6 +102,24 @@ export async function POST(request: NextRequest) {
           { error: 'Failed to create coach profile' },
           { status: 500 }
         );
+      }
+
+      // Send welcome email to the new coach
+      try {
+        const welcomeResult = await emailService.sendWelcomeEmail({
+          email: invitationData.email,
+          firstName: invitationData.first_name,
+          role: 'coach',
+        });
+        
+        if (!welcomeResult.success) {
+          console.error('Failed to send coach welcome email:', welcomeResult.error);
+        } else {
+          console.log('Coach welcome email sent successfully to:', invitationData.email);
+        }
+      } catch (emailError) {
+        console.error('Error sending coach welcome email:', emailError);
+        // Don't fail the request - profile is created, email just failed
       }
 
       return NextResponse.json({

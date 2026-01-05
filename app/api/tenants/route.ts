@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TenantInsert } from '@/lib/database';
 import { createServerClient } from '@/lib/database-server';
+import { emailService } from '@/services/email/email.service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -87,6 +88,25 @@ export async function POST(request: NextRequest) {
       .select('*')
       .eq('id', tenantId)
       .single();
+
+    // Send welcome email to the new user
+    try {
+      const welcomeResult = await emailService.sendWelcomeEmail({
+        email: adminEmail,
+        firstName: adminFirstName,
+        role: 'tenant_admin',
+      });
+      
+      if (!welcomeResult.success) {
+        console.error('Failed to send welcome email:', welcomeResult.error);
+        // Don't fail the request - tenant is created, email just failed
+      } else {
+        console.log('Welcome email sent successfully to:', adminEmail);
+      }
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError);
+      // Don't fail the request
+    }
 
     return NextResponse.json({ tenant, tenantId }, { status: 201 });
   } catch (error) {
