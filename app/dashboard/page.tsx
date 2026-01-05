@@ -378,21 +378,21 @@ export default function DashboardPage() {
             
 
             
-            <FeatureGuard 
+            <FeatureGuard
               featureKey="advanced_analytics"
               fallback={
-                <div className="w-full p-3 rounded-lg border border-amber-200 bg-amber-50">
+                <div className="w-full p-3 rounded-lg border border-border bg-muted/50">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-amber-100 rounded-lg">
-                      <Activity className="h-4 w-4 text-amber-600" />
+                    <div className="p-2 bg-accent rounded-lg">
+                      <Activity className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-amber-900">Advanced Analytics</p>
-                      <p className="text-sm text-amber-700">Requires Level 2 subscription</p>
+                      <p className="font-medium text-foreground">Advanced Analytics</p>
+                      <p className="text-sm text-muted-foreground">Requires Level 2 subscription</p>
                     </div>
-                    <a 
-                      href="/dashboard/subscription" 
-                      className="text-xs text-amber-600 hover:text-amber-700 font-medium"
+                    <a
+                      href="/dashboard/subscription"
+                      className="text-xs text-primary hover:text-primary/80 font-medium"
                     >
                       Upgrade
                     </a>
@@ -413,21 +413,21 @@ export default function DashboardPage() {
               </Link>
             </FeatureGuard>
             
-            <FeatureGuard 
+            <FeatureGuard
               featureKey="team_management"
               fallback={
-                <div className="w-full p-3 rounded-lg border border-amber-200 bg-amber-50">
+                <div className="w-full p-3 rounded-lg border border-border bg-muted/50">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-amber-100 rounded-lg">
-                      <Users className="h-4 w-4 text-amber-600" />
+                    <div className="p-2 bg-accent rounded-lg">
+                      <Users className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-amber-900">Team Management</p>
-                      <p className="text-sm text-amber-700">Requires Level 2 subscription</p>
+                      <p className="font-medium text-foreground">Team Management</p>
+                      <p className="text-sm text-muted-foreground">Requires Level 2 subscription</p>
                     </div>
-                    <a 
-                      href="/dashboard/subscription" 
-                      className="text-xs text-amber-600 hover:text-amber-700 font-medium"
+                    <a
+                      href="/dashboard/subscription"
+                      className="text-xs text-primary hover:text-primary/80 font-medium"
                     >
                       Upgrade
                     </a>
