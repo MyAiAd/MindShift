@@ -260,7 +260,7 @@ CREATE TRIGGER handle_new_user_profile_update
 
 -- Create an idempotent function to fix users who might be stuck without profiles
 CREATE OR REPLACE FUNCTION fix_users_without_profiles()
-RETURNS TABLE(user_id UUID, user_email TEXT, profile_created BOOLEAN, error_message TEXT) AS $$
+RETURNS TABLE(user_id UUID, user_email VARCHAR(255), profile_created BOOLEAN, error_message TEXT) AS $$
 DECLARE
     user_record RECORD;
     profile_created_flag BOOLEAN;
