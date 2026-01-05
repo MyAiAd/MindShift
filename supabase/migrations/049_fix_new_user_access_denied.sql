@@ -3,6 +3,19 @@
 -- ===============================================
 -- Migration 049: Idempotent fix for RLS policies causing new users to get "access denied"
 -- This ensures new users can properly access their profiles after email confirmation
+--
+-- VERSION: 2025-01-05-v4 (with handle_new_user_registration RPC function)
+-- Last Updated: 2025-01-05 19:05 UTC
+--
+-- This version includes:
+-- 1. Fixed RLS policies (no recursion, uses JWT claims)
+-- 2. handle_new_user_registration RPC function
+-- 3. handle_new_user_profile trigger function
+-- 4. fix_users_without_profiles function
+--
+-- IMPORTANT: If you still see 406 errors after running this, the migration did not complete.
+-- Check the SQL Editor output for any errors.
+-- ===============================================
 
 BEGIN;
 
