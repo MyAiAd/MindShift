@@ -39,12 +39,8 @@ CREATE POLICY "profiles_select_own" ON profiles
     USING (
         id = auth.uid()
         OR
-        -- Allow super admins to see all profiles
-        EXISTS (
-            SELECT 1 FROM profiles p
-            WHERE p.id = auth.uid()
-            AND p.role = 'super_admin'
-        )
+        -- Allow super admins to see all profiles (using JWT to avoid recursion)
+        (auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'super_admin'
     );
 
 -- Policy 2: Users can INSERT their own profile (during registration)
@@ -58,22 +54,14 @@ CREATE POLICY "profiles_update_own" ON profiles
     USING (
         id = auth.uid()
         OR
-        -- Allow super admins to update all profiles
-        EXISTS (
-            SELECT 1 FROM profiles p
-            WHERE p.id = auth.uid()
-            AND p.role = 'super_admin'
-        )
+        -- Allow super admins to update all profiles (using JWT to avoid recursion)
+        (auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'super_admin'
     )
     WITH CHECK (
         id = auth.uid()
         OR
-        -- Allow super admins to update all profiles
-        EXISTS (
-            SELECT 1 FROM profiles p
-            WHERE p.id = auth.uid()
-            AND p.role = 'super_admin'
-        )
+        -- Allow super admins to update all profiles (using JWT to avoid recursion)
+        (auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'super_admin'
     );
 
 -- Policy 4: Users can DELETE their own profile (optional, for account deletion)
@@ -82,12 +70,8 @@ CREATE POLICY "profiles_delete_own" ON profiles
     USING (
         id = auth.uid()
         OR
-        -- Allow super admins to delete any profile
-        EXISTS (
-            SELECT 1 FROM profiles p
-            WHERE p.id = auth.uid()
-            AND p.role = 'super_admin'
-        )
+        -- Allow super admins to delete any profile (using JWT to avoid recursion)
+        (auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'super_admin'
     );
 
 -- ===============================================
