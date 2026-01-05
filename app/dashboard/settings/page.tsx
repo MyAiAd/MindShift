@@ -63,7 +63,7 @@ interface GDPRSettings {
 
 export default function SettingsPage() {
   const { profile, user, loading } = useAuth();
-  const { isDarkMode, toggleDarkMode, theme, setTheme, glassEnabled, setGlassEnabled, glassAutoDisableMobile, setGlassAutoDisableMobile } = useTheme();
+  const { isDarkMode, toggleDarkMode, theme, setTheme, glassEnabled, setGlassEnabled, glassIntensity, setGlassIntensity, glassAutoDisableMobile, setGlassAutoDisableMobile } = useTheme();
   const supabase = createClient();
   
   // Services
@@ -1267,6 +1267,37 @@ export default function SettingsPage() {
                     </label>
                   </div>
 
+                  {/* Glass Intensity Slider (only show when glass is enabled) */}
+                  {glassEnabled && (
+                    <div className="pl-4 border-l-2 border-border ml-2 space-y-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-foreground">Glass Intensity</h4>
+                          <span className="text-sm font-medium text-primary">{(glassIntensity * 100).toFixed(0)}%</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-3">Adjust how strong the glass effect appears</p>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground">Subtle</span>
+                          <input
+                            type="range"
+                            min="0.5"
+                            max="2"
+                            step="0.1"
+                            value={glassIntensity}
+                            onChange={(e) => setGlassIntensity(parseFloat(e.target.value))}
+                            className="flex-1 h-2 bg-secondary rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
+                          />
+                          <span className="text-xs text-muted-foreground">Strong</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                          <span>50%</span>
+                          <span>100%</span>
+                          <span>200%</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Auto-disable on Mobile Toggle (only show when glass is enabled) */}
                   {glassEnabled && (
                     <div className="flex items-center justify-between pl-4 border-l-2 border-border ml-2">
@@ -1275,9 +1306,9 @@ export default function SettingsPage() {
                         <p className="text-sm text-muted-foreground">Save battery life on phones (disables blur effects)</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only peer" 
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
                           checked={glassAutoDisableMobile}
                           onChange={(e) => setGlassAutoDisableMobile(e.target.checked)}
                         />

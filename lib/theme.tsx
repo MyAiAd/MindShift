@@ -10,6 +10,8 @@ interface ThemeContextType {
   // Glass effects
   glassEnabled: boolean;
   setGlassEnabled: (enabled: boolean) => void;
+  glassIntensity: number;
+  setGlassIntensity: (intensity: number) => void;
   glassAutoDisableMobile: boolean;
   setGlassAutoDisableMobile: (auto: boolean) => void;
   // Legacy compatibility
@@ -33,6 +35,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   
   // Glass effect state
   const [glassEnabled, setGlassEnabledState] = useState(false);
+  const [glassIntensity, setGlassIntensityState] = useState(1);
   const [glassAutoDisableMobile, setGlassAutoDisableMobileState] = useState(false);
 
   // Load theme from localStorage on mount
@@ -62,7 +65,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (savedGlass !== null) {
       setGlassEnabledState(savedGlass === 'true');
     }
-    
+
+    const savedGlassIntensity = localStorage.getItem('glassIntensity');
+    if (savedGlassIntensity !== null) {
+      const intensity = parseFloat(savedGlassIntensity);
+      if (!isNaN(intensity) && intensity >= 0.5 && intensity <= 2) {
+        setGlassIntensityState(intensity);
+      }
+    }
+
     const savedGlassAutoMobile = localStorage.getItem('glassAutoDisableMobile');
     if (savedGlassAutoMobile !== null) {
       setGlassAutoDisableMobileState(savedGlassAutoMobile === 'true');
@@ -101,19 +112,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Apply glass class when it changes
   useEffect(() => {
     if (!mounted) return;
-    
+
     const root = document.documentElement;
-    
+
     if (effectiveGlassEnabled) {
       root.classList.add('glass-enabled');
     } else {
       root.classList.remove('glass-enabled');
     }
-    
+
     // Save preferences to localStorage
     localStorage.setItem('glassEnabled', String(glassEnabled));
     localStorage.setItem('glassAutoDisableMobile', String(glassAutoDisableMobile));
   }, [effectiveGlassEnabled, glassEnabled, glassAutoDisableMobile, mounted]);
+
+  // Apply glass intensity to CSS variable
+  useEffect(() => {
+    if (!mounted) return;
+
+    document.documentElement.style.setProperty('--glass-intensity', String(glassIntensity));
+    localStorage.setItem('glassIntensity', String(glassIntensity));
+  }, [glassIntensity, mounted]);
 
   const setTheme = (newTheme: ThemeId) => {
     setThemeState(newTheme);
@@ -121,6 +140,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setGlassEnabled = (enabled: boolean) => {
     setGlassEnabledState(enabled);
+  };
+
+  const setGlassIntensity = (intensity: number) => {
+    // Clamp intensity between 0.5 and 2
+    const clampedIntensity = Math.max(0.5, Math.min(2, intensity));
+    setGlassIntensityState(clampedIntensity);
   };
 
   const setGlassAutoDisableMobile = (auto: boolean) => {
@@ -159,18 +184,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider 
-      value={{ 
-        theme, 
-        setTheme, 
+    <ThemeContext.Provider
+      value={{
+        theme,
+        setTheme,
         mode,
         glassEnabled,
         setGlassEnabled,
+        glassIntensity,
+        setGlassIntensity,
         glassAutoDisableMobile,
         setGlassAutoDisableMobile,
-        isDarkMode, 
-        toggleDarkMode, 
-        setDarkMode 
+        isDarkMode,
+        toggleDarkMode,
+        setDarkMode
       }}
     >
       {children}

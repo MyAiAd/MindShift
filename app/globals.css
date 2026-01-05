@@ -824,19 +824,22 @@ body {
 :root {
   /* === MOBILE DEFAULTS (base) === */
 
-  /* Increased blur for more visible glass effect */
-  --glass-blur-subtle: 6px;
-  --glass-blur: 10px;
-  --glass-blur-strong: 16px;
+  /* Base intensity multiplier (user-controllable) */
+  --glass-intensity: 1;
+
+  /* Significantly increased blur for clearly visible glass effect */
+  --glass-blur-subtle: calc(8px * var(--glass-intensity));
+  --glass-blur: calc(14px * var(--glass-intensity));
+  --glass-blur-strong: calc(20px * var(--glass-intensity));
 
   /* Lower opacity = more frosted, more visible glass effect */
-  --glass-opacity: 0.82;
-  --glass-opacity-subtle: 0.88;
-  --glass-opacity-strong: 0.75;
+  --glass-opacity: calc(0.75 + (0.1 * (1 - var(--glass-intensity))));
+  --glass-opacity-subtle: calc(0.82 + (0.1 * (1 - var(--glass-intensity))));
+  --glass-opacity-strong: calc(0.65 + (0.1 * (1 - var(--glass-intensity))));
 
   /* Enhanced glow for more noticeable effect */
-  --glass-glow-opacity: 0.12;
-  --glass-glow-spread: 16px;
+  --glass-glow-opacity: calc(0.15 * var(--glass-intensity));
+  --glass-glow-spread: calc(20px * var(--glass-intensity));
 
   /* Touch-friendly borders (more visible) */
   --glass-border-width: 1px;
@@ -855,45 +858,45 @@ body {
 /* === TABLET ENHANCEMENT (640px+) === */
 @media (min-width: 640px) {
   :root {
-    --glass-blur-subtle: 8px;
-    --glass-blur: 12px;
-    --glass-blur-strong: 20px;
+    --glass-blur-subtle: calc(10px * var(--glass-intensity));
+    --glass-blur: calc(16px * var(--glass-intensity));
+    --glass-blur-strong: calc(24px * var(--glass-intensity));
 
-    --glass-opacity: 0.8;
-    --glass-opacity-subtle: 0.86;
-    --glass-opacity-strong: 0.72;
+    --glass-opacity: calc(0.72 + (0.1 * (1 - var(--glass-intensity))));
+    --glass-opacity-subtle: calc(0.8 + (0.1 * (1 - var(--glass-intensity))));
+    --glass-opacity-strong: calc(0.62 + (0.1 * (1 - var(--glass-intensity))));
 
-    --glass-glow-opacity: 0.14;
-    --glass-glow-spread: 18px;
+    --glass-glow-opacity: calc(0.17 * var(--glass-intensity));
+    --glass-glow-spread: calc(22px * var(--glass-intensity));
 
-    --glass-highlight-opacity: 0.09;
+    --glass-highlight-opacity: calc(0.09 * var(--glass-intensity));
   }
 }
 
 /* === DESKTOP ENHANCEMENT (1024px+) === */
 @media (min-width: 1024px) {
   :root {
-    --glass-blur-subtle: 10px;
-    --glass-blur: 14px;
-    --glass-blur-strong: 24px;
+    --glass-blur-subtle: calc(12px * var(--glass-intensity));
+    --glass-blur: calc(18px * var(--glass-intensity));
+    --glass-blur-strong: calc(28px * var(--glass-intensity));
 
-    --glass-opacity: 0.78;
-    --glass-opacity-subtle: 0.84;
-    --glass-opacity-strong: 0.68;
+    --glass-opacity: calc(0.7 + (0.1 * (1 - var(--glass-intensity))));
+    --glass-opacity-subtle: calc(0.78 + (0.1 * (1 - var(--glass-intensity))));
+    --glass-opacity-strong: calc(0.6 + (0.1 * (1 - var(--glass-intensity))));
 
-    --glass-glow-opacity: 0.16;
-    --glass-glow-spread: 22px;
+    --glass-glow-opacity: calc(0.19 * var(--glass-intensity));
+    --glass-glow-spread: calc(26px * var(--glass-intensity));
 
-    --glass-highlight-opacity: 0.1;
+    --glass-highlight-opacity: calc(0.12 * var(--glass-intensity));
   }
 }
 
 /* === LARGE DESKTOP (1280px+) === */
 @media (min-width: 1280px) {
   :root {
-    --glass-blur-strong: 28px;
-    --glass-glow-spread: 26px;
-    --glass-glow-opacity: 0.18;
+    --glass-blur-strong: calc(32px * var(--glass-intensity));
+    --glass-glow-spread: calc(30px * var(--glass-intensity));
+    --glass-glow-opacity: calc(0.22 * var(--glass-intensity));
   }
 }
 
