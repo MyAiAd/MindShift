@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/database';
 import { useAuth } from '@/lib/auth';
 import { Brain, Mail, Lock, User, Building2, Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -21,11 +21,25 @@ export default function AuthPage() {
   });
   
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const supabase = createClient();
 
+  // Check for error or message from URL (e.g., from email confirmation callback)
+  useEffect(() => {
+    const urlError = searchParams.get('error');
+    const urlMessage = searchParams.get('message');
+    
+    if (urlError) {
+      setError(decodeURIComponent(urlError));
+    }
+    if (urlMessage) {
+      setSuccess(decodeURIComponent(urlMessage));
+    }
+  }, [searchParams]);
+
   // Redirect if already authenticated
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       router.push('/dashboard');
     }
