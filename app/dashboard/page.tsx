@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
@@ -38,7 +38,7 @@ interface DashboardStats {
   avgProgress: number;
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { profile, tenant } = useAuth();
   const searchParams = useSearchParams();
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
@@ -596,5 +596,20 @@ export default function DashboardPage() {
       </Card>
     </div>
     </PullToRefresh>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 } 
