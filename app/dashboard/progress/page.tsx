@@ -199,18 +199,18 @@ export default function ProgressPage() {
 
   const getScoreColor = (score: number, maxScore: number = 10) => {
     const percentage = (score / maxScore) * 100;
-    if (percentage >= 80) return 'text-green-600';
-    if (percentage >= 60) return 'text-yellow-600';
-    if (percentage >= 40) return 'text-orange-600';
-    return 'text-red-600';
+    if (percentage >= 80) return 'text-accent';
+    if (percentage >= 60) return 'text-primary';
+    if (percentage >= 40) return 'text-muted-foreground';
+    return 'text-destructive';
   };
 
   const getScoreBackground = (score: number, maxScore: number = 10) => {
     const percentage = (score / maxScore) * 100;
-    if (percentage >= 80) return 'bg-green-50';
-    if (percentage >= 60) return 'bg-yellow-50';
-    if (percentage >= 40) return 'bg-orange-50';
-    return 'bg-red-50';
+    if (percentage >= 80) return 'bg-accent/20';
+    if (percentage >= 60) return 'bg-primary/20';
+    if (percentage >= 40) return 'bg-muted';
+    return 'bg-destructive/20';
   };
 
   const formatChartData = () => {
@@ -265,10 +265,10 @@ export default function ProgressPage() {
   const getRarityColor = (rarity: AchievementRarity) => {
     switch (rarity) {
       case 'common': return 'text-muted-foreground bg-secondary';
-      case 'uncommon': return 'text-green-600 bg-green-100';
-      case 'rare': return 'text-blue-600 bg-blue-100';
-      case 'epic': return 'text-purple-600 bg-purple-100';
-      case 'legendary': return 'text-yellow-600 bg-yellow-100';
+      case 'uncommon': return 'text-accent bg-accent/20';
+      case 'rare': return 'text-primary bg-primary/20';
+      case 'epic': return 'text-primary bg-primary/30';
+      case 'legendary': return 'text-primary-foreground bg-primary';
       default: return 'text-muted-foreground bg-secondary';
     }
   };
@@ -303,10 +303,10 @@ export default function ProgressPage() {
   };
 
   const getLevelColor = (level: number) => {
-    if (level >= 20) return 'text-yellow-600 bg-yellow-100';
-    if (level >= 15) return 'text-purple-600 bg-purple-100';
-    if (level >= 10) return 'text-blue-600 bg-blue-100';
-    if (level >= 5) return 'text-green-600 bg-green-100';
+    if (level >= 20) return 'text-primary-foreground bg-primary';
+    if (level >= 15) return 'text-primary bg-primary/30';
+    if (level >= 10) return 'text-primary bg-primary/20';
+    if (level >= 5) return 'text-accent bg-accent/20';
     return 'text-muted-foreground bg-secondary';
   };
 
@@ -314,7 +314,7 @@ export default function ProgressPage() {
     return (
       <div className="p-8">
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -330,7 +330,7 @@ export default function ProgressPage() {
           </div>
           <button 
             onClick={() => setShowNewEntryModal(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center"
           >
             <Plus className="h-5 w-5 mr-2" />
             Log Progress
@@ -340,17 +340,17 @@ export default function ProgressPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600">{error}</p>
+        <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+          <p className="text-destructive">{error}</p>
         </div>
       )}
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-card rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-6">
           <div className="flex items-center">
-            <div className="p-2 bg-green-50 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-green-600" />
+            <div className="p-2 bg-accent/20 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-accent" />
             </div>
             <div className="ml-4">
               <p className="text-2xl font-semibold text-foreground">{stats?.overview.overallProgress || 0}%</p>
@@ -359,10 +359,10 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        <div className="bg-card rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-6">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Target className="h-6 w-6 text-blue-600" />
+            <div className="p-2 bg-primary/20 rounded-lg">
+              <Target className="h-6 w-6 text-primary" />
             </div>
             <div className="ml-4">
               <p className="text-2xl font-semibold text-foreground">{stats?.overview.completedGoals || 0}</p>
@@ -371,10 +371,10 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        <div className="bg-card rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-6">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <Activity className="h-6 w-6 text-purple-600" />
+            <div className="p-2 bg-primary/30 rounded-lg">
+              <Activity className="h-6 w-6 text-primary" />
             </div>
             <div className="ml-4">
               <p className="text-2xl font-semibold text-foreground">{stats?.overview.totalProgressEntries || 0}</p>
@@ -383,10 +383,10 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        <div className="bg-card rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-6">
           <div className="flex items-center">
-            <div className="p-2 bg-yellow-50 rounded-lg">
-              <Award className="h-6 w-6 text-yellow-600" />
+            <div className="p-2 bg-accent/30 rounded-lg">
+              <Award className="h-6 w-6 text-accent" />
             </div>
             <div className="ml-4">
               <p className="text-2xl font-semibold text-foreground">{stats?.overview.completedMilestones || 0}</p>
@@ -397,10 +397,10 @@ export default function ProgressPage() {
       </div>
 
       {/* Wellbeing Scores */}
-      <div className="bg-card rounded-lg shadow-sm border p-6 mb-8">
+      <div className="bg-card rounded-lg shadow-sm border border-border p-6 mb-8">
                       <h2 className="text-lg font-semibold text-foreground mb-6">Average Wellbeing Scores</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgMoodScore || 0)} dark:bg-[#586e75]`}>
+          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgMoodScore || 0)}`}>
             <div className="flex items-center">
               <Heart className={`h-6 w-6 ${getScoreColor(stats?.overview.avgMoodScore || 0)} mr-3`} />
               <div>
@@ -410,7 +410,7 @@ export default function ProgressPage() {
             </div>
           </div>
           
-          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgEnergyLevel || 0)} dark:bg-[#586e75]`}>
+          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgEnergyLevel || 0)}`}>
             <div className="flex items-center">
               <Zap className={`h-6 w-6 ${getScoreColor(stats?.overview.avgEnergyLevel || 0)} mr-3`} />
               <div>
@@ -420,7 +420,7 @@ export default function ProgressPage() {
             </div>
           </div>
           
-          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgConfidenceLevel || 0)} dark:bg-[#586e75]`}>
+          <div className={`p-4 rounded-lg ${getScoreBackground(stats?.overview.avgConfidenceLevel || 0)}`}>
             <div className="flex items-center">
               <Shield className={`h-6 w-6 ${getScoreColor(stats?.overview.avgConfidenceLevel || 0)} mr-3`} />
               <div>
@@ -437,7 +437,7 @@ export default function ProgressPage() {
         {/* Column 1: Level Progress & Recent Achievements */}
         <div className="space-y-6">
           {/* Level Progress */}
-          <div className="bg-card rounded-lg shadow-sm border p-6">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-foreground">Your Level Progress</h2>
               {gamificationData?.levelProgress && (
@@ -449,7 +449,7 @@ export default function ProgressPage() {
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
-                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : gamificationData?.levelProgress ? (
               <div className="space-y-4">
@@ -457,14 +457,14 @@ export default function ProgressPage() {
                   <span className="text-muted-foreground">
                     {gamificationData.levelProgress.levelProgress} / {gamificationData.levelProgress.levelProgressMax} XP
                   </span>
-                  <span className="font-medium text-indigo-600">
+                  <span className="font-medium text-primary">
                     {gamificationData.levelProgress.pointsForNextLevel} XP to next level
                   </span>
                 </div>
                 
                 <div className="w-full bg-secondary rounded-full h-3">
                   <div 
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+                    className="bg-primary h-3 rounded-full transition-all duration-500"
                     style={{ width: `${gamificationData.levelProgress.levelProgressPercentage}%` }}
                   ></div>
                 </div>
@@ -477,25 +477,25 @@ export default function ProgressPage() {
             ) : (
               <div className="text-center py-8">
                 <Star className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground dark:text-[#839496]">Start your journey to earn XP and level up!</p>
+                <p className="text-muted-foreground">Start your journey to earn XP and level up!</p>
               </div>
             )}
           </div>
 
           {/* Recent Achievements */}
-          <div className="bg-card rounded-lg shadow-sm border p-6">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
             <h2 className="text-lg font-semibold text-foreground mb-4">Recent Achievements</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
-                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : gamificationData?.recentAchievements && gamificationData.recentAchievements.length > 0 ? (
               <div className="space-y-4">
                 {gamificationData.recentAchievements.map((achievement) => {
                   const RarityIcon = getRarityIcon(achievement.rarity as AchievementRarity);
                   return (
-                    <div key={achievement.id} className={`flex items-center space-x-3 p-4 rounded-lg border ${getRarityColor(achievement.rarity as AchievementRarity)}`}>
+                    <div key={achievement.id} className={`flex items-center space-x-3 p-4 rounded-lg border border-border ${getRarityColor(achievement.rarity as AchievementRarity)}`}>
                       <div className="flex-shrink-0">
                         <RarityIcon className="h-8 w-8" />
                       </div>
@@ -518,7 +518,7 @@ export default function ProgressPage() {
             ) : (
               <div className="text-center py-8">
                 <Award className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground dark:text-[#839496]">No recent achievements</p>
+                <p className="text-muted-foreground">No recent achievements</p>
                 <p className="text-sm text-muted-foreground">Complete goals and log progress to earn achievements!</p>
               </div>
             )}
@@ -526,13 +526,13 @@ export default function ProgressPage() {
         </div>
 
         {/* Column 2: Progress Chart */}
-        <div className="bg-card rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-foreground">Progress Over Time</h2>
             <select 
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-ring focus:border-ring text-sm"
             >
               <option value="30">30d</option>
               <option value="90">3m</option>
@@ -553,58 +553,61 @@ export default function ProgressPage() {
                     bottom: 5,
                   }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis 
                     dataKey="date" 
                     tick={{ fontSize: 12 }}
-                    stroke="#666"
+                    className="text-muted-foreground"
+                    stroke="currentColor"
                   />
                   <YAxis 
                     domain={[0, 10]} 
                     tick={{ fontSize: 12 }}
-                    stroke="#666"
+                    className="text-muted-foreground"
+                    stroke="currentColor"
                   />
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                      color: 'hsl(var(--foreground))'
                     }}
                   />
                   <Legend />
                   <Line 
                     type="monotone" 
                     dataKey="mood" 
-                    stroke="#ef4444" 
+                    stroke="hsl(var(--destructive))" 
                     strokeWidth={2}
-                    dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                    dot={{ fill: 'hsl(var(--destructive))', strokeWidth: 2, r: 4 }}
                     name="Mood Score"
                   />
                   <Line 
                     type="monotone" 
                     dataKey="energy" 
-                    stroke="#f59e0b" 
+                    stroke="hsl(var(--primary))" 
                     strokeWidth={2}
-                    dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
+                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
                     name="Energy Level"
                   />
                   <Line 
                     type="monotone" 
                     dataKey="confidence" 
-                    stroke="#10b981" 
+                    stroke="hsl(var(--accent))" 
                     strokeWidth={2}
-                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    dot={{ fill: 'hsl(var(--accent))', strokeWidth: 2, r: 4 }}
                     name="Confidence Level"
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center bg-secondary/20 dark:bg-[#586e75] rounded-lg">
+            <div className="h-64 flex items-center justify-center bg-secondary/20 rounded-lg">
               <div className="text-center">
                 <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground dark:text-[#839496]">No progress data yet</p>
+                <p className="text-muted-foreground">No progress data yet</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Start logging progress entries to see your trends over time
                 </p>
@@ -620,26 +623,26 @@ export default function ProgressPage() {
         {/* Column 3: Streaks & Quick Stats */}
         <div className="space-y-6">
           {/* Current Streaks */}
-          <div className="bg-card rounded-lg shadow-sm border p-6">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
             <h2 className="text-lg font-semibold text-foreground mb-4">Current Streaks</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
-                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : gamificationData?.streaks && gamificationData.streaks.length > 0 ? (
               <div className="space-y-4">
                 {gamificationData.streaks.map((streak) => {
                   const StreakIcon = getStreakIcon(streak.streak_type);
                   return (
-                    <div key={streak.id} className="flex items-center space-x-3 p-3 bg-orange-50 rounded-lg">
-                      <StreakIcon className="h-6 w-6 text-orange-600" />
+                    <div key={streak.id} className="flex items-center space-x-3 p-3 bg-accent/20 rounded-lg">
+                      <StreakIcon className="h-6 w-6 text-accent" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <p className="font-medium text-foreground">{formatStreakType(streak.streak_type)}</p>
                           <div className="flex items-center space-x-1">
-                            <Flame className="h-4 w-4 text-orange-500" />
-                            <span className="font-bold text-orange-600">{streak.current_count}</span>
+                            <Flame className="h-4 w-4 text-accent" />
+                            <span className="font-bold text-accent">{streak.current_count}</span>
                           </div>
                         </div>
                         <p className="text-sm text-muted-foreground">Best: {streak.best_count} days</p>
@@ -651,19 +654,19 @@ export default function ProgressPage() {
             ) : (
               <div className="text-center py-8">
                 <Flame className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground dark:text-[#839496]">No active streaks</p>
+                <p className="text-muted-foreground">No active streaks</p>
                 <p className="text-sm text-muted-foreground">Stay consistent to build streaks!</p>
               </div>
             )}
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-card rounded-lg shadow-sm border p-6">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
             <h2 className="text-lg font-semibold text-foreground mb-4">Quick Stats</h2>
             
             {gamificationLoading ? (
               <div className="flex items-center justify-center h-24">
-                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : gamificationData?.userStats ? (
               <div className="space-y-4">
@@ -685,7 +688,7 @@ export default function ProgressPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Best Streak</span>
                   <div className="flex items-center space-x-1">
-                    <Flame className="h-4 w-4 text-orange-500" />
+                    <Flame className="h-4 w-4 text-accent" />
                     <span className="font-semibold text-foreground">{gamificationData.userStats.best_streak_days} days</span>
                   </div>
                 </div>
@@ -693,7 +696,7 @@ export default function ProgressPage() {
             ) : (
               <div className="text-center py-8">
                 <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground dark:text-[#839496]">No stats yet</p>
+                <p className="text-muted-foreground">No stats yet</p>
                 <p className="text-sm text-muted-foreground">Start your journey to see stats!</p>
               </div>
             )}
@@ -704,12 +707,12 @@ export default function ProgressPage() {
       {/* New Progress Entry Modal */}
       {showNewEntryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-lg p-6 w-full max-w-md">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-foreground">Log Progress Entry</h3>
               <button
                 onClick={() => setShowNewEntryModal(false)}
-                className="text-muted-foreground hover:text-muted-foreground"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -721,7 +724,7 @@ export default function ProgressPage() {
                   required
                   value={newEntry.goalId}
                   onChange={(e) => setNewEntry({ ...newEntry, goalId: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-lg focus:ring-ring focus:border-ring"
                 >
                   <option value="">Select a goal...</option>
                   {goals.map((goal) => (
@@ -739,7 +742,7 @@ export default function ProgressPage() {
                   required
                   value={newEntry.entryDate}
                   onChange={(e) => setNewEntry({ ...newEntry, entryDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-lg focus:ring-ring focus:border-ring"
                 />
               </div>
 
@@ -753,7 +756,7 @@ export default function ProgressPage() {
                   max="10"
                   value={newEntry.moodScore}
                   onChange={(e) => setNewEntry({ ...newEntry, moodScore: parseInt(e.target.value) })}
-                  className="w-full"
+                  className="w-full accent-primary"
                 />
               </div>
 
@@ -767,7 +770,7 @@ export default function ProgressPage() {
                   max="10"
                   value={newEntry.energyLevel}
                   onChange={(e) => setNewEntry({ ...newEntry, energyLevel: parseInt(e.target.value) })}
-                  className="w-full"
+                  className="w-full accent-primary"
                 />
               </div>
 
@@ -781,7 +784,7 @@ export default function ProgressPage() {
                   max="10"
                   value={newEntry.confidenceLevel}
                   onChange={(e) => setNewEntry({ ...newEntry, confidenceLevel: parseInt(e.target.value) })}
-                  className="w-full"
+                  className="w-full accent-primary"
                 />
               </div>
 
@@ -791,7 +794,7 @@ export default function ProgressPage() {
                   rows={3}
                   value={newEntry.notes}
                   onChange={(e) => setNewEntry({ ...newEntry, notes: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-lg focus:ring-ring focus:border-ring"
                   placeholder="How are you feeling today? Any insights or challenges?"
                 />
               </div>
@@ -800,14 +803,14 @@ export default function ProgressPage() {
                 <button
                   type="button"
                   onClick={() => setShowNewEntryModal(false)}
-                  className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary/20 dark:bg-[#002b36]"
+                  className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
                 >
                   {submitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
