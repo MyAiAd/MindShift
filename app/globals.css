@@ -824,26 +824,26 @@ body {
 :root {
   /* === MOBILE DEFAULTS (base) === */
   
-  /* Lighter blur for mobile performance */
-  --glass-blur-subtle: 4px;
-  --glass-blur: 8px;
-  --glass-blur-strong: 12px;
+  /* Subtle blur for a refined look */
+  --glass-blur-subtle: 2px;
+  --glass-blur: 4px;
+  --glass-blur-strong: 6px;
   
-  /* Higher opacity = better performance + readability on small screens */
-  --glass-opacity: 0.85;
-  --glass-opacity-subtle: 0.9;
-  --glass-opacity-strong: 0.75;
+  /* Higher opacity = more readable, less frosted */
+  --glass-opacity: 0.92;
+  --glass-opacity-subtle: 0.95;
+  --glass-opacity-strong: 0.88;
   
-  /* Reduced glow for battery life */
-  --glass-glow-opacity: 0.08;
-  --glass-glow-spread: 10px;
+  /* Subtle glow */
+  --glass-glow-opacity: 0.04;
+  --glass-glow-spread: 8px;
   
   /* Touch-friendly borders (more visible) */
   --glass-border-width: 1px;
-  --glass-border-opacity: 0.25;
+  --glass-border-opacity: 0.15;
   
-  /* Reduced specular for simplicity */
-  --glass-highlight-opacity: 0.05;
+  /* Very subtle specular */
+  --glass-highlight-opacity: 0.03;
   --glass-highlight-size: 50%;
   
   /* Default tint colors (overridden per theme) */
@@ -855,44 +855,44 @@ body {
 /* === TABLET ENHANCEMENT (640px+) === */
 @media (min-width: 640px) {
   :root {
-    --glass-blur-subtle: 6px;
-    --glass-blur: 10px;
-    --glass-blur-strong: 16px;
+    --glass-blur-subtle: 3px;
+    --glass-blur: 5px;
+    --glass-blur-strong: 8px;
     
-    --glass-opacity: 0.8;
-    --glass-opacity-subtle: 0.88;
-    --glass-opacity-strong: 0.7;
+    --glass-opacity: 0.9;
+    --glass-opacity-subtle: 0.94;
+    --glass-opacity-strong: 0.85;
     
-    --glass-glow-opacity: 0.12;
-    --glass-glow-spread: 15px;
+    --glass-glow-opacity: 0.06;
+    --glass-glow-spread: 10px;
     
-    --glass-highlight-opacity: 0.08;
+    --glass-highlight-opacity: 0.04;
   }
 }
 
 /* === DESKTOP ENHANCEMENT (1024px+) === */
 @media (min-width: 1024px) {
   :root {
-    --glass-blur-subtle: 8px;
-    --glass-blur: 12px;
-    --glass-blur-strong: 20px;
+    --glass-blur-subtle: 4px;
+    --glass-blur: 6px;
+    --glass-blur-strong: 10px;
     
-    --glass-opacity: 0.75;
-    --glass-opacity-subtle: 0.85;
-    --glass-opacity-strong: 0.6;
+    --glass-opacity: 0.88;
+    --glass-opacity-subtle: 0.92;
+    --glass-opacity-strong: 0.8;
     
-    --glass-glow-opacity: 0.15;
-    --glass-glow-spread: 20px;
+    --glass-glow-opacity: 0.08;
+    --glass-glow-spread: 12px;
     
-    --glass-highlight-opacity: 0.1;
+    --glass-highlight-opacity: 0.05;
   }
 }
 
 /* === LARGE DESKTOP (1280px+) === */
 @media (min-width: 1280px) {
   :root {
-    --glass-blur-strong: 24px;
-    --glass-glow-spread: 25px;
+    --glass-blur-strong: 12px;
+    --glass-glow-spread: 15px;
   }
 }
 
@@ -907,8 +907,8 @@ body {
 /* === LANDSCAPE MOBILE OPTIMIZATION === */
 @media (max-width: 640px) and (orientation: landscape) {
   :root {
-    --glass-blur: 6px;
-    --glass-opacity: 0.9;
+    --glass-blur: 3px;
+    --glass-opacity: 0.94;
   }
 }
 
@@ -921,52 +921,44 @@ body {
 @supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
   /* Basic glass surface */
   .glass-enabled .glass {
-    background: hsla(var(--glass-tint) / var(--glass-opacity));
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: var(--glass-border-width) solid hsla(var(--glass-tint) / var(--glass-border-opacity));
   }
 
   /* Subtle glass - lighter effect */
   .glass-enabled .glass-subtle {
-    background: hsla(var(--glass-tint) / var(--glass-opacity-subtle));
     backdrop-filter: blur(var(--glass-blur-subtle));
     -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
-    border: var(--glass-border-width) solid hsla(var(--glass-tint) / calc(var(--glass-border-opacity) * 0.5));
   }
 
   /* Strong glass - more blur and transparency */
   .glass-enabled .glass-strong {
-    background: hsla(var(--glass-tint) / var(--glass-opacity-strong));
     backdrop-filter: blur(var(--glass-blur-strong));
     -webkit-backdrop-filter: blur(var(--glass-blur-strong));
-    border: var(--glass-border-width) solid hsla(var(--glass-tint) / calc(var(--glass-border-opacity) * 1.5));
   }
 
   /* Full glass with glow and specular highlight */
   .glass-enabled .glass-full {
-    background: hsla(var(--glass-tint) / var(--glass-opacity));
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: var(--glass-border-width) solid hsla(var(--glass-tint) / var(--glass-border-opacity));
     box-shadow: 
-      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / var(--glass-glow-opacity)),
-      0 8px 32px rgba(0, 0, 0, 0.12);
+      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.5)),
+      0 2px 12px rgba(0, 0, 0, 0.06);
     position: relative;
   }
 
-  /* Specular highlight on top edge */
+  /* Specular highlight on top edge - very subtle */
   .glass-enabled .glass-full::before {
     content: '';
     position: absolute;
     top: 0;
-    left: 5%;
-    right: 5%;
+    left: 10%;
+    right: 10%;
     height: 1px;
     background: linear-gradient(
       90deg,
       transparent,
-      hsla(0 0% 100% / var(--glass-highlight-opacity)),
+      hsla(0 0% 100% / calc(var(--glass-highlight-opacity) * 0.5)),
       transparent
     );
     border-radius: inherit;
@@ -991,15 +983,15 @@ body {
  * =============================================== */
 
 @supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
-  /* === CARDS: All .bg-card elements get glass treatment === */
+  /* === CARDS: All .bg-card elements get subtle glass treatment === */
   .glass-enabled .bg-card {
-    background: hsla(var(--glass-tint) / var(--glass-opacity)) !important;
+    background: hsla(var(--card) / var(--glass-opacity)) !important;
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
-    border-color: hsla(var(--glass-tint) / var(--glass-border-opacity)) !important;
+    border-color: hsla(var(--border) / 0.5) !important;
     box-shadow: 
-      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.5)),
-      0 4px 20px rgba(0, 0, 0, 0.08);
+      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.3)),
+      0 2px 8px rgba(0, 0, 0, 0.04);
   }
 
   /* === NAVIGATION & HEADERS === */
@@ -1008,7 +1000,7 @@ body {
   .glass-enabled [role="navigation"],
   .glass-enabled .navbar,
   .glass-enabled .header {
-    background: hsla(var(--glass-tint) / var(--glass-opacity-subtle)) !important;
+    background: hsla(var(--card) / var(--glass-opacity-subtle)) !important;
     backdrop-filter: blur(var(--glass-blur-strong));
     -webkit-backdrop-filter: blur(var(--glass-blur-strong));
   }
@@ -1017,7 +1009,7 @@ body {
   .glass-enabled aside,
   .glass-enabled [role="complementary"],
   .glass-enabled .sidebar {
-    background: hsla(var(--glass-tint) / var(--glass-opacity)) !important;
+    background: hsla(var(--card) / var(--glass-opacity)) !important;
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
   }
@@ -1027,12 +1019,12 @@ body {
   .glass-enabled [role="alertdialog"],
   .glass-enabled .modal,
   .glass-enabled .dialog {
-    background: hsla(var(--glass-tint) / var(--glass-opacity)) !important;
+    background: hsla(var(--card) / var(--glass-opacity)) !important;
     backdrop-filter: blur(var(--glass-blur-strong));
     -webkit-backdrop-filter: blur(var(--glass-blur-strong));
     box-shadow: 
-      0 0 calc(var(--glass-glow-spread) * 1.5) hsla(var(--glass-glow-color) / var(--glass-glow-opacity)),
-      0 25px 50px rgba(0, 0, 0, 0.2);
+      0 0 calc(var(--glass-glow-spread) * 1.2) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.5)),
+      0 20px 40px rgba(0, 0, 0, 0.12);
   }
 
   /* === POPOVERS & DROPDOWNS === */
@@ -1041,55 +1033,43 @@ body {
   .glass-enabled .popover,
   .glass-enabled .dropdown-menu,
   .glass-enabled [data-radix-popper-content-wrapper] > div {
-    background: hsla(var(--glass-tint) / var(--glass-opacity)) !important;
+    background: hsla(var(--card) / var(--glass-opacity)) !important;
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
-    border-color: hsla(var(--glass-tint) / var(--glass-border-opacity)) !important;
+    border-color: hsla(var(--border) / 0.5) !important;
   }
 
   /* === TOOLTIPS === */
   .glass-enabled [role="tooltip"] {
-    background: hsla(var(--glass-tint) / var(--glass-opacity-strong)) !important;
+    background: hsla(var(--card) / var(--glass-opacity-strong)) !important;
     backdrop-filter: blur(var(--glass-blur-subtle));
     -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
   }
 
-  /* === PRIMARY BUTTONS get subtle glass === */
+  /* === PRIMARY BUTTONS get very subtle glass === */
   .glass-enabled .bg-primary {
-    background: hsla(var(--primary) / 0.85) !important;
     backdrop-filter: blur(var(--glass-blur-subtle));
     -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
     box-shadow: 
-      0 0 calc(var(--glass-glow-spread) * 0.5) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.7)),
-      0 2px 8px rgba(0, 0, 0, 0.15);
+      0 0 calc(var(--glass-glow-spread) * 0.4) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.4)),
+      0 1px 4px rgba(0, 0, 0, 0.1);
   }
 
   /* === SECONDARY/MUTED BACKGROUNDS === */
   .glass-enabled .bg-secondary {
-    background: hsla(var(--glass-tint) / var(--glass-opacity-subtle)) !important;
     backdrop-filter: blur(var(--glass-blur-subtle));
     -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
   }
 
   .glass-enabled .bg-muted {
-    background: hsla(var(--glass-tint) / calc(var(--glass-opacity-subtle) + 0.05)) !important;
     backdrop-filter: blur(var(--glass-blur-subtle));
     -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
   }
 
-  /* === INPUT FIELDS === */
+  /* === INPUT FIELDS - very subtle === */
   .glass-enabled input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
   .glass-enabled textarea,
   .glass-enabled select {
-    background: hsla(var(--glass-tint) / calc(var(--glass-opacity-subtle) + 0.1)) !important;
-    backdrop-filter: blur(var(--glass-blur-subtle));
-    -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
-  }
-
-  /* === BADGES & PILLS === */
-  .glass-enabled .badge,
-  .glass-enabled .pill,
-  .glass-enabled [class*="rounded-full"][class*="px-"] {
     backdrop-filter: blur(var(--glass-blur-subtle));
     -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
   }
@@ -1097,7 +1077,7 @@ body {
   /* === BOTTOM NAVIGATION (PWA) === */
   .glass-enabled .fixed.bottom-0,
   .glass-enabled [class*="fixed"][class*="bottom-0"] {
-    background: hsla(var(--glass-tint) / var(--glass-opacity)) !important;
+    background: hsla(var(--card) / var(--glass-opacity)) !important;
     backdrop-filter: blur(var(--glass-blur-strong));
     -webkit-backdrop-filter: blur(var(--glass-blur-strong));
   }
@@ -1108,22 +1088,22 @@ body {
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     box-shadow: 
-      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / var(--glass-glow-opacity)),
-      0 4px 15px rgba(0, 0, 0, 0.2);
+      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.5)),
+      0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  /* === SPECULAR HIGHLIGHT on main cards === */
+  /* === SPECULAR HIGHLIGHT on main cards - very subtle === */
   .glass-enabled .bg-card::before {
     content: '';
     position: absolute;
     top: 0;
-    left: 10%;
-    right: 10%;
+    left: 15%;
+    right: 15%;
     height: 1px;
     background: linear-gradient(
       90deg,
       transparent,
-      hsla(0 0% 100% / calc(var(--glass-highlight-opacity) * 0.7)),
+      hsla(0 0% 100% / calc(var(--glass-highlight-opacity) * 0.5)),
       transparent
     );
     pointer-events: none;
