@@ -61,9 +61,34 @@ export async function GET(request: NextRequest) {
       
       if (data?.session) {
         console.log('Auth callback: Session created successfully for user:', data.session.user.email);
-        
-        // Check if profile exists, if not it will be created by the auth listener
-        // Just redirect to the dashboard or requested page
+
+        // Check if profile exists, create it if not
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.session.user.id)
+          .single();
+
+        if (!profile) {
+          console.log('Profile not found, creating via RPC...');
+
+          // Call the RPC function to create the profile
+          const { error: rpcError } = await supabase.rpc('handle_new_user_registration', {
+            user_id: data.session.user.id,
+            user_email: data.session.user.email!,
+            user_first_name: data.session.user.user_metadata?.first_name || null,
+            user_last_name: data.session.user.user_metadata?.last_name || null,
+          });
+
+          if (rpcError) {
+            console.error('Error creating profile via RPC:', rpcError);
+            // Continue anyway - the auth context will try again
+          } else {
+            console.log('Profile created successfully via RPC');
+          }
+        }
+
+        // Redirect to the dashboard or requested page
         return NextResponse.redirect(new URL(next, request.url));
       }
     } catch (error) {
