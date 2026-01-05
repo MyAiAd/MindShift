@@ -823,27 +823,27 @@ body {
 
 :root {
   /* === MOBILE DEFAULTS (base) === */
-  
-  /* Subtle blur for a refined look */
-  --glass-blur-subtle: 2px;
-  --glass-blur: 4px;
-  --glass-blur-strong: 6px;
-  
-  /* Higher opacity = more readable, less frosted */
-  --glass-opacity: 0.92;
-  --glass-opacity-subtle: 0.95;
-  --glass-opacity-strong: 0.88;
-  
-  /* Subtle glow */
-  --glass-glow-opacity: 0.04;
-  --glass-glow-spread: 8px;
-  
+
+  /* Increased blur for more visible glass effect */
+  --glass-blur-subtle: 6px;
+  --glass-blur: 10px;
+  --glass-blur-strong: 16px;
+
+  /* Lower opacity = more frosted, more visible glass effect */
+  --glass-opacity: 0.82;
+  --glass-opacity-subtle: 0.88;
+  --glass-opacity-strong: 0.75;
+
+  /* Enhanced glow for more noticeable effect */
+  --glass-glow-opacity: 0.12;
+  --glass-glow-spread: 16px;
+
   /* Touch-friendly borders (more visible) */
   --glass-border-width: 1px;
-  --glass-border-opacity: 0.15;
-  
-  /* Very subtle specular */
-  --glass-highlight-opacity: 0.03;
+  --glass-border-opacity: 0.2;
+
+  /* Enhanced specular for better light reflection */
+  --glass-highlight-opacity: 0.08;
   --glass-highlight-size: 50%;
   
   /* Default tint colors (overridden per theme) */
@@ -855,44 +855,45 @@ body {
 /* === TABLET ENHANCEMENT (640px+) === */
 @media (min-width: 640px) {
   :root {
-    --glass-blur-subtle: 3px;
-    --glass-blur: 5px;
-    --glass-blur-strong: 8px;
-    
-    --glass-opacity: 0.9;
-    --glass-opacity-subtle: 0.94;
-    --glass-opacity-strong: 0.85;
-    
-    --glass-glow-opacity: 0.06;
-    --glass-glow-spread: 10px;
-    
-    --glass-highlight-opacity: 0.04;
+    --glass-blur-subtle: 8px;
+    --glass-blur: 12px;
+    --glass-blur-strong: 20px;
+
+    --glass-opacity: 0.8;
+    --glass-opacity-subtle: 0.86;
+    --glass-opacity-strong: 0.72;
+
+    --glass-glow-opacity: 0.14;
+    --glass-glow-spread: 18px;
+
+    --glass-highlight-opacity: 0.09;
   }
 }
 
 /* === DESKTOP ENHANCEMENT (1024px+) === */
 @media (min-width: 1024px) {
   :root {
-    --glass-blur-subtle: 4px;
-    --glass-blur: 6px;
-    --glass-blur-strong: 10px;
-    
-    --glass-opacity: 0.88;
-    --glass-opacity-subtle: 0.92;
-    --glass-opacity-strong: 0.8;
-    
-    --glass-glow-opacity: 0.08;
-    --glass-glow-spread: 12px;
-    
-    --glass-highlight-opacity: 0.05;
+    --glass-blur-subtle: 10px;
+    --glass-blur: 14px;
+    --glass-blur-strong: 24px;
+
+    --glass-opacity: 0.78;
+    --glass-opacity-subtle: 0.84;
+    --glass-opacity-strong: 0.68;
+
+    --glass-glow-opacity: 0.16;
+    --glass-glow-spread: 22px;
+
+    --glass-highlight-opacity: 0.1;
   }
 }
 
 /* === LARGE DESKTOP (1280px+) === */
 @media (min-width: 1280px) {
   :root {
-    --glass-blur-strong: 12px;
-    --glass-glow-spread: 15px;
+    --glass-blur-strong: 28px;
+    --glass-glow-spread: 26px;
+    --glass-glow-opacity: 0.18;
   }
 }
 
