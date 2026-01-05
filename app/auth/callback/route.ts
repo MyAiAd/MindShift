@@ -88,8 +88,10 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Redirect to the dashboard or requested page
-        return NextResponse.redirect(new URL(next, request.url));
+        // Redirect to the dashboard or requested page with confirmation success flag
+        const redirectUrl = new URL(next, request.url);
+        redirectUrl.searchParams.set('confirmed', 'true');
+        return NextResponse.redirect(redirectUrl);
       }
     } catch (error) {
       console.error('Auth callback exception:', error);

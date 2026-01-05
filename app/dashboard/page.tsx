@@ -2,21 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import FeatureGuard, { FeatureBanner } from '@/components/auth/FeatureGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
-import { 
-  Brain, 
-  Users, 
-  Target, 
-  TrendingUp, 
+import {
+  Brain,
+  Users,
+  Target,
+  TrendingUp,
   Calendar,
   Award,
   Clock,
   Activity,
-  MessageCircle
+  MessageCircle,
+  CheckCircle,
+  X
 } from 'lucide-react';
 
 interface Activity {
@@ -37,9 +40,27 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { profile, tenant } = useAuth();
+  const searchParams = useSearchParams();
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showConfirmationBanner, setShowConfirmationBanner] = useState(false);
+
+  // Check for email confirmation success
+  useEffect(() => {
+    if (searchParams.get('confirmed') === 'true') {
+      setShowConfirmationBanner(true);
+      // Auto-hide after 10 seconds
+      const timer = setTimeout(() => {
+        setShowConfirmationBanner(false);
+      }, 10000);
+
+      // Clean up the URL
+      window.history.replaceState({}, '', '/dashboard');
+
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -243,6 +264,30 @@ export default function DashboardPage() {
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+      {/* Email Confirmation Success Banner */}
+      {showConfirmationBanner && (
+        <div className="mb-6 animate-in slide-in-from-top duration-300">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-start gap-3">
+            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-green-900 dark:text-green-100">
+                Email Confirmed Successfully!
+              </h3>
+              <p className="text-sm text-green-800 dark:text-green-200 mt-1">
+                Your email has been verified and you're now logged in. Welcome to MindShifting!
+              </p>
+            </div>
+            <button
+              onClick={() => setShowConfirmationBanner(false)}
+              className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 flex-shrink-0"
+              aria-label="Dismiss"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex justify-between items-start">
