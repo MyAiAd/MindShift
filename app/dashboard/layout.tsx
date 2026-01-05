@@ -25,7 +25,8 @@ import {
   Video,
   PlayCircle,
   Flag,
-  BarChart3
+  BarChart3,
+  UserPlus
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -317,6 +318,20 @@ function SidebarContent({
                     pathname?.startsWith('/dashboard/admin/users') ? 'text-primary' : ''
                   }`} />
                   Users
+                </Link>
+                <Link
+                  href="/dashboard/admin/coaches"
+                  onClick={handleNavClick}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    pathname?.startsWith('/dashboard/admin/coaches')
+                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  <UserPlus className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    pathname?.startsWith('/dashboard/admin/coaches') ? 'text-primary' : ''
+                  }`} />
+                  Coaches
                 </Link>
                 <Link
                   href="/dashboard/admin/community-moderation/posts"
