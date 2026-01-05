@@ -937,32 +937,13 @@ body {
     -webkit-backdrop-filter: blur(var(--glass-blur-strong));
   }
 
-  /* Full glass with glow and specular highlight */
+  /* Full glass with glow */
   .glass-enabled .glass-full {
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     box-shadow: 
       0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.5)),
       0 2px 12px rgba(0, 0, 0, 0.06);
-    position: relative;
-  }
-
-  /* Specular highlight on top edge - very subtle */
-  .glass-enabled .glass-full::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 10%;
-    right: 10%;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      hsla(0 0% 100% / calc(var(--glass-highlight-opacity) * 0.5)),
-      transparent
-    );
-    border-radius: inherit;
-    pointer-events: none;
   }
 }
 
@@ -983,149 +964,37 @@ body {
  * =============================================== */
 
 @supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
-  /* === CARDS: All .bg-card elements get subtle glass treatment === */
+  /* 
+   * AUTO-GLASS: Purely additive blur effects
+   * No background changes to avoid layout conflicts
+   * Just adds subtle blur to elements with bg-card class
+   */
+  
+  /* === CARDS: Just add blur, don't change backgrounds === */
   .glass-enabled .bg-card {
-    background: hsla(var(--card) / var(--glass-opacity)) !important;
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border-color: hsla(var(--border) / 0.5) !important;
-    box-shadow: 
-      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.3)),
-      0 2px 8px rgba(0, 0, 0, 0.04);
-  }
-
-  /* === NAVIGATION & HEADERS === */
-  .glass-enabled header,
-  .glass-enabled nav,
-  .glass-enabled [role="navigation"],
-  .glass-enabled .navbar,
-  .glass-enabled .header {
-    background: hsla(var(--card) / var(--glass-opacity-subtle)) !important;
-    backdrop-filter: blur(var(--glass-blur-strong));
-    -webkit-backdrop-filter: blur(var(--glass-blur-strong));
-  }
-
-  /* === SIDEBAR === */
-  .glass-enabled aside,
-  .glass-enabled [role="complementary"],
-  .glass-enabled .sidebar {
-    background: hsla(var(--card) / var(--glass-opacity)) !important;
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
   }
 
-  /* === MODALS & DIALOGS === */
+  /* === MODALS & DIALOGS: Stronger blur === */
   .glass-enabled [role="dialog"],
-  .glass-enabled [role="alertdialog"],
-  .glass-enabled .modal,
-  .glass-enabled .dialog {
-    background: hsla(var(--card) / var(--glass-opacity)) !important;
+  .glass-enabled [role="alertdialog"] {
     backdrop-filter: blur(var(--glass-blur-strong));
     -webkit-backdrop-filter: blur(var(--glass-blur-strong));
-    box-shadow: 
-      0 0 calc(var(--glass-glow-spread) * 1.2) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.5)),
-      0 20px 40px rgba(0, 0, 0, 0.12);
   }
 
   /* === POPOVERS & DROPDOWNS === */
   .glass-enabled [role="menu"],
   .glass-enabled [role="listbox"],
-  .glass-enabled .popover,
-  .glass-enabled .dropdown-menu,
   .glass-enabled [data-radix-popper-content-wrapper] > div {
-    background: hsla(var(--card) / var(--glass-opacity)) !important;
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
-    border-color: hsla(var(--border) / 0.5) !important;
   }
 
-  /* === TOOLTIPS === */
-  .glass-enabled [role="tooltip"] {
-    background: hsla(var(--card) / var(--glass-opacity-strong)) !important;
-    backdrop-filter: blur(var(--glass-blur-subtle));
-    -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
-  }
-
-  /* === PRIMARY BUTTONS get very subtle glass === */
-  .glass-enabled .bg-primary {
-    backdrop-filter: blur(var(--glass-blur-subtle));
-    -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
-    box-shadow: 
-      0 0 calc(var(--glass-glow-spread) * 0.4) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.4)),
-      0 1px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  /* === SECONDARY/MUTED BACKGROUNDS === */
-  .glass-enabled .bg-secondary {
-    backdrop-filter: blur(var(--glass-blur-subtle));
-    -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
-  }
-
-  .glass-enabled .bg-muted {
-    backdrop-filter: blur(var(--glass-blur-subtle));
-    -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
-  }
-
-  /* === INPUT FIELDS - very subtle === */
-  .glass-enabled input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-  .glass-enabled textarea,
-  .glass-enabled select {
-    backdrop-filter: blur(var(--glass-blur-subtle));
-    -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
-  }
-
-  /* === BOTTOM NAVIGATION (PWA) === */
-  .glass-enabled .fixed.bottom-0,
-  .glass-enabled [class*="fixed"][class*="bottom-0"] {
-    background: hsla(var(--card) / var(--glass-opacity)) !important;
-    backdrop-filter: blur(var(--glass-blur-strong));
-    -webkit-backdrop-filter: blur(var(--glass-blur-strong));
-  }
-
-  /* === FLOATING ACTION BUTTONS === */
-  .glass-enabled .fab,
-  .glass-enabled [class*="fixed"][class*="rounded-full"] {
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    box-shadow: 
-      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.5)),
-      0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  /* === SPECULAR HIGHLIGHT on main cards - very subtle === */
-  .glass-enabled .bg-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 15%;
-    right: 15%;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      hsla(0 0% 100% / calc(var(--glass-highlight-opacity) * 0.5)),
-      transparent
-    );
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  /* Ensure cards have relative positioning for the highlight */
-  .glass-enabled .bg-card {
-    position: relative;
-    overflow: hidden;
-  }
 }
 
 /* === FALLBACK: When backdrop-filter not supported === */
-@supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
-  .glass-enabled .bg-card,
-  .glass-enabled .bg-secondary,
-  .glass-enabled .bg-muted {
-    /* Just slightly tint the background */
-    background: hsla(var(--glass-tint) / 0.08) !important;
-  }
-}
+/* No visual changes needed - elements keep their normal appearance */
 
 /* === DISABLE AUTO-GLASS ON SPECIFIC ELEMENTS === */
 /* Add .no-glass class to opt-out of auto-glass effects */
