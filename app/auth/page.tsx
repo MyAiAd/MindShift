@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { createClient } from '@/lib/database';
 import { useAuth } from '@/lib/auth';
 import { Brain, Mail, Lock, User, Building2, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function AuthPage() {
+function AuthPageContent() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -177,7 +177,7 @@ export default function AuthPage() {
         } else {
           // Email confirmation required
           console.log('Auth: Email confirmation required');
-          setError('Please check your email and click the confirmation link to complete your registration.');
+          setSuccess('Please check your email and click the confirmation link to complete your registration.');
         }
       }
     } catch (err) {
@@ -209,7 +209,7 @@ export default function AuthPage() {
         )}
         
         {success && (
-          <div className="bg-accent/10 border border-accent text-accent px-4 py-3 rounded-md">
+          <div className="bg-green-500/10 border border-green-500 text-green-600 dark:text-green-400 px-4 py-3 rounded-md">
             {success}
           </div>
         )}
@@ -356,4 +356,16 @@ export default function AuthPage() {
       </div>
     </div>
   );
-} 
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <AuthPageContent />
+    </Suspense>
+  );
+}
