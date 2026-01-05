@@ -47,35 +47,21 @@ export class EmailService {
         return { success: false, error: 'Email service not configured' };
       }
 
-      // Build email options - Resend requires either html or text
-      const emailOptions: {
-        from: string;
-        to: string | string[];
-        subject: string;
-        html?: string;
-        text?: string;
-        replyTo?: string;
-      } = {
-        from: EMAIL_CONFIG.from,
-        to: options.to,
-        subject: options.subject,
-        replyTo: options.replyTo || EMAIL_CONFIG.replyTo,
-      };
-
-      // Add html or text content (at least one is required)
-      if (options.html) {
-        emailOptions.html = options.html;
-      }
-      if (options.text) {
-        emailOptions.text = options.text;
-      }
-
       // Ensure we have at least one content type
-      if (!emailOptions.html && !emailOptions.text) {
+      if (!options.html && !options.text) {
         return { success: false, error: 'Email must have html or text content' };
       }
 
-      const { data, error } = await resend.emails.send(emailOptions);
+      // Use type assertion for Resend SDK compatibility
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await resend.emails.send({
+        from: EMAIL_CONFIG.from,
+        to: options.to,
+        subject: options.subject,
+        html: options.html || '',
+        text: options.text,
+        replyTo: options.replyTo || EMAIL_CONFIG.replyTo,
+      } as any);
 
       if (error) {
         console.error('Email send error:', error);
