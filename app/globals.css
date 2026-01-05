@@ -452,6 +452,11 @@
     --border: 192 13% 45%;           /* base0: #839496 - visible border */
     --input: 192 13% 45%;            /* base0: #839496 - visible input border */
     --ring: 205 69% 67%;             /* blue: #268bd2 - focus ring */
+    /* Glass effect variables */
+    --glass-tint: 205 69% 67%;       /* Blue tint for glass */
+    --glass-glow-color: 205 69% 67%;
+    --glass-opacity: 0.88;           /* Higher opacity for light themes */
+    --glass-opacity-subtle: 0.92;
   }
 
   /* Solarized Dark */
@@ -475,6 +480,9 @@
     --border: 192 81% 27%;             /* base01 lighter */
     --input: 192 81% 27%;              /* base01 lighter */
     --ring: 205 69% 67%;               /* blue: #268bd2 */
+    /* Glass effect variables */
+    --glass-tint: 205 69% 67%;         /* Blue tint - cool, professional */
+    --glass-glow-color: 205 69% 67%;
   }
 
   /* Gruvbox Light */
@@ -498,6 +506,11 @@
     --border: 36 46% 76%;            /* #d5c4a1 */
     --input: 36 46% 76%;             /* #d5c4a1 */
     --ring: 39 83% 49%;              /* #d79921 */
+    /* Glass effect variables */
+    --glass-tint: 39 83% 49%;        /* Orange/yellow - warm retro */
+    --glass-glow-color: 39 83% 49%;
+    --glass-opacity: 0.88;           /* Higher opacity for light themes */
+    --glass-opacity-subtle: 0.92;
   }
 
   /* Gruvbox Dark */
@@ -521,6 +534,9 @@
     --border: 25 43% 35%;            /* #504945 */
     --input: 25 43% 35%;             /* #504945 */
     --ring: 39 100% 58%;             /* #fabd2f */
+    /* Glass effect variables */
+    --glass-tint: 39 100% 58%;       /* Yellow/orange - warm retro */
+    --glass-glow-color: 39 100% 58%;
   }
 
   /* Nord */
@@ -544,6 +560,9 @@
     --border: 220 16% 36%;           /* #434c5e */
     --input: 220 16% 36%;            /* #434c5e */
     --ring: 193 43% 67%;             /* #88c0d0 */
+    /* Glass effect variables */
+    --glass-tint: 193 43% 67%;       /* Frost blue - arctic feel */
+    --glass-glow-color: 179 25% 65%; /* Teal accent glow */
   }
 
   /* Dracula */
@@ -567,6 +586,9 @@
     --border: 230 15% 36%;           /* #6272a4 */
     --input: 230 15% 36%;            /* #6272a4 */
     --ring: 265 89% 78%;             /* #bd93f9 */
+    /* Glass effect variables */
+    --glass-tint: 265 89% 78%;       /* Purple - vibrant, energetic */
+    --glass-glow-color: 265 89% 78%;
   }
 
   /* Catppuccin Mocha */
@@ -590,6 +612,9 @@
     --border: 233 12% 39%;           /* #585b70 */
     --input: 233 12% 39%;            /* #585b70 */
     --ring: 217 92% 76%;             /* #89b4fa */
+    /* Glass effect variables */
+    --glass-tint: 217 92% 76%;       /* Blue - soft pastel */
+    --glass-glow-color: 189 71% 73%; /* Sky teal glow */
   }
 
   /* Tokyo Night */
@@ -613,6 +638,9 @@
     --border: 235 18% 24%;           /* #292e42 */
     --input: 235 18% 24%;            /* #292e42 */
     --ring: 217 92% 76%;             /* #7aa2f7 */
+    /* Glass effect variables */
+    --glass-tint: 217 92% 76%;       /* Blue - neon city vibe */
+    --glass-glow-color: 172 67% 60%; /* Cyan glow */
   }
 }
 
@@ -787,4 +815,460 @@ body {
   --z-mobile-overlay: 50;
   --z-mobile-modal: 60;
 }
- 
+
+/* ===============================================
+ * LIQUID GLASS SYSTEM - MOBILE-FIRST
+ * Glass effects as orthogonal layer on top of themes
+ * =============================================== */
+
+:root {
+  /* === MOBILE DEFAULTS (base) === */
+  
+  /* Lighter blur for mobile performance */
+  --glass-blur-subtle: 4px;
+  --glass-blur: 8px;
+  --glass-blur-strong: 12px;
+  
+  /* Higher opacity = better performance + readability on small screens */
+  --glass-opacity: 0.85;
+  --glass-opacity-subtle: 0.9;
+  --glass-opacity-strong: 0.75;
+  
+  /* Reduced glow for battery life */
+  --glass-glow-opacity: 0.08;
+  --glass-glow-spread: 10px;
+  
+  /* Touch-friendly borders (more visible) */
+  --glass-border-width: 1px;
+  --glass-border-opacity: 0.25;
+  
+  /* Reduced specular for simplicity */
+  --glass-highlight-opacity: 0.05;
+  --glass-highlight-size: 50%;
+  
+  /* Default tint colors (overridden per theme) */
+  --glass-tint: 0 0% 50%;
+  --glass-glow-color: 0 0% 50%;
+  --glass-highlight: 0 0% 100%;
+}
+
+/* === TABLET ENHANCEMENT (640px+) === */
+@media (min-width: 640px) {
+  :root {
+    --glass-blur-subtle: 6px;
+    --glass-blur: 10px;
+    --glass-blur-strong: 16px;
+    
+    --glass-opacity: 0.8;
+    --glass-opacity-subtle: 0.88;
+    --glass-opacity-strong: 0.7;
+    
+    --glass-glow-opacity: 0.12;
+    --glass-glow-spread: 15px;
+    
+    --glass-highlight-opacity: 0.08;
+  }
+}
+
+/* === DESKTOP ENHANCEMENT (1024px+) === */
+@media (min-width: 1024px) {
+  :root {
+    --glass-blur-subtle: 8px;
+    --glass-blur: 12px;
+    --glass-blur-strong: 20px;
+    
+    --glass-opacity: 0.75;
+    --glass-opacity-subtle: 0.85;
+    --glass-opacity-strong: 0.6;
+    
+    --glass-glow-opacity: 0.15;
+    --glass-glow-spread: 20px;
+    
+    --glass-highlight-opacity: 0.1;
+  }
+}
+
+/* === LARGE DESKTOP (1280px+) === */
+@media (min-width: 1280px) {
+  :root {
+    --glass-blur-strong: 24px;
+    --glass-glow-spread: 25px;
+  }
+}
+
+/* === PWA STANDALONE MODE ENHANCEMENT === */
+@media (display-mode: standalone) {
+  :root {
+    /* PWA users expect app-like experience - slightly enhanced effects */
+    --glass-glow-opacity: calc(var(--glass-glow-opacity) * 1.15);
+  }
+}
+
+/* === LANDSCAPE MOBILE OPTIMIZATION === */
+@media (max-width: 640px) and (orientation: landscape) {
+  :root {
+    --glass-blur: 6px;
+    --glass-opacity: 0.9;
+  }
+}
+
+/* ===============================================
+ * GLASS UTILITY CLASSES
+ * Only active when .glass-enabled is on <html>
+ * =============================================== */
+
+/* Feature detection: Only apply blur if supported */
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+  /* Basic glass surface */
+  .glass-enabled .glass {
+    background: hsla(var(--glass-tint) / var(--glass-opacity));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: var(--glass-border-width) solid hsla(var(--glass-tint) / var(--glass-border-opacity));
+  }
+
+  /* Subtle glass - lighter effect */
+  .glass-enabled .glass-subtle {
+    background: hsla(var(--glass-tint) / var(--glass-opacity-subtle));
+    backdrop-filter: blur(var(--glass-blur-subtle));
+    -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
+    border: var(--glass-border-width) solid hsla(var(--glass-tint) / calc(var(--glass-border-opacity) * 0.5));
+  }
+
+  /* Strong glass - more blur and transparency */
+  .glass-enabled .glass-strong {
+    background: hsla(var(--glass-tint) / var(--glass-opacity-strong));
+    backdrop-filter: blur(var(--glass-blur-strong));
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+    border: var(--glass-border-width) solid hsla(var(--glass-tint) / calc(var(--glass-border-opacity) * 1.5));
+  }
+
+  /* Full glass with glow and specular highlight */
+  .glass-enabled .glass-full {
+    background: hsla(var(--glass-tint) / var(--glass-opacity));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: var(--glass-border-width) solid hsla(var(--glass-tint) / var(--glass-border-opacity));
+    box-shadow: 
+      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / var(--glass-glow-opacity)),
+      0 8px 32px rgba(0, 0, 0, 0.12);
+    position: relative;
+  }
+
+  /* Specular highlight on top edge */
+  .glass-enabled .glass-full::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 5%;
+    right: 5%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsla(0 0% 100% / var(--glass-highlight-opacity)),
+      transparent
+    );
+    border-radius: inherit;
+    pointer-events: none;
+  }
+}
+
+/* Fallback when backdrop-filter not supported */
+@supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
+  .glass-enabled .glass,
+  .glass-enabled .glass-subtle,
+  .glass-enabled .glass-strong,
+  .glass-enabled .glass-full {
+    background: hsla(var(--glass-tint) / 0.95);
+  }
+}
+
+/* Ambient glow effect (can be combined with any glass class) */
+.glass-enabled .glass-glow {
+  box-shadow: 
+    0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / var(--glass-glow-opacity)),
+    0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* === TOUCH-FRIENDLY GLASS INTERACTIONS === */
+
+/* Touch target sizing */
+.glass-enabled .glass-touchable {
+  min-height: 44px;
+  min-width: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch feedback (mobile) */
+.glass-enabled .glass-touchable:active {
+  transform: scale(0.98);
+  background: hsla(var(--glass-tint) / calc(var(--glass-opacity) + 0.1));
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+
+/* Hover effects only on devices that support hover */
+@media (hover: hover) and (pointer: fine) {
+  .glass-enabled .glass-interactive {
+    transition: 
+      box-shadow 0.3s ease,
+      transform 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .glass-enabled .glass-interactive:hover {
+    box-shadow: 
+      0 0 calc(var(--glass-glow-spread) * 1.5) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 1.5)),
+      0 12px 40px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .glass-enabled .glass-interactive:active {
+    transform: translateY(0);
+  }
+}
+
+/* Touch devices: simpler interaction */
+@media (hover: none) {
+  .glass-enabled .glass-interactive {
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  
+  .glass-enabled .glass-interactive:active {
+    transform: scale(0.97);
+    background: hsla(var(--glass-tint) / calc(var(--glass-opacity) + 0.15));
+  }
+}
+
+/* Focus states for glass elements */
+.glass-enabled .glass:focus-visible,
+.glass-enabled .glass-full:focus-visible,
+.glass-enabled .glass-interactive:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* === GLASS PERFORMANCE MODES === */
+
+/* Reduced glass mode (low battery) */
+.glass-performance-reduced {
+  --glass-blur: 6px;
+  --glass-blur-strong: 10px;
+  --glass-glow-opacity: 0.05;
+  --glass-opacity: 0.9;
+}
+
+/* Minimal glass mode (very low battery / data saver) */
+.glass-performance-minimal {
+  --glass-blur: 4px;
+  --glass-blur-strong: 6px;
+  --glass-glow-opacity: 0;
+  --glass-glow-spread: 0;
+  --glass-opacity: 0.95;
+  --glass-highlight-opacity: 0;
+}
+
+/* Disable blur entirely in minimal mode */
+.glass-performance-minimal .glass,
+.glass-performance-minimal .glass-subtle,
+.glass-performance-minimal .glass-strong,
+.glass-performance-minimal .glass-full {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* === ACCESSIBILITY FALLBACKS === */
+
+/* High contrast mode: solid backgrounds */
+.high-contrast .glass,
+.high-contrast .glass-subtle,
+.high-contrast .glass-strong,
+.high-contrast .glass-full {
+  background: hsl(var(--card)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Reduced transparency preference */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-enabled .glass,
+  .glass-enabled .glass-subtle,
+  .glass-enabled .glass-strong,
+  .glass-enabled .glass-full {
+    background: hsl(var(--card)) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* Reduced motion: disable animations */
+@media (prefers-reduced-motion: reduce) {
+  .glass-enabled .glass-interactive {
+    transition: none !important;
+    transform: none !important;
+  }
+  
+  .glass-enabled .glass-touchable:active {
+    transform: none !important;
+  }
+}
+
+/* === PWA SAFE AREA GLASS COMPONENTS === */
+
+/* Glass navigation with safe area */
+.glass-enabled .glass-nav {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Glass bottom bar with home indicator padding */
+.glass-enabled .glass-bottom-bar {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+}
+
+/* Glass bottom navigation for PWA */
+.glass-enabled .glass-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: hsla(var(--glass-tint) / var(--glass-opacity));
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: var(--glass-border-width) solid hsla(var(--glass-tint) / var(--glass-border-opacity));
+  z-index: var(--z-mobile-bottom-nav, 40);
+}
+
+/* Hide glass bottom nav on desktop (use sidebar instead) */
+@media (min-width: 1024px) {
+  .glass-enabled .glass-bottom-nav {
+    display: none;
+  }
+}
+
+/* ===============================================
+ * GLASS ANIMATIONS
+ * =============================================== */
+
+/* Shimmer animation keyframes */
+@keyframes glass-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Shimmer effect - subtle moving highlight */
+.glass-enabled .glass-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-enabled .glass-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsla(0 0% 100% / 0.06) 45%,
+    hsla(0 0% 100% / 0.1) 50%,
+    hsla(0 0% 100% / 0.06) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: glass-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Slower shimmer variant */
+.glass-enabled .glass-shimmer-slow::after {
+  animation-duration: 5s;
+}
+
+/* Faster shimmer variant */
+.glass-enabled .glass-shimmer-fast::after {
+  animation-duration: 2s;
+}
+
+/* One-time shimmer on hover */
+@keyframes glass-shimmer-once {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.glass-enabled .glass-shimmer-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-enabled .glass-shimmer-hover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsla(0 0% 100% / 0.08) 45%,
+    hsla(0 0% 100% / 0.15) 50%,
+    hsla(0 0% 100% / 0.08) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-position: -200% center;
+  pointer-events: none;
+  border-radius: inherit;
+  transition: none;
+}
+
+@media (hover: hover) {
+  .glass-enabled .glass-shimmer-hover:hover::after {
+    animation: glass-shimmer-once 0.6s ease-out forwards;
+  }
+}
+
+/* Pulse glow animation */
+@keyframes glass-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / var(--glass-glow-opacity)),
+      0 8px 32px rgba(0, 0, 0, 0.12);
+  }
+  50% {
+    box-shadow: 
+      0 0 calc(var(--glass-glow-spread) * 1.5) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 1.5)),
+      0 8px 32px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.glass-enabled .glass-pulse {
+  animation: glass-pulse 2s ease-in-out infinite;
+}
+
+/* Disable animations when reduced motion is preferred */
+@media (prefers-reduced-motion: reduce) {
+  .glass-enabled .glass-shimmer::after,
+  .glass-enabled .glass-shimmer-hover::after {
+    animation: none !important;
+    background-position: center !important;
+  }
+  
+  .glass-enabled .glass-pulse {
+    animation: none !important;
+  }
+}

@@ -63,7 +63,7 @@ interface GDPRSettings {
 
 export default function SettingsPage() {
   const { profile, user, loading } = useAuth();
-  const { isDarkMode, toggleDarkMode, theme, setTheme } = useTheme();
+  const { isDarkMode, toggleDarkMode, theme, setTheme, glassEnabled, setGlassEnabled, glassAutoDisableMobile, setGlassAutoDisableMobile } = useTheme();
   const supabase = createClient();
   
   // Services
@@ -1233,6 +1233,69 @@ export default function SettingsPage() {
                   <strong className="text-foreground">Tip:</strong> You can also quickly switch themes using the theme menu in the header (sun/moon icon).
                   Your theme preference is automatically saved and will persist across sessions.
                 </p>
+              </div>
+
+              {/* Glass Effects Settings */}
+              <div className="mt-8 pt-6 border-t border-border">
+                <h3 className="font-semibold text-foreground mb-4 flex items-center">
+                  <span className="inline-block w-3 h-3 rounded-full bg-gradient-to-br from-white/40 to-white/10 border border-white/20 mr-2"></span>
+                  Glass Effects
+                  <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                    New
+                  </span>
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Enable modern frosted glass UI effects inspired by Apple&apos;s Liquid Glass design. 
+                  Glass effects work with any color theme.
+                </p>
+                
+                <div className="space-y-4">
+                  {/* Glass Enable Toggle */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-foreground">Enable Glass Effects</h4>
+                      <p className="text-sm text-muted-foreground">Add frosted glass blur and glow to UI elements</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={glassEnabled}
+                        onChange={(e) => setGlassEnabled(e.target.checked)}
+                      />
+                      <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  </div>
+
+                  {/* Auto-disable on Mobile Toggle (only show when glass is enabled) */}
+                  {glassEnabled && (
+                    <div className="flex items-center justify-between pl-4 border-l-2 border-border ml-2">
+                      <div>
+                        <h4 className="font-medium text-foreground">Auto-disable on Mobile</h4>
+                        <p className="text-sm text-muted-foreground">Save battery life on phones (disables blur effects)</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer" 
+                          checked={glassAutoDisableMobile}
+                          onChange={(e) => setGlassAutoDisableMobile(e.target.checked)}
+                        />
+                        <div className="w-11 h-6 bg-secondary dark:bg-[#657b83] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Glass Preview */}
+                  {glassEnabled && (
+                    <div className="mt-4 p-4 rounded-xl glass-full">
+                      <p className="text-sm font-medium text-foreground">✨ Glass Preview</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        This card is using the glass effect with your current theme colors.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

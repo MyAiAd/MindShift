@@ -11,6 +11,10 @@ const cardVariants = cva(
       variant: {
         default: "",
         compact: "",
+        // Glass variants - activated when .glass-enabled is on <html>
+        glass: "glass-full bg-card/80",
+        glassSubtle: "glass-subtle bg-card/90",
+        glassStrong: "glass-strong bg-card/70",
       },
     },
     defaultVariants: {

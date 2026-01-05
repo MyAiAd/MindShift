@@ -1,12 +1,17 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { ThemeId, getDefaultTheme, getThemeById, themes } from '@/lib/themes';
 
 interface ThemeContextType {
   theme: ThemeId;
   setTheme: (theme: ThemeId) => void;
   mode: 'light' | 'dark';
+  // Glass effects
+  glassEnabled: boolean;
+  setGlassEnabled: (enabled: boolean) => void;
+  glassAutoDisableMobile: boolean;
+  setGlassAutoDisableMobile: (auto: boolean) => void;
   // Legacy compatibility
   isDarkMode: boolean;
   toggleDarkMode: () => void;
@@ -15,9 +20,20 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// Helper to detect mobile device
+function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.innerWidth < 640 || 
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeId>(getDefaultTheme());
   const [mounted, setMounted] = useState(false);
+  
+  // Glass effect state
+  const [glassEnabled, setGlassEnabledState] = useState(false);
+  const [glassAutoDisableMobile, setGlassAutoDisableMobileState] = useState(false);
 
   // Load theme from localStorage on mount
   useEffect(() => {
@@ -39,6 +55,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         setThemeState(prefersDark ? 'solarized-dark' : 'solarized-light');
       }
+    }
+    
+    // Load glass preferences
+    const savedGlass = localStorage.getItem('glassEnabled');
+    if (savedGlass !== null) {
+      setGlassEnabledState(savedGlass === 'true');
+    }
+    
+    const savedGlassAutoMobile = localStorage.getItem('glassAutoDisableMobile');
+    if (savedGlassAutoMobile !== null) {
+      setGlassAutoDisableMobileState(savedGlassAutoMobile === 'true');
     }
   }, []);
 
@@ -64,8 +91,40 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('darkMode', (themeConfig.mode === 'dark').toString());
   }, [theme, mounted]);
 
+  // Compute effective glass state (respects auto-disable on mobile)
+  const effectiveGlassEnabled = useMemo(() => {
+    if (!glassEnabled) return false;
+    if (glassAutoDisableMobile && isMobileDevice()) return false;
+    return true;
+  }, [glassEnabled, glassAutoDisableMobile]);
+
+  // Apply glass class when it changes
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const root = document.documentElement;
+    
+    if (effectiveGlassEnabled) {
+      root.classList.add('glass-enabled');
+    } else {
+      root.classList.remove('glass-enabled');
+    }
+    
+    // Save preferences to localStorage
+    localStorage.setItem('glassEnabled', String(glassEnabled));
+    localStorage.setItem('glassAutoDisableMobile', String(glassAutoDisableMobile));
+  }, [effectiveGlassEnabled, glassEnabled, glassAutoDisableMobile, mounted]);
+
   const setTheme = (newTheme: ThemeId) => {
     setThemeState(newTheme);
+  };
+
+  const setGlassEnabled = (enabled: boolean) => {
+    setGlassEnabledState(enabled);
+  };
+
+  const setGlassAutoDisableMobile = (auto: boolean) => {
+    setGlassAutoDisableMobileState(auto);
   };
 
   // Get current theme mode
@@ -104,7 +163,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       value={{ 
         theme, 
         setTheme, 
-        mode, 
+        mode,
+        glassEnabled,
+        setGlassEnabled,
+        glassAutoDisableMobile,
+        setGlassAutoDisableMobile,
         isDarkMode, 
         toggleDarkMode, 
         setDarkMode 

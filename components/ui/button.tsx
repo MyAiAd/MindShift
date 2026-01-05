@@ -19,6 +19,13 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Glass variants - activated when .glass-enabled is on <html>
+        glass:
+          "glass glass-interactive bg-primary/80 text-primary-foreground hover:bg-primary/90",
+        glassSecondary:
+          "glass-subtle glass-interactive bg-secondary/80 text-secondary-foreground hover:bg-secondary/90",
+        glassOutline:
+          "glass-subtle glass-interactive border border-input bg-background/60 hover:bg-accent/80 hover:text-accent-foreground",
       },
       size: {
         default: "h-9 px-4 py-2",
