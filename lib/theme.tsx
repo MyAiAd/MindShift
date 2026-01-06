@@ -47,17 +47,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (savedTheme && themes[savedTheme]) {
       setThemeState(savedTheme);
     } else {
-      // Migration: Check old darkMode setting
-      const oldDarkMode = localStorage.getItem('darkMode');
-      if (oldDarkMode === 'true') {
-        setThemeState('solarized-dark');
-      } else if (oldDarkMode === 'false') {
-        setThemeState('solarized-light');
-      } else {
-        // Default: use system preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setThemeState(prefersDark ? 'solarized-dark' : 'solarized-light');
-      }
+      // Use the default theme (solarized-dark)
+      setThemeState(getDefaultTheme());
     }
     
     // Load glass preferences
