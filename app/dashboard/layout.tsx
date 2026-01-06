@@ -69,10 +69,6 @@ export default function DashboardLayout({
   });
   
   const router = useRouter();
-  const pathname = usePathname();
-  
-  // Check if we're on a treatment session page (mobile gets different header there)
-  const isTreatmentPage = pathname?.includes('/treatment-v') || pathname?.includes('/treatment/');
 
   // Save sidebar state to localStorage
   useEffect(() => {
@@ -133,28 +129,16 @@ export default function DashboardLayout({
   return (
     <ThemeProvider>
       <div className="h-screen flex overflow-hidden bg-secondary/20 relative overflow-x-hidden">
-        {/* Hamburger menu button - fixed in top-left corner (hidden on mobile treatment pages) */}
+        {/* Hamburger menu button - desktop only (mobile uses bottom nav) */}
         <button
-          className={`fixed top-4 left-4 z-50 h-10 w-10 inline-flex items-center justify-center rounded-md bg-primary hover:bg-primary/90 text-primary-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring transition-colors shadow-lg ${isTreatmentPage ? 'hidden md:inline-flex' : ''}`}
+          className="fixed top-4 left-4 z-50 h-10 w-10 hidden md:inline-flex items-center justify-center rounded-md bg-primary hover:bg-primary/90 text-primary-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring transition-colors shadow-lg"
           onClick={() => setSidebarOpen(!sidebarOpen)}
           title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
         >
           {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
 
-        {/* Mobile sidebar */}
-        <div
-          className={`fixed inset-0 flex z-40 md:hidden ${
-            sidebarOpen ? 'block' : 'hidden'
-          }`}
-        >
-          <div className="fixed inset-0 bg-background/75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full h-full pb-20 bg-card">
-            <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} onNavigate={() => setSidebarOpen(false)} />
-          </div>
-        </div>
-
-        {/* Desktop sidebar (toggleable) */}
+        {/* Desktop sidebar (toggleable) - mobile uses bottom nav instead */}
         <div 
           className={`hidden md:flex md:flex-shrink-0 h-screen z-40 transition-all duration-300 ease-in-out bg-card ${
             sidebarOpen ? 'md:w-64' : 'md:w-0'
