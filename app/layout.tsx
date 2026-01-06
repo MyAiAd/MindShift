@@ -5,7 +5,6 @@ import './globals.css'
 import { AuthProvider } from '@/lib/auth'
 import { ThemeProvider } from '@/lib/theme'
 import SkipNavigation from '@/components/layout/SkipNavigation'
-import AccessibilityWidget from '@/components/accessibility/AccessibilityWidget'
 import CookieConsent from '@/components/gdpr/CookieConsent'
 import { InstallPrompt } from '@/components/mobile/InstallPrompt'
 
@@ -103,7 +102,6 @@ export default function RootLayout({
             <main id="main-content" className="min-h-screen bg-background text-foreground">
               {children}
             </main>
-            <AccessibilityWidget />
             <CookieConsent />
             <InstallPrompt />
           </AuthProvider>
