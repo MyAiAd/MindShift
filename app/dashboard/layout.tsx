@@ -32,7 +32,7 @@ const mainSidebarItems = [
   { icon: Brain, label: 'Home', href: '/dashboard' },
   { icon: Sparkles, label: 'Shift', href: '/dashboard/sessions/treatment-v4' },
   { icon: Users, label: 'Connect', href: '/dashboard/community' },
-  { icon: MoreHorizontal, label: 'More', href: '/dashboard/more' },
+  { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
 
 export default function DashboardLayout({

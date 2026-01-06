@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Sparkles, Users, MoreHorizontal } from 'lucide-react';
+import { Home, Sparkles, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -22,9 +22,9 @@ const navItems = [
     icon: Users,
   },
   {
-    label: 'More',
-    href: '/dashboard/more',
-    icon: MoreHorizontal,
+    label: 'Settings',
+    href: '/dashboard/settings',
+    icon: Settings,
   },
 ];
 
