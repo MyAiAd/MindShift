@@ -1205,17 +1205,17 @@ export default function TreatmentSession({
           </div>
           {/* End Desktop Layout */}
           
-          {/* Voice Settings Popover - Shared between mobile and desktop */}
+          {/* Voice Settings Modal - Centered on desktop, bottom sheet on mobile */}
           {showVoiceSettings && (
             <>
-              {/* Mobile overlay backdrop */}
+              {/* Overlay backdrop */}
               <div 
-                className="fixed inset-0 bg-black/30 z-40 md:hidden"
+                className="fixed inset-0 bg-black/30 z-40"
                 onClick={() => setShowVoiceSettings(false)}
               />
               
-              {/* Popover content */}
-              <div className="fixed bottom-0 left-0 right-0 md:absolute md:bottom-auto md:top-full md:mt-2 md:right-4 md:left-auto w-full md:w-72 bg-card dark:bg-[#073642] border-t md:border border-border dark:border-[#586e75] md:rounded-lg shadow-xl p-4 pb-6 md:pb-4 z-50 max-h-[80vh] md:max-h-none overflow-y-auto rounded-t-2xl md:rounded-t-lg">
+              {/* Modal content - bottom sheet on mobile, centered modal on desktop */}
+              <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-80 md:max-w-[90vw] bg-card dark:bg-[#073642] border-t md:border border-border dark:border-[#586e75] md:rounded-xl shadow-xl p-4 pb-6 md:pb-4 z-50 max-h-[80vh] overflow-y-auto rounded-t-2xl md:rounded-xl">
                 {/* Mobile drag handle */}
                 <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mb-4 md:hidden" />
                 
