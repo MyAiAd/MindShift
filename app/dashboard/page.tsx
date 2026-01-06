@@ -92,7 +92,10 @@ function DashboardContent() {
           treatmentResponse.json()
         ]);
 
-        // Get treatment sessions for more detailed stats
+        // Get stats from the API (now includes new metrics fields)
+        const apiStats = sessionsData.stats || {};
+        
+        // Get treatment sessions for fallback calculation
         const treatmentSessions = treatmentData.treatmentSessions || [];
         
         // Filter sessions by time period
@@ -103,12 +106,14 @@ function DashboardContent() {
           new Date(s.created_at) >= cutoffDate
         );
 
-        // Calculate stats
-        const activeCount = filteredSessions.filter((s: any) => s.status === 'active' || s.status === 'paused').length;
-        const completedSessions = filteredSessions.filter((s: any) => s.status === 'completed');
+        // Calculate stats - prefer API values, fallback to local calculation
+        const activeCount = apiStats.active_treatment_sessions ?? 
+          filteredSessions.filter((s: any) => s.status === 'active' || s.status === 'paused').length;
+        
+        const totalSessions = apiStats.treatment_sessions ?? filteredSessions.length;
         
         // Get unique days where user did mind shifting
-        const uniqueDays = new Set(
+        const uniqueDays = apiStats.unique_days_active ?? new Set(
           filteredSessions.map((s: any) => new Date(s.created_at).toDateString())
         ).size;
 
@@ -117,19 +122,29 @@ function DashboardContent() {
           sum + (s.duration_minutes || 0), 0
         );
 
-        // Problems cleared = completed sessions (approximation)
-        const problemsCleared = completedSessions.length;
+        // Use API values for new metrics, with fallback calculations
+        const problemsCleared = apiStats.problems_cleared ?? 
+          filteredSessions.reduce((sum: number, s: any) => 
+            sum + (s.problems_count || (s.status === 'completed' ? 1 : 0)), 0
+          );
+        
+        const goalsOptimised = apiStats.goals_optimized ?? 
+          filteredSessions.reduce((sum: number, s: any) => sum + (s.goals_count || 0), 0);
+        
+        const experiencesCleared = apiStats.experiences_cleared ?? 
+          filteredSessions.reduce((sum: number, s: any) => sum + (s.experiences_count || 0), 0);
         
         // Average time per problem
-        const avgMinutes = problemsCleared > 0 ? Math.round(totalMinutes / problemsCleared) : 0;
+        const avgMinutes = apiStats.avg_minutes_per_problem ?? 
+          (problemsCleared > 0 ? Math.round(totalMinutes / problemsCleared) : 0);
 
         setStats({
           activeSessionsCount: activeCount,
-          totalSessionsCount: filteredSessions.length,
+          totalSessionsCount: totalSessions,
           daysActive: uniqueDays,
           problemsCleared: problemsCleared,
-          goalsOptimised: 0, // Will need separate tracking
-          negativeExperiencesCleared: 0, // Will need separate tracking
+          goalsOptimised: goalsOptimised,
+          negativeExperiencesCleared: experiencesCleared,
           totalMinutes: totalMinutes,
           avgMinutesPerProblem: avgMinutes
         });

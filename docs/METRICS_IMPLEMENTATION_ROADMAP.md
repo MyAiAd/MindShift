@@ -4,6 +4,21 @@ This document outlines the comprehensive changes needed to fully implement all M
 
 ---
 
+## Implementation Status
+
+**Last Updated:** January 6, 2026
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Migration 057 (columns) | ✅ Created | `057_add_metrics_tracking_columns.sql` |
+| Migration 058 (functions) | ✅ Created | `058_update_session_stats_function.sql` |
+| Admin Metrics API | ✅ Created | `/api/admin/metrics/route.ts` |
+| Treatment V4 API Updates | ✅ Done | Tracks session types, increments counters |
+| Dashboard Integration | ✅ Done | Uses new API fields with fallbacks |
+| **Run Migrations** | ⏳ Pending | Need to apply to Supabase |
+
+---
+
 ## Current State
 
 ### Metrics Currently Working ✅
@@ -466,20 +481,21 @@ $$;
 ## Implementation Checklist
 
 ### Database
-- [ ] Create migration for `treatment_sessions` new columns
-- [ ] Create `user_metrics_daily` table (optional)
-- [ ] Create `admin_metrics_aggregate` view
-- [ ] Update `get_session_stats` function
+- [x] Create migration for `treatment_sessions` new columns (`057_add_metrics_tracking_columns.sql`)
+- [ ] Create `user_metrics_daily` table (optional - for performance optimization)
+- [x] Create `admin_metrics_aggregate` function (in `058_update_session_stats_function.sql`)
+- [x] Update `get_session_stats` function (`058_update_session_stats_function.sql`)
+- [ ] **RUN MIGRATIONS IN SUPABASE** ⚠️
 
 ### Backend API
-- [ ] Update `/api/treatment-v4` to track session types
-- [ ] Update session completion to increment counters
-- [ ] Create `/api/admin/metrics` endpoint
-- [ ] Update `/api/sessions/stats` to return new fields
+- [x] Update `/api/treatment-v4` to track session types
+- [x] Update session completion to increment counters
+- [x] Create `/api/admin/metrics` endpoint
+- [x] Update `/api/sessions/stats` to return new fields (via DB function)
 
 ### Frontend
-- [ ] Update dashboard to use new API fields when available
-- [ ] Ensure treatment flow captures method selection
+- [x] Update dashboard to use new API fields when available
+- [x] Dashboard falls back to local calculation if API doesn't have new fields yet
 - [ ] Create admin metrics dashboard (optional)
 
 ### Testing

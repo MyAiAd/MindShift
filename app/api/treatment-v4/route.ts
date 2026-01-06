@@ -850,7 +850,13 @@ async function saveSessionToDatabase(
       ai_responses: 0,
       duration_minutes: 0,
       total_ai_cost: 0.00,
-      total_ai_tokens: 0
+      total_ai_tokens: 0,
+      // Metrics tracking fields
+      session_type: 'problem_shifting', // Default, will be updated based on method selection
+      method_used: 'mind_shifting',
+      problems_count: 0,
+      goals_count: 0,
+      experiences_count: 0
     };
 
     console.log('Treatment V4 API: Inserting session data:', sessionData);
@@ -958,7 +964,30 @@ async function updateSessionContextInDatabase(
     if (isCompleted) {
       updateData.status = 'completed';
       updateData.completed_at = new Date().toISOString();
-      console.log(`🎉 TREATMENT_COMPLETION_V3: Marking session ${sessionId} as completed`);
+      
+      // Increment the appropriate counter based on session type/method
+      const selectedMethod = context.metadata?.selectedMethod || 'mind_shifting';
+      const sessionType = getSessionTypeFromMethod(selectedMethod);
+      
+      // Update session type and method used
+      updateData.session_type = sessionType;
+      updateData.method_used = selectedMethod;
+      
+      // Increment the appropriate counter
+      switch (sessionType) {
+        case 'goal_optimization':
+          updateData.goals_count = 1;
+          break;
+        case 'experience_clearing':
+          updateData.experiences_count = 1;
+          break;
+        case 'problem_shifting':
+        default:
+          updateData.problems_count = 1;
+          break;
+      }
+      
+      console.log(`🎉 TREATMENT_COMPLETION_V4: Marking session ${sessionId} as completed (type: ${sessionType}, method: ${selectedMethod})`);
     }
 
     // PHASE 2 OPTIMIZATION: Build array of database operations to run in parallel
@@ -1298,4 +1327,22 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       { status: 500 }
     );
   }
+}
+
+/**
+ * Map method name to session type for metrics tracking
+ */
+function getSessionTypeFromMethod(method: string): string {
+  const methodToSessionType: Record<string, string> = {
+    'mind_shifting': 'problem_shifting',
+    'problem_shifting': 'problem_shifting',
+    'goal_optimization': 'goal_optimization',
+    'trauma_shifting': 'experience_clearing',
+    'belief_shifting': 'belief_shifting',
+    'identity_shifting': 'identity_shifting',
+    'reality_shifting': 'reality_shifting',
+    'blockage_shifting': 'blockage_shifting'
+  };
+  
+  return methodToSessionType[method] || 'problem_shifting';
 } 
