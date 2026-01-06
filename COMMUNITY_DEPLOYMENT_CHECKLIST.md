@@ -28,8 +28,16 @@
   -- Click "Run"
   -- This fixes the comment creation RLS error
   ```
+- [x] Run Migration 034 (Notification Preferences Duplicate Key Fix) **CRITICAL** ✅ COMPLETED
+  ```sql
+  -- In Supabase Dashboard: SQL Editor
+  -- Paste contents of: supabase/migrations/034_fix_notification_preferences_duplicate.sql
+  -- Click "Run"
+  -- This fixes duplicate key constraint errors when creating default notification preferences
+  ```
 
 ### **Verify Storage Buckets**
+**Note**: These buckets are automatically created by Migration 030. This section is for verification only.
 - [ ] Check `community-media` bucket exists
   - [ ] Public access enabled
   - [ ] 50MB file size limit
@@ -399,8 +407,12 @@ What actually happens
 - [x] Build errors fixed
 
 ### **Deployment** 🚧
-- [ ] Migrations run
-- [ ] Storage configured
+- [ ] Migration 030 run (Media Support)
+- [ ] Migration 031 run (Member Features)
+- [ ] Migration 032 run (Comment Fixes)
+- [ ] Migration 033 run (Notification Preferences RLS)
+- [x] Migration 034 run (Duplicate Key Fix) ✅
+- [ ] Storage buckets verified
 - [ ] Build successful
 - [ ] Deployed to production
 
@@ -418,7 +430,7 @@ What actually happens
 
 ---
 
-**Last Updated**: [Date]
+**Last Updated**: January 6, 2026
 **Version**: 1.0.0
-**Status**: Ready for Testing
+**Status**: In Progress - Pre-Deployment Phase
 
