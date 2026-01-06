@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { createClient } from '@/lib/database';
 import { useAuth } from '@/lib/auth';
-import { Brain, Mail, Lock, User, Building2, Loader2 } from 'lucide-react';
+import { Brain, Mail, Lock, User, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function AuthPageContent() {
@@ -50,17 +50,6 @@ function AuthPageContent() {
     setError(null);
     setSuccess(null);
     
-    // Auto-generate tenant slug from tenant name
-    if (field === 'tenantName' && value) {
-      const slug = value
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim();
-      
-      setFormData(prev => ({ ...prev, tenantSlug: slug }));
-    }
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -253,44 +242,6 @@ function AuthPageContent() {
                         placeholder="Doe"
                       />
                     </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="tenantName" className="block text-sm font-medium text-foreground">
-                    Organization Name
-                  </label>
-                  <div className="mt-1 relative">
-                    <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <input
-                      id="tenantName"
-                      type="text"
-                      required
-                      value={formData.tenantName}
-                      onChange={(e) => handleInputChange('tenantName', e.target.value)}
-                      className="appearance-none rounded-md relative block w-full px-10 py-3 bg-background border border-border placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                      placeholder="Acme Corporation"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="tenantSlug" className="block text-sm font-medium text-foreground">
-                    Organization URL
-                  </label>
-                  <div className="mt-1 flex rounded-md shadow-sm">
-                    <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-border bg-secondary/20 text-muted-foreground text-sm">
-                      myai.app/
-                    </span>
-                    <input
-                      id="tenantSlug"
-                      type="text"
-                      required
-                      value={formData.tenantSlug}
-                      onChange={(e) => handleInputChange('tenantSlug', e.target.value)}
-                      className="appearance-none rounded-none rounded-r-md relative block w-full px-3 py-3 bg-background border border-border placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                      placeholder="acme-corp"
-                    />
                   </div>
                 </div>
               </>

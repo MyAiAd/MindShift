@@ -122,8 +122,23 @@ function TreatmentSessionContent() {
       {/* V4 Audio Preloader - loads static audio for selected voice */}
       <V4AudioPreloader voice={selectedVoice} />
       
-      {/* Header */}
-      <div className="bg-card dark:bg-[#073642] border-b border-border dark:border-[#586e75]">
+      {/* Mobile Header - Compact, fixed */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card dark:bg-[#073642] border-b border-border dark:border-[#586e75]">
+        <div className="flex items-center justify-between h-14 px-4">
+          <div className="flex items-center space-x-3">
+            <Link 
+              href="/dashboard/sessions"
+              className="text-muted-foreground hover:text-foreground transition-colors p-1"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <span className="text-base font-semibold text-foreground dark:text-[#fdf6e3]">Mind Shifting Session</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Desktop Header */}
+      <div className="hidden md:block bg-card dark:bg-[#073642] border-b border-border dark:border-[#586e75]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -135,25 +150,15 @@ function TreatmentSessionContent() {
               </Link>
               <div className="flex items-center space-x-2">
                 <Brain className="h-6 w-6 text-indigo-600" />
-                <span className="text-lg font-semibold text-foreground dark:text-[#fdf6e3]">Treatment Session</span>
+                <span className="text-lg font-semibold text-foreground dark:text-[#fdf6e3]">Mind Shifting Session</span>
               </div>
-              <span className="text-sm text-muted-foreground dark:text-[#93a1a1] bg-secondary dark:bg-[#586e75] px-2 py-1 rounded">
-                ID: {sessionId.slice(-8)}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/dashboard/sessions/analytics"
-                className="text-muted-foreground hover:text-indigo-600 transition-colors flex items-center space-x-1"
-              >
-                <BarChart3 className="h-4 w-4" />
-                <span className="text-sm">Analytics</span>
-              </Link>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Spacer for fixed mobile header */}
+      <div className="md:hidden h-14"></div>
 
       {/* Treatment Session Component */}
       <div className="py-8">

@@ -11,8 +11,6 @@ import { ThemeDropdown } from '@/components/theme/ThemeDropdown';
 import {
   Brain,
   Users,
-  Target,
-  TrendingUp,
   Calendar,
   Settings,
   LogOut,
@@ -26,15 +24,25 @@ import {
   PlayCircle,
   Flag,
   BarChart3,
-  UserPlus
+  UserPlus,
+  ArrowLeft
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-const sidebarItems = [
+// Base sidebar items for regular users (no Clients, Goals, Progress)
+const baseSidebarItems = [
+  { icon: Brain, label: 'Dashboard', href: '/dashboard' },
+  { icon: Calendar, label: 'Sessions', href: '/dashboard/sessions' },
+  { icon: Video, label: 'Tutorials', href: '/dashboard/tutorials' },
+  { icon: Users, label: 'Community', href: '/dashboard/community' },
+  { icon: CreditCard, label: 'Subscription', href: '/dashboard/subscription' },
+  { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
+];
+
+// Admin-only items (Clients shown to admins)
+const adminSidebarItems = [
   { icon: Brain, label: 'Dashboard', href: '/dashboard' },
   { icon: Users, label: 'Clients', href: '/dashboard/team' },
-  { icon: Target, label: 'Goals', href: '/dashboard/goals' },
-  { icon: TrendingUp, label: 'Progress', href: '/dashboard/progress' },
   { icon: Calendar, label: 'Sessions', href: '/dashboard/sessions' },
   { icon: Video, label: 'Tutorials', href: '/dashboard/tutorials' },
   { icon: Users, label: 'Community', href: '/dashboard/community' },
@@ -61,6 +69,10 @@ export default function DashboardLayout({
   });
   
   const router = useRouter();
+  const pathname = usePathname();
+  
+  // Check if we're on a treatment session page (mobile gets different header there)
+  const isTreatmentPage = pathname?.includes('/treatment-v') || pathname?.includes('/treatment/');
 
   // Save sidebar state to localStorage
   useEffect(() => {
@@ -121,9 +133,9 @@ export default function DashboardLayout({
   return (
     <ThemeProvider>
       <div className="h-screen flex overflow-hidden bg-secondary/20 relative overflow-x-hidden">
-        {/* Hamburger menu button - fixed in top-left corner */}
+        {/* Hamburger menu button - fixed in top-left corner (hidden on mobile treatment pages) */}
         <button
-          className="fixed top-4 left-4 z-50 h-10 w-10 inline-flex items-center justify-center rounded-md bg-primary hover:bg-primary/90 text-primary-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring transition-colors shadow-lg"
+          className={`fixed top-4 left-4 z-50 h-10 w-10 inline-flex items-center justify-center rounded-md bg-primary hover:bg-primary/90 text-primary-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring transition-colors shadow-lg ${isTreatmentPage ? 'hidden md:inline-flex' : ''}`}
           onClick={() => setSidebarOpen(!sidebarOpen)}
           title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
         >
@@ -199,15 +211,12 @@ function SidebarContent({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Logo and tenant info */}
+      {/* Logo and branding - simplified */}
       <div className="flex items-center justify-between h-16 flex-shrink-0 pl-16 pr-4 bg-primary">
         <div className="flex items-center space-x-3">
           <Image src="/logo.jpg" alt="MindShifting Logo" width={32} height={32} className="h-8 w-8 rounded" />
           <div>
-            <h1 className="text-primary-foreground font-semibold">
-                              {tenant ? tenant.name : 'MindShifting Admin'}
-            </h1>
-            <p className="text-primary-foreground/70 text-sm pl-4 pr-4 mt-1 mb-1 whitespace-nowrap">{profile.role}</p>
+            <h1 className="text-primary-foreground font-semibold">MindShifting</h1>
           </div>
         </div>
         {/* Theme Dropdown */}
@@ -217,7 +226,8 @@ function SidebarContent({
       {/* Navigation - Made scrollable with flex-1 and overflow-y-auto */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         <nav className="px-2 py-4 bg-card space-y-1">
-          {sidebarItems.map((item) => {
+          {/* Show admin items for admins, base items for regular users */}
+          {(profile?.role && ['tenant_admin', 'super_admin'].includes(profile.role) ? adminSidebarItems : baseSidebarItems).map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || 
               (item.href !== '/dashboard' && pathname.startsWith(item.href));
