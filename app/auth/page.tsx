@@ -102,6 +102,7 @@ function AuthPageContent() {
             first_name: formData.firstName,
             last_name: formData.lastName,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         },
       });
 

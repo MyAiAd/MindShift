@@ -150,7 +150,8 @@ function CoachSignupContent() {
             first_name: formData.firstName.trim(),
             last_name: formData.lastName.trim(),
             invitation_token: invitationToken
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         }
       });
 
