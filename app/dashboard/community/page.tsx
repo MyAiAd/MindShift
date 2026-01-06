@@ -5,7 +5,14 @@ import { useAuth } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TagSelector from '@/components/community/TagSelector';
+import ImageUploader from '@/components/community/ImageUploader';
+import VideoEmbedInput from '@/components/community/VideoEmbedInput';
+import FileAttachmentUploader from '@/components/community/FileAttachmentUploader';
+import type { MediaUrl } from '@/lib/community/media-upload';
+import type { VideoEmbed } from '@/lib/community/video-embed';
+import type { Attachment } from '@/lib/community/file-upload';
 import { 
   Plus,
   Search,
@@ -85,8 +92,12 @@ export default function CommunityPage() {
     title: '',
     content: '',
     status: 'published' as 'draft' | 'published' | 'scheduled',
-    tagIds: [] as string[]
+    tagIds: [] as string[],
+    mediaUrls: [] as MediaUrl[],
+    videoEmbeds: [] as VideoEmbed[],
+    attachments: [] as Attachment[]
   });
+  const [showMediaTab, setShowMediaTab] = useState<string>('content');
 
   useEffect(() => {
     fetchPosts();
@@ -139,13 +150,25 @@ export default function CommunityPage() {
           title: newPost.title,
           content: newPost.content,
           status: newPost.status,
-          tagIds: newPost.tagIds
+          tagIds: newPost.tagIds,
+          media_urls: newPost.mediaUrls,
+          video_embeds: newPost.videoEmbeds,
+          attachments: newPost.attachments
         })
       });
 
       if (response.ok) {
         setShowNewPostModal(false);
-        setNewPost({ title: '', content: '', status: 'published', tagIds: [] });
+        setNewPost({ 
+          title: '', 
+          content: '', 
+          status: 'published', 
+          tagIds: [],
+          mediaUrls: [],
+          videoEmbeds: [],
+          attachments: []
+        });
+        setShowMediaTab('content');
         fetchPosts();
       } else {
         const errorData = await response.json();
@@ -357,7 +380,7 @@ export default function CommunityPage() {
           onClick={() => setShowNewPostModal(false)}
         >
           <div 
-            className="bg-card rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-card rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
@@ -371,7 +394,8 @@ export default function CommunityPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleCreatePost} className="space-y-4">
+              <form onSubmit={handleCreatePost} className="space-y-6">
+                {/* Title */}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Title
@@ -385,71 +409,107 @@ export default function CommunityPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Content
-                  </label>
-                  <textarea
-                    rows={6}
-                    value={newPost.content}
-                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground"
-                    placeholder="Share your thoughts..."
-                    required
-                  />
-                  
-                  {/* Skool-style toolbar */}
-                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
-                    <button
-                      type="button"
-                      className="p-2 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                      title="Add image (Coming soon)"
-                    >
-                      <ImageIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      className="p-2 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                      title="Add video link (Coming soon)"
-                    >
-                      <LinkIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      className="p-2 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                      title="Attach file (Coming soon)"
-                    >
-                      <Paperclip className="h-4 w-4" />
-                    </button>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      Media support coming soon
-                    </span>
+                {/* Content & Media Tabs */}
+                <Tabs value={showMediaTab} onValueChange={setShowMediaTab}>
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="content">
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Content
+                    </TabsTrigger>
+                    <TabsTrigger value="images">
+                      <ImageIcon className="h-4 w-4 mr-2" />
+                      Images {newPost.mediaUrls.length > 0 && `(${newPost.mediaUrls.length})`}
+                    </TabsTrigger>
+                    <TabsTrigger value="videos">
+                      <LinkIcon className="h-4 w-4 mr-2" />
+                      Videos {newPost.videoEmbeds.length > 0 && `(${newPost.videoEmbeds.length})`}
+                    </TabsTrigger>
+                    <TabsTrigger value="files">
+                      <Paperclip className="h-4 w-4 mr-2" />
+                      Files {newPost.attachments.length > 0 && `(${newPost.attachments.length})`}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="content" className="space-y-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Content
+                      </label>
+                      <textarea
+                        rows={8}
+                        value={newPost.content}
+                        onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                        className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground resize-none"
+                        placeholder="Share your thoughts..."
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Tags (optional)
+                      </label>
+                      <TagSelector
+                        selectedTags={newPost.tagIds}
+                        onChange={(tagIds) => setNewPost({ ...newPost, tagIds })}
+                        maxTags={5}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="images" className="mt-4">
+                    <ImageUploader
+                      userId={user?.id || ''}
+                      images={newPost.mediaUrls}
+                      onImagesChange={(mediaUrls) => setNewPost({ ...newPost, mediaUrls })}
+                      maxImages={10}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="videos" className="mt-4">
+                    <VideoEmbedInput
+                      videos={newPost.videoEmbeds}
+                      onVideosChange={(videoEmbeds) => setNewPost({ ...newPost, videoEmbeds })}
+                      maxVideos={5}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="files" className="mt-4">
+                    <FileAttachmentUploader
+                      userId={user?.id || ''}
+                      attachments={newPost.attachments}
+                      onAttachmentsChange={(attachments) => setNewPost({ ...newPost, attachments })}
+                      maxFiles={5}
+                    />
+                  </TabsContent>
+                </Tabs>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center pt-4 border-t border-border">
+                  <div className="text-sm text-muted-foreground">
+                    {newPost.mediaUrls.length > 0 && (
+                      <span className="mr-3">📸 {newPost.mediaUrls.length} image(s)</span>
+                    )}
+                    {newPost.videoEmbeds.length > 0 && (
+                      <span className="mr-3">🎥 {newPost.videoEmbeds.length} video(s)</span>
+                    )}
+                    {newPost.attachments.length > 0 && (
+                      <span>📎 {newPost.attachments.length} file(s)</span>
+                    )}
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Tags (optional)
-                  </label>
-                  <TagSelector
-                    selectedTags={newPost.tagIds}
-                    onChange={(tagIds) => setNewPost({ ...newPost, tagIds })}
-                    maxTags={5}
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowNewPostModal(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    <Send className="h-4 w-4 mr-2" />
-                    Publish Post
-                  </Button>
+                  <div className="flex space-x-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowNewPostModal(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      <Send className="h-4 w-4 mr-2" />
+                      Publish Post
+                    </Button>
+                  </div>
                 </div>
               </form>
             </div>
