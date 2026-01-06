@@ -11,6 +11,7 @@ import ImageUploader from '@/components/community/ImageUploader';
 import VideoEmbedInput from '@/components/community/VideoEmbedInput';
 import FileAttachmentUploader from '@/components/community/FileAttachmentUploader';
 import MemberDirectory from '@/components/community/MemberDirectory';
+import PostAdminMenu from '@/components/community/PostAdminMenu';
 import type { MediaUrl } from '@/lib/community/media-upload';
 import type { VideoEmbed } from '@/lib/community/video-embed';
 import type { Attachment } from '@/lib/community/file-upload';
@@ -258,6 +259,52 @@ export default function CommunityPage() {
     fetchComments(post.id);
   };
 
+  const handlePinPost = async (postId: string, pin: boolean) => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_pinned: pin })
+      });
+
+      if (response.ok) {
+        // Update local state
+        setPosts(posts.map(post =>
+          post.id === postId ? { ...post, is_pinned: pin } : post
+        ));
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update post');
+      }
+    } catch (error) {
+      console.error('Error pinning post:', error);
+      throw error;
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    try {
+      const response = await fetch(`/api/community/posts/${postId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        // Remove from local state
+        setPosts(posts.filter(post => post.id !== postId));
+        // Close detail modal if it's open
+        if (selectedPost?.id === postId) {
+          setSelectedPost(null);
+        }
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete post');
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      throw error;
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -352,6 +399,10 @@ export default function CommunityPage() {
                   isLiked={likedPosts.has(post.id)}
                   onLike={handleLikePost}
                   onClick={handlePostClick}
+                  currentUserId={user?.id}
+                  currentUserRole={profile?.role}
+                  onPinToggle={handlePinPost}
+                  onDelete={handleDeletePost}
                 />
               ))}
               <div className="border-t border-border my-6"></div>
@@ -367,6 +418,10 @@ export default function CommunityPage() {
                 isLiked={likedPosts.has(post.id)}
                 onLike={handleLikePost}
                 onClick={handlePostClick}
+                currentUserId={user?.id}
+                currentUserRole={profile?.role}
+                onPinToggle={handlePinPost}
+                onDelete={handleDeletePost}
               />
             ))
           ) : (
@@ -683,13 +738,24 @@ function PostCard({
   post, 
   isLiked, 
   onLike, 
-  onClick 
+  onClick,
+  currentUserId,
+  currentUserRole,
+  onPinToggle,
+  onDelete
 }: { 
   post: Post; 
   isLiked: boolean; 
   onLike: (id: string) => void;
   onClick: (post: Post) => void;
+  currentUserId?: string;
+  currentUserRole?: string;
+  onPinToggle: (postId: string, pin: boolean) => Promise<void>;
+  onDelete: (postId: string) => Promise<void>;
 }) {
+  const isAuthor = currentUserId === post.user_id;
+  const isAdmin = ['super_admin', 'tenant_admin', 'manager'].includes(currentUserRole || '');
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -709,9 +775,9 @@ function PostCard({
 
   return (
     <Card className="hover:shadow-md transition-shadow cursor-pointer">
-      <CardHeader onClick={() => onClick(post)}>
+      <CardHeader>
         <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-1" onClick={() => onClick(post)}>
             <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
               <span className="text-indigo-600 font-medium">
                 {post.author?.first_name?.[0] || 'U'}
@@ -733,6 +799,19 @@ function PostCard({
               </CardDescription>
             </div>
           </div>
+          {/* Admin Menu */}
+          {(isAuthor || isAdmin) && (
+            <div onClick={(e) => e.stopPropagation()}>
+              <PostAdminMenu
+                postId={post.id}
+                isPinned={post.is_pinned}
+                isAuthor={isAuthor}
+                isAdmin={isAdmin}
+                onPinToggle={onPinToggle}
+                onDelete={onDelete}
+              />
+            </div>
+          )}
         </div>
       </CardHeader>
       
