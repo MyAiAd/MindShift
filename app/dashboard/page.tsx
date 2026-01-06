@@ -48,15 +48,23 @@ function DashboardContent() {
 
   // Check for email confirmation success
   useEffect(() => {
-    if (searchParams.get('confirmed') === 'true') {
-      setShowConfirmationBanner(true);
-      // Auto-hide after 10 seconds
-      const timer = setTimeout(() => {
-        setShowConfirmationBanner(false);
-      }, 10000);
+    const confirmedParam = searchParams.get('confirmed');
+    console.log('Dashboard: Checking confirmed parameter:', confirmedParam);
 
-      // Clean up the URL
-      window.history.replaceState({}, '', '/dashboard');
+    if (confirmedParam === 'true') {
+      console.log('Dashboard: Email confirmed! Showing banner');
+      setShowConfirmationBanner(true);
+
+      // Auto-hide after 20 seconds (increased for better visibility)
+      const timer = setTimeout(() => {
+        console.log('Dashboard: Auto-hiding confirmation banner');
+        setShowConfirmationBanner(false);
+      }, 20000);
+
+      // Clean up the URL after a short delay so user can see it
+      setTimeout(() => {
+        window.history.replaceState({}, '', '/dashboard');
+      }, 500);
 
       return () => clearTimeout(timer);
     }
@@ -266,23 +274,30 @@ function DashboardContent() {
       <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
       {/* Email Confirmation Success Banner */}
       {showConfirmationBanner && (
-        <div className="mb-6 animate-in slide-in-from-top duration-300">
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-start gap-3">
-            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 animate-in slide-in-from-top duration-500">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-2 border-green-500 dark:border-green-600 rounded-xl p-6 shadow-lg flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-green-500 dark:bg-green-600 rounded-full flex items-center justify-center">
+                <CheckCircle className="h-7 w-7 text-white" />
+              </div>
+            </div>
             <div className="flex-1">
-              <h3 className="text-sm font-semibold text-green-900 dark:text-green-100">
-                Email Confirmed Successfully!
+              <h3 className="text-lg font-bold text-green-900 dark:text-green-100 mb-2">
+                🎉 Welcome to MindShifting!
               </h3>
-              <p className="text-sm text-green-800 dark:text-green-200 mt-1">
-                Your email has been verified and you're now logged in. Welcome to MindShifting!
+              <p className="text-base text-green-800 dark:text-green-200 mb-3">
+                Your email has been verified successfully. You're all set up and ready to start your mindset transformation journey!
+              </p>
+              <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                👉 Explore your dashboard below to get started
               </p>
             </div>
             <button
               onClick={() => setShowConfirmationBanner(false)}
-              className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 flex-shrink-0"
+              className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 flex-shrink-0 p-1"
               aria-label="Dismiss"
             >
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6" />
             </button>
           </div>
         </div>
