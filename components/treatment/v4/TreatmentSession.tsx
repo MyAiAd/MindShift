@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, Send, Play, Settings, Gauge, User } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, VolumeX, Send, Play, Settings, Gauge, User } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 // Natural voice integration (ElevenLabs + Web Speech)
@@ -1074,53 +1074,56 @@ export default function TreatmentSession({
         </div>
       )}
 
-      {/* V4 Header - Mobile Compact / Desktop Full */}
-      <div className="bg-card dark:bg-[#073642] rounded-lg shadow-sm border border-border dark:border-[#586e75] mb-6">
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border dark:border-[#586e75]">
-          {/* Mobile Layout: Compact single row */}
-          <div className="flex md:hidden items-center justify-between">
-            {/* Voice Toggle - Mobile */}
-            <button
-              onClick={toggleNaturalVoice}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${isNaturalVoiceEnabled
-                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
-                : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
-                }`}
-              title="Toggle Voice"
-            >
-              {isNaturalVoiceEnabled ? (
-                <>
-                  {naturalVoice.isSpeaking ? (
-                    <Volume2 className="h-4 w-4 animate-pulse" />
-                  ) : (
-                    <Mic className="h-4 w-4" />
-                  )}
-                  <span>On</span>
-                </>
+      {/* V4 Header - Mobile: Slim bar outside card / Desktop: Full card */}
+      
+      {/* Mobile Header - Slim compact bar */}
+      <div className="flex md:hidden items-center justify-between px-2 py-2 mb-3 bg-card/50 dark:bg-[#073642]/50 rounded-lg border border-border/50 dark:border-[#586e75]/50">
+        {/* Voice Toggle - Mobile */}
+        <button
+          onClick={toggleNaturalVoice}
+          className={`flex items-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isNaturalVoiceEnabled
+            ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
+            : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
+            }`}
+          title="Toggle Voice"
+        >
+          {isNaturalVoiceEnabled ? (
+            <>
+              {naturalVoice.isSpeaking ? (
+                <Volume2 className="h-4 w-4 animate-pulse" />
               ) : (
-                <>
-                  <Mic className="h-4 w-4" />
-                  <span>Off</span>
-                </>
+                <Volume2 className="h-4 w-4" />
               )}
-            </button>
-            
-            {/* Settings Gear - Mobile */}
-            <button
-              onClick={() => setShowVoiceSettings(!showVoiceSettings)}
-              className={`p-2 rounded-full transition-colors ${
-                showVoiceSettings
-                  ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                  : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
-              }`}
-              title="Voice Settings"
-            >
-              <Settings className="h-5 w-5" />
-            </button>
-          </div>
+              <span>On</span>
+            </>
+          ) : (
+            <>
+              <VolumeX className="h-4 w-4" />
+              <span>Off</span>
+            </>
+          )}
+        </button>
+        
+        {/* Settings Gear - Mobile */}
+        <button
+          onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+          className={`p-2.5 rounded-full transition-colors ${
+            showVoiceSettings
+              ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+              : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
+          }`}
+          title="Voice Settings"
+        >
+          <Settings className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Desktop Header - Full card */}
+      <div className="hidden md:block bg-card dark:bg-[#073642] rounded-lg shadow-sm border border-border dark:border-[#586e75] mb-6">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border dark:border-[#586e75]">
           
           {/* Desktop Layout: Full header */}
-          <div className="hidden md:flex flex-col space-y-3 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
             {/* Title Section */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
@@ -1204,122 +1207,122 @@ export default function TreatmentSession({
             </div>
           </div>
           {/* End Desktop Layout */}
-          
-          {/* Voice Settings Modal - Centered on desktop, bottom sheet on mobile */}
-          {showVoiceSettings && (
-            <>
-              {/* Overlay backdrop */}
-              <div 
-                className="fixed inset-0 bg-black/30 z-40"
-                onClick={() => setShowVoiceSettings(false)}
-              />
-              
-              {/* Modal content - bottom sheet on mobile, centered modal on desktop */}
-              <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-80 md:max-w-[90vw] bg-card dark:bg-[#073642] border-t md:border border-border dark:border-[#586e75] md:rounded-xl shadow-xl p-4 pb-6 md:pb-4 z-50 max-h-[80vh] overflow-y-auto rounded-t-2xl md:rounded-xl">
-                {/* Mobile drag handle */}
-                <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mb-4 md:hidden" />
-                
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base md:text-sm font-semibold text-foreground dark:text-[#fdf6e3] flex items-center space-x-2">
-                    <Settings className="h-5 w-5 md:h-4 md:w-4 text-indigo-500" />
-                    <span>Voice Settings</span>
-                  </h3>
-                  <button
-                    onClick={() => setShowVoiceSettings(false)}
-                    className="text-muted-foreground hover:text-foreground text-2xl md:text-xl leading-none p-1 -mr-1"
-                    aria-label="Close settings"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                {/* Voice Selector */}
-                {AVAILABLE_VOICES.length > 1 && (
-                  <div className="space-y-3 mb-4 pb-4 border-b border-border dark:border-[#586e75]">
-                    <div className="flex items-center space-x-2 text-sm font-medium text-foreground dark:text-[#fdf6e3]">
-                      <User className="h-4 w-4 text-indigo-500" />
-                      <span>Voice Actor</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {AVAILABLE_VOICES.map((voiceOption) => (
-                        <button
-                          key={voiceOption.id}
-                          onClick={() => handleVoiceChange(voiceOption.id)}
-                          className={`w-full text-left px-3 py-3 md:py-2 rounded-lg text-sm transition-colors ${
-                            selectedVoice === voiceOption.id
-                              ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500'
-                              : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
-                          }`}
-                        >
-                          <div className="font-medium">{voiceOption.name}</div>
-                          <div className="text-xs opacity-75 truncate">{voiceOption.description}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Speed Slider */}
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2 text-sm font-medium text-foreground dark:text-[#fdf6e3]">
-                    <Gauge className="h-4 w-4 text-indigo-500" />
-                    <span>Playback Speed</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
-                    <span>Speed: {playbackSpeed.toFixed(2)}x</span>
-                    <span className={`font-medium ${
-                      playbackSpeed === 1.0 ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
-                    }`}>
-                      {getSpeedLabel(playbackSpeed)}
-                    </span>
-                  </div>
-                  
-                  <input
-                    type="range"
-                    min="0.75"
-                    max="1.5"
-                    step="0.05"
-                    value={playbackSpeed}
-                    onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
-                    className="w-full h-3 md:h-2 bg-secondary dark:bg-[#586e75] rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                  />
-                  
-                  <div className="flex justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
-                    <span>0.75x</span>
-                    <span className="text-green-600 dark:text-green-400">1.0x</span>
-                    <span>1.5x</span>
-                  </div>
-
-                  {/* Quick preset buttons */}
-                  <div className="grid grid-cols-5 gap-2 pt-3 border-t border-border dark:border-[#586e75]">
-                    {[0.75, 0.9, 1.0, 1.15, 1.5].map((speed) => (
-                      <button
-                        key={speed}
-                        onClick={() => handleSpeedChange(speed)}
-                        className={`px-2 py-2.5 md:py-1.5 text-xs rounded-lg transition-colors ${
-                          Math.abs(playbackSpeed - speed) < 0.01
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
-                        }`}
-                      >
-                        {speed === 1.0 ? '1x' : `${speed}x`}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <p className="mt-4 text-xs text-muted-foreground dark:text-[#93a1a1] text-center md:text-left">
-                  Adjust voice and speed for your session.
-                </p>
-              </div>
-            </>
-          )}
         </div>
       </div>
 
+      {/* Voice Settings Modal - Separate from headers, bottom sheet on mobile, centered on desktop */}
+      {showVoiceSettings && (
+        <>
+          {/* Overlay backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/30 z-40"
+            onClick={() => setShowVoiceSettings(false)}
+          />
+          
+          {/* Modal content - bottom sheet on mobile, centered modal on desktop */}
+          <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-80 md:max-w-[90vw] bg-card dark:bg-[#073642] border-t md:border border-border dark:border-[#586e75] md:rounded-xl shadow-xl p-4 pb-8 md:pb-4 z-50 max-h-[70vh] overflow-y-auto rounded-t-2xl md:rounded-xl">
+            {/* Mobile drag handle */}
+            <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mb-4 md:hidden" />
+            
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg md:text-sm font-semibold text-foreground dark:text-[#fdf6e3] flex items-center space-x-2">
+                <Settings className="h-5 w-5 md:h-4 md:w-4 text-indigo-500" />
+                <span>Voice Settings</span>
+              </h3>
+              <button
+                onClick={() => setShowVoiceSettings(false)}
+                className="text-muted-foreground hover:text-foreground text-2xl md:text-xl leading-none p-1 -mr-1"
+                aria-label="Close settings"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Voice Selector */}
+            {AVAILABLE_VOICES.length > 1 && (
+              <div className="space-y-3 mb-4 pb-4 border-b border-border dark:border-[#586e75]">
+                <div className="flex items-center space-x-2 text-sm font-medium text-foreground dark:text-[#fdf6e3]">
+                  <User className="h-4 w-4 text-indigo-500" />
+                  <span>Voice Actor</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {AVAILABLE_VOICES.map((voiceOption) => (
+                    <button
+                      key={voiceOption.id}
+                      onClick={() => handleVoiceChange(voiceOption.id)}
+                      className={`w-full text-left px-3 py-3 md:py-2 rounded-lg text-sm transition-colors ${
+                        selectedVoice === voiceOption.id
+                          ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500'
+                          : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                      }`}
+                    >
+                      <div className="font-medium">{voiceOption.name}</div>
+                      <div className="text-xs opacity-75 truncate">{voiceOption.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Speed Slider */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2 text-sm font-medium text-foreground dark:text-[#fdf6e3]">
+                <Gauge className="h-4 w-4 text-indigo-500" />
+                <span>Playback Speed</span>
+              </div>
+              
+              <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
+                <span>Speed: {playbackSpeed.toFixed(2)}x</span>
+                <span className={`font-medium ${
+                  playbackSpeed === 1.0 ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
+                }`}>
+                  {getSpeedLabel(playbackSpeed)}
+                </span>
+              </div>
+              
+              <input
+                type="range"
+                min="0.75"
+                max="1.5"
+                step="0.05"
+                value={playbackSpeed}
+                onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                className="w-full h-3 md:h-2 bg-secondary dark:bg-[#586e75] rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              />
+              
+              <div className="flex justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
+                <span>0.75x</span>
+                <span className="text-green-600 dark:text-green-400">1.0x</span>
+                <span>1.5x</span>
+              </div>
+
+              {/* Quick preset buttons */}
+              <div className="grid grid-cols-5 gap-2 pt-3 border-t border-border dark:border-[#586e75]">
+                {[0.75, 0.9, 1.0, 1.15, 1.5].map((speed) => (
+                  <button
+                    key={speed}
+                    onClick={() => handleSpeedChange(speed)}
+                    className={`px-2 py-2.5 md:py-1.5 text-xs rounded-lg transition-colors ${
+                      Math.abs(playbackSpeed - speed) < 0.01
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                    }`}
+                  >
+                    {speed === 1.0 ? '1x' : `${speed}x`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <p className="mt-4 text-xs text-muted-foreground dark:text-[#93a1a1] text-center md:text-left">
+              Adjust voice and speed for your session.
+            </p>
+          </div>
+        </>
+      )}
+
       {/* V4 Messages Area - Viewport-based height ensures input area always visible */}
-      <div className="h-[40vh] sm:h-[45vh] md:h-[50vh] max-h-96 overflow-y-auto p-6 space-y-4">
+      <div className="h-[50vh] sm:h-[50vh] md:h-[55vh] max-h-[400px] overflow-y-auto p-4 sm:p-6 space-y-4 bg-card/30 dark:bg-[#073642]/30 rounded-lg border border-border/30 dark:border-[#586e75]/30">
         {messages.map((message) => (
           <div
             key={message.id}
