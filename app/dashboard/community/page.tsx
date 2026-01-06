@@ -10,6 +10,7 @@ import TagSelector from '@/components/community/TagSelector';
 import ImageUploader from '@/components/community/ImageUploader';
 import VideoEmbedInput from '@/components/community/VideoEmbedInput';
 import FileAttachmentUploader from '@/components/community/FileAttachmentUploader';
+import MemberDirectory from '@/components/community/MemberDirectory';
 import type { MediaUrl } from '@/lib/community/media-upload';
 import type { VideoEmbed } from '@/lib/community/video-embed';
 import type { Attachment } from '@/lib/community/file-upload';
@@ -86,6 +87,7 @@ export default function CommunityPage() {
   const [comments, setComments] = useState<Record<string, Comment[]>>({});
   const [newComment, setNewComment] = useState('');
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [showMemberDirectory, setShowMemberDirectory] = useState(false);
 
   // New post form state
   const [newPost, setNewPost] = useState({
@@ -295,13 +297,23 @@ export default function CommunityPage() {
               Connect, share, and grow together
             </p>
           </div>
-          <Button
-            onClick={() => setShowNewPostModal(true)}
-            className="w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Post
-          </Button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button
+              onClick={() => setShowMemberDirectory(true)}
+              variant="outline"
+              className="flex-1 sm:flex-none"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Members
+            </Button>
+            <Button
+              onClick={() => setShowNewPostModal(true)}
+              className="flex-1 sm:flex-none"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Post
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -656,6 +668,12 @@ export default function CommunityPage() {
           </div>
         </div>
       )}
+
+      {/* Member Directory Modal */}
+      <MemberDirectory
+        isOpen={showMemberDirectory}
+        onClose={() => setShowMemberDirectory(false)}
+      />
     </div>
   );
 }
