@@ -1318,8 +1318,8 @@ export default function TreatmentSession({
         </div>
       </div>
 
-      {/* V4 Messages Area */}
-      <div className="h-96 overflow-y-auto p-6 space-y-4">
+      {/* V4 Messages Area - Viewport-based height ensures input area always visible */}
+      <div className="h-[40vh] sm:h-[45vh] md:h-[50vh] max-h-96 overflow-y-auto p-6 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
