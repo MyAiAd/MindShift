@@ -1,4 +1,4 @@
-import { createBrowserClient } from '@/lib/database';
+import { createClient } from '@/lib/database';
 
 export interface MediaUrl {
   url: string;
@@ -22,7 +22,7 @@ export class CommunityMediaUploader {
   private allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
   constructor() {
-    this.supabase = createBrowserClient();
+    this.supabase = createClient();
   }
 
   /**

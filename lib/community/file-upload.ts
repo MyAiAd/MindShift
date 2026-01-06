@@ -1,4 +1,4 @@
-import { createBrowserClient } from '@/lib/database';
+import { createClient } from '@/lib/database';
 
 export interface Attachment {
   name: string;
@@ -22,7 +22,7 @@ export class FileUploader {
   ];
 
   constructor() {
-    this.supabase = createBrowserClient();
+    this.supabase = createClient();
   }
 
   /**
