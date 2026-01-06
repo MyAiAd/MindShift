@@ -41,7 +41,7 @@ interface Post {
     first_name: string;
     last_name: string;
     email: string;
-  };
+  } | null;
   community_post_tags?: Array<{
     community_tags: {
       id: string;
@@ -62,7 +62,7 @@ interface Comment {
     first_name: string;
     last_name: string;
     email: string;
-  };
+  } | null;
 }
 
 export default function CommunityPage() {
@@ -458,7 +458,9 @@ export default function CommunityPage() {
                   </h2>
                   <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                     <span>
-                      {selectedPost.author.first_name} {selectedPost.author.last_name}
+                      {selectedPost.author?.first_name && selectedPost.author?.last_name
+                        ? `${selectedPost.author.first_name} ${selectedPost.author.last_name}`
+                        : 'Unknown User'}
                     </span>
                     <span>•</span>
                     <span>{formatDate(selectedPost.created_at)}</span>
@@ -544,7 +546,7 @@ export default function CommunityPage() {
                       <div className="flex-shrink-0">
                         <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
                           <span className="text-foreground font-medium text-sm">
-                            {comment.author.first_name?.[0] || 'U'}
+                            {comment.author?.first_name?.[0] || 'U'}
                           </span>
                         </div>
                       </div>
@@ -552,7 +554,9 @@ export default function CommunityPage() {
                         <div className="bg-secondary rounded-lg p-3">
                           <div className="flex items-center space-x-2 mb-1">
                             <span className="font-medium text-sm text-foreground">
-                              {comment.author.first_name} {comment.author.last_name}
+                              {comment.author?.first_name && comment.author?.last_name
+                                ? `${comment.author.first_name} ${comment.author.last_name}`
+                                : 'Unknown User'}
                             </span>
                             <span className="text-xs text-muted-foreground">
                               {formatDate(comment.created_at)}
@@ -615,13 +619,15 @@ function PostCard({
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
               <span className="text-indigo-600 font-medium">
-                {post.author.first_name?.[0] || 'U'}
+                {post.author?.first_name?.[0] || 'U'}
               </span>
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <CardTitle className="text-base">
-                  {post.author.first_name} {post.author.last_name}
+                  {post.author?.first_name && post.author?.last_name
+                    ? `${post.author.first_name} ${post.author.last_name}`
+                    : 'Unknown User'}
                 </CardTitle>
                 {post.is_pinned && (
                   <Pin className="h-3 w-3 text-indigo-600" />
