@@ -1046,7 +1046,7 @@ export default function TreatmentSession({
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 relative flex flex-col h-full min-h-[calc(100vh-180px)] md:min-h-[calc(100vh-120px)]">
+    <div className="max-w-4xl mx-auto px-2 sm:px-4 relative flex flex-col h-full min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-120px)]">
       {/* Ready Overlay - Shows before session starts */}
       {showReadyOverlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
@@ -1074,10 +1074,10 @@ export default function TreatmentSession({
         </div>
       )}
 
-      {/* V4 Header - Mobile: Slim bar outside card / Desktop: Full card */}
+      {/* V4 Header - Mobile: Slim sticky bar / Desktop: Full card */}
       
-      {/* Mobile Header - Slim compact bar */}
-      <div className="flex md:hidden items-center justify-between px-2 py-2 mb-3 bg-card/50 dark:bg-[#073642]/50 rounded-lg border border-border/50 dark:border-[#586e75]/50">
+      {/* Mobile Header - Slim compact bar, sticky below page header (h-14 = 56px) */}
+      <div className="flex md:hidden items-center justify-between px-3 py-2.5 mb-2 bg-card dark:bg-[#073642] rounded-lg border border-border dark:border-[#586e75] sticky top-14 z-30">
         {/* Voice Toggle - Mobile */}
         <button
           onClick={toggleNaturalVoice}

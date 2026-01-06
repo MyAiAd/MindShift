@@ -160,8 +160,8 @@ function TreatmentSessionContent() {
       {/* Spacer for fixed mobile header */}
       <div className="md:hidden h-14"></div>
 
-      {/* Treatment Session Component */}
-      <div className="py-8">
+      {/* Treatment Session Component - minimal top padding on mobile */}
+      <div className="py-2 md:py-8">
         <TreatmentSession
           sessionId={sessionId}
           userId={user.id}
