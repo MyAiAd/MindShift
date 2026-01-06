@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import FeatureGuard, { FeatureBanner } from '@/components/auth/FeatureGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
@@ -14,610 +13,416 @@ import {
   Target,
   TrendingUp,
   Calendar,
-  Award,
   Clock,
   Activity,
-  MessageCircle,
   CheckCircle,
-  X
+  X,
+  Play,
+  BookOpen,
+  Zap,
+  Timer,
+  Hash,
+  CalendarDays,
+  Sparkles,
+  ChevronDown
 } from 'lucide-react';
 
-interface Activity {
-  id: string;
-  user: string;
-  action: string;
-  target: string;
-  time: string;
-  avatar: string;
+interface MindShiftingStats {
+  activeSessionsCount: number;
+  totalSessionsCount: number;
+  daysActive: number;
+  problemsCleared: number;
+  goalsOptimised: number;
+  negativeExperiencesCleared: number;
+  totalMinutes: number;
+  avgMinutesPerProblem: number;
 }
 
-interface DashboardStats {
-  totalUsers: number;
-  completedGoals: number;
-  totalSessions: number;
-  avgProgress: number;
-}
+type TimePeriod = 'week' | 'month' | 'year' | 'custom';
 
 function DashboardContent() {
   const { profile, tenant } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showConfirmationBanner, setShowConfirmationBanner] = useState(false);
-
-  // Debug: Log component mount and searchParams
-  console.log('Dashboard: Component rendering, searchParams:', {
-    confirmed: searchParams.get('confirmed'),
-    allParams: Object.fromEntries(searchParams.entries()),
-    url: typeof window !== 'undefined' ? window.location.href : 'SSR'
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('week');
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [stats, setStats] = useState<MindShiftingStats>({
+    activeSessionsCount: 0,
+    totalSessionsCount: 0,
+    daysActive: 0,
+    problemsCleared: 0,
+    goalsOptimised: 0,
+    negativeExperiencesCleared: 0,
+    totalMinutes: 0,
+    avgMinutesPerProblem: 0
   });
 
   // Check for email confirmation success
   useEffect(() => {
-    console.log('Dashboard: useEffect running for confirmation check');
     const confirmedParam = searchParams.get('confirmed');
-    console.log('Dashboard: Checking confirmed parameter:', confirmedParam);
-
     if (confirmedParam === 'true') {
-      console.log('Dashboard: Email confirmed! Showing banner');
       setShowConfirmationBanner(true);
-
-      // Auto-hide after 8 seconds
       const timer = setTimeout(() => {
-        console.log('Dashboard: Auto-hiding confirmation banner');
         setShowConfirmationBanner(false);
       }, 8000);
-
-      // Clean up the URL after a short delay so user can see it
       setTimeout(() => {
         window.history.replaceState({}, '', '/dashboard');
       }, 500);
-
       return () => clearTimeout(timer);
     }
   }, [searchParams]);
 
+  // Fetch stats based on time period
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchStats = async () => {
+      setLoading(true);
       try {
-        // Fetch real data from existing APIs
-        const [goalsResponse, progressResponse, gamificationResponse] = await Promise.all([
-          fetch('/api/goals'),
-          fetch('/api/progress/stats'),
-          fetch('/api/gamification')
-        ]);
-
-        const [goalsData, progressData, gamificationData] = await Promise.all([
-          goalsResponse.json(),
-          progressResponse.json(),
-          gamificationResponse.json()
-        ]);
-
-        // Calculate stats from real data
-        const stats = {
-          totalUsers: 1, // For now, just showing current user
-          completedGoals: goalsData.goals?.filter((g: any) => g.status === 'completed').length || 0,
-          totalSessions: gamificationData.data?.userStats?.treatment_sessions_count || 0,
-          avgProgress: progressData.stats?.overview?.overallProgress || 0
-        };
-
-        setDashboardStats(stats);
-
-        // Create activities from real data
-        const activities: Activity[] = [];
+        // Calculate days based on time period
+        const days = timePeriod === 'week' ? 7 : timePeriod === 'month' ? 30 : 365;
         
-        // Add recent goal completions
-        if (goalsData.goals) {
-          goalsData.goals
-            .filter((goal: any) => goal.status === 'completed')
-            .slice(0, 3)
-            .forEach((goal: any) => {
-              activities.push({
-                id: `goal-${goal.id}`,
-                user: `${profile?.first_name || 'User'} ${profile?.last_name || ''}`,
-                action: 'completed goal',
-                target: goal.title,
-                time: formatTimeAgo(goal.updated_at || goal.created_at),
-                avatar: generateAvatar(profile?.first_name || 'U', profile?.last_name || 'U')
-              });
-            });
-        }
+        const [sessionsResponse, treatmentResponse] = await Promise.all([
+          fetch(`/api/sessions/stats?days=${days}`),
+          fetch('/api/sessions/treatment')
+        ]);
 
-        // Add recent progress entries
-        if (progressData.stats?.recentProgressEntries) {
-          progressData.stats.recentProgressEntries
-            .slice(0, 3)
-            .forEach((entry: any) => {
-              activities.push({
-                id: `progress-${entry.id}`,
-                user: `${profile?.first_name || 'User'} ${profile?.last_name || ''}`,
-                action: 'updated progress',
-                target: 'Daily Progress',
-                time: formatTimeAgo(entry.entry_date),
-                avatar: generateAvatar(profile?.first_name || 'U', profile?.last_name || 'U')
-              });
-            });
-        }
+        const [sessionsData, treatmentData] = await Promise.all([
+          sessionsResponse.json(),
+          treatmentResponse.json()
+        ]);
 
-        // Add recent achievements
-        if (gamificationData.data?.recentAchievements) {
-          gamificationData.data.recentAchievements
-            .slice(0, 2)
-            .forEach((achievement: any) => {
-              activities.push({
-                id: `achievement-${achievement.id}`,
-                user: `${profile?.first_name || 'User'} ${profile?.last_name || ''}`,
-                action: 'earned achievement',
-                target: achievement.title,
-                time: formatTimeAgo(achievement.earned_at),
-                avatar: generateAvatar(profile?.first_name || 'U', profile?.last_name || 'U')
-              });
-            });
-        }
+        // Get treatment sessions for more detailed stats
+        const treatmentSessions = treatmentData.treatmentSessions || [];
+        
+        // Filter sessions by time period
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - days);
+        
+        const filteredSessions = treatmentSessions.filter((s: any) => 
+          new Date(s.created_at) >= cutoffDate
+        );
 
-        // Sort activities by most recent and limit to 5
-        const sortedActivities = activities
-          .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-          .slice(0, 5);
+        // Calculate stats
+        const activeCount = filteredSessions.filter((s: any) => s.status === 'active' || s.status === 'paused').length;
+        const completedSessions = filteredSessions.filter((s: any) => s.status === 'completed');
+        
+        // Get unique days where user did mind shifting
+        const uniqueDays = new Set(
+          filteredSessions.map((s: any) => new Date(s.created_at).toDateString())
+        ).size;
 
-        setRecentActivities(sortedActivities);
+        // Calculate total minutes
+        const totalMinutes = filteredSessions.reduce((sum: number, s: any) => 
+          sum + (s.duration_minutes || 0), 0
+        );
+
+        // Problems cleared = completed sessions (approximation)
+        const problemsCleared = completedSessions.length;
+        
+        // Average time per problem
+        const avgMinutes = problemsCleared > 0 ? Math.round(totalMinutes / problemsCleared) : 0;
+
+        setStats({
+          activeSessionsCount: activeCount,
+          totalSessionsCount: filteredSessions.length,
+          daysActive: uniqueDays,
+          problemsCleared: problemsCleared,
+          goalsOptimised: 0, // Will need separate tracking
+          negativeExperiencesCleared: 0, // Will need separate tracking
+          totalMinutes: totalMinutes,
+          avgMinutesPerProblem: avgMinutes
+        });
 
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        // Fallback to sample data if API fails
-        setRecentActivities([
-          {
-            id: 'sample-1',
-            user: `${profile?.first_name || 'User'} ${profile?.last_name || ''}`,
-            action: 'started using',
-                            target: 'MyAi Dashboard',
-            time: 'just now',
-            avatar: generateAvatar(profile?.first_name || 'U', profile?.last_name || 'U')
-          }
-        ]);
+        console.error('Error fetching stats:', error);
       } finally {
         setLoading(false);
       }
     };
 
     if (profile) {
-      fetchDashboardData();
+      fetchStats();
     }
-  }, [profile]);
-
-  // Helper functions
-  const formatTimeAgo = (dateString: string): string => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return 'just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    return `${Math.floor(diffInSeconds / 86400)} days ago`;
-  };
-
-  const generateAvatar = (firstName: string, lastName: string): string => {
-    const first = firstName?.charAt(0).toUpperCase() || '';
-    const last = lastName?.charAt(0).toUpperCase() || '';
-    return `${first}${last}`;
-  };
+  }, [profile, timePeriod]);
 
   // Pull-to-refresh handler
   const handleRefresh = async () => {
     setLoading(true);
-    try {
-      // Re-fetch dashboard data
-      const [goalsResponse, progressResponse, gamificationResponse] = await Promise.all([
-        fetch('/api/goals'),
-        fetch('/api/progress/stats'),
-        fetch('/api/gamification')
-      ]);
+    // Re-trigger the effect by toggling time period
+    setTimePeriod(prev => prev);
+    setTimeout(() => setLoading(false), 1000);
+  };
 
-      const [goalsData, progressData, gamificationData] = await Promise.all([
-        goalsResponse.ok ? goalsResponse.json() : { data: null },
-        progressResponse.ok ? progressResponse.json() : { data: null },
-        gamificationResponse.ok ? gamificationResponse.json() : { data: null }
-      ]);
+  const handleStartShifting = () => {
+    const sessionId = `session-v4-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    router.push(`/dashboard/sessions/treatment-v4?sessionId=${sessionId}`);
+  };
 
-      // Calculate stats
-      const totalGoals = goalsData.data?.length || 0;
-      const completedGoals = goalsData.data?.filter((goal: any) => goal.status === 'completed').length || 0;
-      const totalSessions = progressData.data?.totalSessions || 0;
-      const avgProgress = progressData.data?.averageProgress || 0;
+  const timePeriodLabels: Record<TimePeriod, string> = {
+    week: 'This Week',
+    month: 'This Month',
+    year: 'This Year',
+    custom: 'Custom'
+  };
 
-      setDashboardStats({
-        totalUsers: 1,
-        completedGoals,
-        totalSessions,
-        avgProgress
-      });
-
-      // Update activities
-      const activities: Activity[] = [];
-      
-      if (goalsData.data?.slice(0, 3)) {
-        goalsData.data.slice(0, 3).forEach((goal: any) => {
-          activities.push({
-            id: goal.id,
-            user: `${profile?.first_name || 'User'} ${profile?.last_name || ''}`,
-            action: goal.status === 'completed' ? 'completed goal' : 'updated goal',
-            target: goal.title,
-            time: formatTimeAgo(goal.updated_at || goal.created_at),
-            avatar: generateAvatar(profile?.first_name || 'U', profile?.last_name || 'U')
-          });
-        });
-      }
-
-      if (gamificationData.data?.recentAchievements) {
-        gamificationData.data.recentAchievements
-          .slice(0, 2)
-          .forEach((achievement: any) => {
-            activities.push({
-              id: `achievement-${achievement.id}`,
-              user: `${profile?.first_name || 'User'} ${profile?.last_name || ''}`,
-              action: 'earned achievement',
-              target: achievement.title,
-              time: formatTimeAgo(achievement.earned_at),
-              avatar: generateAvatar(profile?.first_name || 'U', profile?.last_name || 'U')
-            });
-          });
-      }
-
-      const sortedActivities = activities
-        .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-        .slice(0, 5);
-
-      setRecentActivities(sortedActivities);
-    } catch (error) {
-      console.error('Error refreshing dashboard:', error);
-    } finally {
-      setLoading(false);
-    }
+  const formatMinutes = (minutes: number): string => {
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   };
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
-      {/* Email Confirmation Success Banner */}
-      {showConfirmationBanner && (
-        <div className="mb-6 animate-in slide-in-from-top duration-500">
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-2 border-green-500 dark:border-green-600 rounded-xl p-6 shadow-lg flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-green-500 dark:bg-green-600 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-7 w-7 text-white" />
-              </div>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-green-900 dark:text-green-100 mb-2">
-                🎉 Welcome to MindShifting!
-              </h3>
-              <p className="text-base text-green-800 dark:text-green-200 mb-3">
-                Your email has been verified successfully. You're all set up and ready to start your mindset transformation journey!
-              </p>
-              <p className="text-sm font-medium text-green-700 dark:text-green-300">
-                👉 Explore your dashboard below to get started
-              </p>
-            </div>
-            <button
-              onClick={() => setShowConfirmationBanner(false)}
-              className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 flex-shrink-0 p-1"
-              aria-label="Dismiss"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Welcome back, {profile?.first_name}!
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                              Here's what's happening with {tenant?.name || 'MindShifting'} today.
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">Current Plan:</span>
-            <span className="px-2 sm:px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs sm:text-sm font-medium capitalize">
-              {profile?.subscription_tier === 'level_1' ? 'Problem Shifting' : 
-               profile?.subscription_tier === 'level_2' ? 'Complete Access' : 
-               profile?.subscription_tier || 'Trial'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 min-w-0">
-        {loading ? (
-          // Loading skeleton
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-card rounded-lg shadow-sm border border-border p-4 sm:p-6 min-w-0">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="h-4 bg-secondary rounded animate-pulse mb-2"></div>
-                  <div className="h-8 bg-secondary rounded animate-pulse mb-2"></div>
-                  <div className="h-3 bg-secondary rounded animate-pulse"></div>
-                </div>
-                <div className="p-3 bg-secondary rounded-lg">
-                  <div className="h-6 w-6 bg-secondary rounded animate-pulse"></div>
+        {/* Email Confirmation Success Banner */}
+        {showConfirmationBanner && (
+          <div className="mb-4 animate-in slide-in-from-top duration-500">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-2 border-green-500 dark:border-green-600 rounded-xl p-4 shadow-lg flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-green-500 dark:bg-green-600 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-5 w-5 text-white" />
                 </div>
               </div>
-            </div>
-          ))
-        ) : (
-          // Real stats
-          [
-            {
-              name: 'Total Users',
-              value: dashboardStats?.totalUsers?.toString() || '1',
-              change: '+0%',
-              changeType: 'positive' as const,
-              icon: Users,
-            },
-            {
-              name: 'Goals Completed',
-              value: dashboardStats?.completedGoals?.toString() || '0',
-              change: '+0%',
-              changeType: 'positive' as const,
-              icon: Target,
-            },
-            {
-              name: 'Treatment Sessions',
-              value: dashboardStats?.totalSessions?.toString() || '0',
-              change: '+0%',
-              changeType: 'positive' as const,
-              icon: Calendar,
-            },
-            {
-              name: 'Avg. Progress Score',
-              value: `${dashboardStats?.avgProgress || 0}%`,
-              change: '+0%',
-              changeType: 'positive' as const,
-              icon: TrendingUp,
-            },
-          ].map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={stat.name} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardDescription>{stat.name}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-2xl sm:text-3xl font-bold text-foreground truncate">{stat.value}</p>
-                      <p className={`text-xs mt-2 font-medium ${
-                        stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {stat.change} from last month
-                      </p>
-                    </div>
-                    <div className="p-2 sm:p-3 bg-indigo-50 rounded-lg flex-shrink-0">
-                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 min-w-0">
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center text-base sm:text-lg">
-              <Brain className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-indigo-600" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Link href="/dashboard/goals" className="w-full text-left p-3 rounded-lg border border-border hover:bg-accent transition-colors block min-w-0">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <Target className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Create New Goal</p>
-                  <p className="text-sm text-muted-foreground">Set up a new mindset goal for users</p>
-                </div>
-              </div>
-            </Link>
-            
-            <Link href="/dashboard/sessions" className="w-full text-left p-3 rounded-lg border border-border hover:bg-accent transition-colors block">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-50 rounded-lg">
-                  <Calendar className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Schedule Session</p>
-                  <p className="text-sm text-muted-foreground">Book a coaching session</p>
-                </div>
-              </div>
-            </Link>
-            
-
-            
-            <FeatureGuard
-              featureKey="advanced_analytics"
-              fallback={
-                <div className="w-full p-3 rounded-lg border border-border bg-muted/50">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-accent rounded-lg">
-                      <Activity className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">Advanced Analytics</p>
-                      <p className="text-sm text-muted-foreground">Requires Level 2 subscription</p>
-                    </div>
-                    <a
-                      href="/dashboard/subscription"
-                      className="text-xs text-primary hover:text-primary/80 font-medium"
-                    >
-                      Upgrade
-                    </a>
-                  </div>
-                </div>
-              }
-            >
-              <Link href="/dashboard/sessions/analytics" className="w-full text-left p-3 rounded-lg border border-border hover:bg-accent transition-colors block">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-purple-50 rounded-lg">
-                    <Activity className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">View Analytics</p>
-                    <p className="text-sm text-muted-foreground">Check detailed progress reports</p>
-                  </div>
-                </div>
-              </Link>
-            </FeatureGuard>
-            
-            <FeatureGuard
-              featureKey="team_management"
-              fallback={
-                <div className="w-full p-3 rounded-lg border border-border bg-muted/50">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-accent rounded-lg">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">Team Management</p>
-                      <p className="text-sm text-muted-foreground">Requires Level 2 subscription</p>
-                    </div>
-                    <a
-                      href="/dashboard/subscription"
-                      className="text-xs text-primary hover:text-primary/80 font-medium"
-                    >
-                      Upgrade
-                    </a>
-                  </div>
-                </div>
-              }
-            >
-              <Link href="/dashboard/team/message" className="w-full text-left p-3 rounded-lg border border-border hover:bg-accent transition-colors block">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-orange-50 rounded-lg">
-                    <MessageCircle className="h-4 w-4 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Message a Client</p>
-                    <p className="text-sm text-muted-foreground">Send a message to your clients</p>
-                  </div>
-                </div>
-              </Link>
-            </FeatureGuard>
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="h-5 w-5 mr-2 text-indigo-600" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              // Loading skeleton
-              <div className="space-y-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex items-center space-x-3">
-                    <div className="h-8 w-8 bg-secondary rounded-full animate-pulse"></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="h-4 bg-secondary rounded animate-pulse mb-2"></div>
-                      <div className="h-3 bg-secondary rounded animate-pulse w-1/2"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : recentActivities.length > 0 ? (
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-center space-x-3">
-                    <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-medium text-indigo-600">
-                        {activity.avatar}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-foreground">
-                        <span className="font-medium">{activity.user}</span>
-                        {' '}{activity.action}{' '}
-                        <span className="font-medium">{activity.target}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No recent activity</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Start using the platform to see your activities here!
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-green-900 dark:text-green-100">
+                  🎉 Welcome to MindShifting!
+                </h3>
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  Your email has been verified. You're ready to start!
                 </p>
               </div>
-            )}
-            {!loading && recentActivities.length > 0 && (
-              <div className="mt-4 pt-4 border-t">
-                <Link 
-                  href="/dashboard/progress" 
-                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                >
-                  View all activity →
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Performance Overview */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Award className="h-5 w-5 mr-2 text-indigo-600" />
-            Performance Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">92%</div>
-              <div className="text-sm text-muted-foreground">User Satisfaction</div>
-              <div className="w-full bg-secondary rounded-full h-2 mt-2">
-                <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '92%' }}></div>
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-accent mb-2">78%</div>
-              <div className="text-sm text-muted-foreground">Goal Completion Rate</div>
-              <div className="w-full bg-secondary rounded-full h-2 mt-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: '78%' }}></div>
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">85%</div>
-              <div className="text-sm text-muted-foreground">Session Attendance</div>
-              <div className="w-full bg-secondary rounded-full h-2 mt-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
-              </div>
+              <button
+                onClick={() => setShowConfirmationBanner(false)}
+                className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 flex-shrink-0"
+                aria-label="Dismiss"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+
+        {/* Header - Compact */}
+        <div className="mb-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+            Welcome back, {profile?.first_name}!
+          </h1>
+        </div>
+
+        {/* Quick Action Buttons - Compact row */}
+        <div className="flex flex-wrap gap-2 sm:gap-3 mb-6">
+          <Button 
+            onClick={handleStartShifting}
+            className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 px-4 sm:px-6"
+          >
+            <Play className="h-4 w-4 mr-2" />
+            START SHIFTING
+          </Button>
+          
+          <Button 
+            variant="outline"
+            onClick={() => router.push('/dashboard/tutorials')}
+            className="flex-1 sm:flex-none py-2 px-4 sm:px-6"
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            TUTORIALS
+          </Button>
+          
+          <Button 
+            variant="outline"
+            onClick={() => router.push('/dashboard/community')}
+            className="flex-1 sm:flex-none py-2 px-4 sm:px-6"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            CONNECT
+          </Button>
+        </div>
+
+        {/* Time Period Selector */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-foreground">Your Progress</h2>
+          <div className="relative">
+            <button
+              onClick={() => setShowTimePicker(!showTimePicker)}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded-lg transition-colors"
+            >
+              <CalendarDays className="h-4 w-4" />
+              {timePeriodLabels[timePeriod]}
+              <ChevronDown className={`h-4 w-4 transition-transform ${showTimePicker ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {showTimePicker && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setShowTimePicker(false)}
+                />
+                <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-20 py-1 min-w-[140px]">
+                  {(['week', 'month', 'year'] as TimePeriod[]).map((period) => (
+                    <button
+                      key={period}
+                      onClick={() => {
+                        setTimePeriod(period);
+                        setShowTimePicker(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-accent transition-colors ${
+                        timePeriod === period ? 'bg-accent font-medium' : ''
+                      }`}
+                    >
+                      {timePeriodLabels[period]}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Grid - 2x4 on desktop, 2x4 on mobile */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {loading ? (
+            // Loading skeleton
+            Array.from({ length: 8 }).map((_, i) => (
+              <Card key={i} className="p-3 sm:p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-secondary rounded-lg">
+                    <div className="h-5 w-5 bg-secondary animate-pulse rounded"></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="h-6 bg-secondary rounded animate-pulse mb-1"></div>
+                    <div className="h-3 bg-secondary rounded animate-pulse w-2/3"></div>
+                  </div>
+                </div>
+              </Card>
+            ))
+          ) : (
+            <>
+              {/* Active Sessions */}
+              <Card className="p-3 sm:p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                    <Activity className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.activeSessionsCount}</p>
+                    <p className="text-xs text-muted-foreground truncate">Active Sessions</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Total Sessions */}
+              <Card className="p-3 sm:p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalSessionsCount}</p>
+                    <p className="text-xs text-muted-foreground truncate">Mind Shifting Sessions</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Days Active */}
+              <Card className="p-3 sm:p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <Calendar className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.daysActive}</p>
+                    <p className="text-xs text-muted-foreground truncate">Days Active</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Problems Cleared */}
+              <Card className="p-3 sm:p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.problemsCleared}</p>
+                    <p className="text-xs text-muted-foreground truncate">Problems Cleared</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Goals Optimised */}
+              <Card className="p-3 sm:p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                    <Target className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.goalsOptimised}</p>
+                    <p className="text-xs text-muted-foreground truncate">Goals Optimised</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Negative Experiences Cleared */}
+              <Card className="p-3 sm:p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
+                    <Sparkles className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.negativeExperiencesCleared}</p>
+                    <p className="text-xs text-muted-foreground truncate">Experiences Cleared</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Total Time */}
+              <Card className="p-3 sm:p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+                    <Clock className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xl sm:text-2xl font-bold text-foreground">{formatMinutes(stats.totalMinutes)}</p>
+                    <p className="text-xs text-muted-foreground truncate">Total Time</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Average Time per Problem */}
+              <Card className="p-3 sm:p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                    <Timer className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xl sm:text-2xl font-bold text-foreground">{formatMinutes(stats.avgMinutesPerProblem)}</p>
+                    <p className="text-xs text-muted-foreground truncate">Avg per Problem</p>
+                  </div>
+                </div>
+              </Card>
+            </>
+          )}
+        </div>
+
+        {/* Motivational message when no stats */}
+        {!loading && stats.totalSessionsCount === 0 && (
+          <Card className="mt-6 p-6 text-center bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+            <Brain className="h-12 w-12 mx-auto mb-4 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Ready to Start Your Journey?
+            </h3>
+            <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+              Begin your first Mind Shifting session to clear problems and unlock your potential.
+            </p>
+            <Button onClick={handleStartShifting} size="lg">
+              <Play className="h-5 w-5 mr-2" />
+              Start Your First Session
+            </Button>
+          </Card>
+        )}
+      </div>
     </PullToRefresh>
   );
 }
@@ -635,4 +440,4 @@ export default function DashboardPage() {
       <DashboardContent />
     </Suspense>
   );
-} 
+}
