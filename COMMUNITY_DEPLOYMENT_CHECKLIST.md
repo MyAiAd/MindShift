@@ -21,6 +21,13 @@
   -- Paste contents of: supabase/migrations/032_fix_community_comments.sql
   -- Click "Run"
   ```
+- [ ] Run Migration 033 (Notification Preferences RLS Fix) **CRITICAL**
+  ```sql
+  -- In Supabase Dashboard: SQL Editor
+  -- Paste contents of: supabase/migrations/033_fix_notification_preferences_rls.sql
+  -- Click "Run"
+  -- This fixes the comment creation RLS error
+  ```
 
 ### **Verify Storage Buckets**
 - [ ] Check `community-media` bucket exists
