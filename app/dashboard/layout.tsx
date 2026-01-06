@@ -11,43 +11,28 @@ import { ThemeDropdown } from '@/components/theme/ThemeDropdown';
 import {
   Brain,
   Users,
-  Calendar,
   Settings,
   LogOut,
   Menu,
   X,
-  CreditCard,
   Database,
   Shield,
   UserCheck,
-  Video,
   PlayCircle,
   Flag,
   BarChart3,
   UserPlus,
-  ArrowLeft
+  Sparkles,
+  MoreHorizontal
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-// Base sidebar items for regular users (no Clients, Goals, Progress)
-const baseSidebarItems = [
-  { icon: Brain, label: 'Dashboard', href: '/dashboard' },
-  { icon: Calendar, label: 'Sessions', href: '/dashboard/sessions' },
-  { icon: Video, label: 'Tutorials', href: '/dashboard/tutorials' },
-  { icon: Users, label: 'Community', href: '/dashboard/community' },
-  { icon: CreditCard, label: 'Subscription', href: '/dashboard/subscription' },
-  { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
-];
-
-// Admin-only items (Clients shown to admins)
-const adminSidebarItems = [
-  { icon: Brain, label: 'Dashboard', href: '/dashboard' },
-  { icon: Users, label: 'Clients', href: '/dashboard/team' },
-  { icon: Calendar, label: 'Sessions', href: '/dashboard/sessions' },
-  { icon: Video, label: 'Tutorials', href: '/dashboard/tutorials' },
-  { icon: Users, label: 'Community', href: '/dashboard/community' },
-  { icon: CreditCard, label: 'Subscription', href: '/dashboard/subscription' },
-  { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
+// Main navigation items (matches mobile bottom nav)
+const mainSidebarItems = [
+  { icon: Brain, label: 'Home', href: '/dashboard' },
+  { icon: Sparkles, label: 'Shift', href: '/dashboard/sessions/treatment-v4' },
+  { icon: Users, label: 'Connect', href: '/dashboard/community' },
+  { icon: MoreHorizontal, label: 'More', href: '/dashboard/more' },
 ];
 
 export default function DashboardLayout({
@@ -210,8 +195,8 @@ function SidebarContent({
       {/* Navigation - Made scrollable with flex-1 and overflow-y-auto */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         <nav className="px-2 py-4 bg-card space-y-1">
-          {/* Show admin items for admins, base items for regular users */}
-          {(profile?.role && ['tenant_admin', 'super_admin'].includes(profile.role) ? adminSidebarItems : baseSidebarItems).map((item) => {
+          {/* Main navigation items */}
+          {mainSidebarItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || 
               (item.href !== '/dashboard' && pathname.startsWith(item.href));

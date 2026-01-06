@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Calendar, Settings } from 'lucide-react';
+import { Home, Sparkles, Users, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -12,14 +12,19 @@ const navItems = [
     icon: Home,
   },
   {
-    label: 'Sessions',
-    href: '/dashboard/sessions',
-    icon: Calendar,
+    label: 'Shift',
+    href: '/dashboard/sessions/treatment-v4',
+    icon: Sparkles,
   },
   {
-    label: 'Settings',
-    href: '/dashboard/settings',
-    icon: Settings,
+    label: 'Connect',
+    href: '/dashboard/community',
+    icon: Users,
+  },
+  {
+    label: 'More',
+    href: '/dashboard/more',
+    icon: MoreHorizontal,
   },
 ];
 
@@ -42,7 +47,7 @@ export function MobileNav({ onNavigate }: MobileNavProps = {}) {
       role="navigation"
       aria-label="Mobile bottom navigation"
     >
-      <div className="grid grid-cols-3 h-16">
+      <div className="grid grid-cols-4 h-16">
         {navItems.map((item) => {
           // Fix highlighting logic: only highlight if exact match OR starts with path for non-dashboard pages
           const isActive = pathname === item.href || 

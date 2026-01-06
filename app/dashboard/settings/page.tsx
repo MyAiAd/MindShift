@@ -627,6 +627,12 @@ export default function SettingsPage() {
                 <Lock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Privacy & Data</span>
               </a>
+              
+              {/* Column 2 */}
+              <a href="/dashboard/subscription" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
+                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-xs sm:text-sm text-left">Subscription</span>
+              </a>
             </nav>
           </div>
         </div>
