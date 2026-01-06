@@ -27,7 +27,7 @@ interface Comment {
     id: string;
     full_name?: string;
     email: string;
-  };
+  } | null;
   post: {
     id: string;
     title: string;
@@ -55,7 +55,7 @@ export default function CommentModerationCard({
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <UserIcon className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{comment.author.full_name || comment.author.email}</span>
+            <span className="font-medium">{comment.author?.full_name || comment.author?.email || 'Unknown User'}</span>
             {comment.is_flagged && (
               <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">
                 <Flag className="h-3 w-3 mr-1" />

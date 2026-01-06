@@ -42,7 +42,7 @@ interface Post {
     id: string;
     full_name?: string;
     email: string;
-  };
+  } | null;
   created_at: string;
   updated_at: string;
   is_pinned: boolean;
@@ -344,7 +344,7 @@ export default function PostsModerationPage() {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              By {viewingPost?.author.full_name || viewingPost?.author.email}
+              By {viewingPost?.author?.full_name || viewingPost?.author?.email || 'Unknown User'}
             </p>
             <div className="prose max-w-none">
               <p>{viewingPost?.content}</p>

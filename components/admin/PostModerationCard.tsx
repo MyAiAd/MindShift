@@ -34,7 +34,7 @@ interface Post {
     id: string;
     full_name?: string;
     email: string;
-  };
+  } | null;
   created_at: string;
   updated_at: string;
   is_pinned: boolean;
@@ -93,7 +93,7 @@ export default function PostModerationCard({
           
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <UserIcon className="h-3 w-3" />
-            <span>{post.author.full_name || post.author.email}</span>
+            <span>{post.author?.full_name || post.author?.email || 'Unknown User'}</span>
             <span>•</span>
             <span>{format(new Date(post.created_at), 'MMM d, yyyy')}</span>
           </div>
