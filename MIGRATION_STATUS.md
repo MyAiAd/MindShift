@@ -6,11 +6,12 @@ I've encountered an **IPv6 connectivity issue** on your system. Your Supabase da
 
 ## What I've Done
 
-✅ **Created 4 idempotent migrations:**
+✅ **Created 5 idempotent migrations:**
 1. `030_community_media_support.sql` - Adds image/video/file support
 2. `031_community_member_features.sql` - Adds member directory & blocking
 3. `032_fix_community_comments.sql` - Fixes comment RLS policies  
-4. `033_fix_notification_preferences_rls.sql` - **CRITICAL** Fixes the comment creation bug
+4. `033_fix_notification_preferences_rls.sql` - Fixes RLS for notification preferences
+5. `034_fix_notification_preferences_duplicate.sql` - **CRITICAL** Fixes duplicate key issue in comment notifications
 
 ✅ **Pushed all code changes to main** - Ready on Vercel
 
@@ -34,6 +35,8 @@ You need to **manually run these migrations** in the Supabase SQL Editor because
    **Migration 3** - Copy from: `supabase/migrations/032_fix_community_comments.sql`
    
    **Migration 4** - Copy from: `supabase/migrations/033_fix_notification_preferences_rls.sql`
+   
+   **Migration 5** - Copy from: `supabase/migrations/034_fix_notification_preferences_duplicate.sql`
 
 3. **Test:** Try creating a comment on the community page - it should work!
 
@@ -47,9 +50,9 @@ node run-migrations.js
 
 ## Why This Matters
 
-**Migration 033** is **critical** - it fixes the RLS policy that's preventing comments from being created. Without it, the comment bug will persist.
+**Migrations 033 & 034** are **critical** - they fix the RLS policy and duplicate key issues that are preventing comments from being created.
 
-Once you run migration 033, the comment system will work immediately (no code redeploy needed).
+Once you run all migrations (especially 034), the comment system will work immediately (no code redeploy needed).
 
 ## Safety Notes
 
@@ -79,5 +82,5 @@ All the frontend code is already deployed and ready to use these features!
 
 ---
 
-**TL;DR:** Copy/paste 4 SQL files into Supabase SQL Editor and click RUN for each. Then the comment bug is fixed and all new features are live! 🎉
+**TL;DR:** Copy/paste 5 SQL files into Supabase SQL Editor and click RUN for each. Then the comment bug is fixed and all new features are live! 🎉
 

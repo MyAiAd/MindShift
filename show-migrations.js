@@ -12,6 +12,7 @@ const migrations = [
   { file: 'supabase/migrations/031_community_member_features.sql', name: '031: Member Features' },
   { file: 'supabase/migrations/032_fix_community_comments.sql', name: '032: Comment Fixes' },
   { file: 'supabase/migrations/033_fix_notification_preferences_rls.sql', name: '033: Notification Preferences Fix' },
+  { file: 'supabase/migrations/034_fix_notification_preferences_duplicate.sql', name: '034: Duplicate Key Fix' },
 ];
 
 function makeRequest(options, postData) {

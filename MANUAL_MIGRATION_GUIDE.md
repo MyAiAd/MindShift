@@ -30,14 +30,19 @@ This fixes RLS policies for community comments.
 ### Migration 4: Notification Preferences Fix (033)
 **File**: `supabase/migrations/033_fix_notification_preferences_rls.sql`
 
-This fixes the RLS issue preventing comments from being created.
+This fixes the RLS issue for notification preferences table.
+
+### Migration 5: Duplicate Key Fix (034)
+**File**: `supabase/migrations/034_fix_notification_preferences_duplicate.sql`
+
+This fixes the duplicate key constraint error when creating default notification preferences.
 
 ## How to Execute
 
 ### Option 1: Via Supabase SQL Editor (Recommended)
 
 1. Go to https://supabase.com/dashboard/project/kdxwfaynzemmdonkmttf/sql/new
-2. Open each migration file in order (030, 031, 032, 033)
+2. Open each migration file in order (030, 031, 032, 033, 034)
 3. Copy the entire contents of the file
 4. Paste into the SQL Editor
 5. Click "RUN" button
