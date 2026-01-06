@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import TagSelector from '@/components/community/TagSelector';
 import { 
   Plus,
   Search,
@@ -21,7 +22,10 @@ import {
   Edit,
   Trash2,
   Pin,
-  Eye
+  Eye,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Paperclip
 } from 'lucide-react';
 
 interface Post {
@@ -80,7 +84,8 @@ export default function CommunityPage() {
   const [newPost, setNewPost] = useState({
     title: '',
     content: '',
-    status: 'published' as 'draft' | 'published' | 'scheduled'
+    status: 'published' as 'draft' | 'published' | 'scheduled',
+    tagIds: [] as string[]
   });
 
   useEffect(() => {
@@ -130,19 +135,25 @@ export default function CommunityPage() {
       const response = await fetch('/api/community/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPost)
+        body: JSON.stringify({
+          title: newPost.title,
+          content: newPost.content,
+          status: newPost.status,
+          tagIds: newPost.tagIds
+        })
       });
 
       if (response.ok) {
         setShowNewPostModal(false);
-        setNewPost({ title: '', content: '', status: 'published' });
+        setNewPost({ title: '', content: '', status: 'published', tagIds: [] });
         fetchPosts();
       } else {
-        alert('Failed to create post');
+        const errorData = await response.json();
+        alert(`Failed to create post: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error creating post:', error);
-      alert('Failed to create post');
+      alert('Failed to create post. Please try again.');
     }
   };
 
@@ -190,7 +201,8 @@ export default function CommunityPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           postId,
-          content: newComment
+          content: newComment.trim(),
+          status: 'published'
         })
       });
 
@@ -205,9 +217,14 @@ export default function CommunityPage() {
           }
           return post;
         }));
+      } else {
+        const errorData = await response.json();
+        console.error('Error adding comment:', errorData);
+        alert(`Failed to add comment: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error adding comment:', error);
+      alert('Failed to add comment. Please try again.');
     }
   };
 
@@ -277,45 +294,6 @@ export default function CommunityPage() {
             className="pl-10"
           />
         </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center">
-              <Users className="h-4 w-4 mr-2" />
-              Members
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">1,234</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Total Posts
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{posts.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center">
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Active Today
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">156</div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Posts Feed */}
@@ -418,6 +396,45 @@ export default function CommunityPage() {
                     className="w-full px-3 py-2 border border-border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-background text-foreground"
                     placeholder="Share your thoughts..."
                     required
+                  />
+                  
+                  {/* Skool-style toolbar */}
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
+                    <button
+                      type="button"
+                      className="p-2 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                      title="Add image (Coming soon)"
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="p-2 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                      title="Add video link (Coming soon)"
+                    >
+                      <LinkIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="p-2 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                      title="Attach file (Coming soon)"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </button>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      Media support coming soon
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Tags (optional)
+                  </label>
+                  <TagSelector
+                    selectedTags={newPost.tagIds}
+                    onChange={(tagIds) => setNewPost({ ...newPost, tagIds })}
+                    maxTags={5}
                   />
                 </div>
 
