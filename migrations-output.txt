@@ -1,0 +1,586 @@
+🚀 Generating migration SQL...
+
+================================================
+NOTE: Due to network limitations (IPv6 only DNS),
+      we cannot execute migrations automatically.
+
+Please copy and execute these SQL statements in
+the Supabase SQL Editor:
+https://supabase.com/dashboard/project/kdxwfaynzemmdonkmttf/sql
+================================================
+
+
+============================================================
+Migration 1/4: 030: Media Support
+File: supabase/migrations/030_community_media_support.sql
+============================================================
+
+-- BEGIN MIGRATION SQL --
+
+-- ============================================================================
+-- Migration 030: Community Media Support
+-- ============================================================================
+-- Adds media and attachment support to community posts
+-- This migration is IDEMPOTENT - safe to run multiple times
+
+-- Add media columns to community_posts (idempotent with IF NOT EXISTS checks)
+DO $$ 
+BEGIN
+    -- Add media_urls array if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'community_posts' 
+        AND column_name = 'media_urls'
+    ) THEN
+        ALTER TABLE community_posts 
+        ADD COLUMN media_urls JSONB DEFAULT '[]';
+    END IF;
+
+    -- Add video_embeds array if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'community_posts' 
+        AND column_name = 'video_embeds'
+    ) THEN
+        ALTER TABLE community_posts 
+        ADD COLUMN video_embeds JSONB DEFAULT '[]';
+    END IF;
+
+    -- Add attachments array if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'community_posts' 
+        AND column_name = 'attachments'
+    ) THEN
+        ALTER TABLE community_posts 
+        ADD COLUMN attachments JSONB DEFAULT '[]';
+    END IF;
+END $$;
+
+-- Create indexes for media queries (idempotent)
+CREATE INDEX IF NOT EXISTS idx_community_posts_has_media 
+ON community_posts((jsonb_array_length(media_urls) > 0));
+
+CREATE INDEX IF NOT EXISTS idx_community_posts_has_videos 
+ON community_posts((jsonb_array_length(video_embeds) > 0));
+
+CREATE INDEX IF NOT EXISTS idx_community_posts_has_attachments 
+ON community_posts((jsonb_array_length(attachments) > 0));
+
+-- Create storage bucket for community media (idempotent)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'community-media',
+    'community-media',
+    true,
+    52428800, -- 50MB limit
+    ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Create storage bucket for community attachments (idempotent)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'community-attachments',
+    'community-attachments',
+    false, -- Private, requires authentication
+    104857600, -- 100MB limit
+    ARRAY['application/pdf', 'application/msword', 
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'text/plain']
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- RLS policies for community-media bucket (idempotent)
+DO $$ 
+BEGIN
+    -- Drop existing policies if they exist
+    DROP POLICY IF EXISTS "Authenticated users can upload community media" ON storage.objects;
+    DROP POLICY IF EXISTS "Public can view community media" ON storage.objects;
+    DROP POLICY IF EXISTS "Users can update their own media uploads" ON storage.objects;
+    DROP POLICY IF EXISTS "Users can delete their own media uploads" ON storage.objects;
+
+    -- Create policies
+    CREATE POLICY "Authenticated users can upload community media"
+    ON storage.objects FOR INSERT
+    TO authenticated
+    WITH CHECK (bucket_id = 'community-media');
+
+    CREATE POLICY "Public can view community media"
+    ON storage.objects FOR SELECT
+    TO public
+    USING (bucket_id = 'community-media');
+
+    CREATE POLICY "Users can update their own media uploads"
+    ON storage.objects FOR UPDATE
+    TO authenticated
+    USING (
+        bucket_id = 'community-media' 
+        AND auth.uid()::text = (storage.foldername(name))[1]
+    );
+
+    CREATE POLICY "Users can delete their own media uploads"
+    ON storage.objects FOR DELETE
+    TO authenticated
+    USING (
+        bucket_id = 'community-media' 
+        AND auth.uid()::text = (storage.foldername(name))[1]
+    );
+END $$;
+
+-- RLS policies for community-attachments bucket (idempotent)
+DO $$ 
+BEGIN
+    -- Drop existing policies if they exist
+    DROP POLICY IF EXISTS "Authenticated users can upload attachments" ON storage.objects;
+    DROP POLICY IF EXISTS "Tenant members can view attachments" ON storage.objects;
+    DROP POLICY IF EXISTS "Users can delete own attachments" ON storage.objects;
+
+    -- Create policies
+    CREATE POLICY "Authenticated users can upload attachments"
+    ON storage.objects FOR INSERT
+    TO authenticated
+    WITH CHECK (bucket_id = 'community-attachments');
+
+    CREATE POLICY "Tenant members can view attachments"
+    ON storage.objects FOR SELECT
+    TO authenticated
+    USING (bucket_id = 'community-attachments');
+
+    CREATE POLICY "Users can delete own attachments"
+    ON storage.objects FOR DELETE
+    TO authenticated
+    USING (
+        bucket_id = 'community-attachments' 
+        AND auth.uid()::text = (storage.foldername(name))[1]
+    );
+END $$;
+
+-- Add helpful comments
+COMMENT ON COLUMN community_posts.media_urls IS 'Array of image URLs uploaded to Supabase Storage. Format: [{url: string, width: number, height: number, alt: string}]';
+COMMENT ON COLUMN community_posts.video_embeds IS 'Array of video embed URLs (YouTube, Vimeo, Wistia). Format: [{provider: string, url: string, embedUrl: string, thumbnail: string}]';
+COMMENT ON COLUMN community_posts.attachments IS 'Array of file attachments. Format: [{name: string, url: string, size: number, mimeType: string}]';
+
+
+
+-- END MIGRATION SQL --
+
+
+============================================================
+Migration 2/4: 031: Member Features
+File: supabase/migrations/031_community_member_features.sql
+============================================================
+
+-- BEGIN MIGRATION SQL --
+
+-- ============================================================================
+-- Migration 031: Community Member Features
+-- ============================================================================
+-- Adds member directory, blocking, and enhanced profiles
+-- This migration is IDEMPOTENT - safe to run multiple times
+
+-- Add community-specific profile fields (idempotent)
+DO $$ 
+BEGIN
+    -- Add bio field
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'profiles' 
+        AND column_name = 'bio'
+    ) THEN
+        ALTER TABLE profiles ADD COLUMN bio TEXT;
+    END IF;
+
+    -- Add avatar_url field
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'profiles' 
+        AND column_name = 'avatar_url'
+    ) THEN
+        ALTER TABLE profiles ADD COLUMN avatar_url TEXT;
+    END IF;
+
+    -- Add location field
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'profiles' 
+        AND column_name = 'location'
+    ) THEN
+        ALTER TABLE profiles ADD COLUMN location VARCHAR(255);
+    END IF;
+
+    -- Add website field
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'profiles' 
+        AND column_name = 'website'
+    ) THEN
+        ALTER TABLE profiles ADD COLUMN website VARCHAR(255);
+    END IF;
+
+    -- Add community_joined_at field (when they joined the community)
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'profiles' 
+        AND column_name = 'community_joined_at'
+    ) THEN
+        ALTER TABLE profiles ADD COLUMN community_joined_at TIMESTAMPTZ DEFAULT NOW();
+    END IF;
+
+    -- Add last_active_at field
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'profiles' 
+        AND column_name = 'last_active_at'
+    ) THEN
+        ALTER TABLE profiles ADD COLUMN last_active_at TIMESTAMPTZ DEFAULT NOW();
+    END IF;
+END $$;
+
+-- Create community_blocks table for blocking users (idempotent)
+CREATE TABLE IF NOT EXISTS community_blocks (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE NOT NULL,
+    blocker_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    blocked_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    reason TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Prevent blocking yourself and duplicate blocks
+    CHECK (blocker_id != blocked_id),
+    UNIQUE(blocker_id, blocked_id)
+);
+
+-- Create indexes (idempotent)
+CREATE INDEX IF NOT EXISTS idx_community_blocks_blocker ON community_blocks(blocker_id);
+CREATE INDEX IF NOT EXISTS idx_community_blocks_blocked ON community_blocks(blocked_id);
+CREATE INDEX IF NOT EXISTS idx_community_blocks_tenant ON community_blocks(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_last_active ON profiles(last_active_at DESC);
+CREATE INDEX IF NOT EXISTS idx_profiles_community_joined ON profiles(community_joined_at DESC);
+
+-- Enable RLS on community_blocks (idempotent)
+ALTER TABLE community_blocks ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for community_blocks (idempotent with DROP IF EXISTS)
+DO $$ 
+BEGIN
+    DROP POLICY IF EXISTS "Users can view their own blocks" ON community_blocks;
+    DROP POLICY IF EXISTS "Users can create blocks" ON community_blocks;
+    DROP POLICY IF EXISTS "Users can delete their own blocks" ON community_blocks;
+    DROP POLICY IF EXISTS "Admins can view all blocks" ON community_blocks;
+
+    CREATE POLICY "Users can view their own blocks"
+    ON community_blocks FOR SELECT
+    TO authenticated
+    USING (blocker_id = auth.uid());
+
+    CREATE POLICY "Users can create blocks"
+    ON community_blocks FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        blocker_id = auth.uid() AND
+        tenant_id IN (SELECT tenant_id FROM profiles WHERE id = auth.uid())
+    );
+
+    CREATE POLICY "Users can delete their own blocks"
+    ON community_blocks FOR DELETE
+    TO authenticated
+    USING (blocker_id = auth.uid());
+
+    CREATE POLICY "Admins can view all blocks"
+    ON community_blocks FOR SELECT
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE id = auth.uid() 
+            AND role IN ('super_admin', 'tenant_admin')
+        )
+    );
+END $$;
+
+-- Function to check if user A has blocked user B (idempotent)
+CREATE OR REPLACE FUNCTION is_user_blocked(
+    p_blocker_id UUID,
+    p_blocked_id UUID
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM community_blocks
+        WHERE blocker_id = p_blocker_id
+        AND blocked_id = p_blocked_id
+    );
+END;
+$$;
+
+-- Function to get member statistics (idempotent)
+CREATE OR REPLACE FUNCTION get_member_stats(p_user_id UUID)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_post_count INTEGER;
+    v_comment_count INTEGER;
+    v_like_count INTEGER;
+    v_member_since TIMESTAMPTZ;
+BEGIN
+    -- Count posts
+    SELECT COUNT(*) INTO v_post_count
+    FROM community_posts
+    WHERE user_id = p_user_id AND status = 'published';
+
+    -- Count comments
+    SELECT COUNT(*) INTO v_comment_count
+    FROM community_comments
+    WHERE user_id = p_user_id AND status IN ('published', 'approved');
+
+    -- Count likes received on posts
+    SELECT COALESCE(SUM(like_count), 0) INTO v_like_count
+    FROM community_posts
+    WHERE user_id = p_user_id;
+
+    -- Get member since date
+    SELECT community_joined_at INTO v_member_since
+    FROM profiles
+    WHERE id = p_user_id;
+
+    RETURN jsonb_build_object(
+        'post_count', v_post_count,
+        'comment_count', v_comment_count,
+        'like_count', v_like_count,
+        'member_since', v_member_since
+    );
+END;
+$$;
+
+-- Trigger to update last_active_at when user posts or comments (idempotent)
+CREATE OR REPLACE FUNCTION update_last_active()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE profiles
+    SET last_active_at = NOW()
+    WHERE id = NEW.user_id;
+    RETURN NEW;
+END;
+$$;
+
+-- Create triggers (idempotent with DROP IF EXISTS)
+DROP TRIGGER IF EXISTS update_last_active_on_post ON community_posts;
+CREATE TRIGGER update_last_active_on_post
+AFTER INSERT OR UPDATE ON community_posts
+FOR EACH ROW
+EXECUTE FUNCTION update_last_active();
+
+DROP TRIGGER IF EXISTS update_last_active_on_comment ON community_comments;
+CREATE TRIGGER update_last_active_on_comment
+AFTER INSERT OR UPDATE ON community_comments
+FOR EACH ROW
+EXECUTE FUNCTION update_last_active();
+
+-- Add helpful comments
+COMMENT ON TABLE community_blocks IS 'Stores user blocking relationships for community features';
+COMMENT ON COLUMN profiles.bio IS 'User bio/description for community profile';
+COMMENT ON COLUMN profiles.avatar_url IS 'URL to user avatar image';
+COMMENT ON COLUMN profiles.location IS 'User location (city, country)';
+COMMENT ON COLUMN profiles.website IS 'User website or social link';
+COMMENT ON COLUMN profiles.community_joined_at IS 'When user joined the community';
+COMMENT ON COLUMN profiles.last_active_at IS 'Last time user was active in community';
+
+
+
+-- END MIGRATION SQL --
+
+
+============================================================
+Migration 3/4: 032: Comment Fixes
+File: supabase/migrations/032_fix_community_comments.sql
+============================================================
+
+-- BEGIN MIGRATION SQL --
+
+-- ============================================================================
+-- Migration 032: Fix Community Comments
+-- ============================================================================
+-- Fixes comment creation and display issues
+-- This migration is IDEMPOTENT - safe to run multiple times
+
+-- Verify and fix RLS policies for community_comments
+DO $$ 
+BEGIN
+    -- Drop existing policies if they exist
+    DROP POLICY IF EXISTS "Users can view published comments in their tenant" ON community_comments;
+    DROP POLICY IF EXISTS "Users can create comments in their tenant" ON community_comments;
+    DROP POLICY IF EXISTS "Users can update their own comments" ON community_comments;
+    DROP POLICY IF EXISTS "Users can delete their own comments" ON community_comments;
+    DROP POLICY IF EXISTS "Admins can manage all comments in their tenant" ON community_comments;
+    DROP POLICY IF EXISTS "Tenant admins can manage comments in their tenant" ON community_comments;
+    DROP POLICY IF EXISTS "Super admins can manage all comments" ON community_comments;
+
+    -- Create comprehensive SELECT policy (simplified for better performance)
+    CREATE POLICY "Users can view published comments in their tenant"
+    ON community_comments FOR SELECT
+    TO authenticated
+    USING (
+        -- Users can see published/approved comments in their tenant
+        (tenant_id IN (SELECT tenant_id FROM profiles WHERE id = auth.uid())
+        AND status IN ('published', 'approved'))
+        OR
+        -- Super admins can see everything
+        (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin'))
+    );
+
+    -- Create INSERT policy (allow users to create comments)
+    CREATE POLICY "Users can create comments in their tenant"
+    ON community_comments FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        -- User must be creating with their own ID
+        user_id = auth.uid() 
+        AND
+        -- Must be in their tenant
+        tenant_id IN (SELECT tenant_id FROM profiles WHERE id = auth.uid())
+        AND
+        -- Post must exist and be published
+        EXISTS (
+            SELECT 1 FROM community_posts 
+            WHERE id = community_comments.post_id 
+            AND status = 'published'
+            AND (
+                -- Post is in same tenant
+                tenant_id = community_comments.tenant_id
+                OR
+                -- Or super admin
+                EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin')
+            )
+        )
+    );
+
+    -- Create UPDATE policy (users can edit their own comments)
+    CREATE POLICY "Users can update their own comments"
+    ON community_comments FOR UPDATE
+    TO authenticated
+    USING (
+        -- Own comments
+        user_id = auth.uid()
+        OR
+        -- Or admin in same tenant
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE id = auth.uid() 
+            AND role IN ('tenant_admin', 'manager')
+            AND tenant_id = community_comments.tenant_id
+        )
+        OR
+        -- Or super admin
+        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin')
+    );
+
+    -- Create DELETE policy (users can delete their own comments)
+    CREATE POLICY "Users can delete their own comments"
+    ON community_comments FOR DELETE
+    TO authenticated
+    USING (
+        -- Own comments
+        user_id = auth.uid()
+        OR
+        -- Or admin in same tenant
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE id = auth.uid() 
+            AND role IN ('tenant_admin', 'manager')
+            AND tenant_id = community_comments.tenant_id
+        )
+        OR
+        -- Or super admin
+        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin')
+    );
+
+END $$;
+
+-- Add index for better performance on post queries
+CREATE INDEX IF NOT EXISTS idx_community_comments_post_status 
+ON community_comments(post_id, status) 
+WHERE status IN ('published', 'approved');
+
+-- Add index for user's own comments
+CREATE INDEX IF NOT EXISTS idx_community_comments_user_id 
+ON community_comments(user_id);
+
+-- Ensure status defaults to 'published' for regular users
+ALTER TABLE community_comments 
+ALTER COLUMN status SET DEFAULT 'published';
+
+-- Add helpful comment
+COMMENT ON TABLE community_comments IS 'Community post comments with simplified RLS for better performance';
+
+
+
+-- END MIGRATION SQL --
+
+
+============================================================
+Migration 4/4: 033: Notification Preferences Fix
+File: supabase/migrations/033_fix_notification_preferences_rls.sql
+============================================================
+
+-- BEGIN MIGRATION SQL --
+
+-- ============================================================================
+-- Migration 033: Fix Community Notification Preferences RLS
+-- ============================================================================
+-- Fixes RLS policy to allow SECURITY DEFINER functions to create default preferences
+-- This migration is IDEMPOTENT - safe to run multiple times
+
+-- Drop existing INSERT policy that's too restrictive
+DROP POLICY IF EXISTS "Users can manage their own notification preferences" ON community_notification_preferences;
+
+-- Create separate policies for INSERT and UPDATE/DELETE
+CREATE POLICY "Users can insert their own notification preferences" ON community_notification_preferences
+    FOR INSERT 
+    TO authenticated
+    WITH CHECK (user_id = auth.uid());
+
+-- Allow SECURITY DEFINER functions to insert default preferences
+CREATE POLICY "System can create default notification preferences" ON community_notification_preferences
+    FOR INSERT 
+    TO authenticated
+    WITH CHECK (true); -- Security is handled by the function itself
+
+CREATE POLICY "Users can update their own notification preferences" ON community_notification_preferences
+    FOR UPDATE
+    TO authenticated
+    USING (user_id = auth.uid())
+    WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can delete their own notification preferences" ON community_notification_preferences
+    FOR DELETE
+    TO authenticated
+    USING (user_id = auth.uid());
+
+-- Comments
+COMMENT ON POLICY "System can create default notification preferences" ON community_notification_preferences 
+IS 'Allows SECURITY DEFINER functions to create default preferences for users';
+
+
+
+-- END MIGRATION SQL --
+
+
+============================================================
+📋 INSTRUCTIONS:
+============================================================
+1. Go to: https://supabase.com/dashboard/project/kdxwfaynzemmdonkmttf/sql
+2. Copy each migration SQL above (between BEGIN and END)
+3. Paste into the SQL Editor
+4. Click "Run" for each migration in order
+5. Migrations are idempotent - safe to run multiple times
+============================================================
