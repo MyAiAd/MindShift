@@ -1046,7 +1046,7 @@ export default function TreatmentSession({
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 relative">
+    <div className="max-w-4xl mx-auto px-4 relative flex flex-col h-full min-h-[calc(100vh-180px)] md:min-h-[calc(100vh-120px)]">
       {/* Ready Overlay - Shows before session starts */}
       {showReadyOverlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
@@ -1321,8 +1321,8 @@ export default function TreatmentSession({
         </>
       )}
 
-      {/* V4 Messages Area - Viewport-based height ensures input area always visible */}
-      <div className="h-[50vh] sm:h-[50vh] md:h-[55vh] max-h-[400px] overflow-y-auto p-4 sm:p-6 space-y-4 bg-card/30 dark:bg-[#073642]/30 rounded-lg border border-border/30 dark:border-[#586e75]/30">
+      {/* V4 Messages Area - Flex-grow to fill available space */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-card/30 dark:bg-[#073642]/30 rounded-lg border border-border/30 dark:border-[#586e75]/30 min-h-0">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -1348,8 +1348,8 @@ export default function TreatmentSession({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* V4 Input Area */}
-      <div className="px-6 py-4 border-t border-border">
+      {/* V4 Input Area - Fixed at bottom, doesn't shrink */}
+      <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-border mt-auto">
         {hasError && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <div className="flex items-center space-x-2">
