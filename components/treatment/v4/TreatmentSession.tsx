@@ -290,9 +290,15 @@ export default function TreatmentSession({
       .join(' ') + ' V4';
   };
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when NEW messages arrive (not on initial load)
+  const prevMessageCount = useRef(0);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Only auto-scroll if this is NOT the first message (initial load)
+    // On first load, we want user to see the top of the intro message
+    if (messages.length > 1 && messages.length > prevMessageCount.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    prevMessageCount.current = messages.length;
   }, [messages]);
 
   // Handler for starting the session (clicking the play button)
