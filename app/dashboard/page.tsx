@@ -63,11 +63,11 @@ function DashboardContent() {
       console.log('Dashboard: Email confirmed! Showing banner');
       setShowConfirmationBanner(true);
 
-      // Auto-hide after 20 seconds (increased for better visibility)
+      // Auto-hide after 8 seconds
       const timer = setTimeout(() => {
         console.log('Dashboard: Auto-hiding confirmation banner');
         setShowConfirmationBanner(false);
-      }, 20000);
+      }, 8000);
 
       // Clean up the URL after a short delay so user can see it
       setTimeout(() => {
