@@ -91,6 +91,8 @@ export async function GET(request: NextRequest) {
         // Redirect to the dashboard or requested page with confirmation success flag
         const redirectUrl = new URL(next, request.url);
         redirectUrl.searchParams.set('confirmed', 'true');
+        console.log('Auth callback: Redirecting to URL:', redirectUrl.toString());
+        console.log('Auth callback: Redirect search params:', redirectUrl.searchParams.toString());
         return NextResponse.redirect(redirectUrl);
       }
     } catch (error) {

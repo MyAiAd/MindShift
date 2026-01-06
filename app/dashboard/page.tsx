@@ -46,8 +46,16 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [showConfirmationBanner, setShowConfirmationBanner] = useState(false);
 
+  // Debug: Log component mount and searchParams
+  console.log('Dashboard: Component rendering, searchParams:', {
+    confirmed: searchParams.get('confirmed'),
+    allParams: Object.fromEntries(searchParams.entries()),
+    url: typeof window !== 'undefined' ? window.location.href : 'SSR'
+  });
+
   // Check for email confirmation success
   useEffect(() => {
+    console.log('Dashboard: useEffect running for confirmation check');
     const confirmedParam = searchParams.get('confirmed');
     console.log('Dashboard: Checking confirmed parameter:', confirmedParam);
 
