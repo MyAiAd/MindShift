@@ -68,7 +68,13 @@ export async function GET(request: NextRequest) {
         treatment_sessions: 0,
         active_treatment_sessions: 0,
         completed_treatment_sessions: 0,
-        total_treatment_hours_this_month: 0
+        total_treatment_hours_this_month: 0,
+        // New metrics
+        problems_cleared: 0,
+        goals_optimized: 0,
+        experiences_cleared: 0,
+        avg_minutes_per_problem: 0,
+        unique_days_active: 0
       };
       
       return NextResponse.json({ 
@@ -92,7 +98,13 @@ export async function GET(request: NextRequest) {
       treatment_sessions: 0,
       active_treatment_sessions: 0,
       completed_treatment_sessions: 0,
-      total_treatment_hours_this_month: 0
+      total_treatment_hours_this_month: 0,
+      // New metrics
+      problems_cleared: 0,
+      goals_optimized: 0,
+      experiences_cleared: 0,
+      avg_minutes_per_problem: 0,
+      unique_days_active: 0
     };
 
     return NextResponse.json({ stats });
