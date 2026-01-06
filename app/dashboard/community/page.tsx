@@ -249,7 +249,7 @@ export default function CommunityPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-              Community
+              MIND SHIFTING COMMUNITY
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
               Connect, share, and grow together

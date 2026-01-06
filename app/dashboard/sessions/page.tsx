@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { Calendar, Clock, Video, Plus, User, CheckCircle, AlertCircle, ExternalLink, Activity, Zap, RotateCcw, MoreVertical } from 'lucide-react';
-import EnhancedBookingModal from '@/components/sessions/EnhancedBookingModal';
+import { Calendar, Clock, Video, User, ExternalLink, Activity, Zap } from 'lucide-react';
 
 // Dynamic import for audio preloader - loads treatment audio in background
 const V4AudioPreloader = dynamic(() => import('@/components/treatment/v4/V4AudioPreloader'), {
@@ -64,45 +63,26 @@ interface TreatmentSession {
   };
 }
 
-interface SessionStats {
-  total_sessions: number;
-  upcoming_sessions: number;
-  completed_sessions: number;
-  cancelled_sessions: number;
-  total_hours_this_month: number;
-  available_slots: number;
-  treatment_sessions: number;
-  active_treatment_sessions: number;
-  completed_treatment_sessions: number;
-  total_treatment_hours_this_month: number;
-}
-
 export default function SessionsPage() {
   const { profile } = useAuth();
   const [sessions, setSessions] = useState<CoachingSession[]>([]);
   const [treatmentSessions, setTreatmentSessions] = useState<TreatmentSession[]>([]);
-  const [stats, setStats] = useState<SessionStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showBookModal, setShowBookModal] = useState(false);
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
-  const [clearingStats, setClearingStats] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const fetchSessionData = async () => {
       try {
-        const [sessionsResponse, treatmentSessionsResponse, statsResponse] = await Promise.all([
+        const [sessionsResponse, treatmentSessionsResponse] = await Promise.all([
           fetch('/api/sessions'),
-          fetch('/api/sessions/treatment'),
-          fetch('/api/sessions/stats')
+          fetch('/api/sessions/treatment')
         ]);
 
-        const [sessionsData, treatmentSessionsData, statsData] = await Promise.all([
+        const [sessionsData, treatmentSessionsData] = await Promise.all([
           sessionsResponse.json(),
-          treatmentSessionsResponse.json(),
-          statsResponse.json()
+          treatmentSessionsResponse.json()
         ]);
 
         if (sessionsData.sessions) {
@@ -111,10 +91,6 @@ export default function SessionsPage() {
 
         if (treatmentSessionsData.treatmentSessions) {
           setTreatmentSessions(treatmentSessionsData.treatmentSessions);
-        }
-
-        if (statsData.stats) {
-          setStats(statsData.stats);
         }
       } catch (error) {
         console.error('Error fetching session data:', error);
@@ -212,12 +188,6 @@ export default function SessionsPage() {
       if (response.ok) {
         // Remove the session from the local state
         setTreatmentSessions(prev => prev.filter(session => session.session_id !== sessionId));
-        // Refresh stats
-        const statsResponse = await fetch('/api/sessions/stats');
-        const statsData = await statsResponse.json();
-        if (statsData.stats) {
-          setStats(statsData.stats);
-        }
       } else {
         throw new Error('Failed to delete session');
       }
@@ -242,12 +212,6 @@ export default function SessionsPage() {
       if (response.ok) {
         // Remove the session from the local state
         setSessions(prev => prev.filter(session => session.id !== sessionId));
-        // Refresh stats
-        const statsResponse = await fetch('/api/sessions/stats');
-        const statsData = await statsResponse.json();
-        if (statsData.stats) {
-          setStats(statsData.stats);
-        }
       } else {
         throw new Error('Failed to delete session');
       }
@@ -374,13 +338,6 @@ export default function SessionsPage() {
       
       // Clear selection
       setSelectedSessions(new Set());
-      
-      // Refresh stats
-      const statsResponse = await fetch('/api/sessions/stats');
-      const statsData = await statsResponse.json();
-      if (statsData.stats) {
-        setStats(statsData.stats);
-      }
 
     } catch (error) {
       console.error('Error during bulk delete:', error);
@@ -390,237 +347,33 @@ export default function SessionsPage() {
     }
   };
 
-  const handleBookingComplete = (booking: any) => {
-    // Add the new booking to the sessions list
-    setSessions(prev => [booking, ...prev]);
-    
-    // Refresh stats
-    const fetchStats = async () => {
-      try {
-        const statsResponse = await fetch('/api/sessions/stats');
-        const statsData = await statsResponse.json();
-        if (statsData.stats) {
-          setStats(statsData.stats);
-        }
-      } catch (error) {
-        console.error('Error refreshing stats:', error);
-      }
-    };
-    
-    fetchStats();
-    setShowBookModal(false);
-  };
-
-  const handleClearStats = async () => {
-    if (!confirm('Are you sure you want to clear all statistics? This will reset your session counts and hours but will not delete any actual session data. This action cannot be undone.')) {
-      return;
-    }
-
-    setClearingStats(true);
-    try {
-      const response = await fetch('/api/sessions/stats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'clear_stats' })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Refresh stats to show cleared values
-        const statsResponse = await fetch('/api/sessions/stats');
-        const statsData = await statsResponse.json();
-        if (statsData.stats) {
-          setStats(statsData.stats);
-        }
-      } else {
-        throw new Error(data.error || 'Failed to clear statistics');
-      }
-    } catch (error) {
-      console.error('Error clearing stats:', error);
-      alert('Failed to clear statistics. Please try again.');
-    } finally {
-      setClearingStats(false);
-    }
-  };
-
   return (
     <div className="p-8">
       {/* V4 Audio Preloader - starts loading audio for treatment sessions */}
       <V4AudioPreloader />
       
       <div className="mb-8">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Coaching Sessions</h1>
-            <p className="text-muted-foreground mt-1">Manage your coaching sessions and track your progress with AI and human coaches.</p>
-          </div>
-          {/* Desktop buttons - hidden on mobile */}
-          <div className="hidden md:flex space-x-3">
-            <button 
-              onClick={handleClearStats}
-              disabled={clearingStats}
-              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RotateCcw className={`h-5 w-5 mr-2 ${clearingStats ? 'animate-spin' : ''}`} />
-              {clearingStats ? 'Clearing...' : 'Clear Stats'}
-            </button>
-            <button 
-              onClick={() => setShowBookModal(true)}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Book Session
-            </button>
-          </div>
-
-          {/* Mobile menu icon */}
-          <button
-            onClick={() => setShowMobileMenu(true)}
-            className="md:hidden p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-            aria-label="Open actions menu"
-          >
-            <MoreVertical className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {loading ? (
-          // Loading skeleton
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-card rounded-lg shadow-sm border p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-secondary rounded-lg">
-                  <div className="h-6 w-6 bg-secondary rounded animate-pulse"></div>
-                </div>
-                <div className="ml-4 flex-1">
-                  <div className="h-8 bg-secondary rounded animate-pulse mb-2"></div>
-                  <div className="h-4 bg-secondary rounded animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <>
-            <div className="bg-card rounded-lg shadow-sm border p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <Activity className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-semibold text-foreground">
-                    {(stats?.total_sessions || 0) + (stats?.treatment_sessions || 0)}
-                  </p>
-                  <p className="text-muted-foreground">Total Sessions</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stats?.total_sessions || 0} coaching + {stats?.treatment_sessions || 0} treatment
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-card rounded-lg shadow-sm border p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-50 rounded-lg">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-semibold text-foreground">
-                    {(stats?.completed_sessions || 0) + (stats?.completed_treatment_sessions || 0)}
-                  </p>
-                  <p className="text-muted-foreground">Completed</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stats?.completed_sessions || 0} coaching + {stats?.completed_treatment_sessions || 0} treatment
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-card rounded-lg shadow-sm border p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <Calendar className="h-6 w-6 text-purple-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-semibold text-foreground">
-                    {(stats?.upcoming_sessions || 0) + (stats?.active_treatment_sessions || 0)}
-                  </p>
-                  <p className="text-muted-foreground">Active Sessions</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stats?.upcoming_sessions || 0} scheduled + {stats?.active_treatment_sessions || 0} in-progress
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-card rounded-lg shadow-sm border p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-yellow-50 rounded-lg">
-                  <Clock className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-semibold text-foreground">
-                    {((stats?.total_hours_this_month || 0) + (stats?.total_treatment_hours_this_month || 0)).toFixed(1)}
-                  </p>
-                  <p className="text-muted-foreground">Hours This Month</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stats?.total_hours_this_month?.toFixed(1) || '0.0'} coaching + {stats?.total_treatment_hours_this_month?.toFixed(1) || '0.0'} treatment
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="mt-8 mb-8 grid md:grid-cols-3 gap-6">
-        <div className="bg-card border border-border rounded-lg p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center space-x-3 mb-4">
-            <Video className="h-8 w-8 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground">Treatment Session</h3>
-          </div>
-          <p className="text-muted-foreground mb-4">Start an automated treatment session with voice support, modular design, and mobile optimization.</p>
-          <div className="text-xs text-primary mb-6 space-y-1 flex-grow">
-            <div>• Instant responses (&lt;200ms)</div>
-            <div>• Voice-enabled with pre-loaded audio</div>
-            <div>• Minimal AI usage (&lt;5%)</div>
-            <div>• Mobile-optimized experience</div>
-          </div>
+        <div className="flex flex-col items-center text-center">
+          <h1 className="text-3xl font-bold text-foreground">MIND SHIFTING</h1>
+          <p className="text-muted-foreground mt-2 max-w-lg">Follow the guided process to clear your problems and subconscious blockages in minutes.</p>
           <button 
             onClick={() => {
-              const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              const sessionId = `session-v4-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
               router.push(`/dashboard/sessions/treatment-v4?sessionId=${sessionId}`);
             }}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors w-full mt-auto"
+            className="mt-6 bg-primary text-primary-foreground px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold"
           >
-            Start Treatment Session
-          </button>
-        </div>
-
-
-        <div className="bg-card border border-border rounded-lg p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center space-x-3 mb-4">
-            <User className="h-8 w-8 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground">Human Coach</h3>
-          </div>
-          <p className="text-muted-foreground mb-6 flex-grow">Book a session with one of our certified human coaches.</p>
-          <button 
-            onClick={() => setShowBookModal(true)}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors w-full mt-auto"
-          >
-            Book with Coach
+            START MIND SHIFTING
           </button>
         </div>
       </div>
 
-      {/* Sessions List */}
+
+      {/* Ongoing Sessions List */}
               <div className="bg-card rounded-lg shadow-sm border dark:border-[#586e75] overflow-hidden">
                   <div className="px-6 py-4 border-b border-border dark:border-[#586e75]">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Recent Sessions</h2>
+            <h2 className="text-lg font-semibold text-foreground">Ongoing Sessions</h2>
             {(sessions.length > 0 || treatmentSessions.length > 0) && (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -673,10 +426,15 @@ export default function SessionsPage() {
               </div>
             ))}
           </div>
-        ) : sessions.length > 0 || treatmentSessions.length > 0 ? (
+        ) : (() => {
+          // Filter to only show ongoing/unfinished sessions
+          const ongoingCoachingSessions = sessions.filter(s => s.status === 'scheduled');
+          const ongoingTreatmentSessions = treatmentSessions.filter(s => s.status === 'active' || s.status === 'paused');
+          
+          return ongoingCoachingSessions.length > 0 || ongoingTreatmentSessions.length > 0 ? (
           <div className="divide-y divide-gray-200">
             {/* Coaching Sessions */}
-            {sessions.map((session) => {
+            {ongoingCoachingSessions.map((session) => {
               const { date, time } = formatDateTime(session.scheduled_at);
               const coachName = `${session.coach.first_name} ${session.coach.last_name}`;
               
@@ -827,7 +585,7 @@ export default function SessionsPage() {
             })}
 
             {/* Treatment Sessions */}
-            {treatmentSessions.map((session) => {
+            {ongoingTreatmentSessions.map((session) => {
               const { date, time } = formatDateTime(session.created_at);
               const userName = `${session.profiles.first_name} ${session.profiles.last_name}`;
               const aiUsagePercent = session.ai_responses + session.scripted_responses > 0 
@@ -984,94 +742,15 @@ export default function SessionsPage() {
         ) : (
           <div className="text-center py-12">
             <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground text-lg">Your sessions will appear here</p>
+            <p className="text-muted-foreground text-lg">No ongoing sessions</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Book your first coaching session to get started!
+              Start a Mind Shifting session to begin clearing your blockages.
             </p>
           </div>
-        )}
+        );
+        })()}
       </div>
 
-      {/* Mobile Actions Menu */}
-      {showMobileMenu && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-background/75 backdrop-blur-sm"
-            onClick={() => setShowMobileMenu(false)}
-          />
-          
-          {/* Drawer */}
-          <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl shadow-xl border-t border-border pb-safe">
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1.5 bg-border rounded-full" />
-            </div>
-            
-            {/* Title */}
-            <div className="px-4 py-3 border-b border-border">
-              <h3 className="text-lg font-semibold text-foreground">Actions</h3>
-            </div>
-            
-            {/* Menu Items */}
-            <div className="p-2">
-              <button
-                onClick={() => {
-                  setShowMobileMenu(false);
-                  const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-                  router.push(`/dashboard/sessions/treatment-v4?sessionId=${sessionId}`);
-                }}
-                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors text-left"
-              >
-                <Video className="h-5 w-5 text-primary" />
-                <span className="text-foreground font-medium">Start Session in-app</span>
-              </button>
-              
-              <button
-                onClick={() => {
-                  setShowMobileMenu(false);
-                  setShowBookModal(true);
-                }}
-                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors text-left"
-              >
-                <User className="h-5 w-5 text-primary" />
-                <span className="text-foreground font-medium">Book a Live Session</span>
-              </button>
-              
-              <button
-                onClick={() => {
-                  setShowMobileMenu(false);
-                  handleClearStats();
-                }}
-                disabled={clearingStats}
-                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors text-left disabled:opacity-50"
-              >
-                <RotateCcw className={`h-5 w-5 text-primary ${clearingStats ? 'animate-spin' : ''}`} />
-                <span className="text-foreground font-medium">
-                  {clearingStats ? 'Clearing Stats...' : 'Clear Stats'}
-                </span>
-              </button>
-            </div>
-            
-            {/* Cancel button */}
-            <div className="p-4 pt-2">
-              <button
-                onClick={() => setShowMobileMenu(false)}
-                className="w-full py-3 text-center text-muted-foreground font-medium rounded-lg hover:bg-secondary/20 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Book Session Modal */}
-      <EnhancedBookingModal
-        isOpen={showBookModal}
-        onClose={() => setShowBookModal(false)}
-        onBookingComplete={handleBookingComplete}
-      />
     </div>
   );
 } 
