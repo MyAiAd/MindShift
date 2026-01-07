@@ -61,8 +61,15 @@ export default function V4AudioPreloader({ voice = 'rachel' }: V4AudioPreloaderP
 
         console.log(`📋 Loaded manifest for "${voice}" with ${manifestKeys.length} audio files`);
 
-        // Preload each audio file
+        // Preload each audio file (skip INITIAL_WELCOME - it's short enough to generate on-demand)
         for (const [key, audioInfo] of Object.entries(manifest)) {
+          // Skip INITIAL_WELCOME to save initial load time (it's now very short)
+          if (key === 'INITIAL_WELCOME') {
+            skipCount++;
+            console.log(`   ⏭️  Skipped: INITIAL_WELCOME (will generate on-demand if needed)`);
+            continue;
+          }
+
           const text = V4_STATIC_AUDIO_TEXTS[key as keyof typeof V4_STATIC_AUDIO_TEXTS];
           
           if (!text) {

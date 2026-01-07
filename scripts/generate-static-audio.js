@@ -28,8 +28,9 @@ const crypto = require('crypto');
 // Static audio texts (mirrored from lib/v4/static-audio-texts.ts)
 // IMPORTANT: Keep this in sync with the TypeScript source file
 const V4_STATIC_AUDIO_TEXTS = {
-  // Initial welcome message (shown when session starts)
-  INITIAL_WELCOME: "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE",
+  // Initial welcome message (shown when session starts) - SHORTENED
+  // Note: This audio file will not be preloaded to save time  
+  INITIAL_WELCOME: "Would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE",
 
   // Problem Shifting opener
   PROBLEM_SHIFTING_INTRO: "Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.",

@@ -8,20 +8,6 @@ export class IntroductionPhase {
       maxDuration: 5,
       steps: [
         {
-          id: 'mind_shifting_explanation_static',
-          scriptedResponse: (userInput, context) => {
-            // Only show this if we are starting fresh (no input)
-            // If we are looping back, we might want to skip this or handle it differently?
-            // But for now, assuming this is the entry point.
-            return "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.";
-          },
-          expectedResponseType: 'auto',
-          validationRules: [],
-          nextStep: 'mind_shifting_explanation_dynamic',
-          aiTriggers: []
-        },
-
-        {
           id: 'mind_shifting_explanation_dynamic',
           scriptedResponse: (userInput, context) => {
             // Safety check for context
@@ -34,7 +20,7 @@ export class IntroductionPhase {
 
             // If no user input, show the question part
             if (!userInput) {
-              return "When you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
+              return "Would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
             }
 
             const input = userInput.toLowerCase();
