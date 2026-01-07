@@ -35,10 +35,9 @@ export class ValidationHelpers {
     // PRIORITY 2: Step-specific validation for complex inputs
     // ============================================================================
     
-    // Special validation for introduction phase (both static and dynamic variants)
+    // Special validation for introduction phase (only dynamic variant now)
     const introPhaseSteps = [
       'mind_shifting_explanation',
-      'mind_shifting_explanation_static', 
       'mind_shifting_explanation_dynamic'
     ];
     if (introPhaseSteps.includes(step.id)) {

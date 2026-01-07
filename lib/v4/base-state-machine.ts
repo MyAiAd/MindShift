@@ -78,8 +78,8 @@ export abstract class BaseTreatmentStateMachine {
       // Trauma/Identity Bridge: v2/v3 had single step, v4 splits into static + dynamic
       'trauma_identity_step': 'trauma_identity_step_static',
       
-      // Mind Shifting Explanation: v2/v3 had single step, v4 splits into static + dynamic
-      'mind_shifting_explanation': 'mind_shifting_explanation_static',
+      // Mind Shifting Explanation: v2/v3 had single step, v4 uses only dynamic step now
+      'mind_shifting_explanation': 'mind_shifting_explanation_dynamic',
     };
 
     // Step-to-Phase mapping: Maps step names to their correct v4 phase
@@ -875,7 +875,7 @@ export abstract class BaseTreatmentStateMachine {
         userId: context?.userId || '',
         sessionId,
         currentPhase: 'introduction',
-        currentStep: 'mind_shifting_explanation_static',
+        currentStep: 'mind_shifting_explanation_dynamic',
         userResponses: {},
         startTime: new Date(),
         lastActivity: new Date(),
@@ -912,7 +912,7 @@ export abstract class BaseTreatmentStateMachine {
       userId: context?.userId || '',
       sessionId,
       currentPhase: 'introduction',
-      currentStep: 'mind_shifting_explanation_static',
+      currentStep: 'mind_shifting_explanation_dynamic',
       userResponses: {},
       startTime: new Date(),
       lastActivity: new Date(),
