@@ -168,6 +168,58 @@ export default function VoiceControls({
             Voice Settings
           </h3>
 
+          {/* Voice Input toggle */}
+          {capabilities.speechRecognition && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs text-foreground dark:text-muted-foreground block">
+                    Voice Input
+                  </label>
+                  <span className="text-xs text-muted-foreground">Enable microphone</span>
+                </div>
+                <button
+                  onClick={() => updatePreferences({ listeningEnabled: !preferences.listeningEnabled })}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    preferences.listeningEnabled ? 'bg-blue-600' : 'bg-secondary'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-card transition-transform ${
+                      preferences.listeningEnabled ? 'translate-x-5' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Voice Output toggle */}
+          {capabilities.speechSynthesis && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs text-foreground dark:text-muted-foreground block">
+                    Voice Output
+                  </label>
+                  <span className="text-xs text-muted-foreground">Enable speech</span>
+                </div>
+                <button
+                  onClick={() => updatePreferences({ speechEnabled: !preferences.speechEnabled })}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    preferences.speechEnabled ? 'bg-blue-600' : 'bg-secondary'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-card transition-transform ${
+                      preferences.speechEnabled ? 'translate-x-5' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Auto-speak toggle */}
           <div className="mb-3">
             <div className="flex items-center justify-between">
@@ -184,14 +236,14 @@ export default function VoiceControls({
               </div>
               <button
                 onClick={() => updatePreferences({ autoSpeak: !preferences.autoSpeak })}
-                disabled={!capabilities.speechSynthesis}
+                disabled={!capabilities.speechSynthesis || !preferences.speechEnabled}
                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                  preferences.autoSpeak && capabilities.speechSynthesis ? 'bg-blue-600' : 'bg-secondary'
-                } ${!capabilities.speechSynthesis ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  preferences.autoSpeak && capabilities.speechSynthesis && preferences.speechEnabled ? 'bg-blue-600' : 'bg-secondary'
+                } ${!capabilities.speechSynthesis || !preferences.speechEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <span
                   className={`inline-block h-3 w-3 transform rounded-full bg-card transition-transform ${
-                    preferences.autoSpeak && capabilities.speechSynthesis ? 'translate-x-5' : 'translate-x-1'
+                    preferences.autoSpeak && capabilities.speechSynthesis && preferences.speechEnabled ? 'translate-x-5' : 'translate-x-1'
                   }`}
                 />
               </button>
