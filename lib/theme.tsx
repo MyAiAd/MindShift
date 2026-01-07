@@ -9,7 +9,7 @@ interface ThemeContextType {
   mode: 'light' | 'dark';
   // Glass effects
   glassEnabled: boolean;
-  setGlassEnabled: (enabled: boolean) => void;
+  setGlassEnabled: (enabled: boolean | ((prev: boolean) => boolean)) => void;
   glassIntensity: number;
   setGlassIntensity: (intensity: number) => void;
   glassAutoDisableMobile: boolean;
@@ -129,8 +129,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemeState(newTheme);
   };
 
-  const setGlassEnabled = (enabled: boolean) => {
-    setGlassEnabledState(enabled);
+  const setGlassEnabled = (enabled: boolean | ((prev: boolean) => boolean)) => {
+    if (typeof enabled === 'function') {
+      setGlassEnabledState(enabled);
+    } else {
+      setGlassEnabledState(enabled);
+    }
   };
 
   const setGlassIntensity = (intensity: number) => {

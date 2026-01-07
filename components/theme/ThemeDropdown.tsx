@@ -44,6 +44,11 @@ export function ThemeDropdown() {
     setIsOpen(false);
   };
 
+  // Glass toggle handler - uses callback pattern to avoid stale closure
+  const handleGlassToggle = () => {
+    setGlassEnabled(prev => !prev);
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Trigger Button */}
@@ -79,7 +84,7 @@ export function ThemeDropdown() {
           {/* Glass Effects Toggle */}
           <div className="px-4 py-3 border-b border-border">
             <button
-              onClick={() => setGlassEnabled(!glassEnabled)}
+              onClick={handleGlassToggle}
               className="w-full flex items-center justify-between hover:bg-accent/50 -mx-2 px-2 py-1.5 rounded-md transition-colors"
             >
               <div className="flex items-center space-x-3">
