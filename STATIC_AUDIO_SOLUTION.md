@@ -20,24 +20,35 @@ Cost: 10,744 credits per user = $$$
 
 ### New (One-Time Cost):
 ```
-Developer runs script → Generate 17 MP3 files → Cost: 10,744 credits ONE TIME
-User visits → Download static MP3 → Cost: $0
-User visits → Download static MP3 → Cost: $0
-User visits → Download static MP3 → Cost: $0
+Developer runs script → Generate 17 Opus files → Cost: 10,744 credits ONE TIME
+User visits → Download static Opus → Cost: $0
+User visits → Download static Opus → Cost: $0
+User visits → Download static Opus → Cost: $0
 Cost: $0 per user after initial generation
 ```
+
+**Why Opus instead of MP3?**
+- ✅ 30% smaller file size at same quality
+- ✅ Lower latency (designed for real-time streaming)
+- ✅ Better quality at low bitrates (24 kbps excellent for voice)
+- ✅ Native browser support (Chrome, Firefox, Safari, Edge)
+- ✅ WebRTC standard codec
 
 ## Implementation Steps
 
 ### Step 1: Generate Audio Files (One Time Only)
 
+**API Key Setup**: See `ELEVENLABS_API_SETUP.md` for detailed API key configuration instructions.
+
 ```bash
-# Set your ElevenLabs API key
+# Set your ElevenLabs API key (see ELEVENLABS_API_SETUP.md for secure setup methods)
 export ELEVENLABS_API_KEY=your_api_key_here
 
 # Run the generation script
-node scripts/generate-static-audio.js
+node scripts/generate-static-audio.js rachel
 ```
+
+**Note**: Replace `rachel` with `adam` for male voice, or add more voices in the script.
 
 **Output:**
 ```
@@ -50,11 +61,11 @@ Segments: 17
 
 🎤 Generating "INITIAL_WELCOME"...
    Text: Mind Shifting is not like counselling, therapy or life coaching...
-✅ Saved: a1b2c3d4e5f6.mp3 (245,832 bytes)
+✅ Saved: a1b2c3d4e5f6.opus (180,432 bytes)
 
 🎤 Generating "PROBLEM_SHIFTING_INTRO"...
    Text: Please close your eyes and keep them closed throughout the process...
-✅ Saved: f6e5d4c3b2a1.mp3 (198,421 bytes)
+✅ Saved: f6e5d4c3b2a1.opus (145,821 bytes)
 
 ... (continues for all 17 segments)
 
@@ -86,14 +97,14 @@ Next steps:
 ls -lh public/audio/v4/static/
 
 # Output:
-# -rw-r--r-- 1 user staff 246K Jan 01 12:00 a1b2c3d4e5f6.mp3
-# -rw-r--r-- 1 user staff 198K Jan 01 12:00 f6e5d4c3b2a1.mp3
-# ... (17 MP3 files)
+# -rw-r--r-- 1 user staff 180K Jan 01 12:00 a1b2c3d4e5f6.opus
+# -rw-r--r-- 1 user staff 145K Jan 01 12:00 f6e5d4c3b2a1.opus
+# ... (17 Opus files)
 # -rw-r--r-- 1 user staff 2.1K Jan 01 12:00 manifest.json
 
 # Add to git
 git add public/audio/v4/static/
-git commit -m "feat: add pre-generated static audio files for v4 (Rachel voice)"
+git commit -m "feat: add pre-generated static audio files for v4 (Rachel voice, Opus format)"
 git push
 ```
 
@@ -138,10 +149,10 @@ git push
 │       └── v4/
 │           └── static/
 │               ├── manifest.json          # Maps text → audio file
-│               ├── a1b2c3d4e5f6.mp3      # INITIAL_WELCOME
-│               ├── f6e5d4c3b2a1.mp3      # PROBLEM_SHIFTING_INTRO
+│               ├── a1b2c3d4e5f6.opus     # INITIAL_WELCOME
+│               ├── f6e5d4c3b2a1.opus     # PROBLEM_SHIFTING_INTRO
 │               ├── ... (15 more files)
-│               └── total: ~3.5 MB
+│               └── total: ~2.5 MB (30% smaller with Opus)
 │
 ├── scripts/
 │   └── generate-static-audio.js          # Generation script
@@ -188,14 +199,14 @@ The script generates MP3 files for all static texts:
 ```json
 {
   "INITIAL_WELCOME": {
-    "filename": "a1b2c3d4e5f6.mp3",
+    "filename": "a1b2c3d4e5f6.opus",
     "hash": "a1b2c3d4e5f6",
-    "path": "/audio/v4/static/a1b2c3d4e5f6.mp3"
+    "path": "/audio/v4/static/a1b2c3d4e5f6.opus"
   },
   "PROBLEM_SHIFTING_INTRO": {
-    "filename": "f6e5d4c3b2a1.mp3",
+    "filename": "f6e5d4c3b2a1.opus",
     "hash": "f6e5d4c3b2a1",
-    "path": "/audio/v4/static/f6e5d4c3b2a1.mp3"
+    "path": "/audio/v4/static/f6e5d4c3b2a1.opus"
   },
   ...
 }
@@ -209,9 +220,9 @@ const manifest = await fetch('/audio/v4/static/manifest.json');
 
 // 2. For each audio file in manifest
 for (const [key, audioInfo] of Object.entries(manifest)) {
-  // 3. Fetch the static MP3 file (no API call!)
+  // 3. Fetch the static Opus file (no API call!)
   const audio = await fetch(audioInfo.path);
-  
+
   // 4. Cache it in memory for instant playback
   globalAudioCache.set(text, audioUrl);
 }
@@ -249,8 +260,8 @@ This ensures the app never breaks, even if you forget to generate the files.
 
 ## Disadvantages
 
-❌ **Larger repo size** - ~3.5 MB of audio files  
-❌ **Can't change voice on-the-fly** - Must regenerate files  
+❌ **Larger repo size** - ~2.5 MB of audio files (Opus format)
+❌ **Can't change voice on-the-fly** - Must regenerate files
 ❌ **Initial generation required** - Extra setup step  
 
 ## When to Regenerate
@@ -285,11 +296,16 @@ git push
 
 | Component | Size | Impact |
 |-----------|------|--------|
-| 17 MP3 files | ~3.5 MB | Initial page load |
+| 17 Opus files | ~2.5 MB | Initial page load |
 | Manifest JSON | ~2 KB | Negligible |
-| **Total** | **~3.5 MB** | One-time download, then cached |
+| **Total** | **~2.5 MB** | One-time download, then cached |
 
 Users download these files **once**, then browser caches them forever.
+
+**Opus vs MP3 size comparison:**
+- MP3 (128 kbps): ~3.5 MB total
+- Opus (24 kbps): ~2.5 MB total
+- **Savings: 30% smaller, faster initial load**
 
 ## CDN Optimization (Optional)
 

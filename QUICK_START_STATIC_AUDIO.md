@@ -10,23 +10,25 @@ Generate the audio files **once** with Rachel's voice, serve them as static file
 
 ### Step 1: Generate Audio (ONE TIME)
 
+**API Key Setup**: See `ELEVENLABS_API_SETUP.md` for secure API key configuration.
+
 ```bash
-# Set your ElevenLabs API key
+# Set your ElevenLabs API key (NEVER commit this to git!)
 export ELEVENLABS_API_KEY=your_key_here
 
-# Generate all 17 audio files
-node scripts/generate-static-audio.js
+# Generate all 17 audio files for Rachel voice
+node scripts/generate-static-audio.js rachel
 ```
 
 **Cost:** ~10,000 credits one time (equivalent to $1-2)
 
-**Output:** 17 MP3 files in `public/audio/v4/static/`
+**Output:** 17 Opus files in `public/audio/v4/static/` (~2.5 MB total, 30% smaller than MP3)
 
 ### Step 2: Commit the Files
 
 ```bash
 git add public/audio/v4/static/
-git commit -m "feat: add pre-generated Rachel voice audio files"
+git commit -m "feat: add pre-generated Rachel voice audio files (Opus format)"
 git push
 ```
 
