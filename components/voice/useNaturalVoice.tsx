@@ -283,7 +283,7 @@ export const useNaturalVoice = ({
     /**
      * Fetch TTS audio for text and return the audio URL
      */
-    const fetchTTSAudio = useCallback(async (text: string): Promise<string> => {
+    const fetchTTSAudio = useCallback(async (text: string, voiceName: string): Promise<string> => {
         const response = await fetch('/api/tts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -298,7 +298,9 @@ export const useNaturalVoice = ({
 
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
-        globalAudioCache.set(text, audioUrl);
+        // Use voice-prefixed cache key
+        const cacheKey = `${voiceName}:${text}`;
+        globalAudioCache.set(cacheKey, audioUrl);
         return audioUrl;
     }, [voiceProvider, elevenLabsVoiceId, kokoroVoiceId]);
 
@@ -357,7 +359,7 @@ export const useNaturalVoice = ({
 
                 // Now fetch and play the suffix (only part that costs $)
                 console.log('🗣️ Natural Voice: Streaming suffix only:', prefixMatch.suffix.substring(0, 50) + '...');
-                const suffixUrl = await fetchTTSAudio(prefixMatch.suffix);
+                const suffixUrl = await fetchTTSAudio(prefixMatch.suffix, currentVoiceName);
                 await playAudioSegment(suffixUrl, true);
                 return;
             }
@@ -365,7 +367,7 @@ export const useNaturalVoice = ({
             // 3. No cache match - stream the whole thing
             console.log(`🗣️ Natural Voice: No cache for ${currentVoiceName} - streaming full text`);
             console.log('   Text:', text.substring(0, 80) + '...');
-            const audioUrl = await fetchTTSAudio(text);
+            const audioUrl = await fetchTTSAudio(text, currentVoiceName);
             await playAudioSegment(audioUrl, true);
 
         } catch (err) {
