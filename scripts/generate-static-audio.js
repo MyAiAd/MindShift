@@ -3,20 +3,21 @@
 /**
  * Audio Pre-Generation Script for V4 Mind Shifting
  *
- * This script generates all static audio files using local Paroli TTS server.
+ * This script generates all static audio files using Kokoro TTS server.
  * After running this script once per voice, you'll have static Opus files forever.
  *
  * Usage:
- *   1. Make sure Paroli is running: docker compose -f ~/paroli-local/paroli/docker-compose.local.yml up -d
+ *   1. Make sure Kokoro is running at: https://api.mind-shift.click
  *   2. Run: node scripts/generate-static-audio.js [voice-name]
  *   3. Audio files will be saved to public/audio/v4/static/[voice-name]/
  *   4. Commit the audio files to your repo
  *   5. Update preloader to use static files instead of API
  *
  * Examples:
- *   node scripts/generate-static-audio.js rachel   # Generate with ljspeech voice
+ *   node scripts/generate-static-audio.js heart    # Generate with Heart (female) voice
+ *   node scripts/generate-static-audio.js michael  # Generate with Michael (male) voice
  *
- * Cost: $0 (self-hosted Paroli)
+ * Cost: $0 (self-hosted Kokoro)
  * Output: Opus format (30% smaller than MP3, lower latency)
  */
 
@@ -74,17 +75,22 @@ const V4_STATIC_AUDIO_TEXTS = {
 };
 
 // Available voices configuration
-// Note: Paroli uses the loaded model (ljspeech), voice name is just for organization
+// Kokoro voices: af_heart (female), am_michael (male)
 const VOICES = {
-  rachel: {
-    name: 'Rachel',
-    description: 'ljspeech voice (high-quality English)'
+  heart: {
+    name: 'Heart',
+    kokoroId: 'af_heart',
+    description: 'Warm, professional female voice (Kokoro)'
   },
-  // Add more voices when you load different models in Paroli
+  michael: {
+    name: 'Michael',
+    kokoroId: 'am_michael',
+    description: 'Deep, mature male voice (Kokoro)'
+  }
 };
 
 // Parse command line argument for voice
-const voiceArg = process.argv[2] || 'rachel';
+const voiceArg = process.argv[2] || 'heart';
 const selectedVoice = VOICES[voiceArg];
 
 if (!selectedVoice) {
@@ -138,12 +144,16 @@ async function generateAudio(key, text) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ 
+        text,
+        voice: selectedVoice.kokoroId,
+        format: 'opus'
+      }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Paroli API error: ${response.status} - ${errorText}`);
+      throw new Error(`Kokoro API error: ${response.status} - ${errorText}`);
     }
 
     const arrayBuffer = await response.arrayBuffer();
@@ -247,7 +257,7 @@ async function main() {
   console.log(`   1. Commit the audio files: git add public/audio/v4/static/${voiceArg}/`);
   console.log('   2. Ensure V4AudioPreloader loads the correct voice manifest');
   console.log('   3. Deploy - users will download pre-generated Opus files');
-  console.log('\n💰 Cost: $0 (self-hosted Paroli)');
+  console.log('\n💰 Cost: $0 (self-hosted Kokoro)');
   console.log('   Future cost: $0 (serving static files)');
   console.log('   Savings: ~$100-1000/month vs ElevenLabs at scale');
 }

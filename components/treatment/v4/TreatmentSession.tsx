@@ -68,16 +68,16 @@ export default function TreatmentSession({
   });
   const [selectedVoice, setSelectedVoice] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('v4_selected_voice') || 'rachel';
+      return localStorage.getItem('v4_selected_voice') || 'heart';
     }
-    return 'rachel';
+    return 'heart';
   });
   const voiceSettingsRef = useRef<HTMLDivElement>(null);
 
   // Available voices - Kokoro TTS voices
   const AVAILABLE_VOICES = [
-    { id: 'rachel', name: 'Rachel (Heart)', kokoroId: 'af_heart', description: 'Warm, professional female voice' },
-    { id: 'adam', name: 'Adam (Michael)', kokoroId: 'am_michael', description: 'Deep, mature male voice' },
+    { id: 'heart', name: 'Heart', kokoroId: 'af_heart', description: 'Warm, professional female voice' },
+    { id: 'michael', name: 'Michael', kokoroId: 'am_michael', description: 'Deep, mature male voice' },
   ] as const;
 
   // Toggle handler with Sticky Settings and Retroactive Play
@@ -131,7 +131,7 @@ export default function TreatmentSession({
   // Get the Kokoro voice ID for the selected voice
   const getKokoroVoiceId = () => {
     const voice = AVAILABLE_VOICES.find(v => v.id === selectedVoice);
-    return voice?.kokoroId || 'af_heart'; // Default to Heart (Rachel)
+    return voice?.kokoroId || 'af_heart'; // Default to Heart
   };
 
   // Get speed label for display

@@ -20,12 +20,12 @@ function TreatmentSessionContent() {
   const { user, profile, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string>('');
   const [shouldResume, setShouldResume] = useState<boolean>(false);
-  const [selectedVoice, setSelectedVoice] = useState<string>('rachel');
+  const [selectedVoice, setSelectedVoice] = useState<string>('heart');
 
   // Load voice preference from localStorage and listen for changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedVoice = localStorage.getItem('v4_selected_voice') || 'rachel';
+      const savedVoice = localStorage.getItem('v4_selected_voice') || 'heart';
       setSelectedVoice(savedVoice);
 
       // Listen for voice changes from TreatmentSession settings (same-tab)

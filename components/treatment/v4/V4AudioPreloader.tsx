@@ -30,10 +30,10 @@ type AudioManifest = {
 };
 
 interface V4AudioPreloaderProps {
-  voice?: string; // 'rachel' | 'adam' etc.
+  voice?: string; // 'heart' | 'michael' etc.
 }
 
-export default function V4AudioPreloader({ voice = 'rachel' }: V4AudioPreloaderProps) {
+export default function V4AudioPreloader({ voice = 'heart' }: V4AudioPreloaderProps) {
   useEffect(() => {
     const preloadStaticAudio = async () => {
       let successCount = 0;
@@ -49,7 +49,7 @@ export default function V4AudioPreloader({ voice = 'rachel' }: V4AudioPreloaderP
         if (!manifestResponse.ok) {
           console.error(`❌ Static audio manifest not found for voice "${voice}". Audio preloading disabled.`);
           console.error('   To fix this:');
-          console.error(`   1. Run: ELEVENLABS_API_KEY=xxx node scripts/generate-static-audio.js ${voice}`);
+          console.error(`   1. Run: node scripts/generate-static-audio.js ${voice}`);
           console.error('   2. Commit the generated files');
           console.error('   3. Redeploy');
           // No fallback to dynamic TTS - prevents accidental API charges

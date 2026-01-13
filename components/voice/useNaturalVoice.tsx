@@ -305,12 +305,9 @@ export const useNaturalVoice = ({
     // Get voice name from voice ID for cache key prefix
     const getVoiceNameFromId = (voiceId: string): string => {
         const voiceMap: Record<string, string> = {
-            // ElevenLabs voices
-            '21m00Tcm4TlvDq8ikWAM': 'rachel',
-            'pNInz6obpgDQGcFmaJgB': 'adam',
             // Kokoro voices
-            'af_heart': 'rachel',
-            'am_michael': 'adam',
+            'af_heart': 'heart',
+            'am_michael': 'michael',
             // Add more voices here as needed
         };
         return voiceMap[voiceId] || 'unknown';
