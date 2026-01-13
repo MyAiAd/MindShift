@@ -1,92 +1,92 @@
 {
   "INITIAL_WELCOME": {
-    "filename": "7a47dee9bef68886e81ddeda7b16e68d.mp3",
-    "hash": "7a47dee9bef68886e81ddeda7b16e68d",
-    "path": "/audio/v4/static/rachel/7a47dee9bef68886e81ddeda7b16e68d.mp3"
+    "filename": "d2a6867338af593beb5cee7f13e7a314.opus",
+    "hash": "d2a6867338af593beb5cee7f13e7a314",
+    "path": "/audio/v4/static/rachel/d2a6867338af593beb5cee7f13e7a314.opus"
   },
   "PROBLEM_SHIFTING_INTRO": {
-    "filename": "92e207700cb8a54c56549197fa114e9b.mp3",
+    "filename": "92e207700cb8a54c56549197fa114e9b.opus",
     "hash": "92e207700cb8a54c56549197fa114e9b",
-    "path": "/audio/v4/static/rachel/92e207700cb8a54c56549197fa114e9b.mp3"
+    "path": "/audio/v4/static/rachel/92e207700cb8a54c56549197fa114e9b.opus"
   },
   "IDENTITY_SHIFTING_INTRO": {
-    "filename": "df2e42a6c43548151c87c271e851f3dd.mp3",
+    "filename": "df2e42a6c43548151c87c271e851f3dd.opus",
     "hash": "df2e42a6c43548151c87c271e851f3dd",
-    "path": "/audio/v4/static/rachel/df2e42a6c43548151c87c271e851f3dd.mp3"
+    "path": "/audio/v4/static/rachel/df2e42a6c43548151c87c271e851f3dd.opus"
   },
   "BELIEF_SHIFTING_INTRO": {
-    "filename": "92e207700cb8a54c56549197fa114e9b.mp3",
+    "filename": "92e207700cb8a54c56549197fa114e9b.opus",
     "hash": "92e207700cb8a54c56549197fa114e9b",
-    "path": "/audio/v4/static/rachel/92e207700cb8a54c56549197fa114e9b.mp3"
+    "path": "/audio/v4/static/rachel/92e207700cb8a54c56549197fa114e9b.opus"
   },
   "BLOCKAGE_SHIFTING_INTRO": {
-    "filename": "cb55f339992cb94ec6a0580efb622cab.mp3",
+    "filename": "cb55f339992cb94ec6a0580efb622cab.opus",
     "hash": "cb55f339992cb94ec6a0580efb622cab",
-    "path": "/audio/v4/static/rachel/cb55f339992cb94ec6a0580efb622cab.mp3"
+    "path": "/audio/v4/static/rachel/cb55f339992cb94ec6a0580efb622cab.opus"
   },
   "REALITY_SHIFTING_INTRO": {
-    "filename": "63f725e98f7066dc3c41721b8574288c.mp3",
+    "filename": "63f725e98f7066dc3c41721b8574288c.opus",
     "hash": "63f725e98f7066dc3c41721b8574288c",
-    "path": "/audio/v4/static/rachel/63f725e98f7066dc3c41721b8574288c.mp3"
+    "path": "/audio/v4/static/rachel/63f725e98f7066dc3c41721b8574288c.opus"
   },
   "TRAUMA_SHIFTING_INTRO": {
-    "filename": "68dece876238276ee9952a0da8fdbb4b.mp3",
+    "filename": "68dece876238276ee9952a0da8fdbb4b.opus",
     "hash": "68dece876238276ee9952a0da8fdbb4b",
-    "path": "/audio/v4/static/rachel/68dece876238276ee9952a0da8fdbb4b.mp3"
+    "path": "/audio/v4/static/rachel/68dece876238276ee9952a0da8fdbb4b.opus"
   },
   "METHOD_SELECTION": {
-    "filename": "e14d77fec815b5d16754ccfae7b56508.mp3",
+    "filename": "e14d77fec815b5d16754ccfae7b56508.opus",
     "hash": "e14d77fec815b5d16754ccfae7b56508",
-    "path": "/audio/v4/static/rachel/e14d77fec815b5d16754ccfae7b56508.mp3"
+    "path": "/audio/v4/static/rachel/e14d77fec815b5d16754ccfae7b56508.opus"
   },
   "METHOD_SELECTION_DIGGING": {
-    "filename": "6c3e4db715488d5830a12d963cd1f092.mp3",
+    "filename": "6c3e4db715488d5830a12d963cd1f092.opus",
     "hash": "6c3e4db715488d5830a12d963cd1f092",
-    "path": "/audio/v4/static/rachel/6c3e4db715488d5830a12d963cd1f092.mp3"
+    "path": "/audio/v4/static/rachel/6c3e4db715488d5830a12d963cd1f092.opus"
   },
   "WORK_TYPE_PROBLEM_DESC": {
-    "filename": "db27fd20723ff4e9778bb7f739329d4d.mp3",
+    "filename": "db27fd20723ff4e9778bb7f739329d4d.opus",
     "hash": "db27fd20723ff4e9778bb7f739329d4d",
-    "path": "/audio/v4/static/rachel/db27fd20723ff4e9778bb7f739329d4d.mp3"
+    "path": "/audio/v4/static/rachel/db27fd20723ff4e9778bb7f739329d4d.opus"
   },
   "WORK_TYPE_GOAL_DESC": {
-    "filename": "302a8546eda5e8b67be5aa6c051bfbd3.mp3",
+    "filename": "302a8546eda5e8b67be5aa6c051bfbd3.opus",
     "hash": "302a8546eda5e8b67be5aa6c051bfbd3",
-    "path": "/audio/v4/static/rachel/302a8546eda5e8b67be5aa6c051bfbd3.mp3"
+    "path": "/audio/v4/static/rachel/302a8546eda5e8b67be5aa6c051bfbd3.opus"
   },
   "WORK_TYPE_NEGATIVE_EXP_DESC": {
-    "filename": "277c29181a901781007f1a823bc2a155.mp3",
+    "filename": "277c29181a901781007f1a823bc2a155.opus",
     "hash": "277c29181a901781007f1a823bc2a155",
-    "path": "/audio/v4/static/rachel/277c29181a901781007f1a823bc2a155.mp3"
+    "path": "/audio/v4/static/rachel/277c29181a901781007f1a823bc2a155.opus"
   },
   "REALITY_GOAL_CAPTURE": {
-    "filename": "d90f4605098a5011625c8c1744fff175.mp3",
+    "filename": "d90f4605098a5011625c8c1744fff175.opus",
     "hash": "d90f4605098a5011625c8c1744fff175",
-    "path": "/audio/v4/static/rachel/d90f4605098a5011625c8c1744fff175.mp3"
+    "path": "/audio/v4/static/rachel/d90f4605098a5011625c8c1744fff175.opus"
   },
   "REALITY_DEADLINE_CHECK": {
-    "filename": "d4d9b3c4e28d8d83a7659f84e5c54be8.mp3",
+    "filename": "d4d9b3c4e28d8d83a7659f84e5c54be8.opus",
     "hash": "d4d9b3c4e28d8d83a7659f84e5c54be8",
-    "path": "/audio/v4/static/rachel/d4d9b3c4e28d8d83a7659f84e5c54be8.mp3"
+    "path": "/audio/v4/static/rachel/d4d9b3c4e28d8d83a7659f84e5c54be8.opus"
   },
   "REALITY_DEADLINE_DATE": {
-    "filename": "2ee347152f0f31e33dd3da8c91a97a82.mp3",
+    "filename": "2ee347152f0f31e33dd3da8c91a97a82.opus",
     "hash": "2ee347152f0f31e33dd3da8c91a97a82",
-    "path": "/audio/v4/static/rachel/2ee347152f0f31e33dd3da8c91a97a82.mp3"
+    "path": "/audio/v4/static/rachel/2ee347152f0f31e33dd3da8c91a97a82.opus"
   },
   "REALITY_CERTAINTY": {
-    "filename": "e01c2f0d02cc97ffe5572106a3282bc1.mp3",
+    "filename": "e01c2f0d02cc97ffe5572106a3282bc1.opus",
     "hash": "e01c2f0d02cc97ffe5572106a3282bc1",
-    "path": "/audio/v4/static/rachel/e01c2f0d02cc97ffe5572106a3282bc1.mp3"
+    "path": "/audio/v4/static/rachel/e01c2f0d02cc97ffe5572106a3282bc1.opus"
   },
   "RESTATE_PROBLEM": {
-    "filename": "ebf410ac0d71f75db7be2c3cc02862cb.mp3",
+    "filename": "ebf410ac0d71f75db7be2c3cc02862cb.opus",
     "hash": "ebf410ac0d71f75db7be2c3cc02862cb",
-    "path": "/audio/v4/static/rachel/ebf410ac0d71f75db7be2c3cc02862cb.mp3"
+    "path": "/audio/v4/static/rachel/ebf410ac0d71f75db7be2c3cc02862cb.opus"
   },
   "RESTATE_PROBLEM_SHORT": {
-    "filename": "dc29e2c2bca464fa0aa3a1e041a1930b.mp3",
+    "filename": "dc29e2c2bca464fa0aa3a1e041a1930b.opus",
     "hash": "dc29e2c2bca464fa0aa3a1e041a1930b",
-    "path": "/audio/v4/static/rachel/dc29e2c2bca464fa0aa3a1e041a1930b.mp3"
+    "path": "/audio/v4/static/rachel/dc29e2c2bca464fa0aa3a1e041a1930b.opus"
   }
 }

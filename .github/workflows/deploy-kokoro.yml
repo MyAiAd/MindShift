@@ -1,0 +1,24 @@
+name: Deploy Kokoro to Hetzner
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/generate-static-audio.js'
+      - 'public/audio/v4/static/**'
+      - '.github/workflows/deploy-kokoro.yml'
+      # Add more paths here if needed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Hetzner
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 77.42.72.2
+          username: deploy
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          script: |
+            /opt/mind-shift/deploy-kokoro.sh

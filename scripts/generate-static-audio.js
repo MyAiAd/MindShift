@@ -2,23 +2,22 @@
 
 /**
  * Audio Pre-Generation Script for V4 Mind Shifting
- * 
- * This script generates all static audio files ONCE using ElevenLabs.
- * After running this script once per voice, you'll never need to pay for these segments again.
- * 
+ *
+ * This script generates all static audio files using local Paroli TTS server.
+ * After running this script once per voice, you'll have static Opus files forever.
+ *
  * Usage:
- *   1. Make sure ELEVENLABS_API_KEY is set in your environment
+ *   1. Make sure Paroli is running: docker compose -f ~/paroli-local/paroli/docker-compose.local.yml up -d
  *   2. Run: node scripts/generate-static-audio.js [voice-name]
  *   3. Audio files will be saved to public/audio/v4/static/[voice-name]/
  *   4. Commit the audio files to your repo
  *   5. Update preloader to use static files instead of API
- * 
+ *
  * Examples:
- *   node scripts/generate-static-audio.js rachel   # Generate Rachel (female)
- *   node scripts/generate-static-audio.js adam     # Generate Adam (male)
- * 
- * Cost: ~10,000 credits ONE TIME per voice (equivalent to $1-2)
- * Future cost: $0 (serving static files)
+ *   node scripts/generate-static-audio.js rachel   # Generate with ljspeech voice
+ *
+ * Cost: $0 (self-hosted Paroli)
+ * Output: Opus format (30% smaller than MP3, lower latency)
  */
 
 const fs = require('fs');
@@ -75,19 +74,13 @@ const V4_STATIC_AUDIO_TEXTS = {
 };
 
 // Available voices configuration
+// Note: Paroli uses the loaded model (ljspeech), voice name is just for organization
 const VOICES = {
-  rachel: { 
-    id: '21m00Tcm4TlvDq8ikWAM', 
+  rachel: {
     name: 'Rachel',
-    description: 'Warm, professional female voice'
+    description: 'ljspeech voice (high-quality English)'
   },
-  adam: { 
-    id: 'pNInz6obpgDQGcFmaJgB', 
-    name: 'Adam',
-    description: 'Deep, mature male voice'
-  },
-  // Add more voices here as needed:
-  // josh: { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh', description: 'Warm American male' },
+  // Add more voices when you load different models in Paroli
 };
 
 // Parse command line argument for voice
@@ -105,8 +98,7 @@ if (!selectedVoice) {
 }
 
 // Configuration
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-const VOICE_ID = selectedVoice.id;
+const KOKORO_API_URL = process.env.KOKORO_API_URL || 'https://api.mind-shift.click/tts';
 const VOICE_NAME = selectedVoice.name;
 const OUTPUT_DIR = path.join(__dirname, `../public/audio/v4/static/${voiceArg}`);
 
@@ -128,7 +120,7 @@ function generateHash(text) {
  */
 async function generateAudio(key, text) {
   const hash = generateHash(text);
-  const filename = `${hash}.mp3`;
+  const filename = `${hash}.opus`;
   const filepath = path.join(OUTPUT_DIR, filename);
 
   // Skip if already exists
@@ -141,25 +133,17 @@ async function generateAudio(key, text) {
   console.log(`   Text: ${text.substring(0, 80)}${text.length > 80 ? '...' : ''}`);
 
   try {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream`, {
+    const response = await fetch(KOKORO_API_URL, {
       method: 'POST',
       headers: {
-        'xi-api-key': ELEVENLABS_API_KEY,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_monolingual_v1',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-        },
-      }),
+      body: JSON.stringify({ text }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`ElevenLabs API error: ${response.status} - ${errorText}`);
+      throw new Error(`Paroli API error: ${response.status} - ${errorText}`);
     }
 
     const arrayBuffer = await response.arrayBuffer();
@@ -168,8 +152,8 @@ async function generateAudio(key, text) {
     fs.writeFileSync(filepath, buffer);
     console.log(`✅ Saved: ${filename} (${buffer.length} bytes)`);
 
-    // Small delay to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Small delay between requests
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     return { key, hash, filename, skipped: false };
   } catch (error) {
@@ -205,17 +189,27 @@ function generateManifest(results, voiceName) {
  * Main execution
  */
 async function main() {
-  console.log('🎵 V4 Static Audio Generator\n');
+  console.log('🎵 V4 Static Audio Generator (Kokoro)\n');
   console.log('=' .repeat(60));
 
-  if (!ELEVENLABS_API_KEY) {
-    console.error('❌ Error: ELEVENLABS_API_KEY environment variable is not set');
-    console.error('   Set it with: export ELEVENLABS_API_KEY=your_api_key');
+  // Test Kokoro connection
+  try {
+    const healthUrl = KOKORO_API_URL.replace('/tts', '/health');
+    const testResponse = await fetch(healthUrl);
+    if (!testResponse.ok) {
+      throw new Error(`Cannot connect to Kokoro at ${KOKORO_API_URL}`);
+    }
+    console.log(`✅ Connected to Kokoro: ${KOKORO_API_URL}`);
+  } catch (error) {
+    console.error('❌ Error: Cannot connect to Kokoro TTS server');
+    console.error(`   Make sure Kokoro is running at: ${KOKORO_API_URL}`);
+    console.error(`   Test with: curl https://api.mind-shift.click/health`);
     process.exit(1);
   }
 
-  console.log(`Voice: ${VOICE_NAME} (${VOICE_ID})`);
+  console.log(`Voice: ${VOICE_NAME}`);
   console.log(`Output: ${OUTPUT_DIR}`);
+  console.log(`Format: Opus`);
   console.log(`Segments: ${Object.keys(V4_STATIC_AUDIO_TEXTS).length}`);
   console.log('=' .repeat(60));
   console.log('');
@@ -252,9 +246,10 @@ async function main() {
   console.log('\nNext steps:');
   console.log(`   1. Commit the audio files: git add public/audio/v4/static/${voiceArg}/`);
   console.log('   2. Ensure V4AudioPreloader loads the correct voice manifest');
-  console.log('   3. Deploy - users will download pre-generated files');
-  console.log('\n💰 Cost: This was a ONE-TIME expense');
+  console.log('   3. Deploy - users will download pre-generated Opus files');
+  console.log('\n💰 Cost: $0 (self-hosted Paroli)');
   console.log('   Future cost: $0 (serving static files)');
+  console.log('   Savings: ~$100-1000/month vs ElevenLabs at scale');
 }
 
 // Run the script

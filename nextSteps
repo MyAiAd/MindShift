@@ -1,0 +1,207 @@
+step 1 hetzner set up, ubuntu, firewalls, etc complete
+cpx32
+#117178340
+ubuntu-8gb-hel1-1
+77.42.72.2
+2a01:4f9:c013:ba26::/64
+Add Floating IP
+OnOff
+4
+vCPU
+8 GB
+RAM
+160 GB
+Disk local
+0.07
+Usage
+0/20
+ TB
+Traffic out
+
+SSH key:
+sage@your-machine
+2c:f1:5b:e0:fc:70:2f:f2:eb:14:71:2e:b2:6f:49:0a
+
+
+
+step 2 complete, we have now done this
+
+adduser deploy
+usermod -aG sudo deploy
+
+
+We now have:
+
+✅ Secure SSH key auth
+
+✅ Server → GitHub trust
+
+✅ Ability to deploy via git pull (it does not have push, yet)
+
+✅ No need to expose Git services publicly
+
+✅ Clean path toward Docker / systemd services
+
+and so I think the natural next steps are:
+
+Decide deploy user vs root
+
+Decide Docker vs systemd
+
+Wire git pull && restart service
+
+Then deploy Kokoro behind api.mind-shift.click
+
+
+Step 3 — Clone your repo on the server
+
+Pick where your code should live. Common choices:
+
+/opt/mind-shift
+
+/srv/mind-shift
+
+/var/www/mind-shift
+
+
+
+4) Caddy (current state)
+
+Caddy installed and running
+
+Bound correctly on ports 80 / 443
+
+Current Caddyfile is a sanity test setup using respond
+
+Both hostnames are live and reachable
+
+Current intent: replace respond with reverse_proxy later.
+
+5) Firewall & Origin Lockdown (Hetzner)
+
+Hetzner firewall attached to server
+
+Inbound rules:
+
+TCP 80 → Cloudflare IP ranges only
+
+TCP 443 → Cloudflare IP ranges only
+
+No 0.0.0.0/0
+
+Origin cannot be accessed directly from the internet
+
+Cloudflare IP ranges used (v4 + v6):
+
+173.245.48.0/20
+103.21.244.0/22
+103.22.200.0/22
+103.31.4.0/22
+141.101.64.0/18
+108.162.192.0/18
+190.93.240.0/20
+188.114.96.0/20
+197.234.240.0/22
+198.41.128.0/17
+162.158.0.0/15
+104.16.0.0/13
+104.24.0.0/14
+172.64.0.0/13
+131.0.72.0/22
+
+2400:cb00::/32
+2606:4700::/32
+2803:f800::/32
+2405:b500::/32
+2405:8100::/32
+2a06:98c0::/29
+2c0f:f248::/32
+
+
+Verification
+
+curl -I https://77.42.72.2                    # should FAIL
+curl -I --resolve mind-shift.click:443:77.42.72.2 https://mind-shift.click  # should FAIL
+
+🟡 NOT DONE YET (Planned Next Steps)
+A) Deploy Kokoro behind api.mind-shift.click
+
+Goal
+
+Run Kokoro as a service (likely FastAPI or similar)
+
+Expose endpoints like:
+
+/tts/stream
+
+/tts/render
+
+Standardize voice + speed to match pre-rendered boilerplate
+
+Output PCM → encode to Opus
+
+Planned changes
+
+Replace respond with:
+
+reverse_proxy 127.0.0.1:<kokoro_port>
+
+
+Decide deployment style:
+
+systemd service or
+
+Docker Compose
+
+B) Tune Caddy for streaming Opus (low latency)
+
+Goals
+
+No buffering
+
+No caching on streaming endpoints
+
+WebSocket / chunked HTTP friendly
+
+Works cleanly through Cloudflare
+
+Expected Caddy tuning
+
+Per-path headers for /tts/*:
+
+Cache-Control: no-store
+
+Disable compression for audio
+
+Ensure WebSockets stay enabled
+
+Possibly separate streaming routes from static content
+
+🧠 Mental Model (for future you)
+
+Cloudflare = edge, TLS, protection, HTTP/3
+
+Caddy = origin router + TLS terminator
+
+Hetzner firewall = hard security boundary
+
+api.mind-shift.click = streaming TTS surface
+
+Kokoro = internal service, never exposed directly
+
+You are currently fully production-safe at the infra layer.
+All remaining work is application-level, not networking.
+
+When you’re ready later, just say:
+
+“Let’s deploy Kokoro now”
+
+or
+
+“Let’s tune Caddy for Opus streaming”
+
+…and we’ll pick up exactly from here without redoing anything.
+
+
+
+
