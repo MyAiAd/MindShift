@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, voice = 'alloy', model = 'tts-1', provider = 'openai' } = await request.json();
+    const { text, voice = 'alloy', model = 'tts-1', provider = 'kokoro' } = await request.json();
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
@@ -10,7 +10,43 @@ export async function POST(request: NextRequest) {
 
     let audioBuffer: ArrayBuffer;
 
-    if (provider === 'elevenlabs') {
+    if (provider === 'kokoro') {
+      // Kokoro TTS (Hetzner self-hosted)
+      const KOKORO_API_URL = process.env.NEXT_PUBLIC_KOKORO_API_URL || 'https://api.mind-shift.click/tts';
+      
+      const voiceId = voice || 'af_heart'; // Default to Heart (Rachel)
+
+      const response = await fetch(KOKORO_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text,
+          voice: voiceId,
+          format: 'opus',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Kokoro TTS API error:', errorText);
+        return NextResponse.json({ 
+          error: 'Kokoro TTS synthesis failed', 
+          details: errorText,
+          status: response.status 
+        }, { status: 500 });
+      }
+
+      // Return the opus audio
+      return new NextResponse(response.body, {
+        headers: {
+          'Content-Type': 'audio/opus',
+          'Cache-Control': 'public, max-age=31536000',
+        },
+      });
+
+    } else if (provider === 'elevenlabs') {
       // ElevenLabs TTS
       const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
       if (!ELEVENLABS_API_KEY) {

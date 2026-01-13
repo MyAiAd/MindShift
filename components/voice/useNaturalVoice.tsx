@@ -10,8 +10,9 @@ const STATIC_TEXTS = Object.values(V4_STATIC_AUDIO_TEXTS);
 interface UseNaturalVoiceProps {
     onTranscript: (transcript: string) => void;
     enabled: boolean;
-    voiceProvider?: 'openai' | 'elevenlabs';
+    voiceProvider?: 'openai' | 'elevenlabs' | 'kokoro';
     elevenLabsVoiceId?: string;
+    kokoroVoiceId?: string;
     onAudioEnded?: () => void;
     playbackRate?: number; // 0.5 to 2.0, default 1.0
 }
@@ -19,8 +20,9 @@ interface UseNaturalVoiceProps {
 export const useNaturalVoice = ({
     onTranscript,
     enabled,
-    voiceProvider = 'elevenlabs',
+    voiceProvider = 'kokoro',
     elevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM', // Rachel
+    kokoroVoiceId = 'af_heart', // Default to Heart (Rachel)
     onAudioEnded,
     playbackRate = 1.0,
 }: UseNaturalVoiceProps) => {
@@ -288,7 +290,7 @@ export const useNaturalVoice = ({
             body: JSON.stringify({
                 text,
                 provider: voiceProvider,
-                voice: elevenLabsVoiceId,
+                voice: voiceProvider === 'kokoro' ? kokoroVoiceId : elevenLabsVoiceId,
             }),
         });
 
@@ -298,19 +300,23 @@ export const useNaturalVoice = ({
         const audioUrl = URL.createObjectURL(audioBlob);
         globalAudioCache.set(text, audioUrl);
         return audioUrl;
-    }, [voiceProvider, elevenLabsVoiceId]);
+    }, [voiceProvider, elevenLabsVoiceId, kokoroVoiceId]);
 
     // Get voice name from voice ID for cache key prefix
     const getVoiceNameFromId = (voiceId: string): string => {
         const voiceMap: Record<string, string> = {
+            // ElevenLabs voices
             '21m00Tcm4TlvDq8ikWAM': 'rachel',
             'pNInz6obpgDQGcFmaJgB': 'adam',
+            // Kokoro voices
+            'af_heart': 'rachel',
+            'am_michael': 'adam',
             // Add more voices here as needed
         };
         return voiceMap[voiceId] || 'unknown';
     };
 
-    const currentVoiceName = getVoiceNameFromId(elevenLabsVoiceId);
+    const currentVoiceName = getVoiceNameFromId(voiceProvider === 'kokoro' ? kokoroVoiceId : elevenLabsVoiceId);
 
     // Speak text with streaming support, voice-prefixed cache check, AND smart prefix matching
     const speak = useCallback(async (text: string) => {
