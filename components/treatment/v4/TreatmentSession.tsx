@@ -74,10 +74,10 @@ export default function TreatmentSession({
   });
   const voiceSettingsRef = useRef<HTMLDivElement>(null);
 
-  // Available voices - Add new voices here
+  // Available voices - Kokoro TTS voices
   const AVAILABLE_VOICES = [
-    { id: 'rachel', name: 'Rachel', elevenLabsId: '21m00Tcm4TlvDq8ikWAM', description: 'Warm, professional female voice' },
-    { id: 'adam', name: 'Adam', elevenLabsId: 'pNInz6obpgDQGcFmaJgB', description: 'Deep, mature male voice' },
+    { id: 'rachel', name: 'Rachel (Heart)', kokoroId: 'af_heart', description: 'Warm, professional female voice' },
+    { id: 'adam', name: 'Adam (Michael)', kokoroId: 'am_michael', description: 'Deep, mature male voice' },
   ] as const;
 
   // Toggle handler with Sticky Settings and Retroactive Play
@@ -128,10 +128,10 @@ export default function TreatmentSession({
     }
   };
 
-  // Get the ElevenLabs voice ID for the selected voice
-  const getElevenLabsVoiceId = () => {
+  // Get the Kokoro voice ID for the selected voice
+  const getKokoroVoiceId = () => {
     const voice = AVAILABLE_VOICES.find(v => v.id === selectedVoice);
-    return voice?.elevenLabsId || '21m00Tcm4TlvDq8ikWAM'; // Default to Rachel
+    return voice?.kokoroId || 'af_heart'; // Default to Heart (Rachel)
   };
 
   // Get speed label for display
@@ -243,8 +243,8 @@ export default function TreatmentSession({
         sendMessage(transcript);
       }
     },
-    voiceProvider: 'elevenlabs',
-    elevenLabsVoiceId: getElevenLabsVoiceId(),
+    voiceProvider: 'kokoro',
+    kokoroVoiceId: getKokoroVoiceId(),
     onAudioEnded: handleAudioEnded,
     playbackRate: playbackSpeed
   });
