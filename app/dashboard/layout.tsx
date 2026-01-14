@@ -30,9 +30,9 @@ import { useState, useEffect } from 'react';
 // Main navigation items (matches mobile bottom nav)
 const mainSidebarItems = [
   { icon: Brain, label: 'Home', href: '/dashboard' },
-  { icon: Sparkles, label: 'Shift', href: '/dashboard/sessions/treatment-v4' },
+  { icon: Sparkles, label: 'Shifting', href: '/dashboard/sessions/treatment-v4' },
   { icon: Users, label: 'Connect', href: '/dashboard/community' },
-  { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
+  { icon: Settings, label: 'Profile', href: '/dashboard/settings' },
 ];
 
 export default function DashboardLayout({

@@ -969,30 +969,72 @@ body {
 
 @supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
   /* 
-   * AUTO-GLASS: Purely additive blur effects
-   * No background changes to avoid layout conflicts
-   * Just adds subtle blur to elements with bg-card class
+   * AUTO-GLASS: Full glass treatment for all card elements
+   * Applies translucent backgrounds, blur, borders, and subtle glow
+   * Creates cohesive glass aesthetic across the entire app
    */
   
-  /* === CARDS: Just add blur, don't change backgrounds === */
+  /* === CARDS: Full glass treatment === */
   .glass-enabled .bg-card {
+    background: hsla(var(--glass-tint) / calc(var(--glass-opacity) * 0.95)) !important;
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsla(var(--glass-tint) / calc(var(--glass-border-opacity) * 1.5));
+    box-shadow: 
+      0 0 calc(var(--glass-glow-spread) * 0.5) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.7)),
+      0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  /* === MODALS & DIALOGS: Stronger blur === */
+  /* === MODALS & DIALOGS: Stronger blur and more pronounced effect === */
   .glass-enabled [role="dialog"],
   .glass-enabled [role="alertdialog"] {
+    background: hsla(var(--glass-tint) / calc(var(--glass-opacity) * 0.85)) !important;
     backdrop-filter: blur(var(--glass-blur-strong));
     -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+    border: 1px solid hsla(var(--glass-tint) / var(--glass-border-opacity));
+    box-shadow: 
+      0 0 var(--glass-glow-spread) hsla(var(--glass-glow-color) / var(--glass-glow-opacity)),
+      0 8px 32px rgba(0, 0, 0, 0.15);
   }
 
   /* === POPOVERS & DROPDOWNS === */
   .glass-enabled [role="menu"],
   .glass-enabled [role="listbox"],
   .glass-enabled [data-radix-popper-content-wrapper] > div {
+    background: hsla(var(--glass-tint) / calc(var(--glass-opacity) * 0.9)) !important;
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsla(var(--glass-tint) / var(--glass-border-opacity));
+    box-shadow: 
+      0 0 calc(var(--glass-glow-spread) * 0.6) hsla(var(--glass-glow-color) / calc(var(--glass-glow-opacity) * 0.8)),
+      0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  /* === NAVIGATION & SIDEBARS === */
+  .glass-enabled nav.bg-card,
+  .glass-enabled aside.bg-card,
+  .glass-enabled [data-slot="sidebar"] {
+    background: hsla(var(--glass-tint) / calc(var(--glass-opacity) * 0.92)) !important;
+    backdrop-filter: blur(var(--glass-blur-subtle));
+    -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
+    border-right: 1px solid hsla(var(--glass-tint) / calc(var(--glass-border-opacity) * 0.8));
+  }
+
+  /* === BUTTONS with bg-card (if any) === */
+  .glass-enabled button.bg-card {
+    background: hsla(var(--glass-tint) / calc(var(--glass-opacity) * 0.85)) !important;
+    backdrop-filter: blur(var(--glass-blur-subtle));
+    -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
+    border: 1px solid hsla(var(--glass-tint) / calc(var(--glass-border-opacity) * 1.2));
+    transition: all 0.2s ease;
+  }
+
+  .glass-enabled button.bg-card:hover {
+    background: hsla(var(--glass-tint) / calc(var(--glass-opacity) * 0.95)) !important;
+    box-shadow: 
+      0 0 calc(var(--glass-glow-spread) * 0.8) hsla(var(--glass-glow-color) / var(--glass-glow-opacity)),
+      0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
   }
 
 }

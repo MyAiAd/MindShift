@@ -12,7 +12,7 @@ const navItems = [
     icon: Home,
   },
   {
-    label: 'Shift',
+    label: 'Shifting',
     href: '/dashboard/sessions/treatment-v4',
     icon: Sparkles,
   },
@@ -22,7 +22,7 @@ const navItems = [
     icon: Users,
   },
   {
-    label: 'Settings',
+    label: 'Profile',
     href: '/dashboard/settings',
     icon: Settings,
   },
