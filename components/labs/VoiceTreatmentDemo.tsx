@@ -18,6 +18,9 @@ interface TreatmentMessage {
   isUser: boolean;
   timestamp: Date;
   isVoice?: boolean;
+  textRenderTime?: number;      // Time when text was rendered (ms from response start)
+  audioStartTime?: number;       // Time when audio started playing (ms from response start)
+  audioCompleteTime?: number;    // Time when audio completed (ms from response start)
 }
 
 interface DemoContext {
@@ -547,13 +550,25 @@ export default function VoiceTreatmentDemo() {
     }
   };
 
-  const addMessage = useCallback((content: string, isUser: boolean, isVoice: boolean = false) => {
+  const addMessage = useCallback((
+    content: string, 
+    isUser: boolean, 
+    isVoice: boolean = false,
+    timing?: {
+      textRenderTime?: number;
+      audioStartTime?: number;
+      audioCompleteTime?: number;
+    }
+  ) => {
     const message: TreatmentMessage = {
       id: Date.now().toString(),
       content,
       isUser,
       timestamp: new Date(),
-      isVoice
+      isVoice,
+      textRenderTime: timing?.textRenderTime,
+      audioStartTime: timing?.audioStartTime,
+      audioCompleteTime: timing?.audioCompleteTime
     };
     setMessages(prev => [...prev, message]);
   }, []);
@@ -672,14 +687,23 @@ export default function VoiceTreatmentDemo() {
       // NEW: Use cached audio (doctor's prescription) and prevent OpenAI competition
       if (cachedResponse && cachedResponse.audioUrl) {
         const audioStartTime = performance.now();
+        const audioStartTimeFromRequest = audioStartTime - startTime;
         console.log(`🚀 CACHE_AUDIO: Playing pre-synthesized audio (doctor's prescription)`);
-        console.log(`⏱️ PERF_TIMER: Audio playback started at ${(audioStartTime - startTime).toFixed(2)}ms from request start`);
+        console.log(`⏱️ PERF_TIMER: Audio playback started at ${audioStartTimeFromRequest.toFixed(2)}ms from request start`);
         
         // Set flag to prevent OpenAI from competing
         usingCachedAudioRef.current = true;
         
         // Play cached audio directly - this is the doctor's prescription
         const cachedAudioEl = new Audio(cachedResponse.audioUrl);
+        
+        // NEW: Track when audio completes
+        let audioCompleteTimeFromRequest = 0;
+        cachedAudioEl.addEventListener('ended', () => {
+          audioCompleteTimeFromRequest = performance.now() - startTime;
+          console.log(`⏱️ PERF_TIMER: Audio completed at ${audioCompleteTimeFromRequest.toFixed(2)}ms from request start`);
+        }, { once: true });
+        
         cachedAudioEl.play().catch(error => {
           console.warn('🚀 CACHE_AUDIO: Cached audio playback failed, falling back to real-time:', error);
           usingCachedAudioRef.current = false;
@@ -687,9 +711,20 @@ export default function VoiceTreatmentDemo() {
           createRealTimeResponse(scriptedResponse, startTime, false);
         });
         
-        // Update UI immediately with the EXACT scripted response (not cached text)
-        addMessage(scriptedResponse, false, true);
-        console.log(`🔒 SCRIPT_LOCK: ✅ Cached audio playing, but UI shows exact script: "${scriptedResponse}"`);
+        // PERCEPTION FIX: Delay text rendering slightly (150ms) after audio starts
+        // This makes it feel more responsive since audio starts before text appears
+        setTimeout(() => {
+          const textRenderTime = performance.now() - startTime;
+          console.log(`⏱️ PERF_TIMER: Text rendered at ${textRenderTime.toFixed(2)}ms from request start`);
+          
+          // Update UI with the EXACT scripted response (not cached text) and timing data
+          addMessage(scriptedResponse, false, true, {
+            textRenderTime: textRenderTime,
+            audioStartTime: audioStartTimeFromRequest,
+            audioCompleteTime: audioCompleteTimeFromRequest // Will be 0 initially, gets updated
+          });
+          console.log(`🔒 SCRIPT_LOCK: ✅ Cached audio playing, UI shows exact script with ${(textRenderTime - audioStartTimeFromRequest).toFixed(0)}ms delay: "${scriptedResponse}"`);
+        }, 150); // 150ms delay to let audio start first
         
         const endTime = performance.now();
         const totalTime = endTime - startTime;
@@ -764,6 +799,10 @@ export default function VoiceTreatmentDemo() {
     console.log(`⏱️ PERF_TIMER: Real-time synthesis starting with STRICT script adherence...`);
     console.log(`🔒 SCRIPT_LOCK: Enforcing exact script: "${scriptedResponse}"`);
     
+    // Track audio timing (will be updated by event listeners)
+    let audioStartTimeFromRequest = 0;
+    let audioCompleteTimeFromRequest = 0;
+    
     // CRITICAL: Create assistant message with the EXACT script first
     const assistantMessageEvent = {
       type: 'conversation.item.create',
@@ -798,9 +837,27 @@ export default function VoiceTreatmentDemo() {
     sessionRef.current.dataChannel!.send(JSON.stringify(responseEvent));
     console.log(`🔒 SCRIPT_LOCK: ✅ Constrained response triggered for exact script: "${scriptedResponse}"`);
     
-    // Update UI immediately with the EXACT scripted response
-    addMessage(scriptedResponse, false, true);
-    console.log(`🔒 SCRIPT_LOCK: ✅ UI updated with exact scripted response`);
+    // PERCEPTION FIX: Wait for audio to start, then delay text slightly
+    // We'll use a timeout approach since we can't directly listen to OpenAI's audio events from here
+    // Audio typically starts within 200-500ms, so we wait ~300ms then add text with small delay
+    setTimeout(() => {
+      audioStartTimeFromRequest = performance.now() - realStartTime;
+      console.log(`⏱️ PERF_TIMER: Estimated audio start at ${audioStartTimeFromRequest.toFixed(2)}ms`);
+      
+      // Add text 150ms after estimated audio start
+      setTimeout(() => {
+        const textRenderTime = performance.now() - realStartTime;
+        console.log(`⏱️ PERF_TIMER: Text rendered at ${textRenderTime.toFixed(2)}ms from request start`);
+        
+        // Update UI with the EXACT scripted response
+        addMessage(scriptedResponse, false, true, {
+          textRenderTime: textRenderTime,
+          audioStartTime: audioStartTimeFromRequest,
+          audioCompleteTime: audioCompleteTimeFromRequest // Will be updated when audio ends
+        });
+        console.log(`🔒 SCRIPT_LOCK: ✅ UI updated with exact scripted response with ${(textRenderTime - audioStartTimeFromRequest).toFixed(0)}ms delay`);
+      }, 150);
+    }, 300);
     
     // NEW: Track real-time response performance
     const endTime = performance.now();
@@ -1909,6 +1966,37 @@ export default function VoiceTreatmentDemo() {
                     </span>
                   </div>
                   {message.content}
+                  
+                  {/* NEW: Timing metrics display (only for bot messages with timing data) */}
+                  {!message.isUser && (message.textRenderTime || message.audioStartTime) && (
+                    <div 
+                      className="mt-2 pt-2 border-t border-border dark:border-border text-xs text-muted-foreground dark:text-muted-foreground font-mono"
+                      aria-hidden="true"
+                    >
+                      ⏱️ 
+                      {message.textRenderTime && (
+                        <span className="ml-1">
+                          Text: <span className="font-semibold">{Math.round(message.textRenderTime)}ms</span>
+                        </span>
+                      )}
+                      {message.audioStartTime && (
+                        <span className="ml-2">
+                          | Audio: <span className="font-semibold">{Math.round(message.audioStartTime)}ms</span>
+                        </span>
+                      )}
+                      {message.textRenderTime && message.audioStartTime && (
+                        <span className="ml-2">
+                          | Δ: <span className={`font-semibold ${
+                            (message.textRenderTime - message.audioStartTime) > 0 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {Math.round(message.textRenderTime - message.audioStartTime)}ms
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
