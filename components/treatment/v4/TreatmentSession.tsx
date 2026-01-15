@@ -194,9 +194,12 @@ export default function TreatmentSession({
   const toggleSpeaker = useCallback(() => {
     const newState = !isSpeakerEnabled;
     
-    // If turning OFF, immediately stop any playing audio
+    // If turning OFF, pause any playing audio (don't stop completely)
     if (!newState) {
-      naturalVoice.stopSpeaking();
+      if (naturalVoice.isSpeaking) {
+        console.log('⏸️ Pausing audio - speaker toggled off');
+        naturalVoice.pauseSpeaking();
+      }
     }
     
     setIsSpeakerEnabled(newState);
@@ -206,17 +209,23 @@ export default function TreatmentSession({
       localStorage.setItem('v4_speaker_enabled', String(newState));
     }
     
-    // Retroactive Play: If turning ON, speak the last AI message
+    // If turning ON, check if we have paused audio to resume
     if (newState) {
-      const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
-      if (lastAiMessage?.content) {
-        console.log('🔊 Retroactive Play:', lastAiMessage.content);
-        naturalVoice.speak(lastAiMessage.content);
+      if (naturalVoice.hasPausedAudio()) {
+        console.log('▶️ Resuming paused audio - speaker toggled on');
+        naturalVoice.resumeSpeaking();
+      } else {
+        // No paused audio - do retroactive play of last message
+        const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
+        if (lastAiMessage?.content) {
+          console.log('🔊 Retroactive Play:', lastAiMessage.content);
+          naturalVoice.speak(lastAiMessage.content);
+        }
       }
     }
     
     console.log(`🔊 Speaker ${newState ? 'enabled' : 'disabled'}`);
-  }, [isSpeakerEnabled, messages]);
+  }, [isSpeakerEnabled, messages, naturalVoice]);
 
   // DEPRECATED: Old toggle handler (keep for backward compatibility during transition)
   const toggleNaturalVoice = () => {
@@ -1329,9 +1338,11 @@ export default function TreatmentSession({
             onClick={toggleSpeaker}
             className={`flex items-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isSpeakerEnabled
               ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
+              : naturalVoice.isPaused
+              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500'
               : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
               }`}
-            title="Toggle Speaker"
+            title={naturalVoice.isPaused ? "Audio paused - Toggle to resume" : "Toggle Speaker"}
           >
             {isSpeakerEnabled ? (
               <>
@@ -1341,6 +1352,11 @@ export default function TreatmentSession({
                   <Volume2 className="h-4 w-4" />
                 )}
                 <span>🔊</span>
+              </>
+            ) : naturalVoice.isPaused ? (
+              <>
+                <Volume2 className="h-4 w-4" />
+                <span>⏸️</span>
               </>
             ) : (
               <>
@@ -1432,9 +1448,11 @@ export default function TreatmentSession({
                   onClick={toggleSpeaker}
                   className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${isSpeakerEnabled
                     ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
+                    : naturalVoice.isPaused
+                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500 ring-offset-1'
                     : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary dark:hover:bg-[#657b83]'
                     }`}
-                  title="Toggle Audio Output"
+                  title={naturalVoice.isPaused ? "Audio paused - Click to resume" : "Toggle Audio Output"}
                 >
                   {isSpeakerEnabled ? (
                     <>
@@ -1444,6 +1462,11 @@ export default function TreatmentSession({
                         <Volume2 className="h-4 w-4" />
                       )}
                       <span>🔊 Audio On</span>
+                    </>
+                  ) : naturalVoice.isPaused ? (
+                    <>
+                      <Volume2 className="h-4 w-4" />
+                      <span>⏸️ Paused</span>
                     </>
                   ) : (
                     <>
