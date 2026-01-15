@@ -225,7 +225,8 @@ export default function TreatmentSession({
     }
     
     console.log(`🔊 Speaker ${newState ? 'enabled' : 'disabled'}`);
-  }, [isSpeakerEnabled, messages, naturalVoice]);
+  }, [isSpeakerEnabled, messages]);
+  // Note: naturalVoice is not in deps because it's stable (from useNaturalVoice hook)
 
   // DEPRECATED: Old toggle handler (keep for backward compatibility during transition)
   const toggleNaturalVoice = () => {
