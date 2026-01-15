@@ -1308,15 +1308,15 @@ export default function TreatmentSession({
 
       {/* V4 Header - Mobile: Slim sticky bar / Desktop: Full card */}
       
-      {/* Mobile Header - Slim compact bar, sticky below page header (h-14 = 56px) */}
-      <div className="flex md:hidden items-center justify-between px-3 py-2.5 mb-2 bg-card dark:bg-[#073642] rounded-lg border border-border dark:border-[#586e75] sticky top-14 z-30">
-        {/* Left: Audio Controls - Mobile */}
-        <div className="flex items-center space-x-2">
+      {/* Mobile Header - 2x2 Grid, sticky below page header (h-14 = 56px) */}
+      <div className="flex md:hidden flex-col gap-2 px-3 py-2.5 mb-2 bg-card dark:bg-[#073642] rounded-lg border border-border dark:border-[#586e75] sticky top-14 z-30">
+        {/* Audio Controls - 2x2 Grid */}
+        <div className="grid grid-cols-2 gap-2">
           {/* Microphone Toggle */}
           <button
             onClick={toggleMic}
             disabled={micPermission === 'denied'}
-            className={`flex items-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isMicEnabled
+            className={`flex items-center justify-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isMicEnabled
               ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
               : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
               } ${micPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -1342,7 +1342,7 @@ export default function TreatmentSession({
           {/* Speaker Toggle */}
           <button
             onClick={toggleSpeaker}
-            className={`flex items-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isSpeakerEnabled
+            className={`flex items-center justify-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isSpeakerEnabled
               ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
               : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
               }`}
@@ -1369,7 +1369,7 @@ export default function TreatmentSession({
           <button
             onClick={handlePauseResume}
             disabled={!naturalVoice.isSpeaking && !naturalVoice.isPaused}
-            className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-medium transition-colors ${
+            className={`flex items-center justify-center rounded-full text-sm font-medium transition-colors ${
               naturalVoice.isPaused
                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500'
                 : naturalVoice.isSpeaking
@@ -1385,25 +1385,25 @@ export default function TreatmentSession({
             }
           >
             {naturalVoice.isPaused ? (
-              <Play className="h-4 w-4" />
+              <Play className="h-5 w-5" />
             ) : (
-              <span className="text-base">⏸️</span>
+              <span className="text-lg">⏸️</span>
             )}
           </button>
+
+          {/* Settings Button */}
+          <button
+            onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+            className={`flex items-center justify-center rounded-full transition-colors ${
+              showVoiceSettings
+                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
+            }`}
+            title="Voice Settings"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
         </div>
-        
-        {/* Right: Settings - ALWAYS visible */}
-        <button
-          onClick={() => setShowVoiceSettings(!showVoiceSettings)}
-          className={`p-2.5 rounded-full transition-colors ${
-            showVoiceSettings
-              ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-              : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
-          }`}
-          title="Voice Settings"
-        >
-          <Settings className="h-5 w-5" />
-        </button>
       </div>
 
       {/* Desktop Header - STICKY to top */}
@@ -1424,28 +1424,46 @@ export default function TreatmentSession({
               </span>
             </div>
 
-            {/* Controls Section - Desktop */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4">
-              {/* V4 Performance Indicators */}
-              <div className="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground dark:text-[#93a1a1]">
-                <Clock className="h-4 w-4" />
-                <span>{lastResponseTime}ms</span>
+            {/* Controls Section - Desktop: 2x2 Grid for Audio Controls */}
+            <div className="flex flex-col gap-3">
+              {/* Performance Indicators Row */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center space-x-3 text-xs sm:text-sm text-muted-foreground dark:text-[#93a1a1]">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{lastResponseTime}ms</span>
+                  </div>
+
+                  {performanceMetrics.cacheHitRate > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <Zap className="h-4 w-4 text-yellow-500" />
+                      <span>{performanceMetrics.cacheHitRate.toFixed(0)}%</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Undo Button */}
+                <button
+                  onClick={handleUndo}
+                  disabled={isLoading || !canUndo()}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${canUndo() && !isLoading
+                    ? 'bg-secondary text-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                    : 'bg-secondary/50 text-muted-foreground dark:bg-[#586e75]/50 dark:text-[#93a1a1]/50 cursor-not-allowed'
+                    }`}
+                  title="Undo last message"
+                >
+                  <Undo2 className="h-4 w-4" />
+                  <span>Undo</span>
+                </button>
               </div>
 
-              {performanceMetrics.cacheHitRate > 0 && (
-                <div className="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground dark:text-[#93a1a1]">
-                  <Zap className="h-4 w-4 text-yellow-500" />
-                  <span>{performanceMetrics.cacheHitRate.toFixed(0)}%</span>
-                </div>
-              )}
-
-              {/* Mic & Speaker Toggles - Desktop */}
-              <div className="flex items-center space-x-2">
+              {/* Audio Controls - 2x2 Grid */}
+              <div className="grid grid-cols-2 gap-2">
                 {/* Microphone Toggle */}
                 <button
                   onClick={toggleMic}
                   disabled={micPermission === 'denied'}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${isMicEnabled
+                  className={`flex items-center justify-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isMicEnabled
                     ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
                     : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary dark:hover:bg-[#657b83]'
                     } ${micPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -1471,7 +1489,7 @@ export default function TreatmentSession({
                 {/* Speaker Toggle */}
                 <button
                   onClick={toggleSpeaker}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${isSpeakerEnabled
+                  className={`flex items-center justify-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isSpeakerEnabled
                     ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
                     : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary dark:hover:bg-[#657b83]'
                     }`}
@@ -1494,11 +1512,11 @@ export default function TreatmentSession({
                   )}
                 </button>
 
-                {/* Pause/Play Button - ALWAYS visible, FIXED WIDTH, disabled when no audio */}
+                {/* Pause/Play Button - ALWAYS visible, disabled when no audio */}
                 <button
                   onClick={handlePauseResume}
                   disabled={!naturalVoice.isSpeaking && !naturalVoice.isPaused}
-                  className={`flex items-center justify-center w-24 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
+                  className={`flex items-center justify-center px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                     naturalVoice.isPaused
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500 ring-offset-1'
                       : naturalVoice.isSpeaking
@@ -1525,33 +1543,21 @@ export default function TreatmentSession({
                     </span>
                   )}
                 </button>
-              </div>
 
-              {/* Voice Settings Button - Desktop */}
-              <button
-                onClick={() => setShowVoiceSettings(!showVoiceSettings)}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
-                  showVoiceSettings
-                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                    : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
-                }`}
-                title="Voice Settings"
-              >
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </button>
-
-              {/* Undo Button */}
-              {stepHistory.length > 0 && (
+                {/* Settings Button */}
                 <button
-                  onClick={handleUndo}
-                  disabled={isLoading}
-                  className="flex items-center space-x-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-muted-foreground dark:text-[#93a1a1] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50 flex-shrink-0"
+                  onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+                  className={`flex items-center justify-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                    showVoiceSettings
+                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                      : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                  }`}
+                  title="Voice Settings"
                 >
-                  <Undo2 className="h-4 w-4" />
-                  <span>Undo</span>
+                  <Settings className="h-4 w-4" />
+                  <span>Settings</span>
                 </button>
-              )}
+              </div>
             </div>
           </div>
           {/* End Desktop Layout */}
@@ -1895,7 +1901,7 @@ export default function TreatmentSession({
           </div>
         )}
 
-        {/* V3: Method Selection Buttons */}
+        {/* V3: Method Selection Buttons - 2x2 Grid */}
         {shouldShowMethodSelection() && (
           <div className="mb-4">
             <div className="text-center mb-4">
@@ -1903,52 +1909,52 @@ export default function TreatmentSession({
                 Choose a method:
               </h3>
             </div>
-            <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-2xl mx-auto">
               <button
                 onClick={() => handleMethodSelection('Problem Shifting')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === 'Problem Shifting' ? 'scale-105 bg-blue-700 shadow-lg' : ''
                   }`}
               >
                 <span className="bg-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">1</span>
-                <span className="hidden sm:inline">Problem Shifting</span>
+                <span className="hidden sm:inline">Problem</span>
                 <span className="sm:hidden">Problem</span>
               </button>
 
               <button
                 onClick={() => handleMethodSelection('Identity Shifting')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === 'Identity Shifting' ? 'scale-105 bg-green-700 shadow-lg' : ''
                   }`}
               >
                 <span className="bg-green-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">2</span>
-                <span className="hidden sm:inline">Identity Shifting</span>
+                <span className="hidden sm:inline">Identity</span>
                 <span className="sm:hidden">Identity</span>
               </button>
 
               <button
                 onClick={() => handleMethodSelection('Belief Shifting')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === 'Belief Shifting' ? 'scale-105 bg-purple-700 shadow-lg' : ''
                   }`}
               >
                 <span className="bg-purple-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">3</span>
-                <span className="hidden sm:inline">Belief Shifting</span>
+                <span className="hidden sm:inline">Belief</span>
                 <span className="sm:hidden">Belief</span>
               </button>
 
               <button
                 onClick={() => handleMethodSelection('Blockage Shifting')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
                   } ${clickedButton === 'Blockage Shifting' ? 'scale-105 bg-red-700 shadow-lg' : ''
                   }`}
               >
                 <span className="bg-red-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">4</span>
-                <span className="hidden sm:inline">Blockage Shifting</span>
+                <span className="hidden sm:inline">Blockage</span>
                 <span className="sm:hidden">Blockage</span>
               </button>
             </div>
