@@ -222,11 +222,16 @@ export const useNaturalVoice = ({
 
     // NEW: Pause speaking - saves position for resume
     const pauseSpeaking = useCallback(() => {
-        if (audioRef.current && !audioRef.current.paused) {
+        console.log(`⏸️ Natural Voice: Pause requested. Current state - audioRef exists: ${!!audioRef.current}, isSpeakingRef: ${isSpeakingRef.current}, isAudioPlayingRef: ${isAudioPlayingRef.current}`);
+        
+        if (audioRef.current) {
             const currentTime = audioRef.current.currentTime;
             const currentAudio = audioRef.current;
+            const isPaused = currentAudio.paused;
             
-            // Save paused state
+            console.log(`⏸️ Natural Voice: Audio state - currentTime: ${currentTime.toFixed(2)}s, paused: ${isPaused}`);
+            
+            // Save paused state (even if already paused, in case we need to resume)
             pausedAudioRef.current = {
                 audio: currentAudio,
                 time: currentTime,
@@ -235,8 +240,10 @@ export const useNaturalVoice = ({
             
             console.log(`⏸️ Natural Voice: Pausing at ${currentTime.toFixed(2)}s`);
             
-            // Pause the audio
-            currentAudio.pause();
+            // Pause the audio if it's not already paused
+            if (!isPaused) {
+                currentAudio.pause();
+            }
             setIsPaused(true);
             setIsSpeaking(false);
             isSpeakingRef.current = false;
@@ -252,6 +259,8 @@ export const useNaturalVoice = ({
                 setIsPaused(false);
                 pauseTimeoutRef.current = null;
             }, 10000); // 10 second timeout
+        } else {
+            console.log('⏸️ Natural Voice: Cannot pause - no audio reference exists');
         }
     }, []);
 

@@ -227,9 +227,11 @@ export default function TreatmentSession({
     } else if (naturalVoice.isSpeaking) {
       console.log('⏸️ Pausing audio from pause button');
       naturalVoice.pauseSpeaking();
+    } else {
+      console.log('⚠️ Cannot pause/resume - no audio active');
     }
-  }, []);
-  // Note: naturalVoice is stable from hook
+  }, [naturalVoice]);
+  // Note: Added naturalVoice to dependencies to ensure latest reference
 
   // DEPRECATED: Old toggle handler (keep for backward compatibility during transition)
   const toggleNaturalVoice = () => {
@@ -1308,7 +1310,7 @@ export default function TreatmentSession({
       
       {/* Mobile Header - Slim compact bar, sticky below page header (h-14 = 56px) */}
       <div className="flex md:hidden items-center justify-between px-3 py-2.5 mb-2 bg-card dark:bg-[#073642] rounded-lg border border-border dark:border-[#586e75] sticky top-14 z-30">
-        {/* Mic & Speaker Toggles - Mobile */}
+        {/* Left: Audio Controls - Mobile */}
         <div className="flex items-center space-x-2">
           {/* Microphone Toggle */}
           <button
@@ -1363,27 +1365,34 @@ export default function TreatmentSession({
             )}
           </button>
 
-          {/* Pause/Play Button - Only shows when audio is playing or paused */}
-          {(naturalVoice.isSpeaking || naturalVoice.isPaused) && (
-            <button
-              onClick={handlePauseResume}
-              className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-medium transition-colors ${
-                naturalVoice.isPaused
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500'
-                  : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500'
-              }`}
-              title={naturalVoice.isPaused ? "Resume audio" : "Pause audio"}
-            >
-              {naturalVoice.isPaused ? (
-                <Play className="h-4 w-4" />
-              ) : (
-                <span className="text-base">⏸️</span>
-              )}
-            </button>
-          )}
+          {/* Pause/Play Button - ALWAYS visible, disabled when no audio */}
+          <button
+            onClick={handlePauseResume}
+            disabled={!naturalVoice.isSpeaking && !naturalVoice.isPaused}
+            className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-medium transition-colors ${
+              naturalVoice.isPaused
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500'
+                : naturalVoice.isSpeaking
+                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500'
+                : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] opacity-50 cursor-not-allowed'
+            }`}
+            title={
+              !naturalVoice.isSpeaking && !naturalVoice.isPaused
+                ? "No audio playing"
+                : naturalVoice.isPaused
+                ? "Resume audio"
+                : "Pause audio"
+            }
+          >
+            {naturalVoice.isPaused ? (
+              <Play className="h-4 w-4" />
+            ) : (
+              <span className="text-base">⏸️</span>
+            )}
+          </button>
         </div>
         
-        {/* Settings Gear - Mobile */}
+        {/* Right: Settings - ALWAYS visible */}
         <button
           onClick={() => setShowVoiceSettings(!showVoiceSettings)}
           className={`p-2.5 rounded-full transition-colors ${
@@ -1397,8 +1406,8 @@ export default function TreatmentSession({
         </button>
       </div>
 
-      {/* Desktop Header - Full card */}
-      <div className="hidden md:block bg-card dark:bg-[#073642] rounded-lg shadow-sm border border-border dark:border-[#586e75] mb-6">
+      {/* Desktop Header - STICKY to top */}
+      <div className="hidden md:block bg-card dark:bg-[#073642] rounded-lg shadow-sm border border-border dark:border-[#586e75] mb-6 sticky top-0 z-30">
         <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border dark:border-[#586e75]">
           
           {/* Desktop Layout: Full header */}
@@ -1485,30 +1494,42 @@ export default function TreatmentSession({
                   )}
                 </button>
 
-                {/* Pause/Play Button - Only shows when audio is playing or paused */}
-                {(naturalVoice.isSpeaking || naturalVoice.isPaused) && (
-                  <button
-                    onClick={handlePauseResume}
-                    className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
-                      naturalVoice.isPaused
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500 ring-offset-1'
-                        : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500 ring-offset-1'
-                    }`}
-                    title={naturalVoice.isPaused ? "Resume audio" : "Pause audio"}
-                  >
-                    {naturalVoice.isPaused ? (
-                      <>
-                        <Play className="h-4 w-4" />
-                        <span>▶️ Resume</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-base">⏸️</span>
-                        <span>Pause</span>
-                      </>
-                    )}
-                  </button>
-                )}
+                {/* Pause/Play Button - ALWAYS visible, disabled when no audio */}
+                <button
+                  onClick={handlePauseResume}
+                  disabled={!naturalVoice.isSpeaking && !naturalVoice.isPaused}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
+                    naturalVoice.isPaused
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500 ring-offset-1'
+                      : naturalVoice.isSpeaking
+                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500 ring-offset-1'
+                      : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] opacity-50 cursor-not-allowed'
+                  }`}
+                  title={
+                    !naturalVoice.isSpeaking && !naturalVoice.isPaused
+                      ? "No audio playing"
+                      : naturalVoice.isPaused
+                      ? "Resume audio"
+                      : "Pause audio"
+                  }
+                >
+                  {naturalVoice.isPaused ? (
+                    <>
+                      <Play className="h-4 w-4" />
+                      <span>▶️ Resume</span>
+                    </>
+                  ) : naturalVoice.isSpeaking ? (
+                    <>
+                      <span className="text-base">⏸️</span>
+                      <span>Pause</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-base">⏸️</span>
+                      <span>Pause</span>
+                    </>
+                  )}
+                </button>
               </div>
 
               {/* Voice Settings Button - Desktop */}
