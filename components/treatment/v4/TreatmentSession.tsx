@@ -1442,19 +1442,17 @@ export default function TreatmentSession({
                   )}
                 </div>
 
-                {/* Undo Button */}
-                <button
-                  onClick={handleUndo}
-                  disabled={isLoading || stepHistory.length === 0}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${stepHistory.length > 0 && !isLoading
-                    ? 'bg-secondary text-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
-                    : 'bg-secondary/50 text-muted-foreground dark:bg-[#586e75]/50 dark:text-[#93a1a1]/50 cursor-not-allowed'
-                    }`}
-                  title="Undo last message"
-                >
-                  <Undo2 className="h-4 w-4" />
-                  <span>Undo</span>
-                </button>
+                {/* Undo Button - Original code, just repositioned */}
+                {stepHistory.length > 0 && (
+                  <button
+                    onClick={handleUndo}
+                    disabled={isLoading}
+                    className="flex items-center space-x-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-muted-foreground dark:text-[#93a1a1] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50 flex-shrink-0"
+                  >
+                    <Undo2 className="h-4 w-4" />
+                    <span>Undo</span>
+                  </button>
+                )}
               </div>
 
               {/* Audio Controls - 2x2 Grid */}
