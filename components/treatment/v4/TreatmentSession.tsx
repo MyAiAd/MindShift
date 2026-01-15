@@ -1391,18 +1391,35 @@ export default function TreatmentSession({
             )}
           </button>
 
-          {/* Settings Button */}
-          <button
-            onClick={() => setShowVoiceSettings(!showVoiceSettings)}
-            className={`flex items-center justify-center rounded-full transition-colors ${
-              showVoiceSettings
-                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
-            }`}
-            title="Voice Settings"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
+          {/* Settings & Undo - Split equally in the 4th grid cell */}
+          <div className="flex gap-1">
+            {/* Settings Button - Half width */}
+            <button
+              onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+              className={`flex-1 flex items-center justify-center rounded-full transition-colors ${
+                showVoiceSettings
+                  ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                  : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
+              }`}
+              title="Voice Settings"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+
+            {/* Undo Button - Half width, always visible */}
+            <button
+              onClick={handleUndo}
+              disabled={stepHistory.length === 0 || isLoading}
+              className={`flex-1 flex items-center justify-center rounded-full transition-colors ${
+                stepHistory.length > 0 && !isLoading
+                  ? 'bg-secondary text-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
+                  : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] opacity-50 cursor-not-allowed'
+              }`}
+              title="Undo last message"
+            >
+              <Undo2 className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
 
