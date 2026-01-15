@@ -194,12 +194,9 @@ export default function TreatmentSession({
   const toggleSpeaker = useCallback(() => {
     const newState = !isSpeakerEnabled;
     
-    // If turning OFF, pause any playing audio (don't stop completely)
+    // If turning OFF, stop any playing audio
     if (!newState) {
-      if (naturalVoice.isSpeaking) {
-        console.log('⏸️ Pausing audio - speaker toggled off');
-        naturalVoice.pauseSpeaking();
-      }
+      naturalVoice.stopSpeaking();
     }
     
     setIsSpeakerEnabled(newState);
@@ -209,24 +206,30 @@ export default function TreatmentSession({
       localStorage.setItem('v4_speaker_enabled', String(newState));
     }
     
-    // If turning ON, check if we have paused audio to resume
+    // Retroactive Play: If turning ON, speak the last AI message
     if (newState) {
-      if (naturalVoice.hasPausedAudio()) {
-        console.log('▶️ Resuming paused audio - speaker toggled on');
-        naturalVoice.resumeSpeaking();
-      } else {
-        // No paused audio - do retroactive play of last message
-        const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
-        if (lastAiMessage?.content) {
-          console.log('🔊 Retroactive Play:', lastAiMessage.content);
-          naturalVoice.speak(lastAiMessage.content);
-        }
+      const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
+      if (lastAiMessage?.content) {
+        console.log('🔊 Retroactive Play:', lastAiMessage.content);
+        naturalVoice.speak(lastAiMessage.content);
       }
     }
     
     console.log(`🔊 Speaker ${newState ? 'enabled' : 'disabled'}`);
   }, [isSpeakerEnabled, messages]);
   // Note: naturalVoice is not in deps because it's stable (from useNaturalVoice hook)
+
+  // NEW: Pause/Resume handler for dedicated pause button
+  const handlePauseResume = useCallback(() => {
+    if (naturalVoice.isPaused) {
+      console.log('▶️ Resuming audio from pause button');
+      naturalVoice.resumeSpeaking();
+    } else if (naturalVoice.isSpeaking) {
+      console.log('⏸️ Pausing audio from pause button');
+      naturalVoice.pauseSpeaking();
+    }
+  }, []);
+  // Note: naturalVoice is stable from hook
 
   // DEPRECATED: Old toggle handler (keep for backward compatibility during transition)
   const toggleNaturalVoice = () => {
@@ -1339,11 +1342,9 @@ export default function TreatmentSession({
             onClick={toggleSpeaker}
             className={`flex items-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isSpeakerEnabled
               ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
-              : naturalVoice.isPaused
-              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500'
               : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
               }`}
-            title={naturalVoice.isPaused ? "Audio paused - Toggle to resume" : "Toggle Speaker"}
+            title="Toggle Speaker"
           >
             {isSpeakerEnabled ? (
               <>
@@ -1354,11 +1355,6 @@ export default function TreatmentSession({
                 )}
                 <span>🔊</span>
               </>
-            ) : naturalVoice.isPaused ? (
-              <>
-                <Volume2 className="h-4 w-4" />
-                <span>⏸️</span>
-              </>
             ) : (
               <>
                 <VolumeX className="h-4 w-4" />
@@ -1366,6 +1362,25 @@ export default function TreatmentSession({
               </>
             )}
           </button>
+
+          {/* Pause/Play Button - Only shows when audio is playing or paused */}
+          {(naturalVoice.isSpeaking || naturalVoice.isPaused) && (
+            <button
+              onClick={handlePauseResume}
+              className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-medium transition-colors ${
+                naturalVoice.isPaused
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500'
+                  : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500'
+              }`}
+              title={naturalVoice.isPaused ? "Resume audio" : "Pause audio"}
+            >
+              {naturalVoice.isPaused ? (
+                <Play className="h-4 w-4" />
+              ) : (
+                <span className="text-base">⏸️</span>
+              )}
+            </button>
+          )}
         </div>
         
         {/* Settings Gear - Mobile */}
@@ -1449,11 +1464,9 @@ export default function TreatmentSession({
                   onClick={toggleSpeaker}
                   className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${isSpeakerEnabled
                     ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
-                    : naturalVoice.isPaused
-                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500 ring-offset-1'
                     : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary dark:hover:bg-[#657b83]'
                     }`}
-                  title={naturalVoice.isPaused ? "Audio paused - Click to resume" : "Toggle Audio Output"}
+                  title="Toggle Audio Output"
                 >
                   {isSpeakerEnabled ? (
                     <>
@@ -1464,11 +1477,6 @@ export default function TreatmentSession({
                       )}
                       <span>🔊 Audio On</span>
                     </>
-                  ) : naturalVoice.isPaused ? (
-                    <>
-                      <Volume2 className="h-4 w-4" />
-                      <span>⏸️ Paused</span>
-                    </>
                   ) : (
                     <>
                       <VolumeX className="h-4 w-4" />
@@ -1476,6 +1484,31 @@ export default function TreatmentSession({
                     </>
                   )}
                 </button>
+
+                {/* Pause/Play Button - Only shows when audio is playing or paused */}
+                {(naturalVoice.isSpeaking || naturalVoice.isPaused) && (
+                  <button
+                    onClick={handlePauseResume}
+                    className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
+                      naturalVoice.isPaused
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500 ring-offset-1'
+                        : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500 ring-offset-1'
+                    }`}
+                    title={naturalVoice.isPaused ? "Resume audio" : "Pause audio"}
+                  >
+                    {naturalVoice.isPaused ? (
+                      <>
+                        <Play className="h-4 w-4" />
+                        <span>▶️ Resume</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-base">⏸️</span>
+                        <span>Pause</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Voice Settings Button - Desktop */}
