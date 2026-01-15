@@ -43,7 +43,6 @@ export const useNaturalVoice = ({
     const recognitionRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const pausedAudioRef = useRef<{ audio: HTMLAudioElement; time: number; text: string } | null>(null); // NEW: Paused audio state
-    const pauseTimeoutRef = useRef<NodeJS.Timeout | null>(null); // NEW: Timeout to clear paused state
     const isSpeakingRef = useRef(false); // Ref for immediate access in callbacks
     const isMountedRef = useRef(true); // Track if component is mounted
     const isAudioPlayingRef = useRef(false); // Track if audio is actually playing (prevents feedback loop)
@@ -130,10 +129,6 @@ export const useNaturalVoice = ({
             if (pausedAudioRef.current) {
                 pausedAudioRef.current = null;
             }
-            if (pauseTimeoutRef.current) {
-                clearTimeout(pauseTimeoutRef.current);
-                pauseTimeoutRef.current = null;
-            }
             setIsSpeaking(false);
             isSpeakingRef.current = false;
             setIsPaused(false);
@@ -210,10 +205,6 @@ export const useNaturalVoice = ({
             pausedAudioRef.current = null;
             setIsPaused(false);
         }
-        if (pauseTimeoutRef.current) {
-            clearTimeout(pauseTimeoutRef.current);
-            pauseTimeoutRef.current = null;
-        }
         setIsSpeaking(false);
         isSpeakingRef.current = false;
         isAudioPlayingRef.current = false; // Clear audio playing flag
@@ -238,7 +229,7 @@ export const useNaturalVoice = ({
                 text: '' // We'll track this when we need to recreate
             };
             
-            console.log(`⏸️ Natural Voice: Pausing at ${currentTime.toFixed(2)}s`);
+            console.log(`⏸️ Natural Voice: Paused at ${currentTime.toFixed(2)}s (will remain paused indefinitely)`);
             
             // Pause the audio if it's not already paused
             if (!isPaused) {
@@ -249,16 +240,11 @@ export const useNaturalVoice = ({
             isSpeakingRef.current = false;
             isAudioPlayingRef.current = false;
             
-            // Set timeout to clear paused state after 10 seconds
-            if (pauseTimeoutRef.current) {
-                clearTimeout(pauseTimeoutRef.current);
-            }
-            pauseTimeoutRef.current = setTimeout(() => {
-                console.log('⏱️ Natural Voice: Paused state timeout - clearing');
-                pausedAudioRef.current = null;
-                setIsPaused(false);
-                pauseTimeoutRef.current = null;
-            }, 10000); // 10 second timeout
+            // NOTE: No timeout - pause state persists until:
+            // 1. User resumes playback
+            // 2. New audio starts (cleared in speak() function)
+            // 3. Speaker is turned off
+            // This is safe - no memory leak as we clear on new audio
         } else {
             console.log('⏸️ Natural Voice: Cannot pause - no audio reference exists');
         }
@@ -270,12 +256,6 @@ export const useNaturalVoice = ({
             const { audio, time } = pausedAudioRef.current;
             
             console.log(`▶️ Natural Voice: Resuming from ${time.toFixed(2)}s`);
-            
-            // Clear timeout since we're resuming
-            if (pauseTimeoutRef.current) {
-                clearTimeout(pauseTimeoutRef.current);
-                pauseTimeoutRef.current = null;
-            }
             
             // Resume playback
             audioRef.current = audio;
@@ -483,10 +463,6 @@ export const useNaturalVoice = ({
             console.log('🗑️ Natural Voice: Clearing paused state - new message starting');
             pausedAudioRef.current = null;
             setIsPaused(false);
-        }
-        if (pauseTimeoutRef.current) {
-            clearTimeout(pauseTimeoutRef.current);
-            pauseTimeoutRef.current = null;
         }
 
         // NEW: Track when speak() was called for timing measurements

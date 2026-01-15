@@ -1494,11 +1494,11 @@ export default function TreatmentSession({
                   )}
                 </button>
 
-                {/* Pause/Play Button - ALWAYS visible, disabled when no audio */}
+                {/* Pause/Play Button - ALWAYS visible, FIXED WIDTH, disabled when no audio */}
                 <button
                   onClick={handlePauseResume}
                   disabled={!naturalVoice.isSpeaking && !naturalVoice.isPaused}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
+                  className={`flex items-center justify-center w-24 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
                     naturalVoice.isPaused
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500 ring-offset-1'
                       : naturalVoice.isSpeaking
@@ -1514,20 +1514,15 @@ export default function TreatmentSession({
                   }
                 >
                   {naturalVoice.isPaused ? (
-                    <>
+                    <span className="flex items-center space-x-1.5">
                       <Play className="h-4 w-4" />
-                      <span>▶️ Resume</span>
-                    </>
-                  ) : naturalVoice.isSpeaking ? (
-                    <>
-                      <span className="text-base">⏸️</span>
-                      <span>Pause</span>
-                    </>
+                      <span>Resume</span>
+                    </span>
                   ) : (
-                    <>
+                    <span className="flex items-center space-x-1.5">
                       <span className="text-base">⏸️</span>
                       <span>Pause</span>
-                    </>
+                    </span>
                   )}
                 </button>
               </div>
