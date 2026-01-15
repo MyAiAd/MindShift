@@ -7,6 +7,10 @@ export interface TreatmentMessage {
   usedAI?: boolean;
   metadata?: any;
   version?: 'v3' | 'v4'; // V3/V4 specific
+  // Audio/Text timing metrics (for lag diagnosis)
+  textRenderTime?: number;      // Time when text was rendered (ms from response start)
+  audioStartTime?: number;       // Time when audio started playing (ms from response start)
+  audioCompleteTime?: number;    // Time when audio completed (ms from response start)
 }
 
 export interface TreatmentSessionProps {

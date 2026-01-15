@@ -234,6 +234,42 @@ export default function TreatmentSession({
     }
   }, [expectedResponseType, isNaturalVoiceEnabled, messages]);
 
+  // State for pending message that's waiting for audio-then-text timing
+  const [pendingMessage, setPendingMessage] = useState<{
+    content: string;
+    responseTime?: number;
+    usedAI?: boolean;
+    metadata?: any;
+  } | null>(null);
+  const pendingMessageTimingRef = useRef<{
+    audioStartTime?: number;
+    textRenderTime?: number;
+  }>({});
+
+  // Handler for when audio starts and text should be rendered (with 150ms delay)
+  const handleRenderText = useCallback((timing: { audioStartTime: number; textRenderTime: number }) => {
+    console.log(`⏱️ V4: Audio started at ${timing.audioStartTime.toFixed(2)}ms, rendering text at ${timing.textRenderTime.toFixed(2)}ms`);
+    
+    if (pendingMessage) {
+      // Now actually add the message to the UI with timing data
+      const timedMessage: TreatmentMessage = {
+        id: (Date.now() + 1).toString(),
+        content: pendingMessage.content,
+        isUser: false,
+        timestamp: new Date(),
+        responseTime: pendingMessage.responseTime,
+        usedAI: pendingMessage.usedAI,
+        metadata: pendingMessage.metadata,
+        version: 'v4',
+        audioStartTime: timing.audioStartTime,
+        textRenderTime: timing.textRenderTime,
+      };
+      
+      setMessages(prev => [...prev, timedMessage]);
+      setPendingMessage(null); // Clear pending message
+    }
+  }, [pendingMessage]);
+
   // Natural Voice Hook
   const naturalVoice = useNaturalVoice({
     enabled: isNaturalVoiceEnabled,
@@ -246,7 +282,8 @@ export default function TreatmentSession({
     voiceProvider: 'kokoro',
     kokoroVoiceId: getKokoroVoiceId(),
     onAudioEnded: handleAudioEnded,
-    playbackRate: playbackSpeed
+    playbackRate: playbackSpeed,
+    onRenderText: handleRenderText, // NEW: Callback for text rendering timing
   });
 
   // V4: Keep focus on input for voice input to work properly
@@ -525,24 +562,35 @@ export default function TreatmentSession({
             data.message.includes('Choose a method'));
 
         if (!shouldSkipMessage) {
-          const systemMessage: TreatmentMessage = {
-            id: `system-${Date.now()}`,
-            content: data.message,
-            isUser: false,
-            timestamp: new Date(),
-            responseTime: data.responseTime,
-            usedAI: data.usedAI,
-            version: 'v4'
-          };
+          // NEW: If voice is enabled, set up pending message for audio-then-text timing
+          if (isNaturalVoiceEnabled && data.message) {
+            console.log('⏱️ V4: Setting up pending message for audio-first rendering');
+            setPendingMessage({
+              content: data.message,
+              responseTime: data.responseTime,
+              usedAI: data.usedAI,
+              metadata: { version: 'v4' }
+            });
+            
+            // Start audio playback (will trigger handleRenderText after 150ms)
+            naturalVoice.speak(data.message);
+          } else {
+            // Voice disabled: add message immediately (no timing data)
+            const systemMessage: TreatmentMessage = {
+              id: `system-${Date.now()}`,
+              content: data.message,
+              isUser: false,
+              timestamp: new Date(),
+              responseTime: data.responseTime,
+              usedAI: data.usedAI,
+              version: 'v4'
+            };
 
-          setMessages(prev => [...prev, systemMessage]);
+            setMessages(prev => [...prev, systemMessage]);
 
-          // V3: Enhanced voice feedback (only if message is displayed)
-          if (systemMessage.content) {
-            if (isNaturalVoiceEnabled) {
-              naturalVoice.speak(systemMessage.content);
-            } else if (voice.isVoiceOutputEnabled) {
-              voice.speakGlobally(systemMessage.content);
+            // Use global voice if enabled
+            if (voice.isVoiceOutputEnabled) {
+              voice.speakGlobally(data.message);
             }
           }
         }
@@ -811,16 +859,37 @@ export default function TreatmentSession({
               data.message.includes('Choose a method'));
 
           if (!shouldSkipMessage) {
-            const systemMessage: TreatmentMessage = {
-              id: `system-${Date.now()}`,
-              content: data.message,
-              isUser: false,
-              timestamp: new Date(),
-              responseTime: data.responseTime,
-              usedAI: data.usedAI,
-              version: 'v4'
-            };
-            setMessages(prev => [...prev, systemMessage]);
+            // NEW: If voice is enabled, set up pending message for audio-then-text timing
+            if (isNaturalVoiceEnabled && data.message) {
+              console.log('⏱️ V4: Setting up pending message for audio-first rendering (work type)');
+              setPendingMessage({
+                content: data.message,
+                responseTime: data.responseTime,
+                usedAI: data.usedAI,
+                metadata: { version: 'v4' }
+              });
+              
+              // Start audio playback (will trigger handleRenderText after 150ms)
+              console.log('🔊 Playing new audio after work type selection');
+              naturalVoice.speak(data.message);
+            } else {
+              // Voice disabled: add message immediately
+              const systemMessage: TreatmentMessage = {
+                id: `system-${Date.now()}`,
+                content: data.message,
+                isUser: false,
+                timestamp: new Date(),
+                responseTime: data.responseTime,
+                usedAI: data.usedAI,
+                version: 'v4'
+              };
+              setMessages(prev => [...prev, systemMessage]);
+              
+              // Use global voice if enabled
+              if (voice.isVoiceOutputEnabled) {
+                voice.speakGlobally(data.message);
+              }
+            }
           }
 
           setCurrentStep(data.currentStep);
@@ -838,16 +907,6 @@ export default function TreatmentSession({
               ...prev,
               totalResponses: prev.totalResponses + 1
             }));
-          }
-
-          // Speak the new message with Natural Voice or fallback to global voice
-          if (data.message && !shouldSkipMessage) {
-            if (isNaturalVoiceEnabled) {
-              console.log('🔊 Playing new audio after work type selection');
-              naturalVoice.speak(data.message);
-            } else if (voice.isVoiceOutputEnabled) {
-              voice.speakGlobally(data.message);
-            }
           }
         }
         setIsLoading(false);
@@ -1004,16 +1063,38 @@ export default function TreatmentSession({
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          const systemMessage: TreatmentMessage = {
-            id: `system-${Date.now()}`,
-            content: data.message,
-            isUser: false,
-            timestamp: new Date(),
-            responseTime: data.responseTime,
-            usedAI: data.usedAI,
-            version: 'v4'
-          };
-          setMessages(prev => [...prev, systemMessage]);
+          // NEW: If voice is enabled, set up pending message for audio-then-text timing
+          if (isNaturalVoiceEnabled && data.message) {
+            console.log('⏱️ V4: Setting up pending message for audio-first rendering (method selection)');
+            setPendingMessage({
+              content: data.message,
+              responseTime: data.responseTime,
+              usedAI: data.usedAI,
+              metadata: { version: 'v4' }
+            });
+            
+            // Start audio playback (will trigger handleRenderText after 150ms)
+            console.log('🔊 Playing new audio after method selection');
+            naturalVoice.speak(data.message);
+          } else {
+            // Voice disabled: add message immediately
+            const systemMessage: TreatmentMessage = {
+              id: `system-${Date.now()}`,
+              content: data.message,
+              isUser: false,
+              timestamp: new Date(),
+              responseTime: data.responseTime,
+              usedAI: data.usedAI,
+              version: 'v4'
+            };
+            setMessages(prev => [...prev, systemMessage]);
+            
+            // Use global voice if enabled
+            if (voice.isVoiceOutputEnabled) {
+              voice.speakGlobally(data.message);
+            }
+          }
+          
           setCurrentStep(data.currentStep);
           setLastResponseTime(data.responseTime || 0);
 
@@ -1029,16 +1110,6 @@ export default function TreatmentSession({
               ...prev,
               totalResponses: prev.totalResponses + 1
             }));
-          }
-
-          // Speak the new message with Natural Voice or fallback to global voice
-          if (systemMessage.content) {
-            if (isNaturalVoiceEnabled) {
-              console.log('🔊 Playing new audio after method selection');
-              naturalVoice.speak(systemMessage.content);
-            } else if (voice.isVoiceOutputEnabled) {
-              voice.speakGlobally(systemMessage.content);
-            }
           }
         }
         setIsLoading(false);
@@ -1341,10 +1412,43 @@ export default function TreatmentSession({
                 }`}
             >
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              
+              {/* Existing responseTime display */}
               {message.responseTime && (
                 <div className="flex items-center justify-between mt-1 text-xs opacity-70">
                   <span>{message.usedAI ? 'AI Enhanced' : 'Scripted'}</span>
                   <span>{message.responseTime}ms</span>
+                </div>
+              )}
+              
+              {/* NEW: Audio/Text timing metrics (only for bot messages with voice timing) */}
+              {!message.isUser && (message.textRenderTime || message.audioStartTime) && (
+                <div 
+                  className="mt-2 pt-2 border-t border-border/30 text-xs text-muted-foreground font-mono"
+                  aria-hidden="true"
+                >
+                  ⏱️ 
+                  {message.textRenderTime && (
+                    <span className="ml-1">
+                      Text: <span className="font-semibold">{Math.round(message.textRenderTime)}ms</span>
+                    </span>
+                  )}
+                  {message.audioStartTime && (
+                    <span className="ml-2">
+                      | Audio: <span className="font-semibold">{Math.round(message.audioStartTime)}ms</span>
+                    </span>
+                  )}
+                  {message.textRenderTime && message.audioStartTime && (
+                    <span className="ml-2">
+                      | Δ: <span className={`font-semibold ${
+                        (message.textRenderTime - message.audioStartTime) > 0 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {Math.round(message.textRenderTime - message.audioStartTime)}ms
+                      </span>
+                    </span>
+                  )}
                 </div>
               )}
             </div>

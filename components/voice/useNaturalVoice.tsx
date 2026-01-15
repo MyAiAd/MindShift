@@ -15,6 +15,7 @@ interface UseNaturalVoiceProps {
     kokoroVoiceId?: string;
     onAudioEnded?: () => void;
     playbackRate?: number; // 0.5 to 2.0, default 1.0
+    onRenderText?: (timing: { audioStartTime: number; textRenderTime: number }) => void; // NEW: Callback when text should render
 }
 
 export const useNaturalVoice = ({
@@ -25,6 +26,7 @@ export const useNaturalVoice = ({
     kokoroVoiceId = 'af_heart', // Default to Heart (Rachel)
     onAudioEnded,
     playbackRate = 1.0,
+    onRenderText, // NEW: Callback for text rendering timing
 }: UseNaturalVoiceProps) => {
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -37,13 +39,16 @@ export const useNaturalVoice = ({
     const isAudioPlayingRef = useRef(false); // Track if audio is actually playing (prevents feedback loop)
     const onTranscriptRef = useRef(onTranscript); // Ref to prevent effect re-runs
     const onAudioEndedRef = useRef(onAudioEnded); // Ref to prevent effect re-runs
+    const onRenderTextRef = useRef(onRenderText); // NEW: Ref for render callback
     const prevEnabledRef = useRef(enabled); // Track previous enabled state
+    const speakStartTimeRef = useRef<number>(0); // NEW: Track when speak() was called
     
     // Update refs when callbacks change (without triggering effects)
     useEffect(() => {
         onTranscriptRef.current = onTranscript;
         onAudioEndedRef.current = onAudioEnded;
-    }, [onTranscript, onAudioEnded]);
+        onRenderTextRef.current = onRenderText;
+    }, [onTranscript, onAudioEnded, onRenderText]);
 
     // Initialize Speech Recognition (only runs once on mount)
     useEffect(() => {
@@ -226,6 +231,7 @@ export const useNaturalVoice = ({
 
     /**
      * Play a single audio segment and return a promise that resolves when done
+     * NEW: Now tracks audio start time and triggers text rendering with 150ms delay
      */
     const playAudioSegment = useCallback(async (audioUrl: string, isLast: boolean): Promise<void> => {
         return new Promise((resolve, reject) => {
@@ -240,11 +246,27 @@ export const useNaturalVoice = ({
 
             audio.onplay = () => {
                 isAudioPlayingRef.current = true;
-                console.log('🔊 Natural Voice: Audio segment started');
+                const audioStartTime = performance.now() - speakStartTimeRef.current;
+                console.log(`🔊 Natural Voice: Audio segment started at ${audioStartTime.toFixed(2)}ms from speak() call`);
+                
+                // NEW: Schedule text rendering 150ms AFTER audio starts
+                setTimeout(() => {
+                    const textRenderTime = performance.now() - speakStartTimeRef.current;
+                    console.log(`📝 Natural Voice: Text should render at ${textRenderTime.toFixed(2)}ms (${(textRenderTime - audioStartTime).toFixed(0)}ms after audio)`);
+                    
+                    // Notify parent component to render text now
+                    if (onRenderTextRef.current) {
+                        onRenderTextRef.current({
+                            audioStartTime,
+                            textRenderTime
+                        });
+                    }
+                }, 150); // 150ms delay: audio plays first, then text appears
             };
 
             audio.onended = () => {
-                console.log('🗣️ Natural Voice: Audio segment ended');
+                const audioCompleteTime = performance.now() - speakStartTimeRef.current;
+                console.log(`🗣️ Natural Voice: Audio segment ended at ${audioCompleteTime.toFixed(2)}ms`);
                 if (isLast) {
                     setIsSpeaking(false);
                     isSpeakingRef.current = false;
@@ -321,6 +343,10 @@ export const useNaturalVoice = ({
     const speak = useCallback(async (text: string) => {
         if (!text) return;
 
+        // NEW: Track when speak() was called for timing measurements
+        speakStartTimeRef.current = performance.now();
+        console.log(`⏱️ Natural Voice: speak() called at ${speakStartTimeRef.current.toFixed(2)}ms`);
+
         // Stop listening while speaking
         stopListening();
         setIsSpeaking(true);
@@ -379,7 +405,7 @@ export const useNaturalVoice = ({
                 startListening();
             }
         }
-    }, [enabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName]);
+    }, [enabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice]);
 
     // Handle enabled state changes
     useEffect(() => {
