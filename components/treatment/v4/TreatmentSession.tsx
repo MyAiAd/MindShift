@@ -1445,8 +1445,8 @@ export default function TreatmentSession({
                 {/* Undo Button */}
                 <button
                   onClick={handleUndo}
-                  disabled={isLoading || !canUndo()}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${canUndo() && !isLoading
+                  disabled={isLoading || stepHistory.length === 0}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${stepHistory.length > 0 && !isLoading
                     ? 'bg-secondary text-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
                     : 'bg-secondary/50 text-muted-foreground dark:bg-[#586e75]/50 dark:text-[#93a1a1]/50 cursor-not-allowed'
                     }`}
