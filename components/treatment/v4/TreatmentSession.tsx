@@ -220,19 +220,6 @@ export default function TreatmentSession({
   // Note: naturalVoice is not in deps because it's stable (from useNaturalVoice hook)
 
   // NEW: Pause/Resume handler for dedicated pause button
-  const handlePauseResume = useCallback(() => {
-    if (naturalVoice.isPaused) {
-      console.log('▶️ Resuming audio from pause button');
-      naturalVoice.resumeSpeaking();
-    } else if (naturalVoice.isSpeaking) {
-      console.log('⏸️ Pausing audio from pause button');
-      naturalVoice.pauseSpeaking();
-    } else {
-      console.log('⚠️ Cannot pause/resume - no audio active');
-    }
-  }, [naturalVoice]);
-  // Note: Added naturalVoice to dependencies to ensure latest reference
-
   // DEPRECATED: Old toggle handler (keep for backward compatibility during transition)
   const toggleNaturalVoice = () => {
     const newState = !isNaturalVoiceEnabled;
@@ -481,6 +468,19 @@ export default function TreatmentSession({
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ') + ' V4';
   };
+
+  // Handle pause/resume button click
+  const handlePauseResume = useCallback(() => {
+    if (naturalVoice.isPaused) {
+      console.log('▶️ Resuming audio from pause button');
+      naturalVoice.resumeSpeaking();
+    } else if (naturalVoice.isSpeaking) {
+      console.log('⏸️ Pausing audio from pause button');
+      naturalVoice.pauseSpeaking();
+    } else {
+      console.log('⚠️ Cannot pause/resume - no audio active');
+    }
+  }, [naturalVoice]);
 
   // Auto-scroll to bottom when NEW messages arrive (not on initial load)
   const prevMessageCount = useRef(0);
