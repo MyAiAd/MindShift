@@ -9,7 +9,9 @@ const STATIC_TEXTS = Object.values(V4_STATIC_AUDIO_TEXTS);
 
 interface UseNaturalVoiceProps {
     onTranscript: (transcript: string) => void;
-    enabled: boolean;
+    enabled: boolean; // DEPRECATED: For backward compatibility, replaced by micEnabled + speakerEnabled
+    micEnabled?: boolean; // NEW: Controls microphone input separately
+    speakerEnabled?: boolean; // NEW: Controls audio output separately
     voiceProvider?: 'openai' | 'elevenlabs' | 'kokoro';
     elevenLabsVoiceId?: string;
     kokoroVoiceId?: string;
@@ -21,6 +23,8 @@ interface UseNaturalVoiceProps {
 export const useNaturalVoice = ({
     onTranscript,
     enabled,
+    micEnabled,
+    speakerEnabled,
     voiceProvider = 'kokoro',
     elevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM', // Rachel
     kokoroVoiceId = 'af_heart', // Default to Heart (Rachel)
@@ -28,6 +32,9 @@ export const useNaturalVoice = ({
     playbackRate = 1.0,
     onRenderText, // NEW: Callback for text rendering timing
 }: UseNaturalVoiceProps) => {
+    // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
+    const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
+    const isSpeakerEnabled = speakerEnabled !== undefined ? speakerEnabled : enabled;
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -40,7 +47,8 @@ export const useNaturalVoice = ({
     const onTranscriptRef = useRef(onTranscript); // Ref to prevent effect re-runs
     const onAudioEndedRef = useRef(onAudioEnded); // Ref to prevent effect re-runs
     const onRenderTextRef = useRef(onRenderText); // NEW: Ref for render callback
-    const prevEnabledRef = useRef(enabled); // Track previous enabled state
+    const prevMicEnabledRef = useRef(isMicEnabled); // Track previous mic state
+    const prevSpeakerEnabledRef = useRef(isSpeakerEnabled); // Track previous speaker state
     const speakStartTimeRef = useRef<number>(0); // NEW: Track when speak() was called
     
     // Update refs when callbacks change (without triggering effects)
@@ -70,11 +78,11 @@ export const useNaturalVoice = ({
                 recognitionRef.current.onend = () => {
                     console.log('🎤 Natural Voice: Listening ended');
                     setIsListening(false);
-                    // Auto-restart listening if enabled and not speaking
-                    if (prevEnabledRef.current && !isSpeakingRef.current && isMountedRef.current) {
+                    // Auto-restart listening if mic enabled and not speaking
+                    if (prevMicEnabledRef.current && !isSpeakingRef.current && isMountedRef.current) {
                         // Small delay to prevent CPU hogging if it fails repeatedly
                         setTimeout(() => {
-                            if (prevEnabledRef.current && !isSpeakingRef.current && isMountedRef.current) {
+                            if (prevMicEnabledRef.current && !isSpeakingRef.current && isMountedRef.current) {
                                 startListening();
                             }
                         }, 500);
@@ -120,31 +128,41 @@ export const useNaturalVoice = ({
         };
     }, []); // Empty deps - only run on mount/unmount
 
-    // Handle enabled state changes (separate effect)
+    // Handle mic/speaker state changes (separate effect)
     useEffect(() => {
-        const wasEnabled = prevEnabledRef.current;
-        const isEnabled = enabled;
-        prevEnabledRef.current = enabled; // Update ref
+        const wasMicEnabled = prevMicEnabledRef.current;
+        const wasSpeakerEnabled = prevSpeakerEnabledRef.current;
+        prevMicEnabledRef.current = isMicEnabled; // Update ref
+        prevSpeakerEnabledRef.current = isSpeakerEnabled; // Update ref
         
-        // Only cleanup audio when DISABLING (true -> false), not when ENABLING (false -> true)
-        if (wasEnabled && !isEnabled) {
-            console.log('🔇 Natural Voice: Disabling - stopping audio');
+        // Handle microphone disable
+        if (wasMicEnabled && !isMicEnabled) {
+            console.log('🔇 Natural Voice: Disabling microphone - stopping listening');
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+            setIsListening(false);
+        } else if (!wasMicEnabled && isMicEnabled) {
+            console.log('🎤 Natural Voice: Enabling microphone - ready for listening');
+            // Don't auto-start here, let the other effect handle it
+        }
+        
+        // Handle speaker disable
+        if (wasSpeakerEnabled && !isSpeakerEnabled) {
+            console.log('🔇 Natural Voice: Disabling speaker - stopping audio');
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
                 audioRef.current = null;
             }
-            if (recognitionRef.current) {
-                recognitionRef.current.stop();
-            }
             setIsSpeaking(false);
             isSpeakingRef.current = false;
             isAudioPlayingRef.current = false;
-        } else if (!wasEnabled && isEnabled) {
-            console.log('🔊 Natural Voice: Enabling - ready for playback');
+        } else if (!wasSpeakerEnabled && isSpeakerEnabled) {
+            console.log('🔊 Natural Voice: Enabling speaker - ready for playback');
             // Don't stop anything when enabling - let audio play!
         }
-    }, [enabled]);
+    }, [isMicEnabled, isSpeakerEnabled]);
 
     // Start listening helper
     const startListening = useCallback(() => {
@@ -271,7 +289,8 @@ export const useNaturalVoice = ({
                     setIsSpeaking(false);
                     isSpeakingRef.current = false;
                     isAudioPlayingRef.current = false;
-                    if (enabled && isMountedRef.current) {
+                    // Only restart listening if mic is enabled
+                    if (isMicEnabled && isMountedRef.current) {
                         startListening();
                     }
                     onAudioEndedRef.current?.();
@@ -290,8 +309,8 @@ export const useNaturalVoice = ({
                     isAudioPlayingRef.current = false;
                     isSpeakingRef.current = false;
                     setIsSpeaking(false);
-                    // Restart listening after a brief delay
-                    if (enabled && isMountedRef.current) {
+                    // Restart listening after a brief delay (only if mic enabled)
+                    if (isMicEnabled && isMountedRef.current) {
                         setTimeout(() => startListening(), 300);
                     }
                     resolve(); // Not an error, just cleanup
@@ -300,7 +319,7 @@ export const useNaturalVoice = ({
                 }
             });
         });
-    }, [enabled, startListening, playbackRate]);
+    }, [isMicEnabled, startListening, playbackRate]);
 
     /**
      * Fetch TTS audio for text and return the audio URL
@@ -340,8 +359,15 @@ export const useNaturalVoice = ({
     const currentVoiceName = getVoiceNameFromId(voiceProvider === 'kokoro' ? kokoroVoiceId : elevenLabsVoiceId);
 
     // Speak text with streaming support, voice-prefixed cache check, AND smart prefix matching
+    // Only plays audio if speaker is enabled
     const speak = useCallback(async (text: string) => {
         if (!text) return;
+        
+        // If speaker is disabled, don't play audio
+        if (!isSpeakerEnabled) {
+            console.log('🔇 Natural Voice: Speaker disabled, skipping audio playback');
+            return;
+        }
 
         // NEW: Track when speak() was called for timing measurements
         speakStartTimeRef.current = performance.now();
@@ -401,25 +427,22 @@ export const useNaturalVoice = ({
             setIsSpeaking(false);
             isSpeakingRef.current = false;
             isAudioPlayingRef.current = false;
-            if (enabled && isMountedRef.current) {
+            // Only restart listening if mic is enabled
+            if (isMicEnabled && isMountedRef.current) {
                 startListening();
             }
         }
-    }, [enabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice]);
+    }, [isSpeakerEnabled, isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice]);
 
-    // Handle enabled state changes
+    // Handle mic/speaker state changes - start/stop listening based on mic state
     useEffect(() => {
-        if (enabled && !isSpeaking && isMountedRef.current) {
+        if (isMicEnabled && !isSpeaking && isMountedRef.current) {
             startListening();
-        } else if (!enabled) {
+        } else if (!isMicEnabled) {
             stopListening();
-            if (audioRef.current) {
-                audioRef.current.pause();
-                setIsSpeaking(false);
-                isSpeakingRef.current = false;
-            }
         }
-    }, [enabled, isSpeaking, startListening, stopListening]);
+        // Note: Audio stopping is handled in the mic/speaker state change effect above
+    }, [isMicEnabled, isSpeaking, startListening, stopListening]);
 
     return {
         isListening,

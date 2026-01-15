@@ -49,13 +49,101 @@ export default function TreatmentSession({
     version: 'v4'
   });
 
-  // Natural Voice State - Init from localStorage if available
+  // Natural Voice State - SPLIT into Mic and Speaker (Phase 2: Audio System Fix)
+  // Load from localStorage if available
+  const [isMicEnabled, setIsMicEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('v4_mic_enabled') === 'true';
+    }
+    return false;
+  });
+  
+  const [isSpeakerEnabled, setIsSpeakerEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('v4_speaker_enabled') === 'true';
+    }
+    return false;
+  });
+  
+  // Permission state tracking
+  const [micPermission, setMicPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
+  const [hasCheckedPermission, setHasCheckedPermission] = useState(false);
+
+  // DEPRECATED: Keep for backward compatibility during transition
   const [isNaturalVoiceEnabled, setIsNaturalVoiceEnabled] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('v4_natural_voice') === 'true';
     }
     return false;
   });
+
+  // Permission checking logic (prevents repeated prompts on iPhone)
+  const checkMicPermission = useCallback(async (): Promise<'granted' | 'denied' | 'prompt'> => {
+    // Try modern Permissions API first
+    if ('permissions' in navigator) {
+      try {
+        const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        return result.state as 'granted' | 'denied' | 'prompt';
+      } catch (e) {
+        // Fallback for browsers that don't support microphone query
+        console.log('Permissions API not available for microphone');
+      }
+    }
+    
+    // Fallback: check localStorage cache
+    const cached = localStorage.getItem('v4_mic_permission');
+    if (cached) return cached as 'granted' | 'denied' | 'prompt';
+    
+    return 'prompt';
+  }, []);
+
+  // Request microphone permission (only if not already granted)
+  const requestMicPermission = useCallback(async (): Promise<boolean> => {
+    const currentState = await checkMicPermission();
+    
+    // Don't request if already granted
+    if (currentState === 'granted') {
+      console.log('🎤 Microphone already granted');
+      setMicPermission('granted');
+      return true;
+    }
+    
+    // Don't request if denied
+    if (currentState === 'denied') {
+      console.log('🎤 Microphone denied');
+      setMicPermission('denied');
+      return false;
+    }
+    
+    // Only request if 'prompt'
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+      stream.getTracks().forEach(track => track.stop()); // Stop immediately, we just needed permission
+      localStorage.setItem('v4_mic_permission', 'granted');
+      setMicPermission('granted');
+      return true;
+    } catch (e) {
+      localStorage.setItem('v4_mic_permission', 'denied');
+      setMicPermission('denied');
+      return false;
+    }
+  }, [checkMicPermission]);
+
+  // Check permission state on mount (only once)
+  useEffect(() => {
+    if (!hasCheckedPermission && isMicEnabled) {
+      checkMicPermission().then(state => {
+        setMicPermission(state);
+        setHasCheckedPermission(true);
+      });
+    }
+  }, [isMicEnabled, hasCheckedPermission, checkMicPermission]);
 
   // Voice Settings State
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
@@ -80,7 +168,57 @@ export default function TreatmentSession({
     { id: 'michael', name: 'Michael', kokoroId: 'am_michael', description: 'Deep, mature male voice' },
   ] as const;
 
-  // Toggle handler with Sticky Settings and Retroactive Play
+  // Toggle handlers with Sticky Settings and Retroactive Play
+  const toggleMic = useCallback(async () => {
+    const newState = !isMicEnabled;
+    
+    // If turning ON, request permission first
+    if (newState) {
+      const granted = await requestMicPermission();
+      if (!granted) {
+        console.log('🎤 Microphone permission denied, cannot enable');
+        return;
+      }
+    }
+    
+    setIsMicEnabled(newState);
+    
+    // Sticky Settings - persist to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('v4_mic_enabled', String(newState));
+    }
+    
+    console.log(`🎤 Microphone ${newState ? 'enabled' : 'disabled'}`);
+  }, [isMicEnabled, requestMicPermission]);
+
+  const toggleSpeaker = useCallback(() => {
+    const newState = !isSpeakerEnabled;
+    
+    // If turning OFF, immediately stop any playing audio
+    if (!newState) {
+      naturalVoice.stopSpeaking();
+    }
+    
+    setIsSpeakerEnabled(newState);
+    
+    // Sticky Settings - persist to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('v4_speaker_enabled', String(newState));
+    }
+    
+    // Retroactive Play: If turning ON, speak the last AI message
+    if (newState) {
+      const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
+      if (lastAiMessage?.content) {
+        console.log('🔊 Retroactive Play:', lastAiMessage.content);
+        naturalVoice.speak(lastAiMessage.content);
+      }
+    }
+    
+    console.log(`🔊 Speaker ${newState ? 'enabled' : 'disabled'}`);
+  }, [isSpeakerEnabled, messages]);
+
+  // DEPRECATED: Old toggle handler (keep for backward compatibility during transition)
   const toggleNaturalVoice = () => {
     const newState = !isNaturalVoiceEnabled;
     
@@ -212,9 +350,9 @@ export default function TreatmentSession({
 
   // Auto-advance logic for Voice Off mode
   useEffect(() => {
-    // Only run if we have an auto step and voice is disabled
-    // (If voice is enabled, handleAudioEnded takes care of it)
-    if (expectedResponseType === 'auto' && !isNaturalVoiceEnabled) {
+    // Only run if we have an auto step and speaker is disabled
+    // (If speaker is enabled, handleAudioEnded takes care of it)
+    if (expectedResponseType === 'auto' && !isSpeakerEnabled) {
       console.log('⏩ Auto-advance timer started (Voice Off)...');
 
       // Calculate delay based on last message length
@@ -232,7 +370,7 @@ export default function TreatmentSession({
 
       return () => clearTimeout(timer);
     }
-  }, [expectedResponseType, isNaturalVoiceEnabled, messages]);
+  }, [expectedResponseType, isSpeakerEnabled, messages]);
 
   // State for pending message that's waiting for audio-then-text timing
   const [pendingMessage, setPendingMessage] = useState<{
@@ -270,9 +408,11 @@ export default function TreatmentSession({
     }
   }, [pendingMessage]);
 
-  // Natural Voice Hook
+  // Natural Voice Hook - Updated to use separate mic/speaker controls
   const naturalVoice = useNaturalVoice({
-    enabled: isNaturalVoiceEnabled,
+    enabled: isNaturalVoiceEnabled, // DEPRECATED: backward compatibility
+    micEnabled: isMicEnabled, // NEW: Controls microphone input
+    speakerEnabled: isSpeakerEnabled, // NEW: Controls audio output
     onTranscript: (transcript) => {
       console.log('🗣️ Natural Voice Transcript:', transcript);
       if (!isLoading) {
@@ -380,8 +520,8 @@ export default function TreatmentSession({
       // Focus input immediately for user interaction
       setTimeout(() => {
         inputRef.current?.focus();
-        // Speak initial message if enabled - with delay to ensure state is settled
-        if (isNaturalVoiceEnabled) {
+        // Speak initial message if speaker enabled - with delay to ensure state is settled
+        if (isSpeakerEnabled) {
           // Use setTimeout to ensure all React state updates and cleanups are complete
           setTimeout(() => {
             naturalVoice.speak(instantMessage.content);
@@ -501,8 +641,8 @@ export default function TreatmentSession({
   const sendMessage = async (content: string, isAutoAdvance = false) => {
     if ((!content.trim() && !isAutoAdvance) || isLoading) return;
 
-    // Stop current audio if user is advancing to next step
-    if (isNaturalVoiceEnabled && naturalVoice.isSpeaking) {
+    // Stop current audio if user is advancing to next step (only if speaker was enabled)
+    if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user advancing to next step');
       naturalVoice.stopSpeaking();
     }
@@ -562,8 +702,8 @@ export default function TreatmentSession({
             data.message.includes('Choose a method'));
 
         if (!shouldSkipMessage) {
-          // NEW: If voice is enabled, set up pending message for audio-then-text timing
-          if (isNaturalVoiceEnabled && data.message) {
+          // NEW: If speaker is enabled, set up pending message for audio-then-text timing
+          if (isSpeakerEnabled && data.message) {
             console.log('⏱️ V4: Setting up pending message for audio-first rendering');
             setPendingMessage({
               content: data.message,
@@ -575,7 +715,7 @@ export default function TreatmentSession({
             // Start audio playback (will trigger handleRenderText after 150ms)
             naturalVoice.speak(data.message);
           } else {
-            // Voice disabled: add message immediately (no timing data)
+            // Speaker disabled: add message immediately (no timing data)
             const systemMessage: TreatmentMessage = {
               id: `system-${Date.now()}`,
               content: data.message,
@@ -723,7 +863,7 @@ export default function TreatmentSession({
   // Handle button clicks for emotion confirmation
   const handleButtonClick = (buttonText: string) => {
     // Stop current audio if user is advancing to next step
-    if (isNaturalVoiceEnabled && naturalVoice.isSpeaking) {
+    if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user clicked button');
       naturalVoice.stopSpeaking();
     }
@@ -798,7 +938,7 @@ export default function TreatmentSession({
   // V3: Handle work type selection button clicks
   const handleWorkTypeSelection = (workType: string) => {
     // Stop current audio if user is advancing to next step
-    if (isNaturalVoiceEnabled && naturalVoice.isSpeaking) {
+    if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user selected work type');
       naturalVoice.stopSpeaking();
     }
@@ -859,8 +999,8 @@ export default function TreatmentSession({
               data.message.includes('Choose a method'));
 
           if (!shouldSkipMessage) {
-            // NEW: If voice is enabled, set up pending message for audio-then-text timing
-            if (isNaturalVoiceEnabled && data.message) {
+            // NEW: If speaker is enabled, set up pending message for audio-then-text timing
+            if (isSpeakerEnabled && data.message) {
               console.log('⏱️ V4: Setting up pending message for audio-first rendering (work type)');
               setPendingMessage({
                 content: data.message,
@@ -873,7 +1013,7 @@ export default function TreatmentSession({
               console.log('🔊 Playing new audio after work type selection');
               naturalVoice.speak(data.message);
             } else {
-              // Voice disabled: add message immediately
+              // Speaker disabled: add message immediately
               const systemMessage: TreatmentMessage = {
                 id: `system-${Date.now()}`,
                 content: data.message,
@@ -996,7 +1136,7 @@ export default function TreatmentSession({
   // V3: Handle Yes/No button clicks for trauma intro and confirm statement
   const handleYesNoClick = (response: string) => {
     // Stop current audio if user is advancing to next step
-    if (isNaturalVoiceEnabled && naturalVoice.isSpeaking) {
+    if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user clicked yes/no');
       naturalVoice.stopSpeaking();
     }
@@ -1007,7 +1147,7 @@ export default function TreatmentSession({
   // V3: Handle method selection button clicks
   const handleMethodSelection = (method: string) => {
     // Stop current audio if user is advancing to next step
-    if (isNaturalVoiceEnabled && naturalVoice.isSpeaking) {
+    if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user selected method');
       naturalVoice.stopSpeaking();
     }
@@ -1063,8 +1203,8 @@ export default function TreatmentSession({
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          // NEW: If voice is enabled, set up pending message for audio-then-text timing
-          if (isNaturalVoiceEnabled && data.message) {
+          // NEW: If speaker is enabled, set up pending message for audio-then-text timing
+          if (isSpeakerEnabled && data.message) {
             console.log('⏱️ V4: Setting up pending message for audio-first rendering (method selection)');
             setPendingMessage({
               content: data.message,
@@ -1077,7 +1217,7 @@ export default function TreatmentSession({
             console.log('🔊 Playing new audio after method selection');
             naturalVoice.speak(data.message);
           } else {
-            // Voice disabled: add message immediately
+            // Speaker disabled: add message immediately
             const systemMessage: TreatmentMessage = {
               id: `system-${Date.now()}`,
               content: data.message,
@@ -1155,31 +1295,61 @@ export default function TreatmentSession({
       
       {/* Mobile Header - Slim compact bar, sticky below page header (h-14 = 56px) */}
       <div className="flex md:hidden items-center justify-between px-3 py-2.5 mb-2 bg-card dark:bg-[#073642] rounded-lg border border-border dark:border-[#586e75] sticky top-14 z-30">
-        {/* Voice Toggle - Mobile */}
-        <button
-          onClick={toggleNaturalVoice}
-          className={`flex items-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isNaturalVoiceEnabled
-            ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
-            : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
-            }`}
-          title="Toggle Voice"
-        >
-          {isNaturalVoiceEnabled ? (
-            <>
-              {naturalVoice.isSpeaking ? (
-                <Volume2 className="h-4 w-4 animate-pulse" />
-              ) : (
-                <Volume2 className="h-4 w-4" />
-              )}
-              <span>On</span>
-            </>
-          ) : (
-            <>
-              <VolumeX className="h-4 w-4" />
-              <span>Off</span>
-            </>
-          )}
-        </button>
+        {/* Mic & Speaker Toggles - Mobile */}
+        <div className="flex items-center space-x-2">
+          {/* Microphone Toggle */}
+          <button
+            onClick={toggleMic}
+            disabled={micPermission === 'denied'}
+            className={`flex items-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isMicEnabled
+              ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
+              : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
+              } ${micPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title="Toggle Microphone"
+          >
+            {isMicEnabled ? (
+              <>
+                {naturalVoice.isListening ? (
+                  <Mic className="h-4 w-4 animate-pulse text-red-500" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+                <span>🎤</span>
+              </>
+            ) : (
+              <>
+                <Mic className="h-4 w-4" />
+                <span>🎤</span>
+              </>
+            )}
+          </button>
+          
+          {/* Speaker Toggle */}
+          <button
+            onClick={toggleSpeaker}
+            className={`flex items-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isSpeakerEnabled
+              ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
+              : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
+              }`}
+            title="Toggle Speaker"
+          >
+            {isSpeakerEnabled ? (
+              <>
+                {naturalVoice.isSpeaking ? (
+                  <Volume2 className="h-4 w-4 animate-pulse" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+                <span>🔊</span>
+              </>
+            ) : (
+              <>
+                <VolumeX className="h-4 w-4" />
+                <span>🔊</span>
+              </>
+            )}
+          </button>
+        </div>
         
         {/* Settings Gear - Mobile */}
         <button
@@ -1228,33 +1398,61 @@ export default function TreatmentSession({
                 </div>
               )}
 
-              {/* Natural Voice Toggle - Desktop */}
-              <button
-                onClick={toggleNaturalVoice}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${isNaturalVoiceEnabled
-                  ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
-                  : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary dark:hover:bg-[#657b83]'
-                  }`}
-                title="Toggle Natural Voice (ElevenLabs)"
-              >
-                {isNaturalVoiceEnabled ? (
-                  <>
-                    {naturalVoice.isSpeaking ? (
-                      <Volume2 className="h-4 w-4 animate-pulse" />
-                    ) : naturalVoice.isListening ? (
-                      <Mic className="h-4 w-4 animate-pulse text-red-500" />
-                    ) : (
+              {/* Mic & Speaker Toggles - Desktop */}
+              <div className="flex items-center space-x-2">
+                {/* Microphone Toggle */}
+                <button
+                  onClick={toggleMic}
+                  disabled={micPermission === 'denied'}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${isMicEnabled
+                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
+                    : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary dark:hover:bg-[#657b83]'
+                    } ${micPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Toggle Microphone Input"
+                >
+                  {isMicEnabled ? (
+                    <>
+                      {naturalVoice.isListening ? (
+                        <Mic className="h-4 w-4 animate-pulse text-red-500" />
+                      ) : (
+                        <Mic className="h-4 w-4" />
+                      )}
+                      <span>🎤 Mic On</span>
+                    </>
+                  ) : (
+                    <>
                       <Mic className="h-4 w-4" />
-                    )}
-                    <span>Voice On</span>
-                  </>
-                ) : (
-                  <>
-                    <Mic className="h-4 w-4" />
-                    <span>Voice Off</span>
-                  </>
-                )}
-              </button>
+                      <span>🎤 Mic Off</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Speaker Toggle */}
+                <button
+                  onClick={toggleSpeaker}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${isSpeakerEnabled
+                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
+                    : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary dark:hover:bg-[#657b83]'
+                    }`}
+                  title="Toggle Audio Output"
+                >
+                  {isSpeakerEnabled ? (
+                    <>
+                      {naturalVoice.isSpeaking ? (
+                        <Volume2 className="h-4 w-4 animate-pulse" />
+                      ) : (
+                        <Volume2 className="h-4 w-4" />
+                      )}
+                      <span>🔊 Audio On</span>
+                    </>
+                  ) : (
+                    <>
+                      <VolumeX className="h-4 w-4" />
+                      <span>🔊 Audio Off</span>
+                    </>
+                  )}
+                </button>
+              </div>
 
               {/* Voice Settings Button - Desktop */}
               <button
