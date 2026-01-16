@@ -160,6 +160,14 @@ export default function TreatmentSession({
     }
     return 'heart';
   });
+  const [isGuidedMode, setIsGuidedMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('v4_guided_mode');
+      return saved === 'true';
+    }
+    return false;
+  });
+  const [isPTTActive, setIsPTTActive] = useState(false);
   const voiceSettingsRef = useRef<HTMLDivElement>(null);
 
   // Available voices - Kokoro TTS voices
@@ -299,6 +307,32 @@ export default function TreatmentSession({
     };
   }, [showVoiceSettings]);
 
+  // Space bar PTT handler for desktop guided mode
+  useEffect(() => {
+    if (!isGuidedMode) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input field
+      if (e.target instanceof HTMLInputElement || 
+          e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault(); // Don't scroll page
+        
+        if (!isPTTActive) {
+          handlePTTStart();
+        } else {
+          handlePTTEnd();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isGuidedMode, isPTTActive, handlePTTStart, handlePTTEnd]);
+
   // V4: Enhanced performance metrics state
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
     cacheHitRate: 0,
@@ -415,6 +449,7 @@ export default function TreatmentSession({
     enabled: isNaturalVoiceEnabled, // DEPRECATED: backward compatibility
     micEnabled: isMicEnabled, // NEW: Controls microphone input
     speakerEnabled: isSpeakerEnabled, // NEW: Controls audio output
+    guidedMode: isGuidedMode, // NEW: Guided mode disables auto-restart for PTT
     onTranscript: (transcript) => {
       console.log('🗣️ Natural Voice Transcript:', transcript);
       if (!isLoading) {
@@ -481,6 +516,40 @@ export default function TreatmentSession({
       console.log('⚠️ Cannot pause/resume - no audio active');
     }
   }, [naturalVoice]);
+
+  // PTT (Push-to-Talk) handlers for Guided Mode
+  const handlePTTStart = useCallback(() => {
+    if (!isGuidedMode) return;
+    
+    console.log('🎙️ PTT: Starting recording');
+    
+    // Stop any playing audio immediately
+    if (naturalVoice.isSpeaking || naturalVoice.isPaused) {
+      naturalVoice.stopSpeaking();
+    }
+    
+    // Start user's mic
+    naturalVoice.startListening();
+    setIsPTTActive(true);
+  }, [isGuidedMode, naturalVoice]);
+
+  const handlePTTEnd = useCallback(() => {
+    if (!isGuidedMode) return;
+    
+    console.log('🎙️ PTT: Ending recording');
+    
+    // Stop user's mic
+    naturalVoice.stopListening();
+    setIsPTTActive(false);
+  }, [isGuidedMode, naturalVoice]);
+
+  const handlePTTToggle = useCallback(() => {
+    if (isPTTActive) {
+      handlePTTEnd();
+    } else {
+      handlePTTStart();
+    }
+  }, [isPTTActive, handlePTTStart, handlePTTEnd]);
 
   // Auto-scroll to bottom when NEW messages arrive (not on initial load)
   const prevMessageCount = useRef(0);
@@ -1279,6 +1348,84 @@ export default function TreatmentSession({
 
   return (
     <div className="max-w-4xl mx-auto px-2 sm:px-4 relative flex flex-col h-full min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-120px)]">
+      {/* Guided Mode Full-Screen PTT Interface */}
+      {isGuidedMode && (
+        <div className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex items-center justify-center">
+          {/* Exit button */}
+          <button 
+            onClick={() => {
+              setIsGuidedMode(false);
+              localStorage.setItem('v4_guided_mode', 'false');
+              if (isPTTActive) {
+                handlePTTEnd();
+              }
+            }}
+            className="absolute top-4 right-4 text-white/80 hover:text-white text-lg px-4 py-2 bg-black/20 hover:bg-black/30 rounded-lg transition-all backdrop-blur-sm"
+          >
+            ✕ Exit Guided Mode
+          </button>
+
+          {/* Status indicator at top */}
+          <div className="absolute top-8 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+            {isPTTActive ? '🔴 Recording...' : 
+             naturalVoice.isSpeaking ? '🔊 AI Speaking...' : 
+             '🧘 Ready - Hold to speak'}
+          </div>
+
+          {/* Main PTT Button */}
+          <button
+            onPointerDown={handlePTTStart}
+            onPointerUp={handlePTTEnd}
+            onPointerLeave={handlePTTEnd}
+            className={`
+              w-64 h-64 md:w-80 md:h-80 rounded-full 
+              ${isPTTActive 
+                ? 'bg-red-500 animate-pulse ring-8 ring-red-300/50 scale-105' 
+                : naturalVoice.isSpeaking
+                ? 'bg-indigo-500 ring-8 ring-indigo-300/30 animate-pulse'
+                : 'bg-purple-600 ring-4 ring-purple-300/50 hover:ring-8 hover:scale-105'
+              }
+              flex flex-col items-center justify-center
+              text-white font-bold
+              transition-all duration-300
+              shadow-2xl
+              active:scale-95
+              cursor-pointer
+              select-none
+            `}
+          >
+            {isPTTActive ? (
+              <>
+                <div className="text-7xl mb-4 animate-bounce">🔴</div>
+                <div className="text-2xl mb-2">Speaking...</div>
+                <div className="text-sm opacity-75">Release to send</div>
+              </>
+            ) : naturalVoice.isSpeaking ? (
+              <>
+                <div className="text-7xl mb-4">🔊</div>
+                <div className="text-2xl mb-2">AI Speaking</div>
+                <div className="text-sm opacity-75">Hold to interrupt</div>
+              </>
+            ) : (
+              <>
+                <div className="text-7xl mb-4">🎙️</div>
+                <div className="text-2xl mb-2">Hold to Speak</div>
+                <div className="text-sm opacity-75 hidden md:block">or press Space</div>
+              </>
+            )}
+          </button>
+
+          {/* Instructions at bottom */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-sm text-center max-w-md px-4">
+            <p className="mb-2">Close your eyes and speak when ready</p>
+            <p className="text-xs opacity-75">
+              <span className="md:hidden">Hold the button to speak</span>
+              <span className="hidden md:inline">Hold button or press Space bar to speak</span>
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Ready Overlay - Shows before session starts */}
       {showReadyOverlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
@@ -1680,6 +1827,44 @@ export default function TreatmentSession({
                     {speed === 1.0 ? '1x' : `${speed}x`}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Guided Mode Toggle */}
+            <div className="mt-4 pt-4 border-t border-border dark:border-[#586e75]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className={`text-2xl ${isGuidedMode ? 'animate-pulse' : ''}`}>
+                    🧘
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-foreground dark:text-[#fdf6e3]">
+                      Guided Mode
+                    </div>
+                    <div className="text-xs text-muted-foreground dark:text-[#93a1a1]">
+                      Full-screen push-to-talk
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const newState = !isGuidedMode;
+                    setIsGuidedMode(newState);
+                    localStorage.setItem('v4_guided_mode', newState.toString());
+                  }}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                    isGuidedMode 
+                      ? 'bg-purple-600' 
+                      : 'bg-gray-300 dark:bg-[#586e75]'
+                  }`}
+                  aria-label="Toggle guided mode"
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                      isGuidedMode ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
               </div>
             </div>
 

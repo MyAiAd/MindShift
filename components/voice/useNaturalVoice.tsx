@@ -18,6 +18,7 @@ interface UseNaturalVoiceProps {
     onAudioEnded?: () => void;
     playbackRate?: number; // 0.5 to 2.0, default 1.0
     onRenderText?: (timing: { audioStartTime: number; textRenderTime: number }) => void; // NEW: Callback when text should render
+    guidedMode?: boolean; // NEW: If true, disables auto-restart of listening (for PTT mode)
 }
 
 export const useNaturalVoice = ({
@@ -31,6 +32,7 @@ export const useNaturalVoice = ({
     onAudioEnded,
     playbackRate = 1.0,
     onRenderText, // NEW: Callback for text rendering timing
+    guidedMode = false, // NEW: Guided mode flag
 }: UseNaturalVoiceProps) => {
     // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
@@ -80,14 +82,16 @@ export const useNaturalVoice = ({
                 recognitionRef.current.onend = () => {
                     console.log('🎤 Natural Voice: Listening ended');
                     setIsListening(false);
-                    // Auto-restart listening if mic enabled and not speaking
-                    if (prevMicEnabledRef.current && !isSpeakingRef.current && isMountedRef.current) {
+                    // Auto-restart listening if mic enabled and not speaking (but NOT in guided mode)
+                    if (prevMicEnabledRef.current && !isSpeakingRef.current && isMountedRef.current && !guidedMode) {
                         // Small delay to prevent CPU hogging if it fails repeatedly
                         setTimeout(() => {
-                            if (prevMicEnabledRef.current && !isSpeakingRef.current && isMountedRef.current) {
+                            if (prevMicEnabledRef.current && !isSpeakingRef.current && isMountedRef.current && !guidedMode) {
                                 startListening();
                             }
                         }, 500);
+                    } else if (guidedMode) {
+                        console.log('🧘 Guided Mode: Not auto-restarting listening (PTT mode)');
                     }
                 };
 
@@ -530,15 +534,20 @@ export const useNaturalVoice = ({
         }
     }, [isSpeakerEnabled, isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice]);
 
-    // Handle mic/speaker state changes - start/stop listening based on mic state
+    // Handle mic/speaker state changes - start/stop listening based on mic state (but not in guided mode)
     useEffect(() => {
+        // In guided mode, do NOT auto-start listening - user controls via PTT
+        if (guidedMode) {
+            return;
+        }
+        
         if (isMicEnabled && !isSpeaking && isMountedRef.current) {
             startListening();
         } else if (!isMicEnabled) {
             stopListening();
         }
         // Note: Audio stopping is handled in the mic/speaker state change effect above
-    }, [isMicEnabled, isSpeaking, startListening, stopListening]);
+    }, [isMicEnabled, isSpeaking, startListening, stopListening, guidedMode]);
 
     return {
         isListening,
