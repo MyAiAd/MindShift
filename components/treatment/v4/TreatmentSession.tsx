@@ -525,19 +525,33 @@ export default function TreatmentSession({
     }
   }, [isPTTActive, handlePTTStart, handlePTTEnd]);
 
-  // Space bar PTT handler for desktop guided mode
+  // Keyboard handlers for desktop guided mode (Space bar PTT + ESC to exit)
   useEffect(() => {
     if (!isGuidedMode) return;
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in input field
+      // ESC key: Exit guided mode (always works, even in input fields)
+      if (e.code === 'Escape') {
+        e.preventDefault();
+        console.log('⌨️ ESC pressed: Exiting guided mode');
+        setIsGuidedMode(false);
+        localStorage.setItem('v4_guided_mode', 'false');
+        if (isPTTActive) {
+          handlePTTEnd();
+        }
+        return;
+      }
+      
+      // Ignore space bar if typing in input field
       if (e.target instanceof HTMLInputElement || 
           e.target instanceof HTMLTextAreaElement) {
         return;
       }
       
+      // Space bar: PTT toggle
       if (e.code === 'Space' && !e.repeat) {
         e.preventDefault(); // Don't scroll page
+        console.log('⌨️ Space pressed: PTT toggle', { isPTTActive });
         
         if (!isPTTActive) {
           handlePTTStart();
