@@ -1792,11 +1792,6 @@ export default function TreatmentSession({
         {/* V3: Work Type Selection Buttons */}
         {showWorkTypeButtons && (
           <div className="mb-4">
-            <div className="text-center mb-4">
-              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3">
-                What do you want to work on?
-              </h3>
-            </div>
             <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
               <button
                 onClick={() => handleWorkTypeSelection('1')}
