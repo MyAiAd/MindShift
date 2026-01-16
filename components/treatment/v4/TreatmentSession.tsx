@@ -307,32 +307,6 @@ export default function TreatmentSession({
     };
   }, [showVoiceSettings]);
 
-  // Space bar PTT handler for desktop guided mode
-  useEffect(() => {
-    if (!isGuidedMode) return;
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in input field
-      if (e.target instanceof HTMLInputElement || 
-          e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-      
-      if (e.code === 'Space' && !e.repeat) {
-        e.preventDefault(); // Don't scroll page
-        
-        if (!isPTTActive) {
-          handlePTTStart();
-        } else {
-          handlePTTEnd();
-        }
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isGuidedMode, isPTTActive, handlePTTStart, handlePTTEnd]);
-
   // V4: Enhanced performance metrics state
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
     cacheHitRate: 0,
@@ -550,6 +524,32 @@ export default function TreatmentSession({
       handlePTTStart();
     }
   }, [isPTTActive, handlePTTStart, handlePTTEnd]);
+
+  // Space bar PTT handler for desktop guided mode
+  useEffect(() => {
+    if (!isGuidedMode) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input field
+      if (e.target instanceof HTMLInputElement || 
+          e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault(); // Don't scroll page
+        
+        if (!isPTTActive) {
+          handlePTTStart();
+        } else {
+          handlePTTEnd();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isGuidedMode, isPTTActive, handlePTTStart, handlePTTEnd]);
 
   // Auto-scroll to bottom when NEW messages arrive (not on initial load)
   const prevMessageCount = useRef(0);
