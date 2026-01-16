@@ -292,6 +292,14 @@ export const useNaturalVoice = ({
         return pausedAudioRef.current !== null;
     }, []);
 
+    // NEW: Force clear audio state flags (for PTT in guided mode)
+    const clearAudioFlags = useCallback(() => {
+        console.log('🔧 Natural Voice: Force clearing audio state flags');
+        isSpeakingRef.current = false;
+        isAudioPlayingRef.current = false;
+        setIsSpeaking(false);
+    }, []);
+
     // Prefetch audio for a given text (uses global cache)
     const prefetch = useCallback(async (text: string) => {
         if (!text || globalAudioCache.has(text)) return;
@@ -561,6 +569,7 @@ export const useNaturalVoice = ({
         stopSpeaking,
         pauseSpeaking,
         resumeSpeaking,
-        hasPausedAudio
+        hasPausedAudio,
+        clearAudioFlags
     };
 };

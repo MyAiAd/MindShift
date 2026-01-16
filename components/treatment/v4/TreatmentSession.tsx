@@ -307,6 +307,25 @@ export default function TreatmentSession({
     };
   }, [showVoiceSettings]);
 
+  // FIX #4: Request mic permission when entering guided mode
+  useEffect(() => {
+    if (isGuidedMode && micPermission !== 'granted') {
+      console.log('🧘 Guided Mode: Requesting mic permission on entry...');
+      requestMicPermission().then(granted => {
+        if (granted) {
+          console.log('🧘 Guided Mode: Mic permission granted');
+          // Auto-enable mic for guided mode
+          if (!isMicEnabled) {
+            setIsMicEnabled(true);
+            localStorage.setItem('v4_mic_enabled', 'true');
+          }
+        } else {
+          console.warn('🧘 Guided Mode: Mic permission denied - PTT will not work');
+        }
+      });
+    }
+  }, [isGuidedMode, micPermission, isMicEnabled, requestMicPermission]);
+
   // V4: Enhanced performance metrics state
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
     cacheHitRate: 0,
@@ -497,15 +516,37 @@ export default function TreatmentSession({
     
     console.log('🎙️ PTT: Starting recording');
     
+    // FIX #1: Check mic permission first
+    if (micPermission !== 'granted') {
+      console.warn('🎙️ PTT: Mic permission not granted, requesting...');
+      requestMicPermission().then(granted => {
+        if (granted) {
+          console.log('🎙️ PTT: Permission granted, retrying start');
+          handlePTTStart(); // Retry after permission granted
+        } else {
+          console.error('🎙️ PTT: Permission denied by user');
+        }
+      });
+      return;
+    }
+    
     // Stop any playing audio immediately
     if (naturalVoice.isSpeaking || naturalVoice.isPaused) {
       naturalVoice.stopSpeaking();
     }
     
+    // FIX #3: Clear audio state flags to prevent false positives
+    console.log('🎙️ PTT: Clearing audio state flags');
+    naturalVoice.clearAudioFlags();
+    
+    // FIX #2: Force reset recognition state before starting
+    // The SpeechRecognition API can get stuck in "starting" or "stopping" state
+    console.log('🎙️ PTT: Force starting listening (with state reset)');
+    
     // Start user's mic
     naturalVoice.startListening();
     setIsPTTActive(true);
-  }, [isGuidedMode, naturalVoice]);
+  }, [isGuidedMode, naturalVoice, micPermission, requestMicPermission]);
 
   const handlePTTEnd = useCallback(() => {
     if (!isGuidedMode) return;
