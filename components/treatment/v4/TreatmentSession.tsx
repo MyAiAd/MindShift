@@ -1969,6 +1969,30 @@ export default function TreatmentSession({
                     </button>
                   ))}
                 </div>
+                
+                {/* Real-time Voice Level Meter */}
+                <div className="mt-4 pt-4 border-t border-border dark:border-[#586e75]">
+                  <div className="text-xs text-muted-foreground dark:text-[#93a1a1] mb-2">
+                    Voice Level: {vadLevel}%
+                  </div>
+                  
+                  <div className="flex space-x-1">
+                    {[...Array(10)].map((_, index) => {
+                      const barThreshold = (index + 1) * 10;
+                      const isFilled = vadLevel >= barThreshold;
+                      return (
+                        <div
+                          key={index}
+                          className={`flex-1 h-6 rounded-sm transition-colors duration-150 ${
+                            isFilled
+                              ? 'bg-indigo-600 dark:bg-indigo-500'
+                              : 'bg-gray-300 dark:bg-[#586e75]'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 
