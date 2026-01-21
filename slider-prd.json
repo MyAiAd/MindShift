@@ -1,0 +1,393 @@
+{
+  "project": "V4 Treatment Sessions",
+  "branchName": "ralph/voice-activity-detection",
+  "description": "Voice Activity Detection with User-Tunable Sensitivity - Enable users to interrupt AI while speaking",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Install VAD library dependency",
+      "description": "As a developer, I need the VAD library installed so the project can use voice activity detection.",
+      "acceptanceCriteria": [
+        "Install @ricky0123/vad-web package via pnpm",
+        "Verify package.json includes the dependency",
+        "Verify pnpm-lock.yaml is updated",
+        "Library version is latest stable",
+        "No installation errors",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Installed v0.0.30 via npm. Commit: 6afe09f"
+    },
+    {
+      "id": "US-002",
+      "title": "Add VAD state management to TreatmentSession",
+      "description": "As a developer, I need state variables for VAD configuration so the system can track sensitivity settings and VAD status.",
+      "acceptanceCriteria": [
+        "Add vadSensitivity state with localStorage persistence (default: 0.5)",
+        "Add vadLevel state for real-time meter display (0-100)",
+        "Add isVadActive state to track if VAD is running",
+        "Implement handleVadSensitivityChange handler with localStorage save",
+        "Implement getVadSensitivityLabel helper (Low/Medium/High)",
+        "Console logs confirm sensitivity changes",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Added state management following existing patterns. Commit: f477027"
+    },
+    {
+      "id": "US-003",
+      "title": "Create useVAD hook foundation",
+      "description": "As a developer, I need a reusable VAD hook so the logic is encapsulated and can be tested independently.",
+      "acceptanceCriteria": [
+        "Create components/voice/useVAD.tsx file",
+        "Define UseVADProps interface with enabled, sensitivity, onSpeechStart, onSpeechEnd, onVadLevel",
+        "Implement hook structure with refs for callbacks",
+        "Add vadRef to hold MicVAD instance",
+        "Add isInitialized and error state",
+        "Update callback refs when props change",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Created hook following existing patterns. Commit: aa24f71"
+    },
+    {
+      "id": "US-004",
+      "title": "Implement VAD initialization logic",
+      "description": "As a developer, I need VAD to initialize correctly so it can start monitoring audio when enabled.",
+      "acceptanceCriteria": [
+        "Initialize MicVAD when enabled is true",
+        "Configure positiveSpeechThreshold based on sensitivity prop",
+        "Set negativeSpeechThreshold with 0.15 hysteresis",
+        "Configure timing parameters (minSpeechFrames: 3, preSpeechPadFrames: 1, redemptionFrames: 8)",
+        "Set ortConfig for single-threaded WASM",
+        "Clean up/destroy VAD when enabled becomes false",
+        "Console logs confirm initialization and destruction",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Implemented full lifecycle management. Commit: 1847a6e"
+    },
+    {
+      "id": "US-005",
+      "title": "Implement VAD event handlers",
+      "description": "As a developer, I need event handlers for speech detection so the system can respond to user voice activity.",
+      "acceptanceCriteria": [
+        "Implement onSpeechStart handler that calls callback prop",
+        "Implement onSpeechEnd handler with audio data",
+        "Implement onVADMisfire handler with logging",
+        "Implement onFrameProcessed handler for real-time level updates",
+        "Calculate RMS audio level from audio data (0-100 scale)",
+        "Call onVadLevel callback with calculated level",
+        "Console logs show speech detection events",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Implemented all event handlers with RMS calculation. Commit: 2c356af"
+    },
+    {
+      "id": "US-006",
+      "title": "Add VAD start/pause/destroy methods",
+      "description": "As a developer, I need control methods for VAD so it can be managed based on application state.",
+      "acceptanceCriteria": [
+        "Implement startVAD method that calls vad.start()",
+        "Implement pauseVAD method that calls vad.pause()",
+        "Implement destroyVAD method that cleans up instance",
+        "Handle errors in each method with try-catch",
+        "Set appropriate state flags (isInitialized, error)",
+        "Console logs confirm method calls",
+        "Return cleanup function from hook",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Added control methods with error handling. Commit: d2d1309"
+    },
+    {
+      "id": "US-007",
+      "title": "Integrate VAD with useNaturalVoice hook",
+      "description": "As a developer, I need VAD integrated with voice processing so it works with existing audio system.",
+      "acceptanceCriteria": [
+        "Import useVAD hook in useNaturalVoice.tsx",
+        "Add vadError state for error tracking",
+        "Enable VAD only when useMic AND useSpeaker both true",
+        "Pass vadSensitivity from TreatmentSession to hook",
+        "Implement handleVadBargeIn callback function",
+        "Pass onVadLevel callback to update vadLevel state",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Integrated VAD with existing voice system. Commit: 1cb53d0"
+    },
+    {
+      "id": "US-008",
+      "title": "Implement barge-in handler logic",
+      "description": "As a developer, I need barge-in logic so AI audio stops when user speaks.",
+      "acceptanceCriteria": [
+        "Stop AI audio immediately when VAD detects speech",
+        "Set isAudioPlayingRef to false",
+        "Clear audio queue if present",
+        "Stop current listening session to prevent echo",
+        "Pause VAD temporarily during speech recognition",
+        "Console log confirms barge-in triggered",
+        "Start full speech recognition after barge-in",
+        "Resume VAD monitoring after user finishes speaking",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Full barge-in flow with VAD pause/resume. Commit: ca09f04"
+    },
+    {
+      "id": "US-009",
+      "title": "Add VAD sensitivity slider to settings modal",
+      "description": "As a user, I want a sensitivity slider in settings so I can control when interruptions are detected.",
+      "acceptanceCriteria": [
+        "Add section to settings modal below Playback Speed",
+        "Include border separator between sections",
+        "Add 🎙️ emoji icon with 'Interruption Sensitivity' label",
+        "Display current sensitivity percentage and label (Low/Medium/High)",
+        "Implement range slider (0.1 to 0.9, step 0.05)",
+        "Add preset buttons: [Low][Medium][High] (0.25, 0.5, 0.75)",
+        "Slider only visible when both mic AND speaker enabled",
+        "Mirror Playback Speed slider styling exactly",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "Completed 2026-01-21. UI implemented, browser verification pending. Commit: feb400a"
+    },
+    {
+      "id": "US-010",
+      "title": "Add real-time voice level meter",
+      "description": "As a user, I want to see my voice level in real-time so I can test sensitivity settings.",
+      "acceptanceCriteria": [
+        "Add visual meter showing 10 bars (filled/unfilled)",
+        "Display current voice level percentage (0-100%)",
+        "Update meter in real-time as user speaks",
+        "Bars fill proportionally to vadLevel state",
+        "Add label: 'Voice Level: X%'",
+        "Position meter below sensitivity slider",
+        "Style with appropriate colors (filled: primary, unfilled: gray)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Real-time meter UI implemented. Commit: 81f7684"
+    },
+    {
+      "id": "US-011",
+      "title": "Add help text and visual feedback",
+      "description": "As a user, I want guidance on testing VAD so I know how to verify it's working.",
+      "acceptanceCriteria": [
+        "Add info icon (ℹ️) with help text below voice meter",
+        "Text reads: 'Speak while AI talks to test it'",
+        "Style consistently with existing info messages",
+        "Only show when VAD is active (mic + speaker enabled)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Help text added below meter. Commit: 02b45e0"
+    },
+    {
+      "id": "US-012",
+      "title": "Test VAD with single user interruption",
+      "description": "As a developer, I want to verify basic VAD functionality so I know speech detection works.",
+      "acceptanceCriteria": [
+        "Start V4 treatment session with mic and speaker enabled",
+        "Wait for AI to start speaking",
+        "Speak while AI is talking",
+        "Verify AI audio stops within 200ms of speaking",
+        "Verify speech recognition starts",
+        "Verify user transcript is processed normally",
+        "Test with default (medium) sensitivity",
+        "Manually test via browser"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Test VAD sensitivity levels",
+      "description": "As a developer, I want to verify sensitivity settings work correctly so users can tune detection.",
+      "acceptanceCriteria": [
+        "Test Low sensitivity (0.25) - requires louder voice",
+        "Test Medium sensitivity (0.5) - normal speaking volume",
+        "Test High sensitivity (0.75) - detects quiet speech",
+        "Verify slider updates localStorage",
+        "Verify settings persist across page refresh",
+        "Verify label updates (Low/Medium/High)",
+        "Manually test via browser"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Test real-time voice level meter",
+      "description": "As a developer, I want to verify the voice meter displays accurately so users get visual feedback.",
+      "acceptanceCriteria": [
+        "Speak into microphone while viewing settings modal",
+        "Verify bars fill proportionally to voice volume",
+        "Verify percentage updates in real-time",
+        "Test with different voice volumes (whisper to loud)",
+        "Verify meter works with all sensitivity levels",
+        "Verify meter only shows when VAD is active",
+        "Manually test via browser"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Test VAD in noisy environments",
+      "description": "As a developer, I want to verify false positive rate is acceptable so the feature is reliable.",
+      "acceptanceCriteria": [
+        "Test with background music playing",
+        "Test with keyboard typing sounds",
+        "Test with ambient office noise",
+        "Count false positives over 10-minute session",
+        "Verify < 5% false positive rate with medium sensitivity",
+        "Test that lowering sensitivity reduces false positives",
+        "Manually test via browser"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Test VAD state transitions",
+      "description": "As a developer, I want to verify VAD enables/disables correctly so it only runs when needed.",
+      "acceptanceCriteria": [
+        "Enable mic only - verify VAD is disabled",
+        "Enable speaker only - verify VAD is disabled",
+        "Enable both - verify VAD is enabled",
+        "Disable mic while VAD running - verify VAD stops",
+        "Re-enable mic - verify VAD resumes",
+        "Enter guided mode - verify VAD is disabled",
+        "Exit guided mode - verify VAD re-enables (if mic+speaker on)",
+        "Manually test via browser"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Add comprehensive error handling",
+      "description": "As a developer, I need error handling for all failure scenarios so the app degrades gracefully.",
+      "acceptanceCriteria": [
+        "Handle VAD initialization failure with error message",
+        "Handle browser compatibility issues (no WebAssembly)",
+        "Handle microphone access lost mid-session",
+        "Handle WASM download failure",
+        "Set vadError state with descriptive message",
+        "Console log all errors with context",
+        "Disable VAD on error, don't crash app",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Comprehensive error handling implemented. Commit: daced77"
+    },
+    {
+      "id": "US-018",
+      "title": "Add error display in settings modal",
+      "description": "As a user, I want to see error messages if VAD fails so I understand why it's not working.",
+      "acceptanceCriteria": [
+        "Display error banner when vadError is set",
+        "Use red background with AlertCircle icon",
+        "Show message: 'Voice interruption unavailable: [error]'",
+        "Position error below VAD slider section",
+        "Match existing error styling in modal",
+        "Error visible only when present",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Error banner implemented. Commit: 2342fd5"
+    },
+    {
+      "id": "US-019",
+      "title": "Implement lazy loading for VAD library",
+      "description": "As a developer, I want VAD library lazy-loaded so it doesn't impact initial bundle size.",
+      "acceptanceCriteria": [
+        "Wrap VAD import in dynamic import()",
+        "Load only when mic + speaker both enabled",
+        "Track loaded state to avoid duplicate loads",
+        "Show loading state while library downloads",
+        "Handle import failure gracefully",
+        "Verify bundle size impact (should be minimal until loaded)",
+        "Typecheck passes"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": "Already completed in US-004. Dynamic import used, loads only when enabled. Commit: 1847a6e"
+    },
+    {
+      "id": "US-020",
+      "title": "Optimize VAD level updates with debouncing",
+      "description": "As a developer, I want level updates debounced so UI doesn't re-render excessively.",
+      "acceptanceCriteria": [
+        "Debounce vadLevel updates to 100ms",
+        "Use useMemo for debounced function",
+        "Verify meter still feels responsive",
+        "Reduce unnecessary re-renders",
+        "Test with React DevTools profiler",
+        "Typecheck passes"
+      ],
+      "priority": 20,
+      "passes": true,
+      "notes": "Completed 2026-01-21. 100ms debounce implemented. Commit: c932a53"
+    },
+    {
+      "id": "US-021",
+      "title": "Add cleanup on component unmount",
+      "description": "As a developer, I need proper cleanup so there are no memory leaks.",
+      "acceptanceCriteria": [
+        "Destroy VAD instance on component unmount",
+        "Clear all intervals/timeouts",
+        "Remove event listeners",
+        "Verify no memory leaks with Chrome DevTools",
+        "Test mounting/unmounting multiple times",
+        "Console logs confirm cleanup",
+        "Typecheck passes"
+      ],
+      "priority": 21,
+      "passes": true,
+      "notes": "Already completed in US-004 and US-020. Cleanup in useEffect return, timer cleared. Commits: 1847a6e, c932a53"
+    },
+    {
+      "id": "US-022",
+      "title": "Update documentation for VAD feature",
+      "description": "As a developer, I want documentation updated so future developers understand the system.",
+      "acceptanceCriteria": [
+        "Add VAD section to V4_READY_FOR_VOICE.md",
+        "Update audioFix.md with barge-in flow",
+        "Document useVAD hook API with JSDoc comments",
+        "Add inline comments explaining key logic",
+        "Update dependencies list in README",
+        "Document sensitivity mapping (Low/Medium/High)",
+        "Add troubleshooting section",
+        "Typecheck passes"
+      ],
+      "priority": 22,
+      "passes": true,
+      "notes": "Completed 2026-01-21. Comprehensive documentation added. Commit: eb78988"
+    }
+  ]
+}

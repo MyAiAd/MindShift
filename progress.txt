@@ -1,0 +1,191 @@
+===========================================
+RALPH SYSTEM - PROGRESS TRACKER
+===========================================
+Project: V4 Treatment Sessions - Voice Activity Detection
+Branch: ralph/voice-activity-detection
+Started: 2026-01-21
+
+===========================================
+CODEBASE PATTERNS
+===========================================
+
+1. State Management with localStorage
+   - Use function form of useState for localStorage initialization
+   - Example: useState(() => localStorage.getItem('key') ?? defaultValue)
+   - Always persist changes back to localStorage in handlers
+
+2. Hook Patterns
+   - Use refs for callbacks to prevent unnecessary re-initialization
+   - Store hook instances in refs when needed in callbacks defined before hook
+   - Use useCallback for methods passed as props or used in dependencies
+
+3. VAD Integration
+   - Enable VAD only when both mic AND speaker are true
+   - Pause VAD during speech recognition to avoid interference
+   - Resume VAD after speech recognition completes
+
+4. Audio Level Calculation
+   - RMS formula: sqrt(sum(sample²) / length)
+   - Scale to 0-100: Math.min(100, Math.round(rms * 500))
+
+5. Conditional UI Rendering
+   - Use logical AND (&&) for single condition
+   - Wrap complex conditional sections in {}
+   - Match existing component styling patterns
+
+6. Error Handling in Hooks
+   - Use try-catch in all async operations
+   - Set error state with descriptive messages
+   - Log errors with context for debugging
+
+===========================================
+LEARNINGS LOG
+===========================================
+
+[2026-01-21] US-001: Install VAD library dependency
+- Successfully installed @ricky0123/vad-web v0.0.30
+- Package includes WASM-based voice activity detection
+- Project uses npm (not pnpm as initially specified in PRD)
+- Typecheck passes without issues after installation
+- Commit: feat: US-001 - Install VAD library dependency
+
+[2026-01-21] US-002: Add VAD state management to TreatmentSession
+- Added vadSensitivity state with localStorage persistence (default: 0.5)
+- Added vadLevel state (0-100) for real-time meter visualization
+- Added isVadActive state to track VAD running status
+- Implemented handleVadSensitivityChange with localStorage save
+- Implemented getVadSensitivityLabel helper (Low ≤0.35, Medium 0.35-0.65, High >0.65)
+- Console logging confirms sensitivity changes
+- Pattern: State initialization with localStorage fallback using function form
+- Commit: feat: US-002 - Add VAD state management to TreatmentSession
+
+[2026-01-21] US-003: Create useVAD hook foundation
+- Created components/voice/useVAD.tsx following existing hook patterns
+- Defined UseVADProps interface with all required callbacks
+- Implemented hook structure with callback refs to prevent unnecessary re-initialization
+- Added vadRef for MicVAD instance, isInitialized and error state
+- Pattern: Use refs for callbacks to keep VAD instance stable across re-renders
+- Commit: feat: US-003 - Create useVAD hook foundation
+
+[2026-01-21] US-004: Implement VAD initialization logic
+- Implemented full VAD lifecycle management in useEffect
+- Dynamic import of @ricky0123/vad-web for code splitting
+- Configured sensitivity thresholds with 0.15 hysteresis
+- Set timing parameters in milliseconds (minSpeechMs: 150, preSpeechPadMs: 50, redemptionMs: 400)
+- Single-threaded WASM configuration for browser compatibility
+- Proper cleanup on unmount and when enabled changes
+- Console logging confirms initialization and destruction
+- Pattern: Use mounted flag to prevent state updates after unmount
+- Commit: feat: US-004 - Implement VAD initialization logic
+
+[2026-01-21] US-005: Implement VAD event handlers
+- Implemented onSpeechStart, onSpeechEnd, onVADMisfire handlers
+- Implemented onFrameProcessed for real-time level monitoring
+- Calculate RMS (Root Mean Square) audio level from Float32Array data
+- Scale RMS to 0-100 range using factor of 500
+- Console logging for all speech detection events
+- Pattern: RMS calculation - sqrt(sum(sample²) / length) for audio level
+- Commit: feat: US-005 - Implement VAD event handlers
+
+[2026-01-21] US-006: Add VAD start/pause/destroy methods
+- Implemented startVAD, pauseVAD, destroyVAD control methods
+- All methods wrapped in useCallback for stable references
+- Comprehensive error handling with try-catch blocks
+- Error messages set in state for UI display
+- Console logging confirms all method calls
+- Pattern: useCallback for methods that will be passed as props
+- Commit: feat: US-006 - Add VAD start/pause/destroy methods
+
+[2026-01-21] US-007: Integrate VAD with useNaturalVoice hook
+- Imported useVAD hook into useNaturalVoice
+- Added vadError state for separate VAD error tracking
+- VAD only enabled when both isMicEnabled AND isSpeakerEnabled are true
+- Implemented handleVadBargeIn callback to stop AI audio and start speech recognition
+- Passed vadSensitivity and onVadLevel from TreatmentSession through hook chain
+- Pattern: Conditional hook enablement based on multiple state flags
+- Commit: feat: US-007 - Integrate VAD with useNaturalVoice hook
+
+[2026-01-21] US-008: Implement barge-in handler logic
+- Enhanced handleVadBargeIn with VAD pause during speech recognition
+- Stop AI audio, clear all state flags and audio queue on barge-in
+- Pause VAD temporarily to prevent interference with speech recognition
+- Resume VAD monitoring after speech recognition ends (in onend callback)
+- Console logging confirms barge-in flow and VAD state changes
+- Pattern: Use refs to access hook instances in callbacks defined before hook initialization
+- Commit: feat: US-008 - Implement barge-in handler logic
+
+[2026-01-21] US-009: Add VAD sensitivity slider to settings modal
+- Added VAD sensitivity section below Playback Speed
+- Includes 🎙️ emoji, percentage display, and label (Low/Medium/High)
+- Range slider (0.1-0.9, step 0.05) with preset buttons
+- Only visible when both mic AND speaker enabled (conditional rendering)
+- Mirrors Playback Speed styling for consistency
+- Pattern: Conditional section rendering based on multiple state flags
+- Commit: feat: US-009 - Add VAD sensitivity slider to settings modal
+- Note: Browser verification pending (acceptance criteria includes dev-browser check)
+
+[2026-01-21] US-010: Add real-time voice level meter
+- Added 10-bar visual meter below sensitivity slider
+- Displays voice level percentage (0-100%)
+- Bars fill proportionally based on vadLevel state
+- Color coding: indigo for filled, gray for unfilled
+- Real-time updates driven by onVadLevel callback
+- Pattern: Array mapping with conditional styling for responsive bar visualization
+- Commit: feat: US-010 - Add real-time voice level meter
+- Note: Browser verification pending
+
+[2026-01-21] US-011: Add help text and visual feedback
+- Added info icon (ℹ️) with instructional help text
+- Text: "Speak while AI talks to test it"
+- Positioned below voice level meter
+- Styled consistently with existing info messages
+- Only visible when VAD is active (inside conditional block)
+- Commit: feat: US-011 - Add help text and visual feedback
+- Note: Browser verification pending
+
+[2026-01-21] US-017: Add comprehensive error handling
+- Added browser compatibility checks (WebAssembly, MediaDevices)
+- Descriptive error messages for different failure scenarios
+- Handles microphone access loss, WASM download failure, permission denied
+- Error state set without crashing app (graceful degradation)
+- Full error context logged to console for debugging
+- Pattern: Error message mapping based on error content analysis
+- Commit: feat: US-017 - Add comprehensive error handling
+
+[2026-01-21] US-018: Add error display in settings modal
+- Added error banner below VAD controls in settings modal
+- Red background with warning icon (⚠️) for visual prominence
+- Displays descriptive error message from vadError state
+- Conditional rendering - only shows when error present
+- Matches existing error styling patterns in modal
+- Commit: feat: US-018 - Add error display in settings modal
+- Note: Browser verification pending
+
+[2026-01-21] US-019: Implement lazy loading for VAD library
+- Already completed in US-004 via dynamic import
+- VAD library only loads when enabled (mic + speaker both true)
+- Import failure handled gracefully in error handling
+- Pattern: Dynamic import for code splitting
+
+[2026-01-21] US-020: Optimize VAD level updates with debouncing
+- Implemented 100ms debounce for vadLevel updates
+- Used useMemo for stable debounced function reference
+- Timer ref for cleanup on unmount
+- Reduces re-renders while maintaining responsive UI
+- Pattern: useMemo + setTimeout for debouncing with cleanup
+- Commit: feat: US-020 - Optimize VAD level updates with debouncing
+
+[2026-01-21] US-021: Add cleanup on component unmount
+- Already completed in US-004 and US-020
+- VAD instance destroyed in useEffect cleanup
+- Debounce timer cleared on unmount
+- Console logs confirm cleanup
+
+[2026-01-21] US-022: Update documentation for VAD feature
+- Added comprehensive VAD section to V4_READY_FOR_VOICE.md
+- Updated audioFix.md with barge-in flow diagram
+- Added JSDoc comments to useVAD hook with usage examples
+- Documented sensitivity settings, error handling, troubleshooting
+- Included API reference and implementation commit history
+- Commit: feat: US-022 - Update documentation for VAD feature
+
