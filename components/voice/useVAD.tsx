@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 
 /**
  * Props for the useVAD hook
@@ -40,6 +40,27 @@ export const useVAD = ({
   
   // Ref to hold the VAD instance (MicVAD from @ricky0123/vad-web)
   const vadRef = useRef<any>(null);
+  
+  // Debounce timer ref for VAD level updates
+  const vadLevelTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastVadLevelRef = useRef<number>(0);
+  
+  // Debounced VAD level update function (100ms debounce)
+  const debouncedVadLevelUpdate = useMemo(() => {
+    return (level: number) => {
+      lastVadLevelRef.current = level;
+      
+      // Clear existing timer
+      if (vadLevelTimerRef.current) {
+        clearTimeout(vadLevelTimerRef.current);
+      }
+      
+      // Set new timer
+      vadLevelTimerRef.current = setTimeout(() => {
+        onVadLevelRef.current?.(lastVadLevelRef.current);
+      }, 100); // 100ms debounce
+    };
+  }, []);
   
   // Update callback refs when props change (without re-initializing VAD)
   useEffect(() => {
@@ -145,8 +166,8 @@ export const useVAD = ({
             const rms = Math.sqrt(sum / frame.length);
             const level = Math.min(100, Math.round(rms * 500)); // Scale to 0-100
             
-            // Call callback with calculated level
-            onVadLevelRef.current?.(level);
+            // Use debounced update to reduce re-renders
+            debouncedVadLevelUpdate(level);
           },
         });
         
@@ -196,13 +217,20 @@ export const useVAD = ({
     // Cleanup on unmount or when enabled changes
     return () => {
       mounted = false;
+      
+      // Clear debounce timer
+      if (vadLevelTimerRef.current) {
+        clearTimeout(vadLevelTimerRef.current);
+        vadLevelTimerRef.current = null;
+      }
+      
       if (vadRef.current) {
         console.log('🎙️ VAD: Destroying instance (cleanup)');
         vadRef.current.destroy().catch(console.error);
         vadRef.current = null;
       }
     };
-  }, [enabled, sensitivity]);
+  }, [enabled, sensitivity, debouncedVadLevelUpdate]);
   
   // Control methods for VAD management
   const startVAD = useCallback(async () => {
