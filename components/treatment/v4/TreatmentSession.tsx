@@ -1914,6 +1914,64 @@ export default function TreatmentSession({
               </div>
             </div>
 
+            {/* VAD Interruption Sensitivity - Only visible when both mic AND speaker enabled */}
+            {isMicEnabled && isSpeakerEnabled && (
+              <div className="mt-4 pt-4 border-t border-border dark:border-[#586e75]">
+                <div className="flex items-center space-x-3 mb-3">
+                  <span className="text-2xl">🎙️</span>
+                  <span className="text-sm font-medium text-foreground dark:text-[#fdf6e3]">
+                    Interruption Sensitivity
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
+                  <span>Sensitivity: {(vadSensitivity * 100).toFixed(0)}%</span>
+                  <span className={`font-medium ${
+                    getVadSensitivityLabel(vadSensitivity) === 'Medium' ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
+                  }`}>
+                    {getVadSensitivityLabel(vadSensitivity)}
+                  </span>
+                </div>
+                
+                <input
+                  type="range"
+                  min="0.1"
+                  max="0.9"
+                  step="0.05"
+                  value={vadSensitivity}
+                  onChange={(e) => handleVadSensitivityChange(parseFloat(e.target.value))}
+                  className="w-full h-3 md:h-2 bg-secondary dark:bg-[#586e75] rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                />
+                
+                <div className="flex justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
+                  <span>Low</span>
+                  <span className="text-green-600 dark:text-green-400">Medium</span>
+                  <span>High</span>
+                </div>
+
+                {/* Quick preset buttons */}
+                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border dark:border-[#586e75]">
+                  {[
+                    { label: 'Low', value: 0.25 },
+                    { label: 'Medium', value: 0.5 },
+                    { label: 'High', value: 0.75 }
+                  ].map((preset) => (
+                    <button
+                      key={preset.value}
+                      onClick={() => handleVadSensitivityChange(preset.value)}
+                      className={`px-2 py-2.5 md:py-1.5 text-xs rounded-lg transition-colors ${
+                        Math.abs(vadSensitivity - preset.value) < 0.01
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Guided Mode Toggle */}
             <div className="mt-4 pt-4 border-t border-border dark:border-[#586e75]">
               <div className="flex items-center justify-between">
