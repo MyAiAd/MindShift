@@ -1992,6 +1992,12 @@ export default function TreatmentSession({
                       );
                     })}
                   </div>
+                  
+                  {/* Help text */}
+                  <div className="mt-3 flex items-start space-x-2 text-xs text-muted-foreground dark:text-[#93a1a1]">
+                    <span>ℹ️</span>
+                    <span>Speak while AI talks to test it</span>
+                  </div>
                 </div>
               </div>
             )}
