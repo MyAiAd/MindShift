@@ -170,6 +170,17 @@ export default function TreatmentSession({
   const [isPTTActive, setIsPTTActive] = useState(false);
   const voiceSettingsRef = useRef<HTMLDivElement>(null);
 
+  // VAD (Voice Activity Detection) State
+  const [vadSensitivity, setVadSensitivity] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('v4_vad_sensitivity');
+      return saved ? parseFloat(saved) : 0.5;
+    }
+    return 0.5;
+  });
+  const [vadLevel, setVadLevel] = useState(0); // 0-100 for real-time meter display
+  const [isVadActive, setIsVadActive] = useState(false); // Tracks if VAD is running
+
   // Available voices - Kokoro TTS voices
   const AVAILABLE_VOICES = [
     { id: 'heart', name: 'Heart', kokoroId: 'af_heart', description: 'Warm, professional female voice' },
@@ -289,6 +300,22 @@ export default function TreatmentSession({
     if (speed <= 1.1) return 'Normal';
     if (speed <= 1.25) return 'Fast';
     return 'Faster';
+  };
+
+  // Handle VAD sensitivity change
+  const handleVadSensitivityChange = (newSensitivity: number) => {
+    setVadSensitivity(newSensitivity);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('v4_vad_sensitivity', String(newSensitivity));
+    }
+    console.log(`🎙️ VAD Sensitivity changed to ${newSensitivity} (${getVadSensitivityLabel(newSensitivity)})`);
+  };
+
+  // Get VAD sensitivity label for display
+  const getVadSensitivityLabel = (sensitivity: number) => {
+    if (sensitivity <= 0.35) return 'Low';
+    if (sensitivity <= 0.65) return 'Medium';
+    return 'High';
   };
 
   // Close voice settings when clicking outside
