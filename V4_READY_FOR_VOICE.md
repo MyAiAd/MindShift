@@ -310,3 +310,110 @@ If V4 voice work breaks something:
 
 **Ready to add voice! 🎤** V4 is a clean, optimized foundation waiting for your voice features.
 
+
+---
+
+## 🎙️ Voice Activity Detection (VAD) - IMPLEMENTED ✅
+
+**Date**: January 21, 2026  
+**Status**: Complete - Feature-ready for production testing
+
+### Overview
+Voice Activity Detection enables users to interrupt AI responses while they're speaking, creating a natural conversational flow.
+
+### Architecture
+
+**Components**:
+- `components/voice/useVAD.tsx` - Core VAD hook with @ricky0123/vad-web integration
+- `components/voice/useNaturalVoice.tsx` - Enhanced with VAD barge-in handling
+- `components/treatment/v4/TreatmentSession.tsx` - UI controls and state management
+
+**Key Features**:
+- ✅ Real-time speech detection using WASM-based VAD
+- ✅ User-tunable sensitivity (Low/Medium/High presets)
+- ✅ Real-time voice level meter (0-100%)
+- ✅ Barge-in: Interrupts AI audio when user speaks
+- ✅ Smart pause/resume: VAD pauses during speech recognition
+- ✅ Error handling with descriptive messages
+- ✅ Lazy loading via dynamic import
+- ✅ Debounced level updates (100ms) for performance
+
+### Sensitivity Settings
+
+| Level | Threshold | Use Case |
+|-------|-----------|----------|
+| Low | 0.25 | Noisy environments, fewer false positives |
+| Medium | 0.5 (default) | Normal speaking conditions |
+| High | 0.75 | Quiet environments, sensitive detection |
+
+### Barge-In Flow
+
+1. **User speaks while AI is talking**
+2. VAD detects speech → triggers `onSpeechStart`
+3. AI audio stops immediately
+4. VAD pauses to avoid interference
+5. Speech recognition activates
+6. User transcript processed
+7. VAD resumes monitoring
+
+### Configuration
+
+VAD is enabled automatically when:
+- ✅ Microphone is enabled (`isMicEnabled = true`)
+- ✅ Speaker is enabled (`isSpeakerEnabled = true`)
+
+Sensitivity can be adjusted in the settings modal (gear icon).
+
+### Error Handling
+
+Graceful degradation with descriptive messages:
+- WebAssembly not supported
+- Microphone access denied/lost
+- WASM model download failure
+- Browser compatibility issues
+
+### Performance Optimizations
+
+1. **Lazy Loading**: VAD library only loads when needed (dynamic import)
+2. **Debouncing**: Level updates throttled to 100ms
+3. **RMS Calculation**: Efficient audio level computation
+4. **Single-threaded WASM**: Browser compatibility optimization
+
+### API Reference
+
+#### useVAD Hook
+
+\`\`\`typescript
+const vad = useVAD({
+  enabled: boolean,           // Enable/disable VAD
+  sensitivity: number,        // 0.1-0.9 (higher = more sensitive)
+  onSpeechStart?: () => void, // Called when speech detected
+  onSpeechEnd?: (audio: Float32Array) => void,
+  onVadLevel?: (level: number) => void, // 0-100 level updates
+});
+
+// Returns:
+// - isInitialized: boolean
+// - error: string | null
+// - startVAD: () => Promise<void>
+// - pauseVAD: () => Promise<void>
+// - destroyVAD: () => Promise<void>
+\`\`\`
+
+### Troubleshooting
+
+**VAD not working**:
+1. Check console for initialization errors
+2. Verify mic + speaker both enabled
+3. Check browser WebAssembly support
+4. Verify microphone permissions granted
+
+**False positives**:
+- Lower sensitivity setting
+- Check for background noise
+
+**Not sensitive enough**:
+- Increase sensitivity setting
+- Check microphone levels
+- Verify voice level meter shows activity when speaking
+

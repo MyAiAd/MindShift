@@ -940,3 +940,53 @@ After implementation, we should see:
 - Old code preserved with DEPRECATED comments for easy rollback
 
 
+
+---
+
+## Voice Activity Detection (VAD) - Barge-In Flow
+
+**Updated**: January 21, 2026
+
+### Barge-In Integration
+
+VAD enables users to interrupt AI audio mid-sentence. The system coordinates between VAD, audio playback, and speech recognition to provide seamless interruption.
+
+### Flow Diagram
+
+```
+[AI Speaking] → [User Speaks] → [VAD Detects] → [Stop Audio] → [Pause VAD] → [Speech Recognition] → [Resume VAD]
+```
+
+### Implementation Details
+
+**State Management**:
+- `isAudioPlayingRef` tracks active audio playback
+- `isSpeakingRef` prevents feedback loops
+- `pausedAudioRef` cleared on interruption
+
+**VAD Coordination**:
+1. VAD monitors while `isSpeakerEnabled && isMicEnabled`
+2. On speech detection: pause VAD, stop audio, start recognition
+3. After recognition completes: resume VAD monitoring
+
+**Audio Queue Handling**:
+- All queued audio segments cleared on barge-in
+- Paused audio state reset
+- Audio flags immediately updated
+
+### Preventing Feedback Loops
+
+1. **VAD pauses during recognition**: Prevents detecting user's own speech multiple times
+2. **Audio playing flag**: Speech recognition doesn't auto-start if audio is playing
+3. **State synchronization**: All audio state refs updated atomically
+
+### Console Logging
+
+```
+🎙️ VAD: Speech started
+🎙️ VAD: Paused during speech recognition
+🎤 Natural Voice: Listening started
+🎤 Natural Voice: Listening ended
+🎙️ VAD: Resumed monitoring after speech recognition
+```
+

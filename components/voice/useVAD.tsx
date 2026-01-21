@@ -20,8 +20,26 @@ export interface UseVADProps {
 
 /**
  * Voice Activity Detection hook
- * Monitors microphone input and detects when user is speaking
- * Uses @ricky0123/vad-web for WASM-based detection
+ * 
+ * Monitors microphone input and detects when user is speaking using WASM-based VAD.
+ * Provides real-time audio level updates and speech detection callbacks.
+ * 
+ * @example
+ * ```tsx
+ * const vad = useVAD({
+ *   enabled: isMicEnabled && isSpeakerEnabled,
+ *   sensitivity: 0.5, // 0.1 (least) to 0.9 (most sensitive)
+ *   onSpeechStart: () => console.log('Speech started'),
+ *   onVadLevel: (level) => setVadLevel(level), // 0-100
+ * });
+ * 
+ * if (vad.error) {
+ *   console.error('VAD error:', vad.error);
+ * }
+ * ```
+ * 
+ * @param props - Configuration options for VAD
+ * @returns Object containing VAD state and control methods
  */
 export const useVAD = ({
   enabled,
@@ -233,6 +251,12 @@ export const useVAD = ({
   }, [enabled, sensitivity, debouncedVadLevelUpdate]);
   
   // Control methods for VAD management
+  
+  /**
+   * Start VAD listening
+   * Must be called after VAD is initialized
+   * @throws Error if VAD not initialized
+   */
   const startVAD = useCallback(async () => {
     if (!vadRef.current) {
       console.error('🎙️ VAD: Cannot start - not initialized');
@@ -248,6 +272,11 @@ export const useVAD = ({
     }
   }, []);
   
+  /**
+   * Pause VAD listening
+   * Temporarily stops monitoring without destroying the instance
+   * Used during speech recognition to avoid interference
+   */
   const pauseVAD = useCallback(async () => {
     if (!vadRef.current) {
       console.error('🎙️ VAD: Cannot pause - not initialized');
@@ -263,6 +292,11 @@ export const useVAD = ({
     }
   }, []);
   
+  /**
+   * Destroy VAD instance
+   * Cleans up all resources and resets state
+   * Called automatically on unmount
+   */
   const destroyVAD = useCallback(async () => {
     if (!vadRef.current) {
       console.error('🎙️ VAD: Cannot destroy - not initialized');
