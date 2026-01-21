@@ -48,6 +48,106 @@ export const useVAD = ({
     onVadLevelRef.current = onVadLevel;
   }, [onSpeechStart, onSpeechEnd, onVadLevel]);
   
+  // Initialize and manage VAD lifecycle based on enabled state
+  useEffect(() => {
+    let mounted = true;
+    
+    const initVAD = async () => {
+      if (!enabled) {
+        // Clean up if disabled
+        if (vadRef.current) {
+          console.log('🎙️ VAD: Destroying instance (disabled)');
+          try {
+            await vadRef.current.destroy();
+          } catch (e) {
+            console.error('VAD destroy error:', e);
+          }
+          vadRef.current = null;
+          setIsInitialized(false);
+        }
+        return;
+      }
+      
+      // Initialize VAD when enabled
+      try {
+        console.log('🎙️ VAD: Initializing with sensitivity:', sensitivity);
+        
+        // Dynamic import to avoid loading VAD until needed
+        const { MicVAD } = await import('@ricky0123/vad-web');
+        
+        if (!mounted) return;
+        
+        // Configure VAD with sensitivity-based thresholds
+        const positiveSpeechThreshold = sensitivity;
+        const negativeSpeechThreshold = Math.max(0.1, sensitivity - 0.15); // 0.15 hysteresis
+        
+        const vad = await MicVAD.new({
+          // Sensitivity thresholds
+          positiveSpeechThreshold,
+          negativeSpeechThreshold,
+          
+          // Timing parameters for responsiveness (in milliseconds)
+          minSpeechMs: 150,          // Min duration to trigger speech (3 frames * 50ms)
+          preSpeechPadMs: 50,        // Duration to include before speech (1 frame)
+          redemptionMs: 400,         // Duration to wait before ending speech (8 frames * 50ms)
+          
+          // WASM configuration (single-threaded for compatibility)
+          ortConfig: (ort: any) => {
+            ort.env.wasm.numThreads = 1;
+          },
+          
+          // Event handlers will be added in next story
+          onSpeechStart: () => {
+            console.log('🎙️ VAD: Speech started');
+            onSpeechStartRef.current?.();
+          },
+          
+          onSpeechEnd: (audio: Float32Array) => {
+            console.log('🎙️ VAD: Speech ended');
+            onSpeechEndRef.current?.(audio);
+          },
+          
+          onVADMisfire: () => {
+            console.log('🎙️ VAD: Misfire detected');
+          },
+          
+          onFrameProcessed: (probs: any) => {
+            // Calculate level from probabilities (will be implemented in US-005)
+          },
+        });
+        
+        if (!mounted) {
+          await vad.destroy();
+          return;
+        }
+        
+        vadRef.current = vad;
+        setIsInitialized(true);
+        setError(null);
+        console.log('🎙️ VAD: Initialized successfully');
+        
+      } catch (err) {
+        console.error('🎙️ VAD: Initialization error:', err);
+        if (mounted) {
+          setError(err instanceof Error ? err.message : 'Failed to initialize VAD');
+          setIsInitialized(false);
+        }
+      }
+    };
+    
+    initVAD();
+    
+    // Cleanup on unmount or when enabled changes
+    return () => {
+      mounted = false;
+      if (vadRef.current) {
+        console.log('🎙️ VAD: Destroying instance (cleanup)');
+        vadRef.current.destroy().catch(console.error);
+        vadRef.current = null;
+      }
+    };
+  }, [enabled, sensitivity]);
+  
   return {
     isInitialized,
     error,
