@@ -72,6 +72,21 @@ export const useVAD = ({
       try {
         console.log('🎙️ VAD: Initializing with sensitivity:', sensitivity);
         
+        // Check for browser compatibility
+        if (typeof window === 'undefined') {
+          throw new Error('VAD requires browser environment');
+        }
+        
+        // Check for WebAssembly support
+        if (typeof WebAssembly === 'undefined') {
+          throw new Error('Browser does not support WebAssembly');
+        }
+        
+        // Check for microphone API
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Browser does not support microphone access');
+        }
+        
         // Dynamic import to avoid loading VAD until needed
         const { MicVAD } = await import('@ricky0123/vad-web');
         
@@ -148,8 +163,30 @@ export const useVAD = ({
       } catch (err) {
         console.error('🎙️ VAD: Initialization error:', err);
         if (mounted) {
-          setError(err instanceof Error ? err.message : 'Failed to initialize VAD');
+          // Provide descriptive error messages based on error type
+          let errorMessage = 'Failed to initialize voice detection';
+          
+          if (err instanceof Error) {
+            const errMsg = err.message.toLowerCase();
+            
+            if (errMsg.includes('webassembly')) {
+              errorMessage = 'Browser does not support required technology (WebAssembly)';
+            } else if (errMsg.includes('microphone') || errMsg.includes('mediadevices')) {
+              errorMessage = 'Microphone access lost or unavailable';
+            } else if (errMsg.includes('network') || errMsg.includes('fetch') || errMsg.includes('load')) {
+              errorMessage = 'Failed to download voice detection model';
+            } else if (errMsg.includes('permission')) {
+              errorMessage = 'Microphone permission denied';
+            } else {
+              errorMessage = `Voice detection error: ${err.message}`;
+            }
+          }
+          
+          setError(errorMessage);
           setIsInitialized(false);
+          
+          // Log full error for debugging but don't crash the app
+          console.error('🎙️ VAD: Detailed error:', err);
         }
       }
     };
