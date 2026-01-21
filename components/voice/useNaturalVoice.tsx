@@ -60,10 +60,17 @@ export const useNaturalVoice = ({
     const prevMicEnabledRef = useRef(isMicEnabled); // Track previous mic state
     const prevSpeakerEnabledRef = useRef(isSpeakerEnabled); // Track previous speaker state
     const speakStartTimeRef = useRef<number>(0); // NEW: Track when speak() was called
+    const vadRef = useRef<any>(null); // Track VAD instance for resuming after speech
     
     // VAD barge-in handler - called when user speaks while AI is talking
     const handleVadBargeIn = useCallback(() => {
         console.log('🎙️ VAD: Barge-in detected - user interrupted AI');
+        
+        // Pause VAD temporarily to avoid interference with speech recognition
+        if (vadRef.current?.isInitialized) {
+            vadRef.current.pauseVAD();
+            console.log('🎙️ VAD: Paused during speech recognition');
+        }
         
         // Stop AI audio immediately
         if (audioRef.current) {
@@ -77,7 +84,7 @@ export const useNaturalVoice = ({
         isSpeakingRef.current = false;
         isAudioPlayingRef.current = false;
         
-        // Clear any paused state
+        // Clear any paused state (clear audio queue)
         if (pausedAudioRef.current) {
             pausedAudioRef.current = null;
             setIsPaused(false);
@@ -111,6 +118,11 @@ export const useNaturalVoice = ({
         onVadLevel: onVadLevel,
     });
     
+    // Store VAD in ref for access in speech recognition callbacks
+    useEffect(() => {
+        vadRef.current = vad;
+    }, [vad]);
+    
     // Update vadError state when VAD error changes
     useEffect(() => {
         setVadError(vad.error);
@@ -143,6 +155,13 @@ export const useNaturalVoice = ({
                 recognitionRef.current.onend = () => {
                     console.log('🎤 Natural Voice: Listening ended');
                     setIsListening(false);
+                    
+                    // Resume VAD monitoring after user finishes speaking
+                    if (vadRef.current?.isInitialized && vadEnabled) {
+                        vadRef.current.startVAD();
+                        console.log('🎙️ VAD: Resumed monitoring after speech recognition');
+                    }
+                    
                     // Auto-restart listening if mic enabled and not speaking (but NOT in guided mode)
                     if (prevMicEnabledRef.current && !isSpeakingRef.current && isMountedRef.current && !guidedMode) {
                         // Small delay to prevent CPU hogging if it fails repeatedly
