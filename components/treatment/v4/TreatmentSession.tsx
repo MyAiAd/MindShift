@@ -1998,6 +1998,19 @@ export default function TreatmentSession({
                     <span>ℹ️</span>
                     <span>Speak while AI talks to test it</span>
                   </div>
+                  
+                  {/* VAD Error Display */}
+                  {naturalVoice.vadError && (
+                    <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                      <div className="flex items-start space-x-2 text-xs text-red-600 dark:text-red-400">
+                        <span className="text-base">⚠️</span>
+                        <div>
+                          <div className="font-medium">Voice interruption unavailable</div>
+                          <div className="mt-1">{naturalVoice.vadError}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
