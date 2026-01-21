@@ -96,23 +96,42 @@ export const useVAD = ({
             ort.env.wasm.numThreads = 1;
           },
           
-          // Event handlers will be added in next story
+          // Event handlers
           onSpeechStart: () => {
             console.log('🎙️ VAD: Speech started');
             onSpeechStartRef.current?.();
           },
           
           onSpeechEnd: (audio: Float32Array) => {
-            console.log('🎙️ VAD: Speech ended');
+            console.log('🎙️ VAD: Speech ended, audio samples:', audio.length);
+            
+            // Calculate RMS (Root Mean Square) audio level from audio data
+            let sum = 0;
+            for (let i = 0; i < audio.length; i++) {
+              sum += audio[i] * audio[i];
+            }
+            const rms = Math.sqrt(sum / audio.length);
+            const level = Math.min(100, Math.round(rms * 500)); // Scale to 0-100
+            console.log('🎙️ VAD: Audio level:', level);
+            
             onSpeechEndRef.current?.(audio);
           },
           
           onVADMisfire: () => {
-            console.log('🎙️ VAD: Misfire detected');
+            console.log('🎙️ VAD: Misfire detected (speech segment too short)');
           },
           
-          onFrameProcessed: (probs: any) => {
-            // Calculate level from probabilities (will be implemented in US-005)
+          onFrameProcessed: (probs: any, frame: Float32Array) => {
+            // Calculate RMS level from frame for real-time meter
+            let sum = 0;
+            for (let i = 0; i < frame.length; i++) {
+              sum += frame[i] * frame[i];
+            }
+            const rms = Math.sqrt(sum / frame.length);
+            const level = Math.min(100, Math.round(rms * 500)); // Scale to 0-100
+            
+            // Call callback with calculated level
+            onVadLevelRef.current?.(level);
           },
         });
         
