@@ -481,6 +481,8 @@ export default function TreatmentSession({
     onAudioEnded: handleAudioEnded,
     playbackRate: playbackSpeed,
     onRenderText: handleRenderText, // NEW: Callback for text rendering timing
+    vadSensitivity: vadSensitivity, // VAD sensitivity setting
+    onVadLevel: (level) => setVadLevel(level), // Update VAD level for meter
   });
 
   // V4: Keep focus on input for voice input to work properly

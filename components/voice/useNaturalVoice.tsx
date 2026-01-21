@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { globalAudioCache } from '@/services/voice/audioCache';
 import { V4_STATIC_AUDIO_TEXTS } from '@/lib/v4/static-audio-texts';
+import { useVAD } from './useVAD';
 
 // Get all static texts for prefix matching
 const STATIC_TEXTS = Object.values(V4_STATIC_AUDIO_TEXTS);
@@ -19,6 +20,8 @@ interface UseNaturalVoiceProps {
     playbackRate?: number; // 0.5 to 2.0, default 1.0
     onRenderText?: (timing: { audioStartTime: number; textRenderTime: number }) => void; // NEW: Callback when text should render
     guidedMode?: boolean; // NEW: If true, disables auto-restart of listening (for PTT mode)
+    vadSensitivity?: number; // VAD sensitivity (0.1-0.9)
+    onVadLevel?: (level: number) => void; // VAD level callback
 }
 
 export const useNaturalVoice = ({
@@ -33,6 +36,8 @@ export const useNaturalVoice = ({
     playbackRate = 1.0,
     onRenderText, // NEW: Callback for text rendering timing
     guidedMode = false, // NEW: Guided mode flag
+    vadSensitivity = 0.5, // VAD sensitivity
+    onVadLevel, // VAD level callback
 }: UseNaturalVoiceProps) => {
     // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
@@ -41,6 +46,7 @@ export const useNaturalVoice = ({
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [vadError, setVadError] = useState<string | null>(null); // VAD-specific error
 
     const recognitionRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -54,6 +60,61 @@ export const useNaturalVoice = ({
     const prevMicEnabledRef = useRef(isMicEnabled); // Track previous mic state
     const prevSpeakerEnabledRef = useRef(isSpeakerEnabled); // Track previous speaker state
     const speakStartTimeRef = useRef<number>(0); // NEW: Track when speak() was called
+    
+    // VAD barge-in handler - called when user speaks while AI is talking
+    const handleVadBargeIn = useCallback(() => {
+        console.log('🎙️ VAD: Barge-in detected - user interrupted AI');
+        
+        // Stop AI audio immediately
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            audioRef.current = null;
+        }
+        
+        // Clear audio state flags
+        setIsSpeaking(false);
+        isSpeakingRef.current = false;
+        isAudioPlayingRef.current = false;
+        
+        // Clear any paused state
+        if (pausedAudioRef.current) {
+            pausedAudioRef.current = null;
+            setIsPaused(false);
+        }
+        
+        // Stop current listening session to prevent echo
+        if (recognitionRef.current) {
+            try {
+                recognitionRef.current.stop();
+            } catch (e) {
+                console.log('🎙️ VAD: Recognition already stopped');
+            }
+        }
+        
+        console.log('🎙️ VAD: Starting full speech recognition after barge-in');
+        // Start full speech recognition after barge-in
+        // Small delay to ensure clean state
+        setTimeout(() => {
+            if (isMountedRef.current && prevMicEnabledRef.current) {
+                startListening();
+            }
+        }, 100);
+    }, []);
+    
+    // Initialize VAD - only when both mic AND speaker are enabled
+    const vadEnabled = isMicEnabled && isSpeakerEnabled;
+    const vad = useVAD({
+        enabled: vadEnabled,
+        sensitivity: vadSensitivity,
+        onSpeechStart: handleVadBargeIn,
+        onVadLevel: onVadLevel,
+    });
+    
+    // Update vadError state when VAD error changes
+    useEffect(() => {
+        setVadError(vad.error);
+    }, [vad.error]);
     
     // Update refs when callbacks change (without triggering effects)
     useEffect(() => {
@@ -564,6 +625,7 @@ export const useNaturalVoice = ({
         speak,
         prefetch,
         error,
+        vadError, // VAD-specific error
         startListening,
         stopListening,
         stopSpeaking,
