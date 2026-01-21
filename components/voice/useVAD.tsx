@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 /**
  * Props for the useVAD hook
@@ -167,8 +167,59 @@ export const useVAD = ({
     };
   }, [enabled, sensitivity]);
   
+  // Control methods for VAD management
+  const startVAD = useCallback(async () => {
+    if (!vadRef.current) {
+      console.error('🎙️ VAD: Cannot start - not initialized');
+      return;
+    }
+    
+    try {
+      await vadRef.current.start();
+      console.log('🎙️ VAD: Started listening');
+    } catch (err) {
+      console.error('🎙️ VAD: Start error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start VAD');
+    }
+  }, []);
+  
+  const pauseVAD = useCallback(async () => {
+    if (!vadRef.current) {
+      console.error('🎙️ VAD: Cannot pause - not initialized');
+      return;
+    }
+    
+    try {
+      await vadRef.current.pause();
+      console.log('🎙️ VAD: Paused listening');
+    } catch (err) {
+      console.error('🎙️ VAD: Pause error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to pause VAD');
+    }
+  }, []);
+  
+  const destroyVAD = useCallback(async () => {
+    if (!vadRef.current) {
+      console.error('🎙️ VAD: Cannot destroy - not initialized');
+      return;
+    }
+    
+    try {
+      await vadRef.current.destroy();
+      vadRef.current = null;
+      setIsInitialized(false);
+      console.log('🎙️ VAD: Destroyed successfully');
+    } catch (err) {
+      console.error('🎙️ VAD: Destroy error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to destroy VAD');
+    }
+  }, []);
+  
   return {
     isInitialized,
     error,
+    startVAD,
+    pauseVAD,
+    destroyVAD,
   };
 };
