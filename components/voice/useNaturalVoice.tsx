@@ -68,7 +68,7 @@ export const useNaturalVoice = ({
     
     // Test mode handler - called when user speaks during test mode
     const handleTestModeInterruption = useCallback(() => {
-        console.log('🧪 VAD: Test mode interruption detected');
+        console.log('🧪 VAD: Test mode interruption detected (TEST MODE ACTIVE)');
         
         // Stop AI audio for visual feedback
         if (audioRef.current) {
@@ -83,28 +83,19 @@ export const useNaturalVoice = ({
         
         // Notify parent component of test interruption
         onTestInterruption?.();
+        
+        console.log('🧪 VAD: Test mode - NO speech recognition started (safe)');
     }, [onTestInterruption]);
     
     // VAD barge-in handler - called when user speaks while AI is talking
     const handleVadBargeIn = useCallback(() => {
         console.log('🎙️ VAD: Barge-in detected - user interrupted AI');
         
-        // If in test mode, don't trigger speech recognition
+        // CRITICAL SAFETY CHECK: If in test mode, don't trigger real barge-in
         if (testMode) {
-            console.log('🎙️ VAD: Test mode active - skipping speech recognition');
-            
-            // Still stop the audio for UI feedback
-            if (audioRef.current) {
-                audioRef.current.pause();
-                audioRef.current.currentTime = 0;
-                audioRef.current = null;
-            }
-            
-            setIsSpeaking(false);
-            isSpeakingRef.current = false;
-            isAudioPlayingRef.current = false;
-            
-            return; // Exit early without starting speech recognition
+            console.log('🧪 VAD: Test mode active - redirecting to test handler');
+            handleTestModeInterruption();
+            return;
         }
         
         // Pause VAD temporarily to avoid interference with speech recognition
@@ -148,14 +139,20 @@ export const useNaturalVoice = ({
                 startListening();
             }
         }, 100);
-    }, [testMode]);
+    }, [testMode, handleTestModeInterruption]);
     
     // Initialize VAD - only when both mic AND speaker are enabled
     const vadEnabled = isMicEnabled && isSpeakerEnabled;
+    
+    // Choose the correct handler based on test mode
+    const vadSpeechHandler = testMode ? handleTestModeInterruption : handleVadBargeIn;
+    
+    console.log(`🎙️ VAD: Using ${testMode ? 'TEST MODE' : 'REAL MODE'} handler`);
+    
     const vad = useVAD({
         enabled: vadEnabled,
         sensitivity: vadSensitivity,
-        onSpeechStart: testMode ? handleTestModeInterruption : handleVadBargeIn, // Use different handler for test mode
+        onSpeechStart: vadSpeechHandler,
         onVadLevel: onVadLevel,
     });
     
