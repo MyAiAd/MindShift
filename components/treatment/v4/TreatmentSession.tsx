@@ -181,6 +181,14 @@ export default function TreatmentSession({
   const [vadLevel, setVadLevel] = useState(0); // 0-100 for real-time meter display
   const [isVadActive, setIsVadActive] = useState(false); // Tracks if VAD is running
 
+  // Test Audio State - for settings demo
+  const [isTestPlaying, setIsTestPlaying] = useState(false);
+  const [testInterrupted, setTestInterrupted] = useState(false);
+  const testAudioTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Test audio sample text
+  const TEST_AUDIO_SAMPLE = "This is a test of your voice settings. Try interrupting me by speaking now!";
+
   // Available voices - Kokoro TTS voices
   const AVAILABLE_VOICES = [
     { id: 'heart', name: 'Heart', kokoroId: 'af_heart', description: 'Warm, professional female voice' },
@@ -538,6 +546,68 @@ export default function TreatmentSession({
       console.log('⚠️ Cannot pause/resume - no audio active');
     }
   }, [naturalVoice]);
+
+  // Test Audio Controls (for settings modal demo)
+  const startTestAudio = useCallback(() => {
+    if (!isSpeakerEnabled) return;
+    
+    console.log('🧪 Starting test audio');
+    setIsTestPlaying(true);
+    setTestInterrupted(false);
+    
+    // Play test sample
+    naturalVoice.speak(TEST_AUDIO_SAMPLE);
+    
+    // Auto-restart after completion (loop)
+    testAudioTimeoutRef.current = setTimeout(() => {
+      if (isTestPlaying) {
+        startTestAudio(); // Loop
+      }
+    }, 8000); // ~8 seconds for the test phrase
+  }, [isSpeakerEnabled, isTestPlaying, naturalVoice, TEST_AUDIO_SAMPLE]);
+
+  const stopTestAudio = useCallback(() => {
+    console.log('🧪 Stopping test audio');
+    setIsTestPlaying(false);
+    setTestInterrupted(false);
+    
+    // Clear timeout
+    if (testAudioTimeoutRef.current) {
+      clearTimeout(testAudioTimeoutRef.current);
+      testAudioTimeoutRef.current = null;
+    }
+    
+    // Stop any playing audio
+    naturalVoice.stopSpeaking();
+  }, [naturalVoice]);
+
+  // Handle test audio interruption via VAD
+  const handleTestInterruption = useCallback(() => {
+    if (isTestPlaying) {
+      console.log('🧪 Test audio interrupted by VAD!');
+      setTestInterrupted(true);
+      
+      // Show feedback briefly then reset
+      setTimeout(() => {
+        setTestInterrupted(false);
+      }, 2000);
+    }
+  }, [isTestPlaying]);
+
+  // Cleanup test audio on unmount or when settings close
+  useEffect(() => {
+    if (!showVoiceSettings && isTestPlaying) {
+      stopTestAudio();
+    }
+  }, [showVoiceSettings, isTestPlaying, stopTestAudio]);
+
+  useEffect(() => {
+    return () => {
+      if (testAudioTimeoutRef.current) {
+        clearTimeout(testAudioTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // PTT (Push-to-Talk) handlers for Guided Mode
   const handlePTTStart = useCallback(() => {
@@ -1998,20 +2068,128 @@ export default function TreatmentSession({
                     <span>ℹ️</span>
                     <span>Speak while AI talks to test it</span>
                   </div>
-                  
-                  {/* VAD Error Display */}
-                  {naturalVoice.vadError && (
-                    <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                      <div className="flex items-start space-x-2 text-xs text-red-600 dark:text-red-400">
-                        <span className="text-base">⚠️</span>
-                        <div>
-                          <div className="font-medium">Voice interruption unavailable</div>
-                          <div className="mt-1">{naturalVoice.vadError}</div>
+                </div>
+
+                {/* Test Your Settings - Interactive Demo */}
+                <div className="mt-4 pt-4 border-t border-border dark:border-[#586e75]">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xl">🧪</span>
+                      <span className="text-sm font-medium text-foreground dark:text-[#fdf6e3]">
+                        Test Your Settings
+                      </span>
+                    </div>
+                    
+                    {/* Play/Stop Button */}
+                    <button
+                      onClick={isTestPlaying ? stopTestAudio : startTestAudio}
+                      disabled={!isSpeakerEnabled}
+                      className={`px-3 py-2 text-xs rounded-lg font-medium transition-colors ${
+                        isTestPlaying
+                          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 hover:bg-red-200'
+                          : isSpeakerEnabled
+                          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                    >
+                      {isTestPlaying ? (
+                        <span className="flex items-center space-x-1">
+                          <span>⏹</span>
+                          <span>Stop</span>
+                        </span>
+                      ) : (
+                        <span className="flex items-center space-x-1">
+                          <span>▶</span>
+                          <span>Play Sample</span>
+                        </span>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Status Display */}
+                  {isTestPlaying && (
+                    <div className={`mb-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                      testInterrupted
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 animate-pulse'
+                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                    }`}>
+                      {testInterrupted ? (
+                        <div className="flex items-center space-x-2">
+                          <span>✓</span>
+                          <span>Interruption detected!</span>
                         </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <span className="animate-pulse">🔊</span>
+                          <span>Playing... Try speaking to interrupt!</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* VAD Level Meter - Enhanced for Testing */}
+                  {isTestPlaying && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-xs text-muted-foreground dark:text-[#93a1a1]">
+                        <span>Your Voice Level:</span>
+                        <span className="font-medium">{vadLevel}%</span>
+                      </div>
+                      
+                      <div className="flex space-x-1">
+                        {[...Array(10)].map((_, index) => {
+                          const barThreshold = (index + 1) * 10;
+                          const isFilled = vadLevel >= barThreshold;
+                          const isHighLevel = barThreshold > 70;
+                          return (
+                            <div
+                              key={index}
+                              className={`flex-1 h-8 rounded-sm transition-all duration-150 ${
+                                isFilled
+                                  ? isHighLevel
+                                    ? 'bg-green-500 dark:bg-green-400 shadow-lg'
+                                    : 'bg-indigo-600 dark:bg-indigo-500'
+                                  : 'bg-gray-300 dark:bg-[#586e75]'
+                              }`}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   )}
+
+                  {/* Help Text */}
+                  <div className="mt-3 text-xs text-muted-foreground dark:text-[#93a1a1] space-y-1">
+                    {!isSpeakerEnabled ? (
+                      <div className="flex items-start space-x-2">
+                        <span>⚠️</span>
+                        <span>Enable speaker to test</span>
+                      </div>
+                    ) : !isTestPlaying ? (
+                      <div className="flex items-start space-x-2">
+                        <span>💡</span>
+                        <span>Click Play to test your speed & sensitivity settings in a safe environment</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-start space-x-2">
+                        <span>🎙️</span>
+                        <span>Speak now to test interruption! Higher sensitivity = easier to interrupt</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
+                
+                {/* VAD Error Display */}
+                {naturalVoice.vadError && (
+                  <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                    <div className="flex items-start space-x-2 text-xs text-red-600 dark:text-red-400">
+                      <span className="text-base">⚠️</span>
+                      <div>
+                        <div className="font-medium">Voice interruption unavailable</div>
+                        <div className="mt-1">{naturalVoice.vadError}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
