@@ -572,17 +572,24 @@ export default function TreatmentSession({
     isTestPlayingRef.current = true;
     setTestInterrupted(false);
     
-    // Play test sample
-    naturalVoice.speak(TEST_AUDIO_SAMPLE);
+    // Function to play and auto-loop
+    const playLoop = () => {
+      if (!isTestPlayingRef.current) return;
+      
+      console.log('🧪 Playing test audio sample');
+      naturalVoice.speak(TEST_AUDIO_SAMPLE);
+      
+      // Schedule next loop
+      // Using setInterval would be cleaner but timeout works for variable durations
+      testAudioTimeoutRef.current = setTimeout(() => {
+        if (isTestPlayingRef.current) {
+          console.log('🧪 Looping test audio');
+          playLoop(); // Recursive loop
+        }
+      }, 25000); // ~25 seconds for long phrase at normal speed (adjust based on playbackSpeed)
+    };
     
-    // Auto-loop: Wait for audio to finish, then restart if still in test mode
-    // The actual duration depends on speech rate, so we use a generous timeout
-    testAudioTimeoutRef.current = setTimeout(() => {
-      if (isTestPlayingRef.current) {
-        console.log('🧪 Looping test audio');
-        startTestAudio(); // Loop
-      }
-    }, 20000); // ~20 seconds - generous timeout for the longer phrase
+    playLoop(); // Start first iteration
   }, [isSpeakerEnabled, naturalVoice, TEST_AUDIO_SAMPLE]);
 
   const stopTestAudio = useCallback(() => {
@@ -601,12 +608,32 @@ export default function TreatmentSession({
     naturalVoice.stopSpeaking();
   }, [naturalVoice]);
 
-  // Cleanup test audio on unmount or when settings close
+  // Pause session audio when settings open, auto-start test when settings open
   useEffect(() => {
-    if (!showVoiceSettings && isTestPlaying) {
-      stopTestAudio();
+    if (showVoiceSettings) {
+      // Pause any ongoing session audio
+      if (naturalVoice.isSpeaking) {
+        console.log('⚙️ Settings opened - pausing session audio');
+        naturalVoice.pauseSpeaking();
+      }
+      
+      // Auto-start test audio if speaker enabled
+      if (isSpeakerEnabled && !isTestPlaying) {
+        console.log('⚙️ Settings opened - auto-starting test audio');
+        setTimeout(() => startTestAudio(), 300); // Small delay for smooth UX
+      }
+    } else {
+      // Settings closed - stop test audio and resume session audio if it was paused
+      if (isTestPlaying) {
+        stopTestAudio();
+      }
+      
+      if (naturalVoice.isPaused) {
+        console.log('⚙️ Settings closed - resuming session audio');
+        naturalVoice.resumeSpeaking();
+      }
     }
-  }, [showVoiceSettings, isTestPlaying, stopTestAudio]);
+  }, [showVoiceSettings, isSpeakerEnabled]); // Don't include isTestPlaying to avoid loops
 
   useEffect(() => {
     return () => {
