@@ -144,13 +144,19 @@ export const useVAD = ({
         if (!mounted) return;
         
         // Configure VAD with sensitivity-based thresholds
-        const positiveSpeechThreshold = sensitivity;
-        const negativeSpeechThreshold = Math.max(0.1, sensitivity - 0.15); // 0.15 hysteresis
+        // IMPORTANT: Invert the sensitivity value for intuitive behavior
+        // - High UI sensitivity (0.8) → Low threshold (0.3) = MORE sensitive (detects quieter speech)
+        // - Low UI sensitivity (0.2) → High threshold (0.9) = LESS sensitive (needs louder speech)
+        const invertedSensitivity = 1.0 - sensitivity;
+        const positiveSpeechThreshold = Math.max(0.1, Math.min(0.9, invertedSensitivity));
+        const negativeSpeechThreshold = Math.max(0.05, positiveSpeechThreshold - 0.15); // 0.15 hysteresis
         
         console.log('🎙️ VAD: Configuring thresholds:', {
-          sensitivity,
+          uiSensitivity: sensitivity,
+          invertedSensitivity,
           positiveSpeechThreshold,
-          negativeSpeechThreshold
+          negativeSpeechThreshold,
+          explanation: `UI ${sensitivity} → Threshold ${positiveSpeechThreshold.toFixed(2)} (${sensitivity >= 0.7 ? 'Very Sensitive' : sensitivity >= 0.5 ? 'Sensitive' : 'Less Sensitive'})`
         });
         
         const vad = await MicVAD.new({
