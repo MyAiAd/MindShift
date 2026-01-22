@@ -107,6 +107,18 @@ export const useVAD = ({
         return;
       }
       
+      // Destroy existing VAD instance if sensitivity changed
+      if (vadRef.current && isInitialized) {
+        console.log('🎙️ VAD: Destroying existing instance to apply new sensitivity');
+        try {
+          await vadRef.current.destroy();
+          vadRef.current = null;
+          setIsInitialized(false);
+        } catch (e) {
+          console.error('VAD destroy error during re-init:', e);
+        }
+      }
+      
       // Initialize VAD when enabled
       try {
         console.log('🎙️ VAD: Initializing with sensitivity:', sensitivity);
@@ -134,6 +146,12 @@ export const useVAD = ({
         // Configure VAD with sensitivity-based thresholds
         const positiveSpeechThreshold = sensitivity;
         const negativeSpeechThreshold = Math.max(0.1, sensitivity - 0.15); // 0.15 hysteresis
+        
+        console.log('🎙️ VAD: Configuring thresholds:', {
+          sensitivity,
+          positiveSpeechThreshold,
+          negativeSpeechThreshold
+        });
         
         const vad = await MicVAD.new({
           // Asset paths - where to load VAD models and WASM files from
@@ -180,6 +198,11 @@ export const useVAD = ({
           },
           
           onFrameProcessed: (probs: any, frame: Float32Array) => {
+            // Log speech probability for debugging (throttled)
+            if (Math.random() < 0.01) { // Log ~1% of frames to avoid spam
+              console.log('🎙️ VAD: Speech probability:', probs.isSpeech.toFixed(3), 'Threshold:', positiveSpeechThreshold);
+            }
+            
             // Calculate RMS level from frame for real-time meter
             let sum = 0;
             for (let i = 0; i < frame.length; i++) {
