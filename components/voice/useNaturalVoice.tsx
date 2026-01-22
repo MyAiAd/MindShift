@@ -23,6 +23,7 @@ interface UseNaturalVoiceProps {
     vadSensitivity?: number; // VAD sensitivity (0.1-0.9)
     onVadLevel?: (level: number) => void; // VAD level callback
     testMode?: boolean; // NEW: If true, VAD won't trigger speech recognition (for testing)
+    onTestInterruption?: () => void; // NEW: Callback when VAD detects speech in test mode
 }
 
 export const useNaturalVoice = ({
@@ -40,6 +41,7 @@ export const useNaturalVoice = ({
     vadSensitivity = 0.5, // VAD sensitivity
     onVadLevel, // VAD level callback
     testMode = false, // NEW: Test mode flag to prevent VAD triggering speech recognition
+    onTestInterruption, // NEW: Callback when VAD detects speech in test mode
 }: UseNaturalVoiceProps) => {
     // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
@@ -63,6 +65,25 @@ export const useNaturalVoice = ({
     const prevSpeakerEnabledRef = useRef(isSpeakerEnabled); // Track previous speaker state
     const speakStartTimeRef = useRef<number>(0); // NEW: Track when speak() was called
     const vadRef = useRef<any>(null); // Track VAD instance for resuming after speech
+    
+    // Test mode handler - called when user speaks during test mode
+    const handleTestModeInterruption = useCallback(() => {
+        console.log('🧪 VAD: Test mode interruption detected');
+        
+        // Stop AI audio for visual feedback
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            audioRef.current = null;
+        }
+        
+        setIsSpeaking(false);
+        isSpeakingRef.current = false;
+        isAudioPlayingRef.current = false;
+        
+        // Notify parent component of test interruption
+        onTestInterruption?.();
+    }, [onTestInterruption]);
     
     // VAD barge-in handler - called when user speaks while AI is talking
     const handleVadBargeIn = useCallback(() => {
@@ -134,7 +155,7 @@ export const useNaturalVoice = ({
     const vad = useVAD({
         enabled: vadEnabled,
         sensitivity: vadSensitivity,
-        onSpeechStart: handleVadBargeIn,
+        onSpeechStart: testMode ? handleTestModeInterruption : handleVadBargeIn, // Use different handler for test mode
         onVadLevel: onVadLevel,
     });
     

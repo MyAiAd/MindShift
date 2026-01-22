@@ -472,6 +472,19 @@ export default function TreatmentSession({
     }
   }, [pendingMessage]);
 
+  // Handle test audio interruption via VAD (defined before naturalVoice hook)
+  const handleTestInterruption = useCallback(() => {
+    if (isTestPlaying) {
+      console.log('🧪 Test audio interrupted by VAD!');
+      setTestInterrupted(true);
+      
+      // Show feedback briefly then reset
+      setTimeout(() => {
+        setTestInterrupted(false);
+      }, 2000);
+    }
+  }, [isTestPlaying]);
+
   // Natural Voice Hook - Updated to use separate mic/speaker controls
   const naturalVoice = useNaturalVoice({
     enabled: isNaturalVoiceEnabled, // DEPRECATED: backward compatibility
@@ -492,6 +505,7 @@ export default function TreatmentSession({
     onRenderText: handleRenderText, // NEW: Callback for text rendering timing
     vadSensitivity: vadSensitivity, // VAD sensitivity setting
     onVadLevel: (level) => setVadLevel(level), // Update VAD level for meter
+    onTestInterruption: handleTestInterruption, // NEW: Handle test mode interruptions
   });
 
   // V4: Keep focus on input for voice input to work properly
@@ -581,19 +595,6 @@ export default function TreatmentSession({
     // Stop any playing audio
     naturalVoice.stopSpeaking();
   }, [naturalVoice]);
-
-  // Handle test audio interruption via VAD
-  const handleTestInterruption = useCallback(() => {
-    if (isTestPlaying) {
-      console.log('🧪 Test audio interrupted by VAD!');
-      setTestInterrupted(true);
-      
-      // Show feedback briefly then reset
-      setTimeout(() => {
-        setTestInterrupted(false);
-      }, 2000);
-    }
-  }, [isTestPlaying]);
 
   // Cleanup test audio on unmount or when settings close
   useEffect(() => {
