@@ -478,6 +478,7 @@ export default function TreatmentSession({
     micEnabled: isMicEnabled, // NEW: Controls microphone input
     speakerEnabled: isSpeakerEnabled, // NEW: Controls audio output
     guidedMode: isGuidedMode, // NEW: Guided mode disables auto-restart for PTT
+    testMode: isTestPlaying, // NEW: Test mode prevents VAD from triggering speech recognition
     onTranscript: (transcript) => {
       console.log('🗣️ Natural Voice Transcript:', transcript);
       if (!isLoading) {

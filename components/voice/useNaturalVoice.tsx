@@ -22,6 +22,7 @@ interface UseNaturalVoiceProps {
     guidedMode?: boolean; // NEW: If true, disables auto-restart of listening (for PTT mode)
     vadSensitivity?: number; // VAD sensitivity (0.1-0.9)
     onVadLevel?: (level: number) => void; // VAD level callback
+    testMode?: boolean; // NEW: If true, VAD won't trigger speech recognition (for testing)
 }
 
 export const useNaturalVoice = ({
@@ -38,6 +39,7 @@ export const useNaturalVoice = ({
     guidedMode = false, // NEW: Guided mode flag
     vadSensitivity = 0.5, // VAD sensitivity
     onVadLevel, // VAD level callback
+    testMode = false, // NEW: Test mode flag to prevent VAD triggering speech recognition
 }: UseNaturalVoiceProps) => {
     // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
@@ -65,6 +67,24 @@ export const useNaturalVoice = ({
     // VAD barge-in handler - called when user speaks while AI is talking
     const handleVadBargeIn = useCallback(() => {
         console.log('🎙️ VAD: Barge-in detected - user interrupted AI');
+        
+        // If in test mode, don't trigger speech recognition
+        if (testMode) {
+            console.log('🎙️ VAD: Test mode active - skipping speech recognition');
+            
+            // Still stop the audio for UI feedback
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+                audioRef.current = null;
+            }
+            
+            setIsSpeaking(false);
+            isSpeakingRef.current = false;
+            isAudioPlayingRef.current = false;
+            
+            return; // Exit early without starting speech recognition
+        }
         
         // Pause VAD temporarily to avoid interference with speech recognition
         if (vadRef.current?.isInitialized) {
@@ -107,7 +127,7 @@ export const useNaturalVoice = ({
                 startListening();
             }
         }, 100);
-    }, []);
+    }, [testMode]);
     
     // Initialize VAD - only when both mic AND speaker are enabled
     const vadEnabled = isMicEnabled && isSpeakerEnabled;
