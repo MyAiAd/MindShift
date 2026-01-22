@@ -185,9 +185,10 @@ export default function TreatmentSession({
   const [isTestPlaying, setIsTestPlaying] = useState(false);
   const [testInterrupted, setTestInterrupted] = useState(false);
   const testAudioTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isTestPlayingRef = useRef(false); // Ref for immediate access in callbacks
   
-  // Test audio sample text
-  const TEST_AUDIO_SAMPLE = "This is a test of your voice settings. Try interrupting me by speaking now!";
+  // Test audio sample text - longer for better testing
+  const TEST_AUDIO_SAMPLE = "This is a test of your voice settings. I will keep speaking so you can test interrupting me at any time. Try adjusting the sensitivity slider, then speak to interrupt. Higher sensitivity means it's easier to interrupt me. Lower sensitivity means I'm harder to interrupt. You can also adjust my speaking speed to find what works best for you. Go ahead and try interrupting me now by speaking. I'll keep looping until you stop the test.";
 
   // Available voices - Kokoro TTS voices
   const AVAILABLE_VOICES = [
@@ -566,24 +567,28 @@ export default function TreatmentSession({
   const startTestAudio = useCallback(() => {
     if (!isSpeakerEnabled) return;
     
-    console.log('🧪 Starting test audio');
+    console.log('🧪 Starting test audio loop');
     setIsTestPlaying(true);
+    isTestPlayingRef.current = true;
     setTestInterrupted(false);
     
     // Play test sample
     naturalVoice.speak(TEST_AUDIO_SAMPLE);
     
-    // Auto-restart after completion (loop)
+    // Auto-loop: Wait for audio to finish, then restart if still in test mode
+    // The actual duration depends on speech rate, so we use a generous timeout
     testAudioTimeoutRef.current = setTimeout(() => {
-      if (isTestPlaying) {
+      if (isTestPlayingRef.current) {
+        console.log('🧪 Looping test audio');
         startTestAudio(); // Loop
       }
-    }, 8000); // ~8 seconds for the test phrase
-  }, [isSpeakerEnabled, isTestPlaying, naturalVoice, TEST_AUDIO_SAMPLE]);
+    }, 20000); // ~20 seconds - generous timeout for the longer phrase
+  }, [isSpeakerEnabled, naturalVoice, TEST_AUDIO_SAMPLE]);
 
   const stopTestAudio = useCallback(() => {
     console.log('🧪 Stopping test audio');
     setIsTestPlaying(false);
+    isTestPlayingRef.current = false;
     setTestInterrupted(false);
     
     // Clear timeout
