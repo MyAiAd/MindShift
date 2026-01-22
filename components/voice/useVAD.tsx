@@ -136,10 +136,6 @@ export const useVAD = ({
         const negativeSpeechThreshold = Math.max(0.1, sensitivity - 0.15); // 0.15 hysteresis
         
         const vad = await MicVAD.new({
-          // Model paths (served from public/vad/ directory)
-          modelURL: '/vad/silero_vad_legacy.onnx',
-          workletURL: '/vad/vad.worklet.bundle.min.js',
-          
           // Sensitivity thresholds
           positiveSpeechThreshold,
           negativeSpeechThreshold,
@@ -152,7 +148,7 @@ export const useVAD = ({
           // WASM configuration (single-threaded for compatibility)
           ortConfig: (ort: any) => {
             ort.env.wasm.numThreads = 1;
-            // Specify WASM file locations (must be in public directory)
+            // Specify WASM file locations (served from public/vad/ directory)
             ort.env.wasm.wasmPaths = '/vad/';
           },
           

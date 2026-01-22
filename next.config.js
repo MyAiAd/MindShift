@@ -135,7 +135,7 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   images: {
-            domains: ['YOUR_PROJECT_ID.supabase.co'],
+    domains: ['YOUR_PROJECT_ID.supabase.co'],
   },
   env: {
     CUSTOM_KEY: 'my-value',
@@ -163,6 +163,6 @@ const nextConfig = {
     
     return config;
   },
-}
+};
 
-module.exports = withPWA(nextConfig) 
+module.exports = withPWA(nextConfig); 
