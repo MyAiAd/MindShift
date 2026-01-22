@@ -140,6 +140,29 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: 'my-value',
   },
+  // Webpack configuration for WASM and ONNX files (VAD support)
+  webpack: (config, { isServer }) => {
+    // Enable WebAssembly support
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+      layers: true,
+    };
+    
+    // Add rule for .onnx model files
+    config.module.rules.push({
+      test: /\.onnx$/,
+      type: 'asset/resource',
+    });
+    
+    // Add rule for .wasm files
+    config.module.rules.push({
+      test: /\.wasm$/,
+      type: 'asset/resource',
+    });
+    
+    return config;
+  },
 }
 
 module.exports = withPWA(nextConfig) 

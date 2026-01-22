@@ -18,6 +18,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/copy-vad-assets.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
