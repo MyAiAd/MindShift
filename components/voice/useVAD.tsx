@@ -16,6 +16,10 @@ export interface UseVADProps {
   onSpeechEnd?: (audio: Float32Array) => void;
   /** Callback for real-time VAD level updates (0-100) */
   onVadLevel?: (level: number) => void;
+  /** End-of-speech timeout in milliseconds */
+  endOfSpeechTimeoutMs?: number;
+  /** Mid-speech pause tolerance in milliseconds */
+  midSpeechPauseToleranceMs?: number;
 }
 
 /**
@@ -47,6 +51,8 @@ export const useVAD = ({
   onSpeechStart,
   onSpeechEnd,
   onVadLevel,
+  endOfSpeechTimeoutMs,
+  midSpeechPauseToleranceMs,
 }: UseVADProps) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +68,10 @@ export const useVAD = ({
   // Debounce timer ref for VAD level updates
   const vadLevelTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastVadLevelRef = useRef<number>(0);
+  
+  // Speech end timing refs (for configurable end-of-speech timeout)
+  const speechEndTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingSpeechAudioRef = useRef<Float32Array | null>(null);
   
   // Debounced VAD level update function (100ms debounce)
   const debouncedVadLevelUpdate = useMemo(() => {
@@ -91,6 +101,57 @@ export const useVAD = ({
   useEffect(() => {
     let mounted = true;
     
+    const pauseToleranceMs = Math.max(0, midSpeechPauseToleranceMs ?? 400);
+    const endOfSpeechMs = Math.max(pauseToleranceMs, endOfSpeechTimeoutMs ?? pauseToleranceMs);
+    const endOfSpeechDelayMs = Math.max(0, endOfSpeechMs - pauseToleranceMs);
+    
+    const clearSpeechEndTimer = (clearPendingAudio: boolean) => {
+      if (speechEndTimerRef.current) {
+        clearTimeout(speechEndTimerRef.current);
+        speechEndTimerRef.current = null;
+      }
+      if (clearPendingAudio) {
+        pendingSpeechAudioRef.current = null;
+      }
+    };
+    
+    const mergeSpeechAudio = (first: Float32Array, second: Float32Array) => {
+      const merged = new Float32Array(first.length + second.length);
+      merged.set(first, 0);
+      merged.set(second, first.length);
+      return merged;
+    };
+    
+    const scheduleSpeechEnd = (audio: Float32Array) => {
+      if (!mounted) return;
+      
+      const pendingAudio = pendingSpeechAudioRef.current;
+      pendingSpeechAudioRef.current = pendingAudio ? mergeSpeechAudio(pendingAudio, audio) : audio;
+      
+      if (speechEndTimerRef.current) {
+        clearTimeout(speechEndTimerRef.current);
+      }
+      
+      if (endOfSpeechDelayMs === 0) {
+        const finalAudio = pendingSpeechAudioRef.current;
+        pendingSpeechAudioRef.current = null;
+        if (mounted && finalAudio) {
+          onSpeechEndRef.current?.(finalAudio);
+        }
+        return;
+      }
+      
+      speechEndTimerRef.current = setTimeout(() => {
+        speechEndTimerRef.current = null;
+        const finalAudio = pendingSpeechAudioRef.current;
+        pendingSpeechAudioRef.current = null;
+        
+        if (mounted && finalAudio) {
+          onSpeechEndRef.current?.(finalAudio);
+        }
+      }, endOfSpeechDelayMs);
+    };
+    
     const initVAD = async () => {
       if (!enabled) {
         // Clean up if disabled
@@ -104,6 +165,7 @@ export const useVAD = ({
           vadRef.current = null;
           setIsInitialized(false);
         }
+        clearSpeechEndTimer(true);
         return;
       }
       
@@ -114,6 +176,7 @@ export const useVAD = ({
           await vadRef.current.destroy();
           vadRef.current = null;
           setIsInitialized(false);
+          clearSpeechEndTimer(true);
         } catch (e) {
           console.error('VAD destroy error during re-init:', e);
         }
@@ -156,6 +219,8 @@ export const useVAD = ({
           invertedSensitivity,
           positiveSpeechThreshold,
           negativeSpeechThreshold,
+          endOfSpeechMs,
+          pauseToleranceMs,
           explanation: `UI ${sensitivity} → Threshold ${positiveSpeechThreshold.toFixed(2)} (${sensitivity >= 0.7 ? 'Very Sensitive' : sensitivity >= 0.5 ? 'Sensitive' : 'Less Sensitive'})`
         });
         
@@ -171,7 +236,7 @@ export const useVAD = ({
           // Timing parameters for responsiveness (in milliseconds)
           minSpeechMs: 150,          // Min duration to trigger speech (3 frames * 50ms)
           preSpeechPadMs: 50,        // Duration to include before speech (1 frame)
-          redemptionMs: 400,         // Duration to wait before ending speech (8 frames * 50ms)
+          redemptionMs: pauseToleranceMs, // Duration to wait before ending speech
           
           // WASM configuration (single-threaded for compatibility)
           ortConfig: (ort: any) => {
@@ -181,6 +246,7 @@ export const useVAD = ({
           // Event handlers
           onSpeechStart: () => {
             console.log('🎙️ VAD: Speech started');
+            clearSpeechEndTimer(false);
             onSpeechStartRef.current?.();
           },
           
@@ -196,7 +262,7 @@ export const useVAD = ({
             const level = Math.min(100, Math.round(rms * 500)); // Scale to 0-100
             console.log('🎙️ VAD: Audio level:', level);
             
-            onSpeechEndRef.current?.(audio);
+            scheduleSpeechEnd(audio);
           },
           
           onVADMisfire: () => {
@@ -275,13 +341,15 @@ export const useVAD = ({
         vadLevelTimerRef.current = null;
       }
       
+      clearSpeechEndTimer(true);
+      
       if (vadRef.current) {
         console.log('🎙️ VAD: Destroying instance (cleanup)');
         vadRef.current.destroy().catch(console.error);
         vadRef.current = null;
       }
     };
-  }, [enabled, sensitivity, debouncedVadLevelUpdate]);
+  }, [enabled, sensitivity, debouncedVadLevelUpdate, endOfSpeechTimeoutMs, midSpeechPauseToleranceMs]);
   
   // Control methods for VAD management
   
