@@ -149,11 +149,19 @@ export const useNaturalVoice = ({
     
     console.log(`🎙️ VAD: Using ${testMode ? 'TEST MODE' : 'REAL MODE'} handler`);
     
+    const vadTimingOverrides = testMode
+        ? undefined
+        : {
+            endOfSpeechTimeoutMs: 900,
+            midSpeechPauseToleranceMs: 400
+        };
+    
     const vad = useVAD({
         enabled: vadEnabled,
         sensitivity: vadSensitivity,
         onSpeechStart: vadSpeechHandler,
         onVadLevel: onVadLevel,
+        ...(vadTimingOverrides ?? {})
     });
     
     // Store VAD in ref for access in speech recognition callbacks
