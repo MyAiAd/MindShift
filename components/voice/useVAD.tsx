@@ -208,20 +208,24 @@ export const useVAD = ({
         
         // Configure VAD with sensitivity-based thresholds
         // IMPORTANT: Invert the sensitivity value for intuitive behavior
-        // - High UI sensitivity (0.8) → Low threshold (0.3) = MORE sensitive (detects quieter speech)
-        // - Low UI sensitivity (0.2) → High threshold (0.9) = LESS sensitive (needs louder speech)
+        // - High UI sensitivity (0.8) → Low threshold (0.2) = MORE sensitive (detects quieter speech)
+        // - Low UI sensitivity (0.2) → High threshold (0.7) = LESS sensitive (needs louder speech)
+        // Map to narrower band (0.25-0.75 instead of 0.1-0.9) to avoid extremes
         const invertedSensitivity = 1.0 - sensitivity;
-        const positiveSpeechThreshold = Math.max(0.1, Math.min(0.9, invertedSensitivity));
+        const minThreshold = 0.25; // More forgiving minimum
+        const maxThreshold = 0.75; // Less strict maximum
+        const thresholdRange = maxThreshold - minThreshold;
+        const positiveSpeechThreshold = minThreshold + (invertedSensitivity * thresholdRange);
         const negativeSpeechThreshold = Math.max(0.05, positiveSpeechThreshold - 0.15); // 0.15 hysteresis
         
         console.log('🎙️ VAD: Configuring thresholds:', {
           uiSensitivity: sensitivity,
           invertedSensitivity,
-          positiveSpeechThreshold,
-          negativeSpeechThreshold,
+          positiveSpeechThreshold: positiveSpeechThreshold.toFixed(3),
+          negativeSpeechThreshold: negativeSpeechThreshold.toFixed(3),
           endOfSpeechMs,
           pauseToleranceMs,
-          explanation: `UI ${sensitivity} → Threshold ${positiveSpeechThreshold.toFixed(2)} (${sensitivity >= 0.7 ? 'Very Sensitive' : sensitivity >= 0.5 ? 'Sensitive' : 'Less Sensitive'})`
+          explanation: `UI ${sensitivity.toFixed(2)} → Threshold ${positiveSpeechThreshold.toFixed(3)} (${sensitivity >= 0.7 ? 'Very Sensitive' : sensitivity >= 0.5 ? 'Sensitive' : 'Less Sensitive'})`
         });
         
         const vad = await MicVAD.new({

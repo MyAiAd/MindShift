@@ -51,6 +51,11 @@ export const useNaturalVoice = ({
     const [isPaused, setIsPaused] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [vadError, setVadError] = useState<string | null>(null); // VAD-specific error
+    const [interimTranscript, setInterimTranscript] = useState<string>(''); // NEW: Interim transcript for UI feedback
+    
+    // NEW: Richer listening state for better UX
+    type ListeningState = 'listening' | 'restarting' | 'blockedByAudio' | 'micDisabled' | 'unsupported' | 'permissionDenied' | 'idle' | 'error';
+    const [listeningState, setListeningState] = useState<ListeningState>('idle');
 
     const recognitionRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -65,6 +70,11 @@ export const useNaturalVoice = ({
     const prevSpeakerEnabledRef = useRef(isSpeakerEnabled); // Track previous speaker state
     const speakStartTimeRef = useRef<number>(0); // NEW: Track when speak() was called
     const vadRef = useRef<any>(null); // Track VAD instance for resuming after speech
+    
+    // Restart scheduler state - for backoff/loop prevention
+    const restartAttemptCountRef = useRef(0); // Track consecutive restart attempts without success
+    const lastRestartTimeRef = useRef(0); // Track when last restart was scheduled
+    const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Track pending restart
     
     // Test mode handler - called when user speaks during test mode
     const handleTestModeInterruption = useCallback(() => {
@@ -131,14 +141,38 @@ export const useNaturalVoice = ({
             }
         }
         
-        console.log('🎙️ VAD: Starting full speech recognition after barge-in');
-        // Start full speech recognition after barge-in
-        // Small delay to ensure clean state
-        setTimeout(() => {
-            if (isMountedRef.current && prevMicEnabledRef.current) {
-                startListening();
+        console.log('🎙️ VAD: Starting full speech recognition after barge-in (fast-start)');
+        // Fast-start retry loop: attempt immediately, then retry with short delays
+        const attemptStart = (attemptNumber: number, maxAttempts: number = 10, maxTotalTime: number = 500) => {
+            const startTime = Date.now();
+            
+            if (attemptNumber >= maxAttempts || (Date.now() - startTime) > maxTotalTime) {
+                console.log(`🎙️ VAD: Fast-start exhausted (${attemptNumber} attempts), falling back to normal restart`);
+                // Fallback to normal restart scheduler
+                setTimeout(() => {
+                    if (isMountedRef.current && prevMicEnabledRef.current) {
+                        startListening();
+                    }
+                }, 100);
+                return;
             }
-        }, 100);
+            
+            if (!isMountedRef.current || !prevMicEnabledRef.current) {
+                return; // Exit if component unmounted or mic disabled
+            }
+            
+            try {
+                recognitionRef.current?.start();
+                console.log(`🎙️ VAD: Fast-start succeeded on attempt ${attemptNumber + 1}`);
+            } catch (e) {
+                // Recognition not ready yet, retry with short delay
+                const retryDelay = attemptNumber === 0 ? 0 : Math.min(25 + (attemptNumber * 10), 50);
+                setTimeout(() => attemptStart(attemptNumber + 1, maxAttempts, maxTotalTime), retryDelay);
+            }
+        };
+        
+        // Start immediately (attempt 0)
+        attemptStart(0);
     }, [testMode, handleTestModeInterruption]);
     
     // Initialize VAD - only when both mic AND speaker are enabled
@@ -190,16 +224,21 @@ export const useNaturalVoice = ({
             if (SpeechRecognition) {
                 recognitionRef.current = new SpeechRecognition();
                 recognitionRef.current.continuous = false; // We want single utterances for now to avoid loops
-                recognitionRef.current.interimResults = false;
+                recognitionRef.current.interimResults = true; // Enable interim results for better responsiveness
                 recognitionRef.current.lang = 'en-US';
 
                 recognitionRef.current.onstart = () => {
-                    console.log('🎤 Natural Voice: Listening started');
+                    const timestamp = Date.now();
+                    console.log(`🎤 Natural Voice: Listening started at ${timestamp}`);
                     setIsListening(true);
+                    setListeningState('listening');
+                    // Clear restart attempt counter on successful start
+                    restartAttemptCountRef.current = 0;
                 };
 
                 recognitionRef.current.onend = () => {
-                    console.log('🎤 Natural Voice: Listening ended');
+                    const timestamp = Date.now();
+                    console.log(`🎤 Natural Voice: Listening ended at ${timestamp}`);
                     setIsListening(false);
                     
                     // Resume VAD monitoring after user finishes speaking
@@ -210,22 +249,73 @@ export const useNaturalVoice = ({
                     
                     // Auto-restart listening if mic enabled and not speaking (but NOT in guided mode)
                     if (prevMicEnabledRef.current && !isSpeakingRef.current && isMountedRef.current && !guidedMode) {
-                        // Small delay to prevent CPU hogging if it fails repeatedly
-                        setTimeout(() => {
+                        // Clear any pending restart
+                        if (restartTimeoutRef.current) {
+                            clearTimeout(restartTimeoutRef.current);
+                            restartTimeoutRef.current = null;
+                        }
+                        
+                        // Calculate backoff delay based on consecutive restart attempts
+                        // Progressive backoff: 0ms → 50ms → 150ms → 400ms → 800ms (capped)
+                        const backoffDelays = [0, 50, 150, 400, 800];
+                        const delayIndex = Math.min(restartAttemptCountRef.current, backoffDelays.length - 1);
+                        const restartDelay = backoffDelays[delayIndex];
+                        
+                        if (restartDelay > 0) {
+                            console.log(`🔄 Natural Voice: Scheduling restart with ${restartDelay}ms backoff (attempt ${restartAttemptCountRef.current + 1})`);
+                            setListeningState('restarting');
+                        } else {
+                            console.log(`🔄 Natural Voice: Scheduling immediate restart`);
+                            setListeningState('restarting');
+                        }
+                        
+                        lastRestartTimeRef.current = timestamp;
+                        restartAttemptCountRef.current++;
+                        
+                        restartTimeoutRef.current = setTimeout(() => {
                             if (prevMicEnabledRef.current && !isSpeakingRef.current && isMountedRef.current && !guidedMode) {
+                                console.log(`🔄 Natural Voice: Executing restart (scheduled at ${lastRestartTimeRef.current})`);
                                 startListening();
                             }
-                        }, 500);
+                            restartTimeoutRef.current = null;
+                        }, restartDelay);
                     } else if (guidedMode) {
                         console.log('🧘 Guided Mode: Not auto-restarting listening (PTT mode)');
+                        setListeningState('idle');
+                    } else {
+                        setListeningState('idle');
                     }
                 };
 
                 recognitionRef.current.onresult = (event: any) => {
-                    const transcript = event.results[0][0].transcript;
-                    console.log('🎤 Natural Voice: Transcript received:', transcript);
-                    if (transcript.trim()) {
-                        onTranscriptRef.current(transcript.trim());
+                    // Handle both interim and final results
+                    let interimText = '';
+                    let finalText = '';
+                    
+                    for (let i = 0; i < event.results.length; i++) {
+                        const result = event.results[i];
+                        const transcript = result[0].transcript;
+                        
+                        if (result.isFinal) {
+                            finalText = transcript;
+                        } else {
+                            interimText = transcript;
+                        }
+                    }
+                    
+                    // Update interim transcript for UI feedback
+                    if (interimText) {
+                        setInterimTranscript(interimText);
+                        console.log('🎤 Natural Voice: Interim transcript:', interimText);
+                    }
+                    
+                    // Only call onTranscript for final results
+                    if (finalText && finalText.trim()) {
+                        console.log('🎤 Natural Voice: Final transcript received:', finalText);
+                        setInterimTranscript(''); // Clear interim on final
+                        onTranscriptRef.current(finalText.trim());
+                        // Clear restart attempt counter on successful result
+                        restartAttemptCountRef.current = 0;
                     }
                 };
 
@@ -233,10 +323,14 @@ export const useNaturalVoice = ({
                     console.error('🎤 Natural Voice: Recognition error:', event.error);
                     if (event.error === 'not-allowed') {
                         setError('Microphone permission denied');
+                        setListeningState('permissionDenied');
+                    } else {
+                        setListeningState('error');
                     }
                 };
             } else {
                 setError('Speech recognition not supported in this browser');
+                setListeningState('unsupported');
             }
         }
 
@@ -244,6 +338,12 @@ export const useNaturalVoice = ({
         return () => {
             console.log('🧹 Natural Voice: Component unmounting');
             isMountedRef.current = false;
+            
+            // Clear any pending restart
+            if (restartTimeoutRef.current) {
+                clearTimeout(restartTimeoutRef.current);
+                restartTimeoutRef.current = null;
+            }
             
             // Stop speech recognition
             if (recognitionRef.current) {
@@ -279,8 +379,10 @@ export const useNaturalVoice = ({
                 recognitionRef.current.stop();
             }
             setIsListening(false);
+            setListeningState('micDisabled');
         } else if (!wasMicEnabled && isMicEnabled) {
             console.log('🎤 Natural Voice: Enabling microphone - ready for listening');
+            setListeningState('idle');
             // Don't auto-start here, let the other effect handle it
         }
         
@@ -313,6 +415,7 @@ export const useNaturalVoice = ({
             }
         } else if (isAudioPlayingRef.current) {
             console.log('🎤 Natural Voice: Skipping start - audio is playing (feedback prevention)');
+            setListeningState('blockedByAudio');
         }
     }, []);
 
@@ -697,6 +800,8 @@ export const useNaturalVoice = ({
         pauseSpeaking,
         resumeSpeaking,
         hasPausedAudio,
-        clearAudioFlags
+        clearAudioFlags,
+        interimTranscript, // NEW: Expose interim transcript for UI feedback
+        listeningState, // NEW: Richer listening state for better UX
     };
 };

@@ -174,9 +174,9 @@ export default function TreatmentSession({
   const [vadSensitivity, setVadSensitivity] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('v4_vad_sensitivity');
-      return saved ? parseFloat(saved) : 0.5;
+      return saved ? parseFloat(saved) : 0.7; // Increased from 0.5 to 0.7 for more forgiving default
     }
-    return 0.5;
+    return 0.7; // Increased from 0.5 to 0.7 for more forgiving default
   });
   const [vadLevel, setVadLevel] = useState(0); // 0-100 for real-time meter display
   const [isVadActive, setIsVadActive] = useState(false); // Tracks if VAD is running
@@ -1655,12 +1655,26 @@ export default function TreatmentSession({
               ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
               : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
               } ${micPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''}`}
-            title="Toggle Microphone"
+            title={
+              !isMicEnabled ? 'Enable Microphone' :
+              naturalVoice.listeningState === 'listening' ? 'Listening...' :
+              naturalVoice.listeningState === 'restarting' ? 'Restarting...' :
+              naturalVoice.listeningState === 'blockedByAudio' ? 'Blocked (AI speaking)' :
+              naturalVoice.listeningState === 'micDisabled' ? 'Microphone disabled' :
+              naturalVoice.listeningState === 'permissionDenied' ? 'Permission denied' :
+              naturalVoice.listeningState === 'unsupported' ? 'Not supported' :
+              naturalVoice.listeningState === 'error' ? 'Error' :
+              'Ready'
+            }
           >
             {isMicEnabled ? (
               <>
                 {naturalVoice.isListening ? (
                   <Mic className="h-4 w-4 animate-pulse text-red-500" />
+                ) : naturalVoice.listeningState === 'restarting' ? (
+                  <Mic className="h-4 w-4 animate-spin text-yellow-500" />
+                ) : naturalVoice.listeningState === 'blockedByAudio' ? (
+                  <Mic className="h-4 w-4 text-gray-400" />
                 ) : (
                   <Mic className="h-4 w-4" />
                 )}
@@ -1817,12 +1831,26 @@ export default function TreatmentSession({
                     ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
                     : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary dark:hover:bg-[#657b83]'
                     } ${micPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  title="Toggle Microphone Input"
+                  title={
+                    !isMicEnabled ? 'Enable Microphone' :
+                    naturalVoice.listeningState === 'listening' ? 'Listening...' :
+                    naturalVoice.listeningState === 'restarting' ? 'Restarting...' :
+                    naturalVoice.listeningState === 'blockedByAudio' ? 'Blocked (AI speaking)' :
+                    naturalVoice.listeningState === 'micDisabled' ? 'Microphone disabled' :
+                    naturalVoice.listeningState === 'permissionDenied' ? 'Permission denied' :
+                    naturalVoice.listeningState === 'unsupported' ? 'Not supported' :
+                    naturalVoice.listeningState === 'error' ? 'Error' :
+                    'Ready'
+                  }
                 >
                   {isMicEnabled ? (
                     <>
                       {naturalVoice.isListening ? (
                         <Mic className="h-4 w-4 animate-pulse text-red-500" />
+                      ) : naturalVoice.listeningState === 'restarting' ? (
+                        <Mic className="h-4 w-4 animate-spin text-yellow-500" />
+                      ) : naturalVoice.listeningState === 'blockedByAudio' ? (
+                        <Mic className="h-4 w-4 text-gray-400" />
                       ) : (
                         <Mic className="h-4 w-4" />
                       )}
