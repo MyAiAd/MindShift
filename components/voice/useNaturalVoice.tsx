@@ -76,6 +76,11 @@ export const useNaturalVoice = ({
     const lastRestartTimeRef = useRef(0); // Track when last restart was scheduled
     const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Track pending restart
     
+    // Continuous mode: track last speech time to detect silence and finalize transcripts
+    const lastSpeechTimeRef = useRef<number>(0);
+    const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const SILENCE_TIMEOUT_MS = 1500; // 1.5s of silence = done speaking
+    
     // Test mode handler - called when user speaks during test mode
     const handleTestModeInterruption = useCallback(() => {
         console.log('🧪 VAD: Test mode interruption detected (TEST MODE ACTIVE)');
@@ -223,7 +228,7 @@ export const useNaturalVoice = ({
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             if (SpeechRecognition) {
                 recognitionRef.current = new SpeechRecognition();
-                recognitionRef.current.continuous = false; // We want single utterances for now to avoid loops
+                recognitionRef.current.continuous = true; // Always-on listener to eliminate dead zones
                 recognitionRef.current.interimResults = true; // Enable interim results for better responsiveness
                 recognitionRef.current.lang = 'en-US';
 
@@ -238,8 +243,14 @@ export const useNaturalVoice = ({
 
                 recognitionRef.current.onend = () => {
                     const timestamp = Date.now();
-                    console.log(`🎤 Natural Voice: Listening ended at ${timestamp}`);
+                    console.log(`🎤 Natural Voice: Listening ended unexpectedly at ${timestamp} (continuous mode)`);
                     setIsListening(false);
+                    
+                    // Clear any silence timer
+                    if (silenceTimerRef.current) {
+                        clearTimeout(silenceTimerRef.current);
+                        silenceTimerRef.current = null;
+                    }
                     
                     // Resume VAD monitoring after user finishes speaking
                     if (vadRef.current?.isInitialized && vadEnabled) {
@@ -247,7 +258,8 @@ export const useNaturalVoice = ({
                         console.log('🎙️ VAD: Resumed monitoring after speech recognition');
                     }
                     
-                    // Auto-restart listening if mic enabled and not speaking (but NOT in guided mode)
+                    // In continuous mode, onend should only fire on errors or manual stop
+                    // Auto-restart if mic enabled and not speaking (but NOT in guided mode)
                     if (prevMicEnabledRef.current && !isSpeakingRef.current && isMountedRef.current && !guidedMode) {
                         // Clear any pending restart
                         if (restartTimeoutRef.current) {
@@ -288,32 +300,61 @@ export const useNaturalVoice = ({
                 };
 
                 recognitionRef.current.onresult = (event: any) => {
-                    // Handle both interim and final results
-                    let interimText = '';
-                    let finalText = '';
+                    // Update last speech time for silence detection
+                    lastSpeechTimeRef.current = Date.now();
+                    
+                    // Clear any existing silence timer
+                    if (silenceTimerRef.current) {
+                        clearTimeout(silenceTimerRef.current);
+                        silenceTimerRef.current = null;
+                    }
+                    
+                    // In continuous mode, collect all results (browser provides full transcript each time)
+                    let fullInterimText = '';
+                    let fullFinalText = '';
                     
                     for (let i = 0; i < event.results.length; i++) {
                         const result = event.results[i];
                         const transcript = result[0].transcript;
                         
                         if (result.isFinal) {
-                            finalText = transcript;
+                            fullFinalText += transcript;
                         } else {
-                            interimText = transcript;
+                            fullInterimText += transcript;
                         }
                     }
                     
                     // Update interim transcript for UI feedback
-                    if (interimText) {
-                        setInterimTranscript(interimText);
-                        console.log('🎤 Natural Voice: Interim transcript:', interimText);
+                    if (fullInterimText) {
+                        setInterimTranscript(fullInterimText);
+                        console.log('🎤 Natural Voice: Interim transcript:', fullInterimText);
                     }
                     
-                    // Only call onTranscript for final results
-                    if (finalText && finalText.trim()) {
-                        console.log('🎤 Natural Voice: Final transcript received:', finalText);
+                    // In continuous mode, we need to detect when user is done speaking
+                    // Set a silence timer - if it expires, treat accumulated text as final
+                    if (fullFinalText || fullInterimText) {
+                        silenceTimerRef.current = setTimeout(() => {
+                            const timeSinceLastSpeech = Date.now() - lastSpeechTimeRef.current;
+                            if (timeSinceLastSpeech >= SILENCE_TIMEOUT_MS) {
+                                // User has been silent - finalize the transcript
+                                const finalizedText = fullFinalText || fullInterimText;
+                                if (finalizedText && finalizedText.trim()) {
+                                    console.log('🎤 Natural Voice: Silence detected, finalizing transcript:', finalizedText);
+                                    setInterimTranscript(''); // Clear interim
+                                    onTranscriptRef.current(finalizedText.trim());
+                                    // Clear restart attempt counter on successful result
+                                    restartAttemptCountRef.current = 0;
+                                }
+                            }
+                            silenceTimerRef.current = null;
+                        }, SILENCE_TIMEOUT_MS);
+                    }
+                    
+                    // Also immediately process any final results from the browser
+                    if (fullFinalText && fullFinalText.trim()) {
+                        console.log('🎤 Natural Voice: Final transcript received:', fullFinalText);
                         setInterimTranscript(''); // Clear interim on final
-                        onTranscriptRef.current(finalText.trim());
+                        onTranscriptRef.current(fullFinalText.trim());
                         // Clear restart attempt counter on successful result
                         restartAttemptCountRef.current = 0;
                     }
@@ -343,6 +384,12 @@ export const useNaturalVoice = ({
             if (restartTimeoutRef.current) {
                 clearTimeout(restartTimeoutRef.current);
                 restartTimeoutRef.current = null;
+            }
+            
+            // Clear any pending silence timer
+            if (silenceTimerRef.current) {
+                clearTimeout(silenceTimerRef.current);
+                silenceTimerRef.current = null;
             }
             
             // Stop speech recognition
