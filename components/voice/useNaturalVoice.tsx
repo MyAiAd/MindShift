@@ -79,7 +79,7 @@ export const useNaturalVoice = ({
     // Continuous mode: track last speech time to detect silence and finalize transcripts
     const lastSpeechTimeRef = useRef<number>(0);
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const SILENCE_TIMEOUT_MS = 1500; // 1.5s of silence = done speaking
+    const SILENCE_TIMEOUT_MS = 1500; // 1.5s of silence = done speaking (trigger deployment)
     
     // Test mode handler - called when user speaks during test mode
     const handleTestModeInterruption = useCallback(() => {
