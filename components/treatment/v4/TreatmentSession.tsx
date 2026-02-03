@@ -541,7 +541,7 @@ export default function TreatmentSession({
 
   // Helper function to format method names
   const formatMethodName = (methodName: string) => {
-    if (!methodName) return 'Mind Shifting V4';
+    if (!methodName) return 'Mind Shifting V4.1';
 
     // Convert snake_case to Title Case
     return methodName
