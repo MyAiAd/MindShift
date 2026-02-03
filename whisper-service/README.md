@@ -163,10 +163,68 @@ Or increase available memory/swap.
 ## Next Steps
 
 After completing local setup:
-1. Implement the FastAPI application (`app/main.py`)
-2. Set up Docker containers for production
-3. Configure Redis for caching
-4. Deploy to production server
+1. Start Redis with Docker Compose (see below)
+2. Implement the FastAPI application (`app/main.py`) - DONE
+3. Set up Docker containers for production
+4. Configure Redis for caching - DONE
+5. Deploy to production server
+
+## Redis Setup
+
+### Start Redis with Docker Compose
+
+```bash
+# Start Redis in background
+docker-compose up -d redis
+
+# Check Redis is running
+docker-compose ps
+
+# View Redis logs
+docker-compose logs -f redis
+
+# Test Redis connection
+docker-compose exec redis redis-cli ping
+# Should return: PONG
+
+# Stop Redis
+docker-compose down
+
+# Stop and remove volumes (clears cache)
+docker-compose down -v
+```
+
+### Redis Configuration
+
+The Redis instance is configured with:
+- **Max memory**: 256MB
+- **Eviction policy**: allkeys-lru (evict least recently used keys when memory full)
+- **Port**: 6379 (exposed to host)
+- **Persistence**: Data stored in Docker volume `redis-data`
+- **Health check**: `redis-cli ping` every 10 seconds
+- **Restart policy**: unless-stopped (survives reboots)
+
+### Verify Cache Operations
+
+```bash
+# Start Redis and the Whisper service
+docker-compose up -d
+
+# Transcribe audio (will cache result)
+curl -X POST http://localhost:8000/transcribe \
+  -F "audio=@test_audio.wav"
+
+# Transcribe same audio again (should be cached, faster)
+curl -X POST http://localhost:8000/transcribe \
+  -F "audio=@test_audio.wav"
+
+# Check cache stats
+curl http://localhost:8000/stats
+
+# Clear cache
+curl -X DELETE http://localhost:8000/cache \
+  -H "X-API-Key: your-api-key"  # If API key configured
+```
 
 ## Project Structure
 
