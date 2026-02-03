@@ -10,7 +10,8 @@ import time
 from typing import Optional
 from fastapi import FastAPI, File, UploadFile, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 from .config import config, get_config_summary
 from .transcribe import preprocess_audio, transcribe_audio, get_whisper_model
 from .cache import get_cache
@@ -21,6 +22,31 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Prometheus metrics
+transcription_requests_total = Counter(
+    'transcription_requests_total',
+    'Total number of transcription requests',
+    ['status', 'cached']
+)
+transcription_duration_seconds = Histogram(
+    'transcription_duration_seconds',
+    'Time spent processing transcriptions',
+    buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0]
+)
+audio_duration_seconds = Histogram(
+    'audio_duration_seconds',
+    'Duration of input audio',
+    buckets=[0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0]
+)
+real_time_factor_histogram = Histogram(
+    'real_time_factor',
+    'Real-time factor (processing_time / audio_duration)',
+    buckets=[0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0]
+)
+cache_hits_total = Counter('cache_hits_total', 'Total number of cache hits')
+cache_misses_total = Counter('cache_misses_total', 'Total number of cache misses')
+active_requests = Gauge('active_requests', 'Number of requests currently being processed')
 
 # Create FastAPI application
 app = FastAPI(
@@ -166,7 +192,12 @@ async def transcribe(
     # Verify API key if required
     verify_api_key(x_api_key)
     
+    # Track active requests
+    active_requests.inc()
+    
     start_time = time.time()
+    status = "error"
+    cached = False
     
     try:
         # Validate file format
@@ -198,7 +229,11 @@ async def transcribe(
         cached_result = cache.get(audio_bytes)
         if cached_result:
             logger.info(f"Cache HIT: Returning cached result")
+            cached = True
+            cache_hits_total.inc()
             return cached_result
+        
+        cache_misses_total.inc()
         
         # Preprocess audio
         audio_file = io.BytesIO(audio_bytes)
@@ -220,6 +255,12 @@ async def transcribe(
             f"{total_time:.3f}s"
         )
         
+        # Record metrics
+        status = "success"
+        transcription_duration_seconds.observe(total_time)
+        audio_duration_seconds.observe(result['audio_duration'])
+        real_time_factor_histogram.observe(result['real_time_factor'])
+        
         return result
         
     except HTTPException:
@@ -229,15 +270,22 @@ async def transcribe(
     except ValueError as e:
         # Validation errors (from preprocessing)
         logger.warning(f"Validation error: {e}")
+        status = "validation_error"
         raise HTTPException(status_code=400, detail=str(e))
     
     except Exception as e:
         # Unexpected errors
         logger.error(f"Transcription failed: {e}", exc_info=True)
+        status = "error"
         raise HTTPException(
             status_code=500,
             detail=f"Transcription failed: {str(e)}"
         )
+    
+    finally:
+        # Always record request and decrement active
+        active_requests.dec()
+        transcription_requests_total.labels(status=status, cached=str(cached)).inc()
 
 
 @app.delete("/cache")
@@ -268,6 +316,46 @@ async def clear_cache(x_api_key: Optional[str] = Header(None)):
         "status": "success",
         "deleted": deleted,
         "message": f"Cleared {deleted} cached transcriptions"
+    }
+
+
+@app.get("/metrics")
+async def metrics():
+    """
+    Expose Prometheus metrics.
+    
+    Returns:
+        Prometheus metrics in text format
+    """
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+@app.get("/stats")
+async def stats():
+    """
+    Return JSON statistics for monitoring.
+    
+    Returns:
+        JSON with cache hit rate and other stats
+    """
+    # Calculate cache hit rate
+    total_hits = cache_hits_total._value.get()
+    total_misses = cache_misses_total._value.get()
+    total_requests = total_hits + total_misses
+    
+    cache_hit_rate = (total_hits / total_requests * 100) if total_requests > 0 else 0
+    
+    return {
+        "cache": {
+            "hits": total_hits,
+            "misses": total_misses,
+            "total_requests": total_requests,
+            "hit_rate_percent": round(cache_hit_rate, 2)
+        },
+        "requests": {
+            "total": transcription_requests_total._value.get(),
+            "active": active_requests._value.get()
+        }
     }
 
 
