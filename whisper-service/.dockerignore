@@ -1,0 +1,43 @@
+# Python
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Testing
+test_*.py
+tests/
+
+# Development
+.env
+.env.local
+*.md
+shell.nix
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs (will be mounted as volume)
+logs/
+
+# Models (will be downloaded during build or mounted)
+models/
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore

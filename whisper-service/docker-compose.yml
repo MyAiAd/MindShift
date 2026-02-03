@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: whisper-redis
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - whisper-network
+
+  whisper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        WHISPER_MODEL: base
+    container_name: whisper-service
+    environment:
+      - WHISPER_MODEL=base
+      - WHISPER_DEVICE=cpu
+      - WHISPER_COMPUTE_TYPE=int8
+      - REDIS_URL=redis://redis:6379/0
+      - CACHE_ENABLED=true
+      - CACHE_TTL=3600
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_WORKERS=2
+    ports:
+      - "8000:8000"
+    volumes:
+      - whisper-models:/app/models
+      - whisper-logs:/app/logs
+      - whisper-cache:/app/cache
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - whisper-network
+
+volumes:
+  redis-data:
+    driver: local
+  whisper-models:
+    driver: local
+  whisper-logs:
+    driver: local
+  whisper-cache:
+    driver: local
+
+networks:
+  whisper-network:
+    driver: bridge
