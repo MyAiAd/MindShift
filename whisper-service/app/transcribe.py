@@ -7,13 +7,146 @@ Handles audio file reading, format conversion, validation, and transcription.
 import io
 import time
 import logging
-from typing import Tuple, BinaryIO
+from typing import Tuple, BinaryIO, Dict, List, Any, Optional
 import numpy as np
 import soundfile as sf
 import librosa
+from faster_whisper import WhisperModel
 from .config import config
 
 logger = logging.getLogger(__name__)
+
+# Global Whisper model instance (singleton pattern)
+_whisper_model: Optional[WhisperModel] = None
+
+
+def get_whisper_model() -> WhisperModel:
+    """
+    Get or initialize the Whisper model (singleton pattern).
+    
+    Loads the model once and reuses it across requests for efficiency.
+    
+    Returns:
+        WhisperModel: Loaded Whisper model instance
+        
+    Raises:
+        RuntimeError: If model fails to load
+    """
+    global _whisper_model
+    
+    if _whisper_model is None:
+        logger.info(f"Loading Whisper model '{config.WHISPER_MODEL}' "
+                   f"(device={config.WHISPER_DEVICE}, compute_type={config.WHISPER_COMPUTE_TYPE})")
+        start_time = time.time()
+        
+        try:
+            _whisper_model = WhisperModel(
+                config.WHISPER_MODEL,
+                device=config.WHISPER_DEVICE,
+                compute_type=config.WHISPER_COMPUTE_TYPE,
+                download_root=config.MODEL_CACHE_DIR
+            )
+            load_time = time.time() - start_time
+            logger.info(f"Whisper model loaded successfully in {load_time:.2f}s")
+            
+        except Exception as e:
+            logger.error(f"Failed to load Whisper model: {e}")
+            raise RuntimeError(f"Failed to load Whisper model: {e}")
+    
+    return _whisper_model
+
+
+def transcribe_audio(audio_data: np.ndarray, sample_rate: int) -> Dict[str, Any]:
+    """
+    Transcribe audio using Whisper model.
+    
+    Args:
+        audio_data: Preprocessed audio as float32 numpy array
+        sample_rate: Audio sample rate (should be 16000 for Whisper)
+    
+    Returns:
+        Dictionary containing:
+            - transcript: Full transcription text
+            - segments: List of segments with timestamps and confidence scores
+            - language: Detected language code
+            - language_probability: Confidence of language detection
+            - audio_duration: Length of audio in seconds
+            - processing_time: Time taken to transcribe in seconds
+            - real_time_factor: processing_time / audio_duration (lower is better)
+    
+    Raises:
+        RuntimeError: If transcription fails
+    """
+    start_time = time.time()
+    
+    try:
+        # Get model instance
+        model = get_whisper_model()
+        
+        # Calculate audio duration
+        audio_duration = len(audio_data) / sample_rate
+        
+        logger.info(f"Starting transcription: duration={audio_duration:.2f}s, "
+                   f"sample_rate={sample_rate}Hz")
+        
+        # Transcribe with VAD filter to skip silence
+        transcribe_start = time.time()
+        segments_generator, info = model.transcribe(
+            audio_data,
+            vad_filter=True,  # Voice Activity Detection to skip silence
+            vad_parameters=dict(
+                min_silence_duration_ms=500,  # Minimum silence duration to split
+                threshold=0.5,  # VAD threshold
+            ),
+            beam_size=5,  # Balance between accuracy and speed
+            language="en",  # Default to English (can be overridden by caller in future)
+        )
+        
+        # Extract segments and build full transcript
+        segments = []
+        transcript_parts = []
+        
+        for segment in segments_generator:
+            segment_dict = {
+                "start": round(segment.start, 2),
+                "end": round(segment.end, 2),
+                "text": segment.text.strip(),
+                "confidence": round(segment.avg_logprob, 3) if hasattr(segment, 'avg_logprob') else None,
+            }
+            segments.append(segment_dict)
+            transcript_parts.append(segment.text.strip())
+        
+        transcript = " ".join(transcript_parts).strip()
+        transcribe_time = time.time() - transcribe_start
+        
+        # Calculate processing metrics
+        total_time = time.time() - start_time
+        real_time_factor = total_time / audio_duration if audio_duration > 0 else 0
+        
+        result = {
+            "transcript": transcript,
+            "segments": segments,
+            "language": info.language,
+            "language_probability": round(info.language_probability, 3),
+            "audio_duration": round(audio_duration, 2),
+            "processing_time": {
+                "transcribe": round(transcribe_time, 3),
+                "total": round(total_time, 3),
+            },
+            "real_time_factor": round(real_time_factor, 3),
+        }
+        
+        logger.info(
+            f"Transcription complete: {len(transcript)} chars, "
+            f"{len(segments)} segments, language={info.language}, "
+            f"rtf={real_time_factor:.3f}, time={total_time:.3f}s"
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Transcription failed: {e}")
+        raise RuntimeError(f"Transcription failed: {e}")
 
 
 def preprocess_audio(audio_file: BinaryIO, filename: str = "audio") -> Tuple[np.ndarray, int]:
