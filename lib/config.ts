@@ -197,4 +197,26 @@ export default config;
 // Utility functions for common config access
 export const getApiUrl = () => config.site.url;
 export const getDatabaseUrl = () => config.database.url;
-export const getStripePublishableKey = () => config.stripe.publishableKey; 
+export const getStripePublishableKey = () => config.stripe.publishableKey;
+
+// =========================
+// WHISPER TRANSCRIPTION
+// =========================
+
+/**
+ * Get the configured transcription provider from environment.
+ * 
+ * @returns "whisper" | "webspeech" - The transcription provider to use
+ * @default "webspeech" - Safe fallback to browser-native API
+ */
+export function getTranscriptionProvider(): "whisper" | "webspeech" {
+  const provider = process.env.NEXT_PUBLIC_TRANSCRIPTION_PROVIDER;
+  
+  // Validate and default to webspeech for safety
+  if (provider === "whisper") {
+    return "whisper";
+  }
+  
+  // Default to webspeech (safe fallback)
+  return "webspeech";
+}
