@@ -547,7 +547,7 @@ export default function TreatmentSession({
     return methodName
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ') + ' V4';
+      .join(' ') + ' V4.1';
   };
 
   // Handle pause/resume button click
@@ -1786,7 +1786,7 @@ export default function TreatmentSession({
               </h2>
               <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full flex items-center space-x-1 flex-shrink-0">
                 <Sparkles className="h-3 w-3" />
-                <span>V4</span>
+                <span>V4.1</span>
               </span>
             </div>
 
