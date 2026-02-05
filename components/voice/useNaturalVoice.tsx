@@ -87,9 +87,9 @@ export const useNaturalVoice = ({
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const SILENCE_TIMEOUT_MS = 1500; // 1.5s of silence = done speaking (trigger deployment)
     
-    // Audio capture for Whisper transcription (only if enabled)
+    // Audio capture for Whisper transcription (only if enabled AND not in test mode)
     const audioCapture = useAudioCapture({
-        enabled: isMicEnabled && useWhisper,
+        enabled: isMicEnabled && useWhisper && !testMode, // ← Disable during test mode
         onTranscript: (transcript) => {
             console.log('🎤 Whisper transcript:', transcript);
             onTranscriptRef.current(transcript);
@@ -243,9 +243,15 @@ export const useNaturalVoice = ({
         onRenderTextRef.current = onRenderText;
     }, [onTranscript, onAudioEnded, onRenderText]);
 
-    // Initialize Speech Recognition (only runs once on mount)
+    // Initialize Speech Recognition (only runs once on mount, skip if using Whisper)
     useEffect(() => {
         isMountedRef.current = true; // Mark as mounted
+        
+        // Skip Web Speech Recognition initialization if using Whisper
+        if (useWhisper) {
+            console.log('🎤 Using Whisper - skipping Web Speech Recognition initialization');
+            return;
+        }
         
         if (typeof window !== 'undefined') {
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -433,7 +439,7 @@ export const useNaturalVoice = ({
             isSpeakingRef.current = false;
             setIsPaused(false);
         };
-    }, []); // Empty deps - only run on mount/unmount
+    }, [useWhisper]); // Re-run if Whisper flag changes
 
     // Handle mic/speaker state changes (separate effect)
     useEffect(() => {
@@ -475,6 +481,12 @@ export const useNaturalVoice = ({
 
     // Start listening helper
     const startListening = useCallback(() => {
+        // If using Whisper, audio capture is handled by useAudioCapture hook
+        if (useWhisper) {
+            console.log('🎤 Using Whisper - audio capture managed by useAudioCapture hook');
+            return;
+        }
+        
         // Don't start if audio is currently playing (prevents feedback loop)
         if (recognitionRef.current && !isSpeakingRef.current && !isAudioPlayingRef.current) {
             try {
@@ -487,14 +499,20 @@ export const useNaturalVoice = ({
             console.log('🎤 Natural Voice: Skipping start - audio is playing (feedback prevention)');
             setListeningState('blockedByAudio');
         }
-    }, []);
+    }, [useWhisper]);
 
     // Stop listening helper
     const stopListening = useCallback(() => {
+        // If using Whisper, stopping is handled by useAudioCapture hook
+        if (useWhisper) {
+            console.log('🎤 Using Whisper - stop managed by useAudioCapture hook');
+            return;
+        }
+        
         if (recognitionRef.current) {
             recognitionRef.current.stop();
         }
-    }, []);
+    }, [useWhisper]);
 
     // Stop speaking helper - immediately stops audio
     const stopSpeaking = useCallback(() => {
