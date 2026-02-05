@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { globalAudioCache } from '@/services/voice/audioCache';
 import { V4_STATIC_AUDIO_TEXTS } from '@/lib/v4/static-audio-texts';
 import { useVAD } from './useVAD';
+import { useAudioCapture } from './useAudioCapture';
 
 // Get all static texts for prefix matching
 const STATIC_TEXTS = Object.values(V4_STATIC_AUDIO_TEXTS);
@@ -46,6 +47,11 @@ export const useNaturalVoice = ({
     // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
     const isSpeakerEnabled = speakerEnabled !== undefined ? speakerEnabled : enabled;
+    
+    // Feature flag: Use Whisper or Web Speech API
+    const useWhisper = typeof window !== 'undefined' && 
+                       process.env.NEXT_PUBLIC_TRANSCRIPTION_PROVIDER === 'whisper';
+    
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
@@ -81,6 +87,16 @@ export const useNaturalVoice = ({
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const SILENCE_TIMEOUT_MS = 1500; // 1.5s of silence = done speaking (trigger deployment)
     
+    // Audio capture for Whisper transcription (only if enabled)
+    const audioCapture = useAudioCapture({
+        enabled: isMicEnabled && useWhisper,
+        onTranscript: (transcript) => {
+            console.log('🎤 Whisper transcript:', transcript);
+            onTranscriptRef.current(transcript);
+        },
+        vadTrigger: false, // We'll manually trigger via processNow()
+    });
+    
     // Test mode handler - called when user speaks during test mode
     const handleTestModeInterruption = useCallback(() => {
         console.log('🧪 VAD: Test mode interruption detected (TEST MODE ACTIVE)');
@@ -113,12 +129,6 @@ export const useNaturalVoice = ({
             return;
         }
         
-        // Pause VAD temporarily to avoid interference with speech recognition
-        if (vadRef.current?.isInitialized) {
-            vadRef.current.pauseVAD();
-            console.log('🎙️ VAD: Paused during speech recognition');
-        }
-        
         // Stop AI audio immediately
         if (audioRef.current) {
             audioRef.current.pause();
@@ -135,6 +145,19 @@ export const useNaturalVoice = ({
         if (pausedAudioRef.current) {
             pausedAudioRef.current = null;
             setIsPaused(false);
+        }
+        
+        // NEW: If using Whisper, process buffered audio immediately
+        if (useWhisper && audioCapture.isCapturing) {
+            console.log('🎙️ VAD: Processing buffered audio via Whisper (no handoff delay!)');
+            audioCapture.processNow();
+            return;
+        }
+        
+        // OLD: Web Speech API path - Pause VAD and use fast-start retry loop
+        if (vadRef.current?.isInitialized) {
+            vadRef.current.pauseVAD();
+            console.log('🎙️ VAD: Paused during speech recognition');
         }
         
         // Stop current listening session to prevent echo
@@ -178,7 +201,7 @@ export const useNaturalVoice = ({
         
         // Start immediately (attempt 0)
         attemptStart(0);
-    }, [testMode, handleTestModeInterruption]);
+    }, [testMode, handleTestModeInterruption, useWhisper, audioCapture]);
     
     // Initialize VAD - only when both mic AND speaker are enabled
     const vadEnabled = isMicEnabled && isSpeakerEnabled;
@@ -834,12 +857,12 @@ export const useNaturalVoice = ({
     }, [isMicEnabled, isSpeaking, startListening, stopListening, guidedMode]);
 
     return {
-        isListening,
+        isListening: useWhisper ? audioCapture.isCapturing : isListening,
         isSpeaking,
         isPaused,
         speak,
         prefetch,
-        error,
+        error: error || (useWhisper ? audioCapture.error : null),
         vadError, // VAD-specific error
         startListening,
         stopListening,
@@ -848,7 +871,11 @@ export const useNaturalVoice = ({
         resumeSpeaking,
         hasPausedAudio,
         clearAudioFlags,
-        interimTranscript, // NEW: Expose interim transcript for UI feedback
-        listeningState, // NEW: Richer listening state for better UX
+        interimTranscript: useWhisper ? '' : interimTranscript, // Whisper doesn't have interim results yet
+        listeningState: useWhisper 
+            ? (audioCapture.isCapturing ? 'listening' : 'idle')
+            : listeningState,
+        // Expose for debugging
+        isProcessing: useWhisper ? audioCapture.isProcessing : false,
     };
 };

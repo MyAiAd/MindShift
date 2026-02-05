@@ -1262,8 +1262,24 @@ export default function TreatmentSession({
         userInput: workType
       }),
     })
-      .then(response => response.json())
+      .then(async response => {
+        console.log('Work type selection response status:', response.status);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Work type selection HTTP error:', response.status, errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        return response.json();
+      })
       .then(data => {
+        console.log('Work type selection response data:', data);
+        
+        // Check if response indicates an error
+        if (data.error || !data.success) {
+          console.error('Work type selection failed:', data.error || 'Unknown error', data.details);
+          throw new Error(data.error || data.details || 'Failed to process work type selection');
+        }
+        
         if (data.success) {
           // Skip "Choose a method:" message if buttons will be shown
           const shouldSkipMessage = data.message === "Choose a method:" ||
@@ -1325,8 +1341,13 @@ export default function TreatmentSession({
       })
       .catch(error => {
         console.error('Work type selection error:', error);
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
         setHasError(true);
-        setErrorMessage('Failed to process work type selection');
+        setErrorMessage(`Failed to process work type selection: ${error.message || 'Unknown error'}`);
         setIsLoading(false);
       });
   };
