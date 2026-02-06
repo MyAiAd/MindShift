@@ -58,6 +58,7 @@ export const useNaturalVoice = ({
     const [error, setError] = useState<string | null>(null);
     const [vadError, setVadError] = useState<string | null>(null); // VAD-specific error
     const [interimTranscript, setInterimTranscript] = useState<string>(''); // NEW: Interim transcript for UI feedback
+    const [whisperProcessing, setWhisperProcessing] = useState(false); // Track Whisper processing for UI feedback
     
     // NEW: Richer listening state for better UX
     type ListeningState = 'listening' | 'restarting' | 'blockedByAudio' | 'micDisabled' | 'unsupported' | 'permissionDenied' | 'idle' | 'error';
@@ -94,6 +95,7 @@ export const useNaturalVoice = ({
             console.log('🎤 Whisper transcript:', transcript);
             onTranscriptRef.current(transcript);
         },
+        onProcessingChange: (processing) => setWhisperProcessing(processing),
         vadTrigger: false, // We'll manually trigger via processNow()
     });
     
@@ -203,6 +205,15 @@ export const useNaturalVoice = ({
         attemptStart(0);
     }, [testMode, handleTestModeInterruption, useWhisper, audioCapture]);
     
+    // VAD speech-end handler - when user stops speaking, immediately process buffered audio
+    // This gives Whisper a clean end-of-utterance signal instead of relying solely on the timer
+    const handleVadSpeechEnd = useCallback((_audio: Float32Array) => {
+        if (useWhisper && audioCapture.isCapturing) {
+            console.log('🎙️ VAD: Speech ended - triggering immediate Whisper processing');
+            audioCapture.processNow();
+        }
+    }, [useWhisper, audioCapture]);
+    
     // Initialize VAD - only when both mic AND speaker are enabled
     const vadEnabled = isMicEnabled && isSpeakerEnabled;
     
@@ -222,6 +233,7 @@ export const useNaturalVoice = ({
         enabled: vadEnabled,
         sensitivity: vadSensitivity,
         onSpeechStart: vadSpeechHandler,
+        onSpeechEnd: useWhisper ? handleVadSpeechEnd : undefined, // Trigger Whisper processing when speech ends
         onVadLevel: onVadLevel,
         ...(vadTimingOverrides ?? {})
     });
@@ -889,7 +901,9 @@ export const useNaturalVoice = ({
         resumeSpeaking,
         hasPausedAudio,
         clearAudioFlags,
-        interimTranscript: useWhisper ? '' : interimTranscript, // Whisper doesn't have interim results yet
+        interimTranscript: useWhisper 
+            ? (whisperProcessing ? '...' : '') // Show processing indicator while Whisper transcribes
+            : interimTranscript,
         listeningState: useWhisper 
             ? (audioCapture.isCapturing ? 'listening' : 'idle')
             : listeningState,

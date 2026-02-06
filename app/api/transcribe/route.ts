@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     
     // Prepare multipart form data
     const formData = new FormData();
-    formData.append('audio', audioBlob, 'audio.webm');
+    formData.append('audio', audioBlob, 'audio.wav');
     
     // Forward to Whisper service
     const headers: HeadersInit = {};

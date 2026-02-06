@@ -5,12 +5,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 interface UseAudioCaptureProps {
   enabled: boolean;
   onTranscript: (transcript: string) => void;
+  onProcessingChange?: (isProcessing: boolean) => void; // Notify parent of processing state changes
   vadTrigger?: boolean; // External VAD can trigger transcription
 }
 
 export const useAudioCapture = ({
   enabled,
   onTranscript,
+  onProcessingChange,
   vadTrigger,
 }: UseAudioCaptureProps) => {
   const [isCapturing, setIsCapturing] = useState(false);
@@ -23,12 +25,21 @@ export const useAudioCapture = ({
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const audioBufferRef = useRef<Float32Array[]>([]);
   const lastProcessTimeRef = useRef<number>(0);
+  const activeRequestsRef = useRef<number>(0); // Track concurrent API requests
   
-  // Configuration
-  const BUFFER_DURATION_MS = 5000; // Keep last 5 seconds
-  const SAMPLE_RATE = 16000; // 16kHz (Whisper optimal)
-  const MIN_PROCESS_INTERVAL_MS = 1000; // Don't process more than once per second
-  const AUTO_PROCESS_INTERVAL_MS = 3000; // Auto-process every 3 seconds if speech detected
+  // Keep callback refs current to avoid stale closures in async operations
+  const onTranscriptRef = useRef(onTranscript);
+  const onProcessingChangeRef = useRef(onProcessingChange);
+  useEffect(() => {
+    onTranscriptRef.current = onTranscript;
+    onProcessingChangeRef.current = onProcessingChange;
+  }, [onTranscript, onProcessingChange]);
+  
+  // Configuration - TUNED for responsive speech capture
+  const BUFFER_DURATION_MS = 8000;   // Keep last 8 seconds (up from 5 - more safety margin)
+  const SAMPLE_RATE = 16000;          // 16kHz (Whisper optimal)
+  const MIN_PROCESS_INTERVAL_MS = 300; // Throttle: max once per 300ms (down from 1000ms)
+  const AUTO_PROCESS_INTERVAL_MS = 1500; // Auto-process every 1.5s (down from 3s)
   
   /**
    * Convert Float32Array audio buffers to WAV blob
@@ -83,34 +94,51 @@ export const useAudioCapture = ({
   }, []);
   
   /**
-   * Send audio buffer to Whisper for transcription
+   * Send audio buffer to Whisper for transcription.
+   * 
+   * Uses SNAPSHOT-AND-CLEAR pattern:
+   * 1. Atomically snapshot current buffer and clear it
+   * 2. New audio accumulates in the fresh buffer immediately
+   * 3. Send snapshot to Whisper API
+   * 4. Multiple calls can be in-flight concurrently (no blocking)
+   * 
+   * @param bypassThrottle - If true, skip the MIN_PROCESS_INTERVAL_MS throttle
+   *                         (used for barge-in and VAD speech-end triggers)
    */
-  const processAudioBuffer = useCallback(async () => {
-    // Throttle processing
-    const now = Date.now();
-    if (now - lastProcessTimeRef.current < MIN_PROCESS_INTERVAL_MS) {
-      console.log('🎙️ AudioCapture: Throttling - too soon since last process');
-      return;
+  const processAudioBuffer = useCallback(async (bypassThrottle = false) => {
+    // Throttle processing (unless bypassed for urgent triggers)
+    if (!bypassThrottle) {
+      const now = Date.now();
+      if (now - lastProcessTimeRef.current < MIN_PROCESS_INTERVAL_MS) {
+        return;
+      }
     }
     
     // Check if we have audio to process
     if (audioBufferRef.current.length === 0) {
-      console.log('🎙️ AudioCapture: No audio to process');
       return;
     }
     
-    lastProcessTimeRef.current = now;
+    lastProcessTimeRef.current = Date.now();
+    
+    // SNAPSHOT AND CLEAR: Atomically take current buffer and start fresh.
+    // This is safe because JS is single-threaded: no audio worklet messages
+    // can arrive between these two lines (they queue on the event loop).
+    // New audio from the worklet will accumulate in the fresh empty buffer
+    // while this batch is being sent to Whisper.
+    const bufferSnapshot = audioBufferRef.current;
+    audioBufferRef.current = [];
+    
+    // Track concurrent requests for UI state
+    activeRequestsRef.current++;
     setIsProcessing(true);
+    onProcessingChangeRef.current?.(true);
     
     try {
-      // Create WAV blob from buffer
-      const wavBlob = createWavBlob(audioBufferRef.current);
-      console.log(`🎙️ AudioCapture: Processing ${(wavBlob.size / 1024).toFixed(1)}KB of audio`);
+      const wavBlob = createWavBlob(bufferSnapshot);
+      console.log(`🎙️ AudioCapture: Processing ${(wavBlob.size / 1024).toFixed(1)}KB of audio (${activeRequestsRef.current} in-flight)`);
       
-      // Clear buffer after capturing (so we don't re-process same audio)
-      audioBufferRef.current = [];
-      
-      // Send to API
+      // Send to Whisper API
       const response = await fetch('/api/transcribe', {
         method: 'POST',
         body: wavBlob,
@@ -120,14 +148,15 @@ export const useAudioCapture = ({
       });
       
       if (!response.ok) {
-        throw new Error(`Transcription failed: ${response.status}`);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        throw new Error(`Transcription failed (${response.status}): ${errorText}`);
       }
       
       const data = await response.json();
       
       if (data.transcript && data.transcript.trim()) {
         console.log('🎙️ AudioCapture: Transcript:', data.transcript);
-        onTranscript(data.transcript.trim());
+        onTranscriptRef.current(data.transcript.trim());
       } else {
         console.log('🎙️ AudioCapture: Empty transcript (likely silence)');
       }
@@ -136,12 +165,26 @@ export const useAudioCapture = ({
       console.error('🎙️ AudioCapture: Processing error:', err);
       setError(err instanceof Error ? err.message : 'Transcription failed');
     } finally {
-      setIsProcessing(false);
+      // Decrement active request counter
+      activeRequestsRef.current = Math.max(0, activeRequestsRef.current - 1);
+      if (activeRequestsRef.current === 0) {
+        setIsProcessing(false);
+        onProcessingChangeRef.current?.(false);
+      }
     }
-  }, [createWavBlob, onTranscript]);
+  }, [createWavBlob]);
   
   /**
-   * Initialize audio capture
+   * Process audio immediately, bypassing the throttle.
+   * Use for barge-in and VAD speech-end triggers where latency matters.
+   */
+  const processNow = useCallback(() => {
+    processAudioBuffer(true);
+  }, [processAudioBuffer]);
+  
+  /**
+   * Initialize audio capture pipeline:
+   * Microphone → AudioContext → AudioWorklet → Buffer
    */
   const initializeCapture = useCallback(async () => {
     if (!enabled) return;
@@ -162,11 +205,11 @@ export const useAudioCapture = ({
       
       mediaStreamRef.current = stream;
       
-      // Create audio context
+      // Create audio context at Whisper's optimal sample rate
       const audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
       audioContextRef.current = audioContext;
       
-      // Load audio worklet processor
+      // Load audio worklet processor (runs on separate thread)
       await audioContext.audioWorklet.addModule('/audio-capture-processor.js');
       
       // Create worklet node
@@ -177,24 +220,23 @@ export const useAudioCapture = ({
       workletNode.port.onmessage = (event) => {
         const audioData = event.data.audioData as Float32Array;
         
-        // Add to circular buffer
+        // Add to rolling buffer
         audioBufferRef.current.push(audioData);
         
-        // Maintain buffer duration (remove old chunks)
+        // Maintain buffer duration (remove oldest chunks when buffer exceeds max)
         const maxChunks = Math.ceil(BUFFER_DURATION_MS / (audioData.length / SAMPLE_RATE * 1000));
-        if (audioBufferRef.current.length > maxChunks) {
+        while (audioBufferRef.current.length > maxChunks) {
           audioBufferRef.current.shift();
         }
       };
       
-      // Connect audio pipeline
+      // Connect audio pipeline: mic → worklet (don't connect to destination - no echo)
       const source = audioContext.createMediaStreamSource(stream);
       source.connect(workletNode);
-      // Note: Don't connect to destination (we don't want to hear ourselves)
       
       setIsCapturing(true);
       setError(null);
-      console.log('🎙️ AudioCapture: Initialized successfully');
+      console.log('🎙️ AudioCapture: Initialized successfully (buffer: 8s, auto-process: 1.5s)');
       
     } catch (err) {
       console.error('🎙️ AudioCapture: Initialization error:', err);
@@ -204,7 +246,7 @@ export const useAudioCapture = ({
   }, [enabled]);
   
   /**
-   * Cleanup audio capture
+   * Cleanup audio capture: stop stream, close context, clear buffer
    */
   const cleanupCapture = useCallback(() => {
     console.log('🎙️ AudioCapture: Cleaning up...');
@@ -244,32 +286,34 @@ export const useAudioCapture = ({
     };
   }, [enabled, initializeCapture, cleanupCapture]);
   
-  // Process audio when VAD triggers
+  // Process audio when external VAD triggers
   useEffect(() => {
-    if (vadTrigger && isCapturing && !isProcessing) {
-      console.log('🎙️ AudioCapture: VAD trigger - processing audio');
-      processAudioBuffer();
+    if (vadTrigger && isCapturing) {
+      console.log('🎙️ AudioCapture: VAD trigger - processing audio immediately');
+      processNow(); // Bypass throttle for VAD triggers
     }
-  }, [vadTrigger, isCapturing, isProcessing, processAudioBuffer]);
+  }, [vadTrigger, isCapturing, processNow]);
   
-  // Auto-process every N seconds
+  // Auto-process timer
+  // NOTE: No isProcessing gate! Concurrent API calls are safe because
+  // each call snapshots its own portion of the buffer. The throttle
+  // (MIN_PROCESS_INTERVAL_MS) prevents excessive API calls.
   useEffect(() => {
     if (!isCapturing) return;
     
     const interval = setInterval(() => {
-      if (!isProcessing && audioBufferRef.current.length > 0) {
-        console.log('🎙️ AudioCapture: Auto-processing audio buffer');
+      if (audioBufferRef.current.length > 0) {
         processAudioBuffer();
       }
     }, AUTO_PROCESS_INTERVAL_MS);
     
     return () => clearInterval(interval);
-  }, [isCapturing, isProcessing, processAudioBuffer]);
+  }, [isCapturing, processAudioBuffer]);
   
   return {
     isCapturing,
     isProcessing,
     error,
-    processNow: processAudioBuffer, // Manual trigger
+    processNow, // Manual trigger (bypasses throttle)
   };
 };

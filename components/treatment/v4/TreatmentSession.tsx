@@ -2559,7 +2559,7 @@ export default function TreatmentSession({
                   }`}
               >
                 <span className="bg-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">1</span>
-                <span className="hidden sm:inline">Problem</span>
+                <span className="hidden sm:inline">Problem Shifting</span>
                 <span className="sm:hidden">Problem</span>
               </button>
 
