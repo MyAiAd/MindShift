@@ -12,28 +12,40 @@ export async function POST(request: NextRequest) {
 
     if (provider === 'kokoro') {
       // Kokoro TTS (Hetzner self-hosted)
-      const KOKORO_API_URL = process.env.NEXT_PUBLIC_KOKORO_API_URL || 'https://api.mind-shift.click/tts';
+      // Use internal URL for server-side calls (avoids Cloudflare round-trip)
+      const KOKORO_API_URL = process.env.KOKORO_INTERNAL_URL || 'http://localhost:8080/tts';
       
       const voiceId = voice || 'af_heart'; // Default to Heart (Rachel)
 
-      const response = await fetch(KOKORO_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text,
-          voice: voiceId,
-          format: 'opus',
-        }),
-      });
+      console.log(`TTS: Calling Kokoro at ${KOKORO_API_URL} with voice=${voiceId}, text="${text.substring(0, 50)}..."`);
+
+      let response: Response;
+      try {
+        response = await fetch(KOKORO_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text,
+            voice: voiceId,
+            format: 'opus',
+          }),
+        });
+      } catch (fetchError) {
+        console.error('Kokoro TTS fetch error (network/connection):', fetchError instanceof Error ? fetchError.message : fetchError);
+        return NextResponse.json({ 
+          error: 'Kokoro TTS connection failed', 
+          details: fetchError instanceof Error ? fetchError.message : 'Network error',
+        }, { status: 502 });
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Kokoro TTS API error:', errorText);
+        console.error(`Kokoro TTS API error (status ${response.status}):`, errorText || '(empty response)');
         return NextResponse.json({ 
           error: 'Kokoro TTS synthesis failed', 
-          details: errorText,
+          details: errorText || 'Unknown error',
           status: response.status 
         }, { status: 500 });
       }
