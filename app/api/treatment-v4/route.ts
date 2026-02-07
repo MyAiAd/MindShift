@@ -309,7 +309,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
             treatmentContext?.metadata?.newDiggingProblem ||
             treatmentContext?.problemStatement ||
             treatmentContext?.userResponses?.['restate_selected_problem'] ||
-            treatmentContext?.userResponses?.['mind_shifting_explanation'] ||
+            treatmentContext?.userResponses?.['mind_shifting_explanation_dynamic'] ||
             userInput;
           console.log('Treatment V4 API: Using problem statement for intro step processing:', textToProcess);
         }
@@ -387,7 +387,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       finalResponse = {
         ...finalResponse,
         message: aiResponse.message,
-        currentStep: 'mind_shifting_explanation', // AI assistance keeps user on same step for clarification
+        currentStep: 'mind_shifting_explanation_dynamic', // AI assistance keeps user on same step for clarification
         responseTime: Math.round(responseTime),
         usedAI: true,
         aiCost: aiResponse.cost,
@@ -580,14 +580,14 @@ async function handleAIAssistance(
         userId,
         sessionId,
         currentPhase: 'introduction', // Use actual phase instead of hardcoded
-        currentStep: 'mind_shifting_explanation', // Use actual step instead of hardcoded
+        currentStep: 'mind_shifting_explanation_dynamic', // Use actual step instead of hardcoded
         userResponses: {},
         startTime: new Date(),
         lastActivity: new Date(),
         metadata: {}
       },
       currentStep: {
-        id: 'mind_shifting_explanation', // Use actual step ID
+        id: 'mind_shifting_explanation_dynamic', // Use actual step ID
         scriptedResponse: '',
         expectedResponseType: 'problem', // Correct response type for introduction
         validationRules: [],
@@ -718,7 +718,7 @@ async function handleAIValidation(
       }
 
       // Validation passed - continue with normal flow but store the corrected statement
-      if (treatmentContext.currentStep === 'mind_shifting_explanation' && treatmentContext.metadata.selectedMethod) {
+      if (treatmentContext.currentStep === 'mind_shifting_explanation_dynamic' && treatmentContext.metadata.selectedMethod) {
         // Store the corrected problem statement before continuing
         console.log(`🔍 V3_VALIDATION: Storing corrected problem statement: "${userInput}" for method: ${treatmentContext.metadata.selectedMethod}`);
         treatmentContext.metadata.problemStatement = userInput;
@@ -842,7 +842,7 @@ async function saveSessionToDatabase(
       tenant_id: profile?.tenant_id || null, // Allow null for super admins
       status: 'active',
       current_phase: 'introduction', // Use proper phase name from state machine
-      current_step: result.nextStep || 'mind_shifting_explanation_static', // Use proper step name from state machine
+      current_step: result.nextStep || 'mind_shifting_explanation_dynamic', // Use proper step name from state machine
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       avg_response_time: Math.round(responseTime),
@@ -1033,7 +1033,7 @@ function getPhaseForStep(stepId: string): string {
   // Note: This will need to be updated based on actual V4 phase/step structure
   const stepToPhaseMap: Record<string, string> = {
     // Introduction phase
-    'mind_shifting_explanation': 'introduction',
+    'mind_shifting_explanation_dynamic': 'introduction',
 
     // Work type selection phase
     'work_type_selection': 'work_type_selection',
