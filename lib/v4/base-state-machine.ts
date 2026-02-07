@@ -497,7 +497,7 @@ export abstract class BaseTreatmentStateMachine {
     // Add phase-specific predictions based on common flows
     switch (context.currentPhase) {
       case 'introduction':
-        if (context.currentStep === 'mind_shifting_explanation') {
+        if (context.currentStep === 'mind_shifting_explanation_dynamic' || context.currentStep === 'mind_shifting_explanation') {
           predictions.push('work_type_description', 'goal_description', 'negative_experience_description');
         }
         break;

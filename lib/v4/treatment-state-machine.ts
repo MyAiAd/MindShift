@@ -467,12 +467,12 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       }
     } else if (selectedWorkType === 'problem' && !selectedMethod) {
       // Problem selected but no method yet, stay on current step for method selection
-      console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem selected, waiting for method selection, staying on mind_shifting_explanation`);
-      return 'mind_shifting_explanation';
+      console.log(`🔍 MIND_SHIFTING_DETERMINE: Problem selected, waiting for method selection, staying on mind_shifting_explanation_dynamic`);
+      return 'mind_shifting_explanation_dynamic';
     } else {
       // No valid work type selected yet, stay on current step
-      console.log(`🔍 MIND_SHIFTING_DETERMINE: No valid work type selected, staying on mind_shifting_explanation`);
-      return 'mind_shifting_explanation';
+      console.log(`🔍 MIND_SHIFTING_DETERMINE: No valid work type selected, staying on mind_shifting_explanation_dynamic`);
+      return 'mind_shifting_explanation_dynamic';
     }
   }
 
@@ -670,7 +670,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       return 'restate_selected_problem';
     }
     if (lastResponse.includes('yes') || lastResponse.includes('correct') || lastResponse.includes('right')) {
-      const problemResponse = context.userResponses['restate_selected_problem'] || context.userResponses['mind_shifting_explanation'] || '';
+      const problemResponse = context.userResponses['restate_selected_problem'] || context.userResponses['mind_shifting_explanation_dynamic'] || context.userResponses['mind_shifting_explanation'] || '';
       this.updateProblemStatement(context, problemResponse);
       context.currentPhase = 'method_selection';
       return 'choose_method';
