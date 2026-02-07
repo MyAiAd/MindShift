@@ -1,28 +1,25 @@
 [Unit]
 Description=Whisper Transcription Service
-After=network.target redis.service
-Wants=redis.service
+After=network.target
 
 [Service]
 Type=simple
-User=www-data
-Group=www-data
-WorkingDirectory=/opt/mindshifting/whisper-service
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/mind-shift/app/whisper-service
 
 # Environment variables
 Environment="WHISPER_MODEL=base"
 Environment="WHISPER_DEVICE=cpu"
 Environment="WHISPER_COMPUTE_TYPE=int8"
-Environment="REDIS_URL=redis://localhost:6379/0"
-Environment="CACHE_ENABLED=true"
-Environment="CACHE_TTL=3600"
+Environment="CACHE_ENABLED=false"
 Environment="API_HOST=0.0.0.0"
 Environment="API_PORT=8000"
-Environment="API_WORKERS=2"
-EnvironmentFile=-/opt/mindshifting/whisper-service/.env
+Environment="API_WORKERS=1"
+EnvironmentFile=-/opt/mind-shift/app/whisper-service/.env
 
 # Command
-ExecStart=/opt/mindshifting/whisper-service/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+ExecStart=/opt/mind-shift/app/whisper-service/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
 
 # Restart policy
 Restart=always
@@ -30,8 +27,6 @@ RestartSec=10
 
 # Resource limits
 LimitNOFILE=65536
-MemoryLimit=2G
-CPUQuota=200%
 
 # Logging
 StandardOutput=journal
