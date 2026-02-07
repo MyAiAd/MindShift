@@ -641,7 +641,7 @@ export const useNaturalVoice = ({
                 body: JSON.stringify({
                     text,
                     provider: voiceProvider,
-                    voice: elevenLabsVoiceId,
+                    voice: voiceProvider === 'kokoro' ? kokoroVoiceId : elevenLabsVoiceId,
                 }),
             });
 
@@ -654,7 +654,7 @@ export const useNaturalVoice = ({
         } catch (err) {
             console.error('🗣️ Natural Voice: Prefetch error:', err);
         }
-    }, [voiceProvider, elevenLabsVoiceId]);
+    }, [voiceProvider, elevenLabsVoiceId, kokoroVoiceId]);
 
     /**
      * Find if text starts with any cached static text for a specific voice

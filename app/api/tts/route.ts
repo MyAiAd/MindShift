@@ -15,7 +15,16 @@ export async function POST(request: NextRequest) {
       // Use internal URL for server-side calls (avoids Cloudflare round-trip)
       const KOKORO_API_URL = process.env.KOKORO_INTERNAL_URL || 'http://localhost:8080/tts';
       
-      const voiceId = voice || 'af_heart'; // Default to Heart (Rachel)
+      // Map OpenAI/generic voice names to Kokoro voices, default to af_heart
+      const kokoroVoiceMap: Record<string, string> = {
+        'alloy': 'af_heart',
+        'echo': 'am_adam',
+        'fable': 'af_bella',
+        'onyx': 'am_michael',
+        'nova': 'af_nova',
+        'shimmer': 'af_sarah',
+      };
+      const voiceId = kokoroVoiceMap[voice] || (voice?.startsWith('af_') || voice?.startsWith('am_') ? voice : 'af_heart');
 
       console.log(`TTS: Calling Kokoro at ${KOKORO_API_URL} with voice=${voiceId}, text="${text.substring(0, 50)}..."`);
 
