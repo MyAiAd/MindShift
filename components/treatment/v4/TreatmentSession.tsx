@@ -722,21 +722,41 @@ export default function TreatmentSession({
         return;
       }
       
-      // Space bar: PTT toggle
+      // Space bar: PTT start (on key press)
       if (e.code === 'Space' && !e.repeat) {
         e.preventDefault(); // Don't scroll page
-        console.log('⌨️ Space pressed: PTT toggle', { isPTTActive });
+        console.log('⌨️ Space pressed: PTT start', { isPTTActive });
         
         if (!isPTTActive) {
           handlePTTStart();
-        } else {
+        }
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      // Ignore space bar if typing in input field
+      if (e.target instanceof HTMLInputElement || 
+          e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      // Space bar: PTT end (on key release)
+      if (e.code === 'Space') {
+        e.preventDefault(); // Don't scroll page
+        console.log('⌨️ Space released: PTT end', { isPTTActive });
+        
+        if (isPTTActive) {
           handlePTTEnd();
         }
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, [isGuidedMode, isPTTActive, handlePTTStart, handlePTTEnd]);
 
   // Auto-scroll to bottom when NEW messages arrive (not on initial load)
