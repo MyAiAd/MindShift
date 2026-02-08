@@ -218,8 +218,8 @@ export const useNaturalVoice = ({
         }
     }, [useWhisper, audioCapture]);
     
-    // Initialize VAD - only when both mic AND speaker are enabled
-    const vadEnabled = isMicEnabled && isSpeakerEnabled;
+    // Initialize VAD - only when both mic AND speaker are enabled, and NOT in guided mode (PTT)
+    const vadEnabled = isMicEnabled && isSpeakerEnabled && !guidedMode;
     
     // Choose the correct handler based on test mode
     const vadSpeechHandler = testMode ? handleTestModeInterruption : handleVadBargeIn;
