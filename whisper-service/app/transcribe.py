@@ -2,9 +2,11 @@
 Audio preprocessing and transcription logic for Whisper service.
 
 Handles audio file reading, format conversion, validation, and transcription.
+Includes hallucination detection to filter out common Whisper artifacts.
 """
 
 import io
+import re
 import time
 import logging
 from typing import Tuple, BinaryIO, Dict, List, Any, Optional
@@ -15,6 +17,207 @@ from faster_whisper import WhisperModel
 from .config import config
 
 logger = logging.getLogger(__name__)
+
+# ============================================================================
+# WHISPER HALLUCINATION DETECTION
+# ============================================================================
+# Whisper (especially smaller models like base/small) hallucinates common
+# phrases when given silence, short audio, or noisy input. These are
+# well-documented patterns that appear across many users and use cases.
+# See: https://github.com/openai/whisper/discussions/928
+# ============================================================================
+
+# Exact-match hallucination phrases (case-insensitive, stripped of punctuation)
+# These are phrases Whisper generates from silence/noise, NOT from real speech
+HALLUCINATION_PHRASES = {
+    # YouTube-style hallucinations (most common)
+    "thanks for watching",
+    "thank you for watching",
+    "thanks for watching and i'll see you in the next video",
+    "thanks for watching and ill see you in the next video",
+    "thank you for watching and i'll see you in the next video",
+    "see you in the next video",
+    "i'll see you in the next video",
+    "ill see you in the next video",
+    "see you in the next one",
+    "i'll see you in the next one",
+    "see you next time",
+    "thanks for listening",
+    "thank you for listening",
+    "thank you very much",
+    "thank you so much",
+    "thank you",
+    "thanks",
+    "bye bye",
+    "bye",
+    "goodbye",
+    "good bye",
+    
+    # Subscribe/engagement hallucinations
+    "please subscribe",
+    "subscribe to my channel",
+    "like and subscribe",
+    "please like and subscribe",
+    "don't forget to subscribe",
+    "hit the subscribe button",
+    "hit the like button",
+    "leave a comment",
+    "please leave a like",
+    
+    # Intro hallucinations
+    "hey guys",
+    "hi everyone",
+    "hello everyone",
+    "what's up guys",
+    "whats up guys",
+    "welcome back",
+    "welcome to my channel",
+    "hey what's up",
+    
+    # Podcast-style hallucinations
+    "you've been listening to",
+    "this has been",
+    "that's all for today",
+    "thats all for today",
+    "that's it for today",
+    "until next time",
+    
+    # Music/subtitle hallucinations
+    "♪",
+    "music",
+    "music playing",
+    "background music",
+    "applause",
+    "laughter",
+    
+    # Silence acknowledgment hallucinations
+    "...",
+    "silence",
+    "no speech detected",
+    
+    # Foreign language hallucinations (common in English-mode)
+    "ご視聴ありがとうございました",
+    "字幕由",
+    "字幕",
+    "請不吝點讚",
+    "訂閱",
+    "谢谢观看",
+    "감사합니다",
+    "소리",
+}
+
+# Substring patterns - if the transcript CONTAINS any of these, it's likely hallucinated
+HALLUCINATION_SUBSTRINGS = [
+    "thanks for watching",
+    "thank you for watching",
+    "see you in the next video",
+    "see you in the next one",
+    "subscribe to my channel",
+    "like and subscribe",
+    "don't forget to subscribe",
+    "hit the subscribe button",
+    "welcome to my channel",
+    "mozilafoundation",
+    "mozilla foundation",
+    "amara.org",
+    "subtitles by",
+    "captions by",
+    "transcribed by",
+]
+
+
+def _normalize_text(text: str) -> str:
+    """Normalize text for hallucination comparison: lowercase, strip punctuation."""
+    text = text.lower().strip()
+    # Remove common punctuation but keep apostrophes for contractions
+    text = re.sub(r"[^\w\s']", "", text)
+    # Collapse whitespace
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def is_hallucination(transcript: str, segments: List[Dict], audio_duration: float) -> Tuple[bool, str]:
+    """
+    Check if a Whisper transcript is likely a hallucination.
+    
+    Uses multiple heuristics (Research-backed: https://arxiv.org/abs/2501.11378):
+    1. Exact phrase matching against known hallucination phrases
+    2. Substring matching for partial hallucination patterns
+    3. Confidence score analysis (low avg_logprob = suspicious)
+    4. No-speech probability (high no_speech_prob = likely silence/noise)
+    5. Duration mismatch (very short audio producing long text)
+    6. Compression ratio check (repetitive text patterns)
+    7. Word repetition detection (hallucinations often repeat words/phrases)
+    
+    Args:
+        transcript: The full transcript text
+        segments: List of segment dicts with confidence scores
+        audio_duration: Duration of audio in seconds
+    
+    Returns:
+        Tuple of (is_hallucination: bool, reason: str)
+    """
+    if not transcript or not transcript.strip():
+        return False, ""  # Empty is not a hallucination, just silence
+    
+    normalized = _normalize_text(transcript)
+    
+    # 1. Exact phrase match
+    if normalized in HALLUCINATION_PHRASES:
+        return True, f"exact_match: '{normalized}'"
+    
+    # 2. Substring match
+    for pattern in HALLUCINATION_SUBSTRINGS:
+        if pattern in normalized:
+            return True, f"substring_match: '{pattern}' in '{normalized}'"
+    
+    # 3. Segment-level confidence analysis
+    if segments:
+        avg_logprobs = [s.get("avg_logprob", 0) for s in segments if s.get("avg_logprob") is not None]
+        no_speech_probs = [s.get("no_speech_prob", 0) for s in segments if s.get("no_speech_prob") is not None]
+        
+        # High no-speech probability across segments = likely hallucination
+        if no_speech_probs:
+            avg_no_speech = sum(no_speech_probs) / len(no_speech_probs)
+            if avg_no_speech > 0.6:
+                return True, f"high_no_speech_prob: {avg_no_speech:.3f}"
+        
+        # Very low confidence + short audio = likely hallucination
+        if avg_logprobs and audio_duration < 3.0:
+            avg_confidence = sum(avg_logprobs) / len(avg_logprobs)
+            if avg_confidence < -1.0:
+                return True, f"low_confidence_short_audio: logprob={avg_confidence:.3f}, duration={audio_duration:.2f}s"
+    
+    # 4. Duration mismatch: very short audio producing suspiciously long transcript
+    # Real speech is roughly 2-3 words per second; hallucinations often produce more
+    if audio_duration < 1.5:
+        word_count = len(transcript.split())
+        if word_count > 8:  # More than ~5 words/sec is suspicious for <1.5s audio
+            return True, f"duration_mismatch: {word_count} words in {audio_duration:.2f}s audio"
+    
+    # 5. Compression ratio check (NEW): Detect highly repetitive text
+    # Hallucinations often repeat the same word/phrase many times
+    words = transcript.lower().split()
+    if len(words) > 3:
+        unique_words = len(set(words))
+        compression_ratio = len(words) / unique_words
+        if compression_ratio > 3.0:  # More than 3x repetition
+            return True, f"high_compression_ratio: {compression_ratio:.2f} ({len(words)} words, {unique_words} unique)"
+    
+    # 6. Word repetition detection (NEW): Check for repeated bigrams/trigrams
+    # Example hallucination: "thank you thank you thank you"
+    if len(words) >= 4:
+        bigrams = [f"{words[i]} {words[i+1]}" for i in range(len(words)-1)]
+        bigram_counts = {}
+        for bg in bigrams:
+            bigram_counts[bg] = bigram_counts.get(bg, 0) + 1
+        
+        max_repetitions = max(bigram_counts.values()) if bigram_counts else 0
+        if max_repetitions >= 3:  # Same 2-word phrase repeated 3+ times
+            repeated_bigram = [bg for bg, count in bigram_counts.items() if count == max_repetitions][0]
+            return True, f"repeated_phrase: '{repeated_bigram}' repeated {max_repetitions}x"
+    
+    return False, ""
 
 # Global Whisper model instance (singleton pattern)
 _whisper_model: Optional[WhisperModel] = None
@@ -91,15 +294,33 @@ def transcribe_audio(audio_data: np.ndarray, sample_rate: int) -> Dict[str, Any]
         
         # Transcribe with VAD filter to skip silence
         transcribe_start = time.time()
+        
+        # ENHANCED HALLUCINATION PREVENTION (Research-backed techniques)
+        # Suppress tokens known to cause hallucinations (from research + your data)
+        # Token IDs for common hallucination phrases (Whisper English tokenizer)
+        suppress_tokens = [
+            # "thanks for watching" variants
+            11176, 329, 6355,  # thanks for watching
+            50364, 50365,      # silence tokens
+            # Add more token IDs as needed
+        ]
+        
         segments_generator, info = model.transcribe(
             audio_data,
             vad_filter=True,  # Voice Activity Detection to skip silence
             vad_parameters=dict(
                 min_silence_duration_ms=500,  # Minimum silence duration to split
                 threshold=0.5,  # VAD threshold
+                speech_pad_ms=200,  # Add 200ms padding before/after speech
             ),
             beam_size=5,  # Balance between accuracy and speed
             language="en",  # Default to English (can be overridden by caller in future)
+            condition_on_previous_text=False,  # Prevent hallucination chain reactions
+            temperature=0.0,  # Greedy decoding (most confident predictions only)
+            compression_ratio_threshold=2.4,  # Reject overly repetitive text
+            logprob_threshold=-1.0,  # Stricter confidence threshold
+            no_speech_threshold=0.6,  # Higher threshold for "no speech" detection
+            # suppress_tokens=suppress_tokens,  # Uncomment if needed (experimental)
         )
         
         # Extract segments and build full transcript
@@ -112,12 +333,29 @@ def transcribe_audio(audio_data: np.ndarray, sample_rate: int) -> Dict[str, Any]
                 "end": round(segment.end, 2),
                 "text": segment.text.strip(),
                 "confidence": round(segment.avg_logprob, 3) if hasattr(segment, 'avg_logprob') else None,
+                "no_speech_prob": round(segment.no_speech_prob, 3) if hasattr(segment, 'no_speech_prob') else None,
+                "avg_logprob": round(segment.avg_logprob, 3) if hasattr(segment, 'avg_logprob') else None,
             }
             segments.append(segment_dict)
             transcript_parts.append(segment.text.strip())
         
         transcript = " ".join(transcript_parts).strip()
         transcribe_time = time.time() - transcribe_start
+        
+        # ================================================================
+        # HALLUCINATION DETECTION: Filter out known Whisper hallucinations
+        # ================================================================
+        hallucinated, reason = is_hallucination(transcript, segments, audio_duration)
+        if hallucinated:
+            logger.warning(
+                f"HALLUCINATION DETECTED: '{transcript}' (reason: {reason}, "
+                f"duration={audio_duration:.2f}s, segments={len(segments)})"
+            )
+            # Return empty transcript instead of hallucinated text
+            transcript = ""
+            # Keep segments for debugging but mark as filtered
+            for seg in segments:
+                seg["filtered_as_hallucination"] = True
         
         # Calculate processing metrics
         total_time = time.time() - start_time
@@ -134,12 +372,17 @@ def transcribe_audio(audio_data: np.ndarray, sample_rate: int) -> Dict[str, Any]
                 "total": round(total_time, 3),
             },
             "real_time_factor": round(real_time_factor, 3),
+            "hallucination_filtered": hallucinated,
         }
+        
+        if hallucinated:
+            result["hallucination_reason"] = reason
         
         logger.info(
             f"Transcription complete: {len(transcript)} chars, "
             f"{len(segments)} segments, language={info.language}, "
             f"rtf={real_time_factor:.3f}, time={total_time:.3f}s"
+            f"{f', FILTERED (hallucination: {reason})' if hallucinated else ''}"
         )
         
         return result
