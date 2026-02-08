@@ -75,6 +75,7 @@ export const useNaturalVoice = ({
     const onRenderTextRef = useRef(onRenderText); // NEW: Ref for render callback
     const prevMicEnabledRef = useRef(isMicEnabled); // Track previous mic state
     const prevSpeakerEnabledRef = useRef(isSpeakerEnabled); // Track previous speaker state
+    const speakerEnabledRef = useRef(isSpeakerEnabled); // Immediate ref for async callback checks
     const speakStartTimeRef = useRef<number>(0); // NEW: Track when speak() was called
     const vadRef = useRef<any>(null); // Track VAD instance for resuming after speech
     
@@ -149,10 +150,13 @@ export const useNaturalVoice = ({
             setIsPaused(false);
         }
         
-        // NEW: If using Whisper, process buffered audio immediately
+        // ECHO FIX: If using Whisper, clear the buffer (it contains AI voice) instead of
+        // processing it immediately. The VAD onSpeechEnd handler will trigger processNow()
+        // after the user finishes speaking, at which point the buffer contains only user voice.
         if (useWhisper && audioCapture.isCapturing) {
-            console.log('🎙️ VAD: Processing buffered audio via Whisper (no handoff delay!)');
-            audioCapture.processNow();
+            console.log('🎙️ VAD: Clearing audio buffer (contained AI voice) - waiting for clean user audio');
+            audioCapture.clearBuffer();
+            audioCapture.setAISpeaking(false); // Resume capture for user voice
             return;
         }
         
@@ -450,8 +454,9 @@ export const useNaturalVoice = ({
             setIsSpeaking(false);
             isSpeakingRef.current = false;
             setIsPaused(false);
+            audioCapture.setAISpeaking(false); // Clear echo prevention on unmount
         };
-    }, [useWhisper]); // Re-run if Whisper flag changes
+    }, [useWhisper, audioCapture]); // Re-run if Whisper flag changes
 
     // Handle mic/speaker state changes (separate effect)
     useEffect(() => {
@@ -459,6 +464,7 @@ export const useNaturalVoice = ({
         const wasSpeakerEnabled = prevSpeakerEnabledRef.current;
         prevMicEnabledRef.current = isMicEnabled; // Update ref
         prevSpeakerEnabledRef.current = isSpeakerEnabled; // Update ref
+        speakerEnabledRef.current = isSpeakerEnabled; // Sync immediate ref
         
         // Handle microphone disable
         if (wasMicEnabled && !isMicEnabled) {
@@ -485,11 +491,12 @@ export const useNaturalVoice = ({
             setIsSpeaking(false);
             isSpeakingRef.current = false;
             isAudioPlayingRef.current = false;
+            audioCapture.setAISpeaking(false); // Clear echo prevention flag
         } else if (!wasSpeakerEnabled && isSpeakerEnabled) {
             console.log('🔊 Natural Voice: Enabling speaker - ready for playback');
             // Don't stop anything when enabling - let audio play!
         }
-    }, [isMicEnabled, isSpeakerEnabled]);
+    }, [isMicEnabled, isSpeakerEnabled, audioCapture]);
 
     // Start listening helper
     const startListening = useCallback(() => {
@@ -541,8 +548,9 @@ export const useNaturalVoice = ({
         setIsSpeaking(false);
         isSpeakingRef.current = false;
         isAudioPlayingRef.current = false; // Clear audio playing flag
+        audioCapture.setAISpeaking(false); // Clear echo prevention flag
         stopListening();
-    }, [stopListening]);
+    }, [stopListening, audioCapture]);
 
     // NEW: Pause speaking - saves position for resume
     const pauseSpeaking = useCallback(() => {
@@ -572,6 +580,7 @@ export const useNaturalVoice = ({
             setIsSpeaking(false);
             isSpeakingRef.current = false;
             isAudioPlayingRef.current = false;
+            audioCapture.setAISpeaking(false); // Audio paused, resume mic capture
             
             // NOTE: No timeout - pause state persists until:
             // 1. User resumes playback
@@ -581,7 +590,7 @@ export const useNaturalVoice = ({
         } else {
             console.log('⏸️ Natural Voice: Cannot pause - no audio reference exists');
         }
-    }, []);
+    }, [audioCapture]);
 
     // NEW: Resume speaking - continues from paused position
     const resumeSpeaking = useCallback(() => {
@@ -596,6 +605,7 @@ export const useNaturalVoice = ({
             setIsSpeaking(true);
             isSpeakingRef.current = true;
             setIsPaused(false);
+            audioCapture.setAISpeaking(true); // Pause mic capture while AI speaks
             
             audio.play().then(() => {
                 isAudioPlayingRef.current = true;
@@ -607,6 +617,7 @@ export const useNaturalVoice = ({
                 setIsPaused(false);
                 setIsSpeaking(false);
                 isSpeakingRef.current = false;
+                audioCapture.setAISpeaking(false);
             });
             
             // Clear paused state after resuming
@@ -614,7 +625,7 @@ export const useNaturalVoice = ({
         } else if (!isSpeakerEnabled) {
             console.log('⏸️ Natural Voice: Cannot resume - speaker disabled');
         }
-    }, [isSpeakerEnabled]);
+    }, [isSpeakerEnabled, audioCapture]);
 
     // NEW: Check if there's paused audio available
     const hasPausedAudio = useCallback(() => {
@@ -683,6 +694,20 @@ export const useNaturalVoice = ({
      */
     const playAudioSegment = useCallback(async (audioUrl: string, isLast: boolean): Promise<void> => {
         return new Promise((resolve, reject) => {
+            // SPEAKER OFF FIX: Check ref immediately before playing
+            // This catches the case where speaker was disabled during an async TTS fetch
+            if (!speakerEnabledRef.current) {
+                console.log('🔊 Natural Voice: Speaker disabled before playback, skipping audio segment');
+                if (isLast) {
+                    setIsSpeaking(false);
+                    isSpeakingRef.current = false;
+                    isAudioPlayingRef.current = false;
+                    audioCapture.setAISpeaking(false);
+                }
+                resolve();
+                return;
+            }
+            
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current = null;
@@ -719,6 +744,7 @@ export const useNaturalVoice = ({
                     setIsSpeaking(false);
                     isSpeakingRef.current = false;
                     isAudioPlayingRef.current = false;
+                    audioCapture.setAISpeaking(false); // Resume mic capture after AI finishes
                     // Only restart listening if mic is enabled
                     if (isMicEnabled && isMountedRef.current) {
                         startListening();
@@ -729,6 +755,7 @@ export const useNaturalVoice = ({
             };
 
             audio.onerror = (e) => {
+                audioCapture.setAISpeaking(false);
                 reject(new Error('Audio playback error'));
             };
 
@@ -739,17 +766,19 @@ export const useNaturalVoice = ({
                     isAudioPlayingRef.current = false;
                     isSpeakingRef.current = false;
                     setIsSpeaking(false);
+                    audioCapture.setAISpeaking(false);
                     // Restart listening after a brief delay (only if mic enabled)
                     if (isMicEnabled && isMountedRef.current) {
                         setTimeout(() => startListening(), 300);
                     }
                     resolve(); // Not an error, just cleanup
                 } else {
+                    audioCapture.setAISpeaking(false);
                     reject(playError);
                 }
             });
         });
-    }, [isMicEnabled, startListening, playbackRate]);
+    }, [isMicEnabled, startListening, playbackRate, audioCapture]);
 
     /**
      * Fetch TTS audio for text and return the audio URL
@@ -793,8 +822,9 @@ export const useNaturalVoice = ({
     const speak = useCallback(async (text: string) => {
         if (!text) return;
         
-        // If speaker is disabled, don't play audio
-        if (!isSpeakerEnabled) {
+        // SPEAKER OFF FIX: Use ref for immediate check (not stale closure)
+        // This prevents audio from starting after speaker was disabled during an async gap
+        if (!speakerEnabledRef.current) {
             console.log('🔇 Natural Voice: Speaker disabled, skipping audio playback');
             return;
         }
@@ -815,6 +845,9 @@ export const useNaturalVoice = ({
         setIsSpeaking(true);
         isSpeakingRef.current = true;
         isAudioPlayingRef.current = false;
+        
+        // ECHO PREVENTION: Tell audio capture that AI is speaking
+        audioCapture.setAISpeaking(true);
 
         // Voice-prefixed cache key
         const cacheKey = `${currentVoiceName}:${text}`;
@@ -840,15 +873,26 @@ export const useNaturalVoice = ({
                 const prefixUrl = globalAudioCache.get(prefixCacheKey)!;
                 await playAudioSegment(prefixUrl, false);
 
-                // Check if still mounted/speaking before continuing
-                if (!isMountedRef.current || !isSpeakingRef.current) {
+                // Check if still mounted/speaking/speaker-enabled before continuing
+                if (!isMountedRef.current || !isSpeakingRef.current || !speakerEnabledRef.current) {
                     console.log('🗣️ Natural Voice: Stopped before suffix playback');
+                    audioCapture.setAISpeaking(false);
                     return;
                 }
 
                 // Now fetch and play the suffix (only part that costs $)
                 console.log('🗣️ Natural Voice: Streaming suffix only:', prefixMatch.suffix.substring(0, 50) + '...');
                 const suffixUrl = await fetchTTSAudio(prefixMatch.suffix, currentVoiceName);
+                
+                // Check again after async TTS fetch
+                if (!speakerEnabledRef.current || !isMountedRef.current) {
+                    console.log('🗣️ Natural Voice: Speaker disabled during TTS fetch, aborting');
+                    audioCapture.setAISpeaking(false);
+                    setIsSpeaking(false);
+                    isSpeakingRef.current = false;
+                    return;
+                }
+                
                 await playAudioSegment(suffixUrl, true);
                 return;
             }
@@ -857,6 +901,16 @@ export const useNaturalVoice = ({
             console.log(`🗣️ Natural Voice: No cache for ${currentVoiceName} - streaming full text`);
             console.log('   Text:', text.substring(0, 80) + '...');
             const audioUrl = await fetchTTSAudio(text, currentVoiceName);
+            
+            // SPEAKER OFF FIX: Check again after async TTS fetch
+            if (!speakerEnabledRef.current || !isMountedRef.current) {
+                console.log('🗣️ Natural Voice: Speaker disabled during TTS fetch, aborting');
+                audioCapture.setAISpeaking(false);
+                setIsSpeaking(false);
+                isSpeakingRef.current = false;
+                return;
+            }
+            
             await playAudioSegment(audioUrl, true);
 
         } catch (err) {
@@ -864,12 +918,13 @@ export const useNaturalVoice = ({
             setIsSpeaking(false);
             isSpeakingRef.current = false;
             isAudioPlayingRef.current = false;
+            audioCapture.setAISpeaking(false); // Clear echo prevention on error
             // Only restart listening if mic is enabled
             if (isMicEnabled && isMountedRef.current) {
                 startListening();
             }
         }
-    }, [isSpeakerEnabled, isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice]);
+    }, [isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice, audioCapture]);
 
     // Handle mic/speaker state changes - start/stop listening based on mic state (but not in guided mode)
     useEffect(() => {

@@ -27,6 +27,15 @@ export const useAudioCapture = ({
   const lastProcessTimeRef = useRef<number>(0);
   const activeRequestsRef = useRef<number>(0); // Track concurrent API requests
   
+  // Echo prevention: Track when AI is speaking to avoid capturing its own voice
+  const isAISpeakingRef = useRef(false);
+  const enabledRef = useRef(enabled);
+  
+  // Keep enabled ref in sync
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
+  
   // Keep callback refs current to avoid stale closures in async operations
   const onTranscriptRef = useRef(onTranscript);
   const onProcessingChangeRef = useRef(onProcessingChange);
@@ -106,6 +115,13 @@ export const useAudioCapture = ({
    *                         (used for barge-in and VAD speech-end triggers)
    */
   const processAudioBuffer = useCallback(async (bypassThrottle = false) => {
+    // ECHO PREVENTION: Don't process audio while AI is speaking
+    // The buffer would contain the AI's own voice, producing phantom transcriptions
+    if (isAISpeakingRef.current) {
+      audioBufferRef.current = []; // Discard any AI voice that leaked in
+      return;
+    }
+    
     // Throttle processing (unless bypassed for urgent triggers)
     if (!bypassThrottle) {
       const now = Date.now();
@@ -155,6 +171,13 @@ export const useAudioCapture = ({
       const data = await response.json();
       
       if (data.transcript && data.transcript.trim()) {
+        // GUARD: Don't deliver transcript if capture was disabled or AI started speaking
+        // during the in-flight Whisper request. This prevents phantom transcriptions
+        // from completing API calls after mic disable or during AI speech.
+        if (!enabledRef.current || isAISpeakingRef.current) {
+          console.log('🎙️ AudioCapture: Discarding transcript (disabled or AI speaking):', data.transcript);
+          return;
+        }
         console.log('🎙️ AudioCapture: Transcript:', data.transcript);
         onTranscriptRef.current(data.transcript.trim());
       } else {
@@ -219,6 +242,10 @@ export const useAudioCapture = ({
       // Handle audio data from worklet
       workletNode.port.onmessage = (event) => {
         const audioData = event.data.audioData as Float32Array;
+        
+        // ECHO PREVENTION: Don't buffer audio while AI is speaking
+        // This prevents the AI's own voice from entering the buffer
+        if (isAISpeakingRef.current) return;
         
         // Add to rolling buffer
         audioBufferRef.current.push(audioData);
@@ -302,7 +329,7 @@ export const useAudioCapture = ({
     if (!isCapturing) return;
     
     const interval = setInterval(() => {
-      if (audioBufferRef.current.length > 0) {
+      if (audioBufferRef.current.length > 0 && !isAISpeakingRef.current) {
         processAudioBuffer();
       }
     }, AUTO_PROCESS_INTERVAL_MS);
@@ -310,10 +337,38 @@ export const useAudioCapture = ({
     return () => clearInterval(interval);
   }, [isCapturing, processAudioBuffer]);
   
+  /**
+   * Notify audio capture that AI is speaking (echo prevention).
+   * When true: clears buffer and prevents new audio from being buffered/processed.
+   * When false: resumes normal capture.
+   */
+  const setAISpeaking = useCallback((speaking: boolean) => {
+    const wasAISpeaking = isAISpeakingRef.current;
+    isAISpeakingRef.current = speaking;
+    if (speaking && !wasAISpeaking) {
+      // Clear buffer when AI starts speaking - discard any captured audio
+      audioBufferRef.current = [];
+      console.log('🎙️ AudioCapture: AI speaking - buffer cleared, capture paused');
+    } else if (!speaking && wasAISpeaking) {
+      console.log('🎙️ AudioCapture: AI stopped speaking - capture resumed');
+    }
+  }, []);
+  
+  /**
+   * Clear the audio buffer immediately.
+   * Used during barge-in to discard mixed AI+user audio.
+   */
+  const clearBuffer = useCallback(() => {
+    audioBufferRef.current = [];
+    console.log('🎙️ AudioCapture: Buffer cleared');
+  }, []);
+  
   return {
     isCapturing,
     isProcessing,
     error,
     processNow, // Manual trigger (bypasses throttle)
+    setAISpeaking, // Echo prevention: pause capture during AI speech
+    clearBuffer, // Discard buffered audio
   };
 };
