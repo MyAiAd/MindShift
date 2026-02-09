@@ -236,8 +236,8 @@ export const useNaturalVoice = ({
     const vadTimingOverrides = testMode
         ? undefined
         : {
-            endOfSpeechTimeoutMs: 900,
-            midSpeechPauseToleranceMs: 400
+            endOfSpeechTimeoutMs: 600,     // Was 900ms - reduced for faster transcription response
+            midSpeechPauseToleranceMs: 250  // Was 400ms - still tolerates natural pauses
         };
     
     const vad = useVAD({

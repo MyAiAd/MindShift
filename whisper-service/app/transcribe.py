@@ -17,7 +17,7 @@ import soundfile as sf
 import librosa
 import noisereduce as nr
 import webrtcvad
-from scipy.signal import butter, filtfilt, wiener
+from scipy.signal import butter, filtfilt
 from faster_whisper import WhisperModel
 from .config import config
 
@@ -312,13 +312,8 @@ def transcribe_audio(audio_data: np.ndarray, sample_rate: int) -> Dict[str, Any]
         
         segments_generator, info = model.transcribe(
             audio_data,
-            vad_filter=True,  # Voice Activity Detection to skip silence
-            vad_parameters=dict(
-                min_silence_duration_ms=500,  # Minimum silence duration to split
-                threshold=0.5,  # VAD threshold
-                speech_pad_ms=200,  # Add 200ms padding before/after speech
-            ),
-            beam_size=5,  # Balance between accuracy and speed
+            vad_filter=False,  # Disabled: Stage 4 WebRTC VAD already strips silence before Whisper
+            beam_size=1,  # True greedy decoding (temperature=0.0 makes beam search redundant)
             language="en",  # Default to English (can be overridden by caller in future)
             condition_on_previous_text=False,  # Prevent hallucination chain reactions
             temperature=0.0,  # Greedy decoding (most confident predictions only)
@@ -504,17 +499,13 @@ def preprocess_audio(audio_file: BinaryIO, filename: str = "audio") -> Tuple[np.
             logger.warning(f"Adaptive noise reduction failed, skipping: {e}")
         
         # ----------------------------------------------------------------
-        # STAGE 2: SIGNAL FILTERING AND ENHANCEMENT
+        # STAGE 2: SIGNAL FILTERING (lightweight)
         # ----------------------------------------------------------------
+        # Only high-pass filter to remove rumble. Wiener filter removed
+        # (redundant after Stage 1 noisereduce). Band-pass filter removed
+        # (was cutting speech consonants above 3400Hz like "s", "sh", "f").
         
-        # 2A. Wiener filter (additional background noise reduction)
-        try:
-            audio_data = wiener(audio_data, mysize=5)
-            logger.debug("Applied Wiener filter")
-        except Exception as e:
-            logger.warning(f"Wiener filter failed, skipping: {e}")
-        
-        # 2B. High-pass filter (remove low-frequency rumble < 80Hz)
+        # High-pass filter (remove low-frequency rumble < 80Hz)
         # Removes traffic noise, HVAC rumble, low-frequency hum
         try:
             nyquist = sample_rate / 2
@@ -524,19 +515,6 @@ def preprocess_audio(audio_file: BinaryIO, filename: str = "audio") -> Tuple[np.
             logger.debug("Applied high-pass filter (80Hz cutoff)")
         except Exception as e:
             logger.warning(f"High-pass filter failed, skipping: {e}")
-        
-        # 2C. Band-pass enhancement (boost speech frequencies 300Hz-3400Hz)
-        # Human speech fundamental frequency range
-        try:
-            low_cutoff = 300  # Hz
-            high_cutoff = 3400  # Hz
-            b_low, a_low = butter(2, low_cutoff / nyquist, btype='high')
-            b_high, a_high = butter(2, high_cutoff / nyquist, btype='low')
-            audio_data = filtfilt(b_low, a_low, audio_data)
-            audio_data = filtfilt(b_high, a_high, audio_data)
-            logger.debug("Applied speech band-pass filter (300Hz-3400Hz)")
-        except Exception as e:
-            logger.warning(f"Band-pass filter failed, skipping: {e}")
         
         # ----------------------------------------------------------------
         # STAGE 3: DYNAMIC RANGE COMPRESSION (RMS NORMALIZATION)
