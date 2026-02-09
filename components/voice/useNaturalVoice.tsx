@@ -237,7 +237,7 @@ export const useNaturalVoice = ({
         ? undefined
         : {
             endOfSpeechTimeoutMs: 600,     // Was 900ms - reduced for faster transcription response
-            midSpeechPauseToleranceMs: 250  // Was 400ms - still tolerates natural pauses
+            midSpeechPauseToleranceMs: 400  // Keep at 400ms - lower values drop one-word answers
         };
     
     const vad = useVAD({
