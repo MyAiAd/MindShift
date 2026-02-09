@@ -132,6 +132,13 @@ export const useNaturalVoice = ({
             return;
         }
         
+        // SAFETY CHECK: Prevent VAD from triggering during AI speech
+        // This happens when VAD picks up AI voice from speakers (echo)
+        if (isSpeakingRef.current || isAudioPlayingRef.current) {
+            console.log('⚠️ VAD: False barge-in detected (AI still speaking) - IGNORING');
+            return;
+        }
+        
         // Stop AI audio immediately
         if (audioRef.current) {
             audioRef.current.pause();
@@ -549,8 +556,15 @@ export const useNaturalVoice = ({
         isSpeakingRef.current = false;
         isAudioPlayingRef.current = false; // Clear audio playing flag
         audioCapture.setAISpeaking(false); // Clear echo prevention flag
+        
+        // Resume VAD when stopping speech
+        if (vadRef.current?.isInitialized && vadEnabled) {
+            vadRef.current.startVAD();
+            console.log('🎙️ VAD: Resumed after stopping speech');
+        }
+        
         stopListening();
-    }, [stopListening, audioCapture]);
+    }, [stopListening, audioCapture, vadEnabled]);
 
     // NEW: Pause speaking - saves position for resume
     const pauseSpeaking = useCallback(() => {
@@ -745,6 +759,13 @@ export const useNaturalVoice = ({
                     isSpeakingRef.current = false;
                     isAudioPlayingRef.current = false;
                     audioCapture.setAISpeaking(false); // Resume mic capture after AI finishes
+                    
+                    // Resume VAD after AI finishes speaking
+                    if (vadRef.current?.isInitialized && vadEnabled) {
+                        vadRef.current.startVAD();
+                        console.log('🎙️ VAD: Resumed after AI finished speaking');
+                    }
+                    
                     // Only restart listening if mic is enabled
                     if (isMicEnabled && isMountedRef.current) {
                         startListening();
@@ -756,6 +777,11 @@ export const useNaturalVoice = ({
 
             audio.onerror = (e) => {
                 audioCapture.setAISpeaking(false);
+                // Resume VAD after error
+                if (vadRef.current?.isInitialized && vadEnabled) {
+                    vadRef.current.startVAD();
+                    console.log('🎙️ VAD: Resumed after audio error');
+                }
                 reject(new Error('Audio playback error'));
             };
 
@@ -767,6 +793,11 @@ export const useNaturalVoice = ({
                     isSpeakingRef.current = false;
                     setIsSpeaking(false);
                     audioCapture.setAISpeaking(false);
+                    // Resume VAD after abort
+                    if (vadRef.current?.isInitialized && vadEnabled) {
+                        vadRef.current.startVAD();
+                        console.log('🎙️ VAD: Resumed after audio abort');
+                    }
                     // Restart listening after a brief delay (only if mic enabled)
                     if (isMicEnabled && isMountedRef.current) {
                         setTimeout(() => startListening(), 300);
@@ -774,11 +805,16 @@ export const useNaturalVoice = ({
                     resolve(); // Not an error, just cleanup
                 } else {
                     audioCapture.setAISpeaking(false);
+                    // Resume VAD after error
+                    if (vadRef.current?.isInitialized && vadEnabled) {
+                        vadRef.current.startVAD();
+                        console.log('🎙️ VAD: Resumed after play error');
+                    }
                     reject(playError);
                 }
             });
         });
-    }, [isMicEnabled, startListening, playbackRate, audioCapture]);
+    }, [isMicEnabled, startListening, playbackRate, audioCapture, vadEnabled]);
 
     /**
      * Fetch TTS audio for text and return the audio URL
@@ -848,6 +884,16 @@ export const useNaturalVoice = ({
         
         // ECHO PREVENTION: Tell audio capture that AI is speaking
         audioCapture.setAISpeaking(true);
+        
+        // CRITICAL: Pause VAD to prevent it from detecting AI voice as user speech
+        if (vadRef.current?.isInitialized) {
+            try {
+                await vadRef.current.pauseVAD();
+                console.log('🎙️ VAD: Paused for AI speech (prevents self-triggering)');
+            } catch (e) {
+                console.warn('🎙️ VAD: Failed to pause, may self-trigger:', e);
+            }
+        }
 
         // Voice-prefixed cache key
         const cacheKey = `${currentVoiceName}:${text}`;
@@ -877,6 +923,11 @@ export const useNaturalVoice = ({
                 if (!isMountedRef.current || !isSpeakingRef.current || !speakerEnabledRef.current) {
                     console.log('🗣️ Natural Voice: Stopped before suffix playback');
                     audioCapture.setAISpeaking(false);
+                    // Resume VAD after AI finishes
+                    if (vadRef.current?.isInitialized && vadEnabled) {
+                        vadRef.current.startVAD();
+                        console.log('🎙️ VAD: Resumed after AI stopped early');
+                    }
                     return;
                 }
 
@@ -890,6 +941,11 @@ export const useNaturalVoice = ({
                     audioCapture.setAISpeaking(false);
                     setIsSpeaking(false);
                     isSpeakingRef.current = false;
+                    // Resume VAD after AI finishes
+                    if (vadRef.current?.isInitialized && vadEnabled) {
+                        vadRef.current.startVAD();
+                        console.log('🎙️ VAD: Resumed after AI stopped during fetch');
+                    }
                     return;
                 }
                 
@@ -908,6 +964,11 @@ export const useNaturalVoice = ({
                 audioCapture.setAISpeaking(false);
                 setIsSpeaking(false);
                 isSpeakingRef.current = false;
+                // Resume VAD after AI finishes
+                if (vadRef.current?.isInitialized && vadEnabled) {
+                    vadRef.current.startVAD();
+                    console.log('🎙️ VAD: Resumed after AI stopped during full fetch');
+                }
                 return;
             }
             
@@ -919,12 +980,17 @@ export const useNaturalVoice = ({
             isSpeakingRef.current = false;
             isAudioPlayingRef.current = false;
             audioCapture.setAISpeaking(false); // Clear echo prevention on error
+            // Resume VAD after error
+            if (vadRef.current?.isInitialized && vadEnabled) {
+                vadRef.current.startVAD();
+                console.log('🎙️ VAD: Resumed after TTS error');
+            }
             // Only restart listening if mic is enabled
             if (isMicEnabled && isMountedRef.current) {
                 startListening();
             }
         }
-    }, [isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice, audioCapture]);
+    }, [isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice, audioCapture, vadEnabled]);
 
     // Handle mic/speaker state changes - start/stop listening based on mic state (but not in guided mode)
     useEffect(() => {
