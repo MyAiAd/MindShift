@@ -4,6 +4,7 @@ Audio preprocessing and transcription logic for Whisper service.
 Handles audio file reading, format conversion, validation, and transcription.
 Includes hallucination detection to filter out common Whisper artifacts.
 Enhanced with advanced audio preprocessing for improved accuracy.
+Option 5 complete implementation: adaptive noise profiling, VAD pre-filtering, dynamic range compression.
 """
 
 import io
@@ -15,6 +16,7 @@ import numpy as np
 import soundfile as sf
 import librosa
 import noisereduce as nr
+import webrtcvad
 from scipy.signal import butter, filtfilt, wiener
 from faster_whisper import WhisperModel
 from .config import config
@@ -457,32 +459,62 @@ def preprocess_audio(audio_file: BinaryIO, filename: str = "audio") -> Tuple[np.
         audio_data = np.squeeze(audio_data)
         
         # ================================================================
-        # ENHANCED AUDIO PREPROCESSING (Option 3 Implementation)
+        # OPTION 5: COMPLETE ADVANCED AUDIO PREPROCESSING PIPELINE
+        # ================================================================
+        # Three-stage enhancement for maximum accuracy:
+        # Stage 1: Adaptive noise profiling and reduction
+        # Stage 2: Signal filtering and enhancement
+        # Stage 3: Dynamic range compression (RMS normalization)
+        # Stage 4: VAD-based voice isolation
         # ================================================================
         
-        # 1. Spectral noise reduction (removes background noise)
-        # Uses non-stationary noise reduction for dynamic environments
+        # ----------------------------------------------------------------
+        # STAGE 1: ADAPTIVE NOISE PROFILING
+        # ----------------------------------------------------------------
+        # Sample first 300ms as noise profile (captures room tone/background)
+        # More accurate than blind noise reduction
         try:
-            audio_data = nr.reduce_noise(
-                y=audio_data,
-                sr=sample_rate,
-                stationary=False,  # Non-stationary noise (varies over time)
-                prop_decrease=0.8,  # Reduce noise by 80%
-                freq_mask_smooth_hz=500,  # Smooth frequency masking
-                time_mask_smooth_ms=50  # Smooth time masking
-            )
-            logger.debug("Applied spectral noise reduction")
+            noise_sample_duration = min(0.3, len(audio_data) / sample_rate * 0.1)  # 300ms or 10% of audio
+            noise_sample_length = int(sample_rate * noise_sample_duration)
+            
+            if noise_sample_length > 0:
+                noise_profile = audio_data[:noise_sample_length]
+                
+                # Apply adaptive noise reduction using actual room noise
+                audio_data = nr.reduce_noise(
+                    y=audio_data,
+                    sr=sample_rate,
+                    y_noise=noise_profile,  # Use actual background as reference
+                    stationary=True,  # Room noise is relatively consistent
+                    prop_decrease=0.9,  # Aggressive reduction (90%)
+                    freq_mask_smooth_hz=500,
+                    time_mask_smooth_ms=50
+                )
+                logger.debug(f"Applied adaptive noise reduction (profiled {noise_sample_duration:.2f}s)")
+            else:
+                # Fallback to non-stationary if audio too short
+                audio_data = nr.reduce_noise(
+                    y=audio_data,
+                    sr=sample_rate,
+                    stationary=False,
+                    prop_decrease=0.8
+                )
+                logger.debug("Applied non-stationary noise reduction (audio too short for profiling)")
         except Exception as e:
-            logger.warning(f"Noise reduction failed, skipping: {e}")
+            logger.warning(f"Adaptive noise reduction failed, skipping: {e}")
         
-        # 2. Wiener filter (additional background noise reduction)
+        # ----------------------------------------------------------------
+        # STAGE 2: SIGNAL FILTERING AND ENHANCEMENT
+        # ----------------------------------------------------------------
+        
+        # 2A. Wiener filter (additional background noise reduction)
         try:
             audio_data = wiener(audio_data, mysize=5)
             logger.debug("Applied Wiener filter")
         except Exception as e:
             logger.warning(f"Wiener filter failed, skipping: {e}")
         
-        # 3. High-pass filter (remove low-frequency rumble < 80Hz)
+        # 2B. High-pass filter (remove low-frequency rumble < 80Hz)
         # Removes traffic noise, HVAC rumble, low-frequency hum
         try:
             nyquist = sample_rate / 2
@@ -493,8 +525,103 @@ def preprocess_audio(audio_file: BinaryIO, filename: str = "audio") -> Tuple[np.
         except Exception as e:
             logger.warning(f"High-pass filter failed, skipping: {e}")
         
+        # 2C. Band-pass enhancement (boost speech frequencies 300Hz-3400Hz)
+        # Human speech fundamental frequency range
+        try:
+            low_cutoff = 300  # Hz
+            high_cutoff = 3400  # Hz
+            b_low, a_low = butter(2, low_cutoff / nyquist, btype='high')
+            b_high, a_high = butter(2, high_cutoff / nyquist, btype='low')
+            audio_data = filtfilt(b_low, a_low, audio_data)
+            audio_data = filtfilt(b_high, a_high, audio_data)
+            logger.debug("Applied speech band-pass filter (300Hz-3400Hz)")
+        except Exception as e:
+            logger.warning(f"Band-pass filter failed, skipping: {e}")
+        
+        # ----------------------------------------------------------------
+        # STAGE 3: DYNAMIC RANGE COMPRESSION (RMS NORMALIZATION)
+        # ----------------------------------------------------------------
+        # Normalize both peak and RMS levels for consistent volume
+        # Helps with quiet speakers and varying microphone gain
+        try:
+            target_rms = 0.1  # Target RMS level
+            current_rms = np.sqrt(np.mean(audio_data ** 2))
+            
+            if current_rms > 0.001:  # Avoid division by zero for silent audio
+                # RMS normalization
+                audio_data = audio_data * (target_rms / current_rms)
+                
+                # Peak normalization (ensure no clipping)
+                max_abs = np.max(np.abs(audio_data))
+                if max_abs > 0.95:  # If close to clipping
+                    audio_data = audio_data * (0.95 / max_abs)
+                
+                logger.debug(f"Applied dynamic range compression (RMS: {current_rms:.4f} → {target_rms:.4f})")
+            else:
+                logger.warning(f"Audio too quiet for RMS normalization (RMS={current_rms:.6f})")
+        except Exception as e:
+            logger.warning(f"Dynamic range compression failed, skipping: {e}")
+        
         # ================================================================
-        # END ENHANCED PREPROCESSING
+        # END OPTION 5 PREPROCESSING
+        # ================================================================
+        
+        # ----------------------------------------------------------------
+        # STAGE 4: VAD PRE-FILTERING (Voice Activity Detection)
+        # ----------------------------------------------------------------
+        # Remove non-speech segments BEFORE sending to Whisper
+        # Prevents hallucinations on silence/noise by only transcribing speech
+        try:
+            vad = webrtcvad.Vad(3)  # Aggressiveness 3 (most strict, 0-3 scale)
+            
+            # Resample to 16kHz if needed (VAD requires 8k, 16k, 32k, or 48k Hz)
+            if sample_rate != 16000:
+                audio_data = librosa.resample(audio_data, orig_sr=sample_rate, target_sr=16000)
+                sample_rate = 16000
+                logger.debug("Resampled to 16kHz for VAD compatibility")
+            
+            # Convert float32 to int16 for VAD (required format)
+            audio_int16 = (audio_data * 32767).astype(np.int16)
+            
+            # Process in 30ms frames (WebRTC VAD requirement)
+            frame_duration_ms = 30
+            frame_size = int(sample_rate * frame_duration_ms / 1000)  # 480 samples at 16kHz
+            
+            # Extract voice frames only
+            voice_frames = []
+            total_frames = 0
+            voice_frames_count = 0
+            
+            for i in range(0, len(audio_int16) - frame_size, frame_size):
+                frame = audio_int16[i:i + frame_size]
+                total_frames += 1
+                
+                # Check if frame contains speech
+                is_speech = vad.is_speech(frame.tobytes(), sample_rate)
+                if is_speech:
+                    voice_frames.append(frame)
+                    voice_frames_count += 1
+            
+            # Reconstruct audio from voice frames only
+            if voice_frames:
+                audio_int16 = np.concatenate(voice_frames)
+                audio_data = audio_int16.astype(np.float32) / 32767.0
+                
+                voice_percentage = (voice_frames_count / total_frames * 100) if total_frames > 0 else 0
+                logger.info(f"VAD pre-filtering: {voice_frames_count}/{total_frames} frames ({voice_percentage:.1f}% speech)")
+                
+                # If almost no speech detected, log warning
+                if voice_percentage < 5:
+                    logger.warning(f"Low speech activity detected ({voice_percentage:.1f}%), audio may be mostly silence/noise")
+            else:
+                logger.warning("VAD detected no speech in audio, sending original")
+                # Keep original audio_data if no speech detected
+        
+        except Exception as e:
+            logger.warning(f"VAD pre-filtering failed, using full audio: {e}")
+        
+        # ================================================================
+        # FINAL NORMALIZATION AND VALIDATION
         # ================================================================
         
         # Resample to 16kHz (Whisper's expected sample rate)

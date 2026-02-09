@@ -4,6 +4,7 @@ faster-whisper==1.0.3
 # Audio preprocessing for enhanced accuracy
 noisereduce==3.0.2
 scipy==1.11.4
+webrtcvad==2.0.10
 
 # Web framework
 fastapi==0.109.0
