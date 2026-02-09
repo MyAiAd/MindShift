@@ -2,6 +2,66 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 
+// ============================================================================
+// CLIENT-SIDE WHISPER HALLUCINATION FILTER (backup for server-side filter)
+// ============================================================================
+// Whisper hallucinates these phrases when given silence/noise/short audio.
+// This is a well-known issue: https://github.com/openai/whisper/discussions/928
+// The server-side filter should catch most cases, but this is a safety net.
+// ============================================================================
+const HALLUCINATION_PHRASES = new Set([
+  "thanks for watching",
+  "thank you for watching",
+  "thanks for watching and i'll see you in the next video",
+  "see you in the next video",
+  "i'll see you in the next video",
+  "see you in the next one",
+  "see you next time",
+  "thanks for listening",
+  "thank you for listening",
+  "thank you very much",
+  "thank you so much",
+  "thank you",
+  "bye bye",
+  "goodbye",
+  "please subscribe",
+  "subscribe to my channel",
+  "like and subscribe",
+  "please like and subscribe",
+  "hey guys",
+  "hi everyone",
+  "hello everyone",
+  "welcome back",
+  "welcome to my channel",
+  "that's all for today",
+  "until next time",
+]);
+
+const HALLUCINATION_SUBSTRINGS = [
+  "thanks for watching",
+  "thank you for watching",
+  "see you in the next video",
+  "see you in the next one",
+  "subscribe to my channel",
+  "like and subscribe",
+  "don't forget to subscribe",
+  "welcome to my channel",
+];
+
+function isLikelyHallucination(transcript: string): boolean {
+  const normalized = transcript.toLowerCase().replace(/[^\w\s']/g, '').replace(/\s+/g, ' ').trim();
+  
+  // Exact match
+  if (HALLUCINATION_PHRASES.has(normalized)) return true;
+  
+  // Substring match
+  for (const pattern of HALLUCINATION_SUBSTRINGS) {
+    if (normalized.includes(pattern)) return true;
+  }
+  
+  return false;
+}
+
 interface UseAudioCaptureProps {
   enabled: boolean;
   onTranscript: (transcript: string) => void;
@@ -178,6 +238,15 @@ export const useAudioCapture = ({
           console.log('🎙️ AudioCapture: Discarding transcript (disabled or AI speaking):', data.transcript);
           return;
         }
+        
+        // HALLUCINATION FILTER: Check for known Whisper hallucination phrases
+        // The server should catch most, but this is a client-side safety net
+        if (data.hallucination_filtered || isLikelyHallucination(data.transcript)) {
+          console.log('🎙️ AudioCapture: Filtered hallucination:', data.transcript, 
+            data.hallucination_reason ? `(server: ${data.hallucination_reason})` : '(client-side filter)');
+          return;
+        }
+        
         console.log('🎙️ AudioCapture: Transcript:', data.transcript);
         onTranscriptRef.current(data.transcript.trim());
       } else {
@@ -215,14 +284,31 @@ export const useAudioCapture = ({
     try {
       console.log('🎙️ AudioCapture: Initializing...');
       
-      // Request microphone access
+      // Request microphone access with enhanced quality settings
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
           sampleRate: SAMPLE_RATE,
+          
+          // Core noise reduction (widely supported)
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
+          
+          // Enhanced features (iOS 16.4+, Safari 17+, Chrome 94+)
+          // @ts-ignore - TypeScript may not recognize newer properties
+          voiceIsolation: true,  // iOS 16.4+ - isolates voice from background
+          // @ts-ignore
+          suppressLocalAudioPlayback: true,  // Prevents echo from AI voice
+          
+          // Advanced constraints (request highest quality)
+          advanced: [
+            {
+              echoCancellation: { exact: true },
+              noiseSuppression: { exact: true },
+              autoGainControl: { exact: true }
+            }
+          ]
         },
       });
       

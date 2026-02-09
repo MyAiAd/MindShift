@@ -1,6 +1,10 @@
 # Whisper transcription
 faster-whisper==1.0.3
 
+# Audio preprocessing for enhanced accuracy
+noisereduce==3.0.2
+scipy==1.11.4
+
 # Web framework
 fastapi==0.109.0
 uvicorn[standard]==0.27.0

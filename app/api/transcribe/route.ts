@@ -78,13 +78,23 @@ export async function POST(request: NextRequest) {
       cached: whisperResult.cache_hit || false,
       segments: whisperResult.segments || [],
       real_time_factor: whisperResult.real_time_factor || 0,
+      // Hallucination detection metadata (from Whisper service)
+      hallucination_filtered: whisperResult.hallucination_filtered || false,
+      hallucination_reason: whisperResult.hallucination_reason || null,
     };
     
-    console.log(
-      `[Transcribe] Success: ${response.transcript.length} chars, ` +
-      `${processingTime}ms, cached=${response.cached}, ` +
-      `rtf=${response.real_time_factor}`
-    );
+    if (response.hallucination_filtered) {
+      console.log(
+        `[Transcribe] HALLUCINATION FILTERED: reason=${response.hallucination_reason}, ` +
+        `${processingTime}ms`
+      );
+    } else {
+      console.log(
+        `[Transcribe] Success: ${response.transcript.length} chars, ` +
+        `${processingTime}ms, cached=${response.cached}, ` +
+        `rtf=${response.real_time_factor}`
+      );
+    }
     
     return NextResponse.json(response);
     

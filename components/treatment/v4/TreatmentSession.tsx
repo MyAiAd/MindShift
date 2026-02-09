@@ -185,6 +185,7 @@ export default function TreatmentSession({
   const [isTestPlaying, setIsTestPlaying] = useState(false);
   const [testInterrupted, setTestInterrupted] = useState(false);
   const testAudioTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const testAutoStartTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Track the 300ms auto-start delay
   const isTestPlayingRef = useRef(false); // Ref for immediate access in callbacks
   
   // Test audio sample text - longer for better testing
@@ -617,13 +618,26 @@ export default function TreatmentSession({
         naturalVoice.pauseSpeaking();
       }
       
-      // Auto-start test audio if speaker enabled
-      if (isSpeakerEnabled && !isTestPlaying) {
+      // Auto-start test audio if speaker enabled AND not in guided mode
+      // In guided mode (PTT), test audio auto-start is confusing - user must manually start it
+      if (isSpeakerEnabled && !isTestPlaying && !isGuidedMode) {
         console.log('⚙️ Settings opened - auto-starting test audio');
-        setTimeout(() => startTestAudio(), 300); // Small delay for smooth UX
+        // Store the timeout so it can be cancelled if settings close quickly
+        testAutoStartTimeoutRef.current = setTimeout(() => {
+          testAutoStartTimeoutRef.current = null;
+          startTestAudio();
+        }, 300); // Small delay for smooth UX
+      } else if (isGuidedMode) {
+        console.log('⚙️ Settings opened in guided mode - skipping test audio auto-start');
       }
     } else {
-      // Settings closed - stop test audio and resume session audio if it was paused
+      // Settings closed - cancel any pending auto-start and stop test audio
+      if (testAutoStartTimeoutRef.current) {
+        clearTimeout(testAutoStartTimeoutRef.current);
+        testAutoStartTimeoutRef.current = null;
+        console.log('⚙️ Settings closed - cancelled pending test audio auto-start');
+      }
+      
       if (isTestPlaying) {
         stopTestAudio();
       }
@@ -639,6 +653,9 @@ export default function TreatmentSession({
     return () => {
       if (testAudioTimeoutRef.current) {
         clearTimeout(testAudioTimeoutRef.current);
+      }
+      if (testAutoStartTimeoutRef.current) {
+        clearTimeout(testAutoStartTimeoutRef.current);
       }
     };
   }, []);

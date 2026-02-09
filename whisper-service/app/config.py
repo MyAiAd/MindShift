@@ -16,7 +16,7 @@ class Config:
     """Centralized configuration for Whisper service."""
     
     # Model Configuration
-    WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "base")  # Options: tiny, base, small, medium, large
+    WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "medium")  # Options: tiny, base, small, medium, large
     WHISPER_DEVICE: str = os.getenv("WHISPER_DEVICE", "cpu")  # Options: cpu, cuda
     WHISPER_COMPUTE_TYPE: str = os.getenv("WHISPER_COMPUTE_TYPE", "int8")  # Options: int8, float16, float32
     
