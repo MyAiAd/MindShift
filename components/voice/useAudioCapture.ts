@@ -105,10 +105,10 @@ export const useAudioCapture = ({
   }, [onTranscript, onProcessingChange]);
   
   // Configuration - TUNED for responsive speech capture
-  const BUFFER_DURATION_MS = 4000;   // Keep last 4 seconds (down from 8 - reduces audio sent to Whisper)
+  const BUFFER_DURATION_MS = 8000;   // Keep last 8 seconds (safety margin for longer utterances)
   const SAMPLE_RATE = 16000;          // 16kHz (Whisper optimal)
   const MIN_PROCESS_INTERVAL_MS = 300; // Throttle: max once per 300ms (down from 1000ms)
-  const AUTO_PROCESS_INTERVAL_MS = 1000; // Auto-process every 1s (down from 1.5s for faster response)
+  const AUTO_PROCESS_INTERVAL_MS = 1500; // Auto-process every 1.5s (gives Whisper enough context per chunk)
   
   /**
    * Convert Float32Array audio buffers to WAV blob
@@ -349,7 +349,7 @@ export const useAudioCapture = ({
       
       setIsCapturing(true);
       setError(null);
-      console.log('🎙️ AudioCapture: Initialized successfully (buffer: 4s, auto-process: 1s)');
+      console.log('🎙️ AudioCapture: Initialized successfully (buffer: 8s, auto-process: 1.5s)');
       
     } catch (err) {
       console.error('🎙️ AudioCapture: Initialization error:', err);
