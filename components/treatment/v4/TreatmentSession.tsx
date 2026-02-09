@@ -2415,6 +2415,18 @@ export default function TreatmentSession({
           </div>
         ))}
 
+        {/* Processing shimmer - shows while Whisper is transcribing user speech */}
+        {naturalVoice.isProcessing && (
+          <div className="flex justify-end">
+            <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-indigo-600/20 dark:bg-indigo-600/30 animate-pulse">
+              <div className="space-y-2">
+                <div className="h-3 bg-indigo-400/40 dark:bg-indigo-400/30 rounded w-3/4"></div>
+                <div className="h-3 bg-indigo-400/40 dark:bg-indigo-400/30 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
