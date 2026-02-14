@@ -41,6 +41,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, profile, tenant, signOut, loading } = useAuth();
+  const pathname = usePathname();
   
   // Initialize sidebar state from localStorage or screen size
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -54,6 +55,9 @@ export default function DashboardLayout({
   });
   
   const router = useRouter();
+
+  // Determine if we should hide the mobile nav (orb mode on mobile)
+  const isV4TreatmentRoute = pathname?.startsWith('/dashboard/sessions/treatment-v4');
 
   // Save sidebar state to localStorage
   useEffect(() => {
@@ -145,8 +149,10 @@ export default function DashboardLayout({
           </main>
         </div>
 
-        {/* Mobile bottom navigation */}
-        <MobileNav onNavigate={() => setSidebarOpen(false)} />
+        {/* Mobile bottom navigation - Hidden on treatment-v4 orb route */}
+        {!isV4TreatmentRoute && (
+          <MobileNav onNavigate={() => setSidebarOpen(false)} />
+        )}
       </div>
     </ThemeProvider>
   );

@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, VolumeX, Send, Play, Settings, Gauge, User } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, VolumeX, Send, Play, Settings, Gauge, User, SkipForward, ArrowLeft } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 // Natural voice integration (ElevenLabs + Web Speech)
 import { useNaturalVoice } from '@/components/voice/useNaturalVoice';
 // V4 static audio texts (for consistency with preloader)
 import { V4_STATIC_AUDIO_TEXTS } from '@/lib/v4/static-audio-texts';
+// V4 preferences for interaction modes
+import { getInteractionMode, getVoicePreferences, shouldShowOrb, shouldShowTextFirst, isListenOnlyMode, InteractionMode, V4_EVENTS } from '@/lib/v4/v4-preferences';
 
 // Import shared types
 import {
@@ -169,6 +171,20 @@ export default function TreatmentSession({
   });
   const [isPTTActive, setIsPTTActive] = useState(false);
   const voiceSettingsRef = useRef<HTMLDivElement>(null);
+
+  // Interaction Mode State (new - for orb/listen-only/text-first)
+  const [interactionMode, setInteractionMode] = useState<InteractionMode>(() => {
+    if (typeof window !== 'undefined') {
+      return getInteractionMode();
+    }
+    return 'text_first';
+  });
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
 
   // VAD (Voice Activity Detection) State
   const [vadSensitivity, setVadSensitivity] = useState(() => {
@@ -362,6 +378,101 @@ export default function TreatmentSession({
       });
     }
   }, [isGuidedMode, micPermission, isMicEnabled, requestMicPermission]);
+
+  // Listen for interaction mode changes from settings and handle mobile resize
+  useEffect(() => {
+    const handleModeChange = (e: Event) => {
+      const customEvent = e as CustomEvent<InteractionMode>;
+      setInteractionMode(customEvent.detail);
+      console.log('Interaction mode changed to:', customEvent.detail);
+      
+      // Apply mode-specific settings
+      if (customEvent.detail === 'orb_ptt') {
+        // Orb mode: enable both mic and speaker by default, activate guided mode on mobile
+        if (isMobile) {
+          setIsGuidedMode(true);
+          requestMicPermission().then((granted) => {
+            if (granted) {
+              setIsMicEnabled(true);
+              setSpeakerEnabled(true);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('v4_mic_enabled', 'true');
+                localStorage.setItem('v4_speaker_enabled', 'true');
+                localStorage.setItem('v4_guided_mode', 'true');
+              }
+            }
+          });
+        }
+      } else if (customEvent.detail === 'listen_only') {
+        // Listen-only: speaker on, mic off, no guided mode
+        setIsGuidedMode(false);
+        setIsMicEnabled(false);
+        setSpeakerEnabled(true);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('v4_mic_enabled', 'false');
+          localStorage.setItem('v4_speaker_enabled', 'true');
+          localStorage.setItem('v4_guided_mode', 'false');
+        }
+      } else if (customEvent.detail === 'text_first') {
+        // Text-first: no guided mode, user controls mic/speaker
+        setIsGuidedMode(false);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('v4_guided_mode', 'false');
+        }
+      }
+    };
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener(V4_EVENTS.INTERACTION_MODE_CHANGED, handleModeChange);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener(V4_EVENTS.INTERACTION_MODE_CHANGED, handleModeChange);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isMobile, requestMicPermission]);
+
+  // Initialize orb mode for mobile on first load
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const shouldInitOrb = isMobile && interactionMode === 'orb_ptt';
+    const isListenOnly = interactionMode === 'listen_only';
+    const isTextFirst = interactionMode === 'text_first';
+    
+    if (shouldInitOrb && !isGuidedMode) {
+      // Activate guided mode for orb on mobile
+      setIsGuidedMode(true);
+      localStorage.setItem('v4_guided_mode', 'true');
+      
+      // Request mic permission and enable controls
+      requestMicPermission().then((granted) => {
+        if (granted) {
+          setIsMicEnabled(true);
+          setSpeakerEnabled(true);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('v4_mic_enabled', 'true');
+            localStorage.setItem('v4_speaker_enabled', 'true');
+          }
+        }
+      });
+    } else if (isListenOnly) {
+      // Listen-only: speaker on, mic off, no guided mode
+      setIsGuidedMode(false);
+      setIsMicEnabled(false);
+      setSpeakerEnabled(true);
+      localStorage.setItem('v4_mic_enabled', 'false');
+      localStorage.setItem('v4_speaker_enabled', 'true');
+      localStorage.setItem('v4_guided_mode', 'false');
+    } else if (isTextFirst) {
+      // Text-first: no guided mode, user controls mic/speaker
+      setIsGuidedMode(false);
+      localStorage.setItem('v4_guided_mode', 'false');
+    }
+  }, []); // Only run once on mount
 
   // V4: Enhanced performance metrics state
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
@@ -1596,20 +1707,22 @@ export default function TreatmentSession({
     <div className="max-w-4xl mx-auto px-2 sm:px-4 relative flex flex-col h-full min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-120px)]">
       {/* Guided Mode Full-Screen PTT Interface */}
       {isGuidedMode && (
-        <div className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex items-center justify-center">
-          {/* Exit button */}
-          <button 
-            onClick={() => {
-              setIsGuidedMode(false);
-              localStorage.setItem('v4_guided_mode', 'false');
-              if (isPTTActive) {
-                handlePTTEnd();
-              }
-            }}
-            className="absolute top-4 right-4 text-white/80 hover:text-white text-lg px-4 py-2 bg-black/20 hover:bg-black/30 rounded-lg transition-all backdrop-blur-sm"
-          >
-            ✕ Exit Guided Mode
-          </button>
+        <div className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex flex-col items-center justify-center">
+          {/* Exit button - Only show on desktop or in text_first mode */}
+          {(!isMobile || interactionMode !== 'orb_ptt') && (
+            <button 
+              onClick={() => {
+                setIsGuidedMode(false);
+                localStorage.setItem('v4_guided_mode', 'false');
+                if (isPTTActive) {
+                  handlePTTEnd();
+                }
+              }}
+              className="absolute top-4 right-4 text-white/80 hover:text-white text-lg px-4 py-2 bg-black/20 hover:bg-black/30 rounded-lg transition-all backdrop-blur-sm"
+            >
+              ✕ Exit Guided Mode
+            </button>
+          )}
 
           {/* Status indicator at top */}
           <div className="absolute top-8 left-1/2 -translate-x-1/2 text-white/60 text-sm">
@@ -1618,57 +1731,102 @@ export default function TreatmentSession({
              '🧘 Ready - Hold to speak'}
           </div>
 
-          {/* Main PTT Button */}
-          <button
-            onPointerDown={handlePTTStart}
-            onPointerUp={handlePTTEnd}
-            onPointerLeave={handlePTTEnd}
-            className={`
-              w-64 h-64 md:w-80 md:h-80 rounded-full 
-              ${isPTTActive 
-                ? 'bg-red-500 animate-pulse ring-8 ring-red-300/50 scale-105' 
-                : naturalVoice.isSpeaking
-                ? 'bg-indigo-500 ring-8 ring-indigo-300/30 animate-pulse'
-                : 'bg-purple-600 ring-4 ring-purple-300/50 hover:ring-8 hover:scale-105'
-              }
-              flex flex-col items-center justify-center
-              text-white font-bold
-              transition-all duration-300
-              shadow-2xl
-              active:scale-95
-              cursor-pointer
-              select-none
-            `}
-          >
-            {isPTTActive ? (
-              <>
-                <div className="text-7xl mb-4 animate-bounce">🔴</div>
-                <div className="text-2xl mb-2">Speaking...</div>
-                <div className="text-sm opacity-75">Release to send</div>
-              </>
-            ) : naturalVoice.isSpeaking ? (
-              <>
-                <div className="text-7xl mb-4">🔊</div>
-                <div className="text-2xl mb-2">AI Speaking</div>
-                <div className="text-sm opacity-75">Hold to interrupt</div>
-              </>
-            ) : (
-              <>
-                <div className="text-7xl mb-4">🎙️</div>
-                <div className="text-2xl mb-2">Hold to Speak</div>
-                <div className="text-sm opacity-75 hidden md:block">or press Space</div>
-              </>
-            )}
-          </button>
-
-          {/* Instructions at bottom */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-sm text-center max-w-md px-4">
-            <p className="mb-2">Close your eyes and speak when ready</p>
-            <p className="text-xs opacity-75">
-              <span className="md:hidden">Hold the button to speak</span>
-              <span className="hidden md:inline">Hold button or press Space bar to speak</span>
-            </p>
+          {/* Centered Orb */}
+          <div className="flex-1 flex items-center justify-center">
+            {/* Main PTT Button */}
+            <button
+              onPointerDown={handlePTTStart}
+              onPointerUp={handlePTTEnd}
+              onPointerLeave={handlePTTEnd}
+              className={`
+                w-64 h-64 md:w-80 md:h-80 rounded-full 
+                ${isPTTActive 
+                  ? 'bg-red-500 animate-pulse ring-8 ring-red-300/50 scale-105' 
+                  : naturalVoice.isSpeaking
+                  ? 'bg-indigo-500 ring-8 ring-indigo-300/30 animate-pulse'
+                  : 'bg-purple-600 ring-4 ring-purple-300/50 hover:ring-8 hover:scale-105'
+                }
+                flex flex-col items-center justify-center
+                text-white font-bold
+                transition-all duration-300
+                shadow-2xl
+                active:scale-95
+                cursor-pointer
+                select-none
+              `}
+            >
+              {isPTTActive ? (
+                <>
+                  <div className="text-7xl mb-4 animate-bounce">🔴</div>
+                  <div className="text-2xl mb-2">Speaking...</div>
+                  <div className="text-sm opacity-75">Release to send</div>
+                </>
+              ) : naturalVoice.isSpeaking ? (
+                <>
+                  <div className="text-7xl mb-4">🔊</div>
+                  <div className="text-2xl mb-2">AI Speaking</div>
+                  <div className="text-sm opacity-75">Hold to interrupt</div>
+                </>
+              ) : (
+                <>
+                  <div className="text-7xl mb-4">🎙️</div>
+                  <div className="text-2xl mb-2">Hold to Speak</div>
+                  <div className="text-sm opacity-75 hidden md:block">or press Space</div>
+                </>
+              )}
+            </button>
           </div>
+
+          {/* Mobile Controls at Bottom - Skip and Back */}
+          {isMobile && interactionMode === 'orb_ptt' && (
+            <div className="absolute bottom-0 left-0 right-0 pb-safe">
+              <div className="flex items-center justify-center gap-4 p-6">
+                {/* Back Step Button */}
+                <button
+                  onClick={handleUndo}
+                  disabled={stepHistory.length === 0 || isLoading}
+                  className={`flex flex-col items-center justify-center w-20 h-20 rounded-full transition-all ${
+                    stepHistory.length > 0 && !isLoading
+                      ? 'bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm'
+                      : 'bg-white/10 text-white/40 cursor-not-allowed'
+                  }`}
+                  title="Go back one step"
+                >
+                  <ArrowLeft className="h-6 w-6 mb-1" />
+                  <span className="text-xs">Back</span>
+                </button>
+
+                {/* Skip Audio Button */}
+                <button
+                  onClick={() => {
+                    naturalVoice.stopSpeaking();
+                    console.log('⏭️ Skip: Audio playback stopped');
+                  }}
+                  disabled={!naturalVoice.isSpeaking}
+                  className={`flex flex-col items-center justify-center w-20 h-20 rounded-full transition-all ${
+                    naturalVoice.isSpeaking
+                      ? 'bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm'
+                      : 'bg-white/10 text-white/40 cursor-not-allowed'
+                  }`}
+                  title="Skip current audio"
+                >
+                  <SkipForward className="h-6 w-6 mb-1" />
+                  <span className="text-xs">Skip</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Instructions at bottom (only on desktop) */}
+          {!isMobile && (
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-sm text-center max-w-md px-4">
+              <p className="mb-2">Close your eyes and speak when ready</p>
+              <p className="text-xs opacity-75">
+                <span className="md:hidden">Hold the button to speak</span>
+                <span className="hidden md:inline">Hold button or press Space bar to speak</span>
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -1702,7 +1860,9 @@ export default function TreatmentSession({
       {/* V4 Header - Mobile: Slim sticky bar / Desktop: Full card */}
       
       {/* Mobile Header - 2x2 Grid, sticky below page header (h-14 = 56px) */}
-      <div className="flex md:hidden flex-col gap-2 px-3 py-2.5 mb-2 bg-card dark:bg-[#073642] rounded-lg border border-border dark:border-[#586e75] sticky top-14 z-30">
+      {/* Hide this header when in orb_ptt mode on mobile - orb has its own minimal controls */}
+      {(!isMobile || interactionMode !== 'orb_ptt') && (
+        <div className="flex md:hidden flex-col gap-2 px-3 py-2.5 mb-2 bg-card dark:bg-[#073642] rounded-lg border border-border dark:border-[#586e75] sticky top-14 z-30">
         {/* Audio Controls - 2x2 Grid */}
         <div className="grid grid-cols-2 gap-2">
           {/* Microphone Toggle */}
@@ -1829,6 +1989,7 @@ export default function TreatmentSession({
           </div>
         </div>
       </div>
+      )}
 
       {/* Desktop Header - STICKY to top */}
       <div className="hidden md:block bg-card dark:bg-[#073642] rounded-lg shadow-sm border border-border dark:border-[#586e75] mb-6 sticky top-0 z-30">
@@ -2431,7 +2592,9 @@ export default function TreatmentSession({
       </div>
 
       {/* V4 Input Area - Fixed at bottom, doesn't shrink */}
-      <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-border mt-auto">
+      {/* Hide input area when in orb mode on mobile - orb uses PTT only */}
+      {(!isMobile || interactionMode !== 'orb_ptt' || !isGuidedMode) && (
+        <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-border mt-auto">
         {hasError && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <div className="flex items-center space-x-2">
@@ -2674,6 +2837,7 @@ export default function TreatmentSession({
           </form>
         )}
       </div>
+      )}
     </div>
 
   );

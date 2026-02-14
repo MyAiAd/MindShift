@@ -127,12 +127,12 @@ function TreatmentSessionContent() {
         <div className="flex items-center justify-between h-14 px-4">
           <div className="flex items-center space-x-3">
             <Link 
-              href="/dashboard/sessions"
+              href="/dashboard"
               className="text-muted-foreground hover:text-foreground transition-colors p-1"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <span className="text-base font-semibold text-foreground dark:text-[#fdf6e3]">Mind Shifting Session</span>
+            <span className="text-base font-semibold text-foreground dark:text-[#fdf6e3]">Shifting</span>
           </div>
         </div>
       </div>

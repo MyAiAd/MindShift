@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker, Brain } from 'lucide-react';
+import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker, Brain, Mic, Volume2, Gauge } from 'lucide-react';
+import { InteractionMode, getInteractionMode, setInteractionMode, getVoicePreferences, setVoicePreferences, V4_EVENTS } from '@/lib/v4/v4-preferences';
 import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
 import BeliefShiftingDemo from '@/components/labs/BeliefShiftingDemo';
 import IdentityShiftingDemo from '@/components/labs/IdentityShiftingDemo';
@@ -132,6 +133,15 @@ export default function SettingsPage() {
     v2TreatmentDemo: true,
     v3TreatmentDemo: true,
     v4TreatmentDemo: true
+  });
+
+  // V4 Voice & Interaction Settings
+  const [v4Settings, setV4Settings] = useState({
+    interactionMode: 'text_first' as InteractionMode,
+    selectedVoice: 'heart',
+    playbackSpeed: 1.0,
+    vadSensitivity: 0.5,
+    loading: true
   });
 
   // Load notification preferences on component mount
@@ -268,6 +278,49 @@ export default function SettingsPage() {
     if (user) {
       loadGDPRSettings();
     }
+  }, [user]);
+
+  // Load V4 Voice & Interaction settings
+  useEffect(() => {
+    const loadV4Settings = () => {
+      try {
+        const mode = getInteractionMode();
+        const voicePrefs = getVoicePreferences();
+        setV4Settings({
+          interactionMode: mode,
+          selectedVoice: voicePrefs.selectedVoice,
+          playbackSpeed: voicePrefs.playbackSpeed,
+          vadSensitivity: voicePrefs.vadSensitivity,
+          loading: false
+        });
+      } catch (error) {
+        console.error('Failed to load V4 settings:', error);
+        setV4Settings(prev => ({ ...prev, loading: false }));
+      }
+    };
+
+    if (user) {
+      loadV4Settings();
+    }
+
+    // Listen for changes from treatment session
+    const handleModeChange = (e: Event) => {
+      const customEvent = e as CustomEvent<InteractionMode>;
+      setV4Settings(prev => ({ ...prev, interactionMode: customEvent.detail }));
+    };
+
+    const handleVoiceChange = (e: Event) => {
+      const customEvent = e as CustomEvent<Partial<typeof v4Settings>>;
+      setV4Settings(prev => ({ ...prev, ...customEvent.detail }));
+    };
+
+    window.addEventListener(V4_EVENTS.INTERACTION_MODE_CHANGED, handleModeChange);
+    window.addEventListener(V4_EVENTS.VOICE_SETTINGS_CHANGED, handleVoiceChange);
+
+    return () => {
+      window.removeEventListener(V4_EVENTS.INTERACTION_MODE_CHANGED, handleModeChange);
+      window.removeEventListener(V4_EVENTS.VOICE_SETTINGS_CHANGED, handleVoiceChange);
+    };
   }, [user]);
 
   // Handle notification toggle changes
@@ -472,6 +525,37 @@ export default function SettingsPage() {
     }));
   };
 
+  // Handle V4 interaction mode change
+  const handleInteractionModeChange = (mode: InteractionMode) => {
+    try {
+      setV4Settings(prev => ({ ...prev, interactionMode: mode }));
+      setInteractionMode(mode);
+      console.log('Interaction mode changed to:', mode);
+    } catch (error) {
+      console.error('Failed to update interaction mode:', error);
+    }
+  };
+
+  // Handle V4 voice preference changes
+  const handleV4VoiceChange = (setting: 'selectedVoice' | 'playbackSpeed' | 'vadSensitivity', value: string | number) => {
+    try {
+      const newSettings = { ...v4Settings, [setting]: value };
+      setV4Settings(newSettings);
+      
+      // Update localStorage
+      setVoicePreferences({ [setting]: value });
+      console.log(`V4 ${setting} changed to:`, value);
+    } catch (error) {
+      console.error(`Failed to update ${setting}:`, error);
+    }
+  };
+
+  const getSpeedLabel = (speed: number): string => {
+    if (speed < 0.9) return 'Slower';
+    if (speed > 1.1) return 'Faster';
+    return 'Normal';
+  };
+
   // Update profile data
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -599,6 +683,12 @@ export default function SettingsPage() {
               </a>
               
               {/* Column 1 */}
+              <a href="#voice" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
+                <Mic className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-xs sm:text-sm text-left">Voice</span>
+              </a>
+              
+              {/* Column 2 */}
               <a href="#security" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
                 <Shield className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Security</span>
@@ -714,6 +804,188 @@ export default function SettingsPage() {
                   {profileState.loading ? 'Saving...' : 'Save Changes'}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Voice & Interaction Settings */}
+          <Card id="voice" className="bg-card border-border scroll-mt-20">
+            <CardHeader>
+              <CardTitle className="text-foreground flex items-center">
+                <Mic className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mr-2" />
+                Voice & Interaction
+              </CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Configure how you interact with Mind Shifting sessions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {v4Settings.loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Interaction Mode Selection */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-foreground">Interaction Mode</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Choose how you prefer to interact during sessions
+                    </p>
+                    <div className="grid gap-3">
+                      <button
+                        onClick={() => handleInteractionModeChange('orb_ptt')}
+                        className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                          v4Settings.interactionMode === 'orb_ptt'
+                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-500 ring-2 ring-indigo-500'
+                            : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] border-border hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                        }`}
+                      >
+                        <div className="font-medium mb-1">Voice Orb (Mobile)</div>
+                        <div className="text-xs opacity-75">Push-to-talk orb interface, ideal for mobile voice sessions</div>
+                      </button>
+                      
+                      <button
+                        onClick={() => handleInteractionModeChange('listen_only')}
+                        className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                          v4Settings.interactionMode === 'listen_only'
+                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-500 ring-2 ring-indigo-500'
+                            : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] border-border hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                        }`}
+                      >
+                        <div className="font-medium mb-1">Listen Only</div>
+                        <div className="text-xs opacity-75">Hear AI responses, type your replies (accessibility mode)</div>
+                      </button>
+                      
+                      <button
+                        onClick={() => handleInteractionModeChange('text_first')}
+                        className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                          v4Settings.interactionMode === 'text_first'
+                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-500 ring-2 ring-indigo-500'
+                            : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] border-border hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                        }`}
+                      >
+                        <div className="font-medium mb-1">Text First</div>
+                        <div className="text-xs opacity-75">Traditional chat interface with optional voice playback</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Voice Actor Selection */}
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <div className="flex items-center space-x-2">
+                      <Volume2 className="h-4 w-4 text-indigo-500" />
+                      <h4 className="font-medium text-foreground">Voice Actor</h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleV4VoiceChange('selectedVoice', 'heart')}
+                        className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                          v4Settings.selectedVoice === 'heart'
+                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500'
+                            : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                        }`}
+                      >
+                        Heart (Female)
+                      </button>
+                      <button
+                        onClick={() => handleV4VoiceChange('selectedVoice', 'michael')}
+                        className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                          v4Settings.selectedVoice === 'michael'
+                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500'
+                            : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                        }`}
+                      >
+                        Michael (Male)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Playback Speed */}
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <div className="flex items-center space-x-2">
+                      <Gauge className="h-4 w-4 text-indigo-500" />
+                      <h4 className="font-medium text-foreground">Playback Speed</h4>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Speed: {v4Settings.playbackSpeed.toFixed(2)}x</span>
+                      <span className={`font-medium ${
+                        v4Settings.playbackSpeed === 1.0 ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
+                      }`}>
+                        {getSpeedLabel(v4Settings.playbackSpeed)}
+                      </span>
+                    </div>
+                    
+                    <input
+                      type="range"
+                      min="0.75"
+                      max="1.5"
+                      step="0.05"
+                      value={v4Settings.playbackSpeed}
+                      onChange={(e) => handleV4VoiceChange('playbackSpeed', parseFloat(e.target.value))}
+                      className="w-full h-2 bg-secondary dark:bg-[#586e75] rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                      aria-label="Playback speed slider"
+                    />
+                    
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>0.75x</span>
+                      <span className="text-green-600 dark:text-green-400">1.0x</span>
+                      <span>1.5x</span>
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-2">
+                      {[0.75, 0.9, 1.0, 1.15, 1.5].map((speed) => (
+                        <button
+                          key={speed}
+                          onClick={() => handleV4VoiceChange('playbackSpeed', speed)}
+                          className={`px-2 py-1.5 text-xs rounded-lg transition-colors ${
+                            Math.abs(v4Settings.playbackSpeed - speed) < 0.01
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                          }`}
+                        >
+                          {speed === 1.0 ? '1x' : `${speed}x`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* VAD Sensitivity (Advanced) */}
+                  {v4Settings.interactionMode === 'orb_ptt' && (
+                    <div className="space-y-3 pt-4 border-t border-border">
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">Voice Detection Sensitivity</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Adjust how easily the system detects when you start speaking
+                        </p>
+                      </div>
+                      
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="0.9"
+                        step="0.1"
+                        value={v4Settings.vadSensitivity}
+                        onChange={(e) => handleV4VoiceChange('vadSensitivity', parseFloat(e.target.value))}
+                        className="w-full h-2 bg-secondary dark:bg-[#586e75] rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        aria-label="Voice detection sensitivity slider"
+                      />
+                      
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Less Sensitive</span>
+                        <span>More Sensitive</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Help Text */}
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-xs text-muted-foreground">
+                      <strong className="text-foreground">Note:</strong> Changes take effect immediately and sync across all your sessions.
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
