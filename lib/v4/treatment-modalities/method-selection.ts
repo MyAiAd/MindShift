@@ -8,7 +8,7 @@ export class MethodSelectionPhase {
       steps: [
         {
           id: 'choose_method',
-          scriptedResponse: "Choose a method:",
+          scriptedResponse: "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting",
           expectedResponseType: 'selection',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }

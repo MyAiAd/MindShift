@@ -1738,9 +1738,9 @@ export default function TreatmentSession({
               className={`
                 w-64 h-64 md:w-80 md:h-80 rounded-full 
                 ${isPTTActive 
-                  ? 'bg-red-500 animate-pulse ring-8 ring-red-300/50 scale-105' 
+                  ? 'bg-red-500 animate-pulse-slow ring-8 ring-red-300/50 scale-105' 
                   : naturalVoice.isSpeaking
-                  ? 'bg-indigo-500 ring-8 ring-indigo-300/30 animate-pulse'
+                  ? 'bg-indigo-500 ring-8 ring-indigo-300/30 animate-pulse-slow'
                   : 'bg-purple-600 ring-4 ring-purple-300/50 hover:ring-8 hover:scale-105'
                 }
                 flex flex-col items-center justify-center
