@@ -736,48 +736,84 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     console.log(`🔍 CHOOSE_METHOD: Processing normal method selection`);
     const methodChoice = context.userResponses[context.currentStep]?.toLowerCase() || '';
     console.log(`🔍 CHOOSE_METHOD: methodChoice="${methodChoice}"`);
+    console.log(`🔍 CHOOSE_METHOD: currentStep="${context.currentStep}"`);
+    console.log(`🔍 CHOOSE_METHOD: userResponses=`, Object.keys(context.userResponses || {}));
 
     // Check if problem statement already exists (e.g., from trauma redirect)
     const hasExistingProblem = context.problemStatement || context.metadata.problemStatement;
 
-    if (methodChoice.includes('problem shifting') || methodChoice.includes('1')) {
+    // Voice-friendly matching: Check FULL PHRASES FIRST to avoid false positives
+    // Order matters: "problem shifting" must be checked before "problem" alone
+    // This prevents "problem" from incorrectly matching when user meant work type
+    
+    // Match full method names first
+    if (methodChoice.includes('problem shifting') || methodChoice === '1') {
+      console.log(`🔍 CHOOSE_METHOD: ✓ Matched Problem Shifting (exact/full)`);
       context.currentPhase = hasExistingProblem ? 'problem_shifting' : 'work_type_selection';
       context.metadata.selectedMethod = 'problem_shifting';
-      // Clear previous modality metadata for clean state
       this.clearPreviousModalityMetadata(context);
       return hasExistingProblem ? this.getIntroStepForMethod('problem_shifting', context) : 'work_type_description';
-    } else if (methodChoice.includes('blockage shifting') || methodChoice.includes('4')) {
-      context.currentPhase = hasExistingProblem ? 'blockage_shifting' : 'work_type_selection';
-      context.metadata.selectedMethod = 'blockage_shifting';
-      // Clear previous modality metadata for clean state
-      this.clearPreviousModalityMetadata(context);
-      return hasExistingProblem ? this.getIntroStepForMethod('blockage_shifting', context) : 'work_type_description';
-    } else if (methodChoice.includes('identity shifting') || methodChoice.includes('2')) {
+    } else if (methodChoice.includes('identity shifting') || methodChoice === '2') {
+      console.log(`🔍 CHOOSE_METHOD: ✓ Matched Identity Shifting (exact/full)`);
       context.currentPhase = hasExistingProblem ? 'identity_shifting' : 'work_type_selection';
       context.metadata.selectedMethod = 'identity_shifting';
-      // Clear previous modality metadata for clean state
       this.clearPreviousModalityMetadata(context);
       return hasExistingProblem ? this.getIntroStepForMethod('identity_shifting', context) : 'work_type_description';
-    } else if (methodChoice.includes('belief shifting') || methodChoice.includes('3')) {
+    } else if (methodChoice.includes('belief shifting') || methodChoice === '3') {
+      console.log(`🔍 CHOOSE_METHOD: ✓ Matched Belief Shifting (exact/full)`);
       context.currentPhase = hasExistingProblem ? 'belief_shifting' : 'work_type_selection';
       context.metadata.selectedMethod = 'belief_shifting';
-      // Clear previous modality metadata for clean state
       this.clearPreviousModalityMetadata(context);
       return hasExistingProblem ? this.getIntroStepForMethod('belief_shifting', context) : 'work_type_description';
+    } else if (methodChoice.includes('blockage shifting') || methodChoice === '4') {
+      console.log(`🔍 CHOOSE_METHOD: ✓ Matched Blockage Shifting (exact/full)`);
+      context.currentPhase = hasExistingProblem ? 'blockage_shifting' : 'work_type_selection';
+      context.metadata.selectedMethod = 'blockage_shifting';
+      this.clearPreviousModalityMetadata(context);
+      return hasExistingProblem ? this.getIntroStepForMethod('blockage_shifting', context) : 'work_type_description';
     } else if (methodChoice.includes('reality shifting')) {
+      console.log(`🔍 CHOOSE_METHOD: ✓ Matched Reality Shifting (exact/full)`);
       context.currentPhase = 'reality_shifting';
       context.metadata.selectedMethod = 'reality_shifting';
       return 'reality_goal_capture';
     } else if (methodChoice.includes('trauma shifting')) {
+      console.log(`🔍 CHOOSE_METHOD: ✓ Matched Trauma Shifting (exact/full)`);
       context.currentPhase = hasExistingProblem ? 'trauma_shifting' : 'work_type_selection';
       context.metadata.selectedMethod = 'trauma_shifting';
-      // Clear previous modality metadata for clean state
       this.clearPreviousModalityMetadata(context);
       return hasExistingProblem ? 'trauma_shifting_intro' : 'work_type_description';
     }
+    
+    // Then check for numbers explicitly (not includes, exact match)
+    else if (methodChoice.trim() === '1') {
+      console.log(`🔍 CHOOSE_METHOD: ✓ Matched Problem Shifting (number 1)`);
+      context.currentPhase = hasExistingProblem ? 'problem_shifting' : 'work_type_selection';
+      context.metadata.selectedMethod = 'problem_shifting';
+      this.clearPreviousModalityMetadata(context);
+      return hasExistingProblem ? this.getIntroStepForMethod('problem_shifting', context) : 'work_type_description';
+    } else if (methodChoice.trim() === '2') {
+      console.log(`🔍 CHOOSE_METHOD: ✓ Matched Identity Shifting (number 2)`);
+      context.currentPhase = hasExistingProblem ? 'identity_shifting' : 'work_type_selection';
+      context.metadata.selectedMethod = 'identity_shifting';
+      this.clearPreviousModalityMetadata(context);
+      return hasExistingProblem ? this.getIntroStepForMethod('identity_shifting', context) : 'work_type_description';
+    } else if (methodChoice.trim() === '3') {
+      console.log(`🔍 CHOOSE_METHOD: ✓ Matched Belief Shifting (number 3)`);
+      context.currentPhase = hasExistingProblem ? 'belief_shifting' : 'work_type_selection';
+      context.metadata.selectedMethod = 'belief_shifting';
+      this.clearPreviousModalityMetadata(context);
+      return hasExistingProblem ? this.getIntroStepForMethod('belief_shifting', context) : 'work_type_description';
+    } else if (methodChoice.trim() === '4') {
+      console.log(`🔍 CHOOSE_METHOD: ✓ Matched Blockage Shifting (number 4)`);
+      context.currentPhase = hasExistingProblem ? 'blockage_shifting' : 'work_type_selection';
+      context.metadata.selectedMethod = 'blockage_shifting';
+      this.clearPreviousModalityMetadata(context);
+      return hasExistingProblem ? this.getIntroStepForMethod('blockage_shifting', context) : 'work_type_description';
+    }
 
     // No valid method selected yet - stay on choose_method to show buttons
-    console.log(`🔍 CHOOSE_METHOD: No valid method detected, staying on choose_method`);
+    console.log(`🔍 CHOOSE_METHOD: ✗ No valid method detected, staying on choose_method`);
+    console.log(`🔍 CHOOSE_METHOD: ✗ Input was: "${methodChoice}"`);
     return 'choose_method';
   }
 
