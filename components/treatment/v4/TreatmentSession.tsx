@@ -394,7 +394,7 @@ export default function TreatmentSession({
           requestMicPermission().then((granted) => {
             if (granted) {
               setIsMicEnabled(true);
-              setSpeakerEnabled(true);
+              setIsSpeakerEnabled(true);
               if (typeof window !== 'undefined') {
                 localStorage.setItem('v4_mic_enabled', 'true');
                 localStorage.setItem('v4_speaker_enabled', 'true');
@@ -407,7 +407,7 @@ export default function TreatmentSession({
         // Listen-only: speaker on, mic off, no guided mode
         setIsGuidedMode(false);
         setIsMicEnabled(false);
-        setSpeakerEnabled(true);
+        setIsSpeakerEnabled(true);
         if (typeof window !== 'undefined') {
           localStorage.setItem('v4_mic_enabled', 'false');
           localStorage.setItem('v4_speaker_enabled', 'true');
@@ -452,7 +452,7 @@ export default function TreatmentSession({
       requestMicPermission().then((granted) => {
         if (granted) {
           setIsMicEnabled(true);
-          setSpeakerEnabled(true);
+          setIsSpeakerEnabled(true);
           if (typeof window !== 'undefined') {
             localStorage.setItem('v4_mic_enabled', 'true');
             localStorage.setItem('v4_speaker_enabled', 'true');
@@ -463,7 +463,7 @@ export default function TreatmentSession({
       // Listen-only: speaker on, mic off, no guided mode
       setIsGuidedMode(false);
       setIsMicEnabled(false);
-      setSpeakerEnabled(true);
+      setIsSpeakerEnabled(true);
       localStorage.setItem('v4_mic_enabled', 'false');
       localStorage.setItem('v4_speaker_enabled', 'true');
       localStorage.setItem('v4_guided_mode', 'false');
