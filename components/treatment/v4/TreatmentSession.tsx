@@ -1116,14 +1116,11 @@ export default function TreatmentSession({
       console.log('V4 Continue session response:', data);
 
       if (data.success) {
-        // Don't display "Choose a method:" message when buttons will be shown
-        const shouldSkipMessage = data.message === "Choose a method:" ||
-          (data.currentStep === 'choose_method' &&
-            data.message.includes('Choose a method'));
-
-        if (!shouldSkipMessage) {
+        // Always provide audio/visual feedback in PTT guided mode
+        // PTT users need to hear confirmation that their input was processed
+        if (data.message) {
           // NEW: If speaker is enabled, set up pending message for audio-then-text timing
-          if (isSpeakerEnabled && data.message) {
+          if (isSpeakerEnabled) {
             console.log('⏱️ V4: Setting up pending message for audio-first rendering');
             setPendingMessage({
               content: data.message,
