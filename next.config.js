@@ -5,6 +5,8 @@ const withPWA = require('next-pwa')({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  // Keep navigations network-first; avoid stale start-url caches trapping Safari.
+  cacheStartUrl: false,
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,
@@ -122,12 +124,12 @@ const withPWA = require('next-pwa')({
       urlPattern: /.*/i,
       handler: 'NetworkFirst',
       options: {
+        // No hard timeout here; cold mobile loads can exceed 10s after cache clear.
         cacheName: 'others',
         expiration: {
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        },
-        networkTimeoutSeconds: 10
+        }
       }
     }
   ]

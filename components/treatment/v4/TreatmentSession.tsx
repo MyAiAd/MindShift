@@ -10,6 +10,7 @@ import { useNaturalVoice } from '@/components/voice/useNaturalVoice';
 import { V4_STATIC_AUDIO_TEXTS } from '@/lib/v4/static-audio-texts';
 // V4 preferences for interaction modes
 import { getInteractionMode, getVoicePreferences, shouldShowOrb, shouldShowTextFirst, isListenOnlyMode, InteractionMode, V4_EVENTS } from '@/lib/v4/v4-preferences';
+import { performHardRefresh } from '@/lib/pwa/hard-refresh';
 
 // Import shared types
 import {
@@ -780,25 +781,9 @@ export default function TreatmentSession({
     }
   }, [naturalVoice]);
 
-  // Temporary testing helper: approximate a hard refresh in-app on mobile.
+  // Trigger a real hard refresh by clearing SW + caches.
   const handleHardRefresh = useCallback(async () => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      if ('caches' in window) {
-        const cacheKeys = await caches.keys();
-        await Promise.all(cacheKeys.map(cacheKey => caches.delete(cacheKey)));
-      }
-
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map(registration => registration.update()));
-      }
-    } catch (error) {
-      console.warn('⚠️ Hard refresh cleanup failed:', error);
-    } finally {
-      window.location.reload();
-    }
+    await performHardRefresh();
   }, []);
 
   // Test Audio Controls (for settings modal demo)
