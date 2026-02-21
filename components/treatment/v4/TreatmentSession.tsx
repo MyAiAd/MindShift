@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, VolumeX, Send, Play, Settings, Gauge, User, SkipForward, ArrowLeft } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, VolumeX, Send, Play, Settings, Gauge, User, SkipForward, ArrowLeft, RefreshCw } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 // Natural voice integration (ElevenLabs + Web Speech)
@@ -204,8 +204,94 @@ export default function TreatmentSession({
   const testAutoStartTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Track the 300ms auto-start delay
   const isTestPlayingRef = useRef(false); // Ref for immediate access in callbacks
   
+  // Subtitle testing state (single-line text under orb)
+  const [currentSubtitle, setCurrentSubtitle] = useState('');
+  const subtitleTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+  const subtitleSpeechTextRef = useRef('');
+  const subtitleReadyRef = useRef(false);
+  const subtitleStartedRef = useRef(false);
+  
   // Test audio sample text - longer for better testing
   const TEST_AUDIO_SAMPLE = "This is a test of your voice settings. I will keep speaking so you can test interrupting me at any time. Try adjusting the sensitivity slider, then speak to interrupt. Higher sensitivity means it's easier to interrupt me. Lower sensitivity means I'm harder to interrupt. You can also adjust my speaking speed to find what works best for you. Go ahead and try interrupting me now by speaking. I'll keep looping until you stop the test.";
+  const SUBTITLE_START_DELAY_MS = 220;
+  const SUBTITLE_MS_PER_WORD = 360;
+
+  const clearSubtitleTimers = useCallback(() => {
+    subtitleTimersRef.current.forEach(timer => clearTimeout(timer));
+    subtitleTimersRef.current = [];
+  }, []);
+
+  const resetSubtitles = useCallback(() => {
+    subtitleSpeechTextRef.current = '';
+    subtitleReadyRef.current = false;
+    subtitleStartedRef.current = false;
+    clearSubtitleTimers();
+    setCurrentSubtitle('');
+  }, [clearSubtitleTimers]);
+
+  const prepareSubtitlesForSpeech = useCallback((text: string) => {
+    subtitleSpeechTextRef.current = text;
+    subtitleReadyRef.current = Boolean(text?.trim());
+    subtitleStartedRef.current = false;
+    clearSubtitleTimers();
+    setCurrentSubtitle('');
+  }, [clearSubtitleTimers]);
+
+  const splitIntoSubtitleSegments = useCallback((text: string): string[] => {
+    const normalized = text.replace(/\s+/g, ' ').trim();
+    if (!normalized) return [];
+
+    const sentenceSplit = normalized
+      .split(/(?<=[.!?])\s+/)
+      .map(segment => segment.trim())
+      .filter(Boolean);
+
+    const baseSegments = sentenceSplit.length > 0 ? sentenceSplit : [normalized];
+
+    return baseSegments.flatMap(segment => {
+      if (segment.length <= 110) {
+        return [segment];
+      }
+
+      const clauseSegments = segment
+        .split(/[,;:]\s+/)
+        .map(clause => clause.trim())
+        .filter(Boolean);
+
+      return clauseSegments.length > 0 ? clauseSegments : [segment];
+    });
+  }, []);
+
+  const getSubtitleSegmentDurationMs = useCallback((segment: string) => {
+    const wordCount = segment.split(/\s+/).filter(Boolean).length;
+    const effectiveSpeed = Math.max(playbackSpeed, 0.5);
+    const estimatedDuration = (wordCount * SUBTITLE_MS_PER_WORD) / effectiveSpeed;
+    return Math.min(Math.max(estimatedDuration, 900), 5200);
+  }, [playbackSpeed]);
+
+  const startSubtitleSequence = useCallback((text: string) => {
+    const segments = splitIntoSubtitleSegments(text);
+    if (segments.length === 0) {
+      setCurrentSubtitle('');
+      return;
+    }
+
+    clearSubtitleTimers();
+
+    const firstLineTimer = setTimeout(() => {
+      setCurrentSubtitle(segments[0]);
+    }, SUBTITLE_START_DELAY_MS);
+    subtitleTimersRef.current.push(firstLineTimer);
+
+    let elapsedMs = SUBTITLE_START_DELAY_MS;
+    for (let i = 0; i < segments.length - 1; i++) {
+      elapsedMs += getSubtitleSegmentDurationMs(segments[i]);
+      const nextLineTimer = setTimeout(() => {
+        setCurrentSubtitle(segments[i + 1]);
+      }, elapsedMs);
+      subtitleTimersRef.current.push(nextLineTimer);
+    }
+  }, [clearSubtitleTimers, getSubtitleSegmentDurationMs, splitIntoSubtitleSegments]);
 
   // Available voices - Kokoro TTS voices
   const AVAILABLE_VOICES = [
@@ -242,6 +328,7 @@ export default function TreatmentSession({
     // If turning OFF, stop any playing audio
     if (!newState) {
       naturalVoice.stopSpeaking();
+      resetSubtitles();
     }
     
     setIsSpeakerEnabled(newState);
@@ -256,12 +343,13 @@ export default function TreatmentSession({
       const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
       if (lastAiMessage?.content) {
         console.log('🔊 Retroactive Play:', lastAiMessage.content);
+        prepareSubtitlesForSpeech(lastAiMessage.content);
         naturalVoice.speak(lastAiMessage.content);
       }
     }
     
     console.log(`🔊 Speaker ${newState ? 'enabled' : 'disabled'}`);
-  }, [isSpeakerEnabled, messages]);
+  }, [isSpeakerEnabled, messages, prepareSubtitlesForSpeech, resetSubtitles]);
   // Note: naturalVoice is not in deps because it's stable (from useNaturalVoice hook)
 
   // NEW: Pause/Resume handler for dedicated pause button
@@ -272,6 +360,7 @@ export default function TreatmentSession({
     // If turning OFF, immediately stop any playing audio
     if (!newState) {
       naturalVoice.stopSpeaking();
+      resetSubtitles();
     }
     
     setIsNaturalVoiceEnabled(newState);
@@ -287,6 +376,7 @@ export default function TreatmentSession({
       const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
       if (lastAiMessage?.content) {
         console.log('🔊 Retroactive Play:', lastAiMessage.content);
+        prepareSubtitlesForSpeech(lastAiMessage.content);
         naturalVoice.speak(lastAiMessage.content);
       }
     } else {
@@ -515,6 +605,7 @@ export default function TreatmentSession({
 
   // Handle audio ended event for auto-advance steps
   const handleAudioEnded = useCallback(() => {
+    resetSubtitles();
     console.log('🔊 Audio ended. Step type:', currentStepTypeRef.current);
     if (currentStepTypeRef.current === 'auto') {
       console.log('⏩ Auto-advancing step (Audio Ended)...');
@@ -523,7 +614,7 @@ export default function TreatmentSession({
         sendMessage('', true); // Send empty message to trigger next step
       }, 500);
     }
-  }, []);
+  }, [resetSubtitles]);
 
   // Auto-advance logic for Voice Off mode
   useEffect(() => {
@@ -548,6 +639,13 @@ export default function TreatmentSession({
       return () => clearTimeout(timer);
     }
   }, [expectedResponseType, isSpeakerEnabled, messages]);
+
+  // Keep subtitles in sync with audio controls.
+  useEffect(() => {
+    if (!isSpeakerEnabled) {
+      resetSubtitles();
+    }
+  }, [isSpeakerEnabled, resetSubtitles]);
 
   // State for pending message that's waiting for audio-then-text timing
   const [pendingMessage, setPendingMessage] = useState<{
@@ -583,7 +681,13 @@ export default function TreatmentSession({
       setMessages(prev => [...prev, timedMessage]);
       setPendingMessage(null); // Clear pending message
     }
-  }, [pendingMessage]);
+    
+    // Start sentence-by-sentence subtitle progression slightly after audio starts.
+    if (subtitleReadyRef.current && !subtitleStartedRef.current) {
+      subtitleStartedRef.current = true;
+      startSubtitleSequence(subtitleSpeechTextRef.current);
+    }
+  }, [pendingMessage, startSubtitleSequence]);
 
   // Handle test audio interruption via VAD (defined before naturalVoice hook)
   const handleTestInterruption = useCallback(() => {
@@ -648,8 +752,9 @@ export default function TreatmentSession({
     return () => {
       console.log('🧹 TreatmentSession: Cleaning up - stopping audio');
       naturalVoice.stopSpeaking();
+      clearSubtitleTimers();
     };
-  }, []); // Empty deps - only run on unmount, not on every render
+  }, []); // Cleanup on unmount only
 
   // Helper function to format method names
   const formatMethodName = (methodName: string) => {
@@ -674,6 +779,27 @@ export default function TreatmentSession({
       console.log('⚠️ Cannot pause/resume - no audio active');
     }
   }, [naturalVoice]);
+
+  // Temporary testing helper: approximate a hard refresh in-app on mobile.
+  const handleHardRefresh = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      if ('caches' in window) {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map(cacheKey => caches.delete(cacheKey)));
+      }
+
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(registration => registration.update()));
+      }
+    } catch (error) {
+      console.warn('⚠️ Hard refresh cleanup failed:', error);
+    } finally {
+      window.location.reload();
+    }
+  }, []);
 
   // Test Audio Controls (for settings modal demo)
   const startTestAudio = useCallback(() => {
@@ -718,7 +844,8 @@ export default function TreatmentSession({
     
     // Stop any playing audio
     naturalVoice.stopSpeaking();
-  }, [naturalVoice]);
+    resetSubtitles();
+  }, [naturalVoice, resetSubtitles]);
 
   // Pause session audio when settings open, auto-start test when settings open
   useEffect(() => {
@@ -794,6 +921,7 @@ export default function TreatmentSession({
     // Stop any playing audio immediately
     if (naturalVoice.isSpeaking || naturalVoice.isPaused) {
       naturalVoice.stopSpeaking();
+      resetSubtitles();
     }
     
     // FIX #3: Clear audio state flags to prevent false positives
@@ -807,7 +935,7 @@ export default function TreatmentSession({
     // Start user's mic
     naturalVoice.startListening();
     setIsPTTActive(true);
-  }, [isGuidedMode, naturalVoice, micPermission, requestMicPermission]);
+  }, [isGuidedMode, naturalVoice, micPermission, requestMicPermission, resetSubtitles]);
 
   const handlePTTEnd = useCallback(() => {
     if (!isGuidedMode) return;
@@ -944,6 +1072,7 @@ export default function TreatmentSession({
         if (isSpeakerEnabled) {
           // Use setTimeout to ensure all React state updates and cleanups are complete
           setTimeout(() => {
+            prepareSubtitlesForSpeech(instantMessage.content);
             naturalVoice.speak(instantMessage.content);
           }, 150);
         }
@@ -1065,6 +1194,7 @@ export default function TreatmentSession({
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user advancing to next step');
       naturalVoice.stopSpeaking();
+      resetSubtitles();
     }
 
     const userMessage: TreatmentMessage = {
@@ -1130,6 +1260,7 @@ export default function TreatmentSession({
             });
             
             // Start audio playback (will trigger handleRenderText after 150ms)
+            prepareSubtitlesForSpeech(data.message);
             naturalVoice.speak(data.message);
           } else {
             // Speaker disabled: add message immediately (no timing data)
@@ -1283,6 +1414,7 @@ export default function TreatmentSession({
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user clicked button');
       naturalVoice.stopSpeaking();
+      resetSubtitles();
     }
     setClickedButton(buttonText);
     sendMessage(buttonText);
@@ -1358,6 +1490,7 @@ export default function TreatmentSession({
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user selected work type');
       naturalVoice.stopSpeaking();
+      resetSubtitles();
     }
     
     setClickedButton(workType);
@@ -1444,6 +1577,7 @@ export default function TreatmentSession({
               
               // Start audio playback (will trigger handleRenderText after 150ms)
               console.log('🔊 Playing new audio after work type selection');
+              prepareSubtitlesForSpeech(data.message);
               naturalVoice.speak(data.message);
             } else {
               // Speaker disabled: add message immediately
@@ -1577,6 +1711,7 @@ export default function TreatmentSession({
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user clicked yes/no');
       naturalVoice.stopSpeaking();
+      resetSubtitles();
     }
     setClickedButton(response);
     sendMessage(response);
@@ -1588,6 +1723,7 @@ export default function TreatmentSession({
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user selected method');
       naturalVoice.stopSpeaking();
+      resetSubtitles();
     }
     
     setClickedButton(method);
@@ -1653,6 +1789,7 @@ export default function TreatmentSession({
             
             // Start audio playback (will trigger handleRenderText after 150ms)
             console.log('🔊 Playing new audio after method selection');
+            prepareSubtitlesForSpeech(data.message);
             naturalVoice.speak(data.message);
           } else {
             // Speaker disabled: add message immediately
@@ -1774,7 +1911,21 @@ export default function TreatmentSession({
             </button>
           </div>
 
-          {/* Mobile Controls at Bottom - Skip and Back */}
+          {/* Subtitle test line - single-line on mobile under the talking circle */}
+          {isMobile && interactionMode === 'orb_ptt' && (
+            <div className="w-full px-4 -mt-3 mb-3">
+              <div className="mx-auto max-w-md rounded-md bg-black/30 border border-white/20 backdrop-blur-sm px-3 py-2">
+                <p
+                  className="text-sm text-white text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
+                  aria-live="polite"
+                >
+                  {currentSubtitle}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Controls at Bottom - Back, Skip, Hard Refresh */}
           {isMobile && interactionMode === 'orb_ptt' && (
             <div className="absolute bottom-0 left-0 right-0 pb-safe">
               <div className="flex items-center justify-center gap-4 p-6">
@@ -1797,6 +1948,7 @@ export default function TreatmentSession({
                 <button
                   onClick={() => {
                     naturalVoice.stopSpeaking();
+                    resetSubtitles();
                     console.log('⏭️ Skip: Audio playback stopped');
                   }}
                   disabled={!naturalVoice.isSpeaking}
@@ -1809,6 +1961,18 @@ export default function TreatmentSession({
                 >
                   <SkipForward className="h-6 w-6 mb-1" />
                   <span className="text-xs">Skip</span>
+                </button>
+
+                {/* Temporary hard refresh test button */}
+                <button
+                  onClick={() => {
+                    void handleHardRefresh();
+                  }}
+                  className="flex flex-col items-center justify-center w-20 h-20 rounded-full transition-all bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+                  title="Hard refresh (testing)"
+                >
+                  <RefreshCw className="h-6 w-6 mb-1" />
+                  <span className="text-xs">Refresh</span>
                 </button>
               </div>
             </div>
