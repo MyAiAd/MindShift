@@ -14,6 +14,75 @@ const V4AudioPreloader = dynamic(() => import('@/components/treatment/v4/V4Audio
   loading: () => null,
 });
 
+class SessionErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; errorMessage: string }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, errorMessage: '' };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, errorMessage: error?.message || 'Unknown render error' };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('Treatment V4 render error:', error, info);
+  }
+
+  handleForceReload = async () => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      if ('caches' in window) {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map(cacheKey => caches.delete(cacheKey)));
+      }
+    } catch (error) {
+      console.warn('Force reload cache clear failed:', error);
+    } finally {
+      window.location.reload();
+    }
+  };
+
+  render() {
+    if (!this.state.hasError) {
+      return this.props.children;
+    }
+
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-lg border border-red-200 bg-card p-5 text-center">
+          <h2 className="text-lg font-semibold text-foreground mb-2">Session failed to render</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Please reload the page. If the issue persists, use Force Refresh.
+          </p>
+          {this.state.errorMessage && (
+            <p className="text-xs text-red-600 mb-4 break-words">{this.state.errorMessage}</p>
+          )}
+          <div className="flex gap-2 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 text-sm"
+            >
+              Reload
+            </button>
+            <button
+              onClick={() => {
+                void this.handleForceReload();
+              }}
+              className="px-3 py-2 rounded-md bg-secondary text-foreground hover:bg-secondary/80 text-sm"
+            >
+              Force Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+
 function TreatmentSessionContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -162,14 +231,16 @@ function TreatmentSessionContent() {
 
       {/* Treatment Session Component - minimal top padding on mobile */}
       <div className="py-2 md:py-8">
-        <TreatmentSession
-          sessionId={sessionId}
-          userId={user.id}
-          shouldResume={shouldResume}
-          onComplete={handleSessionComplete}
-          onError={handleSessionError}
-          version="v4"
-        />
+        <SessionErrorBoundary>
+          <TreatmentSession
+            sessionId={sessionId}
+            userId={user.id}
+            shouldResume={shouldResume}
+            onComplete={handleSessionComplete}
+            onError={handleSessionError}
+            version="v4"
+          />
+        </SessionErrorBoundary>
       </div>
     </div>
   );
