@@ -1865,65 +1865,71 @@ export default function TreatmentSession({
              '🧘 Ready - Hold to speak'}
           </div>
 
-          {/* Centered Orb */}
-          <div className="flex-1 flex items-center justify-center">
-            {/* Main PTT Button */}
-            <button
-              onPointerDown={handlePTTStart}
-              onPointerUp={handlePTTEnd}
-              onPointerLeave={handlePTTEnd}
-              className={`
-                w-64 h-64 md:w-80 md:h-80 rounded-full 
-                ${isPTTActive 
-                  ? 'bg-red-500 animate-pulse-slow ring-8 ring-red-300/50 scale-105' 
-                  : naturalVoice.isSpeaking
-                  ? 'bg-indigo-500 ring-8 ring-indigo-300/30 animate-pulse-slow'
-                  : 'bg-purple-600 ring-4 ring-purple-300/50 hover:ring-8 hover:scale-105'
-                }
-                flex flex-col items-center justify-center
-                text-white font-bold
-                transition-all duration-300
-                shadow-2xl
-                active:scale-95
-                cursor-pointer
-                select-none
-              `}
-            >
-              {isPTTActive ? (
-                <>
-                  <div className="text-7xl mb-4 animate-bounce">🔴</div>
-                  <div className="text-2xl mb-2">Speaking...</div>
-                  <div className="text-sm opacity-75">Release to send</div>
-                </>
-              ) : naturalVoice.isSpeaking ? (
-                <>
-                  <div className="text-7xl mb-4">🔊</div>
-                  <div className="text-2xl mb-2">AI Speaking</div>
-                  <div className="text-sm opacity-75">Hold to interrupt</div>
-                </>
-              ) : (
-                <>
-                  <div className="text-7xl mb-4">🎙️</div>
-                  <div className="text-2xl mb-2">Hold to Speak</div>
-                  <div className="text-sm opacity-75 hidden md:block">or press Space</div>
-                </>
-              )}
-            </button>
-          </div>
+          {/* Centered Orb + subtitle */}
+          <div
+            className={`flex-1 flex items-center justify-center ${
+              isMobile && interactionMode === 'orb_ptt' ? 'px-4 pb-28' : ''
+            }`}
+          >
+            <div className="w-full max-w-md flex flex-col items-center">
+              {/* Main PTT Button */}
+              <button
+                onPointerDown={handlePTTStart}
+                onPointerUp={handlePTTEnd}
+                onPointerLeave={handlePTTEnd}
+                className={`
+                  w-64 h-64 md:w-80 md:h-80 rounded-full 
+                  ${isPTTActive
+                    ? 'bg-red-500 animate-pulse-slow ring-8 ring-red-300/50 scale-105'
+                    : naturalVoice.isSpeaking
+                    ? 'bg-indigo-500 ring-8 ring-indigo-300/30 animate-pulse-slow'
+                    : 'bg-purple-600 ring-4 ring-purple-300/50 hover:ring-8 hover:scale-105'
+                  }
+                  flex flex-col items-center justify-center
+                  text-white font-bold
+                  transition-all duration-300
+                  shadow-2xl
+                  active:scale-95
+                  cursor-pointer
+                  select-none
+                `}
+              >
+                {isPTTActive ? (
+                  <>
+                    <div className="text-7xl mb-4 animate-bounce">🔴</div>
+                    <div className="text-2xl mb-2">Speaking...</div>
+                    <div className="text-sm opacity-75">Release to send</div>
+                  </>
+                ) : naturalVoice.isSpeaking ? (
+                  <>
+                    <div className="text-7xl mb-4">🔊</div>
+                    <div className="text-2xl mb-2">AI Speaking</div>
+                    <div className="text-sm opacity-75">Hold to interrupt</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-7xl mb-4">🎙️</div>
+                    <div className="text-2xl mb-2">Hold to Speak</div>
+                    <div className="text-sm opacity-75 hidden md:block">or press Space</div>
+                  </>
+                )}
+              </button>
 
-          {/* Subtitle test line - single-line on mobile under the talking circle */}
-          {isMobile && interactionMode === 'orb_ptt' && (
-            <div className="w-full px-4 -mt-3 mb-3">
-              <div className="mx-auto max-w-md rounded-md bg-black/30 border border-white/20 backdrop-blur-sm px-3 py-2">
-                <p
-                  className="text-sm text-white text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
-                  aria-live="polite"
-                >
-                  {currentSubtitle}
-                </p>
-              </div>
+              {/* Subtitle line - anchored under the orb on mobile */}
+              {isMobile && interactionMode === 'orb_ptt' && (
+                <div className="w-full mt-5">
+                  <div className="mx-auto max-w-md rounded-md bg-black/30 border border-white/20 backdrop-blur-sm px-3 py-2">
+                    <p
+                      className="text-sm text-white text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
+                      aria-live="polite"
+                    >
+                      {currentSubtitle}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Mobile Controls at Bottom - Back, Skip, Hard Refresh */}
           {isMobile && interactionMode === 'orb_ptt' && (
