@@ -841,7 +841,7 @@ export const useNaturalVoice = ({
             const audio = new Audio(audioUrl);
             audio.playbackRate = playbackRate; // Apply user's speed preference
             audio.preload = 'auto';
-            audio.playsInline = true;
+            audio.setAttribute('playsinline', 'true');
             audioRef.current = audio;
 
             // Some mobile PWA/WebKit combinations can stall before onplay/onerror.
