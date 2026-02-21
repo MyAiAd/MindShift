@@ -1866,7 +1866,11 @@ export default function TreatmentSession({
           </div>
 
           {/* Centered Orb + Subtitle */}
-          <div className="flex-1 flex flex-col items-center justify-center">
+          <div
+            className={`flex-1 flex flex-col items-center justify-center ${
+              isMobile && interactionMode === 'orb_ptt' ? 'pb-24' : ''
+            }`}
+          >
             {/* Main PTT Button */}
             <button
               onPointerDown={handlePTTStart}
