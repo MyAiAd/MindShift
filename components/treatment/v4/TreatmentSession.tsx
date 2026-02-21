@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, VolumeX, Send, Play, Settings, Gauge, User, SkipForward, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, VolumeX, Send, Play, Settings, Gauge, User, SkipForward, ArrowLeft } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 // Natural voice integration (ElevenLabs + Web Speech)
@@ -1971,7 +1971,7 @@ export default function TreatmentSession({
                   className="flex flex-col items-center justify-center w-20 h-20 rounded-full transition-all bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
                   title="Hard refresh (testing)"
                 >
-                  <RefreshCw className="h-6 w-6 mb-1" />
+                  <span className="text-lg mb-1">↻</span>
                   <span className="text-xs">Refresh</span>
                 </button>
               </div>
