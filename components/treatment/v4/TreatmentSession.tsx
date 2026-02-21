@@ -1865,8 +1865,8 @@ export default function TreatmentSession({
              '🧘 Ready - Hold to speak'}
           </div>
 
-          {/* Centered Orb */}
-          <div className="flex-1 flex items-center justify-center">
+          {/* Centered Orb + Subtitle */}
+          <div className="flex-1 flex flex-col items-center justify-center">
             {/* Main PTT Button */}
             <button
               onPointerDown={handlePTTStart}
@@ -1909,21 +1909,21 @@ export default function TreatmentSession({
                 </>
               )}
             </button>
-          </div>
 
-          {/* Subtitle test line - single-line on mobile under the talking circle */}
-          {isMobile && interactionMode === 'orb_ptt' && (
-            <div className="w-full px-4 -mt-3 mb-3">
-              <div className="mx-auto max-w-md rounded-md bg-black/30 border border-white/20 backdrop-blur-sm px-3 py-2">
-                <p
-                  className="text-sm text-white text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
-                  aria-live="polite"
-                >
-                  {currentSubtitle}
-                </p>
+            {/* Subtitle line - directly beneath the orb */}
+            {isMobile && interactionMode === 'orb_ptt' && (
+              <div className="w-full px-4 mt-4">
+                <div className="mx-auto max-w-md rounded-md bg-black/30 border border-white/20 backdrop-blur-sm px-3 py-2">
+                  <p
+                    className="text-sm text-white text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
+                    aria-live="polite"
+                  >
+                    {currentSubtitle}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Mobile Controls at Bottom - Back, Skip, Hard Refresh */}
           {isMobile && interactionMode === 'orb_ptt' && (
