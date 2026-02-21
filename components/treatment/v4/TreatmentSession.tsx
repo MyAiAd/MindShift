@@ -241,8 +241,8 @@ export default function TreatmentSession({
     const normalized = text.replace(/\s+/g, ' ').trim();
     if (!normalized) return [];
 
-    const sentenceSplit = normalized
-      .split(/(?<=[.!?])\s+/)
+    // Avoid regex lookbehind so older mobile browsers can parse this file.
+    const sentenceSplit = (normalized.match(/[^.!?]+[.!?]?/g) || [])
       .map(segment => segment.trim())
       .filter(Boolean);
 
