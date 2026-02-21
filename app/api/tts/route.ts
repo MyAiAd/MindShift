@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const { text, voice = 'alloy', model = 'tts-1', provider = 'kokoro' } = await request.json();
+    const userAgent = request.headers.get('user-agent') || '';
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
@@ -26,7 +27,17 @@ export async function POST(request: NextRequest) {
       };
       const voiceId = kokoroVoiceMap[voice] || (voice?.startsWith('af_') || voice?.startsWith('am_') ? voice : 'af_heart');
 
-      console.log(`TTS: Calling Kokoro at ${KOKORO_API_URL} with voice=${voiceId}, text="${text.substring(0, 50)}..."`);
+      // iOS Safari/PWA generally does not decode Ogg/Opus reliably.
+      // Serve WAV to iOS clients while keeping Opus for lower bandwidth elsewhere.
+      const isIOSClient =
+        /iPhone|iPad|iPod/i.test(userAgent) ||
+        (/Macintosh/i.test(userAgent) && /Mobile/i.test(userAgent));
+      const kokoroFormat = isIOSClient ? 'wav' : 'opus';
+      const kokoroContentType = isIOSClient ? 'audio/wav' : 'audio/ogg; codecs=opus';
+
+      console.log(
+        `TTS: Calling Kokoro at ${KOKORO_API_URL} with voice=${voiceId}, format=${kokoroFormat}, text="${text.substring(0, 50)}..."`
+      );
 
       let response: Response;
       try {
@@ -38,7 +49,7 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             text,
             voice: voiceId,
-            format: 'opus',
+            format: kokoroFormat,
           }),
         });
       } catch (fetchError) {
@@ -59,12 +70,10 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
       }
 
-      // Return the opus audio
+      // Return audio in a container that the client can decode reliably.
       return new NextResponse(response.body, {
         headers: {
-          // Safari/PWA playback is more reliable with an Ogg+Opus MIME.
-          // `audio/opus` can fail decoding on some WebKit builds.
-          'Content-Type': 'audio/ogg; codecs=opus',
+          'Content-Type': kokoroContentType,
           'Cache-Control': 'public, max-age=31536000',
         },
       });
