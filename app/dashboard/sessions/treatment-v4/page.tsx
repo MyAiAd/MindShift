@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth';
 import TreatmentSession from '@/components/treatment/v4/TreatmentSession';
 import { Brain, ArrowLeft, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
+import { cleanupHardRefreshParam, performHardRefresh } from '@/lib/pwa/hard-refresh';
 
 // Dynamic import for audio preloader
 const V4AudioPreloader = dynamic(() => import('@/components/treatment/v4/V4AudioPreloader'), {
@@ -32,18 +33,7 @@ class SessionErrorBoundary extends React.Component<
   }
 
   handleForceReload = async () => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      if ('caches' in window) {
-        const cacheKeys = await caches.keys();
-        await Promise.all(cacheKeys.map(cacheKey => caches.delete(cacheKey)));
-      }
-    } catch (error) {
-      console.warn('Force reload cache clear failed:', error);
-    } finally {
-      window.location.reload();
-    }
+    await performHardRefresh();
   };
 
   render() {
@@ -90,6 +80,10 @@ function TreatmentSessionContent() {
   const [sessionId, setSessionId] = useState<string>('');
   const [shouldResume, setShouldResume] = useState<boolean>(false);
   const [selectedVoice, setSelectedVoice] = useState<string>('heart');
+
+  useEffect(() => {
+    cleanupHardRefreshParam();
+  }, []);
 
   // Load voice preference from localStorage and listen for changes
   useEffect(() => {

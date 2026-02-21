@@ -10,6 +10,7 @@ import { useNaturalVoice } from '@/components/voice/useNaturalVoice';
 import { V4_STATIC_AUDIO_TEXTS } from '@/lib/v4/static-audio-texts';
 // V4 preferences for interaction modes
 import { getInteractionMode, getVoicePreferences, shouldShowOrb, shouldShowTextFirst, isListenOnlyMode, InteractionMode, V4_EVENTS } from '@/lib/v4/v4-preferences';
+import { performHardRefresh } from '@/lib/pwa/hard-refresh';
 
 // Import shared types
 import {
@@ -210,11 +211,38 @@ export default function TreatmentSession({
   const subtitleSpeechTextRef = useRef('');
   const subtitleReadyRef = useRef(false);
   const subtitleStartedRef = useRef(false);
+  const audioPrimedRef = useRef(false);
   
   // Test audio sample text - longer for better testing
   const TEST_AUDIO_SAMPLE = "This is a test of your voice settings. I will keep speaking so you can test interrupting me at any time. Try adjusting the sensitivity slider, then speak to interrupt. Higher sensitivity means it's easier to interrupt me. Lower sensitivity means I'm harder to interrupt. You can also adjust my speaking speed to find what works best for you. Go ahead and try interrupting me now by speaking. I'll keep looping until you stop the test.";
   const SUBTITLE_START_DELAY_MS = 220;
   const SUBTITLE_MS_PER_WORD = 360;
+  const SILENT_WAV_DATA_URI = 'data:audio/wav;base64,UklGRsQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+
+  const primeAudioPlayback = useCallback(() => {
+    if (typeof window === 'undefined' || audioPrimedRef.current) return;
+
+    const primerAudio = new Audio(SILENT_WAV_DATA_URI);
+    primerAudio.preload = 'auto';
+    primerAudio.setAttribute('playsinline', 'true');
+
+    const cleanup = () => {
+      primerAudio.pause();
+      primerAudio.removeAttribute('src');
+      primerAudio.load();
+    };
+
+    void primerAudio.play()
+      .then(() => {
+        audioPrimedRef.current = true;
+        cleanup();
+        console.log('🔊 Audio primed from user interaction');
+      })
+      .catch((error) => {
+        cleanup();
+        console.warn('🔊 Audio prime skipped:', error);
+      });
+  }, [SILENT_WAV_DATA_URI]);
 
   const clearSubtitleTimers = useCallback(() => {
     subtitleTimersRef.current.forEach(timer => clearTimeout(timer));
@@ -340,6 +368,7 @@ export default function TreatmentSession({
     
     // Retroactive Play: If turning ON, speak the last AI message
     if (newState) {
+      primeAudioPlayback();
       const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
       if (lastAiMessage?.content) {
         console.log('🔊 Retroactive Play:', lastAiMessage.content);
@@ -349,7 +378,7 @@ export default function TreatmentSession({
     }
     
     console.log(`🔊 Speaker ${newState ? 'enabled' : 'disabled'}`);
-  }, [isSpeakerEnabled, messages, prepareSubtitlesForSpeech, resetSubtitles]);
+  }, [isSpeakerEnabled, messages, prepareSubtitlesForSpeech, resetSubtitles, primeAudioPlayback]);
   // Note: naturalVoice is not in deps because it's stable (from useNaturalVoice hook)
 
   // NEW: Pause/Resume handler for dedicated pause button
@@ -780,25 +809,9 @@ export default function TreatmentSession({
     }
   }, [naturalVoice]);
 
-  // Temporary testing helper: approximate a hard refresh in-app on mobile.
+  // Trigger a real hard refresh by clearing SW + caches.
   const handleHardRefresh = useCallback(async () => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      if ('caches' in window) {
-        const cacheKeys = await caches.keys();
-        await Promise.all(cacheKeys.map(cacheKey => caches.delete(cacheKey)));
-      }
-
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map(registration => registration.update()));
-      }
-    } catch (error) {
-      console.warn('⚠️ Hard refresh cleanup failed:', error);
-    } finally {
-      window.location.reload();
-    }
+    await performHardRefresh();
   }, []);
 
   // Test Audio Controls (for settings modal demo)
@@ -902,6 +915,7 @@ export default function TreatmentSession({
   const handlePTTStart = useCallback(() => {
     if (!isGuidedMode) return;
     
+    primeAudioPlayback();
     console.log('🎙️ PTT: Starting recording');
     
     // FIX #1: Check mic permission first
@@ -935,7 +949,7 @@ export default function TreatmentSession({
     // Start user's mic
     naturalVoice.startListening();
     setIsPTTActive(true);
-  }, [isGuidedMode, naturalVoice, micPermission, requestMicPermission, resetSubtitles]);
+  }, [isGuidedMode, naturalVoice, micPermission, requestMicPermission, resetSubtitles, primeAudioPlayback]);
 
   const handlePTTEnd = useCallback(() => {
     if (!isGuidedMode) return;
@@ -1028,6 +1042,7 @@ export default function TreatmentSession({
 
   // Handler for starting the session (clicking the play button)
   const handleStartSession = () => {
+    primeAudioPlayback();
     setShowReadyOverlay(false);
     // Start session immediately after hiding overlay
     if (sessionId && userId && !isSessionActive) {
@@ -1189,6 +1204,9 @@ export default function TreatmentSession({
   // V3: Enhanced message sending
   const sendMessage = async (content: string, isAutoAdvance = false) => {
     if ((!content.trim() && !isAutoAdvance) || isLoading) return;
+    if (isSpeakerEnabled) {
+      primeAudioPlayback();
+    }
 
     // Stop current audio if user is advancing to next step (only if speaker was enabled)
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
@@ -1912,8 +1930,11 @@ export default function TreatmentSession({
           </div>
 
           {/* Subtitle test line - single-line on mobile under the talking circle */}
-          {isMobile && interactionMode === 'orb_ptt' && (
-            <div className="w-full px-4 -mt-3 mb-3">
+          {isMobile && interactionMode === 'orb_ptt' && currentSubtitle && (
+            <div
+              className="absolute left-0 right-0 px-4 z-10 pointer-events-none"
+              style={{ bottom: 'calc(env(safe-area-inset-bottom) + 8.5rem)' }}
+            >
               <div className="mx-auto max-w-md rounded-md bg-black/30 border border-white/20 backdrop-blur-sm px-3 py-2">
                 <p
                   className="text-sm text-white text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
