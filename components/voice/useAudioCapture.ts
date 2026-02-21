@@ -69,6 +69,11 @@ interface UseAudioCaptureProps {
   vadTrigger?: boolean; // External VAD can trigger transcription
 }
 
+type ExtendedAudioConstraints = MediaTrackConstraints & {
+  voiceIsolation?: boolean;
+  suppressLocalAudioPlayback?: boolean;
+};
+
 export const useAudioCapture = ({
   enabled,
   onTranscript,
@@ -273,6 +278,63 @@ export const useAudioCapture = ({
   const processNow = useCallback(() => {
     processAudioBuffer(true);
   }, [processAudioBuffer]);
+
+  /**
+   * Request microphone with progressively simpler constraints.
+   * Mobile PWAs (especially iOS) can reject advanced/exact constraints.
+   */
+  const requestMicrophoneStream = useCallback(async (): Promise<MediaStream> => {
+    const enhancedConstraints: ExtendedAudioConstraints = {
+      channelCount: 1,
+      sampleRate: SAMPLE_RATE,
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+      voiceIsolation: true, // iOS 16.4+ where available
+      suppressLocalAudioPlayback: true,
+    };
+
+    const fallbackProfiles: MediaStreamConstraints[] = [
+      {
+        audio: {
+          ...enhancedConstraints,
+          // Request best-effort advanced features (not exact) for compatibility.
+          advanced: [
+            {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          ],
+        },
+      },
+      {
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      },
+      { audio: true },
+    ];
+
+    let lastError: unknown = null;
+    for (let i = 0; i < fallbackProfiles.length; i++) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(fallbackProfiles[i]);
+        if (i > 0) {
+          console.log(`🎙️ AudioCapture: Microphone initialized using fallback profile ${i + 1}/${fallbackProfiles.length}`);
+        }
+        return stream;
+      } catch (err) {
+        lastError = err;
+        console.warn(`🎙️ AudioCapture: Mic profile ${i + 1} failed, trying fallback`, err);
+      }
+    }
+
+    throw (lastError instanceof Error ? lastError : new Error('Failed to initialize microphone'));
+  }, []);
   
   /**
    * Initialize audio capture pipeline:
@@ -284,39 +346,23 @@ export const useAudioCapture = ({
     try {
       console.log('🎙️ AudioCapture: Initializing...');
       
-      // Request microphone access with enhanced quality settings
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          sampleRate: SAMPLE_RATE,
-          
-          // Core noise reduction (widely supported)
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          
-          // Enhanced features (iOS 16.4+, Safari 17+, Chrome 94+)
-          // @ts-ignore - TypeScript may not recognize newer properties
-          voiceIsolation: true,  // iOS 16.4+ - isolates voice from background
-          // @ts-ignore
-          suppressLocalAudioPlayback: true,  // Prevents echo from AI voice
-          
-          // Advanced constraints (request highest quality)
-          advanced: [
-            {
-              echoCancellation: { exact: true },
-              noiseSuppression: { exact: true },
-              autoGainControl: { exact: true }
-            }
-          ]
-        },
-      });
+      // Request microphone access with compatibility fallback profiles.
+      const stream = await requestMicrophoneStream();
       
       mediaStreamRef.current = stream;
       
       // Create audio context at Whisper's optimal sample rate
       const audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
       audioContextRef.current = audioContext;
+
+      // iOS/Safari may start suspended even after user granted mic.
+      if (audioContext.state === 'suspended') {
+        try {
+          await audioContext.resume();
+        } catch (resumeError) {
+          console.warn('🎙️ AudioCapture: AudioContext resume warning:', resumeError);
+        }
+      }
       
       // Load audio worklet processor (runs on separate thread)
       await audioContext.audioWorklet.addModule('/audio-capture-processor.js');
@@ -356,7 +402,7 @@ export const useAudioCapture = ({
       setError(err instanceof Error ? err.message : 'Failed to initialize');
       setIsCapturing(false);
     }
-  }, [enabled]);
+  }, [enabled, requestMicrophoneStream]);
   
   /**
    * Cleanup audio capture: stop stream, close context, clear buffer

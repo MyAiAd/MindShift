@@ -62,7 +62,9 @@ export async function POST(request: NextRequest) {
       // Return the opus audio
       return new NextResponse(response.body, {
         headers: {
-          'Content-Type': 'audio/opus',
+          // Safari/PWA playback is more reliable with an Ogg+Opus MIME.
+          // `audio/opus` can fail decoding on some WebKit builds.
+          'Content-Type': 'audio/ogg; codecs=opus',
           'Cache-Control': 'public, max-age=31536000',
         },
       });

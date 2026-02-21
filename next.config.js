@@ -62,7 +62,7 @@ const withPWA = require('next-pwa')({
       }
     },
     {
-      urlPattern: /\.(?:mp3|wav|ogg|m4a)$/i,
+      urlPattern: /\.(?:mp3|wav|ogg|opus|m4a)$/i,
       handler: 'CacheFirst',
       options: {
         rangeRequests: true,

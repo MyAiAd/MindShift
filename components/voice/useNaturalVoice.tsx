@@ -48,9 +48,16 @@ export const useNaturalVoice = ({
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
     const isSpeakerEnabled = speakerEnabled !== undefined ? speakerEnabled : enabled;
     
-    // Feature flag: Use Whisper or Web Speech API
-    const useWhisper = typeof window !== 'undefined' && 
-                       process.env.NEXT_PUBLIC_TRANSCRIPTION_PROVIDER === 'whisper';
+    // Feature flag: Use Whisper or Web Speech API.
+    // If provider is not explicitly forced to webspeech, prefer Whisper on browsers
+    // that do not implement SpeechRecognition (notably iOS Safari/PWA).
+    const hasWebSpeechSupport = typeof window !== 'undefined' &&
+        !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+    const configuredTranscriptionProvider = process.env.NEXT_PUBLIC_TRANSCRIPTION_PROVIDER;
+    const useWhisper = typeof window !== 'undefined' && (
+        configuredTranscriptionProvider === 'whisper' ||
+        (configuredTranscriptionProvider !== 'webspeech' && !hasWebSpeechSupport)
+    );
     
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -654,6 +661,85 @@ export const useNaturalVoice = ({
         setIsSpeaking(false);
     }, []);
 
+    /**
+     * Normalize Opus blob type for stricter browser decoders (Safari/iOS PWA).
+     */
+    const normalizeAudioBlobType = useCallback((blob: Blob): Blob => {
+        const unsupportedOrGenericType = !blob.type ||
+            blob.type === 'audio/opus' ||
+            blob.type === 'application/opus' ||
+            blob.type === 'application/octet-stream';
+
+        if (!unsupportedOrGenericType) {
+            return blob;
+        }
+
+        return blob.slice(0, blob.size, 'audio/ogg; codecs=opus');
+    }, []);
+
+    /**
+     * Fallback TTS path using browser SpeechSynthesis when streamed audio fails.
+     * This is especially useful for mobile PWAs where codec policies can differ
+     * from desktop browser emulation.
+     */
+    const speakWithSystemVoiceFallback = useCallback(async (text: string): Promise<boolean> => {
+        if (!text || typeof window === 'undefined' || !('speechSynthesis' in window)) {
+            return false;
+        }
+
+        return new Promise<boolean>((resolve) => {
+            let finished = false;
+            let safetyTimeout: ReturnType<typeof setTimeout> | null = null;
+            const synth = window.speechSynthesis;
+
+            const settle = (success: boolean) => {
+                if (finished) return;
+                finished = true;
+                if (safetyTimeout) {
+                    clearTimeout(safetyTimeout);
+                }
+                resolve(success);
+            };
+
+            try {
+                synth.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = Math.max(0.5, Math.min(2.0, playbackRate));
+
+                utterance.onstart = () => {
+                    isAudioPlayingRef.current = true;
+                    const audioStartTime = performance.now() - speakStartTimeRef.current;
+
+                    // Keep visual timing behavior consistent with streamed playback.
+                    setTimeout(() => {
+                        if (!onRenderTextRef.current) return;
+                        const textRenderTime = performance.now() - speakStartTimeRef.current;
+                        onRenderTextRef.current({ audioStartTime, textRenderTime });
+                    }, 150);
+                };
+
+                utterance.onend = () => settle(true);
+                utterance.onerror = (event) => {
+                    console.error('🔊 Natural Voice: SpeechSynthesis fallback error:', event.error);
+                    settle(false);
+                };
+
+                // Guard against a stalled utterance state.
+                safetyTimeout = setTimeout(() => {
+                    console.warn('🔊 Natural Voice: SpeechSynthesis fallback timed out');
+                    synth.cancel();
+                    settle(false);
+                }, Math.max(15000, text.length * 150));
+
+                synth.speak(utterance);
+            } catch (fallbackError) {
+                console.error('🔊 Natural Voice: SpeechSynthesis fallback exception:', fallbackError);
+                settle(false);
+            }
+        });
+    }, [playbackRate]);
+
     // Prefetch audio for a given text (uses global cache)
     const prefetch = useCallback(async (text: string) => {
         if (!text || globalAudioCache.has(text)) return;
@@ -672,14 +758,14 @@ export const useNaturalVoice = ({
 
             if (!response.ok) throw new Error('Prefetch failed');
 
-            const audioBlob = await response.blob();
+            const audioBlob = normalizeAudioBlobType(await response.blob());
             const audioUrl = URL.createObjectURL(audioBlob);
             globalAudioCache.set(text, audioUrl);
             console.log('🗣️ Natural Voice: Prefetch complete (global cache):', text);
         } catch (err) {
             console.error('🗣️ Natural Voice: Prefetch error:', err);
         }
-    }, [voiceProvider, elevenLabsVoiceId, kokoroVoiceId]);
+    }, [voiceProvider, elevenLabsVoiceId, kokoroVoiceId, normalizeAudioBlobType]);
 
     /**
      * Find if text starts with any cached static text for a specific voice
@@ -708,6 +794,31 @@ export const useNaturalVoice = ({
      */
     const playAudioSegment = useCallback(async (audioUrl: string, isLast: boolean): Promise<void> => {
         return new Promise((resolve, reject) => {
+            const PLAYBACK_START_TIMEOUT_MS = 5000;
+            let playbackStarted = false;
+            let settled = false;
+            let playbackStartTimeout: ReturnType<typeof setTimeout> | null = null;
+
+            const resolveOnce = () => {
+                if (settled) return;
+                settled = true;
+                if (playbackStartTimeout) {
+                    clearTimeout(playbackStartTimeout);
+                    playbackStartTimeout = null;
+                }
+                resolve();
+            };
+
+            const rejectOnce = (error: unknown) => {
+                if (settled) return;
+                settled = true;
+                if (playbackStartTimeout) {
+                    clearTimeout(playbackStartTimeout);
+                    playbackStartTimeout = null;
+                }
+                reject(error instanceof Error ? error : new Error('Audio playback failed'));
+            };
+
             // SPEAKER OFF FIX: Check ref immediately before playing
             // This catches the case where speaker was disabled during an async TTS fetch
             if (!speakerEnabledRef.current) {
@@ -718,7 +829,7 @@ export const useNaturalVoice = ({
                     isAudioPlayingRef.current = false;
                     audioCapture.setAISpeaking(false);
                 }
-                resolve();
+                resolveOnce();
                 return;
             }
             
@@ -729,9 +840,29 @@ export const useNaturalVoice = ({
 
             const audio = new Audio(audioUrl);
             audio.playbackRate = playbackRate; // Apply user's speed preference
+            audio.preload = 'auto';
+            audio.playsInline = true;
             audioRef.current = audio;
 
+            // Some mobile PWA/WebKit combinations can stall before onplay/onerror.
+            // Watchdog prevents the app from staying in "AI speaking" forever.
+            playbackStartTimeout = setTimeout(() => {
+                if (playbackStarted) return;
+
+                console.warn('🔊 Natural Voice: Playback start timeout (possible codec/autoplay issue)');
+                audio.pause();
+                audioCapture.setAISpeaking(false);
+
+                if (vadRef.current?.isInitialized && vadEnabled) {
+                    vadRef.current.startVAD();
+                    console.log('🎙️ VAD: Resumed after playback timeout');
+                }
+
+                rejectOnce(new Error('Audio playback start timeout'));
+            }, PLAYBACK_START_TIMEOUT_MS);
+
             audio.onplay = () => {
+                playbackStarted = true;
                 isAudioPlayingRef.current = true;
                 const audioStartTime = performance.now() - speakStartTimeRef.current;
                 console.log(`🔊 Natural Voice: Audio segment started at ${audioStartTime.toFixed(2)}ms from speak() call`);
@@ -772,17 +903,17 @@ export const useNaturalVoice = ({
                     }
                     onAudioEndedRef.current?.();
                 }
-                resolve();
+                resolveOnce();
             };
 
-            audio.onerror = (e) => {
+            audio.onerror = () => {
                 audioCapture.setAISpeaking(false);
                 // Resume VAD after error
                 if (vadRef.current?.isInitialized && vadEnabled) {
                     vadRef.current.startVAD();
                     console.log('🎙️ VAD: Resumed after audio error');
                 }
-                reject(new Error('Audio playback error'));
+                rejectOnce(new Error('Audio playback error'));
             };
 
             audio.play().catch((playError) => {
@@ -802,7 +933,7 @@ export const useNaturalVoice = ({
                     if (isMicEnabled && isMountedRef.current) {
                         setTimeout(() => startListening(), 300);
                     }
-                    resolve(); // Not an error, just cleanup
+                    resolveOnce(); // Not an error, just cleanup
                 } else {
                     audioCapture.setAISpeaking(false);
                     // Resume VAD after error
@@ -810,7 +941,7 @@ export const useNaturalVoice = ({
                         vadRef.current.startVAD();
                         console.log('🎙️ VAD: Resumed after play error');
                     }
-                    reject(playError);
+                    rejectOnce(playError);
                 }
             });
         });
@@ -832,13 +963,13 @@ export const useNaturalVoice = ({
 
         if (!response.ok) throw new Error('TTS request failed');
 
-        const audioBlob = await response.blob();
+        const audioBlob = normalizeAudioBlobType(await response.blob());
         const audioUrl = URL.createObjectURL(audioBlob);
         // Use voice-prefixed cache key
         const cacheKey = `${voiceName}:${text}`;
         globalAudioCache.set(cacheKey, audioUrl);
         return audioUrl;
-    }, [voiceProvider, elevenLabsVoiceId, kokoroVoiceId]);
+    }, [voiceProvider, elevenLabsVoiceId, kokoroVoiceId, normalizeAudioBlobType]);
 
     // Get voice name from voice ID for cache key prefix
     const getVoiceNameFromId = (voiceId: string): string => {
@@ -976,6 +1107,28 @@ export const useNaturalVoice = ({
 
         } catch (err) {
             console.error('🗣️ Natural Voice: TTS error:', err);
+
+            // Last-resort fallback for mobile/PWA codec issues.
+            if (speakerEnabledRef.current) {
+                const fallbackWorked = await speakWithSystemVoiceFallback(text);
+                if (fallbackWorked) {
+                    console.log('🗣️ Natural Voice: Recovered with SpeechSynthesis fallback');
+                    setIsSpeaking(false);
+                    isSpeakingRef.current = false;
+                    isAudioPlayingRef.current = false;
+                    audioCapture.setAISpeaking(false);
+                    if (vadRef.current?.isInitialized && vadEnabled) {
+                        vadRef.current.startVAD();
+                        console.log('🎙️ VAD: Resumed after SpeechSynthesis fallback');
+                    }
+                    if (isMicEnabled && isMountedRef.current) {
+                        startListening();
+                    }
+                    onAudioEndedRef.current?.();
+                    return;
+                }
+            }
+
             setIsSpeaking(false);
             isSpeakingRef.current = false;
             isAudioPlayingRef.current = false;
@@ -990,7 +1143,7 @@ export const useNaturalVoice = ({
                 startListening();
             }
         }
-    }, [isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice, audioCapture, vadEnabled]);
+    }, [isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice, audioCapture, vadEnabled, speakWithSystemVoiceFallback]);
 
     // Handle mic/speaker state changes - start/stop listening based on mic state (but not in guided mode)
     useEffect(() => {

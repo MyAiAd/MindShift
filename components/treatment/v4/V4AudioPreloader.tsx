@@ -40,6 +40,19 @@ export default function V4AudioPreloader({ voice = 'heart' }: V4AudioPreloaderPr
       let skipCount = 0;
       let failCount = 0;
 
+      const normalizeAudioBlobType = (blob: Blob): Blob => {
+        const unsupportedOrGenericType = !blob.type ||
+          blob.type === 'audio/opus' ||
+          blob.type === 'application/opus' ||
+          blob.type === 'application/octet-stream';
+
+        if (!unsupportedOrGenericType) {
+          return blob;
+        }
+
+        return blob.slice(0, blob.size, 'audio/ogg; codecs=opus');
+      };
+
       console.log(`🎵 V4: Starting audio preload for voice "${voice}" from static files...`);
 
       try {
@@ -94,7 +107,7 @@ export default function V4AudioPreloader({ voice = 'heart' }: V4AudioPreloaderPr
               throw new Error(`Failed to load ${audioInfo.filename}: ${audioResponse.status}`);
             }
 
-            const audioBlob = await audioResponse.blob();
+            const audioBlob = normalizeAudioBlobType(await audioResponse.blob());
             const audioUrl = URL.createObjectURL(audioBlob);
             globalAudioCache.set(cacheKey, audioUrl);
             successCount++;
