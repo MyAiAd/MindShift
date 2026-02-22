@@ -66,7 +66,7 @@ module.exports = {
   		animation: {
   			'fade-in': 'fadeIn 0.5s ease-in-out',
   			'slide-up': 'slideUp 0.5s ease-out',
-  			'pulse-slow': 'pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+  			'pulse-slow': 'pulse-slow 10s ease-in-out infinite'
   		},
   		keyframes: {
   			fadeIn: {
@@ -92,7 +92,7 @@ module.exports = {
   					opacity: '1'
   				},
   				'50%': {
-  					opacity: '0.7'
+  					opacity: '0.9'
   				}
   			}
   		},
