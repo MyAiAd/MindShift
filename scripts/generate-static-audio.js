@@ -4,11 +4,11 @@
  * Audio Pre-Generation Script for V4 Mind Shifting
  *
  * This script generates all static audio files using Kokoro TTS server.
- * After running this script once per voice, you'll have static Opus files forever.
+ * After running this script once per voice, you'll have static multi-format files.
  *
  * Usage:
  *   1. Make sure Kokoro is running at: https://api.mind-shift.click
- *   2. Run: node scripts/generate-static-audio.js [voice-name]
+ *   2. Run: node scripts/generate-static-audio.js [voice-name] --formats=opus,wav
  *   3. Audio files will be saved to public/audio/v4/static/[voice-name]/
  *   4. Commit the audio files to your repo
  *   5. Update preloader to use static files instead of API
@@ -18,7 +18,7 @@
  *   node scripts/generate-static-audio.js michael  # Generate with Michael (male) voice
  *
  * Cost: $0 (self-hosted Kokoro)
- * Output: Opus format (30% smaller than MP3, lower latency)
+ * Output: Opus + WAV (runtime can choose best format by browser support)
  */
 
 const fs = require('fs');
@@ -89,8 +89,29 @@ const VOICES = {
   }
 };
 
-// Parse command line argument for voice
-const voiceArg = process.argv[2] || 'heart';
+// Parse command line arguments:
+//   node scripts/generate-static-audio.js heart --formats=opus,wav
+const args = process.argv.slice(2);
+const positionalArgs = args.filter((arg) => !arg.startsWith('--'));
+const voiceArg = positionalArgs[0] || 'heart';
+const formatsArg = args.find((arg) => arg.startsWith('--formats='))?.split('=')[1];
+
+const FORMAT_CONFIG = {
+  opus: {
+    ext: 'opus',
+    kokoroFormat: 'opus',
+    mime: 'audio/ogg; codecs=opus',
+  },
+  wav: {
+    ext: 'wav',
+    kokoroFormat: 'wav',
+    mime: 'audio/wav',
+  },
+};
+
+const requestedFormats = (formatsArg ? formatsArg.split(',') : ['opus', 'wav'])
+  .map((f) => f.trim().toLowerCase())
+  .filter((f) => Object.prototype.hasOwnProperty.call(FORMAT_CONFIG, f));
 const selectedVoice = VOICES[voiceArg];
 
 if (!selectedVoice) {
@@ -100,6 +121,13 @@ if (!selectedVoice) {
     console.error(`   ${key}: ${voice.name} - ${voice.description}`);
   });
   console.error(`\nUsage: node scripts/generate-static-audio.js [voice-name]`);
+  process.exit(1);
+}
+
+if (requestedFormats.length === 0) {
+  console.error('❌ No valid formats selected.');
+  console.error(`   Supported formats: ${Object.keys(FORMAT_CONFIG).join(', ')}`);
+  console.error('   Example: node scripts/generate-static-audio.js heart --formats=opus,wav');
   process.exit(1);
 }
 
@@ -122,11 +150,12 @@ function generateHash(text) {
 }
 
 /**
- * Generate audio for a single text segment
+ * Generate audio for a single text segment + format
  */
-async function generateAudio(key, text) {
+async function generateAudio(key, text, formatName) {
+  const format = FORMAT_CONFIG[formatName];
   const hash = generateHash(text);
-  const filename = `${hash}.opus`;
+  const filename = `${hash}.${format.ext}`;
   const filepath = path.join(OUTPUT_DIR, filename);
 
   // Skip if already exists
@@ -135,7 +164,7 @@ async function generateAudio(key, text) {
     return { key, hash, filename, skipped: true };
   }
 
-  console.log(`🎤 Generating "${key}"...`);
+  console.log(`🎤 Generating "${key}" [${formatName}]...`);
   console.log(`   Text: ${text.substring(0, 80)}${text.length > 80 ? '...' : ''}`);
 
   try {
@@ -147,7 +176,7 @@ async function generateAudio(key, text) {
       body: JSON.stringify({ 
         text,
         voice: selectedVoice.kokoroId,
-        format: 'opus'
+        format: format.kokoroFormat
       }),
     });
 
@@ -165,10 +194,10 @@ async function generateAudio(key, text) {
     // Small delay between requests
     await new Promise(resolve => setTimeout(resolve, 200));
 
-    return { key, hash, filename, skipped: false };
+    return { key, hash, filename, skipped: false, format: formatName, mime: format.mime };
   } catch (error) {
     console.error(`❌ Failed to generate "${key}":`, error.message);
-    return { key, hash, filename, skipped: false, error: error.message };
+    return { key, hash, filename, skipped: false, error: error.message, format: formatName, mime: format.mime };
   }
 }
 
@@ -180,11 +209,27 @@ function generateManifest(results, voiceName) {
   
   for (const result of results) {
     if (!result.error) {
-      manifest[result.key] = {
+      if (!manifest[result.key]) {
+        manifest[result.key] = {
+          hash: result.hash,
+          formats: {}
+        };
+      }
+
+      manifest[result.key].formats[result.format] = {
         filename: result.filename,
-        hash: result.hash,
-        path: `/audio/v4/static/${voiceName}/${result.filename}`
+        path: `/audio/v4/static/${voiceName}/${result.filename}`,
+        mime: result.mime
       };
+    }
+  }
+
+  // Backward compatibility for code that still expects `filename`/`path` at root.
+  for (const entry of Object.values(manifest)) {
+    const preferred = entry.formats.opus || Object.values(entry.formats)[0];
+    if (preferred) {
+      entry.filename = preferred.filename;
+      entry.path = preferred.path;
     }
   }
 
@@ -219,17 +264,19 @@ async function main() {
 
   console.log(`Voice: ${VOICE_NAME}`);
   console.log(`Output: ${OUTPUT_DIR}`);
-  console.log(`Format: Opus`);
+  console.log(`Formats: ${requestedFormats.join(', ')}`);
   console.log(`Segments: ${Object.keys(V4_STATIC_AUDIO_TEXTS).length}`);
   console.log('=' .repeat(60));
   console.log('');
 
   const results = [];
 
-  // Generate audio for each segment
+  // Generate audio for each segment + format
   for (const [key, text] of Object.entries(V4_STATIC_AUDIO_TEXTS)) {
-    const result = await generateAudio(key, text);
-    results.push(result);
+    for (const formatName of requestedFormats) {
+      const result = await generateAudio(key, text, formatName);
+      results.push(result);
+    }
   }
 
   // Generate manifest
@@ -239,7 +286,9 @@ async function main() {
   console.log('\n' + '=' .repeat(60));
   console.log('📊 Summary:');
   console.log(`   Voice: ${VOICE_NAME}`);
-  console.log(`   Total segments: ${results.length}`);
+  console.log(`   Total segments: ${Object.keys(V4_STATIC_AUDIO_TEXTS).length}`);
+  console.log(`   Format variants per segment: ${requestedFormats.join(', ')}`);
+  console.log(`   Total generation tasks: ${results.length}`);
   console.log(`   Generated: ${results.filter(r => !r.skipped && !r.error).length}`);
   console.log(`   Skipped: ${results.filter(r => r.skipped).length}`);
   console.log(`   Failed: ${results.filter(r => r.error).length}`);
@@ -255,8 +304,8 @@ async function main() {
   console.log('\n✅ Audio generation complete!');
   console.log('\nNext steps:');
   console.log(`   1. Commit the audio files: git add public/audio/v4/static/${voiceArg}/`);
-  console.log('   2. Ensure V4AudioPreloader loads the correct voice manifest');
-  console.log('   3. Deploy - users will download pre-generated Opus files');
+  console.log('   2. Ensure V4AudioPreloader selects compatible formats per client');
+  console.log('   3. Deploy - users will download pre-generated static files');
   console.log('\n💰 Cost: $0 (self-hosted Kokoro)');
   console.log('   Future cost: $0 (serving static files)');
   console.log('   Savings: ~$100-1000/month vs ElevenLabs at scale');
