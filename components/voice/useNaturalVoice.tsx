@@ -95,7 +95,7 @@ export const useNaturalVoice = ({
     const lastSpeechTimeRef = useRef<number>(0);
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const SILENCE_TIMEOUT_MS = 1500; // 1.5s of silence = done speaking (trigger deployment)
-    const TEXT_RENDER_DELAY_MS = 320; // Keep text slightly behind voice to reduce perceived start lag
+    const TEXT_RENDER_DELAY_MS = 420; // Keep text clearly behind voice to reduce perceived lag
     
     // Audio capture for Whisper transcription (only if enabled AND not in test mode)
     const audioCapture = useAudioCapture({

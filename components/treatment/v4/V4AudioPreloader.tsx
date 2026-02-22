@@ -35,7 +35,19 @@ interface V4AudioPreloaderProps {
 
 export default function V4AudioPreloader({ voice = 'heart' }: V4AudioPreloaderProps) {
   useEffect(() => {
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    const isIOSClient =
+      /iPhone|iPad|iPod/i.test(userAgent) ||
+      (/Macintosh/i.test(userAgent) && /Mobile/i.test(userAgent));
+
     const preloadStaticAudio = async () => {
+      // Static V4 assets are currently Opus; avoid preloading them on iOS.
+      // iOS Safari/PWA decoding is more reliable with our dynamic WAV TTS path.
+      if (isIOSClient) {
+        console.log(`🎵 V4: Skipping static Opus preload on iOS for voice "${voice}"`);
+        return;
+      }
+
       let successCount = 0;
       let skipCount = 0;
       let failCount = 0;
