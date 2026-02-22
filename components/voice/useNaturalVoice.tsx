@@ -473,6 +473,36 @@ export const useNaturalVoice = ({
         };
     }, [useWhisper, audioCapture]); // Re-run if Whisper flag changes
 
+    // iOS PWA: re-activate the audio session when the page returns to the foreground.
+    // iOS suspends the system audio session when the app is backgrounded or the screen
+    // locks. Playing a zero-duration silent Audio element on visibility restore ensures
+    // that the next real HTMLAudioElement.play() call won't be blocked.
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState !== 'visible') return;
+            if (!speakerEnabledRef.current) return;
+            if (isSpeakingRef.current || isAudioPlayingRef.current) return;
+
+            // Attempt a silent play to re-open the iOS audio session.
+            try {
+                const silent = new Audio(
+                    'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='
+                );
+                silent.volume = 0;
+                silent.play().catch(() => {
+                    // Blocked — audio context still suspended; harmless, real plays will retry.
+                });
+            } catch {
+                // Ignore — environment doesn't support Audio
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []); // stable — only refs are used inside
+
     // Handle mic/speaker state changes (separate effect)
     useEffect(() => {
         const wasMicEnabled = prevMicEnabledRef.current;
@@ -852,11 +882,14 @@ export const useNaturalVoice = ({
 
                 console.warn('🔊 Natural Voice: Playback start timeout (possible codec/autoplay issue)');
                 audio.pause();
-                audioCapture.setAISpeaking(false);
 
-                if (vadRef.current?.isInitialized && vadEnabled) {
-                    vadRef.current.startVAD();
-                    console.log('🎙️ VAD: Resumed after playback timeout');
+                // Only clear shared state if this audio is still the active one
+                if (audioRef.current === audio) {
+                    audioCapture.setAISpeaking(false);
+                    if (vadRef.current?.isInitialized && vadEnabled) {
+                        vadRef.current.startVAD();
+                        console.log('🎙️ VAD: Resumed after playback timeout');
+                    }
                 }
 
                 rejectOnce(new Error('Audio playback start timeout'));
@@ -917,8 +950,24 @@ export const useNaturalVoice = ({
                 rejectOnce(new Error('Audio playback error'));
             };
 
+            // Capture identity of this specific audio element so the AbortError handler
+            // can detect whether a newer speak() call has already taken over.
+            // AbortError fires as a microtask (before the new audio's onplay macrotask),
+            // so without this guard it would zero-out isSpeakingRef / isAudioPlayingRef
+            // while the next segment is already running — breaking prefix→suffix chaining
+            // and silently dropping mid-session messages.
+            const thisAudio = audio;
+
             audio.play().catch((playError) => {
                 if (playError instanceof Error && playError.name === 'AbortError') {
+                    // If audioRef no longer points to this element, a newer speak() has
+                    // taken ownership. Don't touch global state — just resolve cleanly.
+                    if (audioRef.current !== thisAudio) {
+                        console.log('🔊 Natural Voice: Superseded audio aborted (expected) — skipping state cleanup');
+                        resolveOnce();
+                        return;
+                    }
+
                     console.log('🔊 Natural Voice: Audio playback interrupted (expected during cleanup)');
                     // CRITICAL: Clear the audio playing flags so listening can restart!
                     isAudioPlayingRef.current = false;
