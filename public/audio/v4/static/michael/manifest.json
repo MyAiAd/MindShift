@@ -2,9 +2,10 @@
   "INITIAL_WELCOME": {
     "hash": "d2a6867338af593beb5cee7f13e7a314",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "d2a6867338af593beb5cee7f13e7a314.opus",
-        "path": "/audio/v4/static/michael/d2a6867338af593beb5cee7f13e7a314.opus"
+        "path": "/audio/v4/static/michael/d2a6867338af593beb5cee7f13e7a314.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "d2a6867338af593beb5cee7f13e7a314.wav",
@@ -18,9 +19,10 @@
   "PROBLEM_SHIFTING_INTRO": {
     "hash": "92e207700cb8a54c56549197fa114e9b",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "92e207700cb8a54c56549197fa114e9b.opus",
-        "path": "/audio/v4/static/michael/92e207700cb8a54c56549197fa114e9b.opus"
+        "path": "/audio/v4/static/michael/92e207700cb8a54c56549197fa114e9b.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "92e207700cb8a54c56549197fa114e9b.wav",
@@ -34,9 +36,10 @@
   "IDENTITY_SHIFTING_INTRO": {
     "hash": "df2e42a6c43548151c87c271e851f3dd",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "df2e42a6c43548151c87c271e851f3dd.opus",
-        "path": "/audio/v4/static/michael/df2e42a6c43548151c87c271e851f3dd.opus"
+        "path": "/audio/v4/static/michael/df2e42a6c43548151c87c271e851f3dd.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "df2e42a6c43548151c87c271e851f3dd.wav",
@@ -50,20 +53,27 @@
   "BELIEF_SHIFTING_INTRO": {
     "hash": "92e207700cb8a54c56549197fa114e9b",
     "formats": {
-      "undefined": {
+      "opus": {
+        "filename": "92e207700cb8a54c56549197fa114e9b.opus",
+        "path": "/audio/v4/static/michael/92e207700cb8a54c56549197fa114e9b.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
         "filename": "92e207700cb8a54c56549197fa114e9b.wav",
-        "path": "/audio/v4/static/michael/92e207700cb8a54c56549197fa114e9b.wav"
+        "path": "/audio/v4/static/michael/92e207700cb8a54c56549197fa114e9b.wav",
+        "mime": "audio/wav"
       }
     },
-    "filename": "92e207700cb8a54c56549197fa114e9b.wav",
-    "path": "/audio/v4/static/michael/92e207700cb8a54c56549197fa114e9b.wav"
+    "filename": "92e207700cb8a54c56549197fa114e9b.opus",
+    "path": "/audio/v4/static/michael/92e207700cb8a54c56549197fa114e9b.opus"
   },
   "BLOCKAGE_SHIFTING_INTRO": {
     "hash": "cb55f339992cb94ec6a0580efb622cab",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "cb55f339992cb94ec6a0580efb622cab.opus",
-        "path": "/audio/v4/static/michael/cb55f339992cb94ec6a0580efb622cab.opus"
+        "path": "/audio/v4/static/michael/cb55f339992cb94ec6a0580efb622cab.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "cb55f339992cb94ec6a0580efb622cab.wav",
@@ -77,9 +87,10 @@
   "REALITY_SHIFTING_INTRO": {
     "hash": "63f725e98f7066dc3c41721b8574288c",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "63f725e98f7066dc3c41721b8574288c.opus",
-        "path": "/audio/v4/static/michael/63f725e98f7066dc3c41721b8574288c.opus"
+        "path": "/audio/v4/static/michael/63f725e98f7066dc3c41721b8574288c.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "63f725e98f7066dc3c41721b8574288c.wav",
@@ -93,9 +104,10 @@
   "TRAUMA_SHIFTING_INTRO": {
     "hash": "68dece876238276ee9952a0da8fdbb4b",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "68dece876238276ee9952a0da8fdbb4b.opus",
-        "path": "/audio/v4/static/michael/68dece876238276ee9952a0da8fdbb4b.opus"
+        "path": "/audio/v4/static/michael/68dece876238276ee9952a0da8fdbb4b.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "68dece876238276ee9952a0da8fdbb4b.wav",
@@ -109,9 +121,10 @@
   "METHOD_SELECTION": {
     "hash": "e14d77fec815b5d16754ccfae7b56508",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "e14d77fec815b5d16754ccfae7b56508.opus",
-        "path": "/audio/v4/static/michael/e14d77fec815b5d16754ccfae7b56508.opus"
+        "path": "/audio/v4/static/michael/e14d77fec815b5d16754ccfae7b56508.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "e14d77fec815b5d16754ccfae7b56508.wav",
@@ -125,9 +138,10 @@
   "METHOD_SELECTION_DIGGING": {
     "hash": "6c3e4db715488d5830a12d963cd1f092",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "6c3e4db715488d5830a12d963cd1f092.opus",
-        "path": "/audio/v4/static/michael/6c3e4db715488d5830a12d963cd1f092.opus"
+        "path": "/audio/v4/static/michael/6c3e4db715488d5830a12d963cd1f092.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "6c3e4db715488d5830a12d963cd1f092.wav",
@@ -141,9 +155,10 @@
   "WORK_TYPE_PROBLEM_DESC": {
     "hash": "db27fd20723ff4e9778bb7f739329d4d",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "db27fd20723ff4e9778bb7f739329d4d.opus",
-        "path": "/audio/v4/static/michael/db27fd20723ff4e9778bb7f739329d4d.opus"
+        "path": "/audio/v4/static/michael/db27fd20723ff4e9778bb7f739329d4d.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "db27fd20723ff4e9778bb7f739329d4d.wav",
@@ -157,9 +172,10 @@
   "WORK_TYPE_GOAL_DESC": {
     "hash": "302a8546eda5e8b67be5aa6c051bfbd3",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "302a8546eda5e8b67be5aa6c051bfbd3.opus",
-        "path": "/audio/v4/static/michael/302a8546eda5e8b67be5aa6c051bfbd3.opus"
+        "path": "/audio/v4/static/michael/302a8546eda5e8b67be5aa6c051bfbd3.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "302a8546eda5e8b67be5aa6c051bfbd3.wav",
@@ -173,9 +189,10 @@
   "WORK_TYPE_NEGATIVE_EXP_DESC": {
     "hash": "277c29181a901781007f1a823bc2a155",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "277c29181a901781007f1a823bc2a155.opus",
-        "path": "/audio/v4/static/michael/277c29181a901781007f1a823bc2a155.opus"
+        "path": "/audio/v4/static/michael/277c29181a901781007f1a823bc2a155.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "277c29181a901781007f1a823bc2a155.wav",
@@ -189,9 +206,10 @@
   "REALITY_GOAL_CAPTURE": {
     "hash": "d90f4605098a5011625c8c1744fff175",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "d90f4605098a5011625c8c1744fff175.opus",
-        "path": "/audio/v4/static/michael/d90f4605098a5011625c8c1744fff175.opus"
+        "path": "/audio/v4/static/michael/d90f4605098a5011625c8c1744fff175.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "d90f4605098a5011625c8c1744fff175.wav",
@@ -205,9 +223,10 @@
   "REALITY_DEADLINE_CHECK": {
     "hash": "d4d9b3c4e28d8d83a7659f84e5c54be8",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "d4d9b3c4e28d8d83a7659f84e5c54be8.opus",
-        "path": "/audio/v4/static/michael/d4d9b3c4e28d8d83a7659f84e5c54be8.opus"
+        "path": "/audio/v4/static/michael/d4d9b3c4e28d8d83a7659f84e5c54be8.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "d4d9b3c4e28d8d83a7659f84e5c54be8.wav",
@@ -221,9 +240,10 @@
   "REALITY_DEADLINE_DATE": {
     "hash": "2ee347152f0f31e33dd3da8c91a97a82",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "2ee347152f0f31e33dd3da8c91a97a82.opus",
-        "path": "/audio/v4/static/michael/2ee347152f0f31e33dd3da8c91a97a82.opus"
+        "path": "/audio/v4/static/michael/2ee347152f0f31e33dd3da8c91a97a82.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "2ee347152f0f31e33dd3da8c91a97a82.wav",
@@ -237,9 +257,10 @@
   "REALITY_CERTAINTY": {
     "hash": "e01c2f0d02cc97ffe5572106a3282bc1",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "e01c2f0d02cc97ffe5572106a3282bc1.opus",
-        "path": "/audio/v4/static/michael/e01c2f0d02cc97ffe5572106a3282bc1.opus"
+        "path": "/audio/v4/static/michael/e01c2f0d02cc97ffe5572106a3282bc1.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "e01c2f0d02cc97ffe5572106a3282bc1.wav",
@@ -253,9 +274,10 @@
   "RESTATE_PROBLEM": {
     "hash": "ebf410ac0d71f75db7be2c3cc02862cb",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "ebf410ac0d71f75db7be2c3cc02862cb.opus",
-        "path": "/audio/v4/static/michael/ebf410ac0d71f75db7be2c3cc02862cb.opus"
+        "path": "/audio/v4/static/michael/ebf410ac0d71f75db7be2c3cc02862cb.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "ebf410ac0d71f75db7be2c3cc02862cb.wav",
@@ -269,9 +291,10 @@
   "RESTATE_PROBLEM_SHORT": {
     "hash": "dc29e2c2bca464fa0aa3a1e041a1930b",
     "formats": {
-      "undefined": {
+      "opus": {
         "filename": "dc29e2c2bca464fa0aa3a1e041a1930b.opus",
-        "path": "/audio/v4/static/michael/dc29e2c2bca464fa0aa3a1e041a1930b.opus"
+        "path": "/audio/v4/static/michael/dc29e2c2bca464fa0aa3a1e041a1930b.opus",
+        "mime": "audio/ogg; codecs=opus"
       },
       "wav": {
         "filename": "dc29e2c2bca464fa0aa3a1e041a1930b.wav",

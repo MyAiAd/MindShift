@@ -161,7 +161,7 @@ async function generateAudio(key, text, formatName) {
   // Skip if already exists
   if (fs.existsSync(filepath)) {
     console.log(`⏭️  Skipping "${key}" (already exists: ${filename})`);
-    return { key, hash, filename, skipped: true };
+    return { key, hash, filename, skipped: true, format: formatName, mime: format.mime };
   }
 
   console.log(`🎤 Generating "${key}" [${formatName}]...`);
