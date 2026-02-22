@@ -95,6 +95,7 @@ export const useNaturalVoice = ({
     const lastSpeechTimeRef = useRef<number>(0);
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const SILENCE_TIMEOUT_MS = 1500; // 1.5s of silence = done speaking (trigger deployment)
+    const TEXT_RENDER_DELAY_MS = 320; // Keep text slightly behind voice to reduce perceived start lag
     
     // Audio capture for Whisper transcription (only if enabled AND not in test mode)
     const audioCapture = useAudioCapture({
@@ -716,7 +717,7 @@ export const useNaturalVoice = ({
                         if (!onRenderTextRef.current) return;
                         const textRenderTime = performance.now() - speakStartTimeRef.current;
                         onRenderTextRef.current({ audioStartTime, textRenderTime });
-                    }, 150);
+                    }, TEXT_RENDER_DELAY_MS);
                 };
 
                 utterance.onend = () => settle(true);
@@ -790,7 +791,7 @@ export const useNaturalVoice = ({
 
     /**
      * Play a single audio segment and return a promise that resolves when done
-     * NEW: Now tracks audio start time and triggers text rendering with 150ms delay
+     * NEW: Now tracks audio start time and triggers delayed text rendering
      */
     const playAudioSegment = useCallback(async (audioUrl: string, isLast: boolean): Promise<void> => {
         return new Promise((resolve, reject) => {
@@ -867,7 +868,7 @@ export const useNaturalVoice = ({
                 const audioStartTime = performance.now() - speakStartTimeRef.current;
                 console.log(`🔊 Natural Voice: Audio segment started at ${audioStartTime.toFixed(2)}ms from speak() call`);
                 
-                // NEW: Schedule text rendering 150ms AFTER audio starts
+                // NEW: Schedule text rendering slightly AFTER audio starts
                 setTimeout(() => {
                     const textRenderTime = performance.now() - speakStartTimeRef.current;
                     console.log(`📝 Natural Voice: Text should render at ${textRenderTime.toFixed(2)}ms (${(textRenderTime - audioStartTime).toFixed(0)}ms after audio)`);
@@ -879,7 +880,7 @@ export const useNaturalVoice = ({
                             textRenderTime
                         });
                     }
-                }, 150); // 150ms delay: audio plays first, then text appears
+                }, TEXT_RENDER_DELAY_MS); // Audio leads text to avoid perceived startup lag
             };
 
             audio.onended = () => {
