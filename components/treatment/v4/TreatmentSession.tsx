@@ -44,6 +44,8 @@ export default function TreatmentSession({
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showReadyOverlay, setShowReadyOverlay] = useState(true); // New: Start with overlay visible
+  const [isPreparingStartPermissions, setIsPreparingStartPermissions] = useState(false);
+  const [hasUserStartedSession, setHasUserStartedSession] = useState(false);
   const [sessionStats, setSessionStats] = useState<SessionStats>({
     totalResponses: 0,
     avgResponseTime: 0,
@@ -461,6 +463,8 @@ export default function TreatmentSession({
 
   // FIX #4: Request mic permission when entering guided mode
   useEffect(() => {
+    if (!hasUserStartedSession) return;
+    if (showReadyOverlay) return;
     if (isGuidedMode && micPermission !== 'granted') {
       console.log('🧘 Guided Mode: Requesting mic permission on entry...');
       requestMicPermission().then(granted => {
@@ -476,7 +480,7 @@ export default function TreatmentSession({
         }
       });
     }
-  }, [isGuidedMode, micPermission, isMicEnabled, requestMicPermission]);
+  }, [hasUserStartedSession, showReadyOverlay, isGuidedMode, micPermission, isMicEnabled, requestMicPermission]);
 
   // Listen for interaction mode changes from settings and handle mobile resize
   useEffect(() => {
@@ -490,17 +494,13 @@ export default function TreatmentSession({
         // Orb mode: enable both mic and speaker by default, activate guided mode on mobile
         if (isMobile) {
           setIsGuidedMode(true);
-          requestMicPermission().then((granted) => {
-            if (granted) {
-              setIsMicEnabled(true);
-              setIsSpeakerEnabled(true);
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('v4_mic_enabled', 'true');
-                localStorage.setItem('v4_speaker_enabled', 'true');
-                localStorage.setItem('v4_guided_mode', 'true');
-              }
-            }
-          });
+          setIsMicEnabled(true);
+          setIsSpeakerEnabled(true);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('v4_mic_enabled', 'true');
+            localStorage.setItem('v4_speaker_enabled', 'true');
+            localStorage.setItem('v4_guided_mode', 'true');
+          }
         }
       } else if (customEvent.detail === 'listen_only') {
         // Listen-only: speaker on, mic off, no guided mode
@@ -532,7 +532,7 @@ export default function TreatmentSession({
       window.removeEventListener(V4_EVENTS.INTERACTION_MODE_CHANGED, handleModeChange);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isMobile, requestMicPermission]);
+  }, [isMobile]);
 
   // Initialize orb mode for mobile on first load
   useEffect(() => {
@@ -547,17 +547,11 @@ export default function TreatmentSession({
       setIsGuidedMode(true);
       localStorage.setItem('v4_guided_mode', 'true');
       
-      // Request mic permission and enable controls
-      requestMicPermission().then((granted) => {
-        if (granted) {
-          setIsMicEnabled(true);
-          setIsSpeakerEnabled(true);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('v4_mic_enabled', 'true');
-            localStorage.setItem('v4_speaker_enabled', 'true');
-          }
-        }
-      });
+      // Enable controls now, but defer permission prompt until Start Session tap.
+      setIsMicEnabled(true);
+      setIsSpeakerEnabled(true);
+      localStorage.setItem('v4_mic_enabled', 'true');
+      localStorage.setItem('v4_speaker_enabled', 'true');
     } else if (isListenOnly) {
       // Listen-only: speaker on, mic off, no guided mode
       setIsGuidedMode(false);
@@ -1048,7 +1042,13 @@ export default function TreatmentSession({
   }, [messages]);
 
   // Handler for starting the session (clicking the play button)
-  const handleStartSession = () => {
+  const handleStartSession = async () => {
+    setHasUserStartedSession(true);
+    if (isMobile && interactionMode === 'orb_ptt' && micPermission !== 'granted') {
+      setIsPreparingStartPermissions(true);
+      await requestMicPermission();
+      setIsPreparingStartPermissions(false);
+    }
     setShowReadyOverlay(false);
     // Start session immediately after hiding overlay
     if (sessionId && userId && !isSessionActive) {
@@ -1093,6 +1093,7 @@ export default function TreatmentSession({
         if (isSpeakerEnabled) {
           // Use setTimeout to ensure all React state updates and cleanups are complete
           setTimeout(() => {
+            beginFirstSpeechLoading();
             prepareSubtitlesForSpeech(instantMessage.content);
             naturalVoice.speak(instantMessage.content);
           }, 150);
@@ -2044,15 +2045,20 @@ export default function TreatmentSession({
                 Ready to Begin?
               </h2>
               <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
-                Audio is preloaded and ready. Click the button below to start your treatment session.
+                Audio is preloaded and ready. Click below to begin. We may ask for microphone access before starting.
               </p>
             </div>
             <button
               onClick={handleStartSession}
-              className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              disabled={isPreparingStartPermissions}
+              className={`group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white rounded-full transition-all duration-200 shadow-lg hover:shadow-xl ${
+                isPreparingStartPermissions
+                  ? 'bg-indigo-400 cursor-wait'
+                  : 'bg-indigo-600 hover:bg-indigo-700 transform hover:scale-105'
+              }`}
             >
               <Play className="h-6 w-6 mr-2 group-hover:scale-110 transition-transform" />
-              Start Session
+              {isPreparingStartPermissions ? 'Requesting Permission...' : 'Start Session'}
             </button>
             <p className="mt-6 text-xs text-muted-foreground">
               Make sure you're in a quiet space where you can focus
