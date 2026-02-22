@@ -210,6 +210,8 @@ export default function TreatmentSession({
   const subtitleSpeechTextRef = useRef('');
   const subtitleReadyRef = useRef(false);
   const subtitleStartedRef = useRef(false);
+  const [hasFirstSpeechStarted, setHasFirstSpeechStarted] = useState(false);
+  const [isFirstSpeechLoading, setIsFirstSpeechLoading] = useState(false);
   
   // Test audio sample text - longer for better testing
   const TEST_AUDIO_SAMPLE = "This is a test of your voice settings. I will keep speaking so you can test interrupting me at any time. Try adjusting the sensitivity slider, then speak to interrupt. Higher sensitivity means it's easier to interrupt me. Lower sensitivity means I'm harder to interrupt. You can also adjust my speaking speed to find what works best for you. Go ahead and try interrupting me now by speaking. I'll keep looping until you stop the test.";
@@ -236,6 +238,13 @@ export default function TreatmentSession({
     clearSubtitleTimers();
     setCurrentSubtitle('');
   }, [clearSubtitleTimers]);
+
+  const beginFirstSpeechLoading = useCallback(() => {
+    if (!isMobile || interactionMode !== 'orb_ptt' || !isSpeakerEnabled || hasFirstSpeechStarted) {
+      return;
+    }
+    setIsFirstSpeechLoading(true);
+  }, [hasFirstSpeechStarted, interactionMode, isMobile, isSpeakerEnabled]);
 
   const splitIntoSubtitleSegments = useCallback((text: string): string[] => {
     const normalized = text.replace(/\s+/g, ' ').trim();
@@ -662,6 +671,10 @@ export default function TreatmentSession({
   // Handler for when audio starts and text should be rendered (with 150ms delay)
   const handleRenderText = useCallback((timing: { audioStartTime: number; textRenderTime: number }) => {
     console.log(`⏱️ V4: Audio started at ${timing.audioStartTime.toFixed(2)}ms, rendering text at ${timing.textRenderTime.toFixed(2)}ms`);
+    if (!hasFirstSpeechStarted) {
+      setHasFirstSpeechStarted(true);
+    }
+    setIsFirstSpeechLoading(false);
     
     if (pendingMessage) {
       // Now actually add the message to the UI with timing data
@@ -687,7 +700,7 @@ export default function TreatmentSession({
       subtitleStartedRef.current = true;
       startSubtitleSequence(subtitleSpeechTextRef.current);
     }
-  }, [pendingMessage, startSubtitleSequence]);
+  }, [hasFirstSpeechStarted, pendingMessage, startSubtitleSequence]);
 
   // Handle test audio interruption via VAD (defined before naturalVoice hook)
   const handleTestInterruption = useCallback(() => {
@@ -724,6 +737,14 @@ export default function TreatmentSession({
     onVadLevel: (level) => setVadLevel(level), // Update VAD level for meter
     onTestInterruption: handleTestInterruption, // NEW: Handle test mode interruptions
   });
+
+  useEffect(() => {
+    if (!isFirstSpeechLoading) return;
+    const timeout = setTimeout(() => {
+      setIsFirstSpeechLoading(false);
+    }, 12000);
+    return () => clearTimeout(timeout);
+  }, [isFirstSpeechLoading]);
 
   // V4: Keep focus on input for voice input to work properly
   // This ensures the user can always speak and have their input registered
@@ -1260,6 +1281,7 @@ export default function TreatmentSession({
             });
             
             // Start audio playback (will trigger handleRenderText after 150ms)
+            beginFirstSpeechLoading();
             prepareSubtitlesForSpeech(data.message);
             naturalVoice.speak(data.message);
           } else {
@@ -1577,6 +1599,7 @@ export default function TreatmentSession({
               
               // Start audio playback (will trigger handleRenderText after 150ms)
               console.log('🔊 Playing new audio after work type selection');
+              beginFirstSpeechLoading();
               prepareSubtitlesForSpeech(data.message);
               naturalVoice.speak(data.message);
             } else {
@@ -1789,6 +1812,7 @@ export default function TreatmentSession({
             
             // Start audio playback (will trigger handleRenderText after 150ms)
             console.log('🔊 Playing new audio after method selection');
+            beginFirstSpeechLoading();
             prepareSubtitlesForSpeech(data.message);
             naturalVoice.speak(data.message);
           } else {
@@ -1837,6 +1861,12 @@ export default function TreatmentSession({
       });
   };
 
+  const showFirstSpeechWarmup =
+    isMobile &&
+    interactionMode === 'orb_ptt' &&
+    isFirstSpeechLoading &&
+    !hasFirstSpeechStarted;
+
   return (
     <div className="max-w-4xl mx-auto px-2 sm:px-4 relative flex flex-col h-full min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-120px)]">
       {/* Guided Mode Full-Screen PTT Interface */}
@@ -1861,6 +1891,7 @@ export default function TreatmentSession({
           {/* Status indicator at top */}
           <div className="absolute top-8 left-1/2 -translate-x-1/2 text-white/60 text-sm">
             {isPTTActive ? '🔴 Recording...' : 
+             showFirstSpeechWarmup ? '⏳ Preparing voice...' :
              naturalVoice.isSpeaking ? '🔊 AI Speaking...' : 
              '🧘 Ready - Hold to speak'}
           </div>
@@ -1880,6 +1911,8 @@ export default function TreatmentSession({
                 w-64 h-64 md:w-80 md:h-80 rounded-full 
                 ${isPTTActive 
                   ? 'bg-red-500 animate-pulse-slow ring-8 ring-red-300/50 scale-105' 
+                  : showFirstSpeechWarmup
+                  ? 'bg-indigo-500/85 ring-4 ring-indigo-300/25'
                   : naturalVoice.isSpeaking
                   ? 'bg-indigo-500 ring-8 ring-indigo-300/30 animate-pulse-slow'
                   : 'bg-purple-600 ring-4 ring-purple-300/50 hover:ring-8 hover:scale-105'
@@ -1898,6 +1931,12 @@ export default function TreatmentSession({
                   <div className="text-7xl mb-4 animate-bounce">🔴</div>
                   <div className="text-2xl mb-2">Speaking...</div>
                   <div className="text-sm opacity-75">Release to send</div>
+                </>
+              ) : showFirstSpeechWarmup ? (
+                <>
+                  <div className="text-6xl mb-4 animate-pulse">⏳</div>
+                  <div className="text-2xl mb-2">Loading voice...</div>
+                  <div className="text-sm opacity-75">Starting first response</div>
                 </>
               ) : naturalVoice.isSpeaking ? (
                 <>
@@ -1922,7 +1961,7 @@ export default function TreatmentSession({
                     className="text-sm text-white text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
                     aria-live="polite"
                   >
-                    {currentSubtitle}
+                    {showFirstSpeechWarmup && !currentSubtitle ? 'Preparing audio...' : currentSubtitle}
                   </p>
                 </div>
               </div>
