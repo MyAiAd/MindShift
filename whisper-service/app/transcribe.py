@@ -554,7 +554,7 @@ def preprocess_audio(audio_file: BinaryIO, filename: str = "audio") -> Tuple[np.
         # Remove non-speech segments BEFORE sending to Whisper
         # Prevents hallucinations on silence/noise by only transcribing speech
         try:
-            vad = webrtcvad.Vad(3)  # Aggressiveness 3 (most strict, 0-3 scale)
+            vad = webrtcvad.Vad(2)  # Aggressiveness 2 (balanced — 3 was too strict for short utterances like "yes"/"no")
             
             # Resample to 16kHz if needed (VAD requires 8k, 16k, 32k, or 48k Hz)
             if sample_rate != 16000:

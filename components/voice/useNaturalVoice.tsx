@@ -85,6 +85,8 @@ export const useNaturalVoice = ({
     const speakerEnabledRef = useRef(isSpeakerEnabled); // Immediate ref for async callback checks
     const speakStartTimeRef = useRef<number>(0); // NEW: Track when speak() was called
     const vadRef = useRef<any>(null); // Track VAD instance for resuming after speech
+    const guidedModeRef = useRef(guidedMode); // Ref for async access in audio callbacks
+    const playGenerationRef = useRef(0); // Monotonic counter for AbortError supersession detection
     
     // Restart scheduler state - for backoff/loop prevention
     const restartAttemptCountRef = useRef(0); // Track consecutive restart attempts without success
@@ -112,11 +114,10 @@ export const useNaturalVoice = ({
     const handleTestModeInterruption = useCallback(() => {
         console.log('🧪 VAD: Test mode interruption detected (TEST MODE ACTIVE)');
         
-        // Stop AI audio for visual feedback
+        // Stop AI audio for visual feedback (keep element alive for iOS)
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
-            audioRef.current = null;
         }
         
         setIsSpeaking(false);
@@ -147,11 +148,10 @@ export const useNaturalVoice = ({
             return;
         }
         
-        // Stop AI audio immediately
+        // Stop AI audio immediately (keep element alive for iOS audio session)
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
-            audioRef.current = null;
         }
         
         // Clear audio state flags
@@ -267,12 +267,13 @@ export const useNaturalVoice = ({
         setVadError(vad.error);
     }, [vad.error]);
     
-    // Update refs when callbacks change (without triggering effects)
+    // Update refs when callbacks/props change (without triggering effects)
     useEffect(() => {
         onTranscriptRef.current = onTranscript;
         onAudioEndedRef.current = onAudioEnded;
         onRenderTextRef.current = onRenderText;
-    }, [onTranscript, onAudioEnded, onRenderText]);
+        guidedModeRef.current = guidedMode;
+    }, [onTranscript, onAudioEnded, onRenderText, guidedMode]);
 
     // Initialize Speech Recognition (only runs once on mount, skip if using Whisper)
     useEffect(() => {
@@ -565,6 +566,24 @@ export const useNaturalVoice = ({
         }
     }, [useWhisper]);
 
+    // Force-restart listening: stop any existing session then start fresh.
+    // Used by PTT to guarantee a clean recognition session even if one is already running.
+    const forceRestartListening = useCallback(() => {
+        if (useWhisper) {
+            console.log('🎤 Using Whisper - force restart is a no-op');
+            return;
+        }
+        if (!recognitionRef.current) return;
+        try { recognitionRef.current.stop(); } catch (_e) { /* may already be stopped */ }
+        setTimeout(() => {
+            if (!isMountedRef.current) return;
+            try {
+                recognitionRef.current?.start();
+                console.log('🎤 Natural Voice: Force-restarted recognition (clean PTT session)');
+            } catch (_e) { /* ignore */ }
+        }, 50);
+    }, [useWhisper]);
+
     // Stop listening helper
     const stopListening = useCallback(() => {
         // If using Whisper, stopping is handled by useAudioCapture hook
@@ -579,11 +598,12 @@ export const useNaturalVoice = ({
     }, [useWhisper]);
 
     // Stop speaking helper - immediately stops audio
+    // Note: we intentionally keep audioRef.current alive (don't null it) so iOS
+    // preserves the "unlocked" audio session on the reused element.
     const stopSpeaking = useCallback(() => {
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
-            audioRef.current = null;
         }
         // Clear any paused state when stopping
         if (pausedAudioRef.current) {
@@ -864,32 +884,39 @@ export const useNaturalVoice = ({
                 return;
             }
             
+            // iOS audio session fix: REUSE the existing audio element instead of
+            // creating a new one. iOS "unlocks" an Audio element on the first user-gesture
+            // play; destroying it and creating a new element loses that unlock, causing
+            // subsequent non-gesture plays to be silent.
+            let audio: HTMLAudioElement;
             if (audioRef.current) {
                 audioRef.current.pause();
-                audioRef.current = null;
+                audio = audioRef.current;
+            } else {
+                audio = new Audio();
+                audio.setAttribute('playsinline', 'true');
             }
-
-            const audio = new Audio(audioUrl);
-            audio.playbackRate = playbackRate; // Apply user's speed preference
+            audio.src = audioUrl;
+            audio.playbackRate = playbackRate;
             audio.preload = 'auto';
-            audio.setAttribute('playsinline', 'true');
             audioRef.current = audio;
 
             // Some mobile PWA/WebKit combinations can stall before onplay/onerror.
             // Watchdog prevents the app from staying in "AI speaking" forever.
+            // Capture the generation BEFORE the timeout so we can detect supersession.
+            const timeoutGeneration = playGenerationRef.current;
             playbackStartTimeout = setTimeout(() => {
                 if (playbackStarted) return;
+                // A newer playAudioSegment call superseded us — don't interfere
+                if (playGenerationRef.current !== timeoutGeneration) return;
 
                 console.warn('🔊 Natural Voice: Playback start timeout (possible codec/autoplay issue)');
                 audio.pause();
 
-                // Only clear shared state if this audio is still the active one
-                if (audioRef.current === audio) {
-                    audioCapture.setAISpeaking(false);
-                    if (vadRef.current?.isInitialized && vadEnabled) {
-                        vadRef.current.startVAD();
-                        console.log('🎙️ VAD: Resumed after playback timeout');
-                    }
+                audioCapture.setAISpeaking(false);
+                if (vadRef.current?.isInitialized && vadEnabled) {
+                    vadRef.current.startVAD();
+                    console.log('🎙️ VAD: Resumed after playback timeout');
                 }
 
                 rejectOnce(new Error('Audio playback start timeout'));
@@ -931,8 +958,9 @@ export const useNaturalVoice = ({
                         console.log('🎙️ VAD: Resumed after AI finished speaking');
                     }
                     
-                    // Only restart listening if mic is enabled
-                    if (isMicEnabled && isMountedRef.current) {
+                    // Only restart listening if mic is enabled AND not in guided/PTT mode.
+                    // In PTT mode the user controls when the mic is live via the orb button.
+                    if (isMicEnabled && isMountedRef.current && !guidedModeRef.current) {
                         startListening();
                     }
                     onAudioEndedRef.current?.();
@@ -950,19 +978,18 @@ export const useNaturalVoice = ({
                 rejectOnce(new Error('Audio playback error'));
             };
 
-            // Capture identity of this specific audio element so the AbortError handler
+            // Track which "generation" of playback this is so the AbortError handler
             // can detect whether a newer speak() call has already taken over.
-            // AbortError fires as a microtask (before the new audio's onplay macrotask),
-            // so without this guard it would zero-out isSpeakingRef / isAudioPlayingRef
-            // while the next segment is already running — breaking prefix→suffix chaining
-            // and silently dropping mid-session messages.
-            const thisAudio = audio;
+            // We use a counter instead of element identity because we now reuse the
+            // same Audio element across calls (for iOS audio session persistence).
+            playGenerationRef.current++;
+            const thisGeneration = playGenerationRef.current;
 
             audio.play().catch((playError) => {
                 if (playError instanceof Error && playError.name === 'AbortError') {
-                    // If audioRef no longer points to this element, a newer speak() has
-                    // taken ownership. Don't touch global state — just resolve cleanly.
-                    if (audioRef.current !== thisAudio) {
+                    // If a newer generation has started, this abort is expected — don't
+                    // touch global state, just resolve cleanly.
+                    if (playGenerationRef.current !== thisGeneration) {
                         console.log('🔊 Natural Voice: Superseded audio aborted (expected) — skipping state cleanup');
                         resolveOnce();
                         return;
@@ -979,8 +1006,8 @@ export const useNaturalVoice = ({
                         vadRef.current.startVAD();
                         console.log('🎙️ VAD: Resumed after audio abort');
                     }
-                    // Restart listening after a brief delay (only if mic enabled)
-                    if (isMicEnabled && isMountedRef.current) {
+                    // Restart listening after a brief delay (only if mic enabled and not PTT)
+                    if (isMicEnabled && isMountedRef.current && !guidedModeRef.current) {
                         setTimeout(() => startListening(), 300);
                     }
                     resolveOnce(); // Not an error, just cleanup
@@ -1220,11 +1247,13 @@ export const useNaturalVoice = ({
         vadError, // VAD-specific error
         startListening,
         stopListening,
+        forceRestartListening,
         stopSpeaking,
         pauseSpeaking,
         resumeSpeaking,
         hasPausedAudio,
         clearAudioFlags,
+        processNow: audioCapture.processNow, // Flush Whisper buffer immediately (for PTT end)
         interimTranscript: useWhisper 
             ? (whisperProcessing ? '...' : '') // Show processing indicator while Whisper transcribes
             : interimTranscript,

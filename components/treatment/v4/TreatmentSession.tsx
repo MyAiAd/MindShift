@@ -606,16 +606,31 @@ export default function TreatmentSession({
   // Ref to track the expected response type of the current step (keep for ref access if needed)
   const currentStepTypeRef = useRef<string | null>(null);
 
+  // Stable ref for sendMessage so callbacks like handleAudioEnded always see the latest version
+  const sendMessageRef = useRef<(content: string, isAutoAdvance?: boolean) => Promise<void>>(async () => {});
+
+  // Queue for transcripts that arrive while isLoading is true (prevents silent data loss)
+  const pendingTranscriptRef = useRef<string | null>(null);
+  const isPTTActiveRef = useRef(false);
+
   // Handle audio ended event for auto-advance steps
   const handleAudioEnded = useCallback(() => {
     resetSubtitles();
     console.log('🔊 Audio ended. Step type:', currentStepTypeRef.current);
     if (currentStepTypeRef.current === 'auto') {
+      // Don't auto-advance while the user is actively holding the PTT button
+      if (isPTTActiveRef.current) {
+        console.log('⏩ Auto-advance deferred — PTT is active');
+        return;
+      }
       console.log('⏩ Auto-advancing step (Audio Ended)...');
-      // Small delay to ensure natural flow
       setTimeout(() => {
-        sendMessage('', true); // Send empty message to trigger next step
-      }, 500);
+        if (isPTTActiveRef.current) {
+          console.log('⏩ Auto-advance cancelled — PTT became active');
+          return;
+        }
+        sendMessageRef.current('', true);
+      }, 800);
     }
   }, [resetSubtitles]);
 
@@ -720,6 +735,9 @@ export default function TreatmentSession({
       console.log('🗣️ Natural Voice Transcript:', transcript);
       if (!isLoading) {
         sendMessage(transcript);
+      } else {
+        console.log('⏳ Transcript queued (request in flight):', transcript);
+        pendingTranscriptRef.current = transcript;
       }
     },
     voiceProvider: 'kokoro',
@@ -933,6 +951,14 @@ export default function TreatmentSession({
       return;
     }
     
+    // iOS: Re-activate audio session on this user gesture so the next AI audio
+    // play (which happens asynchronously after the API call) doesn't go silent.
+    try {
+      const warmup = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+      warmup.volume = 0;
+      warmup.play().catch(() => {});
+    } catch (_e) { /* env without Audio */ }
+
     // Stop any playing audio immediately
     if (naturalVoice.isSpeaking || naturalVoice.isPaused) {
       naturalVoice.stopSpeaking();
@@ -943,13 +969,13 @@ export default function TreatmentSession({
     console.log('🎙️ PTT: Clearing audio state flags');
     naturalVoice.clearAudioFlags();
     
-    // FIX #2: Force reset recognition state before starting
-    // The SpeechRecognition API can get stuck in "starting" or "stopping" state
-    console.log('🎙️ PTT: Force starting listening (with state reset)');
+    // Force-restart to guarantee a clean recognition session even if one is
+    // already running (e.g. from a previous auto-start that slipped through).
+    console.log('🎙️ PTT: Force starting listening (clean session)');
+    naturalVoice.forceRestartListening();
     
-    // Start user's mic
-    naturalVoice.startListening();
     setIsPTTActive(true);
+    isPTTActiveRef.current = true;
   }, [isGuidedMode, naturalVoice, micPermission, requestMicPermission, resetSubtitles]);
 
   const handlePTTEnd = useCallback(() => {
@@ -959,7 +985,13 @@ export default function TreatmentSession({
     
     // Stop user's mic
     naturalVoice.stopListening();
+
+    // Immediately flush Whisper buffer so short utterances aren't left waiting
+    // for the next auto-process timer tick (up to 1.5s away).
+    naturalVoice.processNow?.();
+
     setIsPTTActive(false);
+    isPTTActiveRef.current = false;
   }, [isGuidedMode, naturalVoice]);
 
   const handlePTTToggle = useCallback(() => {
@@ -1369,6 +1401,19 @@ export default function TreatmentSession({
       }, 100);
     }
   };
+
+  // Keep sendMessageRef pointing at the latest sendMessage on every render
+  sendMessageRef.current = sendMessage;
+
+  // Flush any queued transcript once the previous request finishes
+  useEffect(() => {
+    if (!isLoading && pendingTranscriptRef.current) {
+      const queued = pendingTranscriptRef.current;
+      pendingTranscriptRef.current = null;
+      console.log('📨 Flushing queued transcript:', queued);
+      sendMessage(queued);
+    }
+  }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // V3: Enhanced undo functionality
   const handleUndo = async () => {
