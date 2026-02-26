@@ -1918,28 +1918,27 @@ export default function TreatmentSession({
       {/* Guided Mode Full-Screen PTT Interface */}
       {isGuidedMode && (
         <div className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex flex-col items-center justify-center">
-          {/* Exit button - Only show on desktop or in text_first mode */}
-          {(!isMobile || interactionMode !== 'orb_ptt') && (
-            <button 
-              onClick={() => {
-                setIsGuidedMode(false);
-                localStorage.setItem('v4_guided_mode', 'false');
-                if (isPTTActive) {
-                  handlePTTEnd();
-                }
-              }}
-              className="absolute top-4 right-4 text-white/80 hover:text-white text-lg px-4 py-2 bg-black/20 hover:bg-black/30 rounded-lg transition-all backdrop-blur-sm"
-            >
-              ✕ Exit Guided Mode
-            </button>
-          )}
+          {/* Exit button - always visible */}
+          <button 
+            onClick={() => {
+              if (isPTTActive) {
+                handlePTTEnd();
+              }
+              naturalVoice.stopSpeaking();
+              window.location.href = '/dashboard';
+            }}
+            className="absolute top-4 left-4 text-white/70 hover:text-white p-3 bg-black/20 hover:bg-black/30 rounded-full transition-all backdrop-blur-sm z-10"
+            aria-label="Exit session"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
 
           {/* Status indicator at top */}
           <div className="absolute top-8 left-1/2 -translate-x-1/2 text-white/60 text-sm">
             {isPTTActive ? '🔴 Recording...' : 
              showFirstSpeechWarmup ? '⏳ Preparing voice...' :
              naturalVoice.isSpeaking ? '🔊 AI Speaking...' : 
-             '🧘 Ready - Hold to speak'}
+             '🧘 Ready - Speak now'}
           </div>
 
           {/* Centered Orb + Subtitle */}
@@ -1988,13 +1987,11 @@ export default function TreatmentSession({
                 <>
                   <div className="text-7xl mb-4">🔊</div>
                   <div className="text-2xl mb-2">AI Speaking</div>
-                  <div className="text-sm opacity-75">Hold to interrupt</div>
                 </>
               ) : (
                 <>
                   <div className="text-7xl mb-4">🎙️</div>
-                  <div className="text-2xl mb-2">Hold to Speak</div>
-                  <div className="text-sm opacity-75 hidden md:block">or press Space</div>
+                  <div className="text-2xl mb-2">Speak Now</div>
                 </>
               )}
             </button>
@@ -2014,54 +2011,20 @@ export default function TreatmentSession({
             )}
           </div>
 
-          {/* Mobile Controls at Bottom - Back, Skip, Hard Refresh */}
-          {isMobile && interactionMode === 'orb_ptt' && (
+          {/* Mobile Controls at Bottom - Skip Audio */}
+          {isMobile && interactionMode === 'orb_ptt' && naturalVoice.isSpeaking && (
             <div className="absolute bottom-0 left-0 right-0 pb-safe">
-              <div className="flex items-center justify-center gap-4 p-6">
-                {/* Back Step Button */}
-                <button
-                  onClick={handleUndo}
-                  disabled={stepHistory.length === 0 || isLoading}
-                  className={`flex flex-col items-center justify-center w-20 h-20 rounded-full transition-all ${
-                    stepHistory.length > 0 && !isLoading
-                      ? 'bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm'
-                      : 'bg-white/10 text-white/40 cursor-not-allowed'
-                  }`}
-                  title="Go back one step"
-                >
-                  <ArrowLeft className="h-6 w-6 mb-1" />
-                  <span className="text-xs">Back</span>
-                </button>
-
-                {/* Skip Audio Button */}
+              <div className="flex items-center justify-center p-6">
                 <button
                   onClick={() => {
                     naturalVoice.stopSpeaking();
                     resetSubtitles();
-                    console.log('⏭️ Skip: Audio playback stopped');
                   }}
-                  disabled={!naturalVoice.isSpeaking}
-                  className={`flex flex-col items-center justify-center w-20 h-20 rounded-full transition-all ${
-                    naturalVoice.isSpeaking
-                      ? 'bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm'
-                      : 'bg-white/10 text-white/40 cursor-not-allowed'
-                  }`}
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-all"
                   title="Skip current audio"
                 >
-                  <SkipForward className="h-6 w-6 mb-1" />
-                  <span className="text-xs">Skip</span>
-                </button>
-
-                {/* Temporary hard refresh test button */}
-                <button
-                  onClick={() => {
-                    void handleHardRefresh();
-                  }}
-                  className="flex flex-col items-center justify-center w-20 h-20 rounded-full transition-all bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
-                  title="Hard refresh (testing)"
-                >
-                  <span className="text-lg mb-1">↻</span>
-                  <span className="text-xs">Refresh</span>
+                  <SkipForward className="h-5 w-5" />
+                  <span className="text-sm">Skip Audio</span>
                 </button>
               </div>
             </div>
@@ -2071,10 +2034,6 @@ export default function TreatmentSession({
           {!isMobile && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-sm text-center max-w-md px-4">
               <p className="mb-2">Close your eyes and speak when ready</p>
-              <p className="text-xs opacity-75">
-                <span className="md:hidden">Hold the button to speak</span>
-                <span className="hidden md:inline">Hold button or press Space bar to speak</span>
-              </p>
             </div>
           )}
         </div>
@@ -2517,253 +2476,6 @@ export default function TreatmentSession({
                     {speed === 1.0 ? '1x' : `${speed}x`}
                   </button>
                 ))}
-              </div>
-            </div>
-
-            {/* VAD Interruption Sensitivity - Only visible when both mic AND speaker enabled */}
-            {isMicEnabled && isSpeakerEnabled && (
-              <div className="mt-4 pt-4 border-t border-border dark:border-[#586e75]">
-                <div className="flex items-center space-x-3 mb-3">
-                  <span className="text-2xl">🎙️</span>
-                  <span className="text-sm font-medium text-foreground dark:text-[#fdf6e3]">
-                    Interruption Sensitivity
-                  </span>
-                </div>
-                
-                <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
-                  <span>Sensitivity: {(vadSensitivity * 100).toFixed(0)}%</span>
-                  <span className={`font-medium ${
-                    getVadSensitivityLabel(vadSensitivity) === 'Medium' ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
-                  }`}>
-                    {getVadSensitivityLabel(vadSensitivity)}
-                  </span>
-                </div>
-                
-                <input
-                  type="range"
-                  min="0.1"
-                  max="0.9"
-                  step="0.05"
-                  value={vadSensitivity}
-                  onChange={(e) => handleVadSensitivityChange(parseFloat(e.target.value))}
-                  className="w-full h-3 md:h-2 bg-secondary dark:bg-[#586e75] rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                />
-                
-                <div className="flex justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
-                  <span>Low</span>
-                  <span className="text-green-600 dark:text-green-400">Medium</span>
-                  <span>High</span>
-                </div>
-
-                {/* Quick preset buttons */}
-                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border dark:border-[#586e75]">
-                  {[
-                    { label: 'Low', value: 0.25 },
-                    { label: 'Medium', value: 0.5 },
-                    { label: 'High', value: 0.75 }
-                  ].map((preset) => (
-                    <button
-                      key={preset.value}
-                      onClick={() => handleVadSensitivityChange(preset.value)}
-                      className={`px-2 py-2.5 md:py-1.5 text-xs rounded-lg transition-colors ${
-                        Math.abs(vadSensitivity - preset.value) < 0.01
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
-                      }`}
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-                
-                {/* Real-time Voice Level Meter */}
-                <div className="mt-4 pt-4 border-t border-border dark:border-[#586e75]">
-                  <div className="text-xs text-muted-foreground dark:text-[#93a1a1] mb-2">
-                    Voice Level: {vadLevel}%
-                  </div>
-                  
-                  <div className="flex space-x-1">
-                    {[...Array(10)].map((_, index) => {
-                      const barThreshold = (index + 1) * 10;
-                      const isFilled = vadLevel >= barThreshold;
-                      return (
-                        <div
-                          key={index}
-                          className={`flex-1 h-6 rounded-sm transition-colors duration-150 ${
-                            isFilled
-                              ? 'bg-indigo-600 dark:bg-indigo-500'
-                              : 'bg-gray-300 dark:bg-[#586e75]'
-                          }`}
-                        />
-                      );
-                    })}
-                  </div>
-                  
-                  {/* Help text */}
-                  <div className="mt-3 flex items-start space-x-2 text-xs text-muted-foreground dark:text-[#93a1a1]">
-                    <span>ℹ️</span>
-                    <span>Speak while AI talks to test it</span>
-                  </div>
-                </div>
-
-                {/* Test Your Settings - Interactive Demo */}
-                <div className="mt-4 pt-4 border-t border-border dark:border-[#586e75]">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xl">🧪</span>
-                      <span className="text-sm font-medium text-foreground dark:text-[#fdf6e3]">
-                        Test Your Settings
-                      </span>
-                    </div>
-                    
-                    {/* Play/Stop Button */}
-                    <button
-                      onClick={isTestPlaying ? stopTestAudio : startTestAudio}
-                      disabled={!isSpeakerEnabled}
-                      className={`px-3 py-2 text-xs rounded-lg font-medium transition-colors ${
-                        isTestPlaying
-                          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 hover:bg-red-200'
-                          : isSpeakerEnabled
-                          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      }`}
-                    >
-                      {isTestPlaying ? (
-                        <span className="flex items-center space-x-1">
-                          <span>⏹</span>
-                          <span>Stop</span>
-                        </span>
-                      ) : (
-                        <span className="flex items-center space-x-1">
-                          <span>▶</span>
-                          <span>Play Sample</span>
-                        </span>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Status Display */}
-                  {isTestPlaying && (
-                    <div className={`mb-3 px-3 py-2 rounded-lg text-sm transition-all ${
-                      testInterrupted
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 animate-pulse'
-                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                    }`}>
-                      {testInterrupted ? (
-                        <div className="flex items-center space-x-2">
-                          <span>✓</span>
-                          <span>Interruption detected!</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-2">
-                          <span className="animate-pulse">🔊</span>
-                          <span>Playing... Try speaking to interrupt!</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* VAD Level Meter - Enhanced for Testing */}
-                  {isTestPlaying && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-xs text-muted-foreground dark:text-[#93a1a1]">
-                        <span>Your Voice Level:</span>
-                        <span className="font-medium">{vadLevel}%</span>
-                      </div>
-                      
-                      <div className="flex space-x-1">
-                        {[...Array(10)].map((_, index) => {
-                          const barThreshold = (index + 1) * 10;
-                          const isFilled = vadLevel >= barThreshold;
-                          const isHighLevel = barThreshold > 70;
-                          return (
-                            <div
-                              key={index}
-                              className={`flex-1 h-8 rounded-sm transition-all duration-150 ${
-                                isFilled
-                                  ? isHighLevel
-                                    ? 'bg-green-500 dark:bg-green-400 shadow-lg'
-                                    : 'bg-indigo-600 dark:bg-indigo-500'
-                                  : 'bg-gray-300 dark:bg-[#586e75]'
-                              }`}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Help Text */}
-                  <div className="mt-3 text-xs text-muted-foreground dark:text-[#93a1a1] space-y-1">
-                    {!isSpeakerEnabled ? (
-                      <div className="flex items-start space-x-2">
-                        <span>⚠️</span>
-                        <span>Enable speaker to test</span>
-                      </div>
-                    ) : !isTestPlaying ? (
-                      <div className="flex items-start space-x-2">
-                        <span>💡</span>
-                        <span>Click Play to test your speed & sensitivity settings in a safe environment</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-start space-x-2">
-                        <span>🎙️</span>
-                        <span>Speak now to test interruption! Higher sensitivity = easier to interrupt</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* VAD Error Display */}
-                {naturalVoice.vadError && (
-                  <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                    <div className="flex items-start space-x-2 text-xs text-red-600 dark:text-red-400">
-                      <span className="text-base">⚠️</span>
-                      <div>
-                        <div className="font-medium">Voice interruption unavailable</div>
-                        <div className="mt-1">{naturalVoice.vadError}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Guided Mode Toggle */}
-            <div className="mt-4 pt-4 border-t border-border dark:border-[#586e75]">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`text-2xl ${isGuidedMode ? 'animate-pulse' : ''}`}>
-                    🧘
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-foreground dark:text-[#fdf6e3]">
-                      Guided Mode
-                    </div>
-                    <div className="text-xs text-muted-foreground dark:text-[#93a1a1]">
-                      Full-screen push-to-talk
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    const newState = !isGuidedMode;
-                    setIsGuidedMode(newState);
-                    localStorage.setItem('v4_guided_mode', newState.toString());
-                  }}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                    isGuidedMode 
-                      ? 'bg-purple-600' 
-                      : 'bg-gray-300 dark:bg-[#586e75]'
-                  }`}
-                  aria-label="Toggle guided mode"
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                      isGuidedMode ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
               </div>
             </div>
 
