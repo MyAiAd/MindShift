@@ -4,6 +4,7 @@ const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
+  clientsClaim: true,
   disable: process.env.NODE_ENV === 'development',
   runtimeCaching: [
     {
@@ -75,13 +76,15 @@ const withPWA = require('next-pwa')({
     },
     {
       urlPattern: /\.(?:js)$/i,
-      handler: 'StaleWhileRevalidate',
+      // NetworkFirst reduces stale chunk/app-shell mismatches after deployments.
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'static-js-assets',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
+          maxAgeSeconds: 6 * 60 * 60 // 6 hours
+        },
+        networkTimeoutSeconds: 3
       }
     },
     {
