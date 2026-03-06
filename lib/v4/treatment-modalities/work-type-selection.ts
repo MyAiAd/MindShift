@@ -9,7 +9,6 @@ export class WorkTypeSelectionPhase {
         {
           id: 'work_type_description',
           scriptedResponse: (userInput, context) => {
-            // Safety check for context
             if (!context) {
               throw new Error('Context is undefined in work_type_description');
             }
@@ -18,76 +17,18 @@ export class WorkTypeSelectionPhase {
             }
 
             const workType = context.metadata.workType || 'item';
-            const selectedMethod = context.metadata.selectedMethod;
 
-            console.log(`
-╔════════════════════════════════════════════════════════════════
-║ 📋 WORK_TYPE_DESCRIPTION - Step scriptedResponse() Called
-╠════════════════════════════════════════════════════════════════
-║ userInput: "${userInput}"
-║ workType: "${workType}"
-║ selectedMethod: "${selectedMethod}"
-╚════════════════════════════════════════════════════════════════`);
-
-            // Check if user input is actually a method name (not a problem description)
-            const isMethodName = userInput && (
-              userInput.toLowerCase().includes('problem shifting') ||
-              userInput.toLowerCase().includes('identity shifting') ||
-              userInput.toLowerCase().includes('belief shifting') ||
-              userInput.toLowerCase().includes('blockage shifting') ||
-              userInput.toLowerCase().includes('reality shifting') ||
-              userInput.toLowerCase().includes('trauma shifting')
-            );
-
-            // If no user input OR if user input is a method name, ask for description
-            if (!userInput || isMethodName) {
-              const response = workType === 'problem' ? "Tell me what the problem is in a few words." :
-                workType === 'goal' ? "Tell me what the goal is in a few words." :
-                  workType === 'negative_experience' ? "Tell me what the negative experience was in a few words." :
-                    "Tell me what you want to work on in a few words.";
-              console.log(`║ ➡️  RETURNING (asking for description): "${response}"\n╚════════════════════════════════════════════════════════════════\n`);
-              return response;
-            } else {
-              // User provided description, store it and proceed directly to treatment
-              const statement = userInput || '';
-              context.metadata.problemStatement = statement;
-              context.problemStatement = statement;
-
-              let response = '';
-              // Skip confirmation and route directly to treatment intro step
-              if (workType === 'problem') {
-                if (selectedMethod === 'identity_shifting') {
-                  context.currentPhase = 'identity_shifting';
-                  response = `Great! Let's begin Identity Shifting.`;
-                } else if (selectedMethod === 'problem_shifting') {
-                  context.currentPhase = 'problem_shifting';
-                  response = `Great! Let's begin Problem Shifting.`;
-                } else if (selectedMethod === 'belief_shifting') {
-                  context.currentPhase = 'belief_shifting';
-                  response = `Great! Let's begin Belief Shifting.`;
-                } else if (selectedMethod === 'blockage_shifting') {
-                  context.currentPhase = 'blockage_shifting';
-                  response = `Great! Let's begin Blockage Shifting.`;
-                } else {
-                  response = `Great! Let's begin the treatment.`;
-                }
-              } else if (workType === 'goal') {
-                context.currentPhase = 'reality_shifting';
-                context.metadata.selectedMethod = 'reality_shifting';
-                response = `Great! Let's begin Reality Shifting.`;
-              } else if (workType === 'negative_experience') {
-                context.currentPhase = 'trauma_shifting';
-                context.metadata.selectedMethod = 'trauma_shifting';
-                response = `Great! Let's begin Trauma Shifting.`;
-              } else {
-                response = `So you want to work on '${statement}'. Is that correct?`;
-              }
-
-              console.log(`║ ✅ STORED: problemStatement = "${statement}"
-║ ➡️  RETURNING (confirmation): "${response}"
-╚════════════════════════════════════════════════════════════════\n`);
-              return response;
+            // Return the prompt only. All routing, phase changes, and problem
+            // statement storage are handled by handleWorkTypeDescription in
+            // determineNextStep — never in the scriptedResponse.
+            if (workType === 'problem') {
+              return "Tell me what the problem is in a few words.";
+            } else if (workType === 'goal') {
+              return "Tell me what the goal is in a few words.";
+            } else if (workType === 'negative_experience') {
+              return "Tell me what the negative experience was in a few words.";
             }
+            return "Tell me what you want to work on in a few words.";
           },
           expectedResponseType: 'description',
           validationRules: [
