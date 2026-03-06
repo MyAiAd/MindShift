@@ -27,7 +27,19 @@
     "db:reset": "supabase db reset",
     "db:push": "supabase db push",
     "setup": "node scripts/setup-new-site.js",
-    "setup:new": "node scripts/setup-new-site.js"
+    "setup:new": "node scripts/setup-new-site.js",
+    "test": "npx playwright test --project=api-parity",
+    "test:all": "npx playwright test",
+    "test:parity": "npx playwright test tests/api/all-flows-parity.spec.ts",
+    "test:problem": "npx playwright test tests/api/problem-shifting.spec.ts",
+    "test:identity": "npx playwright test tests/api/identity-shifting.spec.ts",
+    "test:belief": "npx playwright test tests/api/belief-shifting.spec.ts",
+    "test:blockage": "npx playwright test tests/api/blockage-shifting.spec.ts",
+    "test:reality": "npx playwright test tests/api/reality-shifting.spec.ts",
+    "test:trauma": "npx playwright test tests/api/trauma-shifting.spec.ts",
+    "test:digging": "npx playwright test tests/api/digging-deeper.spec.ts",
+    "test:edge": "npx playwright test tests/api/edge-cases.spec.ts",
+    "test:full-parity": "npx playwright test --project=full-parity"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
@@ -80,6 +92,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/node": "^20.9.0",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",

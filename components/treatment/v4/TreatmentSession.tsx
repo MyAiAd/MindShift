@@ -2501,13 +2501,7 @@ export default function TreatmentSession({
             >
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
               
-              {/* Existing responseTime display */}
-              {message.responseTime && (
-                <div className="flex items-center justify-between mt-1 text-xs opacity-70">
-                  <span>{message.usedAI ? 'AI Enhanced' : 'Scripted'}</span>
-                  <span>{message.responseTime}ms</span>
-                </div>
-              )}
+              {/* Response time badge removed from bubble so it doesn't read as bot speech */}
               
               {/* NEW: Audio/Text timing metrics (only for bot messages with voice timing) */}
               {!message.isUser && (message.textRenderTime || message.audioStartTime) && (
