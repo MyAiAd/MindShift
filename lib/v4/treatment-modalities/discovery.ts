@@ -84,6 +84,7 @@ export class DiscoveryPhase {
             // Store the new problem statement
             const newProblem = userInput || 'the problem';
             context.problemStatement = newProblem;
+            context.metadata.problemStatement = newProblem;
             return `So the problem is now '${newProblem}'. Is this correct?`;
           },
           expectedResponseType: 'yesno',
@@ -115,6 +116,7 @@ export class DiscoveryPhase {
             // Store the new problem statement
             const newProblem = userInput || 'the problem';
             context.problemStatement = newProblem;
+            context.metadata.problemStatement = newProblem;
             return `So the problem is now '${newProblem}'. Is this correct?`;
           },
           expectedResponseType: 'yesno',

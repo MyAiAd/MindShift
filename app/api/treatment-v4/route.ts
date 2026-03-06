@@ -299,9 +299,16 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         console.log('Treatment V4 API: V4 linguistic processing needed - using V2 compatibility layer');
 
         // For intro steps, use the problem statement from context, not the current user input
+        // PARITY: Include v4 step IDs (*_intro_dynamic, *_intro_static) so correct source text is used
         let textToProcess = userInput;
-        if (['problem_shifting_intro', 'blockage_shifting_intro',
-          'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
+        const introStepIds = [
+          'problem_shifting_intro', 'problem_shifting_intro_dynamic', 'problem_shifting_intro_static',
+          'blockage_shifting_intro', 'blockage_shifting_intro_dynamic', 'blockage_shifting_intro_static',
+          'identity_shifting_intro', 'identity_shifting_intro_dynamic', 'identity_shifting_intro_static',
+          'trauma_shifting_intro', 'trauma_shifting_intro_dynamic', 'trauma_shifting_intro_static',
+          'belief_shifting_intro', 'belief_shifting_intro_dynamic', 'belief_shifting_intro_static'
+        ];
+        if (introStepIds.includes(result.nextStep || '')) {
           // Get the stored problem statement that the intro step will use
           const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
           // PRIORITIZE: Use new digging problem if available, then fall back to original problem
@@ -317,7 +324,11 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         // Check if we should skip AI processing for digging deeper intro steps
         const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
         const isDiggingContext = treatmentContext?.metadata?.currentDiggingProblem || treatmentContext?.metadata?.newDiggingProblem;
-        const isIntroStep = ['problem_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '');
+        const isIntroStep = [
+          'problem_shifting_intro', 'problem_shifting_intro_dynamic', 'problem_shifting_intro_static',
+          'identity_shifting_intro', 'identity_shifting_intro_dynamic', 'identity_shifting_intro_static',
+          'belief_shifting_intro', 'belief_shifting_intro_dynamic', 'belief_shifting_intro_static'
+        ].includes(result.nextStep || '');
         const shouldSkipAI = isDiggingContext && isIntroStep;
 
         if (shouldSkipAI) {

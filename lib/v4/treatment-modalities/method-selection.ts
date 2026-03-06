@@ -8,7 +8,7 @@ export class MethodSelectionPhase {
       steps: [
         {
           id: 'choose_method',
-          scriptedResponse: "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting",
+          scriptedResponse: "Choose which Mind Shifting method you would like to use to clear the problem:",
           expectedResponseType: 'selection',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
@@ -24,7 +24,7 @@ export class MethodSelectionPhase {
             if (workType === 'problem') {
               if (!userInput || !context.metadata.methodSelectionShown) {
                 context.metadata.methodSelectionShown = true;
-                return "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting";
+                return "Choose which Mind Shifting method you would like to use to clear the problem:";
               }
               
               const input = userInput.toLowerCase();

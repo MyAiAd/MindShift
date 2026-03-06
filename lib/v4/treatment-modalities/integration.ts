@@ -10,9 +10,8 @@ export class IntegrationPhase {
         {
           id: 'integration_start',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement from the stored context or fallback to previous responses
-            // CRITICAL: Check metadata.problemStatement first (set at work_type_description) to prevent cached cross-session contamination
-            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
+            // PARITY: Match v2 order - prefer originalProblemStatement for integration (first/root problem)
+            const problemStatement = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the problem';
             return `Ok now we have cleared the problem, next I will ask you some questions about how your perspective has shifted and what you want to do next. So firstly, how do you feel about the former problem of '${problemStatement}' now?`;
           },
           expectedResponseType: 'open',
@@ -55,9 +54,8 @@ export class IntegrationPhase {
         {
           id: 'intention_question',
           scriptedResponse: (userInput, context) => {
-            // Get the problem statement from the stored context or fallback to previous responses
-            // CRITICAL: Check metadata.problemStatement first (set at work_type_description) to prevent cached cross-session contamination
-            const problemStatement = context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the former problem';
+            // PARITY: Match v2 order - prefer originalProblemStatement for intention question
+            const problemStatement = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the former problem';
             return `What's your intention now in relation to the former problem of '${problemStatement}'?`;
           },
           expectedResponseType: 'open',

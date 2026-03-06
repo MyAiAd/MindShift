@@ -76,6 +76,7 @@ export class DiggingDeeperPhase {
               // Use the new problem statement that was stored in restate_problem_future step
               const newProblem = context.metadata.newDiggingProblem || input;
               context.metadata.currentDiggingProblem = newProblem;
+              context.metadata.problemStatement = newProblem;
               context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
               context.metadata.returnToDiggingStep = 'scenario_check_1'; // Where to return after clearing
               context.problemStatement = newProblem;
@@ -88,12 +89,12 @@ export class DiggingDeeperPhase {
               console.log('🔍 BELIEF_DEBUG digging_method_selection - context.metadata after storing:', JSON.stringify(context.metadata, null, 2));
               console.log('🔍 BELIEF_DEBUG digging_method_selection - context.problemStatement after storing:', context.problemStatement);
               
-              return `We need to clear this problem. Which method would you like to use?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting`;
+              return "We need to clear this problem. Which method would you like to use?";
             }
             
             // If we already have the problem stored and no new input, show the selection message
             if (!input || input === 'METHOD_SELECTION_NEEDED') {
-              return `We need to clear this problem. Which method would you like to use?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting`;
+              return "We need to clear this problem. Which method would you like to use?";
             }
             
             // Validate input before proceeding
@@ -169,6 +170,7 @@ export class DiggingDeeperPhase {
             // Store the new scenario problem for clearing
             const newProblem = context?.userResponses?.['restate_scenario_problem_1'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.problemStatement = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 2) + 1;
             context.metadata.returnToDiggingStep = 'anything_else_check_1'; // Where to return after clearing
             context.problemStatement = newProblem;
@@ -234,6 +236,7 @@ export class DiggingDeeperPhase {
             // Store the new scenario problem for clearing
             const newProblem = context?.userResponses?.['restate_scenario_problem_2'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.problemStatement = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 3) + 1;
             context.metadata.returnToDiggingStep = 'scenario_check_3'; // Where to return after clearing
             context.problemStatement = newProblem;
@@ -295,6 +298,7 @@ export class DiggingDeeperPhase {
             // Store the new scenario problem for clearing
             const newProblem = context?.userResponses?.['restate_scenario_problem_3'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.problemStatement = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 4) + 1;
             context.metadata.returnToDiggingStep = 'anything_else_check_1'; // Move to "anything else" questions after this
             context.problemStatement = newProblem;
@@ -361,6 +365,7 @@ export class DiggingDeeperPhase {
             // Store the new scenario problem for clearing
             const newProblem = context?.userResponses?.['restate_scenario_problem_3'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.problemStatement = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 4) + 1;
             context.metadata.returnToDiggingStep = 'scenario_check_3'; // Return to this scenario check after clearing
             context.metadata.workType = 'problem'; // Set work type for method selection
@@ -410,6 +415,7 @@ export class DiggingDeeperPhase {
             // Store the new "anything else" problem for clearing
             const newProblem = context?.userResponses?.['restate_anything_else_problem_1'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.problemStatement = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
             context.metadata.returnToDiggingStep = 'integration_start'; // Where to return after clearing
             context.metadata.workType = 'problem'; // Set work type for method selection
@@ -456,6 +462,7 @@ export class DiggingDeeperPhase {
             // Store the new "anything else" problem for clearing
             const newProblem = context?.userResponses?.['restate_anything_else_problem_2'] || 'the problem';
             context.metadata.currentDiggingProblem = newProblem;
+            context.metadata.problemStatement = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 6) + 1;
             context.metadata.returnToDiggingStep = 'anything_else_check_3'; // Where to return after clearing
             context.metadata.workType = 'problem'; // Set work type for method selection

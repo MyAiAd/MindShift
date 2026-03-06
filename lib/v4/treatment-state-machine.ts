@@ -30,6 +30,16 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   }
 
   /**
+   * Parity fix: set all active problem fields together when promoting a new current problem
+   * (e.g. in digging deeper). Does NOT overwrite originalProblemStatement.
+   */
+  private setActiveProblemFull(context: TreatmentContext, problem: string): void {
+    context.problemStatement = problem;
+    context.metadata.problemStatement = problem;
+    context.metadata.currentDiggingProblem = problem;
+  }
+
+  /**
    * Determine next step logic - orchestrates the complex routing between treatment modalities
    */
   protected determineNextStep(currentStep: TreatmentStep, context: TreatmentContext): string | null {
@@ -702,19 +712,18 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         diggingSelectedMethod = 'blockage_shifting';
       }
 
-      // Update problem statement to use the new problem from digging deeper flow
+      // Update problem statement to use the new problem from digging deeper flow.
+      // PARITY: Prefer currentDiggingProblem (set by previous step) over userResponses (may contain stale data).
       const newProblemFromUserResponse = context.userResponses?.['restate_problem_future'] ||
         context.userResponses?.['restate_scenario_problem_1'] ||
         context.userResponses?.['restate_scenario_problem_2'] ||
         context.userResponses?.['restate_scenario_problem_3'] ||
         context.userResponses?.['restate_anything_else_problem_1'] ||
         context.userResponses?.['restate_anything_else_problem_2'];
-      // CRITICAL: Prioritize newProblemFromUserResponse FIRST to use the latest restated problem
-      const newDiggingProblem = newProblemFromUserResponse || context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem;
+      const newDiggingProblem = context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem || newProblemFromUserResponse;
 
       if (newDiggingProblem) {
-        context.problemStatement = newDiggingProblem;
-        context.metadata.currentDiggingProblem = newDiggingProblem;
+        this.setActiveProblemFull(context, newDiggingProblem);
         console.log(`🔍 CHOOSE_METHOD_DIGGING: Using problem: "${newDiggingProblem}"`);
       }
 
@@ -1548,7 +1557,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const newProblemFromRestate = context.userResponses?.['restate_problem_future'];
     if (newProblemFromRestate && newProblemFromRestate.trim()) {
       const newProblem = newProblemFromRestate.trim();
-      context.metadata.currentDiggingProblem = newProblem;
+      this.setActiveProblemFull(context, newProblem);
       context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
 
       // PRODUCTION FIX: Don't overwrite returnToDiggingStep if already set to a trauma step
@@ -1559,7 +1568,6 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       }
       // else: Keep existing returnToDiggingStep (e.g., trauma_dig_deeper_2)
 
-      context.problemStatement = newProblem;
       context.metadata.workType = 'problem';
       console.log(`🔍 RESTATE_PROBLEM_FUTURE: Updated problem to "${newProblem}" before routing to choose_method`);
     }
@@ -1597,8 +1605,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const newDiggingProblem = context.metadata?.currentDiggingProblem || context.metadata?.newDiggingProblem || newProblemFromUserResponse;
 
     if (newDiggingProblem) {
-      context.problemStatement = newDiggingProblem;
-      context.metadata.currentDiggingProblem = newDiggingProblem;
+      this.setActiveProblemFull(context, newDiggingProblem);
       console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: Using problem: "${newDiggingProblem}"`);
     } else {
       console.error(`❌ DIGGING_METHOD_SELECTION_ROUTE: NO PROBLEM FOUND! This will cause routing to fail!`);
@@ -1655,8 +1662,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const scenario1Problem = context.userResponses?.['restate_scenario_problem_1'];
 
     if (scenario1Problem) {
-      context.problemStatement = scenario1Problem;
-      context.metadata.currentDiggingProblem = scenario1Problem;
+      this.setActiveProblemFull(context, scenario1Problem);
       console.log(`🔍 SCENARIO_1_ROUTE: Using problem: "${scenario1Problem}"`);
     }
 
@@ -1703,8 +1709,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const scenario2Problem = context.userResponses?.['restate_scenario_problem_2'];
 
     if (scenario2Problem) {
-      context.problemStatement = scenario2Problem;
-      context.metadata.currentDiggingProblem = scenario2Problem;
+      this.setActiveProblemFull(context, scenario2Problem);
       console.log(`🔍 SCENARIO_2_ROUTE: Using problem: "${scenario2Problem}"`);
     }
 
@@ -1750,8 +1755,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const scenario3Problem = context.userResponses?.['restate_scenario_problem_3'];
 
     if (scenario3Problem) {
-      context.problemStatement = scenario3Problem;
-      context.metadata.currentDiggingProblem = scenario3Problem;
+      this.setActiveProblemFull(context, scenario3Problem);
       console.log(`🔍 SCENARIO_3_ROUTE: Using problem: "${scenario3Problem}"`);
     }
 
@@ -1807,8 +1811,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // Setup metadata for the new problem and route to method selection
     const anythingElseProblem = context.userResponses?.['restate_anything_else_problem_1'];
     if (anythingElseProblem) {
-      context.problemStatement = anythingElseProblem;
-      context.metadata.currentDiggingProblem = anythingElseProblem;
+      this.setActiveProblemFull(context, anythingElseProblem);
       context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
       context.metadata.returnToDiggingStep = 'anything_else_check_1';
       context.metadata.workType = 'problem';
@@ -1825,8 +1828,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const anythingElse1Problem = context.userResponses?.['restate_anything_else_problem_1'];
 
     if (anythingElse1Problem) {
-      context.problemStatement = anythingElse1Problem;
-      context.metadata.currentDiggingProblem = anythingElse1Problem;
+      this.setActiveProblemFull(context, anythingElse1Problem);
       // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
       console.log(`🔍 ANYTHING_ELSE_1_ROUTE: Using problem: "${anythingElse1Problem}"`);
     }
@@ -1873,8 +1875,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // Setup metadata for the new problem and route to method selection
     const anythingElseProblem2 = context.userResponses?.['restate_anything_else_problem_2'];
     if (anythingElseProblem2) {
-      context.problemStatement = anythingElseProblem2;
-      context.metadata.currentDiggingProblem = anythingElseProblem2;
+      this.setActiveProblemFull(context, anythingElseProblem2);
       context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 6) + 1;
       context.metadata.returnToDiggingStep = 'anything_else_check_2';
       context.metadata.workType = 'problem';
@@ -1891,8 +1892,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     const anythingElse2Problem = context.userResponses?.['restate_anything_else_problem_2'];
 
     if (anythingElse2Problem) {
-      context.problemStatement = anythingElse2Problem;
-      context.metadata.currentDiggingProblem = anythingElse2Problem;
+      this.setActiveProblemFull(context, anythingElse2Problem);
       // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
       console.log(`🔍 ANYTHING_ELSE_2_ROUTE: Using problem: "${anythingElse2Problem}"`);
     }

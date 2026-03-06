@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { TreatmentPhase, TreatmentStep, TreatmentContext, ProcessingResult, AITrigger, ResponseCache, PerformanceMetrics, CachedResponse } from './types';
 import { ValidationHelpers } from './validation-helpers';
 import { DatabaseOperations } from './database-operations';
@@ -357,15 +358,41 @@ export abstract class BaseTreatmentStateMachine {
     // Integration steps that reference problem statement - must always skip cache to prevent cross-session contamination
     // Blockage steps that embed userInput directly - must always skip cache to prevent cross-cycle contamination
     // Problem Shifting steps that embed user-specific data - must always skip cache
+    // PARITY: Skip cache for steps that interpolate current problem, intention, or prior answer
     const alwaysSkipCacheSteps = [
       'integration_start',
       'intention_question',
+      'action_question',
+      'action_followup',
       'blockage_step_b',
       'blockage_step_d',
       'body_sensation_check',
       'what_needs_to_happen_step',
       'blockage_check_if_still_problem',
-      'confirm_statement'  // References problemStatement which changes after trauma_problem_redirect
+      'confirm_statement',  // References problemStatement which changes after trauma_problem_redirect
+      'problem_shifting_intro_dynamic',  // "Feel the problem '${problem}'..."
+      'blockage_shifting_intro_dynamic',
+      'identity_shifting_intro_dynamic',
+      'belief_shifting_intro_dynamic',
+      'check_if_still_problem',  // "Feel the problem '${problem}'... does it still feel like a problem?"
+      'digging_deeper_start',
+      'problem_integration_awareness_1',
+      'integration_awareness_1',
+      'belief_integration_awareness_1',
+      'blockage_integration_awareness_1',
+      'trauma_integration_awareness_1',
+      'reality_integration_awareness_1',
+      'reality_step_a2',
+      'reality_step_a3',
+      'reality_feel_reason',
+      'trauma_dig_deeper',
+      'trauma_dig_deeper_2',
+      'trauma_experience_check',
+      'reality_feel_reason_2',
+      'reality_feel_reason_3',
+      'reality_doubt_reason',
+      'reality_cycle_b2',
+      'reality_cycle_b4'
     ];
 
     if (alwaysSkipCacheSteps.includes(stepId)) {
@@ -433,7 +460,10 @@ export abstract class BaseTreatmentStateMachine {
       selectedMethod: context.metadata.selectedMethod,
       currentPhase: context.currentPhase,
       problemStatement: context.problemStatement,
+      metadataProblemStatement: context.metadata.problemStatement,
       originalProblemStatement: context.metadata.originalProblemStatement,
+      newDiggingProblem: context.metadata.newDiggingProblem,
+      intentionQuestion: context.userResponses?.['intention_question'],
       currentBelief: context.metadata.currentBelief,
       desiredFeeling: context.metadata.desiredFeeling,
       currentGoal: context.metadata.currentGoal,
@@ -443,8 +473,8 @@ export abstract class BaseTreatmentStateMachine {
       currentIdentity: context.metadata.currentIdentity
     };
 
-    // Simple hash - could be improved with actual hash function if needed
-    return btoa(JSON.stringify(relevantData)).substring(0, 16);
+    // Full-content SHA-256 hash so different problem statements/sessions get different cache keys
+    return crypto.createHash('sha256').update(JSON.stringify(relevantData)).digest('hex');
   }
 
   /**
@@ -735,9 +765,8 @@ export abstract class BaseTreatmentStateMachine {
 
       const nextStep = updatedPhase.steps.find(s => s.id === nextStepId);
       if (nextStep) {
-        // PHASE 7 FIX: Don't pass userInput for new steps - let getScriptedResponse use fallback logic
-        // This ensures each step receives appropriate context via getPreviousStep() or undefined
-        const scriptedResponse = this.getScriptedResponse(nextStep, context);
+        // PARITY: Pass userInput so next step (e.g. reality_step_a2/a3) uses the response that just triggered the transition
+        const scriptedResponse = this.getScriptedResponse(nextStep, context, userInput);
         const needsLinguisticProcessing = this.isLinguisticProcessingStep(nextStep.id, context);
 
         // CRITICAL FIX (V2 parity): Check if this new step's response is also a signal that needs auto-progression
@@ -770,7 +799,7 @@ export abstract class BaseTreatmentStateMachine {
               const finalStep = finalPhase.steps.find(s => s.id === finalNextStepId);
 
               if (finalStep) {
-                const finalResponse = this.getScriptedResponse(finalStep, context);
+                const finalResponse = this.getScriptedResponse(finalStep, context, userInput);
                 const finalNeedsLinguistic = this.isLinguisticProcessingStep(finalStep.id, context);
 
                 console.log(`║ 💬 FINAL RESPONSE TO USER: "${finalResponse.substring(0, 80)}${finalResponse.length > 80 ? '...' : ''}"
@@ -943,7 +972,10 @@ export abstract class BaseTreatmentStateMachine {
   public async clearContext(sessionId: string): Promise<void> {
     // Clear from memory
     this.contexts.delete(sessionId);
-    
+
+    // Clear response cache to prevent cross-session contamination from stale cached responses
+    this.responseCache.cache.clear();
+
     // Clear from database to ensure fresh start
     await DatabaseOperations.deleteContextFromDatabase(sessionId);
     console.log(`🧹 Context cleared for session: ${sessionId}`);

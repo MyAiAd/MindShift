@@ -32,11 +32,11 @@ export const V4_STATIC_AUDIO_TEXTS = {
   // Trauma Shifting opener (lib/v4/treatment-modalities/trauma-shifting.ts)
   TRAUMA_SHIFTING_INTRO: "Please close your eyes and keep them closed throughout the rest of the process.",
 
-  // Method Selection (lib/v4/treatment-modalities/method-selection.ts)
-  METHOD_SELECTION: "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting",
+  // Method Selection (lib/v4/treatment-modalities/method-selection.ts) - v2 parity
+  METHOD_SELECTION: "Choose which Mind Shifting method you would like to use to clear the problem:",
 
-  // Method Selection for Digging Deeper (lib/v4/treatment-modalities/digging-deeper.ts)
-  METHOD_SELECTION_DIGGING: "We need to clear this problem. Which method would you like to use?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting",
+  // Method Selection for Digging Deeper (lib/v4/treatment-modalities/digging-deeper.ts) - v2 parity (no numbered list)
+  METHOD_SELECTION_DIGGING: "We need to clear this problem. Which method would you like to use?",
 
   // Work Type Descriptions (lib/v4/treatment-modalities/work-type-selection.ts)
   WORK_TYPE_PROBLEM_DESC: "Tell me what the problem is in a few words.",
