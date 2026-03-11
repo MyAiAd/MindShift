@@ -1,7 +1,13 @@
 import { Resend } from 'resend';
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY || '');
+  }
+  return resend;
+}
 
 // Configuration
 const EMAIL_CONFIG = {
@@ -52,9 +58,9 @@ export class EmailService {
         return { success: false, error: 'Email must have html or text content' };
       }
 
-      // Use type assertion for Resend SDK compatibility
+      const client = getResendClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await client.emails.send({
         from: EMAIL_CONFIG.from,
         to: options.to,
         subject: options.subject,
