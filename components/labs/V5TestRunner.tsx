@@ -625,7 +625,7 @@ export default function V5TestRunner() {
                                       : handleReview(fi, step.index, 'pass')}
                                     className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors ${
                                       step.reviewStatus === 'pass'
-                                        ? 'bg-green-500 text-white border-green-500'
+                                        ? 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-400'
                                         : 'border-border hover:bg-green-50 dark:hover:bg-green-900/20 text-muted-foreground'
                                     }`}
                                     title="Pass"
@@ -636,7 +636,7 @@ export default function V5TestRunner() {
                                       : handleReview(fi, step.index, 'fail')}
                                     className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors ${
                                       step.reviewStatus === 'fail'
-                                        ? 'bg-red-500 text-white border-red-500'
+                                        ? 'bg-red-500/20 border-red-500 text-red-700 dark:text-red-400'
                                         : 'border-border hover:bg-red-50 dark:hover:bg-red-900/20 text-muted-foreground'
                                     }`}
                                     title="Fail"
@@ -647,7 +647,7 @@ export default function V5TestRunner() {
                                       : handleReview(fi, step.index, 'flag')}
                                     className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors ${
                                       step.reviewStatus === 'flag'
-                                        ? 'bg-yellow-500 text-white border-yellow-500'
+                                        ? 'bg-yellow-500/20 border-yellow-500 text-yellow-700 dark:text-yellow-400'
                                         : 'border-border hover:bg-yellow-50 dark:hover:bg-yellow-900/20 text-muted-foreground'
                                     }`}
                                     title="Flag"
@@ -660,7 +660,7 @@ export default function V5TestRunner() {
                                     )}
                                     className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors ${
                                       chatOpen?.flowIndex === fi && chatOpen?.stepIndex === step.index
-                                        ? 'bg-indigo-500 text-white border-indigo-500'
+                                        ? 'bg-indigo-500/20 border-indigo-500 text-indigo-700 dark:text-indigo-400'
                                         : 'border-border hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-muted-foreground'
                                     }`}
                                     title="AI Correction Chat"
