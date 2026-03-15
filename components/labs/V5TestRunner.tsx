@@ -367,6 +367,8 @@ export default function V5TestRunner() {
           usedAI: s.usedAI,
           stepMatched: s.matched,
           apiError: s.apiError,
+          reviewStatus: s.reviewStatus,
+          reviewNote: s.reviewNote || undefined,
         })),
       })),
     };
@@ -639,6 +641,11 @@ export default function V5TestRunner() {
                                   placeholder="note…"
                                   value={step.reviewNote}
                                   onChange={(e) => handleNoteChange(fi, step.index, e.target.value)}
+                                  onBlur={() => {
+                                    if (step.savedStepId) {
+                                      patchStepReview(step.savedStepId, step.reviewStatus, step.reviewNote);
+                                    }
+                                  }}
                                   className="text-[10px] px-1.5 py-0.5 border border-border rounded bg-background text-foreground w-24"
                                 />
                               </div>

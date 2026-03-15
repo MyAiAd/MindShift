@@ -13,6 +13,8 @@ interface StepPayload {
   stepMatched?: boolean | null;
   problemRefFound?: boolean | null;
   apiError?: string;
+  reviewStatus?: string;
+  reviewNote?: string;
 }
 
 interface FlowPayload {
@@ -122,7 +124,8 @@ export async function POST(request: NextRequest) {
       step_matched: s.stepMatched ?? null,
       problem_ref_found: s.problemRefFound ?? null,
       api_error: s.apiError ?? null,
-      review_status: 'unreviewed',
+      review_status: s.reviewStatus ?? 'unreviewed',
+      review_note: s.reviewNote ?? null,
     }));
 
     if (stepRows.length > 0) {
