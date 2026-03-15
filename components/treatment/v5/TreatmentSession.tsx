@@ -791,13 +791,13 @@ export default function TreatmentSession({
 
   // Helper function to format method names
   const formatMethodName = (methodName: string) => {
-    if (!methodName) return 'Mind Shifting V4.1';
+    if (!methodName) return 'Mind Shifting V5';
 
     // Convert snake_case to Title Case
     return methodName
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ') + ' V4.1';
+      .join(' ') + ' V5';
   };
 
   // Handle pause/resume button click
@@ -2219,7 +2219,7 @@ export default function TreatmentSession({
               </h2>
               <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full flex items-center space-x-1 flex-shrink-0">
                 <Sparkles className="h-3 w-3" />
-                <span>V4.1</span>
+                <span>V5</span>
               </span>
             </div>
 
