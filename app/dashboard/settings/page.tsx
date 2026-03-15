@@ -132,7 +132,8 @@ export default function SettingsPage() {
   const [labsToggles, setLabsToggles] = useState({
     v2TreatmentDemo: true,
     v3TreatmentDemo: true,
-    v4TreatmentDemo: true
+    v4TreatmentDemo: true,
+    v5TreatmentDemo: true
   });
 
   // V4 Voice & Interaction Settings
@@ -1814,6 +1815,52 @@ export default function SettingsPage() {
                 )}
               </div>
               
+              {/* V5 Treatment */}
+              <div className="border border-border dark:border-[#586e75] rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <h4 className="text-md font-medium text-foreground">V5 Treatment</h4>
+                    <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full">
+                      In Development
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleLabsToggle('v5TreatmentDemo')}
+                    aria-label={`${labsToggles.v5TreatmentDemo ? 'Disable' : 'Enable'} V5 Treatment Demo`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                      labsToggles.v5TreatmentDemo
+                        ? 'bg-indigo-600'
+                        : 'bg-secondary dark:bg-[#586e75]'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
+                        labsToggles.v5TreatmentDemo ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                {labsToggles.v5TreatmentDemo && (
+                  <div className="bg-secondary/20 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Brain className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <h5 className="font-medium text-foreground">V5 Treatment System</h5>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Next version in development. Starts as a clean copy of V4 — ready for experimentation.
+                    </p>
+                    <div className="flex space-x-3">
+                      <a
+                        href="/dashboard/sessions/treatment-v5"
+                        className="flex-1 px-4 py-2 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm"
+                      >
+                        Try V5 Treatment
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Individual treatment modality demos - temporarily hidden for company review */}
               {/* 
               <RealityShiftingDemo />
