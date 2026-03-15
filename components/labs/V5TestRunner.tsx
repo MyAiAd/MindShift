@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/auth';
 import { ALL_V5_FLOWS, FlowStep } from '@/lib/v5/test-flows';
 import StepChatPanel from '@/components/labs/StepChatPanel';
+import StepCorrectionWizard from '@/components/labs/StepCorrectionWizard';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -119,6 +120,7 @@ export default function V5TestRunner() {
   const [expandedFlows, setExpandedFlows] = useState<Set<number>>(new Set());
   const [selectedFlow, setSelectedFlow] = useState<string>('');
   const [chatOpen, setChatOpen] = useState<{ flowIndex: number; stepIndex: number } | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [savedRunId, setSavedRunId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [runName, setRunName] = useState('');
@@ -756,14 +758,29 @@ export default function V5TestRunner() {
       )}
 
       {savedRunId && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-green-700 dark:text-green-300 font-medium">
             ✅ Saved! View at{' '}
             <a href={`/dashboard/labs/v5-tests?runId=${savedRunId}`} className="underline">
               /dashboard/labs/v5-tests?runId={savedRunId}
             </a>
           </p>
+          {flagCount > 0 && (
+            <button
+              onClick={() => setWizardOpen(true)}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+            >
+              🔧 Apply Corrections ({flagCount} flagged)
+            </button>
+          )}
         </div>
+      )}
+
+      {wizardOpen && savedRunId && (
+        <StepCorrectionWizard
+          runId={savedRunId}
+          onClose={() => setWizardOpen(false)}
+        />
       )}
 
       {/* Historical runs */}
