@@ -12,14 +12,14 @@ export async function PATCH(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { review_status: string; review_note?: string };
+  let body: { review_status: string; review_note?: string; suggested_correction?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { review_status, review_note } = body;
+  const { review_status, review_note, suggested_correction } = body;
   const validStatuses = ['unreviewed', 'pass', 'fail', 'flag'];
   if (!validStatuses.includes(review_status)) {
     return NextResponse.json({ error: 'Invalid review_status' }, { status: 400 });
@@ -31,6 +31,7 @@ export async function PATCH(
     .update({
       review_status,
       review_note: review_note ?? null,
+      ...(suggested_correction !== undefined && { suggested_correction }),
       reviewed_by: user.id,
       reviewed_at: new Date().toISOString(),
     })

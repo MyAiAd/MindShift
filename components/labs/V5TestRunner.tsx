@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/auth';
 import { ALL_V5_FLOWS, FlowStep } from '@/lib/v5/test-flows';
+import StepChatPanel from '@/components/labs/StepChatPanel';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -117,6 +118,7 @@ export default function V5TestRunner() {
   const [activeFlowIndex, setActiveFlowIndex] = useState<number>(-1);
   const [expandedFlows, setExpandedFlows] = useState<Set<number>>(new Set());
   const [selectedFlow, setSelectedFlow] = useState<string>('');
+  const [chatOpen, setChatOpen] = useState<{ flowIndex: number; stepIndex: number } | null>(null);
   const [savedRunId, setSavedRunId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [runName, setRunName] = useState('');
@@ -308,6 +310,21 @@ export default function V5TestRunner() {
       const si = steps.findIndex((s) => s.index === stepIndex);
       if (si >= 0) {
         steps[si] = { ...steps[si], reviewNote: note };
+      }
+      flow.steps = steps;
+      next[flowIndex] = flow;
+      return next;
+    });
+  }, []);
+
+  const handleCorrectionApplied = useCallback((flowIndex: number, stepIndex: number, correctedText: string) => {
+    setFlows((prev) => {
+      const next = [...prev];
+      const flow = { ...next[flowIndex] };
+      const steps = [...flow.steps];
+      const si = steps.findIndex((s) => s.index === stepIndex);
+      if (si >= 0) {
+        steps[si] = { ...steps[si], reviewStatus: 'flag', reviewNote: correctedText };
       }
       flow.steps = steps;
       next[flowIndex] = flow;
@@ -578,8 +595,8 @@ export default function V5TestRunner() {
                       </thead>
                       <tbody>
                         {flow.steps.map((step) => (
+                          <React.Fragment key={step.index}>
                           <tr
-                            key={step.index}
                             className={`border-t border-border/50 ${reviewRowClass(step.reviewStatus)}`}
                           >
                             <td className="px-2 py-2 text-muted-foreground">{step.index}</td>
@@ -635,6 +652,19 @@ export default function V5TestRunner() {
                                     }`}
                                     title="Flag"
                                   >🚩</button>
+                                  <button
+                                    onClick={() => setChatOpen(
+                                      chatOpen?.flowIndex === fi && chatOpen?.stepIndex === step.index
+                                        ? null
+                                        : { flowIndex: fi, stepIndex: step.index }
+                                    )}
+                                    className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors ${
+                                      chatOpen?.flowIndex === fi && chatOpen?.stepIndex === step.index
+                                        ? 'bg-indigo-500 text-white border-indigo-500'
+                                        : 'border-border hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-muted-foreground'
+                                    }`}
+                                    title="AI Correction Chat"
+                                  >💬</button>
                                 </div>
                                 <input
                                   type="text"
@@ -651,6 +681,30 @@ export default function V5TestRunner() {
                               </div>
                             </td>
                           </tr>
+                          {chatOpen?.flowIndex === fi && chatOpen?.stepIndex === step.index && (
+                            <tr className="border-t border-border/50 bg-card dark:bg-card">
+                              <td colSpan={8} className="px-3 py-3">
+                                <StepChatPanel
+                                  stepContext={{
+                                    stepLabel: step.label,
+                                    userInput: step.userInput,
+                                    actualMessage: step.message,
+                                    expectedStep: step.expectedStep ?? '',
+                                    actualStep: step.actualStep,
+                                  }}
+                                  savedStepId={step.savedStepId}
+                                  onCorrectionApplied={(correctedText) => {
+                                    handleCorrectionApplied(fi, step.index, correctedText);
+                                    if (step.savedStepId) {
+                                      patchStepReview(step.savedStepId, 'flag', correctedText);
+                                    }
+                                  }}
+                                  onClose={() => setChatOpen(null)}
+                                />
+                              </td>
+                            </tr>
+                          )}
+                          </React.Fragment>
                         ))}
                       </tbody>
                     </table>
