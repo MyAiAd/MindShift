@@ -1856,6 +1856,12 @@ export default function SettingsPage() {
                       >
                         Try V5 Treatment
                       </a>
+                      <a
+                        href="/dashboard/labs/v5-tests"
+                        className="flex-1 px-4 py-2 bg-indigo-600 text-white text-center rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm"
+                      >
+                        🧪 Run V5 Tests
+                      </a>
                     </div>
                   </div>
                 )}

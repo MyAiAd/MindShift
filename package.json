@@ -39,7 +39,8 @@
     "test:trauma": "npx playwright test tests/api/trauma-shifting.spec.ts",
     "test:digging": "npx playwright test tests/api/digging-deeper.spec.ts",
     "test:edge": "npx playwright test tests/api/edge-cases.spec.ts",
-    "test:full-parity": "npx playwright test --project=full-parity"
+    "test:full-parity": "npx playwright test --project=full-parity",
+    "test:v5": "npx playwright test tests/api/v5-all-flows.spec.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
