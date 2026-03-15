@@ -179,11 +179,17 @@ function extractReturnFromBlock(content: string, blockStart: number): string | n
   }
   const block = content.slice(blockStart, i);
 
-  // Find the last `return` keyword in the block
-  const returnMatches = [...block.matchAll(/\breturn\s+/g)];
-  if (returnMatches.length === 0) return null;
-  const lastReturn = returnMatches[returnMatches.length - 1];
-  const retValueStart = blockStart + lastReturn.index! + lastReturn[0].length;
+  // Find the last `return` keyword in the block (matchAll not available at this target)
+  const returnRe = /\breturn\s+/g;
+  let lastReturnIndex = -1;
+  let lastReturnLength = 0;
+  let m: RegExpExecArray | null;
+  while ((m = returnRe.exec(block)) !== null) {
+    lastReturnIndex = m.index;
+    lastReturnLength = m[0].length;
+  }
+  if (lastReturnIndex === -1) return null;
+  const retValueStart = blockStart + lastReturnIndex + lastReturnLength;
   return extractStringLiteral(content, retValueStart);
 }
 
