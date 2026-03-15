@@ -47,7 +47,10 @@ export class DiggingDeeperPhase {
             if (userInput && userInput.trim()) {
               console.log(`🔍 RESTATE_PROBLEM_FUTURE: Storing new problem: "${userInput}"`);
               context.metadata.newDiggingProblem = userInput.trim();
-              console.log(`🔍 RESTATE_PROBLEM_FUTURE: Next step should be digging_method_selection`);
+              // Clear currentDiggingProblem so digging_method_selection can promote the new problem
+              // on subsequent digging passes (not just the first pass)
+              context.metadata.currentDiggingProblem = undefined;
+              console.log(`🔍 RESTATE_PROBLEM_FUTURE: Cleared currentDiggingProblem to allow re-promotion`);
             }
             console.log('🔍 BELIEF_DEBUG restate_problem_future - context.metadata after:', JSON.stringify(context.metadata, null, 2));
             return "How would you state the problem in a few words?";
@@ -327,60 +330,6 @@ export class DiggingDeeperPhase {
             { type: 'minLength', value: 1, errorMessage: 'Please continue with the process.' }
           ],
           nextStep: undefined, // Handled by routing logic
-          aiTriggers: []
-        },
-        
-        // SCENARIO CHECK 3 - Third scenario check (missing in original V4)
-        {
-          id: 'scenario_check_3',
-          scriptedResponse: (userInput, context) => {
-            const originalProblem = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'the original problem';
-            return `Is there any scenario in which '${originalProblem}' would still be a problem for you?`;
-          },
-          expectedResponseType: 'yesno',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
-          ],
-          nextStep: 'restate_scenario_problem_3',
-          aiTriggers: [
-            { condition: 'needsClarification', action: 'clarify' }
-          ]
-        },
-        {
-          id: 'restate_scenario_problem_3',
-          scriptedResponse: "How would you state the problem in a few words?",
-          expectedResponseType: 'problem',
-          validationRules: [
-            { type: 'minLength', value: 3, errorMessage: 'Please tell me how you would state this scenario problem.' }
-          ],
-          nextStep: 'clear_scenario_problem_3',
-          aiTriggers: [
-            { condition: 'userStuck', action: 'clarify' },
-            { condition: 'tooLong', action: 'simplify' }
-          ]
-        },
-        {
-          id: 'clear_scenario_problem_3',
-          scriptedResponse: (userInput, context) => {
-            // Store the new scenario problem for clearing
-            const newProblem = context?.userResponses?.['restate_scenario_problem_3'] || 'the problem';
-            context.metadata.currentDiggingProblem = newProblem;
-            context.metadata.problemStatement = newProblem;
-            context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 4) + 1;
-            context.metadata.returnToDiggingStep = 'scenario_check_3'; // Return to this scenario check after clearing
-            context.metadata.workType = 'problem'; // Set work type for method selection
-            
-            // Set the problem statement for the method selection
-            context.problemStatement = newProblem;
-            
-            // Ask user to choose method instead of dictating
-            return "We need to clear this problem. Which method would you like to use?";
-          },
-          expectedResponseType: 'selection',
-          validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
-          ],
-          nextStep: 'digging_method_selection',
           aiTriggers: []
         },
         
