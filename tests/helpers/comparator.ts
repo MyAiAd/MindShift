@@ -196,6 +196,8 @@ export interface FlowReport {
   v4Failed?: boolean;
   v4FailureStep?: number;
   v4FailureError?: string;
+  /** When set (e.g. 'v5'), report text uses this instead of 'v4' for the candidate version */
+  candidateLabel?: string;
   divergences: Divergence[];
   stepDetails: StepDetail[];
 }
@@ -298,6 +300,7 @@ function truncate(s: string, max = 200): string {
 
 export function generateFlowReportMarkdown(report: FlowReport): string {
   const lines: string[] = [];
+  const cand = report.candidateLabel ?? 'v4';
   const { flowName, divergences, stepDetails,
     v2Failed, v2FailureStep, v2FailureError,
     v4Failed, v4FailureStep, v4FailureError } = report;
@@ -315,25 +318,25 @@ export function generateFlowReportMarkdown(report: FlowReport): string {
   }
 
   if (v4Failed) {
-    lines.push(`> **V4 API crashed at step ${v4FailureStep}**: ${v4FailureError ?? 'unknown'}`);
-    lines.push(`> V4 deployment may be out of date with local code.`);
+    lines.push(`> **${cand.toUpperCase()} API crashed at step ${v4FailureStep}**: ${v4FailureError ?? 'unknown'}`);
+    lines.push(`> ${cand.toUpperCase()} deployment may be out of date with local code.`);
     lines.push('');
   }
 
   if (realDivergences.length === 0 && !v2Failed) {
     lines.push('**Result: PASS** — V4 matches V2 at every step.');
     lines.push('');
-  } else if (realDivergences.length > 0) {
-    lines.push(`**Result: ${realDivergences.length} DIVERGENCE(S) FOUND** — V4 does NOT match V2.`);
+  } else   if (realDivergences.length > 0) {
+    lines.push(`**Result: ${realDivergences.length} DIVERGENCE(S) FOUND** — ${cand.toUpperCase()} does NOT match V2.`);
     lines.push('');
 
     for (const d of realDivergences) {
       lines.push(`#### ❌ Step ${d.stepIndex}: ${d.inputLabel}`);
       lines.push(`- **Type**: ${d.type.replace(/_/g, ' ').toUpperCase()}`);
       lines.push(`- **User input**: \`${d.userInput}\``);
-      lines.push(`- **V2 step**: \`${d.v2Step}\` → V4 step: \`${d.v4Step}\``);
+      lines.push(`- **V2 step**: \`${d.v2Step}\` → ${cand.toUpperCase()} step: \`${d.v4Step}\``);
       lines.push(`- **V2 says**: "${truncate(d.v2Message)}"`);
-      lines.push(`- **V4 says**: "${truncate(d.v4Message)}"`);
+      lines.push(`- **${cand.toUpperCase()} says**: "${truncate(d.v4Message)}"`);
       lines.push(`- **Detail**: ${d.detail}`);
       lines.push('');
     }
@@ -352,7 +355,7 @@ export function generateFlowReportMarkdown(report: FlowReport): string {
   // Full step-by-step table
   lines.push('<details><summary>Full step-by-step comparison</summary>');
   lines.push('');
-  lines.push('| # | Input | V2 Step | V4 Step | Match | V2 Message (excerpt) | V4 Message (excerpt) |');
+  lines.push(`| # | Input | V2 Step | ${cand.toUpperCase()} Step | Match | V2 Message (excerpt) | ${cand.toUpperCase()} Message (excerpt) |`);
   lines.push('|---|-------|---------|---------|-------|---------------------|---------------------|');
   for (const s of stepDetails) {
     const matchIcon =
@@ -383,10 +386,11 @@ export function generateFullReportMarkdown(reports: FlowReport[]): string {
   const flowsV4Crashed = reports.filter(r => r.v4Failed).length;
   const flowsBothCrashed = reports.filter(r => r.v2Failed && r.v4Failed).length;
 
-  lines.push(`# V2 vs V4 Parity Report — ${timestamp}`);
+  const cand = reports[0]?.candidateLabel ?? 'v4';
+  lines.push(`# V2 vs ${cand.toUpperCase()} Parity Report — ${timestamp}`);
   lines.push('');
-  lines.push('> V2 is the medical gold standard. Every divergence below means V4 says');
-  lines.push('> something different from V2 and **must be fixed in V4**.');
+  lines.push(`> V2 is the medical gold standard. Every divergence below means ${cand.toUpperCase()} says`);
+  lines.push(`> something different from V2 and **must be fixed in ${cand.toUpperCase()}**.`);
   lines.push('');
   lines.push('## Summary');
   lines.push('');
@@ -395,7 +399,8 @@ export function generateFullReportMarkdown(reports: FlowReport[]): string {
   lines.push(`| Flows tested | ${reports.length} |`);
   lines.push(`| Flows with divergences | ${flowsWithIssues} |`);
   lines.push(`| Flows where V2 API crashed | ${flowsV2Crashed} |`);
-  lines.push(`| Flows where V4 API crashed | ${flowsV4Crashed} |`);
+  const cand = reports[0]?.candidateLabel ?? 'v4';
+  lines.push(`| Flows where ${cand.toUpperCase()} API crashed | ${flowsV4Crashed} |`);
   lines.push(`| Flows where BOTH APIs crashed | ${flowsBothCrashed} |`);
   lines.push(`| Total divergences | ${totalDivergences} |`);
   lines.push('');
@@ -411,7 +416,8 @@ export function generateFullReportMarkdown(reports: FlowReport[]): string {
       lines.push('');
     }
     if (flowsV4Crashed > 0) {
-      lines.push('**V4 crashes** (deployed V4 may be behind local code):');
+      const cand = reports[0]?.candidateLabel ?? 'v4';
+      lines.push(`**${cand.toUpperCase()} crashes** (deployed ${cand.toUpperCase()} may be behind local code):`);
       for (const r of reports.filter(r => r.v4Failed)) {
         lines.push(`- **${r.flowName}**: crashed at step ${r.v4FailureStep} — ${r.v4FailureError ?? 'unknown'}`);
       }
@@ -437,7 +443,8 @@ export function generateFullReportMarkdown(reports: FlowReport[]): string {
 
   // Action items summary
   if (totalDivergences > 0) {
-    lines.push('## Action Items (Fix in V4)');
+    const cand = reports[0]?.candidateLabel ?? 'v4';
+    lines.push(`## Action Items (Fix in ${cand.toUpperCase()})`);
     lines.push('');
     let itemNum = 1;
     for (const report of reports) {
