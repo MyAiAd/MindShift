@@ -175,7 +175,7 @@ export class DiggingDeeperPhase {
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.problemStatement = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 2) + 1;
-            context.metadata.returnToDiggingStep = 'anything_else_check_1'; // Where to return after clearing
+            context.metadata.returnToDiggingStep = 'scenario_check_1'; // Return to same scenario check after clearing
             context.problemStatement = newProblem;
             
             // Return routing signal based on original method used
@@ -241,7 +241,7 @@ export class DiggingDeeperPhase {
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.problemStatement = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 3) + 1;
-            context.metadata.returnToDiggingStep = 'scenario_check_3'; // Where to return after clearing
+            context.metadata.returnToDiggingStep = 'scenario_check_2'; // Return to same scenario check after clearing
             context.problemStatement = newProblem;
             
             // Return routing signal based on original method used
@@ -303,7 +303,7 @@ export class DiggingDeeperPhase {
             context.metadata.currentDiggingProblem = newProblem;
             context.metadata.problemStatement = newProblem;
             context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 4) + 1;
-            context.metadata.returnToDiggingStep = 'anything_else_check_1'; // Move to "anything else" questions after this
+            context.metadata.returnToDiggingStep = 'scenario_check_3'; // Return to same scenario check after clearing
             context.problemStatement = newProblem;
             
             // Return routing signal based on original method used
