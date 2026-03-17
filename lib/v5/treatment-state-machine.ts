@@ -511,6 +511,24 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     console.log('🔍 MODALITY_CLEANUP: Cleared previous modality metadata, kept digging-deeper context');
   }
 
+  private hasDiggingDeeperPermission(context: TreatmentContext): boolean {
+    const raw = context.userResponses?.['digging_deeper_start'];
+    if (!raw) {
+      return false;
+    }
+
+    const normalized = String(raw).trim().toLowerCase();
+    return (
+      normalized === 'yes' ||
+      normalized === '1' ||
+      normalized === 'true' ||
+      normalized.startsWith('yes') ||
+      normalized.startsWith('yep') ||
+      normalized.startsWith('yeah') ||
+      normalized.includes('sure')
+    );
+  }
+
   private getPhaseForMethod(method: string): string {
     const methodPhaseMap: Record<string, string> = {
       'problem_shifting': 'problem_shifting',
@@ -947,7 +965,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
       // No longer a problem - check if we've already asked permission to dig deeper
-      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+      const alreadyGrantedPermission = this.hasDiggingDeeperPermission(context);
       const returnStep = context.metadata?.returnToDiggingStep;
 
       console.log(`🔍 CHECK_IF_STILL_PROBLEM: alreadyGrantedPermission=${alreadyGrantedPermission}, returnStep=${returnStep}`);
@@ -986,7 +1004,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     if (stepESeemsResolved) {
       // Problem seems resolved - check if we're returning from a sub-problem or this is first completion
       console.log(`🔍 BLOCKAGE_STEP_E: Problem resolved (response: "${lastResponse}"), checking dig deeper context`);
-      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+      const alreadyGrantedPermission = this.hasDiggingDeeperPermission(context);
       const returnStep = context.metadata?.returnToDiggingStep;
 
       if (alreadyGrantedPermission && returnStep) {
@@ -1050,7 +1068,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     } else if (seemsResolved) {
       // Problem seems resolved - check if we've already asked permission to dig deeper
       console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Problem resolved, transitioning to dig deeper`);
-      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+      const alreadyGrantedPermission = this.hasDiggingDeeperPermission(context);
       const returnStep = context.metadata?.returnToDiggingStep;
 
       if (alreadyGrantedPermission && returnStep) {
@@ -1165,7 +1183,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
       // No longer a problem - check if we've already asked permission to dig deeper
-      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+      const alreadyGrantedPermission = this.hasDiggingDeeperPermission(context);
       const returnStep = context.metadata?.returnToDiggingStep;
 
       if (alreadyGrantedPermission && returnStep) {
@@ -1288,7 +1306,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
       // No longer a problem - check if we've already asked permission to dig deeper
-      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+      const alreadyGrantedPermission = this.hasDiggingDeeperPermission(context);
       const returnStep = context.metadata?.returnToDiggingStep;
 
       if (alreadyGrantedPermission && returnStep) {
@@ -1488,7 +1506,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
       // No longer a problem - check if we've already asked permission to dig deeper
-      const alreadyGrantedPermission = context.userResponses['digging_deeper_start'] === 'yes';
+      const alreadyGrantedPermission = this.hasDiggingDeeperPermission(context);
       const returnStep = context.metadata?.returnToDiggingStep;
 
       if (alreadyGrantedPermission && returnStep) {

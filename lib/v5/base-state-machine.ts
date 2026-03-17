@@ -222,6 +222,16 @@ export abstract class BaseTreatmentStateMachine {
           }
         }
 
+        // For short responses, always stay scripted and repeat the current question.
+        // This prevents AI "clarify" branches from taking the user off-script.
+        if (this.isMinLengthViolation(currentStep, userInput)) {
+          return {
+            canContinue: false,
+            reason: validationResult.error,
+            scriptedResponse: this.getTooShortRetryPrompt(currentStep, treatmentContext)
+          };
+        }
+
         // Check if we need AI assistance
         const aiTrigger = this.checkAITriggers(userInput, currentStep, treatmentContext);
         if (aiTrigger) {
@@ -1016,6 +1026,21 @@ export abstract class BaseTreatmentStateMachine {
 
   private getValidationPrompt(step: TreatmentStep, error: string): string {
     return `${error} Please try again.`;
+  }
+
+  private isMinLengthViolation(step: TreatmentStep, userInput: string): boolean {
+    const trimmed = userInput.trim();
+    const minLengthRule = step.validationRules.find((rule) => rule.type === 'minLength');
+    if (!minLengthRule || typeof minLengthRule.value !== 'number') {
+      return false;
+    }
+    return trimmed.length < minLengthRule.value;
+  }
+
+  private getTooShortRetryPrompt(step: TreatmentStep, context: TreatmentContext): string {
+    const repeatLead = 'Let me repeat that question for you. Please answer with the first thing that comes up when I ask the question.';
+    const repeatedQuestion = this.getScriptedResponse(step, context);
+    return `${repeatLead} ${repeatedQuestion}`;
   }
 
   private buildAIContext(context: TreatmentContext, step: TreatmentStep): string {
