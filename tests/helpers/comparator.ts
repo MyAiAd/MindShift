@@ -399,7 +399,6 @@ export function generateFullReportMarkdown(reports: FlowReport[]): string {
   lines.push(`| Flows tested | ${reports.length} |`);
   lines.push(`| Flows with divergences | ${flowsWithIssues} |`);
   lines.push(`| Flows where V2 API crashed | ${flowsV2Crashed} |`);
-  const cand = reports[0]?.candidateLabel ?? 'v4';
   lines.push(`| Flows where ${cand.toUpperCase()} API crashed | ${flowsV4Crashed} |`);
   lines.push(`| Flows where BOTH APIs crashed | ${flowsBothCrashed} |`);
   lines.push(`| Total divergences | ${totalDivergences} |`);
