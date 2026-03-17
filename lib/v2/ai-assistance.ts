@@ -1,14 +1,24 @@
 import { AITrigger, TreatmentContext, TreatmentStep } from './treatment-state-machine';
 import OpenAI from 'openai';
 
+export interface AIModelOverrides {
+  apiKey?: string;
+  baseURL?: string;
+  model?: string;
+  defaultHeaders?: Record<string, string>;
+}
+
 // Create OpenAI client only when needed
-function createOpenAIClient(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) {
+function createOpenAIClient(overrides?: AIModelOverrides): OpenAI {
+  const apiKey = overrides?.apiKey || process.env.OPENAI_API_KEY;
+  if (!apiKey) {
     throw new Error('OPENAI_API_KEY environment variable is required');
   }
   
   return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey,
+    baseURL: overrides?.baseURL,
+    defaultHeaders: overrides?.defaultHeaders,
   });
 }
 
@@ -77,7 +87,7 @@ export class AIAssistanceManager {
   /**
    * NEW: Process validation assistance for problem/goal/question and negative experience validation
    */
-  async processValidationAssistance(request: ValidationAssistanceRequest): Promise<ValidationAssistanceResponse> {
+  async processValidationAssistance(request: ValidationAssistanceRequest, modelOverrides?: AIModelOverrides): Promise<ValidationAssistanceResponse> {
     // Track usage for cost control
     this.trackUsage(request.context.sessionId);
     
@@ -93,7 +103,7 @@ export class AIAssistanceManager {
     const prompt = this.buildValidationPrompt(request);
     
     try {
-      const aiResponse = await this.callOpenAIService(prompt, true);
+      const aiResponse = await this.callOpenAIService(prompt, true, modelOverrides);
       this.updateUsageStats(request.context.sessionId, aiResponse.tokenCount, aiResponse.cost);
       
       // Parse the AI response to determine if correction is needed
@@ -308,7 +318,7 @@ Examples:
   /**
    * Process AI assistance request - Only called for specific scenarios
    */
-  async processAssistanceRequest(request: AIAssistanceRequest): Promise<AIAssistanceResponse> {
+  async processAssistanceRequest(request: AIAssistanceRequest, modelOverrides?: AIModelOverrides): Promise<AIAssistanceResponse> {
     // Track usage for cost control
     this.trackUsage(request.context.sessionId);
     
@@ -326,7 +336,7 @@ Examples:
     
     try {
       // Call actual OpenAI API
-      const aiResponse = await this.callOpenAIService(prompt, isLinguisticProcessing);
+      const aiResponse = await this.callOpenAIService(prompt, isLinguisticProcessing, modelOverrides);
       
       this.updateUsageStats(request.context.sessionId, aiResponse.tokenCount, aiResponse.cost);
       
@@ -352,7 +362,8 @@ Examples:
     scriptedResponse: string,
     userInput: string,
     stepId: string,
-    sessionId: string
+    sessionId: string,
+    modelOverrides?: AIModelOverrides
   ): Promise<{ success: boolean; improvedResponse: string; fallbackToScripted: boolean; cost: number; tokens: number }> {
     // Track usage for cost control
     this.trackUsage(sessionId);
@@ -371,7 +382,7 @@ Examples:
     const prompt = this.buildLinguisticInterpretationPrompt(scriptedResponse, userInput, stepId);
     
     try {
-      const aiResponse = await this.callOpenAIService(prompt, true);
+      const aiResponse = await this.callOpenAIService(prompt, true, modelOverrides);
       this.updateUsageStats(sessionId, aiResponse.tokenCount, aiResponse.cost);
       
       return {
@@ -798,11 +809,16 @@ Provide brief guidance to help the user continue with the treatment. Keep respon
   /**
    * Call OpenAI API with actual implementation
    */
-  private async callOpenAIService(prompt: string, isLinguisticProcessing: boolean = false): Promise<{ content: string; tokenCount: number; cost: number }> {
-    const openai = createOpenAIClient();
+  private async callOpenAIService(
+    prompt: string,
+    isLinguisticProcessing: boolean = false,
+    modelOverrides?: AIModelOverrides
+  ): Promise<{ content: string; tokenCount: number; cost: number }> {
+    const openai = createOpenAIClient(modelOverrides);
+    const model = modelOverrides?.model || 'gpt-4o-mini';
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini", // Cost-effective model for linguistic processing
+        model, // Cost-effective model for linguistic processing
         messages: [{ role: "system", content: prompt }],
         max_tokens: isLinguisticProcessing ? 100 : this.MAX_TOKENS,
         temperature: isLinguisticProcessing ? 0.3 : 0.7, // Lower temperature for consistent linguistic processing

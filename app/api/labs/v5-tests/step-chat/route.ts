@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/database-server';
 import OpenAI from 'openai';
+import { getUserOpenRouterKey } from '@/lib/server/labs-openrouter-key';
 
 export async function POST(request: NextRequest) {
   const supabase = createServerClient();
@@ -8,10 +9,6 @@ export async function POST(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
   }
 
   let body: {
@@ -23,6 +20,7 @@ export async function POST(request: NextRequest) {
       actualStep: string;
     };
     messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+    model?: string;
   };
 
   try {
@@ -31,7 +29,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { stepContext, messages } = body;
+  const { stepContext, messages, model } = body;
+  const openRouterKey = await getUserOpenRouterKey(supabase, user.id);
+  if (!openRouterKey) {
+    return NextResponse.json(
+      { error: 'OpenRouter API key required. Add it in Settings > API Keys.' },
+      { status: 400 }
+    );
+  }
 
   const systemPrompt = `You are a protocol review assistant for a therapeutic treatment app called MindShifting.
 A doctor is reviewing a V5 treatment session script step-by-step.
@@ -49,14 +54,21 @@ Once you fully understand and are confident, output EXACTLY this on its own line
 (and ONLY when confident — do not output it prematurely):
 CORRECTION_CONFIRMED:{"correctedText":"<the exact correct response here>"}`;
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const openai = new OpenAI({
+    apiKey: openRouterKey,
+    baseURL: 'https://openrouter.ai/api/v1',
+    defaultHeaders: {
+      'HTTP-Referer': 'https://mind-shift.click',
+      'X-Title': 'MindShifting Labs V5',
+    },
+  });
 
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
       try {
         const completion = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+          model: model || 'openai/gpt-4o-mini',
           messages: [
             { role: 'system', content: systemPrompt },
             ...messages,

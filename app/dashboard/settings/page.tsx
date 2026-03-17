@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker, Brain, Mic, Volume2, Gauge } from 'lucide-react';
+import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker, Brain, Mic, Volume2, Gauge, Key } from 'lucide-react';
 import { InteractionMode, getInteractionMode, setInteractionMode, getVoicePreferences, setVoicePreferences, V4_EVENTS } from '@/lib/v4/v4-preferences';
 import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
 import BeliefShiftingDemo from '@/components/labs/BeliefShiftingDemo';
@@ -144,6 +144,16 @@ export default function SettingsPage() {
     vadSensitivity: 0.5,
     loading: true
   });
+  const [openRouterKey, setOpenRouterKey] = useState('');
+  const [openRouterHasKey, setOpenRouterHasKey] = useState(false);
+  const [openRouterLoaded, setOpenRouterLoaded] = useState(false);
+  const [openRouterState, setOpenRouterState] = useState<FormState>({
+    loading: false,
+    success: false,
+    error: '',
+  });
+
+  const isLabsAdmin = ['super_admin', 'tenant_admin', 'manager'].includes(profile?.role || '');
 
   // Load notification preferences on component mount
   useEffect(() => {
@@ -226,6 +236,29 @@ export default function SettingsPage() {
     if (user) {
       loadAccessibilitySettings();
     }
+  }, [user]);
+
+  useEffect(() => {
+    const loadOpenRouterStatus = async () => {
+      try {
+        const response = await fetch('/api/settings/labs-openrouter-key');
+        const data = await response.json();
+        if (response.ok) {
+          setOpenRouterHasKey(!!data.hasKey);
+        }
+      } catch (error) {
+        console.error('Failed to load OpenRouter key status:', error);
+      } finally {
+        setOpenRouterLoaded(true);
+      }
+    };
+
+    if (!user) {
+      setOpenRouterLoaded(true);
+      return;
+    }
+
+    loadOpenRouterStatus();
   }, [user]);
 
   // Re-sync accessibility settings when they change
@@ -651,6 +684,37 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSaveOpenRouterKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const apiKey = openRouterKey.trim();
+
+    if (!apiKey) {
+      setOpenRouterState({ loading: false, success: false, error: 'Please enter your OpenRouter API key' });
+      return;
+    }
+
+    setOpenRouterState({ loading: true, success: false, error: '' });
+    try {
+      const response = await fetch('/api/settings/labs-openrouter-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save API key');
+      }
+
+      setOpenRouterHasKey(true);
+      setOpenRouterKey('');
+      setOpenRouterState({ loading: false, success: true, error: '' });
+      setTimeout(() => setOpenRouterState((prev) => ({ ...prev, success: false })), 3000);
+    } catch (error: any) {
+      setOpenRouterState({ loading: false, success: false, error: error?.message || 'Failed to save API key' });
+    }
+  };
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
@@ -699,6 +763,12 @@ export default function SettingsPage() {
               <a href="#labs" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
                 <Beaker className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-left">Labs</span>
+              </a>
+
+              {/* Column 1 */}
+              <a href="#api-keys" className="flex items-center !justify-start space-x-2 p-2 rounded-lg text-muted-foreground hover:bg-accent w-full min-w-[44px] min-h-[44px]">
+                <Key className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-xs sm:text-sm text-left">API Keys</span>
               </a>
               
               {/* Column 1 */}
@@ -1610,6 +1680,57 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
+          {/* Labs API Keys */}
+          <Card id="api-keys" className="bg-card border-border scroll-mt-20">
+            <CardHeader>
+              <CardTitle className="flex items-center text-foreground">
+                <Key className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mr-2" />
+                Labs API Keys
+              </CardTitle>
+              <CardDescription>
+                Keys entered here are only used for Labs features like V5 Tests and are not used in other areas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {openRouterState.success && (
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md flex items-center">
+                  <Check className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                  <span className="text-sm text-green-800 dark:text-green-200">OpenRouter key saved successfully.</span>
+                </div>
+              )}
+
+              {openRouterState.error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
+                  <span className="text-sm text-red-800 dark:text-red-200">{openRouterState.error}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveOpenRouterKey} className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="openRouterKey">OpenRouter API Key</Label>
+                  <Input
+                    id="openRouterKey"
+                    type="password"
+                    value={openRouterKey}
+                    onChange={(e) => setOpenRouterKey(e.target.value)}
+                    placeholder="sk-or-..."
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-xs text-muted-foreground">
+                    {openRouterLoaded ? (openRouterHasKey ? 'A key is currently saved for your account.' : 'No key saved yet.') : 'Checking key status...'}
+                  </span>
+                  <Button type="submit" disabled={openRouterState.loading}>
+                    {openRouterState.loading ? 'Saving...' : 'Save Key'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
           {/* Labs Section */}
           <Card id="labs" className="bg-card border-border scroll-mt-20">
             <CardHeader>
@@ -1856,12 +1977,14 @@ export default function SettingsPage() {
                       >
                         Try V5 Treatment
                       </a>
-                      <a
-                        href="/dashboard/labs/v5-tests"
-                        className="flex-1 px-4 py-2 bg-indigo-600 text-white text-center rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm"
-                      >
-                        🧪 Run V5 Tests
-                      </a>
+                      {isLabsAdmin && (
+                        <a
+                          href="/dashboard/labs/v5-tests"
+                          className="flex-1 px-4 py-2 bg-indigo-600 text-white text-center rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm"
+                        >
+                          🧪 Run V5 Tests
+                        </a>
+                      )}
                     </div>
                   </div>
                 )}

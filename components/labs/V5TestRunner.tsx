@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { ALL_V5_FLOWS, FlowStep } from '@/lib/v5/test-flows';
 import StepChatPanel from '@/components/labs/StepChatPanel';
@@ -49,6 +49,11 @@ interface HistoricalRun {
   failed_steps: number;
   flagged_steps: number;
   unreviewed_steps: number;
+}
+
+interface OpenRouterModelOption {
+  id: string;
+  name: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,7 +133,43 @@ export default function V5TestRunner() {
   const [isSaving, setIsSaving] = useState(false);
   const [historicalRuns, setHistoricalRuns] = useState<HistoricalRun[]>([]);
   const [histLoading, setHistLoading] = useState(false);
+  const [models, setModels] = useState<OpenRouterModelOption[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState('openai/gpt-4o-mini');
   const startedAtRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const loadModels = async () => {
+      setModelsLoading(true);
+      setModelsError(null);
+      try {
+        const response = await fetch('/api/labs/openrouter-models', { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data?.error || 'Failed to load OpenRouter models');
+        }
+        const nextModels = Array.isArray(data?.models) ? data.models : [];
+        setModels(nextModels);
+
+        if (nextModels.length > 0) {
+          const hasCurrent = nextModels.some((model: OpenRouterModelOption) => model.id === selectedModel);
+          if (!hasCurrent) {
+            setSelectedModel(nextModels[0].id);
+          }
+        }
+      } catch (error: any) {
+        setModels([]);
+        setModelsError(error?.message || 'Failed to load OpenRouter models');
+      } finally {
+        setModelsLoading(false);
+      }
+    };
+
+    if (user?.id) {
+      loadModels();
+    }
+  }, [user?.id]);
 
   // ---------------------------------------------------------------------------
   // Flow execution
@@ -178,7 +219,7 @@ export default function V5TestRunner() {
       const startResp = await fetch('/api/treatment-v5', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start', sessionId, userId }),
+        body: JSON.stringify({ action: 'start', sessionId, userId, labsModel: selectedModel }),
       });
       const startJson = await startResp.json();
       const startTime = Date.now() - t0;
@@ -207,7 +248,7 @@ export default function V5TestRunner() {
         const resp = await fetch('/api/treatment-v5', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'continue', sessionId, userId, userInput: stepDef.input }),
+          body: JSON.stringify({ action: 'continue', sessionId, userId, userInput: stepDef.input, labsModel: selectedModel }),
         });
         const json = await resp.json();
         const elapsed = Date.now() - t1;
@@ -251,7 +292,7 @@ export default function V5TestRunner() {
     } catch (err: any) {
       updateFlowStatus(flowIndex, { status: 'error', error: err?.message ?? 'Unknown error', completedAt: new Date().toISOString() });
     }
-  }, [user, updateFlowStep, updateFlowStatus]);
+  }, [selectedModel, user, updateFlowStep, updateFlowStatus]);
 
   const runAllFlows = useCallback(async () => {
     if (status === 'running') return;
@@ -493,6 +534,71 @@ export default function V5TestRunner() {
           </div>
         </div>
 
+        <div className="mb-4 p-3 border border-border rounded-lg bg-secondary/10">
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground">OpenRouter model for this test run</p>
+              <p className="text-xs text-muted-foreground">
+                This model is only used for V5 Labs tests and does not change other app areas.
+              </p>
+            </div>
+            <div className="md:ml-auto flex items-center gap-2">
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                aria-label="OpenRouter model"
+                title="OpenRouter model"
+                className="px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground min-w-[260px]"
+                disabled={status === 'running' || modelsLoading || models.length === 0}
+              >
+                {models.length === 0 ? (
+                  <option value={selectedModel}>
+                    {modelsLoading ? 'Loading models...' : 'No models available'}
+                  </option>
+                ) : (
+                  models.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name}
+                    </option>
+                  ))
+                )}
+              </select>
+              <button
+                type="button"
+                onClick={async () => {
+                  setModelsLoading(true);
+                  setModelsError(null);
+                  try {
+                    const response = await fetch('/api/labs/openrouter-models', { cache: 'no-store' });
+                    const data = await response.json();
+                    if (!response.ok) {
+                      throw new Error(data?.error || 'Failed to refresh models');
+                    }
+                    const nextModels = Array.isArray(data?.models) ? data.models : [];
+                    setModels(nextModels);
+                    if (nextModels.length > 0 && !nextModels.some((model: OpenRouterModelOption) => model.id === selectedModel)) {
+                      setSelectedModel(nextModels[0].id);
+                    }
+                  } catch (error: any) {
+                    setModelsError(error?.message || 'Failed to refresh models');
+                  } finally {
+                    setModelsLoading(false);
+                  }
+                }}
+                className="px-3 py-2 text-sm border border-border rounded-lg hover:bg-secondary/30 transition-colors"
+                disabled={status === 'running' || modelsLoading}
+              >
+                {modelsLoading ? 'Refreshing...' : 'Refresh'}
+              </button>
+            </div>
+          </div>
+          {(modelsError || models.length === 0) && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+              {modelsError || 'Add your OpenRouter API key in Settings > API Keys to load available models.'}
+            </p>
+          )}
+        </div>
+
         {/* Run controls */}
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -506,6 +612,8 @@ export default function V5TestRunner() {
             <select
               value={selectedFlow}
               onChange={(e) => setSelectedFlow(e.target.value)}
+              aria-label="Select a single flow"
+              title="Select a single flow"
               disabled={status === 'running'}
               className="px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground disabled:opacity-50"
             >
@@ -695,6 +803,7 @@ export default function V5TestRunner() {
                                     actualStep: step.actualStep,
                                   }}
                                   savedStepId={step.savedStepId}
+                                  model={selectedModel}
                                   onCorrectionApplied={(correctedText) => {
                                     handleCorrectionApplied(fi, step.index, correctedText);
                                     if (step.savedStepId) {

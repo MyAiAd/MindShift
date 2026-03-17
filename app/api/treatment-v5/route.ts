@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TreatmentStateMachine } from '@/lib/v5/treatment-state-machine';
 import { ProcessingResult } from '@/lib/v5/types';
-import { AIAssistanceManager, AIAssistanceRequest, ValidationAssistanceRequest } from '@/lib/v2/ai-assistance';
+import { AIAssistanceManager, AIAssistanceRequest, AIModelOverrides, ValidationAssistanceRequest } from '@/lib/v2/ai-assistance';
 import { createServerClient } from '@/lib/database-server';
+import { getUserOpenRouterKey } from '@/lib/server/labs-openrouter-key';
 
 // Singleton instances for performance
 const treatmentMachine = new TreatmentStateMachine();
@@ -50,8 +51,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const { sessionId, userInput, userId, action, undoToStep } = requestBody;
-    console.log('Treatment V5 API: Extracted parameters:', { sessionId, userInput, userId, action, undoToStep });
+    const { sessionId, userInput, userId, action, undoToStep, labsModel } = requestBody;
+    console.log('Treatment V5 API: Extracted parameters:', { sessionId, userInput, userId, action, undoToStep, labsModel });
 
     // Validate required fields
     if (!sessionId || !userId) {
@@ -94,6 +95,36 @@ export async function POST(request: NextRequest) {
       // Continue execution - this handles cases where server-side auth isn't working
     }
 
+    let aiModelOverrides: AIModelOverrides | undefined;
+    if (labsModel) {
+      const supabase = createServerClient();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      if (user.id !== userId) {
+        return NextResponse.json({ error: 'User ID mismatch' }, { status: 403 });
+      }
+
+      const openRouterKey = await getUserOpenRouterKey(supabase, user.id);
+      if (!openRouterKey) {
+        return NextResponse.json(
+          { error: 'OpenRouter API key required. Add it in Settings > API Keys.' },
+          { status: 400 }
+        );
+      }
+
+      aiModelOverrides = {
+        apiKey: openRouterKey,
+        baseURL: 'https://openrouter.ai/api/v1',
+        model: labsModel,
+        defaultHeaders: {
+          'HTTP-Referer': 'https://mind-shift.click',
+          'X-Title': 'MindShifting Labs V5',
+        },
+      };
+    }
+
     console.log('Treatment V5 API: Processing action:', action);
     switch (action) {
       case 'start':
@@ -102,7 +133,7 @@ export async function POST(request: NextRequest) {
       case 'continue':
         // V4: Allow empty userInput for auto-advance steps (e.g., expectedResponseType: 'auto')
         // The state machine will handle step-specific validation based on the step's expectedResponseType
-        return await handleContinueSession(sessionId, userInput || '', userId);
+        return await handleContinueSession(sessionId, userInput || '', userId, aiModelOverrides);
 
       case 'resume':
         return await handleResumeSession(sessionId, userId);
@@ -203,7 +234,12 @@ async function handleStartSession(sessionId: string, userId: string) {
  * Continue existing treatment session with user input
  * Updated: 2025-01-09 - Fixed routing signals for goal/negative experience
  */
-async function handleContinueSession(sessionId: string, userInput: string, userId: string) {
+async function handleContinueSession(
+  sessionId: string,
+  userInput: string,
+  userId: string,
+  aiModelOverrides?: AIModelOverrides
+) {
   const startTime = performance.now();
 
   try {
@@ -339,7 +375,8 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
             result.scriptedResponse || '',
             textToProcess,
             result.nextStep || 'unknown',
-            sessionId
+            sessionId,
+            aiModelOverrides
           );
 
           if (linguisticResult.success) {
@@ -391,7 +428,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
 
     } else if (result.needsAIAssistance) {
       // AI assistance needed (only 5% of cases)
-      const aiResponse = await handleAIAssistance(result.needsAIAssistance, sessionId, userId);
+      const aiResponse = await handleAIAssistance(result.needsAIAssistance, sessionId, userId, aiModelOverrides);
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 
@@ -408,7 +445,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
     } else if (result.reason && result.reason.startsWith('AI_VALIDATION_NEEDED:')) {
       // NEW: Handle AI validation requests
       const validationType = result.reason.split(':')[1] as 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion' | 'incomplete_emotion_context';
-      const validationResponse = await handleAIValidation(userInput, validationType, sessionId, userId);
+      const validationResponse = await handleAIValidation(userInput, validationType, sessionId, userId, aiModelOverrides);
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 
@@ -580,7 +617,8 @@ async function handleResumeSession(sessionId: string, userId: string) {
 async function handleAIAssistance(
   needsAI: { trigger: any; context: string; userInput: string },
   sessionId: string,
-  userId: string
+  userId: string,
+  aiModelOverrides?: AIModelOverrides
 ) {
   try {
     // This would be populated with actual treatment context
@@ -606,7 +644,7 @@ async function handleAIAssistance(
       }
     };
 
-    const aiResponse = await aiAssistance.processAssistanceRequest(assistanceRequest);
+    const aiResponse = await aiAssistance.processAssistanceRequest(assistanceRequest, aiModelOverrides);
 
     // Log AI usage for monitoring
     console.log(`V4 AI assistance used for session ${sessionId}:`, {
@@ -635,7 +673,8 @@ async function handleAIValidation(
   userInput: string,
   validationType: 'problem_vs_goal' | 'problem_vs_question' | 'single_negative_experience' | 'goal_vs_problem' | 'goal_vs_question' | 'general_emotion' | 'incomplete_emotion_context',
   sessionId: string,
-  userId: string
+  userId: string,
+  aiModelOverrides?: AIModelOverrides
 ) {
   try {
     // Get current context from state machine
@@ -657,7 +696,7 @@ async function handleAIValidation(
       currentStep: currentStep
     };
 
-    const validationResult = await aiAssistance.processValidationAssistance(validationRequest);
+    const validationResult = await aiAssistance.processValidationAssistance(validationRequest, aiModelOverrides);
 
     if (validationResult.needsCorrection) {
       // For general emotion validation, store the emotion for follow-up questions

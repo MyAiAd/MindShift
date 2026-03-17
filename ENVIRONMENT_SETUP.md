@@ -23,6 +23,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 # OPTIONAL: OPENAI CONFIGURATION
 # ===============================================
 OPENAI_API_KEY=your_openai_api_key_here
+LABS_KEYS_ENCRYPTION_SECRET=your_random_32_plus_char_secret
 
 # ===============================================
 # OPTIONAL: STRIPE CONFIGURATION
@@ -112,6 +113,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 # Optional: OpenAI
 OPENAI_API_KEY=your_openai_api_key_here
+LABS_KEYS_ENCRYPTION_SECRET=your_random_32_plus_char_secret
 
 # Optional: Stripe
 STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
@@ -233,6 +235,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_prod_your_production_key
 ### **✅ Optional but Recommended:**
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` - For admin operations
 - [ ] `OPENAI_API_KEY` - For AI features
+- [ ] `LABS_KEYS_ENCRYPTION_SECRET` - For encrypting Labs OpenRouter user keys
 - [ ] `STRIPE_SECRET_KEY` - For payment processing
 - [ ] `STRIPE_WEBHOOK_SECRET` - For webhook verification
 - [ ] `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - For frontend payments

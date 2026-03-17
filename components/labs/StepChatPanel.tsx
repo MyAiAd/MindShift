@@ -18,6 +18,7 @@ interface Message {
 interface Props {
   stepContext: StepChatContext;
   savedStepId?: string;
+  model?: string;
   onCorrectionApplied: (correctedText: string) => void;
   onClose: () => void;
 }
@@ -43,7 +44,7 @@ function extractCorrection(text: string): string | null {
   }
 }
 
-export default function StepChatPanel({ stepContext, savedStepId, onCorrectionApplied, onClose }: Props) {
+export default function StepChatPanel({ stepContext, savedStepId, model, onCorrectionApplied, onClose }: Props) {
   const seedMessage = `I can see this step returned: "${stepContext.actualMessage.slice(0, 120)}${stepContext.actualMessage.length > 120 ? '…' : ''}". What should it say instead?`;
 
   const [messages, setMessages] = useState<Message[]>([
@@ -83,6 +84,7 @@ export default function StepChatPanel({ stepContext, savedStepId, onCorrectionAp
         body: JSON.stringify({
           stepContext,
           messages: newMessages,
+          model,
         }),
       });
 
