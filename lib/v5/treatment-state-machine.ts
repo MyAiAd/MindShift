@@ -992,14 +992,48 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     return 'check_if_still_problem';
   }
 
+  private isResolvedProblemResponse(rawResponse: string): boolean {
+    const response = (rawResponse || '').trim().toLowerCase();
+    if (!response) return false;
+
+    // Guard against negated positive phrases such as "not good" / "not better".
+    if (/\bnot\s+(good|better|fine|clear|resolved|gone)\b/.test(response)) {
+      return false;
+    }
+
+    const exactResolvedResponses = new Set([
+      'no',
+      'no problem',
+      'none',
+      'nothing',
+      'gone',
+      'resolved',
+      'clear',
+      'fine',
+      'good',
+      'better',
+      'all good'
+    ]);
+
+    if (exactResolvedResponses.has(response)) {
+      return true;
+    }
+
+    const resolvedPhrases = [
+      'no problem',
+      'problem is gone',
+      'it is gone',
+      'its gone',
+      'fully resolved',
+      'all good now',
+      'feels better now'
+    ];
+
+    return resolvedPhrases.some(phrase => response.includes(phrase));
+  }
+
   private handleBlockageStepE(lastResponse: string, context: TreatmentContext): string {
-    const stepENoProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
-    const stepESeemsResolved = stepENoProblemIndicators.some(indicator => lastResponse.includes(indicator)) ||
-      (lastResponse.trim() === 'no') ||
-      (lastResponse.trim() === 'not') ||
-      (lastResponse.trim() === 'no problem') ||
-      (lastResponse.startsWith('no ') && lastResponse.length < 15) ||
-      (lastResponse.startsWith('not ') && lastResponse.length < 15);
+    const stepESeemsResolved = this.isResolvedProblemResponse(lastResponse);
 
     if (stepESeemsResolved) {
       // Problem seems resolved - check if we're returning from a sub-problem or this is first completion
@@ -1047,15 +1081,8 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleBlockageCheckIfStillProblem(lastResponse: string, context: TreatmentContext): string {
     // Core cycling logic for Blockage Shifting
     // Check if the response indicates no problem left
-    const noProblemIndicators = ['no problem', 'nothing', 'none', 'gone', 'resolved', 'fine', 'good', 'better', 'clear'];
-    const seemsResolved = noProblemIndicators.some(indicator => lastResponse.includes(indicator)) ||
-      // Check for standalone "no" or "not" responses (not part of problem descriptions)
-      (lastResponse.trim() === 'no') ||
-      (lastResponse.trim() === 'not') ||
-      (lastResponse.trim() === 'no problem') ||
-      (lastResponse.startsWith('no ') && lastResponse.length < 15) || // Short "no" responses
-      (lastResponse.startsWith('not ') && lastResponse.length < 15);  // Short "not" responses
-    console.log(`🔍 BLOCKAGE_CHECK: lastResponse="${lastResponse}", seemsResolved=${seemsResolved}, noProblemIndicators matched:`, noProblemIndicators.filter(indicator => lastResponse.includes(indicator)));
+    const seemsResolved = this.isResolvedProblemResponse(lastResponse);
+    console.log(`🔍 BLOCKAGE_CHECK: lastResponse="${lastResponse}", seemsResolved=${seemsResolved}`);
 
     // Check if user is responding to dig deeper question with yes/no
     const isDigDeeperResponse = lastResponse.includes('yes') || lastResponse.includes('no');
