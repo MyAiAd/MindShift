@@ -1240,6 +1240,17 @@ export default function TreatmentSession({
     }
   };
 
+  // Capture undo state BEFORE adding a new user response.
+  // This guarantees undo returns to the last app instruction.
+  const createUndoHistoryEntry = (): StepHistoryEntry => ({
+    messages: [...messages],
+    currentStep,
+    userInput: '',
+    sessionStats,
+    timestamp: Date.now(),
+    version: 'v4'
+  });
+
   // V3: Enhanced message sending
   const sendMessage = async (content: string, isAutoAdvance = false) => {
     if ((!content.trim() && !isAutoAdvance) || isLoading) return;
@@ -1250,6 +1261,9 @@ export default function TreatmentSession({
       naturalVoice.stopSpeaking();
       resetSubtitles();
     }
+
+    // Save step history BEFORE applying the user's response to UI state
+    setStepHistory(prev => [...prev, createUndoHistoryEntry()]);
 
     const userMessage: TreatmentMessage = {
       id: `user-${Date.now()}`,
@@ -1264,17 +1278,6 @@ export default function TreatmentSession({
     setIsLoading(true);
     setHasError(false);
     setClickedButton(null);
-
-    // Save step history before processing
-    const historyEntry: StepHistoryEntry = {
-      messages: [...messages, userMessage],
-      currentStep,
-      userInput: content.trim(),
-      sessionStats,
-      timestamp: Date.now(),
-      version: 'v4'
-    };
-    setStepHistory(prev => [...prev, historyEntry]);
 
     try {
       console.log('Sending V4 message:', { content, currentStep });
@@ -1446,11 +1449,25 @@ export default function TreatmentSession({
       console.log('V4 Undo response:', data);
 
       if (data.success) {
+        // Prevent delayed text/audio from a pending message leaking into restored state
+        if (naturalVoice.isSpeaking) {
+          naturalVoice.stopSpeaking();
+          resetSubtitles();
+        }
+        setPendingMessage(null);
+
+        // Backward compatibility: trim trailing user messages from old history entries
+        // so undo always lands on the most recent app instruction.
+        const restoredMessages = [...lastEntry.messages];
+        while (restoredMessages.length > 0 && restoredMessages[restoredMessages.length - 1].isUser) {
+          restoredMessages.pop();
+        }
+
         // Restore previous state
-        setMessages(lastEntry.messages);
+        setMessages(restoredMessages);
         setCurrentStep(lastEntry.currentStep);
         setSessionStats(lastEntry.sessionStats);
-        setUserInput(lastEntry.userInput);
+        setUserInput('');
 
         // Remove the last entry from history
         setStepHistory(prev => prev.slice(0, -1));
@@ -1563,6 +1580,9 @@ export default function TreatmentSession({
     
     setClickedButton(workType);
 
+    // Save step history BEFORE applying the user's response to UI state
+    setStepHistory(prev => [...prev, createUndoHistoryEntry()]);
+
     // Display the full work type name in the UI
     const workTypeMap: { [key: string]: string } = {
       '1': 'PROBLEM',
@@ -1585,17 +1605,6 @@ export default function TreatmentSession({
     setUserInput('');
     setIsLoading(true);
     setHasError(false);
-
-    // Save step history
-    const historyEntry: StepHistoryEntry = {
-      messages: [...messages, userMessage],
-      currentStep,
-      userInput: workType,
-      sessionStats,
-      timestamp: Date.now(),
-      version: 'v4'
-    };
-    setStepHistory(prev => [...prev, historyEntry]);
 
     // Continue with backend call using the number
     fetch('/api/treatment-v5', {
@@ -1796,6 +1805,10 @@ export default function TreatmentSession({
     }
     
     setClickedButton(method);
+
+    // Save step history BEFORE applying the user's response to UI state
+    setStepHistory(prev => [...prev, createUndoHistoryEntry()]);
+
     // Send the method number to backend but display full name to user
     const methodMap: { [key: string]: string } = {
       'Problem Shifting': '1',
@@ -1820,17 +1833,6 @@ export default function TreatmentSession({
     setUserInput('');
     setIsLoading(true);
     setHasError(false);
-
-    // Save step history
-    const historyEntry: StepHistoryEntry = {
-      messages: [...messages, userMessage],
-      currentStep,
-      userInput: methodNumber,
-      sessionStats,
-      timestamp: Date.now(),
-      version: 'v4'
-    };
-    setStepHistory(prev => [...prev, historyEntry]);
 
     // Continue with backend call
     fetch('/api/treatment-v5', {

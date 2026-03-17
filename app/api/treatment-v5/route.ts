@@ -1204,7 +1204,37 @@ function getPhaseForStep(stepId: string): string {
     'session_complete': 'integration'
   };
 
-  return stepToPhaseMap[stepId] || 'introduction'; // Default fallback
+  const mappedPhase = stepToPhaseMap[stepId];
+  if (mappedPhase) {
+    return mappedPhase;
+  }
+
+  // Fallback: discover phase dynamically from state machine definitions.
+  // This protects undo when new steps are added but the static map is not updated yet.
+  const allPhases = [
+    'introduction',
+    'work_type_selection',
+    'method_selection',
+    'discovery',
+    'problem_shifting',
+    'identity_shifting',
+    'belief_shifting',
+    'blockage_shifting',
+    'reality_shifting',
+    'trauma_shifting',
+    'digging_deeper',
+    'integration'
+  ];
+
+  for (const phaseName of allPhases) {
+    const steps = treatmentMachine.getPhaseSteps(phaseName);
+    if (steps?.some((step) => step.id === stepId)) {
+      console.log(`Treatment V5 API: Dynamically resolved phase "${phaseName}" for step "${stepId}"`);
+      return phaseName;
+    }
+  }
+
+  return 'introduction'; // Default fallback
 }
 
 /**
@@ -1245,15 +1275,18 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       userResponses: context.userResponses ? Object.keys(context.userResponses) : []
     });
 
-    // Clear any user responses that were made AFTER the step we're undoing to
-    // This prevents the state machine from using stale responses
-    const stepsToKeep = new Set<string>();
+    // Determine the correct phase for the target step first.
+    // Undo must clear responses based on the target phase, not the current phase.
+    const targetPhase = getPhaseForStep(undoToStep);
+    console.log('Treatment V5 API: Target step belongs to phase:', targetPhase);
 
-    // Add all steps from the target phase up to and including the undoToStep
+    // Clear any user responses that were made AFTER the step we're undoing to.
+    // This prevents the state machine from using stale responses.
+    const stepsToKeep = new Set<string>();
     let phaseSteps;
     try {
-      phaseSteps = treatmentMachine.getPhaseSteps(context.currentPhase);
-      console.log('Treatment V5 API: Phase steps retrieved for phase:', context.currentPhase);
+      phaseSteps = treatmentMachine.getPhaseSteps(targetPhase);
+      console.log('Treatment V5 API: Phase steps retrieved for phase:', targetPhase);
     } catch (phaseError) {
       console.error('Treatment V5 API: Failed to get phase steps:', phaseError);
       // Clear all responses as a safe fallback
@@ -1296,10 +1329,6 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
         // Continue - this isn't critical for the undo operation
       }
     }
-
-    // Determine the correct phase for the target step
-    const targetPhase = getPhaseForStep(undoToStep);
-    console.log('Treatment V5 API: Target step belongs to phase:', targetPhase);
 
     // Update context to the target step with correct phase
     try {
