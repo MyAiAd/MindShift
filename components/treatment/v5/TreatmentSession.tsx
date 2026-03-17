@@ -2733,7 +2733,7 @@ export default function TreatmentSession({
               >
                 <span className="bg-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">1</span>
                 <span className="hidden sm:inline">Problem Shifting</span>
-                <span className="sm:hidden">Problem</span>
+                <span className="sm:hidden">Problem Shifting</span>
               </button>
 
               <button
@@ -2744,8 +2744,8 @@ export default function TreatmentSession({
                   }`}
               >
                 <span className="bg-green-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">2</span>
-                <span className="hidden sm:inline">Identity</span>
-                <span className="sm:hidden">Identity</span>
+                <span className="hidden sm:inline">Identity Shifting</span>
+                <span className="sm:hidden">Identity Shifting</span>
               </button>
 
               <button
@@ -2756,8 +2756,8 @@ export default function TreatmentSession({
                   }`}
               >
                 <span className="bg-purple-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">3</span>
-                <span className="hidden sm:inline">Belief</span>
-                <span className="sm:hidden">Belief</span>
+                <span className="hidden sm:inline">Belief Shifting</span>
+                <span className="sm:hidden">Belief Shifting</span>
               </button>
 
               <button
@@ -2768,8 +2768,8 @@ export default function TreatmentSession({
                   }`}
               >
                 <span className="bg-red-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">4</span>
-                <span className="hidden sm:inline">Blockage</span>
-                <span className="sm:hidden">Blockage</span>
+                <span className="hidden sm:inline">Blockage Shifting</span>
+                <span className="sm:hidden">Blockage Shifting</span>
               </button>
             </div>
           </div>
