@@ -4,10 +4,19 @@ import { ProcessingResult } from '@/lib/v5/types';
 import { AIAssistanceManager, AIAssistanceRequest, AIModelOverrides, ValidationAssistanceRequest } from '@/lib/v2/ai-assistance';
 import { createServerClient } from '@/lib/database-server';
 import { getUserOpenRouterKey } from '@/lib/server/labs-openrouter-key';
+import { ValidationHelpers } from '@/lib/v5/validation-helpers';
 
 // Singleton instances for performance
 const treatmentMachine = new TreatmentStateMachine();
 const aiAssistance = new AIAssistanceManager();
+const DEADLINE_AI_TIMEOUT_MS = 1800;
+
+type DeadlineDetectionAIResult = {
+  hasDeadline: boolean;
+  deadlineText?: string | null;
+  normalizedGoal?: string | null;
+  confidence?: number;
+};
 
 /**
  * Extract emotion from user input for storing context
@@ -32,6 +41,182 @@ function extractEmotionFromInput(userInput: string): string {
   // Find the emotion in the input
   const foundEmotion = emotions.find(emotion => input.includes(emotion));
   return foundEmotion || 'this way';
+}
+
+function safeParseDeadlineResult(raw: string): DeadlineDetectionAIResult | null {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return null;
+
+  const directJsonStart = trimmed.indexOf('{');
+  const directJsonEnd = trimmed.lastIndexOf('}');
+  if (directJsonStart === -1 || directJsonEnd === -1 || directJsonEnd <= directJsonStart) {
+    return null;
+  }
+
+  const candidate = trimmed.slice(directJsonStart, directJsonEnd + 1);
+  try {
+    const parsed = JSON.parse(candidate);
+    if (typeof parsed?.hasDeadline !== 'boolean') return null;
+    return {
+      hasDeadline: parsed.hasDeadline,
+      deadlineText: typeof parsed.deadlineText === 'string' ? parsed.deadlineText : null,
+      normalizedGoal: typeof parsed.normalizedGoal === 'string' ? parsed.normalizedGoal : null,
+      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function normalizeGoalDeadlineInput(rawInput: string): string {
+  let input = (rawInput || '').trim();
+  if (!input) return input;
+
+  // Normalize compact "1by"/"2by" style prefixes into a proper deadline preposition.
+  input = input.replace(/\b\d+\s*by\b/gi, 'by');
+
+  const monthMap: Record<string, string> = {
+    jan: 'january',
+    feb: 'february',
+    mar: 'march',
+    apr: 'april',
+    may: 'may',
+    jun: 'june',
+    jul: 'july',
+    aug: 'august',
+    sep: 'september',
+    sept: 'september',
+    oct: 'october',
+    nov: 'november',
+    dec: 'december',
+  };
+
+  // Expand month abbreviations to match local deadline detector patterns.
+  input = input.replace(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\b/gi, (abbr) => {
+    const key = abbr.toLowerCase();
+    return monthMap[key] || abbr;
+  });
+
+  return input.replace(/\s+/g, ' ').trim();
+}
+
+async function getDeadlineDetectionOverrides(
+  userId: string,
+  aiModelOverrides?: AIModelOverrides
+): Promise<AIModelOverrides | null> {
+  // Reuse explicit labs override when available.
+  if (aiModelOverrides?.apiKey) {
+    return aiModelOverrides;
+  }
+
+  try {
+    const supabase = createServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (!authError && user && user.id === userId) {
+      const openRouterKey = await getUserOpenRouterKey(supabase, user.id);
+      if (openRouterKey) {
+        return {
+          apiKey: openRouterKey,
+          baseURL: 'https://openrouter.ai/api/v1',
+          model: 'openai/gpt-4o-mini',
+          defaultHeaders: {
+            'HTTP-Referer': 'https://mind-shift.click',
+            'X-Title': 'MindShifting V5 Deadline Detection',
+          },
+        };
+      }
+    }
+
+    // Fallback: use shared server key if configured.
+    // This keeps deadline detection working even when per-user key/auth is unavailable.
+    {
+      const sharedApiKey = process.env.OPENAI_API_KEY;
+      if (!sharedApiKey) {
+        return null;
+      }
+
+      const isOpenRouterKey = sharedApiKey.startsWith('sk-or-');
+      return {
+        apiKey: sharedApiKey,
+        baseURL: isOpenRouterKey ? 'https://openrouter.ai/api/v1' : undefined,
+        model: isOpenRouterKey ? 'openai/gpt-4o-mini' : 'gpt-4o-mini',
+        defaultHeaders: isOpenRouterKey
+          ? {
+              'HTTP-Referer': 'https://mind-shift.click',
+              'X-Title': 'MindShifting V5 Deadline Detection',
+            }
+          : undefined,
+      };
+    }
+  } catch (error) {
+    console.warn('Treatment V5 API: Unable to resolve OpenRouter override for deadline detection:', error);
+    return null;
+  }
+}
+
+async function detectDeadlineWithOpenRouter(
+  userGoalInput: string,
+  modelOverrides: AIModelOverrides
+): Promise<DeadlineDetectionAIResult | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), DEADLINE_AI_TIMEOUT_MS);
+
+  try {
+    const baseURL = modelOverrides.baseURL || 'https://api.openai.com/v1';
+    const payload = {
+      model: modelOverrides.model || 'openai/gpt-4o-mini',
+      temperature: 0,
+      max_tokens: 120,
+      messages: [
+        {
+          role: 'system',
+          content: [
+            'You detect deadlines in user goals.',
+            'Return ONLY JSON with keys: hasDeadline (boolean), deadlineText (string|null), normalizedGoal (string|null), confidence (0..1).',
+            'Treat abbreviated months (jan,feb,mar,apr,may,jun,jul,aug,sep,sept,oct,nov,dec) as valid month deadlines.',
+            'Handle compact/attached variants like "1BYNOV2026" by interpreting intended spacing.',
+            'Set hasDeadline=false unless there is an explicit time/date reference.'
+          ].join(' ')
+        },
+        {
+          role: 'user',
+          content: `Goal: ${userGoalInput}`
+        }
+      ]
+    };
+
+    const response = await fetch(`${baseURL}/chat/completions`, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${modelOverrides.apiKey}`,
+        'Content-Type': 'application/json',
+        ...modelOverrides.defaultHeaders,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.warn('Treatment V5 API: Deadline AI request failed', {
+        status: response.status,
+        bodyPreview: errorBody.slice(0, 300)
+      });
+      return null;
+    }
+
+    const json = await response.json();
+    const content = json?.choices?.[0]?.message?.content;
+    if (typeof content !== 'string') {
+      return null;
+    }
+
+    return safeParseDeadlineResult(content);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -244,6 +429,43 @@ async function handleContinueSession(
 
   try {
     console.log('Treatment V5 API [v4-routing-fix]: Continuing session:', { sessionId, userId, userInput: userInput.substring(0, 50) + '...' });
+
+    // Optional micro-AI assist for deadline extraction in goal capture.
+    // Keep this cheap and non-blocking: only when local parser does not find a deadline.
+    const currentContext = treatmentMachine.getContextForUndo(sessionId);
+    const currentStep = currentContext?.currentStep;
+    const isGoalCaptureStep = currentStep === 'goal_description' || currentStep === 'reality_goal_capture';
+    if (isGoalCaptureStep && userInput.trim()) {
+      // Fast local normalization handles compact tokens like "1BY NOV 2026".
+      const normalizedInput = normalizeGoalDeadlineInput(userInput);
+      const localDeadline = ValidationHelpers.detectDeadlineInGoal(normalizedInput);
+      if (localDeadline.hasDeadline && normalizedInput !== userInput) {
+        userInput = normalizedInput;
+      }
+
+      if (!localDeadline.hasDeadline) {
+        const deadlineOverrides = await getDeadlineDetectionOverrides(userId, aiModelOverrides);
+        if (deadlineOverrides) {
+          const aiDeadline = await detectDeadlineWithOpenRouter(userInput, deadlineOverrides);
+          const aiConfidence = aiDeadline?.confidence ?? 0;
+          if (
+            aiDeadline?.hasDeadline &&
+            aiConfidence >= 0.8 &&
+            aiDeadline.normalizedGoal &&
+            aiDeadline.normalizedGoal.trim().length > 0
+          ) {
+            console.log('Treatment V5 API: Deadline AI normalized goal input', {
+              currentStep,
+              originalInput: userInput,
+              normalizedGoal: aiDeadline.normalizedGoal,
+              deadlineText: aiDeadline.deadlineText,
+              confidence: aiConfidence
+            });
+            userInput = aiDeadline.normalizedGoal.trim();
+          }
+        }
+      }
+    }
 
     console.log('Treatment V5 API: About to call processUserInput...');
     // Process with state machine first (95% of cases)
