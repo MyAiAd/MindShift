@@ -1,6 +1,15 @@
 import { TreatmentPhase } from '../types';
 import { TextProcessingUtils } from '../text-processing-utils';
 
+/** v2 parity: prefer intro answer, then metadata; strip "I believe (that)" prefix. v5 intro step = belief_shifting_intro_dynamic. */
+function resolveBeliefShiftingSessionBelief(context: any): string {
+  const rawBelief =
+    context.userResponses?.['belief_shifting_intro_dynamic'] ||
+    context.metadata?.currentBelief ||
+    'that belief';
+  return rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
+}
+
 export class BeliefShiftingPhase {
   static create(): TreatmentPhase {
     return {
@@ -59,14 +68,9 @@ export class BeliefShiftingPhase {
             console.log('🔍 BELIEF_DEBUG belief_step_a - userInput:', userInput);
             console.log('🔍 BELIEF_DEBUG belief_step_a - context.metadata before:', JSON.stringify(context.metadata, null, 2));
 
-            // v5 passes the triggering message into the next step (e.g. "yes" from 3F); belief must always
-            // come from the Step 2 answer (belief_shifting_intro_dynamic), not that transition input.
+            // v5 passes the triggering message into the next step (e.g. "yes" from 3F); belief always from intro (v2 parity).
             const isCyclingBack = (context.metadata.cycleCount || 0) > 0;
-            const rawBelief =
-              context.userResponses?.['belief_shifting_intro_dynamic'] ||
-              context.metadata.currentBelief ||
-              'that belief';
-            const belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
+            const belief = resolveBeliefShiftingSessionBelief(context);
 
             if (!isCyclingBack) {
               context.metadata.currentBelief = belief;
@@ -162,22 +166,10 @@ export class BeliefShiftingPhase {
           scriptedResponse: (userInput, context) => {
             console.log('🔍 BELIEF_DEBUG belief_step_f - context.metadata:', JSON.stringify(context.metadata, null, 2));
 
-            // SURGICAL FIX: Use appropriate belief based on iteration
-            const cycleCount = context.metadata.cycleCount || 0;
-            let belief;
-
-            if (cycleCount === 0) {
-              // First iteration: use original belief from belief_shifting_intro_dynamic
-              belief = context.userResponses?.['belief_shifting_intro_dynamic'] || context.metadata.currentBelief || 'that belief';
-            } else {
-              // Iterations 2+: use new belief from current cycle's belief_step_a
-              belief = context.userResponses?.['belief_step_a'] || context.metadata.currentBelief || 'that belief';
-            }
-
-            console.log('🔍 BELIEF_DEBUG belief_step_f - cycleCount:', cycleCount);
+            // v2 parity: always session belief from intro (+ strip), never userResponses['belief_step_a'] (that is 3A feeling text)
+            const belief = resolveBeliefShiftingSessionBelief(context);
             console.log('🔍 BELIEF_DEBUG belief_step_f - retrieved belief:', belief);
             console.log('🔍 BELIEF_DEBUG belief_step_f - belief_shifting_intro_dynamic:', context.userResponses?.['belief_shifting_intro_dynamic']);
-            console.log('🔍 BELIEF_DEBUG belief_step_f - belief_step_a:', context.userResponses?.['belief_step_a']);
 
             return `Do you still believe '${belief}'?`;
           },
@@ -194,7 +186,7 @@ export class BeliefShiftingPhase {
         {
           id: 'belief_check_1',
           scriptedResponse: (userInput, context) => {
-            const belief = context.metadata.currentBelief || 'that belief';
+            const belief = resolveBeliefShiftingSessionBelief(context);
             return `Does any part of you still believe '${belief}'?`;
           },
           expectedResponseType: 'yesno',
@@ -210,7 +202,7 @@ export class BeliefShiftingPhase {
         {
           id: 'belief_check_2',
           scriptedResponse: (userInput, context) => {
-            const belief = context.metadata.currentBelief || 'that belief';
+            const belief = resolveBeliefShiftingSessionBelief(context);
             return `Do you feel you may believe '${belief}' again in the future?`;
           },
           expectedResponseType: 'yesno',
@@ -226,7 +218,7 @@ export class BeliefShiftingPhase {
         {
           id: 'belief_check_3',
           scriptedResponse: (userInput, context) => {
-            const belief = context.metadata.currentBelief || 'that belief';
+            const belief = resolveBeliefShiftingSessionBelief(context);
             return `Is there any scenario in which you would still believe '${belief}'?`;
           },
           expectedResponseType: 'yesno',
@@ -243,7 +235,7 @@ export class BeliefShiftingPhase {
           id: 'belief_check_4',
           scriptedResponse: (userInput, context) => {
             console.log('🔍 BELIEF_DEBUG belief_check_4 - context.metadata:', JSON.stringify(context.metadata, null, 2));
-            const belief = context.metadata.currentBelief || 'that belief';
+            const belief = resolveBeliefShiftingSessionBelief(context);
             console.log('🔍 BELIEF_DEBUG belief_check_4 - retrieved belief:', belief);
 
             // Simple word rearrangement to preserve user's exact language while making it grammatically correct
