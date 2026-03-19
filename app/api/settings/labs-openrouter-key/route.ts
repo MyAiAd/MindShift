@@ -63,8 +63,27 @@ export async function POST(request: NextRequest) {
 
     await upsertUserOpenRouterKey(supabase, user.id, apiKey);
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('labs-openrouter-key POST error:', error);
+
+    const message = error?.message || '';
+    if (message.includes('LABS_KEYS_ENCRYPTION_SECRET')) {
+      return NextResponse.json(
+        {
+          error:
+            'Server configuration missing LABS_KEYS_ENCRYPTION_SECRET. Add it to your environment and restart the app.',
+        },
+        { status: 500 }
+      );
+    }
+
+    if (message.includes('relation') && message.includes('user_labs_openrouter_keys')) {
+      return NextResponse.json(
+        { error: 'Database table user_labs_openrouter_keys not found. Re-run migrations and deploy schema.' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({ error: 'Failed to save API key' }, { status: 500 });
   }
 }

@@ -111,7 +111,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleGoalConfirmation(lastResponse, context);
 
       case 'goal_certainty':
-        return 'reality_shifting_intro_static';
+        return this.handleGoalCertainty(lastResponse);
 
       // Problem Shifting routing
       case 'check_if_still_problem':
@@ -955,6 +955,20 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     }
   }
 
+  private handleGoalCertainty(lastResponse: string): string {
+    const certaintyMatch = lastResponse.match(/(\d+)%?/);
+    const certaintyPercentage = certaintyMatch ? parseInt(certaintyMatch[1], 10) : 0;
+
+    // Doctor-directed flow: if user is already at 100%, skip Step 2 and
+    // go directly to Step 3 (second checking question).
+    if (certaintyPercentage >= 100) {
+      return 'reality_certainty_check';
+    }
+
+    // Otherwise continue with the normal Step 2 A/B alternation flow.
+    return 'reality_shifting_intro_static';
+  }
+
   private handleCheckIfStillProblem(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('still')) {
       // Still a problem - cycle back to problem_shifting_intro but skip the introductory instructions
@@ -1398,13 +1412,11 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   }
 
   private handleRealityCycleB4(context: TreatmentContext): string {
-    const fromSecondCheck = context?.metadata?.fromSecondCheckingQuestion;
-    if (fromSecondCheck) {
-      context.metadata.fromSecondCheckingQuestion = false;
-      return 'reality_certainty_check';
-    } else {
-      return 'reality_checking_questions';
-    }
+    // Step-3 fallback must re-enter the main A/B loop, not jump back to checking.
+    // We intentionally keep fromSecondCheckingQuestion as-is so when the user
+    // eventually reaches B1 ("reality_why_not_possible") and answers "no reason",
+    // routing can return to the correct checking question.
+    return 'reality_column_a_restart';
   }
 
   private handleRealityCertaintyCheck(lastResponse: string, context: TreatmentContext): string {

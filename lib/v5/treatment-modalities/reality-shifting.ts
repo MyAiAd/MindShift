@@ -312,7 +312,7 @@ export class RealityShiftingPhase {
           validationRules: [
             { type: 'minLength', value: 2, errorMessage: 'Please tell me what that feels like.' }
           ],
-          nextStep: 'reality_checking_questions',
+          nextStep: 'reality_column_a_restart',
           aiTriggers: [
             { condition: 'userStuck', action: 'clarify' }
           ]
