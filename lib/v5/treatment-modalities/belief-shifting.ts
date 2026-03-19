@@ -56,15 +56,23 @@ export class BeliefShiftingPhase {
         {
           id: 'belief_step_a',
           scriptedResponse: (userInput, context) => {
-            // Store the belief for use throughout the process
             console.log('🔍 BELIEF_DEBUG belief_step_a - userInput:', userInput);
             console.log('🔍 BELIEF_DEBUG belief_step_a - context.metadata before:', JSON.stringify(context.metadata, null, 2));
 
-            // Always store the belief from userInput (whether first iteration or cycling back with new belief)
-            context.metadata.currentBelief = userInput || context.metadata.currentBelief || 'that belief';
+            // v5 passes the triggering message into the next step (e.g. "yes" from 3F); belief must always
+            // come from the Step 2 answer (belief_shifting_intro_dynamic), not that transition input.
+            const isCyclingBack = (context.metadata.cycleCount || 0) > 0;
+            const rawBelief =
+              context.userResponses?.['belief_shifting_intro_dynamic'] ||
+              context.metadata.currentBelief ||
+              'that belief';
+            const belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
+
+            if (!isCyclingBack) {
+              context.metadata.currentBelief = belief;
+            }
 
             console.log('🔍 BELIEF_DEBUG belief_step_a - context.metadata after:', JSON.stringify(context.metadata, null, 2));
-            const belief = context.metadata.currentBelief;
             return `Feel yourself believing '${belief}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
