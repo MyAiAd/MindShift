@@ -72,8 +72,23 @@ export class BeliefShiftingPhase {
               context.metadata.currentBelief = belief;
             }
 
+            // v2 parity: bridge phrases when cycling back from specific belief checks
+            const returnTo = context.metadata.returnToBeliefCheck;
+            let prefix = 'Feel yourself believing';
+            if (returnTo === 'belief_check_2') {
+              if (!context.metadata.usedBridgePhraseFor_belief_check_2) {
+                prefix = 'Put yourself in the future and feel yourself believing';
+                context.metadata.usedBridgePhraseFor_belief_check_2 = true;
+              }
+            } else if (returnTo === 'belief_check_3') {
+              if (!context.metadata.usedBridgePhraseFor_belief_check_3) {
+                prefix = 'Imagine that scenario and feel yourself believing';
+                context.metadata.usedBridgePhraseFor_belief_check_3 = true;
+              }
+            }
+
             console.log('🔍 BELIEF_DEBUG belief_step_a - context.metadata after:', JSON.stringify(context.metadata, null, 2));
-            return `Feel yourself believing '${belief}'... what does it feel like?`;
+            return `${prefix} '${belief}'... what does it feel like?`;
           },
           expectedResponseType: 'feeling',
           validationRules: [
