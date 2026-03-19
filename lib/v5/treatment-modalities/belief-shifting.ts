@@ -1,13 +1,27 @@
 import { TreatmentPhase } from '../types';
 import { TextProcessingUtils } from '../text-processing-utils';
 
-/** v2 parity: prefer intro answer, then metadata; strip "I believe (that)" prefix. v5 intro step = belief_shifting_intro_dynamic. */
+const WEAK_BELIEF_TOKEN = /^(yes|no|not|still|never|y|n)$/i;
+
+/** v2 parity: intro answer first (v5 dynamic, then legacy v2 key), then metadata; strip "I believe (that)". Never use yes/no as belief. */
 function resolveBeliefShiftingSessionBelief(context: any): string {
-  const rawBelief =
+  const introRaw =
     context.userResponses?.['belief_shifting_intro_dynamic'] ||
-    context.metadata?.currentBelief ||
-    'that belief';
-  return rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
+    context.userResponses?.['belief_shifting_intro'];
+  const rawBelief = introRaw || context.metadata?.currentBelief || 'that belief';
+  let belief = rawBelief.replace(/^i\s+believe\s+(that\s+)?/i, '').trim();
+
+  if (WEAK_BELIEF_TOKEN.test(belief)) {
+    const introOnly = (introRaw || '')
+      .replace(/^i\s+believe\s+(that\s+)?/i, '')
+      .trim();
+    if (introOnly.length >= 1 && !WEAK_BELIEF_TOKEN.test(introOnly)) {
+      belief = introOnly;
+    } else {
+      belief = 'that belief';
+    }
+  }
+  return belief;
 }
 
 export class BeliefShiftingPhase {

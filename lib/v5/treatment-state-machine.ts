@@ -1273,6 +1273,10 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         if (returnToCheck === 'belief_check_3') {
           context.metadata.usedBridgePhraseFor_belief_check_3 = false;
         }
+        if (returnToCheck === 'belief_check_4') {
+          context.metadata.usedBridgePhraseFor_belief_check_2 = false;
+          context.metadata.usedBridgePhraseFor_belief_check_3 = false;
+        }
         return returnToCheck;
       }
       // First time through - proceed to belief checking questions
