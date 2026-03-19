@@ -76,7 +76,8 @@ export class BeliefShiftingPhase {
               context.metadata.currentBelief = belief;
             }
 
-            // v2 parity: bridge phrases when cycling back from specific belief checks
+            // v2 parity: bridge phrases when cycling back from specific belief checks (first 3A after that
+            // check's yes only; flags reset in treatment-state-machine when re-approaching the check)
             const returnTo = context.metadata.returnToBeliefCheck;
             let prefix = 'Feel yourself believing';
             if (returnTo === 'belief_check_2') {

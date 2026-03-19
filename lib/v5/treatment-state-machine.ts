@@ -1266,7 +1266,13 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       // No longer believes - check if we need to return to a specific check question
       const returnToCheck = context.metadata.returnToBeliefCheck;
       if (returnToCheck) {
-        // Return to the check question we came from
+        // Re-approaching a check = new Step 3 "first cycle" for bridge phrases (v2 UX)
+        if (returnToCheck === 'belief_check_2') {
+          context.metadata.usedBridgePhraseFor_belief_check_2 = false;
+        }
+        if (returnToCheck === 'belief_check_3') {
+          context.metadata.usedBridgePhraseFor_belief_check_3 = false;
+        }
         return returnToCheck;
       }
       // First time through - proceed to belief checking questions
@@ -1287,6 +1293,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       if (lastResponse.includes('no') || lastResponse.includes('not')) {
         // No longer believes - clear return marker and proceed to next belief check
         context.metadata.returnToBeliefCheck = undefined;
+        context.metadata.usedBridgePhraseFor_belief_check_2 = false;
         return 'belief_check_2';
       }
       return 'belief_check_1'; // Stay on step if unclear response
@@ -1302,6 +1309,8 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
         // Won't believe it in future - clear return marker and proceed to scenario check
         context.metadata.returnToBeliefCheck = undefined;
+        context.metadata.usedBridgePhraseFor_belief_check_2 = false;
+        context.metadata.usedBridgePhraseFor_belief_check_3 = false;
         return 'belief_check_3';
       }
       return 'belief_check_2'; // Stay on step if unclear response
@@ -1316,6 +1325,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       if (lastResponse.includes('no') || lastResponse.includes('not')) {
         // Won't believe it in any scenario - clear return marker and proceed to next check
         context.metadata.returnToBeliefCheck = undefined;
+        context.metadata.usedBridgePhraseFor_belief_check_3 = false;
         return 'belief_check_4';
       }
       return 'belief_check_3'; // Stay on step if unclear response

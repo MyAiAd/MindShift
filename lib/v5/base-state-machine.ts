@@ -384,6 +384,8 @@ export abstract class BaseTreatmentStateMachine {
       'blockage_shifting_intro_dynamic',
       'identity_shifting_intro_dynamic',
       'belief_shifting_intro_dynamic',
+      // Bridge phrase vs standard prefix depends on returnToBeliefCheck + usedBridge* flags (not in cache hash)
+      'belief_step_a',
       'check_if_still_problem',  // "Feel the problem '${problem}'... does it still feel like a problem?"
       'digging_deeper_start',
       'problem_integration_awareness_1',
