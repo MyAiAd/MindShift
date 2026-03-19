@@ -386,6 +386,16 @@ export abstract class BaseTreatmentStateMachine {
       'belief_shifting_intro_dynamic',
       // Bridge phrase vs standard prefix depends on returnToBeliefCheck + usedBridge* flags (not in cache hash)
       'belief_step_a',
+      // v2 parity: identity checks + dissolve A–F embed session identity; dissolve A prefix depends on
+      // returnToIdentityCheck + identityBridgePhraseUsed (not in cache hash)
+      'identity_future_check',
+      'identity_scenario_check',
+      'identity_dissolve_step_a',
+      'identity_dissolve_step_b',
+      'identity_dissolve_step_c',
+      'identity_dissolve_step_d',
+      'identity_dissolve_step_e',
+      'identity_dissolve_step_f',
       'check_if_still_problem',  // "Feel the problem '${problem}'... does it still feel like a problem?"
       'digging_deeper_start',
       'problem_integration_awareness_1',
