@@ -1711,16 +1711,16 @@ export default function TreatmentSession({
 
   // V3: Helper function to determine if we should show method selection buttons
   const shouldShowMethodSelection = () => {
-    // Check if we're in the method selection step
-    const isMethodSelectionStep = currentStep === 'choose_method';
+    // choose_method (method_selection phase) + digging_method_selection (digging_deeper phase)
+    const isMethodSelectionStep =
+      currentStep === 'choose_method' || currentStep === 'digging_method_selection';
 
     if (!isMethodSelectionStep) return false;
 
     // Don't show if we're loading or session isn't active
     if (isLoading || !isSessionActive) return false;
 
-    // Show buttons for choose_method step
-    console.log('✅ METHOD BUTTONS: Showing buttons for choose_method step');
+    console.log(`✅ METHOD BUTTONS: Showing buttons for ${currentStep} step`);
     return true;
   };
 

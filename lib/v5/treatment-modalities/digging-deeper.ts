@@ -53,7 +53,7 @@ export class DiggingDeeperPhase {
               console.log(`🔍 RESTATE_PROBLEM_FUTURE: Cleared currentDiggingProblem to allow re-promotion`);
             }
             console.log('🔍 BELIEF_DEBUG restate_problem_future - context.metadata after:', JSON.stringify(context.metadata, null, 2));
-            return "How would you state the problem in a few words?";
+            return "How would you state the problem now in a few words?";
           },
           expectedResponseType: 'problem',
           validationRules: [
@@ -73,25 +73,45 @@ export class DiggingDeeperPhase {
             console.log('🔍 BELIEF_DEBUG digging_method_selection - context.metadata before:', JSON.stringify(context.metadata, null, 2));
             console.log('🔍 BELIEF_DEBUG digging_method_selection - context.problemStatement before:', context.problemStatement);
             
-            // If this is the first time showing this step (coming from restate_problem_future), 
-            // store the problem and show the selection message
+            // v2 parity: promote restate_problem_future into currentDiggingProblem without clobbering trauma return steps.
+            const alreadySetup =
+              context.metadata.currentDiggingProblem &&
+              context.metadata.returnToDiggingStep &&
+              context.metadata.returnToDiggingStep !== 'future_problem_check';
+            const newProblemFromRestate = context.userResponses?.['restate_problem_future'];
+            if (newProblemFromRestate && newProblemFromRestate.trim() && !alreadySetup) {
+              const newProblem = newProblemFromRestate.trim();
+              context.metadata.currentDiggingProblem = newProblem;
+              context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
+              if (
+                !context.metadata.returnToDiggingStep ||
+                context.metadata.returnToDiggingStep === 'future_problem_check'
+              ) {
+                context.metadata.returnToDiggingStep = 'future_problem_check';
+              }
+              context.problemStatement = newProblem;
+              context.metadata.problemStatement = newProblem;
+              context.metadata.workType = 'problem';
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Stored new problem from restate_problem_future: "${newProblem}"`);
+              console.log('🔍 BELIEF_DEBUG digging_method_selection - context.metadata after storing:', JSON.stringify(context.metadata, null, 2));
+              return "We need to clear this problem. Which method would you like to use?";
+            }
+
+            // Legacy path: first input on this step without userResponses (should be rare in v5)
             if (!context.metadata.currentDiggingProblem && input && input !== 'METHOD_SELECTION_NEEDED') {
-              // Use the new problem statement that was stored in restate_problem_future step
               const newProblem = context.metadata.newDiggingProblem || input;
               context.metadata.currentDiggingProblem = newProblem;
               context.metadata.problemStatement = newProblem;
               context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
-              context.metadata.returnToDiggingStep = 'scenario_check_1'; // Where to return after clearing
+              if (
+                !context.metadata.returnToDiggingStep ||
+                context.metadata.returnToDiggingStep === 'future_problem_check'
+              ) {
+                context.metadata.returnToDiggingStep = 'future_problem_check';
+              }
               context.problemStatement = newProblem;
-              
-              // CRITICAL: Set work type to 'problem' to ensure proper method selection
               context.metadata.workType = 'problem';
-              console.log(`🔍 DIGGING_METHOD_SELECTION: Stored new problem: "${newProblem}"`);
-              console.log(`🔍 DIGGING_METHOD_SELECTION: Using newDiggingProblem: "${context.metadata.newDiggingProblem}"`);
-              console.log(`🔍 DIGGING_METHOD_SELECTION: Set workType to 'problem' for method selection`);
-              console.log('🔍 BELIEF_DEBUG digging_method_selection - context.metadata after storing:', JSON.stringify(context.metadata, null, 2));
-              console.log('🔍 BELIEF_DEBUG digging_method_selection - context.problemStatement after storing:', context.problemStatement);
-              
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Stored new problem (legacy): "${newProblem}"`);
               return "We need to clear this problem. Which method would you like to use?";
             }
             
@@ -100,29 +120,33 @@ export class DiggingDeeperPhase {
               return "We need to clear this problem. Which method would you like to use?";
             }
             
-            // Validate input before proceeding
-            const validInputs = ['1', '2', '3', '4', 'problem shifting', 'identity shifting', 'belief shifting', 'blockage shifting'];
-            if (!validInputs.some(valid => input.toLowerCase().includes(valid.toLowerCase()))) {
+            // Validate: full method phrases or a lone digit 1–4 only (avoid "problem 3" matching "3")
+            const normalized = input.toLowerCase().trim();
+            const numericOnly = /^[1-4]$/.test(normalized);
+            const hasMethodPhrase = ['problem shifting', 'identity shifting', 'belief shifting', 'blockage shifting'].some(
+              (p) => normalized.includes(p)
+            );
+            if (!numericOnly && !hasMethodPhrase) {
               return "Please choose a valid option (1-4) or method name.";
             }
-            
+
             // Handle method selection - return routing signals instead of direct phase manipulation
-            if (input.toLowerCase().includes('problem shifting') || input === '1') {
+            if (normalized.includes('problem shifting') || normalized === '1') {
               context.metadata.selectedMethod = 'problem_shifting';
               context.metadata.skipIntroInstructions = true; // Skip lengthy instructions for digging deeper
               console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Problem Shifting for digging deeper`);
               return "PROBLEM_SHIFTING_SELECTED";
-            } else if (input.toLowerCase().includes('identity shifting') || input === '2') {
+            } else if (normalized.includes('identity shifting') || normalized === '2') {
               context.metadata.selectedMethod = 'identity_shifting';
               context.metadata.skipIntroInstructions = true; // Skip lengthy instructions for digging deeper
               console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Identity Shifting for digging deeper`);
               return "IDENTITY_SHIFTING_SELECTED";
-            } else if (input.toLowerCase().includes('belief shifting') || input === '3') {
+            } else if (normalized.includes('belief shifting') || normalized === '3') {
               context.metadata.selectedMethod = 'belief_shifting';
               context.metadata.skipIntroInstructions = true; // Skip lengthy instructions for digging deeper
               console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Belief Shifting for digging deeper`);
               return "BELIEF_SHIFTING_SELECTED";
-            } else if (input.toLowerCase().includes('blockage shifting') || input === '4') {
+            } else if (normalized.includes('blockage shifting') || normalized === '4') {
               context.metadata.selectedMethod = 'blockage_shifting';
               context.metadata.skipIntroInstructions = true; // Skip lengthy instructions for digging deeper
               console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Blockage Shifting for digging deeper`);

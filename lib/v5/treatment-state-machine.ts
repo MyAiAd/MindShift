@@ -39,6 +39,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     context.metadata.currentDiggingProblem = problem;
   }
 
+  /** v2 parity: after a nested method completes, resume generic vs trauma Step 7 questions. */
+  private nextDiggingStepAfterSubMethodComplete(context: TreatmentContext): string {
+    if (context.metadata?.isTraumaDiggingDeeperFlow) {
+      return 'trauma_dig_deeper';
+    }
+    return 'future_problem_check';
+  }
+
   /**
    * Determine next step logic - orchestrates the complex routing between treatment modalities
    */
@@ -212,11 +220,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       case 'trauma_future_scenario_check':
         return this.handleTraumaFutureScenarioCheck(lastResponse, context);
 
+      case 'trauma_dissolve_step_e':
+        return this.handleTraumaDissolveStepE(context);
+
+      case 'trauma_future_step_f': {
+        const traumaFutureFNext = this.handleTraumaFutureStepF(lastResponse, context);
+        return traumaFutureFNext ?? currentStep.nextStep ?? null;
+      }
+
       case 'trauma_experience_check':
         return this.handleTraumaExperienceCheck(lastResponse, context);
 
       case 'trauma_dig_deeper':
-        return 'trauma_dig_deeper_2';
+        return this.handleTraumaDigDeeper(lastResponse, context);
 
       case 'trauma_dig_deeper_2':
         return this.handleTraumaDigDeeper2(lastResponse, context);
@@ -713,22 +729,29 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     if (context.metadata.isDiggingDeeperMethodSelection) {
       console.log(`🔍 CHOOSE_METHOD_DIGGING: Processing digging deeper method selection`);
 
-      // Clear the flag
-      context.metadata.isDiggingDeeperMethodSelection = false;
-
       // Delegate to digging_method_selection logic
-      const input = lastResponse.toLowerCase();
+      const normalizedDig = lastResponse.trim().toLowerCase();
       let diggingSelectedMethod = '';
 
-      if (input.includes('problem shifting') || input === '1') {
+      if (normalizedDig.includes('problem shifting') || normalizedDig === '1') {
         diggingSelectedMethod = 'problem_shifting';
-      } else if (input.includes('identity shifting') || input === '2') {
+      } else if (normalizedDig.includes('identity shifting') || normalizedDig === '2') {
         diggingSelectedMethod = 'identity_shifting';
-      } else if (input.includes('belief shifting') || input === '3') {
+      } else if (normalizedDig.includes('belief shifting') || normalizedDig === '3') {
         diggingSelectedMethod = 'belief_shifting';
-      } else if (input.includes('blockage shifting') || input === '4') {
+      } else if (normalizedDig.includes('blockage shifting') || normalizedDig === '4') {
         diggingSelectedMethod = 'blockage_shifting';
       }
+
+      if (!diggingSelectedMethod) {
+        context.metadata.isDiggingDeeperMethodSelection = true;
+        context.currentPhase = 'method_selection';
+        console.log(`🔍 CHOOSE_METHOD_DIGGING: No method match, staying on choose_method`);
+        return 'choose_method';
+      }
+
+      // Clear the flag only after a valid method choice
+      context.metadata.isDiggingDeeperMethodSelection = false;
 
       // Update problem statement to use the new problem from digging deeper flow.
       // PARITY: Prefer currentDiggingProblem (set by previous step) over userResponses (may contain stale data).
@@ -990,12 +1013,15 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         console.log(`🔍 CHECK_IF_STILL_PROBLEM: Returning to ${returnStep}`);
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+        if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.metadata.isTraumaDiggingDeeperFlow = true;
+        }
         return returnStep;
       } else if (alreadyGrantedPermission) {
-        // Permission already granted - skip permission, go to future_problem_check to continue digging
-        console.log(`🔍 CHECK_IF_STILL_PROBLEM: Permission granted, going to future_problem_check`);
+        const next = this.nextDiggingStepAfterSubMethodComplete(context);
+        console.log(`🔍 CHECK_IF_STILL_PROBLEM: Permission granted, going to ${next}`);
         context.currentPhase = 'digging_deeper';
-        return 'future_problem_check';
+        return next;
       } else {
         // First time - ask permission
         console.log(`🔍 CHECK_IF_STILL_PROBLEM: First time, asking permission`);
@@ -1060,14 +1086,22 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         console.log(`🔍 BLOCKAGE_STEP_E: Permission already granted, returning to ${returnStep}`);
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+        if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.metadata.isTraumaDiggingDeeperFlow = true;
+        }
         return returnStep;
       } else if (alreadyGrantedPermission) {
         // Permission already granted - skip permission, go to appropriate digging question
         console.log(`🔍 BLOCKAGE_STEP_E: Permission already granted, checking for trauma digging context`);
         context.currentPhase = 'digging_deeper';
-        // Check if we're in trauma shifting context
-        if (context.metadata?.selectedMethod === 'trauma_shifting' || context.metadata?.diggingType === 'trauma') {
+        // Trauma Step 7 uses trauma_dig_deeper; nested clears use selectedMethod blockage/problem/etc.
+        if (
+          context.metadata?.selectedMethod === 'trauma_shifting' ||
+          context.metadata?.diggingType === 'trauma' ||
+          context.metadata?.isTraumaDiggingDeeperFlow
+        ) {
           console.log(`🔍 BLOCKAGE_STEP_E: Returning to trauma_dig_deeper`);
+          context.metadata.isTraumaDiggingDeeperFlow = true;
           return 'trauma_dig_deeper';
         } else {
           console.log(`🔍 BLOCKAGE_STEP_E: Returning to future_problem_check`);
@@ -1112,20 +1146,23 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       const alreadyGrantedPermission = this.hasDiggingDeeperPermission(context);
       const returnStep = context.metadata?.returnToDiggingStep;
 
-      if (alreadyGrantedPermission && returnStep) {
-        // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
-        console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Permission already granted, returning to ${returnStep}`);
-        context.currentPhase = 'digging_deeper';
-        context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
-        return returnStep;
-      } else if (alreadyGrantedPermission) {
-        // Permission already granted - skip permission, go to future_problem_check to continue digging
-        console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Permission already granted, going to future_problem_check`);
-        context.currentPhase = 'digging_deeper';
-        return 'future_problem_check';
-      } else {
-        // First time - ask permission
-        console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: First time, asking permission`);
+          if (alreadyGrantedPermission && returnStep) {
+            // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
+            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Permission already granted, returning to ${returnStep}`);
+            context.currentPhase = 'digging_deeper';
+            context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+            if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+              context.metadata.isTraumaDiggingDeeperFlow = true;
+            }
+            return returnStep;
+          } else if (alreadyGrantedPermission) {
+            const next = this.nextDiggingStepAfterSubMethodComplete(context);
+            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Permission already granted, going to ${next}`);
+            context.currentPhase = 'digging_deeper';
+            return next;
+          } else {
+            // First time - ask permission
+            console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: First time, asking permission`);
         context.currentPhase = 'digging_deeper';
         return 'digging_deeper_start';
       }
@@ -1254,11 +1291,13 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+        if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.metadata.isTraumaDiggingDeeperFlow = true;
+        }
         return returnStep;
       } else if (alreadyGrantedPermission) {
-        // Permission already granted - skip permission, go to future_problem_check to continue digging
         context.currentPhase = 'digging_deeper';
-        return 'future_problem_check';
+        return this.nextDiggingStepAfterSubMethodComplete(context);
       } else {
         // First time - ask permission
         context.currentPhase = 'digging_deeper';
@@ -1391,11 +1430,13 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+        if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.metadata.isTraumaDiggingDeeperFlow = true;
+        }
         return returnStep;
       } else if (alreadyGrantedPermission) {
-        // Permission already granted - skip permission, go to future_problem_check to continue digging
         context.currentPhase = 'digging_deeper';
-        return 'future_problem_check';
+        return this.nextDiggingStepAfterSubMethodComplete(context);
       } else {
         // First time - ask permission
         context.currentPhase = 'digging_deeper';
@@ -1529,9 +1570,28 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleTraumaIdentityCheck(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('still')) {
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+
+      delete context.userResponses['trauma_dissolve_step_a'];
+      delete context.userResponses['trauma_dissolve_step_b'];
+      delete context.userResponses['trauma_dissolve_step_c'];
+      delete context.userResponses['trauma_dissolve_step_d'];
+      delete context.userResponses['trauma_dissolve_step_e'];
+      console.log(`🔄 TRAUMA_CYCLE: Starting iteration ${context.metadata.cycleCount}, cleared previous dissolve responses`);
+
+      this.saveContextToDatabase(context).catch(error =>
+        console.error('Failed to save cleared trauma responses to database:', error)
+      );
+
+      context.metadata.returnToTraumaCheck = 'trauma_identity_check';
       return 'trauma_dissolve_step_a';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
+      const resumeStep5 = context.metadata.traumaResumeStep5AfterIdentityNo as string | undefined;
+      if (resumeStep5 === 'trauma_future_scenario_check') {
+        delete context.metadata.traumaResumeStep5AfterIdentityNo;
+        console.log(`🔍 TRAUMA_IDENTITY_CHECK: NO — resuming Step 5 at scenario question`);
+        return 'trauma_future_scenario_check';
+      }
       return 'trauma_future_identity_check';
     }
     return 'trauma_future_identity_check';
@@ -1539,8 +1599,8 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
 
   private handleTraumaFutureIdentityCheck(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
-      context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-      return 'trauma_dissolve_step_c';
+      console.log(`🔍 TRAUMA_FUTURE_IDENTITY_CHECK: User said YES, going to trauma_future_projection`);
+      return 'trauma_future_projection';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
       return 'trauma_future_scenario_check';
@@ -1551,12 +1611,80 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleTraumaFutureScenarioCheck(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
-      return 'trauma_dissolve_step_c';
+
+      delete context.userResponses['trauma_dissolve_step_a'];
+      delete context.userResponses['trauma_dissolve_step_b'];
+      delete context.userResponses['trauma_dissolve_step_c'];
+      delete context.userResponses['trauma_dissolve_step_d'];
+      delete context.userResponses['trauma_dissolve_step_e'];
+      console.log(`🔄 TRAUMA_SCENARIO_CYCLE: Starting iteration ${context.metadata.cycleCount}, cleared previous dissolve responses`);
+
+      this.saveContextToDatabase(context).catch(error =>
+        console.error('Failed to save cleared trauma responses to database:', error)
+      );
+
+      context.metadata.returnToTraumaCheck = 'trauma_future_scenario_check';
+      // After Step 4F (no), return to this Step 5 question — not the future question (flowchart / doctor script).
+      context.metadata.traumaResumeStep5AfterIdentityNo = 'trauma_future_scenario_check';
+      return 'trauma_dissolve_step_a';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
+      delete context.metadata.traumaResumeStep5AfterIdentityNo;
       return 'trauma_experience_check';
     }
     return 'trauma_experience_check';
+  }
+
+  /**
+   * After dissolve A–E: identity_check (Step 4F), except when returning from identity-check loop (v2).
+   * Scenario-triggered passes still go to 4F so we can resume the correct Step 5 question after "no".
+   */
+  private handleTraumaDissolveStepE(context: TreatmentContext): string {
+    const returnToTraumaCheck = context.metadata.returnToTraumaCheck as string | undefined;
+    if (returnToTraumaCheck === 'trauma_future_scenario_check') {
+      console.log(`🔍 TRAUMA_DISSOLVE_STEP_E: Scenario branch — continuing to trauma_identity_check (Step 4F)`);
+      context.metadata.returnToTraumaCheck = undefined;
+      return 'trauma_identity_check';
+    }
+    if (returnToTraumaCheck) {
+      console.log(`🔍 TRAUMA_DISSOLVE_STEP_E: Returning to ${returnToTraumaCheck}`);
+      context.metadata.returnToTraumaCheck = undefined;
+      return returnToTraumaCheck;
+    }
+    return 'trauma_identity_check';
+  }
+
+  /**
+   * After future-projection A→C→D→E: "Can you still feel yourself being (identity)?"
+   * Parity with v2: YES → normal dissolve loop from step A; NO → second future check (scenario).
+   */
+  private handleTraumaFutureStepF(lastResponse: string, context: TreatmentContext): string | null {
+    if (lastResponse.includes('yes') || lastResponse.includes('still')) {
+      context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+
+      delete context.userResponses['trauma_dissolve_step_a'];
+      delete context.userResponses['trauma_dissolve_step_b'];
+      delete context.userResponses['trauma_dissolve_step_c'];
+      delete context.userResponses['trauma_dissolve_step_d'];
+      delete context.userResponses['trauma_dissolve_step_e'];
+      delete context.userResponses['trauma_future_projection'];
+      delete context.userResponses['trauma_future_step_c'];
+      delete context.userResponses['trauma_future_step_d'];
+      delete context.userResponses['trauma_future_step_e'];
+      delete context.userResponses['trauma_future_step_f'];
+      console.log(`🔄 TRAUMA_FUTURE_F_CYCLE: Still feeling identity in future, starting iteration ${context.metadata.cycleCount}, cleared previous responses`);
+
+      this.saveContextToDatabase(context).catch(error =>
+        console.error('Failed to save cleared trauma future responses to database:', error)
+      );
+
+      return 'trauma_dissolve_step_a';
+    }
+    if (lastResponse.includes('no') || lastResponse.includes('not')) {
+      console.log(`🔍 TRAUMA_FUTURE_F: User said NO, proceeding to scenario check`);
+      return 'trauma_future_scenario_check';
+    }
+    return null;
   }
 
   private handleTraumaExperienceCheck(lastResponse: string, context: TreatmentContext): string {
@@ -1564,8 +1692,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       // Still a problem - repeat Steps 3-5 (skip intro, they already answered that)
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
 
+      delete context.metadata.traumaResumeStep5AfterIdentityNo;
+      delete context.metadata.returnToTraumaCheck;
+
       // Clear previous iteration responses to prevent cached identity/feelings
       delete context.userResponses['trauma_identity_step_static'];
+      delete context.userResponses['trauma_identity_step_dynamic'];
+      delete context.metadata.currentTraumaIdentity;
+      delete context.metadata.originalTraumaIdentity;
       delete context.userResponses['trauma_dissolve_step_a'];
       delete context.userResponses['trauma_dissolve_step_b'];
       delete context.userResponses['trauma_dissolve_step_c'];
@@ -1578,7 +1712,8 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         console.error('Failed to save cleared trauma responses to database:', error)
       );
 
-      return 'trauma_identity_step_static';
+      // cycleCount > 0: skip close-eyes static; user already held frozen moment at trauma_experience_check (v2 parity)
+      return 'trauma_identity_step_dynamic';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
       // No longer a problem - check if we've already asked permission to dig deeper
@@ -1589,10 +1724,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         // Permission already granted and we're returning from a sub-problem - skip permission, continue digging
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
+        if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.metadata.isTraumaDiggingDeeperFlow = true;
+        }
         return returnStep;
       } else if (alreadyGrantedPermission) {
         // Permission already granted but first trauma completion - skip permission, start digging questions
         context.currentPhase = 'digging_deeper';
+        context.metadata.isTraumaDiggingDeeperFlow = true;
         return 'trauma_dig_deeper';
       } else {
         // First time - ask permission, then route to trauma-specific digging questions
@@ -1604,21 +1743,44 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     return 'trauma_experience_check';
   }
 
+  /** Trauma Step 7 Q1 — v2 parity: yes → restate + clear; no → second digging question. */
+  private handleTraumaDigDeeper(lastResponse: string, context: TreatmentContext): string {
+    if (lastResponse.includes('yes') || lastResponse.includes('might') || lastResponse.includes('could')) {
+      context.metadata.workType = 'problem';
+      context.metadata.selectedMethod = undefined;
+      context.currentPhase = 'digging_deeper';
+      context.metadata.returnToDiggingStep = 'trauma_dig_deeper';
+      context.metadata.isTraumaDiggingDeeperFlow = true;
+      return 'restate_problem_future';
+    }
+    if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
+      return 'trauma_dig_deeper_2';
+    }
+    return 'trauma_dig_deeper';
+  }
+
   private handleTraumaDigDeeper2(lastResponse: string, context: TreatmentContext): string {
     if (lastResponse.includes('yes')) {
-      context.currentPhase = 'discovery';
-      return 'restate_selected_problem';
+      context.metadata.workType = 'problem';
+      context.metadata.selectedMethod = undefined;
+      context.currentPhase = 'digging_deeper';
+      context.metadata.returnToDiggingStep = 'trauma_dig_deeper_2';
+      context.metadata.isTraumaDiggingDeeperFlow = true;
+      return 'restate_problem_future';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
       const returnStep = context.metadata?.returnToDiggingStep;
       if (returnStep) {
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined;
+        if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.metadata.isTraumaDiggingDeeperFlow = true;
+        }
         return returnStep;
-      } else {
-        context.currentPhase = 'integration';
-        return 'integration_start';
       }
+      context.metadata.isTraumaDiggingDeeperFlow = false;
+      context.currentPhase = 'integration';
+      return 'integration_start';
     }
     return 'trauma_dig_deeper_2';
   }
@@ -1627,9 +1789,24 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     context.currentPhase = 'digging_deeper';
 
     if (lastResponse.includes('yes')) {
+      const returnStep = context.metadata?.returnToDiggingStep;
+      if (returnStep) {
+        context.metadata.returnToDiggingStep = undefined;
+        if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.metadata.isTraumaDiggingDeeperFlow = true;
+        }
+        return returnStep;
+      }
+      if (context.metadata?.diggingType === 'trauma') {
+        context.metadata.diggingType = undefined;
+        context.metadata.isTraumaDiggingDeeperFlow = true;
+        return 'trauma_dig_deeper';
+      }
+      context.metadata.isTraumaDiggingDeeperFlow = false;
       return 'future_problem_check';
     }
     if (lastResponse.includes('no')) {
+      context.metadata.isTraumaDiggingDeeperFlow = false;
       context.currentPhase = 'integration';
       return 'integration_start';
     }
@@ -1674,17 +1851,24 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleDiggingMethodSelection(lastResponse: string, context: TreatmentContext): string {
     // BUGFIX: Read from lastResponse (user input) directly, not from metadata.selectedMethod
     // because scriptedResponse runs AFTER getNextStep, so metadata isn't set yet
-    const input = lastResponse.toLowerCase();
+    const normalized = lastResponse.trim().toLowerCase();
     let diggingSelectedMethod = '';
 
-    if (input.includes('problem shifting') || input === '1') {
+    if (normalized.includes('problem shifting') || normalized === '1') {
       diggingSelectedMethod = 'problem_shifting';
-    } else if (input.includes('identity shifting') || input === '2') {
+    } else if (normalized.includes('identity shifting') || normalized === '2') {
       diggingSelectedMethod = 'identity_shifting';
-    } else if (input.includes('belief shifting') || input === '3') {
+    } else if (normalized.includes('belief shifting') || normalized === '3') {
       diggingSelectedMethod = 'belief_shifting';
-    } else if (input.includes('blockage shifting') || input === '4') {
+    } else if (normalized.includes('blockage shifting') || normalized === '4') {
       diggingSelectedMethod = 'blockage_shifting';
+    }
+
+    if (!diggingSelectedMethod) {
+      context.currentPhase = 'digging_deeper';
+      context.metadata.selectedMethod = undefined;
+      console.log(`🔍 DIGGING_METHOD_SELECTION_ROUTE: No method match, staying on digging_method_selection`);
+      return 'digging_method_selection';
     }
 
     // Update problem statement to use the new problem from digging deeper flow
@@ -1733,11 +1917,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       console.log(`🔍 MODALITY_SWITCH: Switched to Blockage Shifting with problem: "${newDiggingProblem}"`);
       return this.getIntroStepForMethod('blockage_shifting', context);
     }
-    // Default fallback
-    context.currentPhase = 'problem_shifting';
-    context.metadata.workType = 'problem';
-    console.log(`🔍 MODALITY_SWITCH: Defaulted to Problem Shifting with problem: "${newDiggingProblem}"`);
-    return this.getIntroStepForMethod('problem_shifting', context);
+    return 'digging_method_selection';
   }
 
   private handleScenarioCheck(lastResponse: string, restateStep: string, noStep: string): string {

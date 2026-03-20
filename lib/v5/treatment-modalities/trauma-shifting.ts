@@ -27,7 +27,7 @@ export class TraumaShiftingPhase {
         {
           id: 'trauma_problem_redirect',
           scriptedResponse: (userInput, context) => {
-            return `How do you feel now about the fact that this happened?`;
+            return `Ok no problem. Let's work on the trauma in terms of how you feel about it now, so you don't have to recall the actual memory. Tell me in no more than a few words: how do you feel now about the fact that this happened?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -53,7 +53,10 @@ export class TraumaShiftingPhase {
         {
           id: 'trauma_identity_step_dynamic',
           scriptedResponse: (userInput, context) => {
-            // Get the negative experience statement
+            const cycleCount = context?.metadata?.cycleCount || 0;
+            if (cycleCount > 0) {
+              return `Keep feeling this frozen moment...what kind of person are you being in this moment?`;
+            }
             const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'the negative experience';
             return `Think about and feel the negative experience of '${negativeExperience}'. Let your mind go to the worst part of the experience...now freeze it there. Keep feeling this frozen moment...what kind of person are you being in this moment?`;
           },
@@ -73,18 +76,26 @@ export class TraumaShiftingPhase {
             // Get the identity from the trauma_identity_step_dynamic response
             const traumaIdentityResponse = context.userResponses?.['trauma_identity_step_dynamic'];
 
-            // Store the identity from the identity step if we don't have it yet
-            if (!context.metadata.currentTraumaIdentity && traumaIdentityResponse) {
-              // Process the trauma identity response to add "person" suffix like Identity Shifting does
+            // Always sync from the identity step when present (v2 parity). A guarded update
+            // (!currentTraumaIdentity) leaves stale metadata after a new round (e.g. Step 6 → new identity).
+            if (traumaIdentityResponse) {
               const processedTraumaIdentity = TextProcessingUtils.processIdentityResponse(traumaIdentityResponse.trim());
               context.metadata.currentTraumaIdentity = processedTraumaIdentity;
-              context.metadata.originalTraumaIdentity = processedTraumaIdentity; // Store processed version for trauma_identity_check
+              context.metadata.originalTraumaIdentity = processedTraumaIdentity;
               console.log(`🔍 TRAUMA_DISSOLVE_STEP_A: Processing trauma identity "${traumaIdentityResponse}" -> "${processedTraumaIdentity}"`);
             }
 
             // Use the stored identity, don't overwrite with current userInput
             const identity = context.metadata.currentTraumaIdentity || 'that identity';
-            return `Feel yourself being ${identity}... what does it feel like?`;
+
+            // Bridge phrasing for Step 4A when re-entering from Step 5 checks (v2 / doctor script)
+            const returnTo = context.metadata?.returnToTraumaCheck as string | undefined;
+            const prefix =
+              returnTo === 'trauma_future_scenario_check'
+                ? 'Imagine that scenario and feel yourself being'
+                : 'Feel yourself being';
+
+            return `${prefix} ${identity}... what does it feel like?`;
           },
           expectedResponseType: 'open',
           validationRules: [
@@ -331,8 +342,13 @@ export class TraumaShiftingPhase {
         {
           id: 'trauma_dig_deeper',
           scriptedResponse: (userInput, context) => {
-            const negativeExperience = context?.problemStatement || context?.userResponses?.['restate_selected_problem'] || context?.userResponses?.['mind_shifting_explanation'] || 'this incident';
-            return `Do you feel you might feel bad about ${negativeExperience} again in the future?`;
+            const originalProblem =
+              context?.metadata?.originalProblemStatement ||
+              context?.problemStatement ||
+              context?.userResponses?.['restate_selected_problem'] ||
+              context?.userResponses?.['mind_shifting_explanation'] ||
+              'this incident';
+            return `Do you feel you might feel bad about '${originalProblem}' in the future?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
@@ -346,8 +362,15 @@ export class TraumaShiftingPhase {
 
         {
           id: 'trauma_dig_deeper_2',
-          scriptedResponse: () => {
-            return `Is there anything else about this that is still a problem for you?`;
+          scriptedResponse: (userInput, context) => {
+            const originalProblem =
+              context?.metadata?.originalProblemStatement ||
+              context?.metadata?.problemStatement ||
+              context?.problemStatement ||
+              context?.userResponses?.['restate_selected_problem'] ||
+              context?.userResponses?.['mind_shifting_explanation'] ||
+              'this';
+            return `Take your mind back to '${originalProblem}', is there anything else about this that's still a problem for you?`;
           },
           expectedResponseType: 'yesno',
           validationRules: [
