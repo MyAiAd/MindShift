@@ -1148,12 +1148,30 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   }
 
   private handleIdentityDissolveStepF(lastResponse: string, context: TreatmentContext): string {
+    // Step F: "Can you still feel yourself being [IDENTITY]?" — v2 parity: return to the Step 4 check
+    // we came from (if any), else first check. Same pattern as Belief Shifting returnToBeliefCheck.
     if (lastResponse.includes('no') || lastResponse.includes('2')) {
+      console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: User said NO, checking which identity check to proceed to`);
+      const returnToCheck = context.metadata.returnToIdentityCheck;
+      if (returnToCheck) {
+        console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: Returning to ${returnToCheck}`);
+        return returnToCheck;
+      }
+      console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: First time, proceeding to future identity check`);
       return 'identity_future_check';
-    } else if (lastResponse.includes('yes') || lastResponse.includes('1')) {
+    }
+    if (lastResponse.includes('yes') || lastResponse.includes('1')) {
+      console.log(`🔍 IDENTITY_DISSOLVE_STEP_F: User said YES, cycling back to dissolve step A`);
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+      // Keep returnToIdentityCheck so we return to the correct Step 4 checking question after the cycle.
+      // Mark bridge as consumed here (not only inside 3A scriptedResponse) so metadata survives saves:
+      // inner F→A loops must not repeat "Imagine that scenario…" / future bridge — only the first 3A after a Step 4 YES does.
+      context.metadata.identityBridgePhraseUsed = true;
       return 'identity_dissolve_step_a';
     }
+    console.log(
+      `🔍 IDENTITY_DISSOLVE_STEP_F: Unclear response "${lastResponse}", defaulting to future identity check to avoid loop`
+    );
     return 'identity_future_check';
   }
 
@@ -1197,6 +1215,9 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     // Default: treat unclear as needing more work, go back to shifting
     console.log(`🔍 IDENTITY_SCENARIO_CHECK: Unclear response, going back to shifting steps`);
     context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+    // v2 parity: without this, F+no falls through to the first check because returnToIdentityCheck was never set
+    context.metadata.returnToIdentityCheck = 'identity_scenario_check';
+    // Preserve identityBridgePhraseUsed if already true (bridge only once per return-from-check)
     return 'identity_dissolve_step_a';  // NOT identity_problem_check!
   }
 
@@ -1204,6 +1225,8 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     if (lastResponse.includes('yes') || lastResponse.includes('still')) {
       // Still feeling identity - repeat step 3 (go back to step A)
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
+      // Same inner-loop contract as identity_dissolve_step_f YES (this step asks the same yes/no pattern)
+      context.metadata.identityBridgePhraseUsed = true;
       return 'identity_dissolve_step_a';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
