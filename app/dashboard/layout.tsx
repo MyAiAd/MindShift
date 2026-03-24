@@ -2,38 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { ThemeDropdown } from '@/components/theme/ThemeDropdown';
-import {
-  Brain,
-  Users,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Database,
-  Shield,
-  UserCheck,
-  PlayCircle,
-  Flag,
-  BarChart3,
-  UserPlus,
-  Sparkles,
-  MoreHorizontal
-} from 'lucide-react';
-import { useState, useEffect } from 'react';
-
-// Main navigation items (matches mobile bottom nav)
-const mainSidebarItems = [
-  { icon: Brain, label: 'Home', href: '/dashboard' },
-  { icon: Sparkles, label: 'Shifting', href: '/dashboard/sessions/treatment-v4' },
-  { icon: Users, label: 'Connect', href: '/dashboard/community' },
-  { icon: Settings, label: 'Profile', href: '/dashboard/settings' },
-];
 
 export default function DashboardLayout({
   children,
@@ -42,43 +14,10 @@ export default function DashboardLayout({
 }) {
   const { user, profile, tenant, signOut, loading } = useAuth();
   const pathname = usePathname();
-  
-  // Initialize sidebar state from localStorage or screen size
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebarOpen');
-      if (saved !== null) return saved === 'true';
-      // Default based on screen size: open on desktop, closed on mobile
-      return window.matchMedia('(min-width: 768px)').matches;
-    }
-    return false;
-  });
-  
   const router = useRouter();
 
   // Determine if we should hide the mobile nav (orb mode on mobile)
   const isV4TreatmentRoute = pathname?.startsWith('/dashboard/sessions/treatment-v4');
-
-  // Save sidebar state to localStorage
-  useEffect(() => {
-    localStorage.setItem('sidebarOpen', String(sidebarOpen));
-  }, [sidebarOpen]);
-
-  // Handle screen size changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(min-width: 768px)');
-    
-    const handleChange = (e: MediaQueryListEvent) => {
-      // Only auto-adjust if user hasn't manually set a preference
-      const saved = localStorage.getItem('sidebarOpen');
-      if (saved === null) {
-        setSidebarOpen(e.matches);
-      }
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -118,280 +57,18 @@ export default function DashboardLayout({
   return (
     <ThemeProvider>
       <div className="h-screen flex overflow-hidden bg-secondary/20 relative overflow-x-hidden">
-        {/* Hamburger menu button - desktop only (mobile uses bottom nav) */}
-        <button
-          className="fixed top-4 left-4 z-50 h-10 w-10 hidden md:inline-flex items-center justify-center rounded-md bg-primary hover:bg-primary/90 text-primary-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring transition-colors shadow-lg"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-        >
-          {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-
-        {/* Desktop sidebar (toggleable) - mobile uses bottom nav instead */}
-        <div 
-          className={`hidden md:flex md:flex-shrink-0 h-screen z-40 transition-all duration-300 ease-in-out bg-card ${
-            sidebarOpen ? 'md:w-64' : 'md:w-0'
-          }`}
-        >
-          <div 
-            className={`flex flex-col w-64 h-full transition-transform duration-300 ease-in-out bg-card ${
-              sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-            }`}
-          >
-            <SidebarContent tenant={tenant} profile={profile} signOut={handleSignOut} />
-          </div>
-        </div>
-
         {/* Main content */}
         <div className="flex flex-col w-0 flex-1 overflow-hidden min-w-0">
-          <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden focus:outline-none bg-background pb-16 md:pb-0">
+          <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden focus:outline-none bg-background pb-16">
             {children}
           </main>
         </div>
 
-        {/* Mobile bottom navigation - Hidden on treatment-v4 orb route */}
+        {/* Bottom navigation - Hidden on treatment-v4 orb route */}
         {!isV4TreatmentRoute && (
-          <MobileNav onNavigate={() => setSidebarOpen(false)} />
+          <MobileNav profile={profile} onSignOut={handleSignOut} />
         )}
       </div>
     </ThemeProvider>
   );
 }
-
-function SidebarContent({ 
-  tenant, 
-  profile, 
-  signOut,
-  onNavigate
-}: { 
-  tenant: any; 
-  profile: any; 
-  signOut: () => Promise<void>;
-  onNavigate?: () => void;
-}) {
-  const pathname = usePathname();
-
-  const handleSignOutClick = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await signOut();
-  };
-
-  const handleNavClick = () => {
-    // Close sidebar on mobile after navigation
-    if (onNavigate) {
-      onNavigate();
-    }
-  };
-
-  return (
-    <div className="flex flex-col h-full">
-      {/* Logo and branding - simplified */}
-      <div className="flex items-center justify-between h-16 flex-shrink-0 pl-16 pr-4 bg-primary">
-        <div className="flex items-center space-x-3">
-          <Image src="/logo.jpg" alt="MindShifting Logo" width={32} height={32} className="h-8 w-8 rounded" />
-          <div>
-            <h1 className="text-primary-foreground font-semibold">MindShifting</h1>
-          </div>
-        </div>
-        {/* Theme Dropdown */}
-        <ThemeDropdown />
-      </div>
-
-      {/* Navigation - Made scrollable with flex-1 and overflow-y-auto */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <nav className="px-2 py-4 bg-card space-y-1">
-          {/* Main navigation items */}
-          {mainSidebarItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || 
-              (item.href !== '/dashboard' && pathname.startsWith(item.href));
-            
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={handleNavClick}
-                className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive
-                    ? 'bg-primary/10 text-primary border-r-2 border-primary'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                }`}
-              >
-                <Icon className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                  isActive ? 'text-primary' : ''
-                }`} />
-                {item.label}
-              </Link>
-            );
-          })}
-
-          {/* Coach Navigation */}
-          {profile?.role && ['coach', 'manager', 'tenant_admin', 'super_admin'].includes(profile.role) && (
-            <div className="pt-6">
-              <div className="px-3 pb-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Coaching
-                </p>
-              </div>
-              <div className="space-y-1">
-                <Link
-                  href="/dashboard/coach/profile"
-                  onClick={handleNavClick}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                    pathname === '/dashboard/coach/profile'
-                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }`}
-                >
-                  <UserCheck className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    pathname === '/dashboard/coach/profile' ? 'text-primary' : ''
-                  }`} />
-                  Coach Profile
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* Admin Navigation */}
-          {profile?.role && ['tenant_admin', 'super_admin'].includes(profile.role) && (
-            <div className="pt-6">
-              <div className="px-3 pb-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Administration
-                </p>
-              </div>
-              <div className="space-y-1">
-                <Link
-                  href="/dashboard/admin/analytics"
-                  onClick={handleNavClick}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                    pathname?.startsWith('/dashboard/admin/analytics')
-                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }`}
-                >
-                  <BarChart3 className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    pathname?.startsWith('/dashboard/admin/analytics') ? 'text-primary' : ''
-                  }`} />
-                  Analytics
-                </Link>
-                <Link
-                  href="/dashboard/admin/videos"
-                  onClick={handleNavClick}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                    pathname?.startsWith('/dashboard/admin/videos')
-                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }`}
-                >
-                  <PlayCircle className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    pathname?.startsWith('/dashboard/admin/videos') ? 'text-primary' : ''
-                  }`} />
-                  Videos
-                </Link>
-                <Link
-                  href="/dashboard/admin/users"
-                  onClick={handleNavClick}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                    pathname?.startsWith('/dashboard/admin/users')
-                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }`}
-                >
-                  <Shield className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    pathname?.startsWith('/dashboard/admin/users') ? 'text-primary' : ''
-                  }`} />
-                  Users
-                </Link>
-                <Link
-                  href="/dashboard/admin/coaches"
-                  onClick={handleNavClick}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                    pathname?.startsWith('/dashboard/admin/coaches')
-                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }`}
-                >
-                  <UserPlus className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    pathname?.startsWith('/dashboard/admin/coaches') ? 'text-primary' : ''
-                  }`} />
-                  Coaches
-                </Link>
-                <Link
-                  href="/dashboard/admin/community-moderation/posts"
-                  onClick={handleNavClick}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                    pathname?.startsWith('/dashboard/admin/community-moderation')
-                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }`}
-                >
-                  <Flag className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    pathname?.startsWith('/dashboard/admin/community-moderation') ? 'text-primary' : ''
-                  }`} />
-                  Community
-                </Link>
-                <Link
-                  href="/dashboard/admin/settings"
-                  onClick={handleNavClick}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                    pathname?.startsWith('/dashboard/admin/settings')
-                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }`}
-                >
-                  <Settings className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    pathname?.startsWith('/dashboard/admin/settings') ? 'text-primary' : ''
-                  }`} />
-                  Admin Settings
-                </Link>
-                <Link
-                  href="/dashboard/admin/data-management"
-                  onClick={handleNavClick}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                    pathname === '/dashboard/admin/data-management'
-                      ? 'bg-primary/10 text-primary border-r-2 border-primary'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }`}
-                >
-                  <Database className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    pathname === '/dashboard/admin/data-management' ? 'text-primary' : ''
-                  }`} />
-                  Data Management
-                </Link>
-              </div>
-            </div>
-          )}
-        </nav>
-      </div>
-
-      {/* User info and sign out - Fixed at bottom, always visible */}
-      <div className="flex-shrink-0 flex border-t border-border p-4 bg-card">
-        <div className="flex items-center space-x-3 w-full">
-          <div className="flex-shrink-0">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-primary font-medium">
-                {profile.first_name?.[0] || profile.email[0].toUpperCase()}
-              </span>
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">
-              {profile.first_name} {profile.last_name}
-            </p>
-            <p className="text-sm text-muted-foreground truncate">{profile.email}</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleSignOutClick}
-            className="flex-shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors"
-            title="Sign out"
-          >
-            <LogOut className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-} 
