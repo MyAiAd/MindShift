@@ -1926,10 +1926,10 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex space-x-3">
                       <a
-                        href="/dashboard/sessions/treatment-v4"
-                        className="flex-1 px-4 py-2 bg-green-600 text-white text-center rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
+                        href="/dashboard/sessions/treatment-v5"
+                        className="flex-1 px-4 py-2 bg-accent text-accent-foreground text-center rounded-lg hover:bg-accent/90 transition-colors font-medium text-sm"
                       >
-                        Try V4 Treatment
+                        Try V5 Treatment
                       </a>
                     </div>
                   </div>

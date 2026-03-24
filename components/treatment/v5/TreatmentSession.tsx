@@ -1888,124 +1888,112 @@ export default function TreatmentSession({
 
   return (
     <div className="max-w-4xl mx-auto px-2 sm:px-4 relative flex flex-col h-full min-h-[calc(100vh-140px)]">
-      {/* Guided Mode Full-Screen PTT Interface */}
+      {/* Guided Mode PTT Interface - inline, not full-screen overlay */}
       {isGuidedMode && (
-        <div className="fixed inset-0 z-50 bg-gradient-to-br from-primary/90 via-secondary/90 to-primary/80 flex flex-col items-center justify-center">
-          {/* Exit button - always visible */}
-          <button 
-            onClick={() => {
-              if (isPTTActive) {
-                handlePTTEnd();
+        <div className="relative flex-shrink-0 bg-gradient-to-br from-primary/90 via-secondary/90 to-primary/80 rounded-lg flex flex-col items-center py-5 px-4 mb-2">
+          {/* Top row: Exit button + Status */}
+          <div className="w-full flex items-center justify-between mb-3">
+            <button
+              onClick={() => {
+                if (isPTTActive) {
+                  handlePTTEnd();
+                }
+                naturalVoice.stopSpeaking();
+                window.location.href = '/dashboard';
+              }}
+              className="text-primary-foreground/70 hover:text-primary-foreground p-2 bg-black/20 hover:bg-black/30 rounded-full transition-all backdrop-blur-sm"
+              aria-label="Exit session"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div className="text-primary-foreground/60 text-sm">
+              {isPTTActive ? '🔴 Recording...' :
+               showFirstSpeechWarmup ? '⏳ Preparing voice...' :
+               naturalVoice.isSpeaking ? '🔊 AI Speaking...' :
+               '🧘 Ready - Speak now'}
+            </div>
+            <div className="w-9" /> {/* Spacer for centering */}
+          </div>
+
+          {/* Main PTT Button - compact */}
+          <button
+            onPointerDown={handlePTTStart}
+            onPointerUp={handlePTTEnd}
+            onPointerLeave={handlePTTEnd}
+            className={`
+              w-36 h-36 sm:w-44 sm:h-44 rounded-full
+              ${isPTTActive
+                ? 'bg-destructive animate-pulse-slow ring-8 ring-destructive/50 scale-105'
+                : showFirstSpeechWarmup
+                ? 'bg-primary/85 ring-4 ring-primary/25'
+                : naturalVoice.isSpeaking
+                ? 'bg-primary ring-8 ring-primary/30 animate-pulse-slow'
+                : 'bg-secondary ring-4 ring-secondary/50 hover:ring-8 hover:scale-105'
               }
-              naturalVoice.stopSpeaking();
-              window.location.href = '/dashboard';
-            }}
-            className="absolute top-4 left-4 text-primary-foreground/70 hover:text-primary-foreground p-3 bg-black/20 hover:bg-black/30 rounded-full transition-all backdrop-blur-sm z-10"
-            aria-label="Exit session"
+              flex flex-col items-center justify-center
+              text-primary-foreground font-bold
+              transition-all duration-300
+              shadow-2xl
+              active:scale-95
+              cursor-pointer
+              select-none
+            `}
           >
-            <ArrowLeft className="h-5 w-5" />
+            {isPTTActive ? (
+              <>
+                <div className="text-4xl mb-2 animate-bounce">🔴</div>
+                <div className="text-base mb-1">Speaking...</div>
+                <div className="text-xs opacity-75">Release to send</div>
+              </>
+            ) : showFirstSpeechWarmup ? (
+              <>
+                <div className="text-4xl mb-2 animate-pulse">⏳</div>
+                <div className="text-base mb-1">Loading voice...</div>
+                <div className="text-xs opacity-75">Starting first response</div>
+              </>
+            ) : naturalVoice.isSpeaking ? (
+              <>
+                <div className="text-4xl mb-2">🔊</div>
+                <div className="text-base mb-1">AI Speaking</div>
+              </>
+            ) : (
+              <>
+                <div className="text-4xl mb-2">🎙️</div>
+                <div className="text-base mb-1">Speak Now</div>
+              </>
+            )}
           </button>
 
-          {/* Status indicator at top */}
-          <div className="absolute top-8 left-1/2 -translate-x-1/2 text-primary-foreground/60 text-sm">
-            {isPTTActive ? '🔴 Recording...' : 
-             showFirstSpeechWarmup ? '⏳ Preparing voice...' :
-             naturalVoice.isSpeaking ? '🔊 AI Speaking...' : 
-             '🧘 Ready - Speak now'}
-          </div>
-
-          {/* Centered Orb + Subtitle */}
-          <div
-            className={`flex-1 flex flex-col items-center justify-center ${
-              interactionMode === 'orb_ptt' ? 'pb-24' : ''
-            }`}
-          >
-            {/* Main PTT Button */}
-            <button
-              onPointerDown={handlePTTStart}
-              onPointerUp={handlePTTEnd}
-              onPointerLeave={handlePTTEnd}
-              className={`
-                w-64 h-64 md:w-80 md:h-80 rounded-full 
-                ${isPTTActive
-                  ? 'bg-destructive animate-pulse-slow ring-8 ring-destructive/50 scale-105'
-                  : showFirstSpeechWarmup
-                  ? 'bg-primary/85 ring-4 ring-primary/25'
-                  : naturalVoice.isSpeaking
-                  ? 'bg-primary ring-8 ring-primary/30 animate-pulse-slow'
-                  : 'bg-secondary ring-4 ring-secondary/50 hover:ring-8 hover:scale-105'
-                }
-                flex flex-col items-center justify-center
-                text-primary-foreground font-bold
-                transition-all duration-300
-                shadow-2xl
-                active:scale-95
-                cursor-pointer
-                select-none
-              `}
-            >
-              {isPTTActive ? (
-                <>
-                  <div className="text-7xl mb-4 animate-bounce">🔴</div>
-                  <div className="text-2xl mb-2">Speaking...</div>
-                  <div className="text-sm opacity-75">Release to send</div>
-                </>
-              ) : showFirstSpeechWarmup ? (
-                <>
-                  <div className="text-6xl mb-4 animate-pulse">⏳</div>
-                  <div className="text-2xl mb-2">Loading voice...</div>
-                  <div className="text-sm opacity-75">Starting first response</div>
-                </>
-              ) : naturalVoice.isSpeaking ? (
-                <>
-                  <div className="text-7xl mb-4">🔊</div>
-                  <div className="text-2xl mb-2">AI Speaking</div>
-                </>
-              ) : (
-                <>
-                  <div className="text-7xl mb-4">🎙️</div>
-                  <div className="text-2xl mb-2">Speak Now</div>
-                </>
-              )}
-            </button>
-
-            {/* Subtitle line - directly beneath the orb */}
-            {interactionMode === 'orb_ptt' && (
-              <div className="w-full px-4 mt-4">
-                <div className="mx-auto max-w-md rounded-md bg-black/30 border border-white/20 backdrop-blur-sm px-3 py-2">
-                  <p
-                    className="text-sm text-primary-foreground text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
-                    aria-live="polite"
-                  >
-                    {showFirstSpeechWarmup && !currentSubtitle ? 'Preparing audio...' : currentSubtitle}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile Controls at Bottom - Skip Audio */}
-          {interactionMode === 'orb_ptt' && naturalVoice.isSpeaking && (
-            <div className="absolute bottom-0 left-0 right-0 pb-safe">
-              <div className="flex items-center justify-center p-6">
-                <button
-                  onClick={() => {
-                    naturalVoice.stopSpeaking();
-                    resetSubtitles();
-                  }}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground backdrop-blur-sm transition-all"
-                  title="Skip current audio"
+          {/* Subtitle line - directly beneath the orb */}
+          {interactionMode === 'orb_ptt' && (
+            <div className="w-full px-4 mt-3">
+              <div className="mx-auto max-w-md rounded-md bg-black/30 border border-white/20 backdrop-blur-sm px-3 py-2">
+                <p
+                  className="text-sm text-primary-foreground text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
+                  aria-live="polite"
                 >
-                  <SkipForward className="h-5 w-5" />
-                  <span className="text-sm">Skip Audio</span>
-                </button>
+                  {showFirstSpeechWarmup && !currentSubtitle ? 'Preparing audio...' : currentSubtitle}
+                </p>
               </div>
             </div>
           )}
 
-          {/* Instructions at bottom */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-primary-foreground/60 text-sm text-center max-w-md px-4">
-            <p className="mb-2">Close your eyes and speak when ready</p>
+          {/* Skip Audio + Instructions row */}
+          <div className="flex items-center justify-center gap-4 mt-3">
+            {interactionMode === 'orb_ptt' && naturalVoice.isSpeaking && (
+              <button
+                onClick={() => {
+                  naturalVoice.stopSpeaking();
+                  resetSubtitles();
+                }}
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground backdrop-blur-sm transition-all text-sm"
+                title="Skip current audio"
+              >
+                <SkipForward className="h-4 w-4" />
+                <span>Skip Audio</span>
+              </button>
+            )}
+            <p className="text-primary-foreground/60 text-xs text-center">Close your eyes and speak when ready</p>
           </div>
         </div>
       )}
@@ -2042,11 +2030,7 @@ export default function TreatmentSession({
         </div>
       )}
 
-      {/* V4 Header - Mobile: Slim sticky bar / Desktop: Full card */}
-      
       {/* Header - 2x2 Grid, sticky below page header (h-14 = 56px) */}
-      {/* Hide this header when in orb_ptt mode - orb has its own minimal controls */}
-      {interactionMode !== 'orb_ptt' && (
         <div className="flex flex-col gap-2 px-3 py-2.5 mb-2 bg-card rounded-lg border border-border sticky top-14 z-30">
         {/* Audio Controls - 2x2 Grid */}
         <div className="grid grid-cols-2 gap-2">
@@ -2174,7 +2158,6 @@ export default function TreatmentSession({
           </div>
         </div>
       </div>
-      )}
 
       {/* Voice Settings Modal - bottom sheet on all devices */}
       {showVoiceSettings && (
@@ -2354,8 +2337,7 @@ export default function TreatmentSession({
       </div>
 
       {/* V4 Input Area - Fixed at bottom, doesn't shrink */}
-      {/* Hide input area when in orb guided mode - orb uses PTT only */}
-      {(interactionMode !== 'orb_ptt' || !isGuidedMode) && (
+      {/* Input area - always visible */}
         <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-border mt-auto">
         {hasError && (
           <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
@@ -2599,8 +2581,7 @@ export default function TreatmentSession({
           </form>
         )}
       </div>
-      )}
     </div>
 
   );
-} 
+}
