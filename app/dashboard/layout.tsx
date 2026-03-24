@@ -17,7 +17,7 @@ export default function DashboardLayout({
   const router = useRouter();
 
   // Determine if we should hide the mobile nav (orb mode on mobile)
-  const isV4TreatmentRoute = pathname?.startsWith('/dashboard/sessions/treatment-v4');
+  const isTreatmentRoute = pathname?.startsWith('/dashboard/sessions/treatment-v5') || pathname?.startsWith('/dashboard/sessions/treatment-v4');
 
   const handleSignOut = async () => {
     try {
@@ -64,8 +64,8 @@ export default function DashboardLayout({
           </main>
         </div>
 
-        {/* Bottom navigation - Hidden on treatment-v4 orb route */}
-        {!isV4TreatmentRoute && (
+        {/* Bottom navigation - Hidden on treatment routes */}
+        {!isTreatmentRoute && (
           <MobileNav profile={profile} onSignOut={handleSignOut} />
         )}
       </div>

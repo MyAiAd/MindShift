@@ -1890,7 +1890,7 @@ export default function TreatmentSession({
     <div className="max-w-4xl mx-auto px-2 sm:px-4 relative flex flex-col h-full min-h-[calc(100vh-140px)]">
       {/* Guided Mode Full-Screen PTT Interface */}
       {isGuidedMode && (
-        <div className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex flex-col items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-gradient-to-br from-primary/90 via-secondary/90 to-primary/80 flex flex-col items-center justify-center">
           {/* Exit button - always visible */}
           <button 
             onClick={() => {
@@ -1900,14 +1900,14 @@ export default function TreatmentSession({
               naturalVoice.stopSpeaking();
               window.location.href = '/dashboard';
             }}
-            className="absolute top-4 left-4 text-white/70 hover:text-white p-3 bg-black/20 hover:bg-black/30 rounded-full transition-all backdrop-blur-sm z-10"
+            className="absolute top-4 left-4 text-primary-foreground/70 hover:text-primary-foreground p-3 bg-black/20 hover:bg-black/30 rounded-full transition-all backdrop-blur-sm z-10"
             aria-label="Exit session"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
 
           {/* Status indicator at top */}
-          <div className="absolute top-8 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+          <div className="absolute top-8 left-1/2 -translate-x-1/2 text-primary-foreground/60 text-sm">
             {isPTTActive ? '🔴 Recording...' : 
              showFirstSpeechWarmup ? '⏳ Preparing voice...' :
              naturalVoice.isSpeaking ? '🔊 AI Speaking...' : 
@@ -1927,16 +1927,16 @@ export default function TreatmentSession({
               onPointerLeave={handlePTTEnd}
               className={`
                 w-64 h-64 md:w-80 md:h-80 rounded-full 
-                ${isPTTActive 
-                  ? 'bg-red-500 animate-pulse-slow ring-8 ring-red-300/50 scale-105' 
+                ${isPTTActive
+                  ? 'bg-destructive animate-pulse-slow ring-8 ring-destructive/50 scale-105'
                   : showFirstSpeechWarmup
-                  ? 'bg-indigo-500/85 ring-4 ring-indigo-300/25'
+                  ? 'bg-primary/85 ring-4 ring-primary/25'
                   : naturalVoice.isSpeaking
-                  ? 'bg-indigo-500 ring-8 ring-indigo-300/30 animate-pulse-slow'
-                  : 'bg-purple-600 ring-4 ring-purple-300/50 hover:ring-8 hover:scale-105'
+                  ? 'bg-primary ring-8 ring-primary/30 animate-pulse-slow'
+                  : 'bg-secondary ring-4 ring-secondary/50 hover:ring-8 hover:scale-105'
                 }
                 flex flex-col items-center justify-center
-                text-white font-bold
+                text-primary-foreground font-bold
                 transition-all duration-300
                 shadow-2xl
                 active:scale-95
@@ -1974,7 +1974,7 @@ export default function TreatmentSession({
               <div className="w-full px-4 mt-4">
                 <div className="mx-auto max-w-md rounded-md bg-black/30 border border-white/20 backdrop-blur-sm px-3 py-2">
                   <p
-                    className="text-sm text-white text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
+                    className="text-sm text-primary-foreground text-center whitespace-nowrap overflow-hidden text-ellipsis min-h-[20px]"
                     aria-live="polite"
                   >
                     {showFirstSpeechWarmup && !currentSubtitle ? 'Preparing audio...' : currentSubtitle}
@@ -1993,7 +1993,7 @@ export default function TreatmentSession({
                     naturalVoice.stopSpeaking();
                     resetSubtitles();
                   }}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-all"
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground backdrop-blur-sm transition-all"
                   title="Skip current audio"
                 >
                   <SkipForward className="h-5 w-5" />
@@ -2004,7 +2004,7 @@ export default function TreatmentSession({
           )}
 
           {/* Instructions at bottom */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-sm text-center max-w-md px-4">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-primary-foreground/60 text-sm text-center max-w-md px-4">
             <p className="mb-2">Close your eyes and speak when ready</p>
           </div>
         </div>
@@ -2015,7 +2015,7 @@ export default function TreatmentSession({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
           <div className="text-center px-4">
             <div className="mb-8">
-              <Brain className="h-16 w-16 sm:h-20 sm:w-20 text-indigo-600 mx-auto mb-4 animate-pulse" />
+              <Brain className="h-16 w-16 sm:h-20 sm:w-20 text-primary mx-auto mb-4 animate-pulse" />
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                 Ready to Begin?
               </h2>
@@ -2026,10 +2026,10 @@ export default function TreatmentSession({
             <button
               onClick={handleStartSession}
               disabled={isPreparingStartPermissions}
-              className={`group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white rounded-full transition-all duration-200 shadow-lg hover:shadow-xl ${
+              className={`group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground rounded-full transition-all duration-200 shadow-lg hover:shadow-xl ${
                 isPreparingStartPermissions
-                  ? 'bg-indigo-400 cursor-wait'
-                  : 'bg-indigo-600 hover:bg-indigo-700 transform hover:scale-105'
+                  ? 'bg-primary/70 cursor-wait'
+                  : 'bg-primary hover:bg-primary/90 transform hover:scale-105'
               }`}
             >
               <Play className="h-6 w-6 mr-2 group-hover:scale-110 transition-transform" />
@@ -2047,7 +2047,7 @@ export default function TreatmentSession({
       {/* Header - 2x2 Grid, sticky below page header (h-14 = 56px) */}
       {/* Hide this header when in orb_ptt mode - orb has its own minimal controls */}
       {interactionMode !== 'orb_ptt' && (
-        <div className="flex flex-col gap-2 px-3 py-2.5 mb-2 bg-card dark:bg-[#073642] rounded-lg border border-border dark:border-[#586e75] sticky top-14 z-30">
+        <div className="flex flex-col gap-2 px-3 py-2.5 mb-2 bg-card rounded-lg border border-border sticky top-14 z-30">
         {/* Audio Controls - 2x2 Grid */}
         <div className="grid grid-cols-2 gap-2">
           {/* Microphone Toggle */}
@@ -2055,8 +2055,8 @@ export default function TreatmentSession({
             onClick={toggleMic}
             disabled={micPermission === 'denied'}
             className={`flex items-center justify-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isMicEnabled
-              ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
-              : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
+              ? 'bg-primary/20 text-primary ring-2 ring-primary'
+              : 'bg-secondary text-muted-foreground  '
               } ${micPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''}`}
             title={
               !isMicEnabled ? 'Enable Microphone' :
@@ -2073,11 +2073,11 @@ export default function TreatmentSession({
             {isMicEnabled ? (
               <>
                 {naturalVoice.isListening ? (
-                  <Mic className="h-4 w-4 animate-pulse text-red-500" />
+                  <Mic className="h-4 w-4 animate-pulse text-destructive" />
                 ) : naturalVoice.listeningState === 'restarting' ? (
-                  <Mic className="h-4 w-4 animate-spin text-yellow-500" />
+                  <Mic className="h-4 w-4 animate-spin text-warning" />
                 ) : naturalVoice.listeningState === 'blockedByAudio' ? (
-                  <Mic className="h-4 w-4 text-gray-400" />
+                  <Mic className="h-4 w-4 text-muted-foreground" />
                 ) : (
                   <Mic className="h-4 w-4" />
                 )}
@@ -2095,8 +2095,8 @@ export default function TreatmentSession({
           <button
             onClick={toggleSpeaker}
             className={`flex items-center justify-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isSpeakerEnabled
-              ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500'
-              : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
+              ? 'bg-primary/20 text-primary ring-2 ring-primary'
+              : 'bg-secondary text-muted-foreground  '
               }`}
             title="Toggle Speaker"
           >
@@ -2123,10 +2123,10 @@ export default function TreatmentSession({
             disabled={!naturalVoice.isSpeaking && !naturalVoice.isPaused}
             className={`flex items-center justify-center rounded-full text-sm font-medium transition-colors ${
               naturalVoice.isPaused
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500'
+                ? 'bg-accent/20 text-accent ring-2 ring-accent'
                 : naturalVoice.isSpeaking
-                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500'
-                : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] opacity-50 cursor-not-allowed'
+                ? 'bg-warning/20 text-warning ring-2 ring-warning'
+                : 'bg-secondary text-muted-foreground opacity-50 cursor-not-allowed'
             }`}
             title={
               !naturalVoice.isSpeaking && !naturalVoice.isPaused
@@ -2150,8 +2150,8 @@ export default function TreatmentSession({
               onClick={() => setShowVoiceSettings(!showVoiceSettings)}
               className={`flex-1 flex items-center justify-center rounded-full transition-colors ${
                 showVoiceSettings
-                  ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                  : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
+                  ? 'bg-primary/20 text-primary'
+                  : 'bg-secondary text-muted-foreground  '
               }`}
               title="Voice Settings"
             >
@@ -2164,8 +2164,8 @@ export default function TreatmentSession({
               disabled={stepHistory.length === 0 || isLoading}
               className={`flex-1 flex items-center justify-center rounded-full transition-colors ${
                 stepHistory.length > 0 && !isLoading
-                  ? 'bg-secondary text-foreground dark:bg-[#586e75] dark:text-[#93a1a1]'
-                  : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] opacity-50 cursor-not-allowed'
+                  ? 'bg-secondary text-foreground'
+                  : 'bg-secondary text-muted-foreground opacity-50 cursor-not-allowed'
               }`}
               title="Undo last message"
             >
@@ -2186,13 +2186,13 @@ export default function TreatmentSession({
           />
           
           {/* Modal content - bottom sheet on mobile, centered modal on desktop */}
-          <div className="fixed bottom-0 left-0 right-0 w-full bg-card dark:bg-[#073642] border-t border-border dark:border-[#586e75] shadow-xl p-4 pb-8 z-50 max-h-[70vh] overflow-y-auto rounded-t-2xl">
+          <div className="fixed bottom-0 left-0 right-0 w-full bg-card border-t border-border shadow-xl p-4 pb-8 z-50 max-h-[70vh] overflow-y-auto rounded-t-2xl">
             {/* Mobile drag handle */}
             <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mb-4" />
             
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] flex items-center space-x-2">
-                <Settings className="h-5 w-5 text-indigo-500" />
+              <h3 className="text-lg font-semibold text-foreground flex items-center space-x-2">
+                <Settings className="h-5 w-5 text-primary" />
                 <span>Voice Settings</span>
               </h3>
               <button
@@ -2206,9 +2206,9 @@ export default function TreatmentSession({
 
             {/* Voice Selector */}
             {AVAILABLE_VOICES.length > 1 && (
-              <div className="space-y-3 mb-4 pb-4 border-b border-border dark:border-[#586e75]">
-                <div className="flex items-center space-x-2 text-sm font-medium text-foreground dark:text-[#fdf6e3]">
-                  <User className="h-4 w-4 text-indigo-500" />
+              <div className="space-y-3 mb-4 pb-4 border-b border-border">
+                <div className="flex items-center space-x-2 text-sm font-medium text-foreground">
+                  <User className="h-4 w-4 text-primary" />
                   <span>Voice Actor</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -2218,8 +2218,8 @@ export default function TreatmentSession({
                       onClick={() => handleVoiceChange(voiceOption.id)}
                       className={`w-full text-left px-3 py-3 md:py-2 rounded-lg text-sm transition-colors ${
                         selectedVoice === voiceOption.id
-                          ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500'
-                          : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                          ? 'bg-primary/20 text-primary ring-2 ring-primary'
+                          : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
                       }`}
                     >
                       <div className="font-medium">{voiceOption.name}</div>
@@ -2232,15 +2232,15 @@ export default function TreatmentSession({
 
             {/* Speed Slider */}
             <div className="space-y-3">
-              <div className="flex items-center space-x-2 text-sm font-medium text-foreground dark:text-[#fdf6e3]">
-                <Gauge className="h-4 w-4 text-indigo-500" />
+              <div className="flex items-center space-x-2 text-sm font-medium text-foreground">
+                <Gauge className="h-4 w-4 text-primary" />
                 <span>Playback Speed</span>
               </div>
               
-              <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Speed: {playbackSpeed.toFixed(2)}x</span>
                 <span className={`font-medium ${
-                  playbackSpeed === 1.0 ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
+                  playbackSpeed === 1.0 ? 'text-accent' : 'text-primary'
                 }`}>
                   {getSpeedLabel(playbackSpeed)}
                 </span>
@@ -2253,25 +2253,25 @@ export default function TreatmentSession({
                 step="0.05"
                 value={playbackSpeed}
                 onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
-                className="w-full h-3 md:h-2 bg-secondary dark:bg-[#586e75] rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                className="w-full h-3 md:h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
               />
               
-              <div className="flex justify-between text-xs text-muted-foreground dark:text-[#93a1a1]">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>0.75x</span>
-                <span className="text-green-600 dark:text-green-400">1.0x</span>
+                <span className="text-accent">1.0x</span>
                 <span>1.5x</span>
               </div>
 
               {/* Quick preset buttons */}
-              <div className="grid grid-cols-5 gap-2 pt-3 border-t border-border dark:border-[#586e75]">
+              <div className="grid grid-cols-5 gap-2 pt-3 border-t border-border">
                 {[0.75, 0.9, 1.0, 1.15, 1.5].map((speed) => (
                   <button
                     key={speed}
                     onClick={() => handleSpeedChange(speed)}
                     className={`px-2 py-2.5 md:py-1.5 text-xs rounded-lg transition-colors ${
                       Math.abs(playbackSpeed - speed) < 0.01
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-secondary dark:bg-[#586e75] text-muted-foreground dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
                     }`}
                   >
                     {speed === 1.0 ? '1x' : `${speed}x`}
@@ -2280,7 +2280,7 @@ export default function TreatmentSession({
               </div>
             </div>
 
-            <p className="mt-4 text-xs text-muted-foreground dark:text-[#93a1a1] text-center md:text-left">
+            <p className="mt-4 text-xs text-muted-foreground text-center md:text-left">
               Adjust voice and speed for your session.
             </p>
           </div>
@@ -2288,7 +2288,7 @@ export default function TreatmentSession({
       )}
 
       {/* V4 Messages Area - Flex-grow to fill available space */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-card/30 dark:bg-[#073642]/30 rounded-lg border border-border/30 dark:border-[#586e75]/30 min-h-0">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-card/30 rounded-lg border border-border/30 min-h-0">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -2296,7 +2296,7 @@ export default function TreatmentSession({
           >
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.isUser
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-primary text-primary-foreground'
                 : 'bg-secondary text-foreground'
                 }`}
             >
@@ -2325,8 +2325,8 @@ export default function TreatmentSession({
                     <span className="ml-2">
                       | Δ: <span className={`font-semibold ${
                         (message.textRenderTime - message.audioStartTime) > 0 
-                          ? 'text-green-600 dark:text-green-400' 
-                          : 'text-red-600 dark:text-red-400'
+                          ? 'text-accent' 
+                          : 'text-destructive'
                       }`}>
                         {Math.round(message.textRenderTime - message.audioStartTime)}ms
                       </span>
@@ -2341,10 +2341,10 @@ export default function TreatmentSession({
         {/* Processing shimmer - shows while Whisper is transcribing user speech */}
         {naturalVoice.isProcessing && (
           <div className="flex justify-end">
-            <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-indigo-600/20 dark:bg-indigo-600/30 animate-pulse">
+            <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-primary/20 animate-pulse">
               <div className="space-y-2">
-                <div className="h-3 bg-indigo-400/40 dark:bg-indigo-400/30 rounded w-3/4"></div>
-                <div className="h-3 bg-indigo-400/40 dark:bg-indigo-400/30 rounded w-1/2"></div>
+                <div className="h-3 bg-primary/40 rounded w-3/4"></div>
+                <div className="h-3 bg-primary/40 rounded w-1/2"></div>
               </div>
             </div>
           </div>
@@ -2358,19 +2358,19 @@ export default function TreatmentSession({
       {(interactionMode !== 'orb_ptt' || !isGuidedMode) && (
         <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-border mt-auto">
         {hasError && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
             <div className="flex items-center space-x-2">
-              <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-              <span className="text-sm text-red-700 dark:text-red-300">{errorMessage}</span>
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <span className="text-sm text-destructive">{errorMessage}</span>
             </div>
           </div>
         )}
 
         {voiceError && (
-          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <div className="mb-4 p-3 bg-warning/10 border border-warning/30 rounded-lg">
             <div className="flex items-center space-x-2">
-              <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-              <span className="text-sm text-yellow-700 dark:text-yellow-300">Voice: {voiceError}</span>
+              <AlertCircle className="h-4 w-4 text-warning" />
+              <span className="text-sm text-warning">Voice: {voiceError}</span>
             </div>
           </div>
         )}
@@ -2380,14 +2380,14 @@ export default function TreatmentSession({
             <button
               onClick={() => handleButtonClick('yes')}
               disabled={isLoading}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 disabled:opacity-50 transition-colors"
             >
               Yes
             </button>
             <button
               onClick={() => handleButtonClick('no')}
               disabled={isLoading}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 disabled:opacity-50 transition-colors"
             >
               No
             </button>
@@ -2401,33 +2401,33 @@ export default function TreatmentSession({
               <button
                 onClick={() => handleWorkTypeSelection('1')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
-                  } ${clickedButton === '1' ? 'scale-105 bg-blue-700 shadow-lg' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                  } ${clickedButton === '1' ? 'scale-105 bg-primary/80 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">1</span>
+                <span className="bg-primary/80 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">1</span>
                 <span>PROBLEM</span>
               </button>
 
               <button
                 onClick={() => handleWorkTypeSelection('2')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
-                  } ${clickedButton === '2' ? 'scale-105 bg-green-700 shadow-lg' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                  } ${clickedButton === '2' ? 'scale-105 bg-accent/80 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-green-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">2</span>
+                <span className="bg-accent/80 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">2</span>
                 <span>GOAL</span>
               </button>
 
               <button
                 onClick={() => handleWorkTypeSelection('3')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
-                  } ${clickedButton === '3' ? 'scale-105 bg-purple-700 shadow-lg' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                  } ${clickedButton === '3' ? 'scale-105 bg-secondary/80 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-purple-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">3</span>
+                <span className="bg-secondary/80 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">3</span>
                 <span className="hidden sm:inline">NEGATIVE EXPERIENCE</span>
                 <span className="sm:hidden">NEG. EXP.</span>
               </button>
@@ -2441,14 +2441,14 @@ export default function TreatmentSession({
             <button
               onClick={() => handleYesNoClick('yes')}
               disabled={isLoading}
-              className="px-6 py-2 sm:px-8 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               Yes
             </button>
             <button
               onClick={() => handleYesNoClick('no')}
               disabled={isLoading}
-              className="px-6 py-2 sm:px-8 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               No
             </button>
@@ -2461,14 +2461,14 @@ export default function TreatmentSession({
             <button
               onClick={() => handleYesNoClick('yes')}
               disabled={isLoading}
-              className="px-6 py-2 sm:px-8 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               Yes
             </button>
             <button
               onClick={() => handleYesNoClick('no')}
               disabled={isLoading}
-              className="px-6 py-2 sm:px-8 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               No
             </button>
@@ -2481,14 +2481,14 @@ export default function TreatmentSession({
             <button
               onClick={() => handleYesNoClick('yes')}
               disabled={isLoading}
-              className="px-6 py-2 sm:px-8 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               Yes
             </button>
             <button
               onClick={() => handleYesNoClick('no')}
               disabled={isLoading}
-              className="px-6 py-2 sm:px-8 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               No
             </button>
@@ -2502,14 +2502,14 @@ export default function TreatmentSession({
             <button
               onClick={() => handleYesNoClick('yes')}
               disabled={isLoading}
-              className="px-6 py-2 sm:px-8 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               Yes
             </button>
             <button
               onClick={() => handleYesNoClick('no')}
               disabled={isLoading}
-              className="px-6 py-2 sm:px-8 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
+              className="px-6 py-2 sm:px-8 sm:py-3 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 disabled:opacity-50 transition-colors font-semibold text-sm sm:text-base"
             >
               No
             </button>
@@ -2528,11 +2528,11 @@ export default function TreatmentSession({
               <button
                 onClick={() => handleMethodSelection('Problem Shifting')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
-                  } ${clickedButton === 'Problem Shifting' ? 'scale-105 bg-blue-700 shadow-lg' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                  } ${clickedButton === 'Problem Shifting' ? 'scale-105 bg-primary/80 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">1</span>
+                <span className="bg-primary/80 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">1</span>
                 <span className="hidden sm:inline">Problem Shifting</span>
                 <span className="sm:hidden">Problem Shifting</span>
               </button>
@@ -2540,11 +2540,11 @@ export default function TreatmentSession({
               <button
                 onClick={() => handleMethodSelection('Identity Shifting')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
-                  } ${clickedButton === 'Identity Shifting' ? 'scale-105 bg-green-700 shadow-lg' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                  } ${clickedButton === 'Identity Shifting' ? 'scale-105 bg-accent/80 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-green-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">2</span>
+                <span className="bg-accent/80 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">2</span>
                 <span className="hidden sm:inline">Identity Shifting</span>
                 <span className="sm:hidden">Identity Shifting</span>
               </button>
@@ -2552,11 +2552,11 @@ export default function TreatmentSession({
               <button
                 onClick={() => handleMethodSelection('Belief Shifting')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
-                  } ${clickedButton === 'Belief Shifting' ? 'scale-105 bg-purple-700 shadow-lg' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                  } ${clickedButton === 'Belief Shifting' ? 'scale-105 bg-secondary/80 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-purple-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">3</span>
+                <span className="bg-secondary/80 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">3</span>
                 <span className="hidden sm:inline">Belief Shifting</span>
                 <span className="sm:hidden">Belief Shifting</span>
               </button>
@@ -2564,11 +2564,11 @@ export default function TreatmentSession({
               <button
                 onClick={() => handleMethodSelection('Blockage Shifting')}
                 disabled={isLoading}
-                className={`px-3 py-2 sm:px-6 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
-                  } ${clickedButton === 'Blockage Shifting' ? 'scale-105 bg-red-700 shadow-lg' : ''
+                className={`px-3 py-2 sm:px-6 sm:py-3 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 font-semibold text-sm sm:text-base ${isLoading ? 'opacity-50' : ''
+                  } ${clickedButton === 'Blockage Shifting' ? 'scale-105 bg-destructive/80 shadow-lg' : ''
                   }`}
               >
-                <span className="bg-red-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">4</span>
+                <span className="bg-destructive/80 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-bold">4</span>
                 <span className="hidden sm:inline">Blockage Shifting</span>
                 <span className="sm:hidden">Blockage Shifting</span>
               </button>
@@ -2586,12 +2586,12 @@ export default function TreatmentSession({
               onChange={(e) => setUserInput(e.target.value)}
               placeholder="Type your response..."
               disabled={isLoading || !isSessionActive}
-              className="flex-1 px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+              className="flex-1 px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={isLoading || !userInput.trim() || !isSessionActive}
-              className="px-4 sm:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center justify-center sm:space-x-2"
+              className="px-4 sm:px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center sm:space-x-2"
             >
               <Send className="h-5 w-5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Send</span>

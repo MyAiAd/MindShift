@@ -53,18 +53,18 @@ class SessionErrorBoundary extends React.Component<
 
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-lg border border-red-200 bg-card p-5 text-center">
+        <div className="w-full max-w-md rounded-lg border border-destructive/30 bg-card p-5 text-center">
           <h2 className="text-lg font-semibold text-foreground mb-2">Session failed to render</h2>
           <p className="text-sm text-muted-foreground mb-4">
             Please reload the page. If the issue persists, use Force Refresh.
           </p>
           {this.state.errorMessage && (
-            <p className="text-xs text-red-600 mb-4 break-words">{this.state.errorMessage}</p>
+            <p className="text-xs text-destructive mb-4 break-words">{this.state.errorMessage}</p>
           )}
           <div className="flex gap-2 justify-center">
             <button
               onClick={() => window.location.reload()}
-              className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 text-sm"
+              className="px-3 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm"
             >
               Reload
             </button>
@@ -157,8 +157,8 @@ function TreatmentSessionContent() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-        <span className="ml-2 text-muted-foreground dark:text-[#93a1a1]">Loading V5...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2 text-muted-foreground ">Loading V5...</span>
       </div>
     );
   }
@@ -167,9 +167,9 @@ function TreatmentSessionContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground dark:text-[#fdf6e3] mb-4">Authentication Required</h1>
-          <p className="text-muted-foreground dark:text-[#93a1a1]">Please sign in to access V5 treatment sessions.</p>
-          <Link href="/auth" className="mt-4 inline-block text-indigo-600 hover:text-indigo-700">
+          <h1 className="text-2xl font-bold text-foreground  mb-4">Authentication Required</h1>
+          <p className="text-muted-foreground ">Please sign in to access V5 treatment sessions.</p>
+          <Link href="/auth" className="mt-4 inline-block text-primary hover:text-primary/80">
             Sign In
           </Link>
         </div>
@@ -180,54 +180,34 @@ function TreatmentSessionContent() {
   if (!sessionId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-        <span className="ml-2 text-muted-foreground dark:text-[#93a1a1]">Initializing V5 session...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2 text-muted-foreground ">Initializing V5 session...</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-secondary/20 dark:bg-[#002b36]">
+    <div className="min-h-screen bg-secondary/20">
       {/* V5 Audio Preloader - loads static audio for selected voice */}
       <V5AudioPreloader voice={selectedVoice} />
       
-      {/* Mobile Header - Compact, fixed */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card dark:bg-[#073642] border-b border-border dark:border-[#586e75]">
+      {/* Header - Compact, fixed */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border">
         <div className="flex items-center justify-between h-14 px-4">
           <div className="flex items-center space-x-3">
-            <Link 
+            <Link
               href="/dashboard"
               className="text-muted-foreground hover:text-foreground transition-colors p-1"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <span className="text-base font-semibold text-foreground dark:text-[#fdf6e3]">Shifting</span>
+            <span className="text-base font-semibold text-foreground">Shifting</span>
           </div>
         </div>
       </div>
-      
-      {/* Desktop Header */}
-      <div className="hidden md:block bg-card dark:bg-[#073642] border-b border-border dark:border-[#586e75]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/dashboard/sessions"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-              <div className="flex items-center space-x-2">
-                <Brain className="h-6 w-6 text-indigo-600" />
-                <span className="text-lg font-semibold text-foreground dark:text-[#fdf6e3]">Mind Shifting Session</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Spacer for fixed mobile header */}
-      <div className="md:hidden h-14"></div>
+
+      {/* Spacer for fixed header */}
+      <div className="h-14"></div>
 
       {/* Treatment Session Component - minimal top padding on mobile */}
       <div className="py-2 md:py-8">
@@ -250,8 +230,8 @@ export default function TreatmentSessionV5Page() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-        <span className="ml-2 text-muted-foreground dark:text-[#93a1a1]">Loading V5...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2 text-muted-foreground ">Loading V5...</span>
       </div>
     }>
       <TreatmentSessionContent />

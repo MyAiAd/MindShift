@@ -388,6 +388,8 @@
     --accent-foreground: 0 0% 9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
@@ -416,6 +418,8 @@
     --accent-foreground: 44 11% 93%;   /* base3: #fdf6e3 - text on accent */
     --destructive: 1 71% 52%;          /* red: #dc322f - destructive actions */
     --destructive-foreground: 44 11% 93%; /* base3: #fdf6e3 - text on destructive */
+    --warning: 45 100% 36%;            /* yellow: #b58900 - warning */
+    --warning-foreground: 44 87% 94%;  /* cream - text on warning */
     --border: 192 81% 27%;             /* base01 lighter - borders */
     --input: 192 81% 27%;              /* base01 lighter - input borders */
     --ring: 205 69% 67%;               /* blue: #268bd2 - focus rings */
@@ -449,6 +453,8 @@
     --accent-foreground: 44 11% 93%; /* base3: #fdf6e3 - light text on green */
     --destructive: 1 71% 52%;        /* red: #dc322f */
     --destructive-foreground: 44 11% 93%; /* base3: #fdf6e3 - light text on red */
+    --warning: 45 100% 36%;          /* yellow: #b58900 */
+    --warning-foreground: 44 11% 93%; /* base3: #fdf6e3 */
     --border: 192 13% 45%;           /* base0: #839496 - visible border */
     --input: 192 13% 45%;            /* base0: #839496 - visible input border */
     --ring: 205 69% 67%;             /* blue: #268bd2 - focus ring */
@@ -477,6 +483,8 @@
     --accent-foreground: 44 11% 93%;   /* base3: #fdf6e3 */
     --destructive: 1 71% 52%;          /* red: #dc322f */
     --destructive-foreground: 44 11% 93%; /* base3: #fdf6e3 */
+    --warning: 45 100% 36%;            /* yellow: #b58900 */
+    --warning-foreground: 44 87% 94%;  /* cream */
     --border: 192 81% 27%;             /* base01 lighter */
     --input: 192 81% 27%;              /* base01 lighter */
     --ring: 205 69% 67%;               /* blue: #268bd2 */
@@ -503,6 +511,8 @@
     --accent-foreground: 48 87% 94%; /* #fbf1c7 */
     --destructive: 4 69% 55%;        /* #cc241d */
     --destructive-foreground: 48 87% 94%; /* #fbf1c7 */
+    --warning: 39 83% 49%;           /* #d79921 */
+    --warning-foreground: 48 87% 94%; /* #fbf1c7 */
     --border: 36 46% 76%;            /* #d5c4a1 */
     --input: 36 46% 76%;             /* #d5c4a1 */
     --ring: 39 83% 49%;              /* #d79921 */
@@ -531,6 +541,8 @@
     --accent-foreground: 25 18% 16%; /* #282828 */
     --destructive: 4 90% 58%;        /* #fb4934 */
     --destructive-foreground: 36 65% 90%; /* #ebdbb2 */
+    --warning: 39 100% 58%;          /* #fabd2f */
+    --warning-foreground: 25 18% 16%; /* #282828 */
     --border: 25 43% 35%;            /* #504945 */
     --input: 25 43% 35%;             /* #504945 */
     --ring: 39 100% 58%;             /* #fabd2f */
@@ -557,6 +569,8 @@
     --accent-foreground: 220 16% 22%; /* #2e3440 */
     --destructive: 354 42% 56%;      /* #bf616a */
     --destructive-foreground: 219 28% 88%; /* #d8dee9 */
+    --warning: 40 71% 73%;           /* #ebcb8b */
+    --warning-foreground: 220 16% 22%; /* #2e3440 */
     --border: 220 16% 36%;           /* #434c5e */
     --input: 220 16% 36%;            /* #434c5e */
     --ring: 193 43% 67%;             /* #88c0d0 */
@@ -583,6 +597,8 @@
     --accent-foreground: 231 15% 18%; /* #282a36 */
     --destructive: 0 100% 67%;       /* #ff5555 */
     --destructive-foreground: 60 30% 96%; /* #f8f8f2 */
+    --warning: 65 92% 76%;           /* #f1fa8c */
+    --warning-foreground: 231 15% 18%; /* #282a36 */
     --border: 230 15% 36%;           /* #6272a4 */
     --input: 230 15% 36%;            /* #6272a4 */
     --ring: 265 89% 78%;             /* #bd93f9 */
@@ -609,6 +625,8 @@
     --accent-foreground: 240 21% 15%; /* #1e1e2e */
     --destructive: 343 81% 75%;      /* #f38ba8 */
     --destructive-foreground: 240 21% 15%; /* #1e1e2e */
+    --warning: 41 86% 83%;           /* #f9e2af */
+    --warning-foreground: 240 21% 15%; /* #1e1e2e */
     --border: 233 12% 39%;           /* #585b70 */
     --input: 233 12% 39%;            /* #585b70 */
     --ring: 217 92% 76%;             /* #89b4fa */
@@ -635,6 +653,8 @@
     --accent-foreground: 235 18% 13%; /* #1a1b26 */
     --destructive: 3 87% 67%;        /* #f7768e */
     --destructive-foreground: 235 18% 13%; /* #1a1b26 */
+    --warning: 32 93% 66%;           /* #e0af68 */
+    --warning-foreground: 235 18% 13%; /* #1a1b26 */
     --border: 235 18% 24%;           /* #292e42 */
     --input: 235 18% 24%;            /* #292e42 */
     --ring: 217 92% 76%;             /* #7aa2f7 */

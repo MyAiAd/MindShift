@@ -59,7 +59,7 @@ export default function BlockageShifting({
           <h3 className="text-lg font-semibold text-foreground">
             Blockage Shifting
           </h3>
-          <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded-full flex items-center space-x-1">
+          <span className="px-2 py-1 text-xs font-medium bg-warning/20 text-warning rounded-full flex items-center space-x-1">
             <Sparkles className="h-3 w-3" />
             <span>V3</span>
           </span>
@@ -69,7 +69,7 @@ export default function BlockageShifting({
           <button
             onClick={onUndo}
             disabled={isLoading}
-            className="flex items-center space-x-1 px-3 py-1 text-sm text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
+            className="flex items-center space-x-1 px-3 py-1 text-sm text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
           >
             <Undo2 className="h-4 w-4" />
             <span>Undo</span>
@@ -83,14 +83,14 @@ export default function BlockageShifting({
           <button
             onClick={() => handleYesNoResponse('yes')}
             disabled={isLoading}
-            className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-medium"
+            className="flex-1 px-4 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 disabled:opacity-50 transition-colors font-medium"
           >
             Yes
           </button>
           <button
             onClick={() => handleYesNoResponse('no')}
             disabled={isLoading}
-            className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-medium"
+            className="flex-1 px-4 py-3 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 disabled:opacity-50 transition-colors font-medium"
           >
             No
           </button>
@@ -107,7 +107,7 @@ export default function BlockageShifting({
               onChange={(e) => setUserInput(e.target.value)}
               placeholder="Type your response..."
               disabled={isLoading}
-              className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+              className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
               onKeyPress={(e) => {
                 if (e.key === 'Enter' && userInput.trim() && !isLoading) {
                   onSendMessage(userInput.trim());
@@ -122,7 +122,7 @@ export default function BlockageShifting({
           <button
             onClick={() => userInput.trim() && onSendMessage(userInput.trim())}
             disabled={isLoading || !userInput.trim()}
-            className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors font-medium"
+            className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors font-medium"
           >
             {isLoading ? 'Processing...' : 'Send Response'}
           </button>
