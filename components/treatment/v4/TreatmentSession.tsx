@@ -889,18 +889,7 @@ export default function TreatmentSession({
         naturalVoice.pauseSpeaking();
       }
       
-      // Auto-start test audio if speaker enabled AND not in guided mode
-      // In guided mode (PTT), test audio auto-start is confusing - user must manually start it
-      if (isSpeakerEnabled && !isTestPlaying && !isGuidedMode) {
-        console.log('⚙️ Settings opened - auto-starting test audio');
-        // Store the timeout so it can be cancelled if settings close quickly
-        testAutoStartTimeoutRef.current = setTimeout(() => {
-          testAutoStartTimeoutRef.current = null;
-          startTestAudio();
-        }, 300); // Small delay for smooth UX
-      } else if (isGuidedMode) {
-        console.log('⚙️ Settings opened in guided mode - skipping test audio auto-start');
-      }
+      // Auto-start removed: users can manually trigger test audio via the Play Test button
     } else {
       // Settings closed - cancel any pending auto-start and stop test audio
       if (testAutoStartTimeoutRef.current) {

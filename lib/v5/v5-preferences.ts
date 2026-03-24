@@ -47,7 +47,7 @@ export function isMobileDevice(): boolean {
  * Get the default interaction mode based on device type
  */
 export function getDefaultInteractionMode(): InteractionMode {
-  return isMobileDevice() ? 'orb_ptt' : 'text_first';
+  return 'orb_ptt';
 }
 
 /**

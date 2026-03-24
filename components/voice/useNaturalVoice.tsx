@@ -738,6 +738,12 @@ export const useNaturalVoice = ({
             return false;
         }
 
+        // Don't play fallback voice if speaker is disabled
+        if (!speakerEnabledRef.current) {
+            console.log('🔊 Natural Voice: SpeechSynthesis fallback skipped - speaker disabled');
+            return false;
+        }
+
         return new Promise<boolean>((resolve) => {
             let finished = false;
             let safetyTimeout: ReturnType<typeof setTimeout> | null = null;

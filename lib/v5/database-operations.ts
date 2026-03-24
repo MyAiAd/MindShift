@@ -99,23 +99,25 @@ export class DatabaseOperations {
         console.error('Error saving session data:', sessionError);
       }
 
-      // Save user responses to treatment_progress
-      for (const [stepId, response] of Object.entries(context.userResponses)) {
-        if (response) {
-          const { error: progressError } = await supabase
-            .from('treatment_progress')
-            .upsert({
-              session_id: context.sessionId,
-              phase_id: context.currentPhase,
-              step_id: stepId,
-              user_response: response
-            }, {
-              onConflict: 'session_id,phase_id,step_id'
-            });
+      // Batch upsert all user responses to treatment_progress
+      const progressRecords = Object.entries(context.userResponses)
+        .filter(([, response]) => response)
+        .map(([stepId, response]) => ({
+          session_id: context.sessionId,
+          phase_id: context.currentPhase,
+          step_id: stepId,
+          user_response: response
+        }));
 
-          if (progressError) {
-            console.error('Error saving progress data:', progressError);
-          }
+      if (progressRecords.length > 0) {
+        const { error: progressError } = await supabase
+          .from('treatment_progress')
+          .upsert(progressRecords, {
+            onConflict: 'session_id,phase_id,step_id'
+          });
+
+        if (progressError) {
+          console.error('Error saving progress data:', progressError);
         }
       }
 

@@ -699,11 +699,11 @@ async function handleContinueSession(
       };
     }
 
-    // PHASE 1 OPTIMIZATION: Save interaction and update context in parallel (independent operations)
-    await Promise.all([
+    // Fire-and-forget: DB writes don't block the API response
+    void Promise.all([
       saveInteractionToDatabase(sessionId, userInput, finalResponse),
       updateSessionContextInDatabase(sessionId, finalResponse.currentStep, finalResponse.usedAI, finalResponse.responseTime)
-    ]);
+    ]).catch(err => console.error('Background DB save failed:', err));
 
     // NEW: Add performance metrics to response
     const perfMetrics = treatmentMachine.getPerformanceMetrics();

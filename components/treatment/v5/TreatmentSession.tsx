@@ -242,11 +242,11 @@ export default function TreatmentSession({
   }, [clearSubtitleTimers]);
 
   const beginFirstSpeechLoading = useCallback(() => {
-    if (!isMobile || interactionMode !== 'orb_ptt' || !isSpeakerEnabled || hasFirstSpeechStarted) {
+    if (interactionMode !== 'orb_ptt' || !isSpeakerEnabled || hasFirstSpeechStarted) {
       return;
     }
     setIsFirstSpeechLoading(true);
-  }, [hasFirstSpeechStarted, interactionMode, isMobile, isSpeakerEnabled]);
+  }, [hasFirstSpeechStarted, interactionMode, isSpeakerEnabled]);
 
   const splitIntoSubtitleSegments = useCallback((text: string): string[] => {
     const normalized = text.replace(/\s+/g, ' ').trim();
@@ -491,16 +491,14 @@ export default function TreatmentSession({
       
       // Apply mode-specific settings
       if (customEvent.detail === 'orb_ptt') {
-        // Orb mode: enable both mic and speaker by default, activate guided mode on mobile
-        if (isMobile) {
-          setIsGuidedMode(true);
-          setIsMicEnabled(true);
-          setIsSpeakerEnabled(true);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('v5_mic_enabled', 'true');
-            localStorage.setItem('v5_speaker_enabled', 'true');
-            localStorage.setItem('v4_guided_mode', 'true');
-          }
+        // Orb mode: enable both mic and speaker by default, activate guided mode
+        setIsGuidedMode(true);
+        setIsMicEnabled(true);
+        setIsSpeakerEnabled(true);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('v5_mic_enabled', 'true');
+          localStorage.setItem('v5_speaker_enabled', 'true');
+          localStorage.setItem('v4_guided_mode', 'true');
         }
       } else if (customEvent.detail === 'listen_only') {
         // Listen-only: speaker on, mic off, no guided mode
@@ -538,7 +536,7 @@ export default function TreatmentSession({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    const shouldInitOrb = isMobile && interactionMode === 'orb_ptt';
+    const shouldInitOrb = interactionMode === 'orb_ptt';
     const isListenOnly = interactionMode === 'listen_only';
     const isTextFirst = interactionMode === 'text_first';
     
@@ -889,18 +887,7 @@ export default function TreatmentSession({
         naturalVoice.pauseSpeaking();
       }
       
-      // Auto-start test audio if speaker enabled AND not in guided mode
-      // In guided mode (PTT), test audio auto-start is confusing - user must manually start it
-      if (isSpeakerEnabled && !isTestPlaying && !isGuidedMode) {
-        console.log('⚙️ Settings opened - auto-starting test audio');
-        // Store the timeout so it can be cancelled if settings close quickly
-        testAutoStartTimeoutRef.current = setTimeout(() => {
-          testAutoStartTimeoutRef.current = null;
-          startTestAudio();
-        }, 300); // Small delay for smooth UX
-      } else if (isGuidedMode) {
-        console.log('⚙️ Settings opened in guided mode - skipping test audio auto-start');
-      }
+      // Auto-start removed: users can manually trigger test audio via the Play Test button
     } else {
       // Settings closed - cancel any pending auto-start and stop test audio
       if (testAutoStartTimeoutRef.current) {
@@ -1076,7 +1063,7 @@ export default function TreatmentSession({
   // Handler for starting the session (clicking the play button)
   const handleStartSession = async () => {
     setHasUserStartedSession(true);
-    if (isMobile && interactionMode === 'orb_ptt' && micPermission !== 'granted') {
+    if (interactionMode === 'orb_ptt' && micPermission !== 'granted') {
       setIsPreparingStartPermissions(true);
       await requestMicPermission();
       setIsPreparingStartPermissions(false);
@@ -1333,11 +1320,6 @@ export default function TreatmentSession({
             };
 
             setMessages(prev => [...prev, systemMessage]);
-
-            // Use global voice if enabled
-            if (voice.isVoiceOutputEnabled) {
-              voice.speakGlobally(data.message);
-            }
           }
         }
 
@@ -1669,11 +1651,6 @@ export default function TreatmentSession({
                 version: 'v4'
               };
               setMessages(prev => [...prev, systemMessage]);
-              
-              // Use global voice if enabled
-              if (voice.isVoiceOutputEnabled) {
-                voice.speakGlobally(data.message);
-              }
             }
           }
 
@@ -1875,13 +1852,8 @@ export default function TreatmentSession({
               version: 'v4'
             };
             setMessages(prev => [...prev, systemMessage]);
-            
-            // Use global voice if enabled
-            if (voice.isVoiceOutputEnabled) {
-              voice.speakGlobally(data.message);
-            }
           }
-          
+
           setCurrentStep(data.currentStep);
           setLastResponseTime(data.responseTime || 0);
 
@@ -1910,13 +1882,12 @@ export default function TreatmentSession({
   };
 
   const showFirstSpeechWarmup =
-    isMobile &&
     interactionMode === 'orb_ptt' &&
     isFirstSpeechLoading &&
     !hasFirstSpeechStarted;
 
   return (
-    <div className="max-w-4xl mx-auto px-2 sm:px-4 relative flex flex-col h-full min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-120px)]">
+    <div className="max-w-4xl mx-auto px-2 sm:px-4 relative flex flex-col h-full min-h-[calc(100vh-140px)]">
       {/* Guided Mode Full-Screen PTT Interface */}
       {isGuidedMode && (
         <div className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex flex-col items-center justify-center">
@@ -1946,7 +1917,7 @@ export default function TreatmentSession({
           {/* Centered Orb + Subtitle */}
           <div
             className={`flex-1 flex flex-col items-center justify-center ${
-              isMobile && interactionMode === 'orb_ptt' ? 'pb-24' : ''
+              interactionMode === 'orb_ptt' ? 'pb-24' : ''
             }`}
           >
             {/* Main PTT Button */}
@@ -1999,7 +1970,7 @@ export default function TreatmentSession({
             </button>
 
             {/* Subtitle line - directly beneath the orb */}
-            {isMobile && interactionMode === 'orb_ptt' && (
+            {interactionMode === 'orb_ptt' && (
               <div className="w-full px-4 mt-4">
                 <div className="mx-auto max-w-md rounded-md bg-black/30 border border-white/20 backdrop-blur-sm px-3 py-2">
                   <p
@@ -2014,7 +1985,7 @@ export default function TreatmentSession({
           </div>
 
           {/* Mobile Controls at Bottom - Skip Audio */}
-          {isMobile && interactionMode === 'orb_ptt' && naturalVoice.isSpeaking && (
+          {interactionMode === 'orb_ptt' && naturalVoice.isSpeaking && (
             <div className="absolute bottom-0 left-0 right-0 pb-safe">
               <div className="flex items-center justify-center p-6">
                 <button
@@ -2032,12 +2003,10 @@ export default function TreatmentSession({
             </div>
           )}
 
-          {/* Instructions at bottom (only on desktop) */}
-          {!isMobile && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-sm text-center max-w-md px-4">
-              <p className="mb-2">Close your eyes and speak when ready</p>
-            </div>
-          )}
+          {/* Instructions at bottom */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-sm text-center max-w-md px-4">
+            <p className="mb-2">Close your eyes and speak when ready</p>
+          </div>
         </div>
       )}
 
@@ -2075,10 +2044,10 @@ export default function TreatmentSession({
 
       {/* V4 Header - Mobile: Slim sticky bar / Desktop: Full card */}
       
-      {/* Mobile Header - 2x2 Grid, sticky below page header (h-14 = 56px) */}
-      {/* Hide this header when in orb_ptt mode on mobile - orb has its own minimal controls */}
-      {(!isMobile || interactionMode !== 'orb_ptt') && (
-        <div className="flex md:hidden flex-col gap-2 px-3 py-2.5 mb-2 bg-card dark:bg-[#073642] rounded-lg border border-border dark:border-[#586e75] sticky top-14 z-30">
+      {/* Header - 2x2 Grid, sticky below page header (h-14 = 56px) */}
+      {/* Hide this header when in orb_ptt mode - orb has its own minimal controls */}
+      {interactionMode !== 'orb_ptt' && (
+        <div className="flex flex-col gap-2 px-3 py-2.5 mb-2 bg-card dark:bg-[#073642] rounded-lg border border-border dark:border-[#586e75] sticky top-14 z-30">
         {/* Audio Controls - 2x2 Grid */}
         <div className="grid grid-cols-2 gap-2">
           {/* Microphone Toggle */}
@@ -2207,177 +2176,7 @@ export default function TreatmentSession({
       </div>
       )}
 
-      {/* Desktop Header - STICKY to top */}
-      <div className="hidden md:block bg-card dark:bg-[#073642] rounded-lg shadow-sm border border-border dark:border-[#586e75] mb-6 sticky top-0 z-30">
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border dark:border-[#586e75]">
-          
-          {/* Desktop Layout: Full header */}
-          <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-            {/* Title Section */}
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
-              <h2 className="text-base sm:text-xl font-semibold text-foreground dark:text-[#fdf6e3] truncate">
-                {formatMethodName(sessionMethod)}
-              </h2>
-              <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded-full flex items-center space-x-1 flex-shrink-0">
-                <Sparkles className="h-3 w-3" />
-                <span>V5</span>
-              </span>
-            </div>
-
-            {/* Controls Section - Desktop: 2x2 Grid for Audio Controls */}
-            <div className="flex flex-col gap-3">
-              {/* Performance Indicators Row */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center space-x-3 text-xs sm:text-sm text-muted-foreground dark:text-[#93a1a1]">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4" />
-                    <span>{lastResponseTime}ms</span>
-                  </div>
-
-                  {performanceMetrics.cacheHitRate > 0 && (
-                    <div className="flex items-center space-x-2">
-                      <Zap className="h-4 w-4 text-yellow-500" />
-                      <span>{performanceMetrics.cacheHitRate.toFixed(0)}%</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Undo Button - Original code, just repositioned */}
-                {stepHistory.length > 0 && (
-                  <button
-                    onClick={handleUndo}
-                    disabled={isLoading}
-                    className="flex items-center space-x-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-muted-foreground dark:text-[#93a1a1] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50 flex-shrink-0"
-                  >
-                    <Undo2 className="h-4 w-4" />
-                    <span>Undo</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Audio Controls - 2x2 Grid */}
-              <div className="grid grid-cols-2 gap-2">
-                {/* Microphone Toggle */}
-                <button
-                  onClick={toggleMic}
-                  disabled={micPermission === 'denied'}
-                  className={`flex items-center justify-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isMicEnabled
-                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
-                    : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary dark:hover:bg-[#657b83]'
-                    } ${micPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  title={
-                    !isMicEnabled ? 'Enable Microphone' :
-                    naturalVoice.listeningState === 'listening' ? 'Listening...' :
-                    naturalVoice.listeningState === 'restarting' ? 'Restarting...' :
-                    naturalVoice.listeningState === 'blockedByAudio' ? 'Blocked (AI speaking)' :
-                    naturalVoice.listeningState === 'micDisabled' ? 'Microphone disabled' :
-                    naturalVoice.listeningState === 'permissionDenied' ? 'Permission denied' :
-                    naturalVoice.listeningState === 'unsupported' ? 'Not supported' :
-                    naturalVoice.listeningState === 'error' ? 'Error' :
-                    'Ready'
-                  }
-                >
-                  {isMicEnabled ? (
-                    <>
-                      {naturalVoice.isListening ? (
-                        <Mic className="h-4 w-4 animate-pulse text-red-500" />
-                      ) : naturalVoice.listeningState === 'restarting' ? (
-                        <Mic className="h-4 w-4 animate-spin text-yellow-500" />
-                      ) : naturalVoice.listeningState === 'blockedByAudio' ? (
-                        <Mic className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <Mic className="h-4 w-4" />
-                      )}
-                      <span>🎤 Mic On</span>
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="h-4 w-4" />
-                      <span>🎤 Mic Off</span>
-                    </>
-                  )}
-                </button>
-
-                {/* Speaker Toggle */}
-                <button
-                  onClick={toggleSpeaker}
-                  className={`flex items-center justify-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isSpeakerEnabled
-                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 ring-2 ring-indigo-500 ring-offset-1'
-                    : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary dark:hover:bg-[#657b83]'
-                    }`}
-                  title="Toggle Audio Output"
-                >
-                  {isSpeakerEnabled ? (
-                    <>
-                      {naturalVoice.isSpeaking ? (
-                        <Volume2 className="h-4 w-4 animate-pulse" />
-                      ) : (
-                        <Volume2 className="h-4 w-4" />
-                      )}
-                      <span>🔊 Audio On</span>
-                    </>
-                  ) : (
-                    <>
-                      <VolumeX className="h-4 w-4" />
-                      <span>🔊 Audio Off</span>
-                    </>
-                  )}
-                </button>
-
-                {/* Pause/Play Button - ALWAYS visible, disabled when no audio */}
-                <button
-                  onClick={handlePauseResume}
-                  disabled={!naturalVoice.isSpeaking && !naturalVoice.isPaused}
-                  className={`flex items-center justify-center px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                    naturalVoice.isPaused
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 ring-2 ring-green-500 ring-offset-1'
-                      : naturalVoice.isSpeaking
-                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 ring-2 ring-yellow-500 ring-offset-1'
-                      : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] opacity-50 cursor-not-allowed'
-                  }`}
-                  title={
-                    !naturalVoice.isSpeaking && !naturalVoice.isPaused
-                      ? "No audio playing"
-                      : naturalVoice.isPaused
-                      ? "Resume audio"
-                      : "Pause audio"
-                  }
-                >
-                  {naturalVoice.isPaused ? (
-                    <span className="flex items-center space-x-1.5">
-                      <Play className="h-4 w-4" />
-                      <span>Resume</span>
-                    </span>
-                  ) : (
-                    <span className="flex items-center space-x-1.5">
-                      <span className="text-base">⏸️</span>
-                      <span>Pause</span>
-                    </span>
-                  )}
-                </button>
-
-                {/* Settings Button */}
-                <button
-                  onClick={() => setShowVoiceSettings(!showVoiceSettings)}
-                  className={`flex items-center justify-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                    showVoiceSettings
-                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                      : 'bg-secondary text-muted-foreground dark:bg-[#586e75] dark:text-[#93a1a1] hover:bg-secondary/80 dark:hover:bg-[#657b83]'
-                  }`}
-                  title="Voice Settings"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Settings</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          {/* End Desktop Layout */}
-        </div>
-      </div>
-
-      {/* Voice Settings Modal - Separate from headers, bottom sheet on mobile, centered on desktop */}
+      {/* Voice Settings Modal - bottom sheet on all devices */}
       {showVoiceSettings && (
         <>
           {/* Overlay backdrop */}
@@ -2387,18 +2186,18 @@ export default function TreatmentSession({
           />
           
           {/* Modal content - bottom sheet on mobile, centered modal on desktop */}
-          <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-80 md:max-w-[90vw] bg-card dark:bg-[#073642] border-t md:border border-border dark:border-[#586e75] md:rounded-xl shadow-xl p-4 pb-8 md:pb-4 z-50 max-h-[70vh] overflow-y-auto rounded-t-2xl md:rounded-xl">
+          <div className="fixed bottom-0 left-0 right-0 w-full bg-card dark:bg-[#073642] border-t border-border dark:border-[#586e75] shadow-xl p-4 pb-8 z-50 max-h-[70vh] overflow-y-auto rounded-t-2xl">
             {/* Mobile drag handle */}
-            <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mb-4 md:hidden" />
+            <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mb-4" />
             
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg md:text-sm font-semibold text-foreground dark:text-[#fdf6e3] flex items-center space-x-2">
-                <Settings className="h-5 w-5 md:h-4 md:w-4 text-indigo-500" />
+              <h3 className="text-lg font-semibold text-foreground dark:text-[#fdf6e3] flex items-center space-x-2">
+                <Settings className="h-5 w-5 text-indigo-500" />
                 <span>Voice Settings</span>
               </h3>
               <button
                 onClick={() => setShowVoiceSettings(false)}
-                className="text-muted-foreground hover:text-foreground text-2xl md:text-xl leading-none p-1 -mr-1"
+                className="text-muted-foreground hover:text-foreground text-2xl leading-none p-1 -mr-1"
                 aria-label="Close settings"
               >
                 ×
@@ -2555,8 +2354,8 @@ export default function TreatmentSession({
       </div>
 
       {/* V4 Input Area - Fixed at bottom, doesn't shrink */}
-      {/* Hide input area when in orb mode on mobile - orb uses PTT only */}
-      {(!isMobile || interactionMode !== 'orb_ptt' || !isGuidedMode) && (
+      {/* Hide input area when in orb guided mode - orb uses PTT only */}
+      {(interactionMode !== 'orb_ptt' || !isGuidedMode) && (
         <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-border mt-auto">
         {hasError && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
