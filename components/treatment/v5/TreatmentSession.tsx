@@ -1887,7 +1887,7 @@ export default function TreatmentSession({
     !hasFirstSpeechStarted;
 
   return (
-    <div className="max-w-4xl mx-auto px-2 sm:px-4 relative flex flex-col h-full min-h-[calc(100vh-140px)]">
+    <div className="max-w-4xl mx-auto px-2 sm:px-4 flex flex-col fixed inset-x-0 top-14 bottom-0">
       {/* Guided Mode PTT Interface - inline, not full-screen overlay */}
       {isGuidedMode && (
         <div className="relative flex-shrink-0 bg-gradient-to-br from-primary/90 via-secondary/90 to-primary/80 rounded-lg flex flex-col items-center py-5 px-4 mb-2">
@@ -2031,7 +2031,7 @@ export default function TreatmentSession({
       )}
 
       {/* Header - 2x2 Grid, sticky below page header (h-14 = 56px) */}
-        <div className="flex flex-col gap-2 px-3 py-2.5 mb-2 bg-card rounded-lg border border-border sticky top-14 z-30">
+        <div className="flex-shrink-0 flex flex-col gap-2 px-3 py-2.5 mb-2 bg-card rounded-lg border border-border z-30">
         {/* Audio Controls - 2x2 Grid */}
         <div className="grid grid-cols-2 gap-2">
           {/* Microphone Toggle */}
@@ -2270,8 +2270,8 @@ export default function TreatmentSession({
         </>
       )}
 
-      {/* V4 Messages Area - Flex-grow to fill available space */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-card/30 rounded-lg border border-border/30 min-h-0">
+      {/* Messages Area - scrollable, fills remaining space */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-card/30 rounded-lg border border-border/30 min-h-0 mb-2">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -2337,8 +2337,8 @@ export default function TreatmentSession({
       </div>
 
       {/* V4 Input Area - Fixed at bottom, doesn't shrink */}
-      {/* Input area - always visible */}
-        <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-border mt-auto">
+      {/* Input area - pinned at bottom */}
+        <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-border bg-background">
         {hasError && (
           <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
             <div className="flex items-center space-x-2">
