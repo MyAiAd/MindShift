@@ -4,18 +4,24 @@ import { ProcessingResult } from '@/lib/v5/types';
 import { AIAssistanceManager, AIAssistanceRequest, AIModelOverrides, ValidationAssistanceRequest } from '@/lib/v2/ai-assistance';
 import { createServerClient } from '@/lib/database-server';
 import { getUserOpenRouterKey } from '@/lib/server/labs-openrouter-key';
-import { ValidationHelpers } from '@/lib/v5/validation-helpers';
+
 
 // Singleton instances for performance
 const treatmentMachine = new TreatmentStateMachine();
 const aiAssistance = new AIAssistanceManager();
-const DEADLINE_AI_TIMEOUT_MS = 1800;
+const GOAL_AI_TIMEOUT_MS = 2000;
 
-type DeadlineDetectionAIResult = {
+// --- Goal Parse / Synthesis AI types ---
+
+type GoalParseResult = {
   hasDeadline: boolean;
-  deadlineText?: string | null;
-  normalizedGoal?: string | null;
-  confidence?: number;
+  goalWithoutDeadline: string;
+  deadline: string | null;
+  goalWithDeadline: string | null;
+};
+
+type GoalSynthesisResult = {
+  goalWithDeadline: string;
 };
 
 /**
@@ -43,61 +49,72 @@ function extractEmotionFromInput(userInput: string): string {
   return foundEmotion || 'this way';
 }
 
-function safeParseDeadlineResult(raw: string): DeadlineDetectionAIResult | null {
+function safeParseJSON<T>(raw: string, validator: (parsed: any) => T | null): T | null {
   const trimmed = (raw || '').trim();
   if (!trimmed) return null;
 
-  const directJsonStart = trimmed.indexOf('{');
-  const directJsonEnd = trimmed.lastIndexOf('}');
-  if (directJsonStart === -1 || directJsonEnd === -1 || directJsonEnd <= directJsonStart) {
+  const jsonStart = trimmed.indexOf('{');
+  const jsonEnd = trimmed.lastIndexOf('}');
+  if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) {
     return null;
   }
 
-  const candidate = trimmed.slice(directJsonStart, directJsonEnd + 1);
   try {
-    const parsed = JSON.parse(candidate);
-    if (typeof parsed?.hasDeadline !== 'boolean') return null;
-    return {
-      hasDeadline: parsed.hasDeadline,
-      deadlineText: typeof parsed.deadlineText === 'string' ? parsed.deadlineText : null,
-      normalizedGoal: typeof parsed.normalizedGoal === 'string' ? parsed.normalizedGoal : null,
-      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
-    };
+    const parsed = JSON.parse(trimmed.slice(jsonStart, jsonEnd + 1));
+    return validator(parsed);
   } catch {
     return null;
   }
 }
 
-function normalizeGoalDeadlineInput(rawInput: string): string {
-  let input = (rawInput || '').trim();
-  if (!input) return input;
+// --- Generalized OpenRouter JSON call utility ---
 
-  // Normalize compact "1by"/"2by" style prefixes into a proper deadline preposition.
-  input = input.replace(/\b\d+\s*by\b/gi, 'by');
+async function callOpenRouterJSON<T>(
+  systemPrompt: string,
+  userMessage: string,
+  overrides: AIModelOverrides,
+  timeoutMs: number,
+  validator: (parsed: any) => T | null
+): Promise<T | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  const monthMap: Record<string, string> = {
-    jan: 'january',
-    feb: 'february',
-    mar: 'march',
-    apr: 'april',
-    may: 'may',
-    jun: 'june',
-    jul: 'july',
-    aug: 'august',
-    sep: 'september',
-    sept: 'september',
-    oct: 'october',
-    nov: 'november',
-    dec: 'december',
-  };
+  try {
+    const baseURL = overrides.baseURL || 'https://api.openai.com/v1';
+    const response = await fetch(`${baseURL}/chat/completions`, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${overrides.apiKey}`,
+        'Content-Type': 'application/json',
+        ...overrides.defaultHeaders,
+      },
+      body: JSON.stringify({
+        model: overrides.model || 'openai/gpt-4o-mini',
+        temperature: 0,
+        max_tokens: 150,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage },
+        ],
+      }),
+    });
 
-  // Expand month abbreviations to match local deadline detector patterns.
-  input = input.replace(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\b/gi, (abbr) => {
-    const key = abbr.toLowerCase();
-    return monthMap[key] || abbr;
-  });
+    if (!response.ok) {
+      console.warn('callOpenRouterJSON: request failed', { status: response.status });
+      return null;
+    }
 
-  return input.replace(/\s+/g, ' ').trim();
+    const json = await response.json();
+    const content = json?.choices?.[0]?.message?.content;
+    if (typeof content !== 'string') return null;
+
+    return safeParseJSON(content, validator);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function getDeadlineDetectionOverrides(
@@ -154,69 +171,77 @@ async function getDeadlineDetectionOverrides(
   }
 }
 
-async function detectDeadlineWithOpenRouter(
+// --- Goal Parse: detect deadline embedded in user goal ---
+
+const GOAL_PARSE_SYSTEM_PROMPT = [
+  'You parse goal statements. Given a user\'s goal, determine if it contains a deadline or time reference.',
+  'Return ONLY JSON: { "hasDeadline": boolean, "goalWithoutDeadline": string, "deadline": string | null, "goalWithDeadline": string | null }',
+  'Rules:',
+  '- Preserve the user\'s exact wording for the goal portion — do not rephrase, improve, or correct grammar',
+  '- A deadline is any explicit time/date reference: dates, durations, named periods, relative time ("next week", "by Friday", "end of Q1", "before summer")',
+  '- Vague urgency ("soon", "ASAP") is NOT a deadline — set hasDeadline: false',
+  '- The "by" preposition belongs in goalWithDeadline, NOT in the deadline field (e.g., deadline: "next week", not "by next week")',
+].join(' ');
+
+function validateGoalParseResult(parsed: any): GoalParseResult | null {
+  if (typeof parsed?.hasDeadline !== 'boolean') return null;
+  if (typeof parsed?.goalWithoutDeadline !== 'string') return null;
+  return {
+    hasDeadline: parsed.hasDeadline,
+    goalWithoutDeadline: parsed.goalWithoutDeadline,
+    deadline: typeof parsed.deadline === 'string' ? parsed.deadline : null,
+    goalWithDeadline: typeof parsed.goalWithDeadline === 'string' ? parsed.goalWithDeadline : null,
+  };
+}
+
+async function parseGoalWithAI(
   userGoalInput: string,
-  modelOverrides: AIModelOverrides
-): Promise<DeadlineDetectionAIResult | null> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), DEADLINE_AI_TIMEOUT_MS);
+  overrides: AIModelOverrides
+): Promise<GoalParseResult | null> {
+  return callOpenRouterJSON<GoalParseResult>(
+    GOAL_PARSE_SYSTEM_PROMPT,
+    `Goal: ${userGoalInput}`,
+    overrides,
+    GOAL_AI_TIMEOUT_MS,
+    validateGoalParseResult
+  );
+}
 
-  try {
-    const baseURL = modelOverrides.baseURL || 'https://api.openai.com/v1';
-    const payload = {
-      model: modelOverrides.model || 'openai/gpt-4o-mini',
-      temperature: 0,
-      max_tokens: 120,
-      messages: [
-        {
-          role: 'system',
-          content: [
-            'You detect deadlines in user goals.',
-            'Return ONLY JSON with keys: hasDeadline (boolean), deadlineText (string|null), normalizedGoal (string|null), confidence (0..1).',
-            'Treat abbreviated months (jan,feb,mar,apr,may,jun,jul,aug,sep,sept,oct,nov,dec) as valid month deadlines.',
-            'Handle compact/attached variants like "1BYNOV2026" by interpreting intended spacing.',
-            'Set hasDeadline=false unless there is an explicit time/date reference.'
-          ].join(' ')
-        },
-        {
-          role: 'user',
-          content: `Goal: ${userGoalInput}`
-        }
-      ]
-    };
+// --- Goal Synthesis: combine goal + manual deadline into natural sentence ---
 
-    const response = await fetch(`${baseURL}/chat/completions`, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${modelOverrides.apiKey}`,
-        'Content-Type': 'application/json',
-        ...modelOverrides.defaultHeaders,
-      },
-      body: JSON.stringify(payload),
-    });
+const GOAL_SYNTHESIS_SYSTEM_PROMPT = [
+  'Combine a goal statement with a deadline into a single natural sentence.',
+  'Return ONLY JSON: { "goalWithDeadline": string }',
+  'Rules:',
+  '- Preserve the user\'s exact wording for both the goal and the deadline',
+  '- Use "by" as the connecting preposition unless another preposition is clearly more natural (e.g., "in", "before")',
+  '- Do not add, remove, or rephrase any words from the user\'s input beyond the connecting preposition',
+  '- If the deadline already contains a preposition like "by" or "in", do not duplicate it',
+].join(' ');
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.warn('Treatment V5 API: Deadline AI request failed', {
-        status: response.status,
-        bodyPreview: errorBody.slice(0, 300)
-      });
-      return null;
-    }
+function validateGoalSynthesisResult(parsed: any): GoalSynthesisResult | null {
+  if (typeof parsed?.goalWithDeadline !== 'string') return null;
+  return { goalWithDeadline: parsed.goalWithDeadline };
+}
 
-    const json = await response.json();
-    const content = json?.choices?.[0]?.message?.content;
-    if (typeof content !== 'string') {
-      return null;
-    }
+async function synthesizeGoalWithAI(
+  goalStatement: string,
+  deadline: string,
+  overrides: AIModelOverrides
+): Promise<GoalSynthesisResult | null> {
+  return callOpenRouterJSON<GoalSynthesisResult>(
+    GOAL_SYNTHESIS_SYSTEM_PROMPT,
+    `Goal: ${goalStatement}\nDeadline: ${deadline}`,
+    overrides,
+    GOAL_AI_TIMEOUT_MS,
+    validateGoalSynthesisResult
+  );
+}
 
-    return safeParseDeadlineResult(content);
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+// Fallback synthesis when LLM is unavailable: strip leading preposition + template concat
+function synthesizeGoalFallback(goalStatement: string, deadline: string): string {
+  const cleanDeadline = deadline.replace(/^(by |in |within |on |before )/i, '').trim();
+  return `${goalStatement} by ${cleanDeadline}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -430,41 +455,27 @@ async function handleContinueSession(
   try {
     console.log('Treatment V5 API [v4-routing-fix]: Continuing session:', { sessionId, userId, userInput: userInput.substring(0, 50) + '...' });
 
-    // Optional micro-AI assist for deadline extraction in goal capture.
-    // Keep this cheap and non-blocking: only when local parser does not find a deadline.
+    // AI-powered goal parse: detect embedded deadline in user's goal input.
+    // The result is stored on context metadata so the state machine can use it.
     const currentContext = treatmentMachine.getContextForUndo(sessionId);
     const currentStep = currentContext?.currentStep;
     const isGoalCaptureStep = currentStep === 'goal_description' || currentStep === 'reality_goal_capture';
     if (isGoalCaptureStep && userInput.trim()) {
-      // Fast local normalization handles compact tokens like "1BY NOV 2026".
-      const normalizedInput = normalizeGoalDeadlineInput(userInput);
-      const localDeadline = ValidationHelpers.detectDeadlineInGoal(normalizedInput);
-      if (localDeadline.hasDeadline && normalizedInput !== userInput) {
-        userInput = normalizedInput;
-      }
-
-      if (!localDeadline.hasDeadline) {
-        const deadlineOverrides = await getDeadlineDetectionOverrides(userId, aiModelOverrides);
-        if (deadlineOverrides) {
-          const aiDeadline = await detectDeadlineWithOpenRouter(userInput, deadlineOverrides);
-          const aiConfidence = aiDeadline?.confidence ?? 0;
-          if (
-            aiDeadline?.hasDeadline &&
-            aiConfidence >= 0.8 &&
-            aiDeadline.normalizedGoal &&
-            aiDeadline.normalizedGoal.trim().length > 0
-          ) {
-            console.log('Treatment V5 API: Deadline AI normalized goal input', {
-              currentStep,
-              originalInput: userInput,
-              normalizedGoal: aiDeadline.normalizedGoal,
-              deadlineText: aiDeadline.deadlineText,
-              confidence: aiConfidence
-            });
-            userInput = aiDeadline.normalizedGoal.trim();
-          }
+      const deadlineOverrides = await getDeadlineDetectionOverrides(userId, aiModelOverrides);
+      if (deadlineOverrides) {
+        const goalParseResult = await parseGoalWithAI(userInput, deadlineOverrides);
+        if (goalParseResult) {
+          console.log('Treatment V5 API: Goal parse AI result', {
+            currentStep,
+            hasDeadline: goalParseResult.hasDeadline,
+            deadline: goalParseResult.deadline,
+            goalWithDeadline: goalParseResult.goalWithDeadline,
+          });
+          // Store on context metadata for the state machine to pick up
+          currentContext.metadata.goalParseResult = goalParseResult;
         }
       }
+      // If no overrides or AI failed, goalParseResult stays undefined → regex fallback in state machine
     }
 
     console.log('Treatment V5 API: About to call processUserInput...');
@@ -543,6 +554,34 @@ async function handleContinueSession(
             reason: nextResult.reason,
             nextStep: nextResult.nextStep
           });
+        }
+      }
+
+      // Goal synthesis: if we just arrived at goal_confirmation via the manual deadline path,
+      // goalWithDeadline won't be set yet. Use AI to synthesize a natural sentence, then patch the response.
+      if (result.nextStep === 'goal_confirmation') {
+        const ctx = treatmentMachine.getContextForUndo(sessionId);
+        const hasDeadline = ctx?.userResponses?.['goal_deadline_check']?.toLowerCase().includes('yes');
+        const deadline = ctx?.userResponses?.['goal_deadline_date'];
+        if (hasDeadline && deadline && !ctx?.metadata?.goalWithDeadline) {
+          const goalStatement = ctx.metadata.currentGoal
+            || ctx.userResponses?.['reality_goal_capture']
+            || ctx.userResponses?.['goal_description']
+            || '';
+          let synthesized: string | null = null;
+
+          const deadlineOverrides = await getDeadlineDetectionOverrides(userId, aiModelOverrides);
+          if (deadlineOverrides) {
+            const aiResult = await synthesizeGoalWithAI(goalStatement, deadline, deadlineOverrides);
+            synthesized = aiResult?.goalWithDeadline || null;
+          }
+
+          const goalWithDeadline = synthesized || synthesizeGoalFallback(goalStatement, deadline);
+          ctx.metadata.goalWithDeadline = goalWithDeadline;
+          console.log(`Treatment V5 API: Goal synthesis complete: "${goalWithDeadline}"`);
+
+          // Patch the scripted response to use the synthesized goal
+          result.scriptedResponse = `OK, so your goal statement including the deadline is '${goalWithDeadline}', is that right?`;
         }
       }
 
@@ -1686,6 +1725,7 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
         'mind_shifting_explanation', 'mind_shifting_explanation_dynamic',
         'work_type_description', 'restate_selected_problem',
         'negative_experience_description', 'goal_description',
+        'reality_goal_capture',
         'restate_problem_future', 'confirm_statement'
       ];
 
@@ -1697,6 +1737,11 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
         ctx.metadata.originalProblemStatement = '';
         ctx.metadata.problemStatement = '';
         ctx.problemStatement = '';
+        // Clear goal-specific metadata so stale values don't persist across re-entry
+        if (undoToStep === 'reality_goal_capture' || undoToStep === 'goal_description') {
+          ctx.metadata.goalWithDeadline = '';
+          ctx.metadata.currentGoal = '';
+        }
       }
 
       // If undoing within blockage shifting, reset iteration-tracking metadata
@@ -1776,11 +1821,15 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
           console.log(`🔄 UNDO_RESTORE: Restored currentGoal from goal_description: "${ctx.metadata.currentGoal}"`);
         }
 
-        // Restore goalWithDeadline if there was a deadline
+        // Restore goalWithDeadline if there was a deadline.
+        // Prefer synthesizeGoalFallback over raw template concat to avoid "by by" duplication.
         const hasDeadline = ctx.userResponses['goal_deadline_check']?.toLowerCase().includes('yes');
         const deadline = ctx.userResponses['goal_deadline_date'];
         if (hasDeadline && deadline && ctx.metadata.currentGoal) {
-          ctx.metadata.goalWithDeadline = `${ctx.metadata.currentGoal} by ${deadline}`;
+          // Only re-synthesize if not already stored (AI may have set it earlier)
+          if (!ctx.metadata.goalWithDeadline) {
+            ctx.metadata.goalWithDeadline = synthesizeGoalFallback(ctx.metadata.currentGoal, deadline);
+          }
           console.log(`🔄 UNDO_RESTORE: Restored goalWithDeadline: "${ctx.metadata.goalWithDeadline}"`);
         }
 

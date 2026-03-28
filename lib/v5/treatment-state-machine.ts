@@ -85,6 +85,9 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       case 'goal_description':
         return this.handleGoalDescription(lastResponse, context);
 
+      case 'reality_goal_capture':
+        return this.handleRealityGoalCapture(lastResponse, context);
+
       case 'negative_experience_description':
         return this.handleNegativeExperienceDescription(lastResponse, context);
 
@@ -658,7 +661,6 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   private handleGoalDescription(lastResponse: string, context: TreatmentContext): string {
     // Store goal and check for deadline
     this.updateProblemStatement(context, lastResponse);
-    context.metadata.currentGoal = lastResponse;
     // Store the original problem statement for digging deeper questions
     if (!context.metadata.originalProblemStatement) {
       context.metadata.originalProblemStatement = lastResponse;
@@ -667,18 +669,59 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
     context.metadata.selectedMethod = 'reality_shifting';
     console.log(`🔍 GOAL_DESCRIPTION: Stored goal: "${lastResponse}"`);
 
-    // Check if deadline is already mentioned in the goal
-    const hasDeadlineInGoal = ValidationHelpers.detectDeadlineInGoal(lastResponse);
-    if (hasDeadlineInGoal.hasDeadline && hasDeadlineInGoal.deadline && hasDeadlineInGoal.synthesizedGoal) {
-      console.log(`🤖 AI_DEADLINE_DETECTION: Deadline detected in goal: "${hasDeadlineInGoal.deadline}"`);
-      context.metadata.goalWithDeadline = hasDeadlineInGoal.synthesizedGoal;
-      context.userResponses['goal_deadline_check'] = 'yes';
-      context.userResponses['goal_deadline_date'] = hasDeadlineInGoal.deadline;
-      return 'goal_confirmation';
-    } else {
-      console.log(`🤖 AI_DEADLINE_DETECTION: No deadline detected, proceeding to deadline check`);
-      return 'goal_deadline_check';
+    return this.applyGoalParseResult(lastResponse, context);
+  }
+
+  private handleRealityGoalCapture(lastResponse: string, context: TreatmentContext): string {
+    // Store goal — same logic as handleGoalDescription minus phase routing
+    this.updateProblemStatement(context, lastResponse);
+    if (!context.metadata.originalProblemStatement) {
+      context.metadata.originalProblemStatement = lastResponse;
     }
+    console.log(`🔍 REALITY_GOAL_CAPTURE: Stored goal: "${lastResponse}"`);
+
+    return this.applyGoalParseResult(lastResponse, context);
+  }
+
+  /**
+   * Shared logic for both goal_description and reality_goal_capture:
+   * Use AI goalParseResult if available, otherwise fall back to regex.
+   */
+  private applyGoalParseResult(lastResponse: string, context: TreatmentContext): string {
+    const parseResult = context.metadata.goalParseResult;
+    // Clean up — consumed once
+    delete context.metadata.goalParseResult;
+
+    if (parseResult) {
+      if (parseResult.hasDeadline && parseResult.deadline && parseResult.goalWithDeadline) {
+        // AI detected an inline deadline — skip deadline questions
+        context.metadata.currentGoal = parseResult.goalWithoutDeadline;
+        context.metadata.goalWithDeadline = parseResult.goalWithDeadline;
+        context.userResponses['goal_deadline_check'] = 'yes';
+        context.userResponses['goal_deadline_date'] = parseResult.deadline;
+        console.log(`🤖 GOAL_PARSE_AI: Deadline detected: "${parseResult.deadline}", skipping to goal_confirmation`);
+        return 'goal_confirmation';
+      } else {
+        // AI says no deadline
+        context.metadata.currentGoal = lastResponse;
+        console.log(`🤖 GOAL_PARSE_AI: No deadline detected, proceeding to deadline check`);
+        return 'goal_deadline_check';
+      }
+    }
+
+    // Fallback: regex-based deadline detection (LLM unavailable)
+    context.metadata.currentGoal = lastResponse;
+    const regexResult = ValidationHelpers.detectDeadlineInGoal(lastResponse);
+    if (regexResult.hasDeadline && regexResult.deadline && regexResult.synthesizedGoal) {
+      console.log(`🤖 GOAL_PARSE_REGEX_FALLBACK: Deadline detected: "${regexResult.deadline}"`);
+      context.metadata.goalWithDeadline = regexResult.synthesizedGoal;
+      context.userResponses['goal_deadline_check'] = 'yes';
+      context.userResponses['goal_deadline_date'] = regexResult.deadline;
+      return 'goal_confirmation';
+    }
+
+    console.log(`🤖 GOAL_PARSE_REGEX_FALLBACK: No deadline detected, proceeding to deadline check`);
+    return 'goal_deadline_check';
   }
 
   private handleNegativeExperienceDescription(lastResponse: string, context: TreatmentContext): string {
@@ -971,9 +1014,16 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       delete context.userResponses['goal_confirmation'];
       // Clear goal cache to prevent stale responses
       this.clearGoalCache();
-      // Reset phase to introduction where goal_description lives
+
+      // Return to the correct goal-capture step based on how we got here
+      if (context.userResponses['reality_goal_capture']) {
+        delete context.userResponses['reality_goal_capture'];
+        context.currentPhase = 'reality_shifting';
+        console.log('🔄 GOAL_CONFIRMATION: User said no, returning to reality_goal_capture');
+        return 'reality_goal_capture';
+      }
       context.currentPhase = 'introduction';
-      console.log('🔄 GOAL_CONFIRMATION: User said no, cleared metadata and returning to goal_description');
+      console.log('🔄 GOAL_CONFIRMATION: User said no, returning to goal_description');
       return 'goal_description';
     }
   }

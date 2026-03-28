@@ -46,21 +46,11 @@ export class RealityShiftingPhase {
         {
           id: 'goal_confirmation',
           scriptedResponse: (userInput, context) => {
+            const goalWithDeadline = context?.metadata?.goalWithDeadline;
             const goalStatement = context?.metadata?.currentGoal || 'your goal';
-            const deadline = context?.userResponses?.['goal_deadline_date'] || '';
-            const hasDeadline = context?.userResponses?.['goal_deadline_check']?.toLowerCase().includes('yes') || false;
 
-            if (hasDeadline && deadline) {
-              // Check if we already have a synthesized goal with deadline from AI detection
-              const existingSynthesizedGoal = context?.metadata?.goalWithDeadline;
-              if (existingSynthesizedGoal) {
-                // Use the already synthesized goal to avoid duplication
-                return `OK, so your goal statement including the deadline is '${existingSynthesizedGoal}', is that right?`;
-              } else {
-                // Fallback: construct it manually (for cases where user manually entered deadline)
-                context.metadata.goalWithDeadline = `${goalStatement} by ${deadline}`;
-                return `OK, so your goal statement including the deadline is '${goalStatement} by ${deadline}', is that right?`;
-              }
+            if (goalWithDeadline) {
+              return `OK, so your goal statement including the deadline is '${goalWithDeadline}', is that right?`;
             } else {
               return `OK, so your goal statement is '${goalStatement}', is that right?`;
             }
