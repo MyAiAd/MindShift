@@ -1843,11 +1843,13 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       if (returnStep) {
         context.metadata.returnToDiggingStep = undefined;
         if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.currentPhase = 'trauma_shifting';
           context.metadata.isTraumaDiggingDeeperFlow = true;
         }
         return returnStep;
       }
       if (context.metadata?.diggingType === 'trauma') {
+        context.currentPhase = 'trauma_shifting';
         context.metadata.diggingType = undefined;
         context.metadata.isTraumaDiggingDeeperFlow = true;
         return 'trauma_dig_deeper';
