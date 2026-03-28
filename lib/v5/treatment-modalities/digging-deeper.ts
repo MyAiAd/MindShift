@@ -296,7 +296,10 @@ export class DiggingDeeperPhase {
         },
         {
           id: 'scenario_check_3',
-          scriptedResponse: "Is there any scenario in which this would still be a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'this';
+            return `Is there any scenario in which '${originalProblem}' would still be a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -359,7 +362,10 @@ export class DiggingDeeperPhase {
         
         {
           id: 'anything_else_check_1',
-          scriptedResponse: "Is there anything else about this that's still a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'the original problem';
+            return `Is there anything else about '${originalProblem}' that's still a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -406,7 +412,10 @@ export class DiggingDeeperPhase {
         },
         {
           id: 'anything_else_check_2',
-          scriptedResponse: "Is there anything else about this that's still a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'the original problem';
+            return `Is there anything else about '${originalProblem}' that's still a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }
@@ -453,7 +462,10 @@ export class DiggingDeeperPhase {
         },
         {
           id: 'anything_else_check_3',
-          scriptedResponse: "Is there anything else about this that's still a problem for you?",
+          scriptedResponse: (userInput, context) => {
+            const originalProblem = context?.metadata?.originalProblemStatement || context?.metadata?.problemStatement || context?.problemStatement || 'the original problem';
+            return `Is there anything else about '${originalProblem}' that's still a problem for you?`;
+          },
           expectedResponseType: 'yesno',
           validationRules: [
             { type: 'minLength', value: 1, errorMessage: 'Please answer yes or no.' }

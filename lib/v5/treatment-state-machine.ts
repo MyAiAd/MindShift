@@ -254,7 +254,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleScenarioCheck(lastResponse, 'restate_scenario_problem_1', 'anything_else_check_1');
 
       case 'restate_scenario_problem_1':
-        return 'clear_scenario_problem_1';
+        return this.handleRestateScenarioProblem(context, 'restate_scenario_problem_1', 'scenario_check_1', 2);
 
       case 'clear_scenario_problem_1':
         return this.handleClearScenarioProblem1(lastResponse, context);
@@ -263,7 +263,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleScenarioCheck(lastResponse, 'restate_scenario_problem_2', 'scenario_check_3');
 
       case 'restate_scenario_problem_2':
-        return 'clear_scenario_problem_2';
+        return this.handleRestateScenarioProblem(context, 'restate_scenario_problem_2', 'scenario_check_2', 3);
 
       case 'clear_scenario_problem_2':
         return this.handleClearScenarioProblem2(lastResponse, context);
@@ -272,7 +272,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         return this.handleScenarioCheck(lastResponse, 'restate_scenario_problem_3', 'anything_else_check_1');
 
       case 'restate_scenario_problem_3':
-        return 'clear_scenario_problem_3';
+        return this.handleRestateScenarioProblem(context, 'restate_scenario_problem_3', 'scenario_check_3', 4);
 
       case 'clear_scenario_problem_3':
         return this.handleClearScenarioProblem3(lastResponse, context);
@@ -1928,6 +1928,19 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       return noStep;
     }
     return restateStep;
+  }
+
+  private handleRestateScenarioProblem(context: TreatmentContext, restateStep: string, returnStep: string, problemNumber: number): string {
+    const scenarioProblem = context.userResponses?.[restateStep];
+    if (scenarioProblem) {
+      this.setActiveProblemFull(context, scenarioProblem);
+      context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || problemNumber) + 1;
+      context.metadata.returnToDiggingStep = returnStep;
+      context.metadata.workType = 'problem';
+      console.log(`🔍 SCENARIO_RESTATE: Stored problem "${scenarioProblem}", routing to method selection`);
+    }
+    this.clearPreviousModalityMetadata(context);
+    return 'digging_method_selection';
   }
 
   private handleClearScenarioProblem1(lastResponse: string, context: TreatmentContext): string {
