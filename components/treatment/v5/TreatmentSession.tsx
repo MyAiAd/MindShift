@@ -1235,7 +1235,8 @@ export default function TreatmentSession({
     userInput: '',
     sessionStats,
     timestamp: Date.now(),
-    version: 'v4'
+    version: 'v4',
+    expectedResponseType,
   });
 
   // V3: Enhanced message sending
@@ -1450,6 +1451,11 @@ export default function TreatmentSession({
         setCurrentStep(lastEntry.currentStep);
         setSessionStats(lastEntry.sessionStats);
         setUserInput('');
+
+        // Restore expectedResponseType so correct input UI (text vs Yes/No) is shown
+        // Without this, stale expectedResponseType from the undone step causes wrong buttons
+        setExpectedResponseType(lastEntry.expectedResponseType ?? null);
+        currentStepTypeRef.current = lastEntry.expectedResponseType ?? null;
 
         // Remove the last entry from history
         setStepHistory(prev => prev.slice(0, -1));

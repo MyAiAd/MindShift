@@ -1328,6 +1328,8 @@ function getPhaseForStep(stepId: string): string {
 
     // Problem shifting phase
     'problem_shifting_intro': 'problem_shifting',
+    'problem_shifting_intro_static': 'problem_shifting',
+    'problem_shifting_intro_dynamic': 'problem_shifting',
     'body_sensation_check': 'problem_shifting',
     'what_needs_to_happen_step': 'problem_shifting',
     'feel_solution_state': 'problem_shifting',
@@ -1337,21 +1339,43 @@ function getPhaseForStep(stepId: string): string {
 
     // Blockage shifting phase
     'blockage_shifting_intro': 'blockage_shifting',
+    'blockage_shifting_intro_static': 'blockage_shifting',
+    'blockage_shifting_intro_dynamic': 'blockage_shifting',
     'blockage_step_b': 'blockage_shifting',
     'blockage_step_c': 'blockage_shifting',
     'blockage_step_d': 'blockage_shifting',
     'blockage_step_e': 'blockage_shifting',
     'blockage_check_if_still_problem': 'blockage_shifting',
+    'blockage_integration_awareness_1': 'blockage_shifting',
+    'blockage_integration_awareness_2': 'blockage_shifting',
+    'blockage_integration_awareness_3': 'blockage_shifting',
+    'blockage_integration_awareness_4': 'blockage_shifting',
+    'blockage_integration_awareness_5': 'blockage_shifting',
+    'blockage_integration_action_1': 'blockage_shifting',
+    'blockage_integration_action_2': 'blockage_shifting',
+    'blockage_integration_action_3': 'blockage_shifting',
 
     // Identity shifting phase
     'identity_shifting_intro': 'identity_shifting',
+    'identity_shifting_intro_static': 'identity_shifting',
+    'identity_shifting_intro_dynamic': 'identity_shifting',
     'identity_dissolve_step_a': 'identity_shifting',
     'identity_dissolve_step_b': 'identity_shifting',
     'identity_dissolve_step_c': 'identity_shifting',
     'identity_dissolve_step_d': 'identity_shifting',
     'identity_dissolve_step_e': 'identity_shifting',
+    'identity_dissolve_step_f': 'identity_shifting',
+    'identity_future_check': 'identity_shifting',
+    'identity_scenario_check': 'identity_shifting',
     'identity_check': 'identity_shifting',
     'identity_problem_check': 'identity_shifting',
+    'identity_future_projection': 'identity_shifting',
+    'identity_future_step_b': 'identity_shifting',
+    'identity_future_step_c': 'identity_shifting',
+    'identity_future_step_d': 'identity_shifting',
+    'identity_future_step_e': 'identity_shifting',
+    'identity_future_step_f': 'identity_shifting',
+    'identity_session_complete': 'identity_shifting',
 
     // Reality shifting phase
     'reality_shifting_intro': 'reality_shifting',
@@ -1383,17 +1407,38 @@ function getPhaseForStep(stepId: string): string {
 
     // Trauma shifting phase
     'trauma_shifting_intro': 'trauma_shifting',
+    'trauma_problem_redirect': 'trauma_shifting',
+    'trauma_identity_step_static': 'trauma_shifting',
+    'trauma_identity_step_dynamic': 'trauma_shifting',
     'trauma_dissolve_step_a': 'trauma_shifting',
     'trauma_dissolve_step_b': 'trauma_shifting',
     'trauma_dissolve_step_c': 'trauma_shifting',
     'trauma_dissolve_step_d': 'trauma_shifting',
     'trauma_dissolve_step_e': 'trauma_shifting',
     'trauma_identity_check': 'trauma_shifting',
+    'trauma_future_identity_check': 'trauma_shifting',
+    'trauma_future_scenario_check': 'trauma_shifting',
+    'trauma_future_projection': 'trauma_shifting',
+    'trauma_future_step_c': 'trauma_shifting',
+    'trauma_future_step_d': 'trauma_shifting',
+    'trauma_future_step_e': 'trauma_shifting',
+    'trauma_future_step_f': 'trauma_shifting',
     'trauma_experience_check': 'trauma_shifting',
     'trauma_dig_deeper': 'trauma_shifting',
+    'trauma_dig_deeper_2': 'trauma_shifting',
+    'trauma_integration_awareness_1': 'trauma_shifting',
+    'trauma_integration_awareness_2': 'trauma_shifting',
+    'trauma_integration_awareness_3': 'trauma_shifting',
+    'trauma_integration_awareness_4': 'trauma_shifting',
+    'trauma_integration_awareness_5': 'trauma_shifting',
+    'trauma_integration_action_1': 'trauma_shifting',
+    'trauma_integration_action_2': 'trauma_shifting',
+    'trauma_integration_action_3': 'trauma_shifting',
 
     // Belief shifting phase
     'belief_shifting_intro': 'belief_shifting',
+    'belief_shifting_intro_static': 'belief_shifting',
+    'belief_shifting_intro_dynamic': 'belief_shifting',
     'belief_step_a': 'belief_shifting',
     'belief_step_b': 'belief_shifting',
     'belief_step_c': 'belief_shifting',
@@ -1405,10 +1450,20 @@ function getPhaseForStep(stepId: string): string {
     'belief_check_3': 'belief_shifting',
     'belief_check_4': 'belief_shifting',
     'belief_problem_check': 'belief_shifting',
+    'belief_integration_awareness_1': 'belief_shifting',
+    'belief_integration_awareness_2': 'belief_shifting',
+    'belief_integration_awareness_3': 'belief_shifting',
+    'belief_integration_awareness_4': 'belief_shifting',
+    'belief_integration_awareness_5': 'belief_shifting',
+    'belief_integration_action_1': 'belief_shifting',
+    'belief_integration_action_2': 'belief_shifting',
+    'belief_integration_action_3': 'belief_shifting',
 
     // Digging deeper phase
     'digging_deeper_start': 'digging_deeper',
+    'future_problem_check': 'digging_deeper',
     'restate_problem_future': 'digging_deeper',
+    'digging_method_selection': 'digging_deeper',
     'scenario_check': 'digging_deeper',
     'anything_else_check': 'digging_deeper',
 
@@ -1533,6 +1588,19 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
           // Clear responses for steps after our target
           treatmentMachine.clearUserResponsesForUndo(sessionId, stepsToKeep);
           console.log('Treatment V5 API: Cleared user responses after target step');
+
+          // CACHE FIX (v2 parity): Invalidate cached responses for cleared steps
+          // Without this, stale cached responses with old user input get re-served
+          const stepsToInvalidate: string[] = [];
+          Object.keys(context.userResponses).forEach(stepId => {
+            if (!stepsToKeep.has(stepId)) {
+              stepsToInvalidate.push(stepId);
+            }
+          });
+          if (stepsToInvalidate.length > 0) {
+            treatmentMachine.invalidateCacheForSteps(stepsToInvalidate);
+            console.log('Treatment V5 API: Invalidated cache for undone steps:', stepsToInvalidate);
+          }
         } else {
           // If not found in current phase, clear all responses to be safe
           treatmentMachine.clearUserResponsesForUndo(sessionId, new Set());
@@ -1552,6 +1620,47 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
       }
     }
 
+    // POSITION-TRACKING CLEANUP (v2 parity): Clear return-to tracking variables
+    // when their associated check responses were cleared by the undo.
+    // This prevents returning to a check question that the user undid past.
+    const clearedSteps = Object.keys(context.userResponses || {})
+      .filter(stepId => !stepsToKeep.has(stepId));
+
+    console.log('Treatment V5 API: Cleared steps:', clearedSteps);
+
+    // Clear belief check tracking if any belief check responses were cleared
+    if (clearedSteps.some(step => step.startsWith('belief_check_'))) {
+      console.log('🧹 UNDO_TRACKING: Clearing returnToBeliefCheck');
+      context.metadata.returnToBeliefCheck = undefined;
+    }
+
+    // Clear identity check tracking if any identity check responses were cleared
+    if (clearedSteps.some(step => step === 'identity_future_check' || step === 'identity_scenario_check')) {
+      console.log('🧹 UNDO_TRACKING: Clearing returnToIdentityCheck');
+      context.metadata.returnToIdentityCheck = undefined;
+    }
+
+    // Clear digging deeper tracking if any digging deeper check responses were cleared
+    if (clearedSteps.some(step =>
+        step === 'future_problem_check' ||
+        step.startsWith('scenario_check_') ||
+        step.startsWith('clear_scenario_problem_') ||
+        step.startsWith('clear_anything_else_problem_') ||
+        step === 'trauma_dig_deeper' ||
+        step === 'trauma_dig_deeper_2' ||
+        step === 'anything_else_check_1' ||
+        step === 'anything_else_check_2'
+    )) {
+      console.log('🧹 UNDO_TRACKING: Clearing returnToDiggingStep');
+      context.metadata.returnToDiggingStep = undefined;
+    }
+
+    // Clear trauma check tracking if any trauma check responses were cleared
+    if (clearedSteps.some(step => step === 'trauma_identity_check' || step === 'trauma_future_identity_check' || step === 'trauma_future_scenario_check')) {
+      console.log('🧹 UNDO_TRACKING: Clearing returnToTraumaCheck');
+      context.metadata.returnToTraumaCheck = undefined;
+    }
+
     // Update context to the target step with correct phase
     try {
       treatmentMachine.updateContextForUndo(sessionId, {
@@ -1563,6 +1672,92 @@ async function handleUndo(sessionId: string, undoToStep: string, userId: string)
     } catch (updateError) {
       console.error('Treatment V5 API: Error updating context:', updateError);
       throw new Error(`Failed to update V4 context: ${updateError instanceof Error ? updateError.message : 'Unknown update error'}`);
+    }
+
+    // CRITICAL: Clear problem-statement and iteration metadata when undoing to steps
+    // where these values get (re)set. Without this, stale metadata persists and causes:
+    //   1. Digging Deeper showing the old problem ("BAD") instead of the corrected one ("PROBLEM 1")
+    //   2. Blockage Shifting losing track of which iteration the user was on
+    try {
+      const ctx = treatmentMachine.getContextForUndo(sessionId);
+
+      // Steps where the problem statement is initially defined or can be re-entered
+      const problemDefiningSteps = [
+        'mind_shifting_explanation', 'mind_shifting_explanation_dynamic',
+        'work_type_description', 'restate_selected_problem',
+        'negative_experience_description', 'goal_description',
+        'restate_problem_future', 'confirm_statement'
+      ];
+
+      // If undoing to a problem-defining step (or earlier), clear originalProblemStatement
+      // so that updateProblemStatement will re-set it with the new value.
+      // Uses empty string '' (not undefined) to match v2 gold-standard pattern.
+      if (problemDefiningSteps.includes(undoToStep)) {
+        console.log(`🔄 UNDO_METADATA: Clearing originalProblemStatement (was "${ctx.metadata.originalProblemStatement}") because undoing to problem-defining step: ${undoToStep}`);
+        ctx.metadata.originalProblemStatement = '';
+        ctx.metadata.problemStatement = '';
+        ctx.problemStatement = '';
+      }
+
+      // If undoing within blockage shifting, reset iteration-tracking metadata
+      // so the cycle doesn't reference stale state from a later iteration
+      const blockageSteps = [
+        'blockage_shifting_intro', 'blockage_shifting_intro_static', 'blockage_shifting_intro_dynamic',
+        'blockage_step_b', 'blockage_step_c', 'blockage_step_d', 'blockage_step_e',
+        'blockage_check_if_still_problem'
+      ];
+      if (blockageSteps.includes(undoToStep)) {
+        // Determine which iteration the target step was in by counting cleared responses
+        // For safety, reset cycle-related metadata that may have advanced past the undo point
+        console.log(`🔄 UNDO_METADATA: Resetting blockage iteration metadata for undo to: ${undoToStep}`);
+        ctx.metadata.cycleCount = 0;
+        ctx.metadata.skipIntroInstructions = false;
+        ctx.metadata.hasAskedToGuess = false;
+        ctx.metadata.hasAskedToGuessD = false;
+
+        // If undoing back to the intro/start of blockage shifting, also clear
+        // digging-related metadata that may have been set during later iterations
+        if (undoToStep === 'blockage_shifting_intro_static' ||
+            undoToStep === 'blockage_shifting_intro_dynamic' ||
+            undoToStep === 'blockage_shifting_intro') {
+          ctx.metadata.currentDiggingProblem = '';
+          ctx.metadata.newDiggingProblem = '';
+          console.log(`🔄 UNDO_METADATA: Cleared digging problem metadata for blockage intro undo`);
+        }
+      }
+
+      // If undoing to a step in problem_shifting, reset its iteration metadata too
+      const problemShiftingSteps = [
+        'problem_shifting_intro', 'problem_shifting_intro_static', 'problem_shifting_intro_dynamic',
+        'body_sensation_check', 'what_needs_to_happen_step', 'feel_solution_state',
+        'feel_good_state', 'what_happens_step', 'check_if_still_problem'
+      ];
+      if (problemShiftingSteps.includes(undoToStep)) {
+        console.log(`🔄 UNDO_METADATA: Resetting problem shifting iteration metadata for undo to: ${undoToStep}`);
+        ctx.metadata.cycleCount = 0;
+        ctx.metadata.skipIntroInstructions = false;
+      }
+
+      // If undoing to digging deeper steps, reset digging iteration metadata
+      const diggingSteps = [
+        'digging_deeper_start', 'future_problem_check', 'restate_problem_future', 'digging_method_selection'
+      ];
+      if (diggingSteps.includes(undoToStep)) {
+        console.log(`🔄 UNDO_METADATA: Resetting digging deeper metadata for undo to: ${undoToStep}`);
+        ctx.metadata.currentDiggingProblem = '';
+        ctx.metadata.newDiggingProblem = '';
+        // Don't reset diggingProblemNumber completely - but ensure it matches the restored state
+        // Reset returnToDiggingStep since we're re-entering the digging flow
+        if (undoToStep === 'digging_deeper_start' || undoToStep === 'future_problem_check') {
+          ctx.metadata.returnToDiggingStep = undefined;
+        }
+      }
+
+      await treatmentMachine.saveContextToDatabase(ctx);
+      console.log('🔄 UNDO_METADATA: Problem/iteration metadata cleaned and saved successfully');
+    } catch (metadataError) {
+      console.error('Treatment V5 API: Error cleaning problem/iteration metadata:', metadataError);
+      // Continue - undo should still work, just with potentially stale metadata
     }
 
     // CRITICAL: Restore goal metadata from userResponses when undoing to goal-related steps

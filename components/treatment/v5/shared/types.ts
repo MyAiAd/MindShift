@@ -47,6 +47,7 @@ export interface StepHistoryEntry {
   sessionStats: SessionStats;
   timestamp: number;
   version?: 'v3' | 'v4' | 'v5'; // V3/V4 specific
+  expectedResponseType?: string | null; // Tracks input type (yesno, open, feeling, etc.) for correct button rendering on undo
 }
 
 export interface ModalityComponentProps {

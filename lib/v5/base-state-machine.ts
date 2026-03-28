@@ -628,6 +628,32 @@ export abstract class BaseTreatmentStateMachine {
   }
 
   /**
+   * Invalidate cached responses for specific steps (called during undo).
+   * Removes stale cached responses that may have old user input embedded.
+   * Matches v2 gold-standard pattern.
+   */
+  public invalidateCacheForSteps(stepIds: string[]): void {
+    if (!stepIds || stepIds.length === 0) {
+      console.log('🧹 CACHE_INVALIDATION: No steps to invalidate');
+      return;
+    }
+
+    let clearedCount = 0;
+    stepIds.forEach(stepId => {
+      // Clear all cache entries that contain this stepId
+      // This includes both static and dynamic cache entries
+      this.responseCache.cache.forEach((_, key) => {
+        if (key.includes(stepId)) {
+          this.responseCache.cache.delete(key);
+          clearedCount++;
+        }
+      });
+    });
+
+    console.log(`🧹 UNDO_CACHE_CLEAR: Invalidated ${clearedCount} cache entries for ${stepIds.length} undone steps`);
+  }
+
+  /**
    * Check if AI assistance is needed
    */
   private checkAITriggers(userInput: string, step: TreatmentStep, context: TreatmentContext): AITrigger | null {
