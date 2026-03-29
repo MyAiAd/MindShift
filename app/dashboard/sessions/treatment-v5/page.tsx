@@ -156,7 +156,7 @@ function TreatmentSessionContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <span className="ml-2 text-muted-foreground ">Loading V5...</span>
       </div>
@@ -165,7 +165,7 @@ function TreatmentSessionContent() {
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground  mb-4">Authentication Required</h1>
           <p className="text-muted-foreground ">Please sign in to access V5 treatment sessions.</p>
@@ -179,7 +179,7 @@ function TreatmentSessionContent() {
 
   if (!sessionId) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <span className="ml-2 text-muted-foreground ">Initializing V5 session...</span>
       </div>
@@ -187,12 +187,12 @@ function TreatmentSessionContent() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/20">
+    <div className="min-h-dvh bg-secondary/20">
       {/* V5 Audio Preloader - loads static audio for selected voice */}
       <V5AudioPreloader voice={selectedVoice} />
       
       {/* Header - Compact, fixed */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border pt-safe">
         <div className="flex items-center justify-between h-14 px-4">
           <div className="flex items-center space-x-3">
             <Link
@@ -206,8 +206,8 @@ function TreatmentSessionContent() {
         </div>
       </div>
 
-      {/* Spacer for fixed header */}
-      <div className="h-14"></div>
+      {/* Spacer for fixed header (h-14 + safe area top) */}
+      <div className="h-header-safe"></div>
 
       {/* Treatment Session Component - minimal top padding on mobile */}
       <div className="py-2 md:py-8">
@@ -229,7 +229,7 @@ function TreatmentSessionContent() {
 export default function TreatmentSessionV5Page() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <span className="ml-2 text-muted-foreground ">Loading V5...</span>
       </div>

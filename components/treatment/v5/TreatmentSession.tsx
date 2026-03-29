@@ -1893,7 +1893,7 @@ export default function TreatmentSession({
     !hasFirstSpeechStarted;
 
   return (
-    <div className="max-w-4xl mx-auto px-2 sm:px-4 flex flex-col fixed inset-x-0 top-14 bottom-0">
+    <div className="max-w-4xl mx-auto px-2 sm:px-4 flex flex-col fixed inset-x-0 top-header-safe bottom-0 pb-safe">
       {/* Guided Mode PTT Interface - inline, not full-screen overlay */}
       {isGuidedMode && (
         <div className="relative flex-shrink-0 bg-gradient-to-br from-primary/90 via-secondary/90 to-primary/80 rounded-lg flex flex-col items-center py-5 px-4 mb-2">
@@ -2342,9 +2342,8 @@ export default function TreatmentSession({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* V4 Input Area - Fixed at bottom, doesn't shrink */}
-      {/* Input area - pinned at bottom */}
-        <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-border bg-background">
+      {/* Input area - pinned at bottom, scrolls if too tall for viewport */}
+        <div className="flex-shrink-0 max-h-[45vh] overflow-y-auto px-4 sm:px-6 py-3 sm:py-4 border-t border-border bg-background">
         {hasError && (
           <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
             <div className="flex items-center space-x-2">
