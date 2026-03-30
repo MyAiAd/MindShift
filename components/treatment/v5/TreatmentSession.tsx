@@ -20,6 +20,10 @@ import {
   StepHistoryEntry
 } from './shared/types';
 
+// Admin debug drawer (slides out from right for admin testing)
+import AdminDebugDrawer from './AdminDebugDrawer';
+import { useAuth } from '@/lib/auth';
+
 // Import V4 modality components
 import ProblemShifting from './modalities/ProblemShifting/ProblemShifting';
 import IdentityShifting from './modalities/IdentityShifting/IdentityShifting';
@@ -36,6 +40,25 @@ export default function TreatmentSession({
   onError,
   version = 'v4'
 }: TreatmentSessionProps) {
+  // Admin debug drawer
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'tenant_admin';
+  const [isDebugDrawerOpen, setIsDebugDrawerOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('v5_debug_drawer_open') === 'true';
+    }
+    return false;
+  });
+  const toggleDebugDrawer = useCallback(() => {
+    setIsDebugDrawerOpen((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('v5_debug_drawer_open', String(next));
+      }
+      return next;
+    });
+  }, []);
+
   const [messages, setMessages] = useState<TreatmentMessage[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -2277,70 +2300,86 @@ export default function TreatmentSession({
       )}
 
       {/* Messages Area - scrollable, fills remaining space */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-card/30 rounded-lg border border-border/30 min-h-0 mb-2">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-          >
+      {/* In guided/orb mode: hidden inline, moved to admin debug drawer */}
+      {!isGuidedMode && (
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-card/30 rounded-lg border border-border/30 min-h-0 mb-2">
+          {messages.map((message) => (
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.isUser
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-secondary text-foreground'
-                }`}
+              key={message.id}
+              className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
             >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              
-              {/* Response time badge removed from bubble so it doesn't read as bot speech */}
-              
-              {/* NEW: Audio/Text timing metrics (only for bot messages with voice timing) */}
-              {!message.isUser && (message.textRenderTime || message.audioStartTime) && (
-                <div 
-                  className="mt-2 pt-2 border-t border-border/30 text-xs text-muted-foreground font-mono"
-                  aria-hidden="true"
-                >
-                  ⏱️ 
-                  {message.textRenderTime && (
-                    <span className="ml-1">
-                      Text: <span className="font-semibold">{Math.round(message.textRenderTime)}ms</span>
-                    </span>
-                  )}
-                  {message.audioStartTime && (
-                    <span className="ml-2">
-                      | Audio: <span className="font-semibold">{Math.round(message.audioStartTime)}ms</span>
-                    </span>
-                  )}
-                  {message.textRenderTime && message.audioStartTime && (
-                    <span className="ml-2">
-                      | Δ: <span className={`font-semibold ${
-                        (message.textRenderTime - message.audioStartTime) > 0 
-                          ? 'text-accent' 
-                          : 'text-destructive'
-                      }`}>
-                        {Math.round(message.textRenderTime - message.audioStartTime)}ms
-                      </span>
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+              <div
+                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.isUser
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-foreground'
+                  }`}
+              >
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
 
-        {/* Processing shimmer - shows while Whisper is transcribing user speech */}
-        {naturalVoice.isProcessing && (
-          <div className="flex justify-end">
-            <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-primary/20 animate-pulse">
-              <div className="space-y-2">
-                <div className="h-3 bg-primary/40 rounded w-3/4"></div>
-                <div className="h-3 bg-primary/40 rounded w-1/2"></div>
+                {/* Response time badge removed from bubble so it doesn't read as bot speech */}
+
+                {/* NEW: Audio/Text timing metrics (only for bot messages with voice timing) */}
+                {!message.isUser && (message.textRenderTime || message.audioStartTime) && (
+                  <div
+                    className="mt-2 pt-2 border-t border-border/30 text-xs text-muted-foreground font-mono"
+                    aria-hidden="true"
+                  >
+                    ⏱️
+                    {message.textRenderTime && (
+                      <span className="ml-1">
+                        Text: <span className="font-semibold">{Math.round(message.textRenderTime)}ms</span>
+                      </span>
+                    )}
+                    {message.audioStartTime && (
+                      <span className="ml-2">
+                        | Audio: <span className="font-semibold">{Math.round(message.audioStartTime)}ms</span>
+                      </span>
+                    )}
+                    {message.textRenderTime && message.audioStartTime && (
+                      <span className="ml-2">
+                        | Δ: <span className={`font-semibold ${
+                          (message.textRenderTime - message.audioStartTime) > 0
+                            ? 'text-accent'
+                            : 'text-destructive'
+                        }`}>
+                          {Math.round(message.textRenderTime - message.audioStartTime)}ms
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
+          ))}
 
-        <div ref={messagesEndRef} />
-      </div>
+          {/* Processing shimmer - shows while Whisper is transcribing user speech */}
+          {naturalVoice.isProcessing && (
+            <div className="flex justify-end">
+              <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-primary/20 animate-pulse">
+                <div className="space-y-2">
+                  <div className="h-3 bg-primary/40 rounded w-3/4"></div>
+                  <div className="h-3 bg-primary/40 rounded w-1/2"></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+      )}
+
+      {/* In guided/orb mode: spacer to push input to bottom when messages hidden */}
+      {isGuidedMode && <div className="flex-1 min-h-0" />}
+
+      {/* Admin Debug Drawer — right-edge slide-out, orb mode only */}
+      {isGuidedMode && isAdmin && (
+        <AdminDebugDrawer
+          messages={messages}
+          isProcessing={naturalVoice.isProcessing}
+          isOpen={isDebugDrawerOpen}
+          onToggle={toggleDebugDrawer}
+        />
+      )}
 
       {/* Input area - pinned at bottom, scrolls if too tall for viewport */}
         <div className="flex-shrink-0 max-h-[45vh] overflow-y-auto px-4 sm:px-6 py-3 sm:py-4 border-t border-border bg-background">
