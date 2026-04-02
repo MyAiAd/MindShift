@@ -1483,6 +1483,15 @@ export default function TreatmentSession({
         // Remove the last entry from history
         setStepHistory(prev => prev.slice(0, -1));
 
+        // Re-speak the restored last AI message so voice stays in sync with text
+        if (isSpeakerEnabled) {
+          const lastAiMessage = [...restoredMessages].reverse().find(m => !m.isUser);
+          if (lastAiMessage?.content) {
+            prepareSubtitlesForSpeech(lastAiMessage.content);
+            naturalVoice.speak(lastAiMessage.content);
+          }
+        }
+
         console.log('V4 Undo successful');
       } else {
         throw new Error(data.error || 'V4 Undo failed');
