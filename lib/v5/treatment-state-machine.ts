@@ -1633,15 +1633,10 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       );
 
       context.metadata.returnToTraumaCheck = 'trauma_identity_check';
+      context.metadata.traumaBridgePhraseUsed = true; // Inner loop — no bridge phrase
       return 'trauma_dissolve_step_a';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not')) {
-      const resumeStep5 = context.metadata.traumaResumeStep5AfterIdentityNo as string | undefined;
-      if (resumeStep5 === 'trauma_future_scenario_check') {
-        delete context.metadata.traumaResumeStep5AfterIdentityNo;
-        console.log(`🔍 TRAUMA_IDENTITY_CHECK: NO — resuming Step 5 at scenario question`);
-        return 'trauma_future_scenario_check';
-      }
       return 'trauma_future_identity_check';
     }
     return 'trauma_future_identity_check';
@@ -1674,28 +1669,21 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       );
 
       context.metadata.returnToTraumaCheck = 'trauma_future_scenario_check';
-      // After Step 4F (no), return to this Step 5 question — not the future question (flowchart / doctor script).
-      context.metadata.traumaResumeStep5AfterIdentityNo = 'trauma_future_scenario_check';
+      context.metadata.traumaBridgePhraseUsed = false; // Reset — bridge fires once on first return
       return 'trauma_dissolve_step_a';
     }
     if (lastResponse.includes('no') || lastResponse.includes('not') || lastResponse.includes('never')) {
-      delete context.metadata.traumaResumeStep5AfterIdentityNo;
       return 'trauma_experience_check';
     }
     return 'trauma_experience_check';
   }
 
   /**
-   * After dissolve A–E: identity_check (Step 4F), except when returning from identity-check loop (v2).
-   * Scenario-triggered passes still go to 4F so we can resume the correct Step 5 question after "no".
+   * After dissolve A–E: return directly to the check that triggered the cycle (v2 parity).
+   * First time through (no flag): proceed to trauma_identity_check (Step 4F).
    */
   private handleTraumaDissolveStepE(context: TreatmentContext): string {
     const returnToTraumaCheck = context.metadata.returnToTraumaCheck as string | undefined;
-    if (returnToTraumaCheck === 'trauma_future_scenario_check') {
-      console.log(`🔍 TRAUMA_DISSOLVE_STEP_E: Scenario branch — continuing to trauma_identity_check (Step 4F)`);
-      context.metadata.returnToTraumaCheck = undefined;
-      return 'trauma_identity_check';
-    }
     if (returnToTraumaCheck) {
       console.log(`🔍 TRAUMA_DISSOLVE_STEP_E: Returning to ${returnToTraumaCheck}`);
       context.metadata.returnToTraumaCheck = undefined;
@@ -1742,7 +1730,6 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       // Still a problem - repeat Steps 3-5 (skip intro, they already answered that)
       context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
 
-      delete context.metadata.traumaResumeStep5AfterIdentityNo;
       delete context.metadata.returnToTraumaCheck;
 
       // Clear previous iteration responses to prevent cached identity/feelings

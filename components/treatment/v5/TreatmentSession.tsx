@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, VolumeX, Send, Play, Settings, Gauge, User, SkipForward, ArrowLeft } from 'lucide-react';
+import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, VolumeX, Send, Play, Settings, Gauge, User, SkipForward, ArrowLeft, LogOut } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 // Natural voice integration (ElevenLabs + Web Speech)
@@ -41,7 +41,7 @@ export default function TreatmentSession({
   version = 'v4'
 }: TreatmentSessionProps) {
   // Admin debug drawer
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const isAdmin = profile?.role === 'super_admin' || profile?.role === 'tenant_admin';
   const [isDebugDrawerOpen, setIsDebugDrawerOpen] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -1941,7 +1941,19 @@ export default function TreatmentSession({
                naturalVoice.isSpeaking ? '🔊 AI Speaking...' :
                '🧘 Ready - Speak now'}
             </div>
-            <div className="w-9" /> {/* Spacer for centering */}
+            <button
+              onClick={async () => {
+                if (isPTTActive) {
+                  handlePTTEnd();
+                }
+                naturalVoice.stopSpeaking();
+                await signOut();
+              }}
+              className="text-primary-foreground/70 hover:text-primary-foreground p-2 bg-black/20 hover:bg-black/30 rounded-full transition-all backdrop-blur-sm"
+              aria-label="Log out"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
 
           {/* Main PTT Button - compact */}

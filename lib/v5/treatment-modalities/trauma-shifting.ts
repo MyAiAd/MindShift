@@ -88,12 +88,15 @@ export class TraumaShiftingPhase {
             // Use the stored identity, don't overwrite with current userInput
             const identity = context.metadata.currentTraumaIdentity || 'that identity';
 
-            // Bridge phrasing for Step 4A when re-entering from Step 5 checks (v2 / doctor script)
+            // Bridge phrasing for Step 4A when re-entering from Step 5 checks (v2 parity / identity shifting pattern)
             const returnTo = context.metadata?.returnToTraumaCheck as string | undefined;
-            const prefix =
-              returnTo === 'trauma_future_scenario_check'
-                ? 'Imagine that scenario and feel yourself being'
-                : 'Feel yourself being';
+            const bridgeUsed = context.metadata?.traumaBridgePhraseUsed;
+            let prefix = 'Feel yourself being';
+
+            if (returnTo === 'trauma_future_scenario_check' && !bridgeUsed) {
+              prefix = 'Imagine that scenario and feel yourself being';
+              context.metadata.traumaBridgePhraseUsed = true;
+            }
 
             return `${prefix} ${identity}... what does it feel like?`;
           },

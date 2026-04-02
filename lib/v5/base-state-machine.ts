@@ -396,6 +396,16 @@ export abstract class BaseTreatmentStateMachine {
       'identity_dissolve_step_d',
       'identity_dissolve_step_e',
       'identity_dissolve_step_f',
+      // v2 parity: trauma checks + dissolve A–E embed session trauma identity; dissolve A prefix depends on
+      // returnToTraumaCheck + traumaBridgePhraseUsed (not in cache hash)
+      'trauma_identity_check',
+      'trauma_future_identity_check',
+      'trauma_future_scenario_check',
+      'trauma_dissolve_step_a',
+      'trauma_dissolve_step_b',
+      'trauma_dissolve_step_c',
+      'trauma_dissolve_step_d',
+      'trauma_dissolve_step_e',
       'check_if_still_problem',  // "Feel the problem '${problem}'... does it still feel like a problem?"
       'digging_deeper_start',
       'problem_integration_awareness_1',
@@ -492,7 +502,9 @@ export abstract class BaseTreatmentStateMachine {
       goalWithDeadline: context.metadata.goalWithDeadline,
       currentDiggingProblem: context.metadata.currentDiggingProblem,
       identityResponse: context.metadata.identityResponse,
-      currentIdentity: context.metadata.currentIdentity
+      currentIdentity: context.metadata.currentIdentity,
+      currentTraumaIdentity: context.metadata.currentTraumaIdentity,
+      originalTraumaIdentity: context.metadata.originalTraumaIdentity
     };
 
     // Full-content SHA-256 hash so different problem statements/sessions get different cache keys
