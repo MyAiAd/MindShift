@@ -738,11 +738,9 @@ async function handleContinueSession(
       };
     }
 
-    // Fire-and-forget: DB writes don't block the API response
-    void Promise.all([
-      saveInteractionToDatabase(sessionId, userInput, finalResponse),
-      updateSessionContextInDatabase(sessionId, finalResponse.currentStep, finalResponse.usedAI, finalResponse.responseTime)
-    ]).catch(err => console.error('Background DB save failed:', err));
+    void saveInteractionToDatabase(sessionId, userInput, finalResponse)
+      .catch(err => console.error('Background interaction save failed:', err));
+    await updateSessionContextInDatabase(sessionId, finalResponse.currentStep, finalResponse.usedAI, finalResponse.responseTime);
 
     // NEW: Add performance metrics to response
     const perfMetrics = treatmentMachine.getPerformanceMetrics();

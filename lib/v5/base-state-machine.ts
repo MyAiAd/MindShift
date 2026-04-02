@@ -378,6 +378,8 @@ export abstract class BaseTreatmentStateMachine {
       'blockage_step_d',
       'body_sensation_check',
       'what_needs_to_happen_step',
+      'feel_solution_state',  // Uses userResponses['what_needs_to_happen_step'] — v2 parity
+      'analyze_response',     // Uses userResponses['mind_shifting_explanation'] before problemStatement is set — v2 parity
       'blockage_check_if_still_problem',
       'confirm_statement',  // References problemStatement which changes after trauma_problem_redirect
       'problem_shifting_intro_dynamic',  // "Feel the problem '${problem}'..."
