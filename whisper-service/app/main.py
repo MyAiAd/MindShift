@@ -8,12 +8,13 @@ import io
 import logging
 import time
 from typing import Optional
-from fastapi import FastAPI, File, UploadFile, HTTPException, Header, Request
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 from .config import config, get_config_summary
 from .transcribe import preprocess_audio, transcribe_audio, get_whisper_model
+from .domain_bias import resolve_bias, cache_bias_key
 from .cache import get_cache
 
 # Configure logging
@@ -172,6 +173,9 @@ async def health():
 @app.post("/transcribe")
 async def transcribe(
     audio: UploadFile = File(...),
+    expected_response_type: Optional[str] = Form(None),
+    current_step: Optional[str] = Form(None),
+    hotwords: Optional[str] = Form(None),
     x_api_key: Optional[str] = Header(None)
 ):
     """
@@ -179,6 +183,9 @@ async def transcribe(
     
     Args:
         audio: Audio file (WAV, MP3, OGG, FLAC)
+        expected_response_type: Mind Shifting UI step type (yesno, feeling, open, ...)
+        current_step: Optional v5 step id for finer initial_prompt nudges
+        hotwords: Optional session vocabulary (problem wording, names) for faster-whisper hotwords
         x_api_key: Optional API key for authentication
     
     Returns:
@@ -223,10 +230,21 @@ async def transcribe(
                        f"maximum {config.MAX_FILE_SIZE} bytes"
             )
         
-        logger.info(f"Processing audio: {audio.filename} ({len(audio_bytes)} bytes)")
+        initial_prompt, hotwords_resolved = resolve_bias(
+            expected_response_type, current_step, hotwords
+        )
+        # Must match resolve_bias sanitization so cache keys align
+        bias_key = cache_bias_key(
+            expected_response_type, current_step, hotwords_resolved
+        )
+
+        logger.info(
+            f"Processing audio: {audio.filename} ({len(audio_bytes)} bytes), "
+            f"bias_key_len={len(bias_key)}"
+        )
         
-        # Check cache
-        cached_result = cache.get(audio_bytes)
+        # Check cache (same audio + same domain bias)
+        cached_result = cache.get(audio_bytes, bias_key)
         if cached_result:
             logger.info(f"Cache HIT: Returning cached result")
             cached = True
@@ -240,10 +258,15 @@ async def transcribe(
         audio_data, sample_rate = preprocess_audio(audio_file, audio.filename)
         
         # Transcribe
-        result = transcribe_audio(audio_data, sample_rate)
+        result = transcribe_audio(
+            audio_data,
+            sample_rate,
+            initial_prompt=initial_prompt,
+            hotwords=hotwords_resolved,
+        )
         
         # Cache result
-        cache.set(audio_bytes, result)
+        cache.set(audio_bytes, result, bias_key)
         
         # Add processing metadata
         total_time = time.time() - start_time

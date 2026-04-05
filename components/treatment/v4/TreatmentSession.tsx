@@ -8,6 +8,10 @@ import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 import { useNaturalVoice } from '@/components/voice/useNaturalVoice';
 // V4 static audio texts (for consistency with preloader)
 import { V4_STATIC_AUDIO_TEXTS } from '@/lib/v4/static-audio-texts';
+import {
+  buildHotwordsFromRecentUserMessages,
+  type TranscriptionDomainContext,
+} from '@/lib/voice/transcription-domain-context';
 // V4 preferences for interaction modes
 import { getInteractionMode, getVoicePreferences, shouldShowOrb, shouldShowTextFirst, isListenOnlyMode, InteractionMode, V4_EVENTS } from '@/lib/v4/v4-preferences';
 
@@ -613,6 +617,8 @@ export default function TreatmentSession({
   const pendingTranscriptRef = useRef<string | null>(null);
   const isPTTActiveRef = useRef(false);
 
+  const transcriptionContextRef = useRef<TranscriptionDomainContext | null>(null);
+
   // Handle audio ended event for auto-advance steps
   const handleAudioEnded = useCallback(() => {
     resetSubtitles();
@@ -657,6 +663,14 @@ export default function TreatmentSession({
       return () => clearTimeout(timer);
     }
   }, [expectedResponseType, isSpeakerEnabled, messages]);
+
+  useEffect(() => {
+    transcriptionContextRef.current = {
+      expectedResponseType,
+      currentStep: currentStep || null,
+      hotwords: buildHotwordsFromRecentUserMessages(messages),
+    };
+  }, [expectedResponseType, currentStep, messages]);
 
   // Keep subtitles in sync with audio controls.
   useEffect(() => {
@@ -748,6 +762,7 @@ export default function TreatmentSession({
     vadSensitivity: vadSensitivity, // VAD sensitivity setting
     onVadLevel: (level) => setVadLevel(level), // Update VAD level for meter
     onTestInterruption: handleTestInterruption, // NEW: Handle test mode interruptions
+    transcriptionContextRef,
   });
 
   useEffect(() => {

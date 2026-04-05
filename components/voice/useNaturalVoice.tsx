@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type MutableRefObject } from 'react';
+import type { TranscriptionDomainContext } from '@/lib/voice/transcription-domain-context';
 import { globalAudioCache } from '@/services/voice/audioCache';
 import { V4_STATIC_AUDIO_TEXTS } from '@/lib/v4/static-audio-texts';
 import { useVAD } from './useVAD';
@@ -25,6 +26,8 @@ interface UseNaturalVoiceProps {
     onVadLevel?: (level: number) => void; // VAD level callback
     testMode?: boolean; // NEW: If true, VAD won't trigger speech recognition (for testing)
     onTestInterruption?: () => void; // NEW: Callback when VAD detects speech in test mode
+    /** Ref to latest Whisper domain context (expectedResponseType, step, hotwords). */
+    transcriptionContextRef?: MutableRefObject<TranscriptionDomainContext | null>;
 }
 
 export const useNaturalVoice = ({
@@ -43,6 +46,7 @@ export const useNaturalVoice = ({
     onVadLevel, // VAD level callback
     testMode = false, // NEW: Test mode flag to prevent VAD triggering speech recognition
     onTestInterruption, // NEW: Callback when VAD detects speech in test mode
+    transcriptionContextRef,
 }: UseNaturalVoiceProps) => {
     // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
@@ -108,6 +112,7 @@ export const useNaturalVoice = ({
         },
         onProcessingChange: (processing) => setWhisperProcessing(processing),
         vadTrigger: false, // We'll manually trigger via processNow()
+        getTranscriptionContext: () => transcriptionContextRef?.current ?? null,
     });
     
     // Test mode handler - called when user speaks during test mode

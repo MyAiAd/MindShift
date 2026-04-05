@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import type { TranscriptionDomainContext } from '@/lib/voice/transcription-domain-context';
 
 // ============================================================================
 // CLIENT-SIDE WHISPER HALLUCINATION FILTER (backup for server-side filter)
@@ -67,6 +68,8 @@ interface UseAudioCaptureProps {
   onTranscript: (transcript: string) => void;
   onProcessingChange?: (isProcessing: boolean) => void; // Notify parent of processing state changes
   vadTrigger?: boolean; // External VAD can trigger transcription
+  /** Latest session context for Whisper domain bias (expectedResponseType, step, hotwords). */
+  getTranscriptionContext?: () => TranscriptionDomainContext | null;
 }
 
 type ExtendedAudioConstraints = MediaTrackConstraints & {
@@ -79,6 +82,7 @@ export const useAudioCapture = ({
   onTranscript,
   onProcessingChange,
   vadTrigger,
+  getTranscriptionContext,
 }: UseAudioCaptureProps) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,10 +108,12 @@ export const useAudioCapture = ({
   // Keep callback refs current to avoid stale closures in async operations
   const onTranscriptRef = useRef(onTranscript);
   const onProcessingChangeRef = useRef(onProcessingChange);
+  const getTranscriptionContextRef = useRef(getTranscriptionContext);
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
     onProcessingChangeRef.current = onProcessingChange;
-  }, [onTranscript, onProcessingChange]);
+    getTranscriptionContextRef.current = getTranscriptionContext;
+  }, [onTranscript, onProcessingChange, getTranscriptionContext]);
   
   // Configuration - TUNED for responsive speech capture
   const BUFFER_DURATION_MS = 8000;   // Keep last 8 seconds (safety margin for longer utterances)
@@ -218,14 +224,23 @@ export const useAudioCapture = ({
     try {
       const wavBlob = createWavBlob(bufferSnapshot);
       console.log(`🎙️ AudioCapture: Processing ${(wavBlob.size / 1024).toFixed(1)}KB of audio (${activeRequestsRef.current} in-flight)`);
-      
-      // Send to Whisper API
+
+      const ctx = getTranscriptionContextRef.current?.() ?? null;
+      const formData = new FormData();
+      formData.append('audio', wavBlob, 'audio.wav');
+      if (ctx?.expectedResponseType) {
+        formData.append('expected_response_type', ctx.expectedResponseType);
+      }
+      if (ctx?.currentStep) {
+        formData.append('current_step', ctx.currentStep);
+      }
+      if (ctx?.hotwords) {
+        formData.append('hotwords', ctx.hotwords.slice(0, 500));
+      }
+
       const response = await fetch('/api/transcribe', {
         method: 'POST',
-        body: wavBlob,
-        headers: {
-          'Content-Type': 'audio/wav',
-        },
+        body: formData,
       });
       
       if (!response.ok) {

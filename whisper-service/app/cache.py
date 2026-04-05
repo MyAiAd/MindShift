@@ -59,24 +59,26 @@ class RedisCache:
         return url
     
     @staticmethod
-    def _compute_hash(audio_data: bytes) -> str:
+    def _compute_hash(audio_data: bytes, bias_key: str = "") -> str:
         """
-        Compute SHA256 hash of audio data for cache key.
-        
-        Args:
-            audio_data: Raw audio bytes
-        
-        Returns:
-            Hex string of SHA256 hash
+        Compute SHA256 hash of audio + optional domain-bias key for cache key.
+
+        Same waveform with different initial_prompt/hotwords must not share a cache entry.
         """
-        return hashlib.sha256(audio_data).hexdigest()
+        h = hashlib.sha256()
+        h.update(audio_data)
+        if bias_key:
+            h.update(b"\x00")
+            h.update(bias_key.encode("utf-8"))
+        return h.hexdigest()
     
-    def get(self, audio_data: bytes) -> Optional[Dict[str, Any]]:
+    def get(self, audio_data: bytes, bias_key: str = "") -> Optional[Dict[str, Any]]:
         """
         Get cached transcription result for audio data.
         
         Args:
             audio_data: Raw audio bytes
+            bias_key: Domain-bias suffix (expected_response_type|step|hotwords)
         
         Returns:
             Cached transcription result dict, or None if cache miss or Redis unavailable
@@ -85,7 +87,7 @@ class RedisCache:
             return None
         
         try:
-            cache_key = self._compute_hash(audio_data)
+            cache_key = self._compute_hash(audio_data, bias_key)
             cache_key_display = cache_key[:16] + "..."  # Truncate for logging
             
             cached_json = self._client.get(f"transcription:{cache_key}")
@@ -105,13 +107,14 @@ class RedisCache:
             logger.error(f"Redis get() failed: {e}. Continuing without cache.")
             return None
     
-    def set(self, audio_data: bytes, result: Dict[str, Any]) -> bool:
+    def set(self, audio_data: bytes, result: Dict[str, Any], bias_key: str = "") -> bool:
         """
         Store transcription result in cache.
         
         Args:
             audio_data: Raw audio bytes
             result: Transcription result dictionary
+            bias_key: Domain-bias suffix (must match get())
         
         Returns:
             True if cached successfully, False otherwise
@@ -120,7 +123,7 @@ class RedisCache:
             return False
         
         try:
-            cache_key = self._compute_hash(audio_data)
+            cache_key = self._compute_hash(audio_data, bias_key)
             cache_key_display = cache_key[:16] + "..."  # Truncate for logging
             
             # Add cache metadata
@@ -173,11 +176,11 @@ class NoOpCache:
     def __init__(self):
         logger.info("Cache disabled (NoOpCache)")
     
-    def get(self, audio_data: bytes) -> None:
+    def get(self, audio_data: bytes, bias_key: str = "") -> None:
         """Always return cache miss."""
         return None
     
-    def set(self, audio_data: bytes, result: Dict[str, Any]) -> bool:
+    def set(self, audio_data: bytes, result: Dict[str, Any], bias_key: str = "") -> bool:
         """Do nothing, return False."""
         return False
     

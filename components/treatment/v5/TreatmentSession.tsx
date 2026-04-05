@@ -23,6 +23,10 @@ import {
 // Admin debug drawer (slides out from right for admin testing)
 import AdminDebugDrawer from './AdminDebugDrawer';
 import { useAuth } from '@/lib/auth';
+import {
+  buildHotwordsFromRecentUserMessages,
+  type TranscriptionDomainContext,
+} from '@/lib/voice/transcription-domain-context';
 
 // Import V4 modality components
 import ProblemShifting from './modalities/ProblemShifting/ProblemShifting';
@@ -634,6 +638,9 @@ export default function TreatmentSession({
   const pendingTranscriptRef = useRef<string | null>(null);
   const isPTTActiveRef = useRef(false);
 
+  /** Whisper domain bias: expectedResponseType, step id, and recent user wording for hotwords. */
+  const transcriptionContextRef = useRef<TranscriptionDomainContext | null>(null);
+
   // Handle audio ended event for auto-advance steps
   const handleAudioEnded = useCallback(() => {
     resetSubtitles();
@@ -678,6 +685,14 @@ export default function TreatmentSession({
       return () => clearTimeout(timer);
     }
   }, [expectedResponseType, isSpeakerEnabled, messages]);
+
+  useEffect(() => {
+    transcriptionContextRef.current = {
+      expectedResponseType,
+      currentStep: currentStep || null,
+      hotwords: buildHotwordsFromRecentUserMessages(messages),
+    };
+  }, [expectedResponseType, currentStep, messages]);
 
   // Keep subtitles in sync with audio controls.
   useEffect(() => {
@@ -769,6 +784,7 @@ export default function TreatmentSession({
     vadSensitivity: vadSensitivity, // VAD sensitivity setting
     onVadLevel: (level) => setVadLevel(level), // Update VAD level for meter
     onTestInterruption: handleTestInterruption, // NEW: Handle test mode interruptions
+    transcriptionContextRef,
   });
 
   useEffect(() => {

@@ -264,7 +264,12 @@ def get_whisper_model() -> WhisperModel:
     return _whisper_model
 
 
-def transcribe_audio(audio_data: np.ndarray, sample_rate: int) -> Dict[str, Any]:
+def transcribe_audio(
+    audio_data: np.ndarray,
+    sample_rate: int,
+    initial_prompt: Optional[str] = None,
+    hotwords: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     Transcribe audio using Whisper model.
     
@@ -294,34 +299,33 @@ def transcribe_audio(audio_data: np.ndarray, sample_rate: int) -> Dict[str, Any]
         # Calculate audio duration
         audio_duration = len(audio_data) / sample_rate
         
-        logger.info(f"Starting transcription: duration={audio_duration:.2f}s, "
-                   f"sample_rate={sample_rate}Hz")
+        logger.info(
+            f"Starting transcription: duration={audio_duration:.2f}s, "
+            f"sample_rate={sample_rate}Hz, "
+            f"initial_prompt={'yes' if initial_prompt else 'no'}, "
+            f"hotwords={'yes' if hotwords else 'no'}"
+        )
         
         # Transcribe with VAD filter to skip silence
         transcribe_start = time.time()
         
-        # ENHANCED HALLUCINATION PREVENTION (Research-backed techniques)
-        # Suppress tokens known to cause hallucinations (from research + your data)
-        # Token IDs for common hallucination phrases (Whisper English tokenizer)
-        suppress_tokens = [
-            # "thanks for watching" variants
-            11176, 329, 6355,  # thanks for watching
-            50364, 50365,      # silence tokens
-            # Add more token IDs as needed
-        ]
-        
-        segments_generator, info = model.transcribe(
-            audio_data,
-            vad_filter=False,  # Disabled: Stage 4 WebRTC VAD already strips silence before Whisper
-            beam_size=5,  # Restored: beam search helps accuracy on ambiguous/emotional speech
-            language="en",  # Default to English (can be overridden by caller in future)
-            condition_on_previous_text=False,  # Prevent hallucination chain reactions
-            temperature=0.0,  # Greedy decoding (most confident predictions only)
-            compression_ratio_threshold=2.4,  # Reject overly repetitive text
-            logprob_threshold=-1.0,  # Stricter confidence threshold
-            no_speech_threshold=0.6,  # Higher threshold for "no speech" detection
-            # suppress_tokens=suppress_tokens,  # Uncomment if needed (experimental)
+        # Domain bias (Mind Shifting): therapeutic vocabulary + session hotwords (faster-whisper 1.0.x API)
+        tw_kwargs = dict(
+            vad_filter=False,  # Stage 4 WebRTC VAD already strips silence before Whisper
+            beam_size=5,
+            language="en",
+            condition_on_previous_text=False,  # Prevent hallucination chain reactions across chunks
+            temperature=0.0,
+            compression_ratio_threshold=2.4,
+            log_prob_threshold=-1.0,
+            no_speech_threshold=0.6,
         )
+        if initial_prompt:
+            tw_kwargs["initial_prompt"] = initial_prompt
+        if hotwords:
+            tw_kwargs["hotwords"] = hotwords
+
+        segments_generator, info = model.transcribe(audio_data, **tw_kwargs)
         
         # Extract segments and build full transcript
         segments = []
@@ -373,6 +377,7 @@ def transcribe_audio(audio_data: np.ndarray, sample_rate: int) -> Dict[str, Any]
             },
             "real_time_factor": round(real_time_factor, 3),
             "hallucination_filtered": hallucinated,
+            "domain_bias_applied": bool(initial_prompt or hotwords),
         }
         
         if hallucinated:
