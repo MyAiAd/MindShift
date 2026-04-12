@@ -633,9 +633,16 @@ export default function TreatmentSession({
 
   // Stable ref for sendMessage so callbacks like handleAudioEnded always see the latest version
   const sendMessageRef = useRef<(content: string, isAutoAdvance?: boolean) => Promise<void>>(async () => {});
+  const isLoadingRef = useRef(isLoading);
 
-  // Queue for transcripts that arrive while isLoading is true (prevents silent data loss)
+  // Transcript accumulation: Whisper sends audio in ~1.5s chunks, each independently
+  // transcribed. Without accumulation, only the first chunk triggers sendMessage and
+  // subsequent chunks overwrite each other in pendingTranscriptRef, silently losing
+  // the middle of longer utterances.
   const pendingTranscriptRef = useRef<string | null>(null);
+  const transcriptAccumulatorRef = useRef<string>('');
+  const transcriptFlushTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const TRANSCRIPT_FLUSH_DELAY_MS = 2000;
   const isPTTActiveRef = useRef(false);
 
   /** Whisper domain bias: expectedResponseType, step id, and recent user wording for hotwords. */
@@ -769,12 +776,29 @@ export default function TreatmentSession({
     testMode: isTestPlaying, // NEW: Test mode prevents VAD from triggering speech recognition
     onTranscript: (transcript) => {
       console.log('🗣️ Natural Voice Transcript:', transcript);
-      if (!isLoading) {
-        sendMessage(transcript);
-      } else {
-        console.log('⏳ Transcript queued (request in flight):', transcript);
-        pendingTranscriptRef.current = transcript;
+      transcriptAccumulatorRef.current = transcriptAccumulatorRef.current
+        ? transcriptAccumulatorRef.current + ' ' + transcript
+        : transcript;
+
+      if (transcriptFlushTimerRef.current) {
+        clearTimeout(transcriptFlushTimerRef.current);
       }
+
+      transcriptFlushTimerRef.current = setTimeout(() => {
+        transcriptFlushTimerRef.current = null;
+        const accumulated = transcriptAccumulatorRef.current.trim();
+        transcriptAccumulatorRef.current = '';
+        if (!accumulated) return;
+
+        console.log('🗣️ Flushing accumulated transcript:', accumulated);
+        if (!isLoadingRef.current) {
+          sendMessageRef.current(accumulated);
+        } else {
+          pendingTranscriptRef.current = pendingTranscriptRef.current
+            ? pendingTranscriptRef.current + ' ' + accumulated
+            : accumulated;
+        }
+      }, TRANSCRIPT_FLUSH_DELAY_MS);
     },
     voiceProvider: 'kokoro',
     kokoroVoiceId: getKokoroVoiceId(),
@@ -817,12 +841,16 @@ export default function TreatmentSession({
     }
   }, [isLoading, isSessionActive]);
 
-  // Cleanup: Stop audio when navigating away from treatment session
+  // Cleanup: Stop audio and flush timers when navigating away
   useEffect(() => {
     return () => {
       console.log('🧹 TreatmentSession: Cleaning up - stopping audio');
       naturalVoice.stopSpeaking();
       clearSubtitleTimers();
+      if (transcriptFlushTimerRef.current) {
+        clearTimeout(transcriptFlushTimerRef.current);
+        transcriptFlushTimerRef.current = null;
+      }
     };
   }, []); // Cleanup on unmount only
 
@@ -1016,9 +1044,29 @@ export default function TreatmentSession({
     // for the next auto-process timer tick (up to 1.5s away).
     naturalVoice.processNow?.();
 
+    // Flush any already-accumulated transcript immediately on PTT release
+    // instead of waiting for the debounce timer. The final Whisper chunk
+    // (from processNow above) will arrive async and be handled normally.
+    if (transcriptFlushTimerRef.current) {
+      clearTimeout(transcriptFlushTimerRef.current);
+      transcriptFlushTimerRef.current = null;
+    }
+    const accumulated = transcriptAccumulatorRef.current.trim();
+    transcriptAccumulatorRef.current = '';
+    if (accumulated) {
+      console.log('🎙️ PTT: Flushing accumulated transcript on release:', accumulated);
+      if (!isLoading) {
+        sendMessage(accumulated);
+      } else {
+        pendingTranscriptRef.current = pendingTranscriptRef.current
+          ? pendingTranscriptRef.current + ' ' + accumulated
+          : accumulated;
+      }
+    }
+
     setIsPTTActive(false);
     isPTTActiveRef.current = false;
-  }, [isGuidedMode, naturalVoice]);
+  }, [isGuidedMode, naturalVoice, isLoading, sendMessage]);
 
   const handlePTTToggle = useCallback(() => {
     if (isPTTActive) {
@@ -1427,8 +1475,9 @@ export default function TreatmentSession({
     }
   };
 
-  // Keep sendMessageRef pointing at the latest sendMessage on every render
+  // Keep refs pointing at the latest values on every render
   sendMessageRef.current = sendMessage;
+  isLoadingRef.current = isLoading;
 
   // Flush any queued transcript once the previous request finishes
   useEffect(() => {
