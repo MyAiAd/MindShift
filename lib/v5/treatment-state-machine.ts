@@ -2134,18 +2134,22 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   }
 
   private handleRestateAnythingElseProblem1(context: TreatmentContext): string {
-    // Setup metadata for the new problem and route to method selection
     const anythingElseProblem = context.userResponses?.['restate_anything_else_problem_1'];
     if (anythingElseProblem) {
       this.setActiveProblemFull(context, anythingElseProblem);
       context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 5) + 1;
       context.metadata.returnToDiggingStep = 'anything_else_check_1';
       context.metadata.workType = 'problem';
-      // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
-      console.log(`🔍 ANYTHING_ELSE_1: Stored problem "${anythingElseProblem}", routing to method selection`);
+      console.log(`🔍 ANYTHING_ELSE_1: Stored problem "${anythingElseProblem}"`);
     }
     this.clearPreviousModalityMetadata(context);
-    return 'digging_method_selection';
+
+    const originalMethod = context.metadata.selectedMethod || 'problem_shifting';
+    context.currentPhase = this.getPhaseForMethod(originalMethod);
+    context.metadata.selectedMethod = originalMethod;
+    context.metadata.skipIntroInstructions = true;
+    console.log(`🔍 ANYTHING_ELSE_1: Auto-selecting ${originalMethod} (original method)`);
+    return this.getIntroStepForMethod(originalMethod, context);
   }
 
   private handleClearAnythingElseProblem1(lastResponse: string, context: TreatmentContext): string {
@@ -2198,18 +2202,22 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
   }
 
   private handleRestateAnythingElseProblem2(context: TreatmentContext): string {
-    // Setup metadata for the new problem and route to method selection
     const anythingElseProblem2 = context.userResponses?.['restate_anything_else_problem_2'];
     if (anythingElseProblem2) {
       this.setActiveProblemFull(context, anythingElseProblem2);
       context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 6) + 1;
       context.metadata.returnToDiggingStep = 'anything_else_check_2';
       context.metadata.workType = 'problem';
-      // Keep originalProblemStatement intact - it should always refer to PROBLEM 1
-      console.log(`🔍 ANYTHING_ELSE_2: Stored problem "${anythingElseProblem2}", routing to method selection`);
+      console.log(`🔍 ANYTHING_ELSE_2: Stored problem "${anythingElseProblem2}"`);
     }
     this.clearPreviousModalityMetadata(context);
-    return 'digging_method_selection';
+
+    const originalMethod = context.metadata.selectedMethod || 'problem_shifting';
+    context.currentPhase = this.getPhaseForMethod(originalMethod);
+    context.metadata.selectedMethod = originalMethod;
+    context.metadata.skipIntroInstructions = true;
+    console.log(`🔍 ANYTHING_ELSE_2: Auto-selecting ${originalMethod} (original method)`);
+    return this.getIntroStepForMethod(originalMethod, context);
   }
 
   private handleClearAnythingElseProblem2(lastResponse: string, context: TreatmentContext): string {
