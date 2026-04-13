@@ -64,7 +64,7 @@ export class BeliefShiftingPhase {
             // Check if we're coming from digging deeper (shorter instructions)
             // Note: If we skipped, we would have jumped straight here from the previous step
 
-            return `Feel the problem that '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem that '${problemStatement}'?`;
+            return `Feel the problem '${problemStatement}'... what do you believe about yourself that's causing you to experience this problem '${problemStatement}'?`;
           },
           expectedResponseType: 'open',
           validationRules: [
