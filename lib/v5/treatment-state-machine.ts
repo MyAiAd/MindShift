@@ -1064,13 +1064,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
         if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.currentPhase = 'trauma_shifting';
           context.metadata.isTraumaDiggingDeeperFlow = true;
         }
         return returnStep;
       } else if (alreadyGrantedPermission) {
         const next = this.nextDiggingStepAfterSubMethodComplete(context);
         console.log(`🔍 CHECK_IF_STILL_PROBLEM: Permission granted, going to ${next}`);
-        context.currentPhase = 'digging_deeper';
+        context.currentPhase = (next === 'trauma_dig_deeper') ? 'trauma_shifting' : 'digging_deeper';
         return next;
       } else {
         // First time - ask permission
@@ -1137,6 +1138,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
         if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.currentPhase = 'trauma_shifting';
           context.metadata.isTraumaDiggingDeeperFlow = true;
         }
         return returnStep;
@@ -1151,6 +1153,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
           context.metadata?.isTraumaDiggingDeeperFlow
         ) {
           console.log(`🔍 BLOCKAGE_STEP_E: Returning to trauma_dig_deeper`);
+          context.currentPhase = 'trauma_shifting';
           context.metadata.isTraumaDiggingDeeperFlow = true;
           return 'trauma_dig_deeper';
         } else {
@@ -1202,13 +1205,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
             context.currentPhase = 'digging_deeper';
             context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
             if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+              context.currentPhase = 'trauma_shifting';
               context.metadata.isTraumaDiggingDeeperFlow = true;
             }
             return returnStep;
           } else if (alreadyGrantedPermission) {
             const next = this.nextDiggingStepAfterSubMethodComplete(context);
             console.log(`🔍 BLOCKAGE_CHECK_RESOLVED: Permission already granted, going to ${next}`);
-            context.currentPhase = 'digging_deeper';
+            context.currentPhase = (next === 'trauma_dig_deeper') ? 'trauma_shifting' : 'digging_deeper';
             return next;
           } else {
             // First time - ask permission
@@ -1342,12 +1346,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
         if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.currentPhase = 'trauma_shifting';
           context.metadata.isTraumaDiggingDeeperFlow = true;
         }
         return returnStep;
       } else if (alreadyGrantedPermission) {
-        context.currentPhase = 'digging_deeper';
-        return this.nextDiggingStepAfterSubMethodComplete(context);
+        const next = this.nextDiggingStepAfterSubMethodComplete(context);
+        context.currentPhase = (next === 'trauma_dig_deeper') ? 'trauma_shifting' : 'digging_deeper';
+        return next;
       } else {
         // First time - ask permission
         context.currentPhase = 'digging_deeper';
@@ -1481,12 +1487,14 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
         if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.currentPhase = 'trauma_shifting';
           context.metadata.isTraumaDiggingDeeperFlow = true;
         }
         return returnStep;
       } else if (alreadyGrantedPermission) {
-        context.currentPhase = 'digging_deeper';
-        return this.nextDiggingStepAfterSubMethodComplete(context);
+        const next = this.nextDiggingStepAfterSubMethodComplete(context);
+        context.currentPhase = (next === 'trauma_dig_deeper') ? 'trauma_shifting' : 'digging_deeper';
+        return next;
       } else {
         // First time - ask permission
         context.currentPhase = 'digging_deeper';
@@ -1762,12 +1770,13 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined; // Clear now that we're returning
         if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.currentPhase = 'trauma_shifting';
           context.metadata.isTraumaDiggingDeeperFlow = true;
         }
         return returnStep;
       } else if (alreadyGrantedPermission) {
         // Permission already granted but first trauma completion - skip permission, start digging questions
-        context.currentPhase = 'digging_deeper';
+        context.currentPhase = 'trauma_shifting';
         context.metadata.isTraumaDiggingDeeperFlow = true;
         return 'trauma_dig_deeper';
       } else {
@@ -1811,6 +1820,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
         context.currentPhase = 'digging_deeper';
         context.metadata.returnToDiggingStep = undefined;
         if (returnStep === 'trauma_dig_deeper' || returnStep === 'trauma_dig_deeper_2') {
+          context.currentPhase = 'trauma_shifting';
           context.metadata.isTraumaDiggingDeeperFlow = true;
         }
         return returnStep;
