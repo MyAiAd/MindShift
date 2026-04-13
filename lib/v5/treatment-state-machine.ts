@@ -1167,7 +1167,7 @@ export class TreatmentStateMachine extends BaseTreatmentStateMachine {
       // Still a problem - update problem statement and cycle back to step A
       const newProblem = context.userResponses[context.currentStep] || lastResponse;
       if (newProblem) {
-        this.updateProblemStatement(context, newProblem);
+        this.setActiveProblemFull(context, newProblem);
         context.metadata.cycleCount = (context.metadata.cycleCount || 0) + 1;
         context.metadata.skipIntroInstructions = true; // Skip intro when cycling back
         console.log(`🔍 BLOCKAGE_STEP_E: Updated problem to "${newProblem}", cycling back to blockage_shifting_intro`);
