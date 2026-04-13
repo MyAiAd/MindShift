@@ -1056,7 +1056,7 @@ export default function TreatmentSession({
     if (accumulated) {
       console.log('🎙️ PTT: Flushing accumulated transcript on release:', accumulated);
       if (!isLoading) {
-        sendMessage(accumulated);
+        sendMessageRef.current(accumulated);
       } else {
         pendingTranscriptRef.current = pendingTranscriptRef.current
           ? pendingTranscriptRef.current + ' ' + accumulated
@@ -1066,7 +1066,7 @@ export default function TreatmentSession({
 
     setIsPTTActive(false);
     isPTTActiveRef.current = false;
-  }, [isGuidedMode, naturalVoice, isLoading, sendMessage]);
+  }, [isGuidedMode, naturalVoice, isLoading]);
 
   const handlePTTToggle = useCallback(() => {
     if (isPTTActive) {
