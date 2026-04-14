@@ -17,6 +17,16 @@ const STORAGE_STATE = path.join(__dirname, '.auth/storage-state.json');
  *   SUPABASE_ANON_KEY  - override NEXT_PUBLIC_SUPABASE_ANON_KEY
  */
 async function globalSetup(config: FullConfig) {
+  // Reuse existing session if it's still fresh (< 50 min old)
+  if (fs.existsSync(STORAGE_STATE)) {
+    const stats = fs.statSync(STORAGE_STATE);
+    const ageMinutes = (Date.now() - stats.mtimeMs) / 60_000;
+    if (ageMinutes < 50) {
+      console.log(`  Reusing auth session (${Math.round(ageMinutes)}m old)`);
+      return;
+    }
+  }
+
   const email = process.env.TEST_USER_EMAIL;
   const password = process.env.TEST_USER_PASSWORD;
 
@@ -27,16 +37,6 @@ async function globalSetup(config: FullConfig) {
       '    TEST_USER_EMAIL=you@example.com TEST_USER_PASSWORD=secret npm test\n'
     );
     process.exit(1);
-  }
-
-  // Reuse existing session if it's still fresh (< 50 min old)
-  if (fs.existsSync(STORAGE_STATE)) {
-    const stats = fs.statSync(STORAGE_STATE);
-    const ageMinutes = (Date.now() - stats.mtimeMs) / 60_000;
-    if (ageMinutes < 50) {
-      console.log(`  Reusing auth session (${Math.round(ageMinutes)}m old)`);
-      return;
-    }
   }
 
   // Load Supabase config from .env.local

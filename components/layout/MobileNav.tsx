@@ -29,7 +29,7 @@ const navItems = [
   },
   {
     label: 'Shifting',
-    href: '/dashboard/sessions/treatment-v5',
+    href: '/dashboard/sessions/treatment-v6',
     icon: Sparkles,
   },
   {

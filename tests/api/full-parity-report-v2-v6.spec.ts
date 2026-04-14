@@ -1,0 +1,121 @@
+import { test } from '@playwright/test';
+import fs from 'fs';
+import path from 'path';
+import { runParityFlowV2V6, buildFlowReportV2V6 } from '../helpers/parity-runner';
+import { generateFullReportMarkdown, FlowReport } from '../helpers/comparator';
+import { ALL_FLOWS, FlowStep } from '../helpers/test-flows';
+
+/**
+ * V2 vs V6 route-level parity test.
+ *
+ * Runs every flow against BOTH the V2 and V6 APIs, comparing:
+ *   - Step names (normalized)
+ *   - Full message text
+ *   - Problem references in quoted strings
+ *   - Detection of leaked routing signals
+ *
+ * Produces a markdown report at:
+ *   tests/reports/V2_V6_ROUTE_PARITY_REPORT.md
+ *
+ * V2 is the medical gold standard. Every divergence = something to fix in V6.
+ */
+
+const reports: FlowReport[] = [];
+const flowEntries = Object.entries(ALL_FLOWS);
+
+for (const [flowName, flowSteps] of flowEntries) {
+  test(`V2 vs V6 PARITY: ${flowName}`, async ({ request }) => {
+    const {
+      results,
+      v2Failed,
+      v2FailureStep,
+      v2FailureError,
+      v6Failed,
+      v6FailureStep,
+      v6FailureError,
+    } = await runParityFlowV2V6(request, flowSteps as FlowStep[]);
+
+    const report = buildFlowReportV2V6(
+      flowName,
+      results,
+      flowSteps as FlowStep[],
+      v2Failed,
+      v2FailureStep,
+      v2FailureError,
+      v6Failed,
+      v6FailureStep,
+      v6FailureError,
+    );
+
+    reports.push(report);
+
+    const realDivergences = report.divergences.filter(
+      d => !d.isKnownDiff && d.type !== 'v2_error',
+    );
+
+    if (v2Failed) {
+      console.warn(
+        `  ⚠️  ${flowName}: V2 crashed at step ${v2FailureStep} — comparison partial`,
+      );
+    }
+    if (v6Failed) {
+      console.warn(
+        `  ⚠️  ${flowName}: V6 crashed at step ${v6FailureStep} — comparison partial`,
+      );
+    }
+
+    if (realDivergences.length > 0) {
+      const summary = realDivergences
+        .map(d => `  Step ${d.stepIndex} (${d.inputLabel}): ${d.detail}`)
+        .join('\n');
+      console.warn(
+        `  ❌ ${flowName}: ${realDivergences.length} divergence(s):\n${summary}`,
+      );
+    } else if (!v2Failed && !v6Failed) {
+      console.log(`  ✅ ${flowName}: V6 matches V2`);
+    }
+  });
+}
+
+test.afterAll(async () => {
+  if (reports.length === 0) return;
+
+  const reportsDir = path.join(__dirname, '..', 'reports');
+  if (!fs.existsSync(reportsDir)) {
+    fs.mkdirSync(reportsDir, { recursive: true });
+  }
+
+  const markdown = generateFullReportMarkdown(reports);
+  const reportPath = path.join(reportsDir, 'V2_V6_ROUTE_PARITY_REPORT.md');
+  fs.writeFileSync(reportPath, markdown, 'utf-8');
+
+  console.log(`\n${'='.repeat(70)}`);
+  console.log(`  V2 vs V6 PARITY REPORT written to: ${reportPath}`);
+  console.log(`${'='.repeat(70)}\n`);
+
+  const totalDivergences = reports.reduce(
+    (sum, r) =>
+      sum +
+      r.divergences.filter(d => !d.isKnownDiff && d.type !== 'v2_error').length,
+    0,
+  );
+  const v2Crashes = reports.filter(r => r.v2Failed).length;
+  const v6Crashes = reports.filter(r => r.v4Failed).length;
+
+  console.log(`  Flows tested:            ${reports.length}`);
+  console.log(`  Flows where V2 crashed:  ${v2Crashes}`);
+  console.log(`  Flows where V6 crashed:  ${v6Crashes}`);
+  console.log(`  Total divergences:       ${totalDivergences}`);
+  console.log('');
+
+  if (totalDivergences > 0) {
+    console.log('  DIVERGENCES FOUND — V6 does NOT match V2 in the above flows.');
+    console.log('  See the report for details and action items.');
+  } else if (v2Crashes === 0) {
+    console.log('  ALL FLOWS MATCH — V6 is in parity with V2.');
+  } else {
+    console.log(
+      '  No divergences in completed comparisons, but V2 crashes prevented full testing.',
+    );
+  }
+});

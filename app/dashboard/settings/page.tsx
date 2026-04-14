@@ -1926,10 +1926,10 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex space-x-3">
                       <a
-                        href="/dashboard/sessions/treatment-v5"
+                        href="/dashboard/sessions/treatment-v6"
                         className="flex-1 px-4 py-2 bg-accent text-accent-foreground text-center rounded-lg hover:bg-accent/90 transition-colors font-medium text-sm"
                       >
-                        Try V5 Treatment
+                        Start V6 Treatment
                       </a>
                     </div>
                   </div>
@@ -1968,7 +1968,7 @@ export default function SettingsPage() {
                       <h5 className="font-medium text-foreground">V5 Treatment System</h5>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
-                      Next version in development. Starts as a clean copy of V4 — ready for experimentation.
+                      Labs fallback experience retained for operational safety while V6 is the primary route.
                     </p>
                     <div className="flex space-x-3">
                       <a

@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth';
 import { Calendar, Clock, Video, User, ExternalLink, Activity, Zap } from 'lucide-react';
 
 // Dynamic import for audio preloader - loads treatment audio in background
-const V4AudioPreloader = dynamic(() => import('@/components/treatment/v4/V4AudioPreloader'), {
+const V6AudioPreloader = dynamic(() => import('@/components/treatment/v6/V6AudioPreloader'), {
   ssr: false,
   loading: () => null,
 });
@@ -349,8 +349,8 @@ export default function SessionsPage() {
 
   return (
     <div className="p-8">
-      {/* V4 Audio Preloader - starts loading audio for treatment sessions */}
-      <V4AudioPreloader />
+      {/* V6 Audio Preloader - starts loading audio for treatment sessions */}
+      <V6AudioPreloader />
       
       <div className="mb-8">
         <div className="flex flex-col items-center text-center">
@@ -358,8 +358,8 @@ export default function SessionsPage() {
           <p className="text-muted-foreground mt-2 max-w-lg">Follow the guided process to clear your problems and subconscious blockages in minutes.</p>
           <button 
             onClick={() => {
-              const sessionId = `session-v5-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              router.push(`/dashboard/sessions/treatment-v5?sessionId=${sessionId}`);
+              const sessionId = `session-v6-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              router.push(`/dashboard/sessions/treatment-v6?sessionId=${sessionId}`);
             }}
             className="mt-6 bg-primary text-primary-foreground px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold"
           >
@@ -640,7 +640,7 @@ export default function SessionsPage() {
                       {session.status === 'active' && (
                         <div className="flex items-center space-x-2">
                           <button 
-                            onClick={() => router.push(`/dashboard/sessions/treatment-v5?sessionId=${session.session_id}&resume=true`)}
+                            onClick={() => router.push(`/dashboard/sessions/treatment-v6?sessionId=${session.session_id}&resume=true`)}
                             className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm inline-flex items-center"
                           >
                             Continue
@@ -721,7 +721,7 @@ export default function SessionsPage() {
                     {session.status === 'active' && (
                       <div className="flex flex-col space-y-2 pl-14">
                         <button 
-                          onClick={() => router.push(`/dashboard/sessions/treatment-v5?sessionId=${session.session_id}&resume=true`)}
+                          onClick={() => router.push(`/dashboard/sessions/treatment-v6?sessionId=${session.session_id}&resume=true`)}
                           className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm inline-flex items-center justify-center"
                         >
                           Continue

@@ -17,7 +17,10 @@ export default function DashboardLayout({
   const router = useRouter();
 
   // Determine if we should hide the mobile nav (orb mode on mobile)
-  const isTreatmentRoute = pathname?.startsWith('/dashboard/sessions/treatment-v5') || pathname?.startsWith('/dashboard/sessions/treatment-v4');
+  const isTreatmentRoute =
+    pathname?.startsWith('/dashboard/sessions/treatment-v6') ||
+    pathname?.startsWith('/dashboard/sessions/treatment-v5') ||
+    pathname?.startsWith('/dashboard/sessions/treatment-v4');
 
   const handleSignOut = async () => {
     try {

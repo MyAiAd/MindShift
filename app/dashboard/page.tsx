@@ -170,8 +170,8 @@ function DashboardContent() {
   };
 
   const handleStartShifting = () => {
-    const sessionId = `session-v5-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    router.push(`/dashboard/sessions/treatment-v5?sessionId=${sessionId}`);
+    const sessionId = `session-v6-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    router.push(`/dashboard/sessions/treatment-v6?sessionId=${sessionId}`);
   };
 
   const timePeriodLabels: Record<TimePeriod, string> = {

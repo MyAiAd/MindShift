@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Audio Pre-Generation Script for V4 Mind Shifting
+ * Audio Pre-Generation Script for V6 Mind Shifting
  *
  * This script generates all static audio files using Kokoro TTS server.
  * After running this script once per voice, you'll have static multi-format files.
@@ -9,7 +9,7 @@
  * Usage:
  *   1. Make sure Kokoro is running at: https://api.mind-shift.click
  *   2. Run: node scripts/generate-static-audio.js [voice-name] --formats=opus,wav
- *   3. Audio files will be saved to public/audio/v4/static/[voice-name]/
+ *   3. Audio files will be saved to public/audio/v6/static/[voice-name]/
  *   4. Commit the audio files to your repo
  *   5. Update preloader to use static files instead of API
  *
@@ -25,9 +25,9 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-// Static audio texts (mirrored from lib/v4/static-audio-texts.ts)
+// Static audio texts (mirrored from lib/v6/static-audio-texts.ts)
 // IMPORTANT: Keep this in sync with the TypeScript source file
-const V4_STATIC_AUDIO_TEXTS = {
+const V6_STATIC_AUDIO_TEXTS = {
   // Initial welcome message (shown when session starts) - SHORTENED
   // Note: This audio file will not be preloaded to save time  
   INITIAL_WELCOME: "Would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE",
@@ -51,10 +51,10 @@ const V4_STATIC_AUDIO_TEXTS = {
   TRAUMA_SHIFTING_INTRO: "Please close your eyes and keep them closed throughout the rest of the process.",
 
   // Method Selection
-  METHOD_SELECTION: "Which method would you like to use for this problem?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting",
+  METHOD_SELECTION: "Choose which Mind Shifting method you would like to use to clear the problem:",
 
   // Method Selection for Digging Deeper
-  METHOD_SELECTION_DIGGING: "We need to clear this problem. Which method would you like to use?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting",
+  METHOD_SELECTION_DIGGING: "We need to clear this problem. Which method would you like to use?",
 
   // Work Type Descriptions
   WORK_TYPE_PROBLEM_DESC: "Tell me what the problem is in a few words.",
@@ -134,7 +134,7 @@ if (requestedFormats.length === 0) {
 // Configuration
 const KOKORO_API_URL = process.env.KOKORO_API_URL || 'https://api.mind-shift.click/tts';
 const VOICE_NAME = selectedVoice.name;
-const OUTPUT_DIR = path.join(__dirname, `../public/audio/v4/static/${voiceArg}`);
+const OUTPUT_DIR = path.join(__dirname, `../public/audio/v6/static/${voiceArg}`);
 
 // Ensure output directory exists
 if (!fs.existsSync(OUTPUT_DIR)) {
@@ -218,7 +218,7 @@ function generateManifest(results, voiceName) {
 
       manifest[result.key].formats[result.format] = {
         filename: result.filename,
-        path: `/audio/v4/static/${voiceName}/${result.filename}`,
+        path: `/audio/v6/static/${voiceName}/${result.filename}`,
         mime: result.mime
       };
     }
@@ -244,7 +244,7 @@ function generateManifest(results, voiceName) {
  * Main execution
  */
 async function main() {
-  console.log('🎵 V4 Static Audio Generator (Kokoro)\n');
+  console.log('🎵 V6 Static Audio Generator (Kokoro)\n');
   console.log('=' .repeat(60));
 
   // Test Kokoro connection
@@ -265,14 +265,14 @@ async function main() {
   console.log(`Voice: ${VOICE_NAME}`);
   console.log(`Output: ${OUTPUT_DIR}`);
   console.log(`Formats: ${requestedFormats.join(', ')}`);
-  console.log(`Segments: ${Object.keys(V4_STATIC_AUDIO_TEXTS).length}`);
+  console.log(`Segments: ${Object.keys(V6_STATIC_AUDIO_TEXTS).length}`);
   console.log('=' .repeat(60));
   console.log('');
 
   const results = [];
 
   // Generate audio for each segment + format
-  for (const [key, text] of Object.entries(V4_STATIC_AUDIO_TEXTS)) {
+  for (const [key, text] of Object.entries(V6_STATIC_AUDIO_TEXTS)) {
     for (const formatName of requestedFormats) {
       const result = await generateAudio(key, text, formatName);
       results.push(result);
@@ -286,7 +286,7 @@ async function main() {
   console.log('\n' + '=' .repeat(60));
   console.log('📊 Summary:');
   console.log(`   Voice: ${VOICE_NAME}`);
-  console.log(`   Total segments: ${Object.keys(V4_STATIC_AUDIO_TEXTS).length}`);
+  console.log(`   Total segments: ${Object.keys(V6_STATIC_AUDIO_TEXTS).length}`);
   console.log(`   Format variants per segment: ${requestedFormats.join(', ')}`);
   console.log(`   Total generation tasks: ${results.length}`);
   console.log(`   Generated: ${results.filter(r => !r.skipped && !r.error).length}`);
@@ -303,8 +303,8 @@ async function main() {
 
   console.log('\n✅ Audio generation complete!');
   console.log('\nNext steps:');
-  console.log(`   1. Commit the audio files: git add public/audio/v4/static/${voiceArg}/`);
-  console.log('   2. Ensure V4AudioPreloader selects compatible formats per client');
+  console.log(`   1. Commit the audio files: git add public/audio/v6/static/${voiceArg}/`);
+  console.log('   2. Ensure V6AudioPreloader selects compatible formats per client');
   console.log('   3. Deploy - users will download pre-generated static files');
   console.log('\n💰 Cost: $0 (self-hosted Kokoro)');
   console.log('   Future cost: $0 (serving static files)');

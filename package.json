@@ -40,7 +40,11 @@
     "test:digging": "npx playwright test tests/api/digging-deeper.spec.ts",
     "test:edge": "npx playwright test tests/api/edge-cases.spec.ts",
     "test:full-parity": "npx playwright test --project=full-parity",
-    "test:v5": "npx playwright test tests/api/v5-all-flows.spec.ts"
+    "test:v5": "npx playwright test tests/api/v5-all-flows.spec.ts",
+    "test:v6": "npx playwright test tests/api/v2-v6-direct-parity.spec.ts",
+    "test:v2-v6-parity": "tsx scripts/v2-v6-parity-check.ts",
+    "test:v2-v6-route-parity": "npx playwright test tests/api/full-parity-report-v2-v6.spec.ts",
+    "test:v2-v6-route-parity-local": "tsx scripts/v2-v6-route-parity-check.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",

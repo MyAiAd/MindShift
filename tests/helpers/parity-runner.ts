@@ -1,5 +1,11 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
-import { createParityPair, createParityPairV2V5, TreatmentApiClient, TreatmentResponse } from './api-client';
+import {
+  createParityPair,
+  createParityPairV2V5,
+  createParityPairV2V6,
+  TreatmentApiClient,
+  TreatmentResponse,
+} from './api-client';
 import {
   normalizeStep,
   normalizeMessage,
@@ -39,6 +45,16 @@ export interface ParityStepResultV2V5 {
   v5: TreatmentResponse;
   v2StepNorm: string;
   v5StepNorm: string;
+}
+
+export interface ParityStepResultV2V6 {
+  index: number;
+  label: string;
+  input: string;
+  v2: TreatmentResponse;
+  v6: TreatmentResponse;
+  v2StepNorm: string;
+  v6StepNorm: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -587,6 +603,339 @@ export function buildFlowReportV2V5(
     v4FailureStep: v5FailureStep,
     v4FailureError: v5FailureError,
     candidateLabel: 'v5',
+    divergences,
+    stepDetails,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Parity runner (v2 + v6 side-by-side)
+// ---------------------------------------------------------------------------
+
+export async function runParityFlowV2V6(
+  request: APIRequestContext,
+  steps: FlowStep[],
+): Promise<{
+  results: ParityStepResultV2V6[];
+  v2: TreatmentApiClient;
+  v6: TreatmentApiClient;
+  v2Failed: boolean;
+  v2FailureStep?: number;
+  v2FailureError?: string;
+  v6Failed: boolean;
+  v6FailureStep?: number;
+  v6FailureError?: string;
+}> {
+  const { v2, v6 } = createParityPairV2V6(request);
+
+  const [v2Start, v6Start] = await Promise.all([v2.start(), v6.start()]);
+
+  const results: ParityStepResultV2V6[] = [
+    {
+      index: 0,
+      label: 'start',
+      input: 'start',
+      v2: v2Start,
+      v6: v6Start,
+      v2StepNorm: normalizeStep(v2Start.currentStep),
+      v6StepNorm: normalizeStep(v6Start.currentStep),
+    },
+  ];
+
+  let v2Failed = false;
+  let v2FailureStep: number | undefined;
+  let v2FailureError: string | undefined;
+  let v6Failed = false;
+  let v6FailureStep: number | undefined;
+  let v6FailureError: string | undefined;
+
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    let v2Resp: TreatmentResponse;
+    let v6Resp: TreatmentResponse;
+
+    const makeFailed = (version: 'v2' | 'v6', client: TreatmentApiClient, msg: string): TreatmentResponse => ({
+      success: false,
+      sessionId: client.sessionId,
+      message: `${version.toUpperCase()}_ERROR: ${msg}`,
+      currentStep: `${version}_error`,
+      responseTime: 0,
+      usedAI: false,
+    });
+
+    const makeSkipped = (version: 'v2' | 'v6', client: TreatmentApiClient): TreatmentResponse => ({
+      success: false,
+      sessionId: client.sessionId,
+      message: `${version.toUpperCase()}_SKIPPED: previous step failed`,
+      currentStep: `${version}_skipped`,
+      responseTime: 0,
+      usedAI: false,
+    });
+
+    if (!v6Failed) {
+      try {
+        v6Resp = await v6.continue(step.input);
+      } catch (e) {
+        const errMsg = (e as Error).message.substring(0, 200);
+        console.warn(`  [parity v2v6] v6 failed at step ${i + 1} ("${step.label}"): ${errMsg}`);
+        v6Failed = true;
+        v6FailureStep = i + 1;
+        v6FailureError = errMsg;
+        v6Resp = makeFailed('v6', v6, errMsg);
+      }
+    } else {
+      v6Resp = makeSkipped('v6', v6);
+    }
+
+    if (!v2Failed) {
+      try {
+        v2Resp = await v2.continue(step.input);
+      } catch (e) {
+        const errMsg = (e as Error).message.substring(0, 200);
+        console.warn(`  [parity v2v6] v2 failed at step ${i + 1} ("${step.label}"): ${errMsg}`);
+        v2Failed = true;
+        v2FailureStep = i + 1;
+        v2FailureError = errMsg;
+        v2Resp = makeFailed('v2', v2, errMsg);
+      }
+    } else {
+      v2Resp = makeSkipped('v2', v2);
+    }
+
+    if (v2Failed && v6Failed) {
+      results.push({
+        index: i + 1,
+        label: step.label || `step ${i + 1}`,
+        input: step.input,
+        v2: v2Resp,
+        v6: v6Resp,
+        v2StepNorm: normalizeStep(v2Resp.currentStep),
+        v6StepNorm: normalizeStep(v6Resp.currentStep),
+      });
+      break;
+    }
+
+    results.push({
+      index: i + 1,
+      label: step.label || `step ${i + 1}`,
+      input: step.input,
+      v2: v2Resp,
+      v6: v6Resp,
+      v2StepNorm: normalizeStep(v2Resp.currentStep),
+      v6StepNorm: normalizeStep(v6Resp.currentStep),
+    });
+  }
+
+  return {
+    results, v2, v6,
+    v2Failed, v2FailureStep, v2FailureError,
+    v6Failed, v6FailureStep, v6FailureError,
+  };
+}
+
+/**
+ * Build a FlowReport from v2/v6 parity run results.
+ */
+export function buildFlowReportV2V6(
+  flowName: string,
+  results: ParityStepResultV2V6[],
+  steps: FlowStep[],
+  v2Failed: boolean,
+  v2FailureStep?: number,
+  v2FailureError?: string,
+  v6Failed?: boolean,
+  v6FailureStep?: number,
+  v6FailureError?: string,
+): FlowReport {
+  const divergences: Divergence[] = [];
+  const stepDetails: StepDetail[] = [];
+
+  for (const r of results) {
+    const label = r.label;
+    const v2Ok = r.v2.success !== false && r.v2.currentStep !== 'v2_error' && r.v2.currentStep !== 'v2_skipped';
+    const v6Ok = r.v6.success !== false && r.v6.currentStep !== 'v6_error' && r.v6.currentStep !== 'v6_skipped';
+
+    if (!v6Ok && v6FailureStep !== undefined && r.index >= v6FailureStep) {
+      stepDetails.push({
+        index: r.index,
+        label,
+        input: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v6.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v6.message,
+        v2Success: v2Ok,
+        v4Success: false,
+        match: r.index === v6FailureStep ? 'V2_ERROR' : 'V2_SKIPPED',
+      });
+      if (r.index === v6FailureStep) {
+        divergences.push({
+          type: 'v2_error',
+          stepIndex: r.index,
+          inputLabel: label,
+          userInput: r.input,
+          v2Step: r.v2.currentStep,
+          v4Step: r.v6.currentStep,
+          v2Message: r.v2.message,
+          v4Message: r.v6.message,
+          isKnownDiff: false,
+          knownReason: null,
+          detail: `V6 API crashed: ${v6FailureError ?? 'unknown'}`,
+        });
+      }
+      continue;
+    }
+
+    if (!v2Ok && v2FailureStep !== undefined && r.index >= v2FailureStep) {
+      stepDetails.push({
+        index: r.index,
+        label,
+        input: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v6.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v6.message,
+        v2Success: false,
+        v4Success: v6Ok,
+        match: r.index === v2FailureStep ? 'V2_ERROR' : 'V2_SKIPPED',
+      });
+      if (r.index === v2FailureStep) {
+        divergences.push({
+          type: 'v2_error',
+          stepIndex: r.index,
+          inputLabel: label,
+          userInput: r.input,
+          v2Step: r.v2.currentStep,
+          v4Step: r.v6.currentStep,
+          v2Message: r.v2.message,
+          v4Message: r.v6.message,
+          isKnownDiff: false,
+          knownReason: null,
+          detail: `V2 API crashed: ${v2FailureError ?? 'unknown'}`,
+        });
+      }
+      continue;
+    }
+
+    const knownV2 = isKnownDifference(r.v2.currentStep);
+    const knownV6 = isKnownDifference(r.v6.currentStep);
+    const isKnown = knownV2 || knownV6;
+    const knownReason = getKnownDifferenceReason(r.v2.currentStep) ?? getKnownDifferenceReason(r.v6.currentStep);
+
+    const stepsMatch = r.v2StepNorm === r.v6StepNorm;
+    const v2Msg = normalizeMessage(r.v2.message);
+    const v6Msg = normalizeMessage(r.v6.message);
+    const messagesMatch = v2Msg === v6Msg;
+
+    const v2Refs = extractProblemRefs(r.v2.message);
+    const v6Refs = extractProblemRefs(r.v6.message);
+    const refsMatch =
+      v2Refs.length === v6Refs.length &&
+      v2Refs.every((ref, idx) => ref === v6Refs[idx]);
+
+    const v6Leaked = isRoutingSignal(r.v6.message);
+
+    let match: StepDetail['match'] = 'MATCH';
+    if (isKnown && (!stepsMatch || !messagesMatch)) {
+      match = 'KNOWN_DIFF';
+    } else if (!stepsMatch || !messagesMatch || !refsMatch || v6Leaked) {
+      match = 'DIVERGENCE';
+    }
+
+    stepDetails.push({
+      index: r.index,
+      label,
+      input: r.input,
+      v2Step: r.v2.currentStep,
+      v4Step: r.v6.currentStep,
+      v2Message: r.v2.message,
+      v4Message: r.v6.message,
+      v2Success: v2Ok,
+      v4Success: v6Ok,
+      match,
+    });
+
+    if (v6Leaked) {
+      divergences.push({
+        type: 'routing_signal_leaked',
+        stepIndex: r.index,
+        inputLabel: label,
+        userInput: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v6.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v6.message,
+        isKnownDiff: false,
+        knownReason: null,
+        detail: `V6 leaked internal routing signal "${r.v6.message}" to user`,
+      });
+    }
+
+    if (!stepsMatch) {
+      divergences.push({
+        type: 'step_mismatch',
+        stepIndex: r.index,
+        inputLabel: label,
+        userInput: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v6.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v6.message,
+        isKnownDiff: isKnown,
+        knownReason,
+        detail: `Step name differs: v2="${r.v2.currentStep}" vs v6="${r.v6.currentStep}"`,
+      });
+    }
+
+    if (!messagesMatch && stepsMatch) {
+      divergences.push({
+        type: 'message_mismatch',
+        stepIndex: r.index,
+        inputLabel: label,
+        userInput: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v6.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v6.message,
+        isKnownDiff: isKnown,
+        knownReason,
+        detail: 'V6 message text does not match V2 (V2 is the gold standard)',
+      });
+    }
+
+    if (!refsMatch && stepsMatch && messagesMatch) {
+      divergences.push({
+        type: 'problem_ref_mismatch',
+        stepIndex: r.index,
+        inputLabel: label,
+        userInput: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v6.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v6.message,
+        isKnownDiff: isKnown,
+        knownReason,
+        detail: `Problem refs differ: v2=[${v2Refs.join(', ')}] vs v6=[${v6Refs.join(', ')}]`,
+      });
+    }
+  }
+
+  const v2Completed = results.filter(
+    r => r.v2.success !== false && r.v2.currentStep !== 'v2_error' && r.v2.currentStep !== 'v2_skipped'
+  ).length;
+
+  return {
+    flowName,
+    totalSteps: results.length,
+    v2StepsCompleted: v2Completed,
+    v4StepsCompleted: results.filter(r => r.v6.success !== false).length,
+    v2Failed,
+    v2FailureStep,
+    v2FailureError,
+    v4Failed: v6Failed,
+    v4FailureStep: v6FailureStep,
+    v4FailureError: v6FailureError,
+    candidateLabel: 'v6',
     divergences,
     stepDetails,
   };
