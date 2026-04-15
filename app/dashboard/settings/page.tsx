@@ -132,7 +132,8 @@ export default function SettingsPage() {
   const [labsToggles, setLabsToggles] = useState({
     v2TreatmentDemo: true,
     v3TreatmentDemo: true,
-    v4TreatmentDemo: true,
+    v7TreatmentDemo: true,
+    v6TreatmentDemo: true,
     v5TreatmentDemo: true
   });
 
@@ -1744,7 +1745,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
             <p className="text-sm text-muted-foreground mb-6">
-              Compare all treatment versions for testing and migration purposes. V4 is the current production version.
+              Compare all treatment versions for testing and migration purposes. V7 is the current production version, and V6 remains available as the previous model.
             </p>
             
             <div className="space-y-6">
@@ -1872,44 +1873,44 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              {/* V4 Treatment Demo */}
+              {/* V7 Treatment Demo */}
               <div className="border border-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-md font-medium text-foreground">V4 Treatment</h4>
+                    <h4 className="text-md font-medium text-foreground">V7 Treatment</h4>
                     <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded-full">
                       Current Production
                     </span>
                   </div>
                   <button
-                    onClick={() => handleLabsToggle('v4TreatmentDemo')}
-                    aria-label={`${labsToggles.v4TreatmentDemo ? 'Disable' : 'Enable'} V4 Treatment Demo`}
+                    onClick={() => handleLabsToggle('v7TreatmentDemo')}
+                    aria-label={`${labsToggles.v7TreatmentDemo ? 'Disable' : 'Enable'} V7 Treatment Demo`}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      labsToggles.v4TreatmentDemo
+                      labsToggles.v7TreatmentDemo
                         ? 'bg-indigo-600'
                         : 'bg-secondary dark:bg-[#586e75]'
                     }`}
                   >
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
-                        labsToggles.v4TreatmentDemo ? 'translate-x-6' : 'translate-x-1'
+                        labsToggles.v7TreatmentDemo ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />
                   </button>
                 </div>
-                {labsToggles.v4TreatmentDemo && (
+                {labsToggles.v7TreatmentDemo && (
                   <div className="bg-secondary/20 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-2">
                       <Brain className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <h5 className="font-medium text-foreground">V4 Treatment System</h5>
+                      <h5 className="font-medium text-foreground">V7 Treatment System</h5>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
-                      Current production version. Modular architecture with voice support, pre-loaded audio, and mobile optimization.
+                      Current production version. This is the new default route, duplicated from V6 so it can evolve independently.
                     </p>
                     <div className="space-y-2 text-sm text-muted-foreground mb-4">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Modular architecture (each modality separate)</span>
+                        <span>Modular architecture based on the V6 system</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -1926,10 +1927,70 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex space-x-3">
                       <a
-                        href="/dashboard/sessions/treatment-v6"
+                        href="/dashboard/sessions/treatment-v7"
                         className="flex-1 px-4 py-2 bg-accent text-accent-foreground text-center rounded-lg hover:bg-accent/90 transition-colors font-medium text-sm"
                       >
-                        Start V6 Treatment
+                        Start V7 Treatment
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* V6 Treatment Demo */}
+              <div className="border border-border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <h4 className="text-md font-medium text-foreground">V6 Treatment</h4>
+                    <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400 rounded-full">
+                      Old Model
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleLabsToggle('v6TreatmentDemo')}
+                    aria-label={`${labsToggles.v6TreatmentDemo ? 'Disable' : 'Enable'} V6 Treatment Demo`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                      labsToggles.v6TreatmentDemo
+                        ? 'bg-indigo-600'
+                        : 'bg-secondary dark:bg-[#586e75]'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
+                        labsToggles.v6TreatmentDemo ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                {labsToggles.v6TreatmentDemo && (
+                  <div className="bg-secondary/20 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Brain className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                      <h5 className="font-medium text-foreground">V6 Treatment System</h5>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      The previous production model, kept available for comparison, rollback safety, and migration testing.
+                    </p>
+                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                        <span>Stable pre-V7 treatment experience</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                        <span>Retained for version comparison and regression checks</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                        <span>All 6 treatment modalities available</span>
+                      </div>
+                    </div>
+                    <div className="flex space-x-3">
+                      <a
+                        href="/dashboard/sessions/treatment-v6"
+                        className="flex-1 px-4 py-2 bg-amber-600 text-white text-center rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm"
+                      >
+                        Try V6 Treatment
                       </a>
                     </div>
                   </div>
@@ -1968,7 +2029,7 @@ export default function SettingsPage() {
                       <h5 className="font-medium text-foreground">V5 Treatment System</h5>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
-                      Labs fallback experience retained for operational safety while V6 is the primary route.
+                      Labs fallback experience retained for operational safety while V7 is the primary route.
                     </p>
                     <div className="flex space-x-3">
                       <a

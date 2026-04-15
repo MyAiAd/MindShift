@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings as SettingsIcon, Save, Loader2, Shield, Zap, Mail, Send, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Loader2, Shield, Zap, Mail, Send, CheckCircle, XCircle, AlertCircle, Beaker } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface EmailStatus {
@@ -194,7 +195,7 @@ export default function AdminSettingsPage() {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:w-[500px]">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:w-[640px] lg:grid-cols-5">
           <TabsTrigger value="general" className="text-xs sm:text-sm">
             <SettingsIcon className="h-4 w-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">General</span>
@@ -214,6 +215,11 @@ export default function AdminSettingsPage() {
             <Shield className="h-4 w-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Security</span>
             <span className="sm:hidden">Security</span>
+          </TabsTrigger>
+          <TabsTrigger value="labs" className="text-xs sm:text-sm">
+            <Beaker className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Labs</span>
+            <span className="sm:hidden">Labs</span>
           </TabsTrigger>
         </TabsList>
 
@@ -585,6 +591,61 @@ export default function AdminSettingsPage() {
               <p className="text-sm text-muted-foreground italic pt-4 border-t">
                 These security features are managed at the infrastructure level and cannot be disabled.
               </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="labs" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Labs</CardTitle>
+              <CardDescription>
+                Open the existing Labs controls and testing tools without duplicating their configuration.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="rounded-lg border p-4">
+                <h3 className="font-semibold mb-2">Labs Settings</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Labs API keys and treatment demo toggles already live in the main settings experience.
+                </p>
+                <Button asChild>
+                  <Link href="/dashboard/settings#labs">
+                    <Beaker className="h-4 w-4 mr-2" />
+                    Open Labs Settings
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="rounded-lg border p-4">
+                <h3 className="font-semibold mb-2">V5 Test Runner</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Launch the existing Labs test runner for V5 treatment validation and QA workflows.
+                </p>
+                <Button asChild variant="outline">
+                  <Link href="/dashboard/labs/v5-tests">
+                    Run V5 Tests
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="rounded-lg border p-4">
+                <h3 className="font-semibold mb-2">What Lives In Labs</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    Labs OpenRouter key management
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    Treatment demo toggles for newer session versions
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    Admin test access for the V5 runner
+                  </li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

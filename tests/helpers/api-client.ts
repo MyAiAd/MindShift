@@ -83,7 +83,7 @@ export class TreatmentApiClient {
 
   constructor(
     request: APIRequestContext,
-    endpoint: '/api/treatment-v2' | '/api/treatment-v4' | '/api/treatment-v5' | '/api/treatment-v6',
+    endpoint: '/api/treatment-v2' | '/api/treatment-v4' | '/api/treatment-v5' | '/api/treatment-v6' | '/api/treatment-v7',
     options?: { sessionId?: string; userId?: string }
   ) {
     this.request = request;
@@ -94,6 +94,7 @@ export class TreatmentApiClient {
   }
 
   get version(): string {
+    if (this.endpoint.includes('v7')) return 'v7';
     if (this.endpoint.includes('v6')) return 'v6';
     if (this.endpoint.includes('v5')) return 'v5';
     if (this.endpoint.includes('v4')) return 'v4';
@@ -216,4 +217,15 @@ export function createParityPairV2V6(request: APIRequestContext) {
   const v2 = new TreatmentApiClient(request, '/api/treatment-v2', { userId });
   const v6 = new TreatmentApiClient(request, '/api/treatment-v6', { userId });
   return { v2, v6, userId };
+}
+
+/**
+ * Create a matched pair of v2 + v7 clients for parity testing.
+ * V2 is the medical gold standard; V7 is the candidate under test.
+ */
+export function createParityPairV2V7(request: APIRequestContext) {
+  const userId = getAuthUserId() || `test-parity-${randomUUID()}`;
+  const v2 = new TreatmentApiClient(request, '/api/treatment-v2', { userId });
+  const v7 = new TreatmentApiClient(request, '/api/treatment-v7', { userId });
+  return { v2, v7, userId };
 }

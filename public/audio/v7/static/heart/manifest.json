@@ -1,0 +1,308 @@
+{
+  "INITIAL_WELCOME": {
+    "hash": "d2a6867338af593beb5cee7f13e7a314",
+    "formats": {
+      "opus": {
+        "filename": "d2a6867338af593beb5cee7f13e7a314.opus",
+        "path": "/audio/v7/static/heart/d2a6867338af593beb5cee7f13e7a314.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "d2a6867338af593beb5cee7f13e7a314.wav",
+        "path": "/audio/v7/static/heart/d2a6867338af593beb5cee7f13e7a314.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "d2a6867338af593beb5cee7f13e7a314.opus",
+    "path": "/audio/v7/static/heart/d2a6867338af593beb5cee7f13e7a314.opus"
+  },
+  "PROBLEM_SHIFTING_INTRO": {
+    "hash": "92e207700cb8a54c56549197fa114e9b",
+    "formats": {
+      "opus": {
+        "filename": "92e207700cb8a54c56549197fa114e9b.opus",
+        "path": "/audio/v7/static/heart/92e207700cb8a54c56549197fa114e9b.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "92e207700cb8a54c56549197fa114e9b.wav",
+        "path": "/audio/v7/static/heart/92e207700cb8a54c56549197fa114e9b.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "92e207700cb8a54c56549197fa114e9b.opus",
+    "path": "/audio/v7/static/heart/92e207700cb8a54c56549197fa114e9b.opus"
+  },
+  "IDENTITY_SHIFTING_INTRO": {
+    "hash": "df2e42a6c43548151c87c271e851f3dd",
+    "formats": {
+      "opus": {
+        "filename": "df2e42a6c43548151c87c271e851f3dd.opus",
+        "path": "/audio/v7/static/heart/df2e42a6c43548151c87c271e851f3dd.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "df2e42a6c43548151c87c271e851f3dd.wav",
+        "path": "/audio/v7/static/heart/df2e42a6c43548151c87c271e851f3dd.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "df2e42a6c43548151c87c271e851f3dd.opus",
+    "path": "/audio/v7/static/heart/df2e42a6c43548151c87c271e851f3dd.opus"
+  },
+  "BELIEF_SHIFTING_INTRO": {
+    "hash": "92e207700cb8a54c56549197fa114e9b",
+    "formats": {
+      "opus": {
+        "filename": "92e207700cb8a54c56549197fa114e9b.opus",
+        "path": "/audio/v7/static/heart/92e207700cb8a54c56549197fa114e9b.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "92e207700cb8a54c56549197fa114e9b.wav",
+        "path": "/audio/v7/static/heart/92e207700cb8a54c56549197fa114e9b.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "92e207700cb8a54c56549197fa114e9b.opus",
+    "path": "/audio/v7/static/heart/92e207700cb8a54c56549197fa114e9b.opus"
+  },
+  "BLOCKAGE_SHIFTING_INTRO": {
+    "hash": "cb55f339992cb94ec6a0580efb622cab",
+    "formats": {
+      "opus": {
+        "filename": "cb55f339992cb94ec6a0580efb622cab.opus",
+        "path": "/audio/v7/static/heart/cb55f339992cb94ec6a0580efb622cab.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "cb55f339992cb94ec6a0580efb622cab.wav",
+        "path": "/audio/v7/static/heart/cb55f339992cb94ec6a0580efb622cab.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "cb55f339992cb94ec6a0580efb622cab.opus",
+    "path": "/audio/v7/static/heart/cb55f339992cb94ec6a0580efb622cab.opus"
+  },
+  "REALITY_SHIFTING_INTRO": {
+    "hash": "63f725e98f7066dc3c41721b8574288c",
+    "formats": {
+      "opus": {
+        "filename": "63f725e98f7066dc3c41721b8574288c.opus",
+        "path": "/audio/v7/static/heart/63f725e98f7066dc3c41721b8574288c.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "63f725e98f7066dc3c41721b8574288c.wav",
+        "path": "/audio/v7/static/heart/63f725e98f7066dc3c41721b8574288c.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "63f725e98f7066dc3c41721b8574288c.opus",
+    "path": "/audio/v7/static/heart/63f725e98f7066dc3c41721b8574288c.opus"
+  },
+  "TRAUMA_SHIFTING_INTRO": {
+    "hash": "68dece876238276ee9952a0da8fdbb4b",
+    "formats": {
+      "opus": {
+        "filename": "68dece876238276ee9952a0da8fdbb4b.opus",
+        "path": "/audio/v7/static/heart/68dece876238276ee9952a0da8fdbb4b.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "68dece876238276ee9952a0da8fdbb4b.wav",
+        "path": "/audio/v7/static/heart/68dece876238276ee9952a0da8fdbb4b.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "68dece876238276ee9952a0da8fdbb4b.opus",
+    "path": "/audio/v7/static/heart/68dece876238276ee9952a0da8fdbb4b.opus"
+  },
+  "METHOD_SELECTION": {
+    "hash": "4716fedcf9e3f66541645c5e73862d3e",
+    "formats": {
+      "opus": {
+        "filename": "4716fedcf9e3f66541645c5e73862d3e.opus",
+        "path": "/audio/v7/static/heart/4716fedcf9e3f66541645c5e73862d3e.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "4716fedcf9e3f66541645c5e73862d3e.wav",
+        "path": "/audio/v7/static/heart/4716fedcf9e3f66541645c5e73862d3e.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "4716fedcf9e3f66541645c5e73862d3e.opus",
+    "path": "/audio/v7/static/heart/4716fedcf9e3f66541645c5e73862d3e.opus"
+  },
+  "METHOD_SELECTION_DIGGING": {
+    "hash": "5bdfc61c2db01881074838dca734194b",
+    "formats": {
+      "opus": {
+        "filename": "5bdfc61c2db01881074838dca734194b.opus",
+        "path": "/audio/v7/static/heart/5bdfc61c2db01881074838dca734194b.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "5bdfc61c2db01881074838dca734194b.wav",
+        "path": "/audio/v7/static/heart/5bdfc61c2db01881074838dca734194b.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "5bdfc61c2db01881074838dca734194b.opus",
+    "path": "/audio/v7/static/heart/5bdfc61c2db01881074838dca734194b.opus"
+  },
+  "WORK_TYPE_PROBLEM_DESC": {
+    "hash": "db27fd20723ff4e9778bb7f739329d4d",
+    "formats": {
+      "opus": {
+        "filename": "db27fd20723ff4e9778bb7f739329d4d.opus",
+        "path": "/audio/v7/static/heart/db27fd20723ff4e9778bb7f739329d4d.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "db27fd20723ff4e9778bb7f739329d4d.wav",
+        "path": "/audio/v7/static/heart/db27fd20723ff4e9778bb7f739329d4d.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "db27fd20723ff4e9778bb7f739329d4d.opus",
+    "path": "/audio/v7/static/heart/db27fd20723ff4e9778bb7f739329d4d.opus"
+  },
+  "WORK_TYPE_GOAL_DESC": {
+    "hash": "302a8546eda5e8b67be5aa6c051bfbd3",
+    "formats": {
+      "opus": {
+        "filename": "302a8546eda5e8b67be5aa6c051bfbd3.opus",
+        "path": "/audio/v7/static/heart/302a8546eda5e8b67be5aa6c051bfbd3.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "302a8546eda5e8b67be5aa6c051bfbd3.wav",
+        "path": "/audio/v7/static/heart/302a8546eda5e8b67be5aa6c051bfbd3.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "302a8546eda5e8b67be5aa6c051bfbd3.opus",
+    "path": "/audio/v7/static/heart/302a8546eda5e8b67be5aa6c051bfbd3.opus"
+  },
+  "WORK_TYPE_NEGATIVE_EXP_DESC": {
+    "hash": "277c29181a901781007f1a823bc2a155",
+    "formats": {
+      "opus": {
+        "filename": "277c29181a901781007f1a823bc2a155.opus",
+        "path": "/audio/v7/static/heart/277c29181a901781007f1a823bc2a155.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "277c29181a901781007f1a823bc2a155.wav",
+        "path": "/audio/v7/static/heart/277c29181a901781007f1a823bc2a155.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "277c29181a901781007f1a823bc2a155.opus",
+    "path": "/audio/v7/static/heart/277c29181a901781007f1a823bc2a155.opus"
+  },
+  "REALITY_GOAL_CAPTURE": {
+    "hash": "d90f4605098a5011625c8c1744fff175",
+    "formats": {
+      "opus": {
+        "filename": "d90f4605098a5011625c8c1744fff175.opus",
+        "path": "/audio/v7/static/heart/d90f4605098a5011625c8c1744fff175.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "d90f4605098a5011625c8c1744fff175.wav",
+        "path": "/audio/v7/static/heart/d90f4605098a5011625c8c1744fff175.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "d90f4605098a5011625c8c1744fff175.opus",
+    "path": "/audio/v7/static/heart/d90f4605098a5011625c8c1744fff175.opus"
+  },
+  "REALITY_DEADLINE_CHECK": {
+    "hash": "d4d9b3c4e28d8d83a7659f84e5c54be8",
+    "formats": {
+      "opus": {
+        "filename": "d4d9b3c4e28d8d83a7659f84e5c54be8.opus",
+        "path": "/audio/v7/static/heart/d4d9b3c4e28d8d83a7659f84e5c54be8.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "d4d9b3c4e28d8d83a7659f84e5c54be8.wav",
+        "path": "/audio/v7/static/heart/d4d9b3c4e28d8d83a7659f84e5c54be8.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "d4d9b3c4e28d8d83a7659f84e5c54be8.opus",
+    "path": "/audio/v7/static/heart/d4d9b3c4e28d8d83a7659f84e5c54be8.opus"
+  },
+  "REALITY_DEADLINE_DATE": {
+    "hash": "2ee347152f0f31e33dd3da8c91a97a82",
+    "formats": {
+      "opus": {
+        "filename": "2ee347152f0f31e33dd3da8c91a97a82.opus",
+        "path": "/audio/v7/static/heart/2ee347152f0f31e33dd3da8c91a97a82.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "2ee347152f0f31e33dd3da8c91a97a82.wav",
+        "path": "/audio/v7/static/heart/2ee347152f0f31e33dd3da8c91a97a82.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "2ee347152f0f31e33dd3da8c91a97a82.opus",
+    "path": "/audio/v7/static/heart/2ee347152f0f31e33dd3da8c91a97a82.opus"
+  },
+  "REALITY_CERTAINTY": {
+    "hash": "e01c2f0d02cc97ffe5572106a3282bc1",
+    "formats": {
+      "opus": {
+        "filename": "e01c2f0d02cc97ffe5572106a3282bc1.opus",
+        "path": "/audio/v7/static/heart/e01c2f0d02cc97ffe5572106a3282bc1.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "e01c2f0d02cc97ffe5572106a3282bc1.wav",
+        "path": "/audio/v7/static/heart/e01c2f0d02cc97ffe5572106a3282bc1.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "e01c2f0d02cc97ffe5572106a3282bc1.opus",
+    "path": "/audio/v7/static/heart/e01c2f0d02cc97ffe5572106a3282bc1.opus"
+  },
+  "RESTATE_PROBLEM": {
+    "hash": "ebf410ac0d71f75db7be2c3cc02862cb",
+    "formats": {
+      "opus": {
+        "filename": "ebf410ac0d71f75db7be2c3cc02862cb.opus",
+        "path": "/audio/v7/static/heart/ebf410ac0d71f75db7be2c3cc02862cb.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "ebf410ac0d71f75db7be2c3cc02862cb.wav",
+        "path": "/audio/v7/static/heart/ebf410ac0d71f75db7be2c3cc02862cb.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "ebf410ac0d71f75db7be2c3cc02862cb.opus",
+    "path": "/audio/v7/static/heart/ebf410ac0d71f75db7be2c3cc02862cb.opus"
+  },
+  "RESTATE_PROBLEM_SHORT": {
+    "hash": "dc29e2c2bca464fa0aa3a1e041a1930b",
+    "formats": {
+      "opus": {
+        "filename": "dc29e2c2bca464fa0aa3a1e041a1930b.opus",
+        "path": "/audio/v7/static/heart/dc29e2c2bca464fa0aa3a1e041a1930b.opus",
+        "mime": "audio/ogg; codecs=opus"
+      },
+      "wav": {
+        "filename": "dc29e2c2bca464fa0aa3a1e041a1930b.wav",
+        "path": "/audio/v7/static/heart/dc29e2c2bca464fa0aa3a1e041a1930b.wav",
+        "mime": "audio/wav"
+      }
+    },
+    "filename": "dc29e2c2bca464fa0aa3a1e041a1930b.opus",
+    "path": "/audio/v7/static/heart/dc29e2c2bca464fa0aa3a1e041a1930b.opus"
+  }
+}
