@@ -44,7 +44,9 @@
     "test:v6": "npx playwright test tests/api/v2-v6-direct-parity.spec.ts",
     "test:v2-v6-parity": "tsx scripts/v2-v6-parity-check.ts",
     "test:v2-v6-route-parity": "npx playwright test tests/api/full-parity-report-v2-v6.spec.ts",
-    "test:v2-v6-route-parity-local": "tsx scripts/v2-v6-route-parity-check.ts"
+    "test:v2-v6-route-parity-local": "tsx scripts/v2-v6-route-parity-check.ts",
+    "test:v7-speech-compliance": "npx tsx --test lib/voice/speech-compliance.test.ts",
+    "test:v7-speech-route": "npx tsx --test tests/v7-speech-route.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
@@ -105,6 +107,7 @@
     "eslint-config-next": "14.0.3",
     "pg": "^8.16.3",
     "supabase": "^1.115.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.2.2"
   },
   "engines": {

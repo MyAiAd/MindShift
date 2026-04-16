@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TreatmentStateMachine } from '@/lib/v7/treatment-state-machine';
-import { ProcessingResult } from '@/lib/v7/types';
+import { ProcessingResult, TreatmentContext, TreatmentStep } from '@/lib/v7/types';
 import { AIAssistanceManager, AIAssistanceRequest, ValidationAssistanceRequest } from '@/lib/v2/ai-assistance';
 import { createServerClient } from '@/lib/database-server';
+import { STRICT_SPEECH_MODE } from '@/lib/voice/speech-config';
 
 // Singleton instances for performance
 const treatmentMachine = new TreatmentStateMachine();
@@ -31,6 +32,44 @@ function extractEmotionFromInput(userInput: string): string {
   // Find the emotion in the input
   const foundEmotion = emotions.find(emotion => input.includes(emotion));
   return foundEmotion || 'this way';
+}
+
+function getRecentUserTurnHistory(context: TreatmentContext, limit = 5): string[] {
+  return Object.entries(context.userResponses || {})
+    .filter(([, value]) => typeof value === 'string' && value.trim().length > 0)
+    .slice(-limit)
+    .map(([stepId, value]) => `${stepId}: ${value}`);
+}
+
+function getCurrentStepDefinition(context: TreatmentContext): TreatmentStep {
+  const phaseSteps = treatmentMachine.getPhaseSteps(context.currentPhase) || [];
+  const currentStep = phaseSteps.find((step) => step.id === context.currentStep);
+
+  return currentStep || {
+    id: context.currentStep,
+    scriptedResponse: '',
+    expectedResponseType: 'open',
+    validationRules: [],
+    aiTriggers: [],
+  };
+}
+
+function getExpectedResponseTypeForStep(stepId: string | undefined, currentPhase?: string) {
+  if (!stepId) {
+    return null;
+  }
+
+  const candidatePhases = [currentPhase, getPhaseForStep(stepId)].filter(Boolean) as string[];
+
+  for (const phaseName of candidatePhases) {
+    const phaseSteps = treatmentMachine.getPhaseSteps(phaseName) || [];
+    const matchedStep = phaseSteps.find((step) => step.id === stepId);
+    if (matchedStep) {
+      return matchedStep.expectedResponseType;
+    }
+  }
+
+  return null;
 }
 
 export async function POST(request: NextRequest) {
@@ -176,6 +215,7 @@ async function handleStartSession(sessionId: string, userId: string) {
       sessionId,
       message: result.scriptedResponse,
       currentStep: result.nextStep,
+      expectedResponseType: getExpectedResponseTypeForStep(result.nextStep, 'introduction'),
       responseTime: Math.round(responseTime),
       usedAI: false,
       metadata: {
@@ -262,61 +302,68 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       // For now, we'll use the V2 AI assistance system for compatibility
       if (result.needsLinguisticProcessing) {
         console.log('Treatment V7 API: V7 linguistic processing needed - using V2 compatibility layer');
-        
-        // For intro steps, use the problem statement from context, not the current user input
-        let textToProcess = userInput;
-        if (['problem_shifting_intro', 'blockage_shifting_intro', 
-             'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
-          // Get the stored problem statement that the intro step will use
-          const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
-          // PRIORITIZE: Use new digging problem if available, then fall back to original problem
-          textToProcess = treatmentContext?.metadata?.currentDiggingProblem || 
-                        treatmentContext?.metadata?.newDiggingProblem ||
-                        treatmentContext?.problemStatement || 
-                        treatmentContext?.userResponses?.['restate_selected_problem'] || 
-                        treatmentContext?.userResponses?.['mind_shifting_explanation'] || 
-                        userInput;
-          console.log('Treatment V7 API: Using problem statement for intro step processing:', textToProcess);
-        }
-
-        // Check if we should skip AI processing for digging deeper intro steps
-        const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
-        const isDiggingContext = treatmentContext?.metadata?.currentDiggingProblem || treatmentContext?.metadata?.newDiggingProblem;
-        const isIntroStep = ['problem_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '');
-        const shouldSkipAI = isDiggingContext && isIntroStep;
-        
-        if (shouldSkipAI) {
-          console.log('Treatment V7 API: Skipping AI processing for digging deeper intro step - using short scripted response');
-          finalMessage = result.scriptedResponse; // Use the short scripted response directly
+        if (STRICT_SPEECH_MODE) {
+          console.warn('Treatment V7 API: STRICT_SPEECH_MODE bypassed linguistic processing', {
+            sessionId,
+            nextStep: result.nextStep,
+          });
+          finalMessage = result.scriptedResponse;
         } else {
-          const linguisticResult = await aiAssistance.processLinguisticInterpretation(
-            result.scriptedResponse || '',
-            textToProcess,
-            result.nextStep || 'unknown',
-            sessionId
-          );
-          
-          if (linguisticResult.success) {
-            // For feel_solution_state, integrate the AI result back into the template
-            if (result.nextStep === 'feel_solution_state') {
-              finalMessage = `What would you feel like if you already ${linguisticResult.improvedResponse}?`;
-            } 
-            // For intro steps, replace the problem statement in the original scripted response
-            else if (['problem_shifting_intro', 'reality_shifting_intro', 'blockage_shifting_intro', 
-                     'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
-              // Replace the original problem statement in the scripted response with the AI-processed version
-              finalMessage = (result.scriptedResponse || '').replace(new RegExp(`'${textToProcess.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`, 'g'), `'${linguisticResult.improvedResponse}'`);
-              console.log('Treatment V7 API: Replaced problem statement in intro step with AI-processed version');
-            } else {
-              // For other steps (like body_sensation_check), use the full AI response
-              finalMessage = linguisticResult.improvedResponse;
-            }
-            usedAI = true;
-            aiCost = linguisticResult.cost;
-            aiTokens = linguisticResult.tokens;
-            console.log('Treatment V7 API: Linguistic processing successful');
+          // For intro steps, use the problem statement from context, not the current user input
+          let textToProcess = userInput;
+          if (['problem_shifting_intro', 'blockage_shifting_intro',
+               'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
+            // Get the stored problem statement that the intro step will use
+            const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+            // PRIORITIZE: Use new digging problem if available, then fall back to original problem
+            textToProcess = treatmentContext?.metadata?.currentDiggingProblem ||
+                          treatmentContext?.metadata?.newDiggingProblem ||
+                          treatmentContext?.problemStatement ||
+                          treatmentContext?.userResponses?.['restate_selected_problem'] ||
+                          treatmentContext?.userResponses?.['mind_shifting_explanation'] ||
+                          userInput;
+            console.log('Treatment V7 API: Using problem statement for intro step processing:', textToProcess);
+          }
+
+          // Check if we should skip AI processing for digging deeper intro steps
+          const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+          const isDiggingContext = treatmentContext?.metadata?.currentDiggingProblem || treatmentContext?.metadata?.newDiggingProblem;
+          const isIntroStep = ['problem_shifting_intro', 'identity_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '');
+          const shouldSkipAI = isDiggingContext && isIntroStep;
+
+          if (shouldSkipAI) {
+            console.log('Treatment V7 API: Skipping AI processing for digging deeper intro step - using short scripted response');
+            finalMessage = result.scriptedResponse; // Use the short scripted response directly
           } else {
-            console.log('Treatment V7 API: Linguistic processing failed, using scripted response');
+            const linguisticResult = await aiAssistance.processLinguisticInterpretation(
+              result.scriptedResponse || '',
+              textToProcess,
+              result.nextStep || 'unknown',
+              sessionId
+            );
+
+            if (linguisticResult.success) {
+              // For feel_solution_state, integrate the AI result back into the template
+              if (result.nextStep === 'feel_solution_state') {
+                finalMessage = `What would you feel like if you already ${linguisticResult.improvedResponse}?`;
+              }
+              // For intro steps, replace the problem statement in the original scripted response
+              else if (['problem_shifting_intro', 'reality_shifting_intro', 'blockage_shifting_intro',
+                       'identity_shifting_intro', 'trauma_shifting_intro', 'belief_shifting_intro'].includes(result.nextStep || '')) {
+                // Replace the original problem statement in the scripted response with the AI-processed version
+                finalMessage = (result.scriptedResponse || '').replace(new RegExp(`'${textToProcess.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`, 'g'), `'${linguisticResult.improvedResponse}'`);
+                console.log('Treatment V7 API: Replaced problem statement in intro step with AI-processed version');
+              } else {
+                // For other steps (like body_sensation_check), use the full AI response
+                finalMessage = linguisticResult.improvedResponse;
+              }
+              usedAI = true;
+              aiCost = linguisticResult.cost;
+              aiTokens = linguisticResult.tokens;
+              console.log('Treatment V7 API: Linguistic processing successful');
+            } else {
+              console.log('Treatment V7 API: Linguistic processing failed, using scripted response');
+            }
           }
         }
       }
@@ -334,26 +381,52 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         ...finalResponse,
         message: finalMessage,
         currentStep: result.nextStep,
+        expectedResponseType: getExpectedResponseTypeForStep(result.nextStep, getPhaseForStep(result.nextStep || '')),
         responseTime: Math.round(responseTime),
         usedAI,
         ...(usedAI && { aiCost, aiTokens })
       };
 
     } else if (result.needsAIAssistance) {
-      // AI assistance needed (only 5% of cases)
-      const aiResponse = await handleAIAssistance(result.needsAIAssistance, sessionId, userId);
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 
-      finalResponse = {
-        ...finalResponse,
-        message: aiResponse.message,
-        currentStep: 'mind_shifting_explanation', // AI assistance keeps user on same step for clarification
-        responseTime: Math.round(responseTime),
-        usedAI: true,
-        aiCost: aiResponse.cost,
-        aiTokens: aiResponse.tokenCount
-      };
+      if (STRICT_SPEECH_MODE) {
+        console.warn('Treatment V7 API: STRICT_SPEECH_MODE blocked AI assistance rewrite', {
+          sessionId,
+          currentStep: treatmentMachine.getContextForUndo(sessionId)?.currentStep,
+          trigger: result.needsAIAssistance.trigger?.condition,
+        });
+
+        finalResponse = {
+          ...finalResponse,
+          message: result.scriptedResponse || 'Please continue with the current step of the process.',
+          currentStep: treatmentMachine.getContextForUndo(sessionId)?.currentStep || 'mind_shifting_explanation',
+          expectedResponseType: getExpectedResponseTypeForStep(
+            treatmentMachine.getContextForUndo(sessionId)?.currentStep || 'mind_shifting_explanation',
+            treatmentMachine.getContextForUndo(sessionId)?.currentPhase
+          ),
+          responseTime: Math.round(responseTime),
+          usedAI: false,
+        };
+      } else {
+        // AI assistance needed (only 5% of cases)
+        const aiResponse = await handleAIAssistance(result.needsAIAssistance, sessionId, userId);
+
+        finalResponse = {
+          ...finalResponse,
+          message: aiResponse.message,
+          currentStep: treatmentMachine.getContextForUndo(sessionId)?.currentStep || 'mind_shifting_explanation',
+          expectedResponseType: getExpectedResponseTypeForStep(
+            treatmentMachine.getContextForUndo(sessionId)?.currentStep || 'mind_shifting_explanation',
+            treatmentMachine.getContextForUndo(sessionId)?.currentPhase
+          ),
+          responseTime: Math.round(responseTime),
+          usedAI: true,
+          aiCost: aiResponse.cost,
+          aiTokens: aiResponse.tokenCount
+        };
+      }
 
     } else if (result.reason && result.reason.startsWith('AI_VALIDATION_NEEDED:')) {
       // NEW: Handle AI validation requests
@@ -366,6 +439,10 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
         ...finalResponse,
         message: validationResponse.message,
         currentStep: validationResponse.currentStep,
+        expectedResponseType: getExpectedResponseTypeForStep(
+          validationResponse.currentStep,
+          getPhaseForStep(validationResponse.currentStep)
+        ),
         responseTime: Math.round(responseTime),
         usedAI: validationResponse.usedAI,
         ...(validationResponse.usedAI && { 
@@ -384,6 +461,7 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       finalResponse = {
         ...finalResponse,
         message: result.scriptedResponse || result.reason || 'Please try again.',
+        expectedResponseType: getExpectedResponseTypeForStep(finalResponse.currentStep, getPhaseForStep(finalResponse.currentStep || '')),
         responseTime: Math.round(responseTime),
         usedAI: false,
         requiresRetry: true
@@ -533,27 +611,28 @@ async function handleAIAssistance(
   userId: string
 ) {
   try {
-    // This would be populated with actual treatment context
+    const treatmentContext = treatmentMachine.getContextForUndo(sessionId);
+    const currentStep = getCurrentStepDefinition(treatmentContext);
+
     const assistanceRequest: AIAssistanceRequest = {
       trigger: needsAI.trigger,
       userInput: needsAI.userInput,
       context: {
         userId,
         sessionId,
-        currentPhase: 'introduction', // Use actual phase instead of hardcoded
-        currentStep: 'mind_shifting_explanation', // Use actual step instead of hardcoded
-        userResponses: {},
-        startTime: new Date(),
-        lastActivity: new Date(),
-        metadata: {}
+        currentPhase: treatmentContext.currentPhase,
+        currentStep: treatmentContext.currentStep,
+        userResponses: treatmentContext.userResponses,
+        startTime: treatmentContext.startTime,
+        lastActivity: treatmentContext.lastActivity,
+        metadata: {
+          ...treatmentContext.metadata,
+          modality: treatmentContext.metadata?.selectedMethod || treatmentContext.currentPhase,
+          workType: treatmentContext.metadata?.workType,
+          recentUserTurnHistory: getRecentUserTurnHistory(treatmentContext),
+        }
       },
-      currentStep: {
-        id: 'mind_shifting_explanation', // Use actual step ID
-        scriptedResponse: '',
-        expectedResponseType: 'problem', // Correct response type for introduction
-        validationRules: [],
-        aiTriggers: []
-      }
+      currentStep
     };
 
     const aiResponse = await aiAssistance.processAssistanceRequest(assistanceRequest);

@@ -70,6 +70,9 @@ interface UseAudioCaptureProps {
   vadTrigger?: boolean; // External VAD can trigger transcription
   /** Latest session context for Whisper domain bias (expectedResponseType, step, hotwords). */
   getTranscriptionContext?: () => TranscriptionDomainContext | null;
+  treatmentVersion?: string;
+  transcriptionProviderOverride?: 'existing' | 'openai';
+  onProviderError?: (details: { kind: 'stt'; provider: 'openai' | 'existing'; message: string }) => void;
 }
 
 type ExtendedAudioConstraints = MediaTrackConstraints & {
@@ -83,6 +86,9 @@ export const useAudioCapture = ({
   onProcessingChange,
   vadTrigger,
   getTranscriptionContext,
+  treatmentVersion,
+  transcriptionProviderOverride,
+  onProviderError,
 }: UseAudioCaptureProps) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -237,6 +243,12 @@ export const useAudioCapture = ({
       if (ctx?.hotwords) {
         formData.append('hotwords', ctx.hotwords.slice(0, 500));
       }
+      if (treatmentVersion) {
+        formData.append('treatment_version', treatmentVersion);
+      }
+      if (transcriptionProviderOverride) {
+        formData.append('provider', transcriptionProviderOverride);
+      }
 
       const response = await fetch('/api/transcribe', {
         method: 'POST',
@@ -244,7 +256,22 @@ export const useAudioCapture = ({
       });
       
       if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
+        let errorText = 'Unknown error';
+        let provider: 'openai' | 'existing' | null = null;
+        try {
+          const errorData = await response.json();
+          errorText = errorData.message || errorData.error || 'Unknown error';
+          provider = errorData.provider || null;
+          if (errorData.code === 'stt_provider_failure' && provider) {
+            onProviderError?.({
+              kind: 'stt',
+              provider,
+              message: errorText,
+            });
+          }
+        } catch {
+          errorText = await response.text().catch(() => 'Unknown error');
+        }
         throw new Error(`Transcription failed (${response.status}): ${errorText}`);
       }
       
@@ -284,7 +311,7 @@ export const useAudioCapture = ({
         onProcessingChangeRef.current?.(false);
       }
     }
-  }, [createWavBlob]);
+  }, [createWavBlob, onProviderError, transcriptionProviderOverride, treatmentVersion]);
   
   /**
    * Process audio immediately, bypassing the throttle.

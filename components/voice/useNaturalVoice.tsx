@@ -2,13 +2,20 @@
 
 import { useState, useEffect, useRef, useCallback, type MutableRefObject } from 'react';
 import type { TranscriptionDomainContext } from '@/lib/voice/transcription-domain-context';
+import { validateSpeechOutput } from '@/lib/voice/speech-compliance';
 import { globalAudioCache } from '@/services/voice/audioCache';
 import { V4_STATIC_AUDIO_TEXTS } from '@/lib/v4/static-audio-texts';
+import { V7_STATIC_AUDIO_TEXTS } from '@/lib/v7/static-audio-texts';
 import { useVAD } from './useVAD';
 import { useAudioCapture } from './useAudioCapture';
 
 // Get all static texts for prefix matching
-const STATIC_TEXTS = Object.values(V4_STATIC_AUDIO_TEXTS);
+const STATIC_TEXTS = Array.from(
+    new Set([
+        ...Object.values(V4_STATIC_AUDIO_TEXTS),
+        ...Object.values(V7_STATIC_AUDIO_TEXTS),
+    ])
+);
 
 interface UseNaturalVoiceProps {
     onTranscript: (transcript: string) => void;
@@ -28,6 +35,14 @@ interface UseNaturalVoiceProps {
     onTestInterruption?: () => void; // NEW: Callback when VAD detects speech in test mode
     /** Ref to latest Whisper domain context (expectedResponseType, step, hotwords). */
     transcriptionContextRef?: MutableRefObject<TranscriptionDomainContext | null>;
+    treatmentVersion?: string;
+    sttProviderOverride?: 'existing' | 'openai';
+    ttsProviderOverride?: 'existing' | 'openai';
+    onSpeechProviderError?: (details: { kind: 'stt' | 'tts'; provider: 'openai' | 'existing'; message: string }) => void;
+}
+
+interface SpeechRequestOptions {
+    apiMessage?: string;
 }
 
 export const useNaturalVoice = ({
@@ -35,7 +50,7 @@ export const useNaturalVoice = ({
     enabled,
     micEnabled,
     speakerEnabled,
-    voiceProvider = 'kokoro',
+    voiceProvider,
     elevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM', // Rachel
     kokoroVoiceId = 'af_heart', // Default to Heart (Rachel)
     onAudioEnded,
@@ -47,6 +62,10 @@ export const useNaturalVoice = ({
     testMode = false, // NEW: Test mode flag to prevent VAD triggering speech recognition
     onTestInterruption, // NEW: Callback when VAD detects speech in test mode
     transcriptionContextRef,
+    treatmentVersion,
+    sttProviderOverride,
+    ttsProviderOverride,
+    onSpeechProviderError,
 }: UseNaturalVoiceProps) => {
     // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
@@ -59,6 +78,7 @@ export const useNaturalVoice = ({
         !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
     const configuredTranscriptionProvider = process.env.NEXT_PUBLIC_TRANSCRIPTION_PROVIDER;
     const useWhisper = typeof window !== 'undefined' && (
+        treatmentVersion === 'v7' ||
         configuredTranscriptionProvider === 'whisper' ||
         (configuredTranscriptionProvider !== 'webspeech' && !hasWebSpeechSupport)
     );
@@ -113,6 +133,9 @@ export const useNaturalVoice = ({
         onProcessingChange: (processing) => setWhisperProcessing(processing),
         vadTrigger: false, // We'll manually trigger via processNow()
         getTranscriptionContext: () => transcriptionContextRef?.current ?? null,
+        treatmentVersion,
+        transcriptionProviderOverride: sttProviderOverride,
+        onProviderError: onSpeechProviderError,
     });
     
     // Test mode handler - called when user speaks during test mode
@@ -813,8 +836,12 @@ export const useNaturalVoice = ({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     text,
-                    provider: voiceProvider,
-                    voice: voiceProvider === 'kokoro' ? kokoroVoiceId : elevenLabsVoiceId,
+                    ...(ttsProviderOverride
+                        ? { provider: ttsProviderOverride }
+                        : (voiceProvider ? { provider: voiceProvider } : {})),
+                    voice: voiceProvider === 'elevenlabs' ? elevenLabsVoiceId : kokoroVoiceId,
+                    apiMessage: text,
+                    treatmentVersion,
                 }),
             });
 
@@ -827,7 +854,7 @@ export const useNaturalVoice = ({
         } catch (err) {
             console.error('🗣️ Natural Voice: Prefetch error:', err);
         }
-    }, [voiceProvider, elevenLabsVoiceId, kokoroVoiceId, normalizeAudioBlobType]);
+    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, normalizeAudioBlobType, treatmentVersion]);
 
     /**
      * Find if text starts with any cached static text for a specific voice
@@ -1044,12 +1071,32 @@ export const useNaturalVoice = ({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 text,
-                provider: voiceProvider,
-                voice: voiceProvider === 'kokoro' ? kokoroVoiceId : elevenLabsVoiceId,
+                ...(ttsProviderOverride
+                    ? { provider: ttsProviderOverride }
+                    : (voiceProvider ? { provider: voiceProvider } : {})),
+                voice: voiceProvider === 'elevenlabs' ? elevenLabsVoiceId : kokoroVoiceId,
+                apiMessage: text,
+                treatmentVersion,
             }),
         });
 
-        if (!response.ok) throw new Error('TTS request failed');
+        if (!response.ok) {
+            let errorMessage = 'TTS request failed';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.details || errorData.message || errorData.error || errorMessage;
+                if (errorData.code === 'tts_provider_failure' && errorData.provider) {
+                    onSpeechProviderError?.({
+                        kind: 'tts',
+                        provider: errorData.provider,
+                        message: errorMessage,
+                    });
+                }
+            } catch {
+                // Fall back to generic error below.
+            }
+            throw new Error(errorMessage);
+        }
 
         const audioBlob = normalizeAudioBlobType(await response.blob());
         const audioUrl = URL.createObjectURL(audioBlob);
@@ -1057,7 +1104,7 @@ export const useNaturalVoice = ({
         const cacheKey = `${voiceName}:${text}`;
         globalAudioCache.set(cacheKey, audioUrl);
         return audioUrl;
-    }, [voiceProvider, elevenLabsVoiceId, kokoroVoiceId, normalizeAudioBlobType]);
+    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, normalizeAudioBlobType, treatmentVersion, onSpeechProviderError]);
 
     // Get voice name from voice ID for cache key prefix
     const getVoiceNameFromId = (voiceId: string): string => {
@@ -1074,8 +1121,21 @@ export const useNaturalVoice = ({
 
     // Speak text with streaming support, voice-prefixed cache check, AND smart prefix matching
     // Only plays audio if speaker is enabled
-    const speak = useCallback(async (text: string) => {
+    const speak = useCallback(async (text: string, options?: SpeechRequestOptions) => {
         if (!text) return;
+
+        if (treatmentVersion === 'v7') {
+            const complianceResult = validateSpeechOutput({
+                textToSpeak: text,
+                apiMessage: options?.apiMessage ?? text,
+            });
+
+            if (!complianceResult.ok) {
+                console.error('🛡️ Natural Voice: Speech suppressed by compliance guard', complianceResult);
+                setError(`Speech suppressed: ${complianceResult.reason}`);
+                return;
+            }
+        }
         
         // SPEAKER OFF FIX: Use ref for immediate check (not stale closure)
         // This prevents audio from starting after speaker was disabled during an async gap
@@ -1196,8 +1256,9 @@ export const useNaturalVoice = ({
         } catch (err) {
             console.error('🗣️ Natural Voice: TTS error:', err);
 
-            // Last-resort fallback for mobile/PWA codec issues.
-            if (speakerEnabledRef.current) {
+            // Last-resort fallback for legacy mobile/PWA codec issues.
+            // V7 uses an explicit backup-provider prompt instead of silently switching voices.
+            if (speakerEnabledRef.current && treatmentVersion !== 'v7') {
                 const fallbackWorked = await speakWithSystemVoiceFallback(text);
                 if (fallbackWorked) {
                     console.log('🗣️ Natural Voice: Recovered with SpeechSynthesis fallback');
@@ -1231,7 +1292,7 @@ export const useNaturalVoice = ({
                 startListening();
             }
         }
-    }, [isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice, audioCapture, vadEnabled, speakWithSystemVoiceFallback]);
+    }, [isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice, audioCapture, vadEnabled, speakWithSystemVoiceFallback, treatmentVersion]);
 
     // Handle mic/speaker state changes - start/stop listening based on mic state (but not in guided mode)
     useEffect(() => {

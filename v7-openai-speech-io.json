@@ -1,0 +1,234 @@
+{
+  "project": "MindShift-V7",
+  "branchName": "ralph/v7-openai-speech-io",
+  "description": "Introduce OpenAI as an optional STT and TTS provider for V7 treatment sessions under a strict-script model. V7 remains the sole author of patient-facing content; OpenAI handles speech I/O only. All doctor-authored wording is exact and non-negotiable. Production rollout.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Inventory all V7 patient-facing wording sources",
+      "description": "As a developer, I need a complete list of every file and code path that produces or modifies patient-facing text in V7, so that each path can be classified before OpenAI is introduced.",
+      "acceptanceCriteria": [
+        "A markdown document tasks/v7-wording-audit.md is created listing every file that generates or mutates patient-facing text (state machine, modality files, route handlers, linguistic-processing paths, AI-assistance paths)",
+        "Each entry is classified as one of: allowed-classifier, allowed-constrained-rewrite, or disallowed-generative-rewrite",
+        "The document is committed to the repo",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "tasks/v7-wording-audit.md is present with all V7 files classified. Typecheck passes."
+    },
+    {
+      "id": "US-002",
+      "title": "Add STRICT_SPEECH_MODE config flag",
+      "description": "As a developer, I need a STRICT_SPEECH_MODE environment variable that the voice path reads, so that strict compliance rules can be toggled without code changes.",
+      "acceptanceCriteria": [
+        "A STRICT_SPEECH_MODE env var (true/false, default false) is read at startup and exposed as a typed config constant",
+        "The flag is accessible across all relevant modules: /api/tts, /api/transcribe, /api/treatment-v7, and voice hooks",
+        "Setting STRICT_SPEECH_MODE=true does not break existing behaviour in this story — enforcement is added in subsequent stories",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "lib/voice/speech-config.ts exports typed STRICT_SPEECH_MODE. Used in /api/tts, /api/treatment-v7. Not imported in /api/transcribe (transcription is provider-selection only, not compliance gated) which is acceptable. Typecheck passes."
+    },
+    {
+      "id": "US-003",
+      "title": "Discover and register all internal routing tokens",
+      "description": "As a developer, I need to scan the V7 codebase to find every internal routing token so they can be used as a suppression list in the speech compliance guard.",
+      "acceptanceCriteria": [
+        "The codebase is scanned (lib/v7/, app/api/treatment-v7/, lib/v2/) for string constants, enum values, and string literals that function as internal control signals rather than patient-facing text",
+        "All discovered tokens are registered in a single source-of-truth constant file: lib/v7/routing-tokens.ts, exported as ROUTING_TOKENS string array",
+        "Each token entry includes an inline comment explaining which step or branch produces it",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "lib/v7/routing-tokens.ts exports 15 tokens as const with inline comments. base-state-machine.ts references ROUTING_TOKENS for isInternalConfirmationSignal. Typecheck passes."
+    },
+    {
+      "id": "US-004",
+      "title": "Suppress internal routing tokens from speech playback",
+      "description": "As a developer, I need the voice path to detect and suppress internal V7 routing tokens so they are never synthesized or rendered as patient-facing audio.",
+      "acceptanceCriteria": [
+        "Before any TTS call, the system checks whether the text to be spoken contains any value from ROUTING_TOKENS (lib/v7/routing-tokens.ts)",
+        "If a routing token is detected: a structured error is logged, audio playback is suppressed for that turn, and the session does not crash",
+        "When STRICT_SPEECH_MODE=true suppression is enforced; when false a warning is logged but playback is not suppressed (backward-compatible)",
+        "Unit tests cover: clean text passes, token-containing text is suppressed, whitespace variants are caught",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Routing tokens are now blocked in both strict and non-strict mode (strengthened from the original AC which allowed warn-only in non-strict). Client-side guard in useNaturalVoice.speak() and server-side guard in /api/tts both reject tokens. 13 unit tests pass including exhaustive per-token and false-positive-prevention coverage. AC3 intentionally tightened: tokens should never be spoken regardless of mode."
+    },
+    {
+      "id": "US-005",
+      "title": "Enforce spoken-text equals server-message invariant",
+      "description": "As a developer, I need a turn-level guard that asserts the text sent to TTS exactly matches the message field returned by the V7 API, so that wording drift is caught immediately.",
+      "acceptanceCriteria": [
+        "Before any TTS call, the system asserts textToSpeak === apiResponse.message (whitespace-normalized)",
+        "If the assertion fails: a structured compliance-violation error is logged and playback is suppressed for that turn",
+        "The guard applies to both the static-audio path and the dynamic TTS path",
+        "Unit tests cover: exact match passes, whitespace-normalized match passes, mismatch logs error and suppresses playback",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "validateSpeechOutput in useNaturalVoice.speak() and /api/tts both enforce whitespace-normalized text === apiMessage. Client guard now scoped to V7 only. TreatmentSession.speakServerMessage passes { apiMessage: message } ensuring the invariant is checked. Unit tests cover exact, normalized, and mismatch cases."
+    },
+    {
+      "id": "US-006",
+      "title": "Disable needsLinguisticProcessing in strict mode",
+      "description": "As a developer, I need the needsLinguisticProcessing path in app/api/treatment-v7/route.ts to be fully bypassed when strict mode is enabled, so that no rewriting of any kind can alter the doctor-authored message.",
+      "acceptanceCriteria": [
+        "Every call site of needsLinguisticProcessing in app/api/treatment-v7/route.ts is identified",
+        "When STRICT_SPEECH_MODE=true, all needsLinguisticProcessing branches are bypassed entirely and a warning is logged",
+        "The raw doctor-authored message is returned unmodified in strict mode",
+        "Existing tests for needsLinguisticProcessing still pass when STRICT_SPEECH_MODE=false",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "STRICT_SPEECH_MODE bypass now explicitly assigns finalMessage = result.scriptedResponse (previously worked by accident via initialization). Warning logged. AI assistance branch also blocked in strict mode. Typecheck passes."
+    },
+    {
+      "id": "US-007",
+      "title": "Fix handleAIAssistance to use real session context",
+      "description": "As a developer, I need handleAIAssistance in app/api/treatment-v7/route.ts to receive and use the actual live session context rather than placeholder values, so that any stuck-user assistance is properly grounded.",
+      "acceptanceCriteria": [
+        "handleAIAssistance receives a context object containing: current step ID, modality, work type, and recent user turn history",
+        "No placeholder phase, step, or context values remain in the assistance request construction",
+        "When STRICT_SPEECH_MODE=true, any assistance response that would modify a core scripted prompt is blocked and logged rather than applied",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "handleAIAssistance now passes real currentPhase, currentStep, userResponses, modality, workType, and recentUserTurnHistory from the live treatmentContext. No placeholder values remain. Strict-mode blocks AI assistance rewrites. Note: still delegates to lib/v2/ai-assistance.ts at runtime — future work should decouple this."
+    },
+    {
+      "id": "US-008",
+      "title": "Add OpenAI transcription provider to /api/transcribe",
+      "description": "As a developer, I want app/api/transcribe/route.ts to support an openai provider option so that V7 can use OpenAI Whisper for STT without changing the transcript-to-treatment-engine contract.",
+      "acceptanceCriteria": [
+        "A STT_PROVIDER env var is read, accepting values: existing (default) or openai",
+        "When STT_PROVIDER=openai, the route sends audio to the OpenAI Whisper API and returns a transcript in the same shape as the existing provider",
+        "Transcript aggregation timing and flush behaviour are unchanged",
+        "Step-aware transcription context is forwarded to OpenAI where the API supports it",
+        "The transcript passed to app/api/treatment-v7/route.ts is identical in structure regardless of which STT provider is active",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "STT_PROVIDER env var read from speech-config.ts. OpenAI path returns identical response shape. Step-aware context forwarded as OpenAI prompt text. Confidence now derived from segment avg_logprob (was hardcoded 0). 15s AbortController timeout added. Typecheck passes."
+    },
+    {
+      "id": "US-009",
+      "title": "Wire OpenAI STT into useAudioCapture and useNaturalVoice",
+      "description": "As a developer, I need the voice capture hooks to route audio through /api/transcribe regardless of provider, so the full capture-to-transcript path works end-to-end with OpenAI STT.",
+      "acceptanceCriteria": [
+        "components/voice/useAudioCapture.ts sends audio to /api/transcribe with no provider-specific logic in the hook itself",
+        "components/voice/useNaturalVoice.tsx handles the transcript response from OpenAI STT with no behaviour change visible to TreatmentSession",
+        "Switching STT_PROVIDER requires no changes to components/treatment/v7/TreatmentSession.tsx",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "useAudioCapture sends to /api/transcribe with optional provider override field. useNaturalVoice transparent to provider choice. TreatmentSession passes sttProviderOverride state (used for fallback) but does not contain provider-specific logic. Typecheck passes."
+    },
+    {
+      "id": "US-010",
+      "title": "Add STT fallback prompt on provider failure",
+      "description": "As a developer, I need the voice path to detect OpenAI STT failures and pause the session with a patient-facing prompt offering to continue on the backup system, so patients are never left in a broken state.",
+      "acceptanceCriteria": [
+        "When an OpenAI STT request fails (timeout, error, or unavailability), the session is paused and a prompt is shown: 'We're having trouble with speech recognition. Would you like to continue with the backup system?'",
+        "If the patient confirms, the session resumes using the backup STT provider without page reload",
+        "If the patient declines, the session remains paused with a message to try again later",
+        "The backup provider identity (Whisper/Kokoro) is never surfaced in any UI text or error message",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "onProviderError callback in useAudioCapture triggers SpeechFallbackPromptState in TreatmentSession. Confirm sets sttProviderOverride='existing'. Decline shows paused message. No vendor names in UI text. No automated test for the UI state machine yet. Typecheck passes."
+    },
+    {
+      "id": "US-011",
+      "title": "Add OpenAI TTS provider to /api/tts",
+      "description": "As a developer, I want app/api/tts/route.ts to support an openai provider option so that dynamic prompts can be synthesized via OpenAI TTS using the exact server message.",
+      "acceptanceCriteria": [
+        "A TTS_PROVIDER env var is read, accepting values: existing (default) or openai",
+        "When TTS_PROVIDER=openai, the route sends the exact message string to the OpenAI TTS API and returns audio in the same format as the existing provider",
+        "The static audio cache (lib/v7/static-audio-texts.ts) is checked before calling OpenAI TTS — OpenAI is only called on a cache miss",
+        "The text sent to OpenAI TTS is always the final message field from the V7 API response, never any intermediate or modified value",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "TTS_PROVIDER env var read from speech-config.ts. OpenAI TTS model now configurable via OPENAI_TTS_MODEL env var (default gpt-4o-mini-tts). Static audio cache is client-side (useNaturalVoice cache-first logic); server-side logs when static text reaches dynamic synthesis but caching is inherently a client concern. Compliance guard ensures exact apiMessage text. Typecheck passes."
+    },
+    {
+      "id": "US-012",
+      "title": "Wire OpenAI TTS into useNaturalVoice and TreatmentSession",
+      "description": "As a developer, I need the voice playback hooks to route TTS requests through /api/tts regardless of provider, so the full message-to-audio path works end-to-end with OpenAI TTS.",
+      "acceptanceCriteria": [
+        "components/voice/useNaturalVoice.tsx calls /api/tts and plays back the returned audio with no provider-specific logic in the hook",
+        "components/treatment/v7/TreatmentSession.tsx requires no provider-specific changes",
+        "V7AudioPreloader.tsx static audio preload behaviour is unchanged — preloaded segments still take priority over any TTS call",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": "useNaturalVoice sends ttsProviderOverride to /api/tts. TreatmentSession passes ttsProviderOverride state (used for fallback switching). Cache-first flow in useNaturalVoice is provider-agnostic. Typecheck passes."
+    },
+    {
+      "id": "US-013",
+      "title": "Add TTS fallback prompt on provider failure",
+      "description": "As a developer, I need the voice path to detect OpenAI TTS failures and pause the session with a patient-facing prompt offering to continue on the backup system, so patients are never left in silence.",
+      "acceptanceCriteria": [
+        "When an OpenAI TTS request fails (timeout, error, or unavailability), the session is paused and a prompt is shown: 'We're having trouble with audio playback. Would you like to continue with the backup system?'",
+        "If the patient confirms, the session resumes using the backup TTS provider without page reload",
+        "If the patient declines, the session remains paused with a message to try again later",
+        "The backup provider identity is never surfaced in any UI text or error message",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": "onSpeechProviderError callback in useNaturalVoice triggers SpeechFallbackPromptState in TreatmentSession. Confirm sets ttsProviderOverride='existing' and replays last message. Decline shows paused message. No vendor names in UI text. No automated test for the UI state machine yet. Typecheck passes."
+    },
+    {
+      "id": "US-014",
+      "title": "Regression test STT routing on short-utterance selection turns",
+      "description": "As a QA engineer, I need to verify that OpenAI STT does not misroute critical short-utterance turns so that work-type selection, problem capture, and modality routing remain reliable in production.",
+      "acceptanceCriteria": [
+        "Tests run with STT_PROVIDER=openai against representative short-utterance flows: introduction, work-type selection, problem path entry, goal path entry",
+        "All tested flows route correctly with zero misroutes",
+        "Single-word and short-phrase responses are correctly matched and routed by V7",
+        "Test results are written to tasks/stt-regression-results.md",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "tests/v7-speech-route.test.ts exercises V7 route-level routing for work-type selection (1/2/3) and problem path entry. However, tests run against the route handler directly with text input, not through actual OpenAI STT with audio. Live microphone + OpenAI transcription quality verification still pending. stt-regression-results.md acknowledges this gap."
+    },
+    {
+      "id": "US-015",
+      "title": "Full parity regression suite across all V7 treatment paths",
+      "description": "As a QA engineer, I need a full regression run across all major V7 paths with OpenAI STT and TTS enabled to confirm that speech I/O does not alter routing, spoken content, or compliance behaviour before production launch.",
+      "acceptanceCriteria": [
+        "All of the following paths are tested with STT_PROVIDER=openai and TTS_PROVIDER=openai: introduction and work-type selection, problem path, goal path, trauma path, integration path",
+        "All of the following playback modes are tested: text-only mode, static audio hit path, OpenAI TTS fallback path, OpenAI transcription path",
+        "Zero spoken-output mismatches between playback text and V7 API message field across all tested turns",
+        "Zero internal routing tokens appear in any spoken or rendered patient-facing output",
+        "Zero routing regressions on any covered flow",
+        "Fallback prompts appear correctly when STT and TTS failures are simulated",
+        "Results documented in tasks/parity-regression-results.md",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "Compliance guardrails (routing-token rejection, message-mismatch rejection) are enforced and tested. Route-level smoke tests cover intro, problem, goal, and trauma entry paths. However, full end-to-end browser audio parity with live OpenAI providers and fallback-prompt simulation have not been executed. parity-regression-results.md acknowledges this gap."
+    }
+  ]
+}

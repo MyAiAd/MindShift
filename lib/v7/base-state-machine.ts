@@ -2,6 +2,7 @@ import { TreatmentPhase, TreatmentStep, TreatmentContext, ProcessingResult, AITr
 import { ValidationHelpers } from './validation-helpers';
 import { DatabaseOperations } from './database-operations';
 import { TextProcessingUtils } from './text-processing-utils';
+import { ROUTING_TOKENS } from './routing-tokens';
 
 // Import treatment modalities
 import { IntroductionPhase } from './treatment-modalities/introduction';
@@ -537,34 +538,7 @@ export class BaseTreatmentStateMachine {
   }
 
   private isInternalConfirmationSignal(response: string): boolean {
-    const internalSignals = [
-      'GOAL_SELECTION_CONFIRMED',
-      'NEGATIVE_EXPERIENCE_SELECTION_CONFIRMED',
-      'PROBLEM_SELECTION_CONFIRMED',
-      'METHOD_SELECTION_NEEDED',
-      'SKIP_TO_TREATMENT_INTRO',
-      'ROUTE_TO_PROBLEM_INTEGRATION',
-      'ROUTE_TO_IDENTITY_INTEGRATION',
-      'ROUTE_TO_BELIEF_INTEGRATION',
-      'ROUTE_TO_BLOCKAGE_INTEGRATION',
-      'ROUTE_TO_TRAUMA_INTEGRATION',
-      'ROUTE_TO_INTEGRATION',
-      // New routing signals
-      'ROUTE_TO_PROBLEM_SHIFTING',
-      'ROUTE_TO_IDENTITY_SHIFTING',
-      'ROUTE_TO_BELIEF_SHIFTING',
-      'ROUTE_TO_BLOCKAGE_SHIFTING',
-      'ROUTE_TO_REALITY_SHIFTING',
-      'ROUTE_TO_TRAUMA_SHIFTING',
-      'PROBLEM_SHIFTING_SELECTED',
-      'IDENTITY_SHIFTING_SELECTED',
-      'BELIEF_SHIFTING_SELECTED',
-      'BLOCKAGE_SHIFTING_SELECTED',
-      'REALITY_SHIFTING_SELECTED',
-      'TRAUMA_SHIFTING_SELECTED'
-    ];
-    
-    return internalSignals.includes(response);
+    return ROUTING_TOKENS.includes(response as (typeof ROUTING_TOKENS)[number]);
   }
 
   private handleInternalSignal(signal: string, currentStep: TreatmentStep, context: TreatmentContext, userInput: string): ProcessingResult {

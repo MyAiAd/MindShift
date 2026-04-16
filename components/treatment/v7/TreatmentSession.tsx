@@ -52,6 +52,11 @@ export default function TreatmentSession({
   onError,
   version = 'v7'
 }: TreatmentSessionProps) {
+  type SpeechFallbackPromptState = {
+    kind: 'stt' | 'tts';
+    status: 'prompt' | 'declined';
+  } | null;
+
   // Admin debug drawer
   const { profile, signOut } = useAuth();
   const isAdmin = profile?.role === 'super_admin' || profile?.role === 'tenant_admin';
@@ -389,13 +394,12 @@ export default function TreatmentSession({
       const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
       if (lastAiMessage?.content) {
         console.log('🔊 Retroactive Play:', lastAiMessage.content);
-        prepareSubtitlesForSpeech(lastAiMessage.content);
-        naturalVoice.speak(lastAiMessage.content);
+        speakServerMessage(lastAiMessage.content);
       }
     }
     
     console.log(`🔊 Speaker ${newState ? 'enabled' : 'disabled'}`);
-  }, [isSpeakerEnabled, messages, prepareSubtitlesForSpeech, resetSubtitles]);
+  }, [isSpeakerEnabled, messages, resetSubtitles, speakServerMessage]);
   // Note: naturalVoice is not in deps because it's stable (from useNaturalVoice hook)
 
   // NEW: Pause/Resume handler for dedicated pause button
@@ -422,8 +426,7 @@ export default function TreatmentSession({
       const lastAiMessage = [...messages].reverse().find(m => !m.isUser);
       if (lastAiMessage?.content) {
         console.log('🔊 Retroactive Play:', lastAiMessage.content);
-        prepareSubtitlesForSpeech(lastAiMessage.content);
-        naturalVoice.speak(lastAiMessage.content);
+        speakServerMessage(lastAiMessage.content);
       }
     } else {
       // If turning OFF, stop any current speech
@@ -613,6 +616,9 @@ export default function TreatmentSession({
   const [lastResponseTime, setLastResponseTime] = useState<number>(0);
   const [stepHistory, setStepHistory] = useState<StepHistoryEntry[]>([]);
   const [voiceError, setVoiceError] = useState<string>('');
+  const [speechFallbackPrompt, setSpeechFallbackPrompt] = useState<SpeechFallbackPromptState>(null);
+  const [sttProviderOverride, setSttProviderOverride] = useState<'existing' | 'openai' | undefined>(undefined);
+  const [ttsProviderOverride, setTtsProviderOverride] = useState<'existing' | 'openai' | undefined>(undefined);
   const [selectedWorkType, setSelectedWorkType] = useState<string | null>(null);
   const [clickedButton, setClickedButton] = useState<string | null>(null);
   const [sessionMethod, setSessionMethod] = useState<string>('mind_shifting');
@@ -652,6 +658,7 @@ export default function TreatmentSession({
   const transcriptFlushTimerRef = useRef<NodeJS.Timeout | null>(null);
   const TRANSCRIPT_FLUSH_DELAY_MS = 2000;
   const isPTTActiveRef = useRef(false);
+  const lastSpeechMessageRef = useRef<string | null>(null);
 
   /** Whisper domain bias: expectedResponseType, step id, and recent user wording for hotwords. */
   const transcriptionContextRef = useRef<TranscriptionDomainContext | null>(null);
@@ -775,11 +782,13 @@ export default function TreatmentSession({
     }
   }, [isTestPlaying]);
 
+  const isSpeechFallbackPaused = speechFallbackPrompt !== null;
+
   // Natural Voice Hook - Updated to use separate mic/speaker controls
   const naturalVoice = useNaturalVoice({
     enabled: isNaturalVoiceEnabled, // DEPRECATED: backward compatibility
-    micEnabled: isMicEnabled, // NEW: Controls microphone input
-    speakerEnabled: isSpeakerEnabled, // NEW: Controls audio output
+    micEnabled: isMicEnabled && !isSpeechFallbackPaused, // NEW: Controls microphone input
+    speakerEnabled: isSpeakerEnabled && !isSpeechFallbackPaused, // NEW: Controls audio output
     guidedMode: isGuidedMode, // NEW: Guided mode disables auto-restart for PTT
     testMode: isTestPlaying, // NEW: Test mode prevents VAD from triggering speech recognition
     onTranscript: (transcript) => {
@@ -808,7 +817,6 @@ export default function TreatmentSession({
         }
       }, TRANSCRIPT_FLUSH_DELAY_MS);
     },
-    voiceProvider: 'kokoro',
     kokoroVoiceId: getKokoroVoiceId(),
     onAudioEnded: handleAudioEnded,
     playbackRate: playbackSpeed,
@@ -817,7 +825,58 @@ export default function TreatmentSession({
     onVadLevel: (level) => setVadLevel(level), // Update VAD level for meter
     onTestInterruption: handleTestInterruption, // NEW: Handle test mode interruptions
     transcriptionContextRef,
+    treatmentVersion: 'v7',
+    sttProviderOverride,
+    ttsProviderOverride,
+    onSpeechProviderError: ({ kind, provider, message }) => {
+      if (provider !== 'openai') {
+        return;
+      }
+
+      console.error(`V7 ${kind.toUpperCase()} provider error:`, message);
+      setVoiceError(message);
+      setSpeechFallbackPrompt((current) => current ?? { kind, status: 'prompt' });
+    },
   });
+
+  function speakServerMessage(message: string) {
+    if (!message) return;
+    lastSpeechMessageRef.current = message;
+    prepareSubtitlesForSpeech(message);
+    naturalVoice.speak(message, { apiMessage: message });
+  }
+
+  const handleSpeechFallbackConfirm = useCallback(() => {
+    if (!speechFallbackPrompt) return;
+
+    setVoiceError('');
+
+    if (speechFallbackPrompt.kind === 'stt') {
+      setSttProviderOverride('existing');
+      setSpeechFallbackPrompt(null);
+      return;
+    }
+
+    setTtsProviderOverride('existing');
+    setSpeechFallbackPrompt(null);
+
+    if (lastSpeechMessageRef.current && isSpeakerEnabled) {
+      beginFirstSpeechLoading();
+      setTimeout(() => {
+        if (lastSpeechMessageRef.current) {
+          speakServerMessage(lastSpeechMessageRef.current);
+        }
+      }, 100);
+    }
+  }, [speechFallbackPrompt, isSpeakerEnabled, beginFirstSpeechLoading, speakServerMessage]);
+
+  const handleSpeechFallbackDecline = useCallback(() => {
+    if (!speechFallbackPrompt) return;
+    setSpeechFallbackPrompt({
+      kind: speechFallbackPrompt.kind,
+      status: 'declined',
+    });
+  }, [speechFallbackPrompt]);
 
   useEffect(() => {
     if (!isFirstSpeechLoading) return;
@@ -1208,8 +1267,7 @@ export default function TreatmentSession({
           // Use setTimeout to ensure all React state updates and cleanups are complete
           setTimeout(() => {
             beginFirstSpeechLoading();
-            prepareSubtitlesForSpeech(instantMessage.content);
-            naturalVoice.speak(instantMessage.content);
+            speakServerMessage(instantMessage.content);
           }, 150);
         }
       }, 100);
@@ -1401,8 +1459,7 @@ export default function TreatmentSession({
             
             // Start audio playback (will trigger handleRenderText after 150ms)
             beginFirstSpeechLoading();
-            prepareSubtitlesForSpeech(data.message);
-            naturalVoice.speak(data.message);
+            speakServerMessage(data.message);
           } else {
             // Speaker disabled: add message immediately (no timing data)
             const systemMessage: TreatmentMessage = {
@@ -1560,8 +1617,7 @@ export default function TreatmentSession({
         if (isSpeakerEnabled) {
           const lastAiMessage = [...restoredMessages].reverse().find(m => !m.isUser);
           if (lastAiMessage?.content) {
-            prepareSubtitlesForSpeech(lastAiMessage.content);
-            naturalVoice.speak(lastAiMessage.content);
+            speakServerMessage(lastAiMessage.content);
           }
         }
 
@@ -1748,8 +1804,7 @@ export default function TreatmentSession({
               // Start audio playback (will trigger handleRenderText after 150ms)
               console.log('🔊 Playing new audio after work type selection');
               beginFirstSpeechLoading();
-              prepareSubtitlesForSpeech(data.message);
-              naturalVoice.speak(data.message);
+              speakServerMessage(data.message);
             } else {
               // Speaker disabled: add message immediately
               const systemMessage: TreatmentMessage = {
@@ -1949,8 +2004,7 @@ export default function TreatmentSession({
             // Start audio playback (will trigger handleRenderText after 150ms)
             console.log('🔊 Playing new audio after method selection');
             beginFirstSpeechLoading();
-            prepareSubtitlesForSpeech(data.message);
-            naturalVoice.speak(data.message);
+            speakServerMessage(data.message);
           } else {
             // Speaker disabled: add message immediately
             const systemMessage: TreatmentMessage = {
@@ -1997,8 +2051,51 @@ export default function TreatmentSession({
     isFirstSpeechLoading &&
     !hasFirstSpeechStarted;
 
+  const speechFallbackPromptText = speechFallbackPrompt?.kind === 'stt'
+    ? "We're having trouble with speech recognition. Would you like to continue with the backup system?"
+    : "We're having trouble with audio playback. Would you like to continue with the backup system?";
+
+  const speechFallbackDeclinedText = speechFallbackPrompt?.kind === 'stt'
+    ? 'Speech recognition is still paused. Please try again later.'
+    : 'Audio playback is still paused. Please try again later.';
+
   return (
     <div className="max-w-4xl mx-auto px-2 sm:px-4 flex flex-col fixed inset-x-0 top-header-safe bottom-0 pb-safe">
+      {speechFallbackPrompt && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center px-4">
+          <div className="w-full max-w-md rounded-xl border border-border bg-background shadow-xl p-6 space-y-4">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+              <div className="space-y-2">
+                <h2 className="text-lg font-semibold text-foreground">Speech Service Issue</h2>
+                <p className="text-sm text-muted-foreground">
+                  {speechFallbackPrompt.status === 'prompt'
+                    ? speechFallbackPromptText
+                    : speechFallbackDeclinedText}
+                </p>
+              </div>
+            </div>
+
+            {speechFallbackPrompt.status === 'prompt' && (
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleSpeechFallbackDecline}
+                  className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  No
+                </button>
+                <button
+                  onClick={handleSpeechFallbackConfirm}
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  Yes
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Guided Mode PTT Interface - inline, not full-screen overlay */}
       {isGuidedMode && (
         <div className="relative flex-shrink-0 bg-gradient-to-br from-primary/90 via-secondary/90 to-primary/80 rounded-lg flex flex-col items-center py-5 px-4 mb-2">
@@ -2359,6 +2456,8 @@ export default function TreatmentSession({
                 step="0.05"
                 value={playbackSpeed}
                 onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                aria-label="Playback speed"
+                title="Playback speed"
                 className="w-full h-3 md:h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
               />
               
