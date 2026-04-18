@@ -149,6 +149,9 @@ snapshots/
 # Development and testing files that may contain secrets
 test-data/
 fixtures/
+!tests/fixtures/
+!tests/fixtures/v7-speech-corpus/
+!tests/fixtures/v7-speech-corpus/**
 seed-data/
 demo-data/
 example-data/

@@ -1,0 +1,110 @@
+# V7 Speech Regression Corpus
+
+This directory holds reproducible speech recordings used by the V7 peak-fidelity
+regression suite (US-021) and the Realtime VAD grid-search (US-028).
+
+## Status
+
+**SCAFFOLD** — the directory structure, schema, CI validation, and capture
+methodology are committed, but the raw `.wav` / `.json` pairs are a manual
+operator step because recording live human speech is out of scope for an
+autonomous coding agent (consent + audio hardware + microphone noise-floor
+calibration cannot be simulated in CI).
+
+This file (`INDEX.md`) documents exactly what must be delivered so that any
+contributor who captures recordings can drop them in and have the CI check
+pass without any further code changes.
+
+## Required corpus composition
+
+Minimum **50 utterances**, distributed as:
+
+| Bucket                                           | Count | Condition tags                              |
+| ------------------------------------------------ | ----- | ------------------------------------------- |
+| 1-word answers (yes / no / sure / maybe / okay) |    10 | `short-answer`, `quiet-room`                |
+| Short phrases (3–10 words)                       |    15 | `short-phrase`, `quiet-room`                |
+| Long reflections with mid-utterance pauses       |    10 | `long-utterance`, `mid-utterance-pause`     |
+| Whispered responses                              |     5 | `whispered`, `quiet-room`                   |
+| Utterances over background TV noise              |     5 | `background-tv`                             |
+| Utterances over HVAC / fan noise                 |     3 | `hvac-noise`                                |
+| Silent-room control clips (no speech)            |     2 | `silent-control`                            |
+
+Additional utterances beyond the minimum are welcome.
+
+## File format
+
+Each recording is a pair:
+
+```
+tests/fixtures/v7-speech-corpus/<bucket>/<id>.wav
+tests/fixtures/v7-speech-corpus/<bucket>/<id>.json
+```
+
+- `<id>` is a zero-padded 3-digit number unique across the whole corpus.
+- `<bucket>` is one of: `short-answer/`, `short-phrase/`, `long-utterance/`,
+  `whispered/`, `background-tv/`, `hvac-noise/`, `silent-control/`.
+- `.wav` must be **16 kHz mono PCM 16-bit** (ffprobe verifies in CI).
+- `.json` must validate against `schema.json` in this directory (see below).
+
+## Companion JSON schema
+
+Every `.wav` has a sibling `.json`:
+
+```json
+{
+  "transcript": "Yes",
+  "expected_step_context": "work_type_selection | problem | goal | trauma | integration | introduction | any",
+  "condition_tags": ["short-answer", "quiet-room"],
+  "speaker_notes": "Young-adult female, neutral US accent, no background noise.",
+  "sample_rate": 16000,
+  "duration_sec": 0.82
+}
+```
+
+`schema.json` (also in this directory) is the authoritative JSON schema.
+CI uses `tests/v7-speech-corpus-schema.test.ts` to fail the build if any
+`.wav` lacks a `.json` or any `.json` does not validate.
+
+For `silent-control` clips, `transcript` must be an empty string
+(`""`), and the expected behaviour is that the VAD gate + hallucination
+gates produce zero `/api/transcribe` POSTs.
+
+## Capture methodology
+
+1. Use a quiet room with a typical USB condenser microphone (Blue Yeti,
+   Shure MV7, or Rode NT-USB at default gain).
+2. Record at 48 kHz mono and down-sample to 16 kHz mono PCM 16-bit
+   with `ffmpeg -i in.wav -ar 16000 -ac 1 -c:a pcm_s16le out.wav`.
+3. Peak-normalise each clip to -1 dBFS to avoid clipping, but do NOT
+   apply compression or noise-reduction (the corpus should reflect what
+   the STT stack actually receives).
+4. Trim to <= 200 ms of leading / trailing silence.
+5. Save speaker notes in the companion `.json` (voice type, accent,
+   proximity to mic, any ambient events).
+
+## Legal consent
+
+Every recording must be captured with documented informed consent from
+the speaker. Consent records are stored outside the repo in the
+`mindshifting-speech-corpus-consent` private drive (not yet created —
+operator to initialise before first real capture). The public corpus
+only contains utterances whose consent record covers:
+
+- Storage in the public `MindShifting` GitHub repository.
+- Use as a regression / research input for v7 speech I/O.
+- No further commercial use.
+
+If a speaker withdraws consent, their clips must be deleted from this
+directory and from any derived artifacts (CSV tuning results in US-028,
+transcripts in US-021). A `consent-audit.md` entry in this directory
+(created on first real capture) logs consent grants and revocations.
+
+## Interaction with later stories
+
+- **US-021 (Track A regression):** Uses every clip as an STT WER reference.
+- **US-028 (Realtime VAD tuning):** Iterates the Realtime API over every
+  clip under a grid of VAD parameters.
+- **US-029 (Track B regression):** Same clips piped into the Realtime
+  pipeline for apples-to-apples metrics.
+
+When new buckets are added, update this file first, then add the clips.

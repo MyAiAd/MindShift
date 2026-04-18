@@ -47,7 +47,8 @@
     "test:v2-v6-route-parity-local": "tsx scripts/v2-v6-route-parity-check.ts",
     "test:v7-speech-compliance": "npx tsx --test lib/voice/speech-compliance.test.ts",
     "test:v7-speech-route": "npx tsx --test tests/v7-speech-route.test.ts",
-    "test:v7-stt-gates": "npx tsx --test tests/stt-hallucination-gates.test.ts"
+    "test:v7-stt-gates": "npx tsx --test tests/stt-hallucination-gates.test.ts",
+    "test:v7-speech-corpus": "npx tsx --test tests/v7-speech-corpus-schema.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",

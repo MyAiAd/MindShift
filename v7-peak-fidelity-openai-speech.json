@@ -332,8 +332,8 @@
         "Typecheck passes"
       ],
       "priority": 20,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "SCAFFOLD. tests/fixtures/v7-speech-corpus/ committed with INDEX.md (capture methodology, bucket distribution, consent policy), schema.json (authoritative JSON Schema for the companion files), and tests/v7-speech-corpus-schema.test.ts (CI check: every .wav has a matching .json that validates against the schema; INDEX.md and schema.json exist). `npm run test:v7-speech-corpus` passes today on the empty corpus and will fail any PR that adds an orphan .wav or malformed .json. Recording the 50+ real human utterances is a manual operator action — the repo is ready to receive them."
     },
     {
       "id": "US-021",

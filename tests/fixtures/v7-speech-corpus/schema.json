@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "V7 Speech Corpus Utterance",
+  "description": "Companion metadata for a single .wav recording in the v7 speech regression corpus.",
+  "type": "object",
+  "required": [
+    "transcript",
+    "expected_step_context",
+    "condition_tags",
+    "speaker_notes",
+    "sample_rate",
+    "duration_sec"
+  ],
+  "properties": {
+    "transcript": {
+      "type": "string",
+      "description": "Ground-truth transcript, empty string for silent-control clips."
+    },
+    "expected_step_context": {
+      "type": "string",
+      "enum": [
+        "introduction",
+        "work_type_selection",
+        "problem",
+        "goal",
+        "trauma",
+        "integration",
+        "any"
+      ]
+    },
+    "condition_tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "short-answer",
+          "short-phrase",
+          "long-utterance",
+          "mid-utterance-pause",
+          "whispered",
+          "quiet-room",
+          "background-tv",
+          "hvac-noise",
+          "silent-control"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "speaker_notes": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sample_rate": {
+      "type": "integer",
+      "const": 16000
+    },
+    "duration_sec": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 60
+    }
+  },
+  "additionalProperties": false
+}
