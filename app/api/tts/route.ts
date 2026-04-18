@@ -207,27 +207,122 @@ async function synthesizeWithElevenLabs(text: string, voice: string): Promise<Ne
 }
 
 const OPENAI_TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';
+const OPENAI_TTS_FALLBACK_MODEL = process.env.OPENAI_TTS_FALLBACK_MODEL || 'tts-1-hd';
+const DEFAULT_TTS_INSTRUCTIONS =
+  'Warm, calm, reassuring, unhurried — therapeutic but not clinical. Natural pacing, no accent.';
 
-async function synthesizeWithOpenAI(text: string, voice: string, model: string): Promise<NextResponse> {
-  try {
-    const openai = createOpenAIClient();
-    const openaiVoice = getOpenAIVoice(voice);
-    const response = await openai.audio.speech.create({
-      model,
+/** Models that support the `instructions` parameter on `audio.speech.create`. */
+const INSTRUCTION_CAPABLE_TTS_MODELS = new Set(['gpt-4o-mini-tts']);
+
+function modelSupportsInstructions(model: string): boolean {
+  return INSTRUCTION_CAPABLE_TTS_MODELS.has(model);
+}
+
+function isRetryableOpenAITtsError(err: unknown): boolean {
+  if (err instanceof Error && err.name === 'AbortError') return true;
+  const anyErr = err as { status?: number; name?: string } | undefined;
+  const status = anyErr?.status;
+  if (typeof status === 'number') {
+    if (status === 429 || status >= 500) return true;
+    if (status >= 400 && status < 500) return false; // auth/validation — fail fast
+  }
+  if (err instanceof TypeError) return true;
+  if (anyErr?.name === 'FetchError') return true;
+  return false;
+}
+
+type TtsTelemetry = {
+  treatmentVersion: string | null;
+  textLength: number;
+  voice: string;
+};
+
+async function synthesizeWithOpenAI(
+  text: string,
+  voice: string,
+  model: string,
+  telemetry: TtsTelemetry,
+): Promise<NextResponse> {
+  const startTime = Date.now();
+  const openai = createOpenAIClient();
+  const openaiVoice = getOpenAIVoice(voice);
+  const instructions = process.env.OPENAI_TTS_INSTRUCTIONS || DEFAULT_TTS_INSTRUCTIONS;
+
+  type TtsAttempt = { buffer: ArrayBuffer; modelUsed: string; fallbackUsed: boolean; retryCount: number };
+
+  const callOnce = async (modelToUse: string, allowInstructions: boolean): Promise<ArrayBuffer> => {
+    const payload: Parameters<OpenAI['audio']['speech']['create']>[0] = {
+      model: modelToUse,
       input: text,
       voice: openaiVoice,
       response_format: 'mp3',
-    });
-    const audioBuffer = await response.arrayBuffer();
+    };
+    // US-008: only send `instructions` when the model supports it.
+    if (allowInstructions && modelSupportsInstructions(modelToUse)) {
+      (payload as unknown as { instructions?: string }).instructions = instructions;
+    }
+    const response = await openai.audio.speech.create(payload);
+    return await response.arrayBuffer();
+  };
 
-    return new NextResponse(audioBuffer, {
+  const attempt = async (): Promise<TtsAttempt> => {
+    try {
+      const buffer = await callOnce(model, true);
+      return { buffer, modelUsed: model, fallbackUsed: false, retryCount: 0 };
+    } catch (primaryError) {
+      if (OPENAI_TTS_FALLBACK_MODEL === model || !isRetryableOpenAITtsError(primaryError)) {
+        // Either the fallback isn't distinct, or the error is non-retryable (4xx auth/validation).
+        throw primaryError;
+      }
+      // US-009: retry ONCE with tts-1-hd (same vendor, deterministic, proven). Never send
+      // `instructions` on the fallback call — tts-1-hd doesn't understand it.
+      console.log(JSON.stringify({
+        event: 'tts_fallback_attempt',
+        primary_model: model,
+        fallback_model: OPENAI_TTS_FALLBACK_MODEL,
+        reason: primaryError instanceof Error ? primaryError.message : 'unknown',
+      }));
+      const buffer = await callOnce(OPENAI_TTS_FALLBACK_MODEL, false);
+      return { buffer, modelUsed: OPENAI_TTS_FALLBACK_MODEL, fallbackUsed: true, retryCount: 1 };
+    }
+  };
+
+  try {
+    const { buffer, modelUsed, fallbackUsed, retryCount } = await attempt();
+    const processingTime = Date.now() - startTime;
+
+    // US-005 TTS telemetry — single-line JSON, one per response.
+    console.log(JSON.stringify({
+      event: 'tts_call',
+      treatment_version: telemetry.treatmentVersion ?? 'legacy',
+      text_length: telemetry.textLength,
+      voice: openaiVoice,
+      model: modelUsed,
+      retry_count: retryCount,
+      fallback_used: fallbackUsed,
+      processing_time_ms: processingTime,
+    }));
+
+    return new NextResponse(buffer, {
       headers: {
         'Content-Type': 'audio/mpeg',
         'Cache-Control': 'public, max-age=3600',
       },
     });
   } catch (error) {
+    const processingTime = Date.now() - startTime;
     console.error('OpenAI TTS API error:', error);
+    console.log(JSON.stringify({
+      event: 'tts_call',
+      treatment_version: telemetry.treatmentVersion ?? 'legacy',
+      text_length: telemetry.textLength,
+      voice: openaiVoice,
+      model,
+      retry_count: 1, // we attempted the fallback
+      fallback_used: false,
+      processing_time_ms: processingTime,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }));
     return NextResponse.json({
       error: 'TTS synthesis failed',
       code: 'tts_provider_failure',
@@ -294,7 +389,11 @@ export async function POST(request: NextRequest) {
       return await synthesizeWithElevenLabs(text, voice);
     }
 
-    return await synthesizeWithOpenAI(text, voice, model);
+    return await synthesizeWithOpenAI(text, voice, model, {
+      treatmentVersion: treatmentVersion ?? null,
+      textLength: text.length,
+      voice,
+    });
   } catch (error) {
     console.error('TTS API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

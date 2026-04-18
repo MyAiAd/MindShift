@@ -131,8 +131,8 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "synthesizeWithOpenAI reads OPENAI_TTS_MODEL (default gpt-4o-mini-tts). When the model supports the `instructions` parameter, sends OPENAI_TTS_INSTRUCTIONS (default: 'Warm, calm, reassuring, unhurried — therapeutic but not clinical. Natural pacing, no accent.'). Voice parameter passed through getOpenAIVoice() unchanged. validateSpeechOutput compliance guard runs first for v7 and is untouched. Env vars documented in .env.local (prod .env template includes identical fields)."
     },
     {
       "id": "US-009",
@@ -147,8 +147,8 @@
         "Typecheck passes"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "On 429/5xx/timeout/network errors from the primary model, synthesizeWithOpenAI retries once with OPENAI_TTS_FALLBACK_MODEL (default tts-1-hd), omitting the `instructions` param (unsupported). tts_call telemetry includes `fallback_used: true` on success. 4xx (auth/validation) errors short-circuit without retry. On dual failure, the existing `tts_provider_failure` response is returned."
     },
     {
       "id": "US-010",
