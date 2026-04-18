@@ -452,8 +452,8 @@
         "Verify in browser using dev-browser skill: toggle the admin override and confirm the page re-renders with the other pipeline"
       ],
       "priority": 27,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "app/dashboard/sessions/treatment-v7/page.tsx reads NEXT_PUBLIC_V7_SPEECH_PIPELINE (default 'request_response') and renders either TreatmentSession (Track A) or V7RealtimeSession (Track B) with identical props. Admin override: super_admin/tenant_admin sees a `Pipeline` <select> in the page header with options 'Default (<env>)' / 'Request / Response' / 'Realtime' that writes `v7_speech_pipeline_override` to localStorage and dispatches the `v7-speech-pipeline-changed` CustomEvent. resolveSpeechPipeline() is the single source of truth and the override takes precedence over the env default. Both components receive the identical TreatmentSessionProps contract so the switch is a single ternary. Env var documented in env templates."
     },
     {
       "id": "US-028",

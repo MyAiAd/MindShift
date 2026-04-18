@@ -5,8 +5,28 @@ import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import TreatmentSession from '@/components/treatment/v7/TreatmentSession';
+import V7RealtimeSession from '@/components/treatment/v7/V7RealtimeSession';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+
+// US-027: V7_SPEECH_PIPELINE feature flag
+//   NEXT_PUBLIC_V7_SPEECH_PIPELINE = 'request_response' | 'realtime'
+//   default: 'request_response' (Track A)
+//   Super-admins / tenant-admins can override per-session via the admin
+//   debug drawer — the override is stored in localStorage under
+//   `v7_speech_pipeline_override` and takes precedence over the env default.
+type V7SpeechPipeline = 'request_response' | 'realtime';
+
+function resolveSpeechPipeline(): V7SpeechPipeline {
+  if (typeof window !== 'undefined') {
+    const override = window.localStorage.getItem('v7_speech_pipeline_override');
+    if (override === 'realtime' || override === 'request_response') {
+      return override;
+    }
+  }
+  const envValue = (process.env.NEXT_PUBLIC_V7_SPEECH_PIPELINE || '').trim();
+  return envValue === 'realtime' ? 'realtime' : 'request_response';
+}
 
 const V7AudioPreloader = dynamic(
   () => import('@/components/treatment/v7/V7AudioPreloader'),
@@ -92,6 +112,23 @@ function TreatmentSessionContent() {
   const [sessionId, setSessionId] = useState<string>('');
   const [shouldResume, setShouldResume] = useState<boolean>(false);
   const [selectedVoice, setSelectedVoice] = useState<string>('heart');
+  const [speechPipeline, setSpeechPipeline] = useState<V7SpeechPipeline>('request_response');
+
+  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'tenant_admin';
+
+  const handlePipelineOverrideChange = (value: V7SpeechPipeline | 'default') => {
+    if (typeof window === 'undefined') return;
+    if (value === 'default') {
+      window.localStorage.removeItem('v7_speech_pipeline_override');
+    } else {
+      window.localStorage.setItem('v7_speech_pipeline_override', value);
+    }
+    setSpeechPipeline(resolveSpeechPipeline());
+    window.dispatchEvent(new CustomEvent<V7SpeechPipeline>(
+      'v7-speech-pipeline-changed',
+      { detail: resolveSpeechPipeline() },
+    ));
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -112,9 +149,25 @@ function TreatmentSessionContent() {
     window.addEventListener('v7-voice-changed', handleVoiceChange as EventListener);
     window.addEventListener('storage', handleStorageChange);
 
+    setSpeechPipeline(resolveSpeechPipeline());
+    const handlePipelineChange = (e: CustomEvent<V7SpeechPipeline>) => {
+      if (e.detail === 'realtime' || e.detail === 'request_response') {
+        setSpeechPipeline(e.detail);
+      }
+    };
+    const handlePipelineStorage = (e: StorageEvent) => {
+      if (e.key === 'v7_speech_pipeline_override') {
+        setSpeechPipeline(resolveSpeechPipeline());
+      }
+    };
+    window.addEventListener('v7-speech-pipeline-changed', handlePipelineChange as EventListener);
+    window.addEventListener('storage', handlePipelineStorage);
+
     return () => {
       window.removeEventListener('v7-voice-changed', handleVoiceChange as EventListener);
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('v7-speech-pipeline-changed', handlePipelineChange as EventListener);
+      window.removeEventListener('storage', handlePipelineStorage);
     };
   }, []);
 
@@ -196,6 +249,25 @@ function TreatmentSessionContent() {
             </Link>
             <span className="text-base font-semibold text-foreground">Shifting</span>
           </div>
+          {isAdmin && (
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Pipeline</span>
+              <select
+                className="bg-background border border-border rounded px-2 py-1 text-xs"
+                value={
+                  typeof window !== 'undefined'
+                    ? (window.localStorage.getItem('v7_speech_pipeline_override') ?? 'default')
+                    : 'default'
+                }
+                onChange={(e) => handlePipelineOverrideChange(e.target.value as V7SpeechPipeline | 'default')}
+                aria-label="V7 speech pipeline override"
+              >
+                <option value="default">Default ({process.env.NEXT_PUBLIC_V7_SPEECH_PIPELINE || 'request_response'})</option>
+                <option value="request_response">Request / Response</option>
+                <option value="realtime">Realtime</option>
+              </select>
+            </label>
+          )}
         </div>
       </div>
 
@@ -203,14 +275,25 @@ function TreatmentSessionContent() {
 
       <div className="py-2 md:py-8">
         <SessionErrorBoundary>
-          <TreatmentSession
-            sessionId={sessionId}
-            userId={user.id}
-            shouldResume={shouldResume}
-            onComplete={handleSessionComplete}
-            onError={handleSessionError}
-            version="v7"
-          />
+          {speechPipeline === 'realtime' ? (
+            <V7RealtimeSession
+              sessionId={sessionId}
+              userId={user.id}
+              shouldResume={shouldResume}
+              onComplete={handleSessionComplete}
+              onError={handleSessionError}
+              version="v7"
+            />
+          ) : (
+            <TreatmentSession
+              sessionId={sessionId}
+              userId={user.id}
+              shouldResume={shouldResume}
+              onComplete={handleSessionComplete}
+              onError={handleSessionError}
+              version="v7"
+            />
+          )}
         </SessionErrorBoundary>
       </div>
     </div>
