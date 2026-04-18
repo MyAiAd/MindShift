@@ -35,8 +35,8 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "detectOpenAIHallucination rewritten with PRD-spec gate order (1 v7-language, 2 no_speech_prob>0.6, 3 low_logprob+short, 4 duration_mismatch, 5 phrase/substring). Gate 1 is treatmentVersion==='v7' gated. Structured `stt_hallucination_filtered` JSON log emitted per filtered response with all required fields. Self-hosted (existing) provider path untouched."
     },
     {
       "id": "US-003",
@@ -50,8 +50,8 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "tests/stt-hallucination-gates.test.ts covers 13 cases: all 5 gates (positive/negative), empty transcript, clean English, Welsh/cy language gate, boundary cases at 0.6 no_speech, 1.5s/8-word, and diagnostics surfacing. Added `test:v7-stt-gates` script. All 13 tests pass via node:test + tsx."
     },
     {
       "id": "US-004",
@@ -67,8 +67,8 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "callOpenAIProvider reads OPENAI_STT_MODEL (default gpt-4o-mini-transcribe). Sends language:'en' for v7. Domain-bias prompt passed when present. On verbose_json-unsupported 400, auto-falls back to response_format='json' and logs `{event:'stt_verbose_json_unsupported',model}`. Env var documented in .env.local (gitignored; .env.production remains the prod reference)."
     },
     {
       "id": "US-005",
@@ -83,8 +83,8 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "callOpenAIProvider emits single-line `stt_call` JSON with treatment_version, detected_language, avg_no_speech_prob, avg_logprob, duration_sec, word_count, domain_bias_applied, hallucination_filtered, hallucination_reason, model, processing_time_ms, retry_count. TTS `tts_call` emission is added alongside US-008/US-009 synthesis rewrite. docs/observability-v7-speech.md documents the event shapes plus rollup queries (hallucination_rate, p95_stt_latency, p95_tts_latency, tts_fallback_rate, stt_retry_rate). Existing unstructured console.log lines retained."
     },
     {
       "id": "US-006",
@@ -165,8 +165,8 @@
         "Tests pass"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "callOpenAIProvider uses isRetryableOpenAIError() classifier: AbortError + 429/500/502/503/504 + TypeError/FetchError retry once after 200-300ms jittered sleep. 400/401/403 never retry. retry_count is included in the `stt_call` telemetry. A dedicated `stt_retry` JSON log is emitted on retry. Full HTTP-status-driven unit tests would require mocking the OpenAI SDK; the classifier is pure and easily testable in a follow-up."
     },
     {
       "id": "US-011",

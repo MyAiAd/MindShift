@@ -109,6 +109,11 @@ HALLUCINATION_PHRASES = {
     "谢谢观看",
     "감사합니다",
     "소리",
+    
+    # Welsh hallucinations (extremely common from silence)
+    "diolch yn fawr iawn am wylior fideo",
+    "diolch yn fawr am wylior fideo",
+    "diolch yn fawr",
 }
 
 # Substring patterns - if the transcript CONTAINS any of these, it's likely hallucinated
@@ -128,6 +133,10 @@ HALLUCINATION_SUBSTRINGS = [
     "subtitles by",
     "captions by",
     "transcribed by",
+    # Welsh hallucination substrings
+    "diolch yn fawr",
+    "am wylio'r fideo",
+    "am wylior fideo",
 ]
 
 
