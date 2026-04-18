@@ -383,8 +383,8 @@
         "Verify in browser using dev-browser skill: component mounts, establishes connection, shows 'connected' state in console, then cleanly disconnects on unmount"
       ],
       "priority": 23,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "components/treatment/v7/V7RealtimeSession.tsx is a parallel alternative to TreatmentSession with the same props contract (TreatmentSessionProps). On mount it POSTs /api/treatment-v7/realtime-session (US-022) to mint an ephemeral session, creates RTCPeerConnection, requests mic via getUserMedia, creates the 'oai-events' data channel, exchanges SDP with OpenAI's Realtime endpoint per the official WebRTC pattern, and attaches the returned media track to a hidden <audio> element for playback. On unmount: data channel + peer connection + local-stream tracks are all closed and a 'disconnected' state is logged. Every connection lifecycle transition emits `{event:'v7_realtime_connection_state', state, session_id}`. Outer shell renders header, orb placeholder, transcript panel — full TreatmentSession chrome copy-over is marked as a TODO for a later iteration as it's explicitly out of scope for the shell story."
     },
     {
       "id": "US-024",
@@ -400,8 +400,8 @@
         "Verify in browser using dev-browser skill: speak an utterance in the Realtime session and confirm the v7 engine processes it (console shows 'Sending V4 message')"
       ],
       "priority": 24,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "V7RealtimeSession listens for `conversation.item.input_audio_transcription.completed` events on the data channel and forwards the transcript via sendTranscriptToEngine() which POSTs `/api/treatment-v7` with action:'continue' + userInput:<transcript> — the same call shape TreatmentSession uses. No new backend route. Barge-in is left to the Realtime server-side VAD; client has no echo-prevention logic (per PRD). The PRD-specified non-English language filter is applied: if event.language exists and !== 'en', the transcript is dropped and a `v7_realtime_non_english_transcript_filtered` log is emitted (this is the equivalent safeguard to US-002, which cannot be applied directly because the Realtime event shape is not verbose_json)."
     },
     {
       "id": "US-025",
@@ -418,8 +418,8 @@
         "Verify in browser using dev-browser skill: trigger a scripted v7 response and hear it played with the v7 voice"
       ],
       "priority": 25,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "V7RealtimeSession.speakServerMessage(message) matches TreatmentSession's signature. Runs validateSpeechOutput({textToSpeak:message, apiMessage:message}) first (ROUTING_TOKENS suppression is part of that guard). On violation emits `v7_realtime_speech_compliance_violation` and suppresses send. On success sends `conversation.item.create` with {type:'message', role:'assistant', content:[{type:'input_text', text:message}]} followed by `response.create` with modalities:['audio'] and instructions 'Read exactly this message verbatim. Do not add or modify any text.' Audio plays through the WebRTC media track attached to a hidden <audio autoPlay playsInline>; no manual HTMLAudioElement play() calls. speakServerMessage is also a no-op when textModeFallbackState==='active' (US-026 parity)."
     },
     {
       "id": "US-026",
@@ -435,8 +435,8 @@
         "Verify in browser using dev-browser skill: force-close the WebRTC connection via dev-tools; confirm auto-reconnect happens once and text-mode dialog appears on second failure"
       ],
       "priority": 26,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "V7RealtimeSession watches RTCPeerConnection.oniceconnectionstatechange for 'disconnected' / 'failed' / 'closed'. classifyDisconnect() keeps a 30s rolling history. First failure: logs `v7_realtime_reconnect_attempt`, transitions connectionState→'reconnecting', immediately re-mints a session token and reconnects. If reconnect completes with iceConnectionState==='connected' inside 5s, the session resumes. If reconnect fails or a second disconnect arrives within 30s, logs `v7_realtime_second_disconnect`, flips textModeFallbackState→'prompt'. Text-mode dialog uses the same US-015 copy ('Audio unavailable' + 'We're temporarily unable to use audio. Would you like to continue by typing?') and the same two buttons ('Try again' / 'Continue in text'). In 'active' state TTS (speakServerMessage) is suppressed, mic orb reduces to 40% opacity, text input auto-focuses."
     },
     {
       "id": "US-027",
