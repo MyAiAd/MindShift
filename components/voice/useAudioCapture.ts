@@ -360,11 +360,25 @@ export const useAudioCapture = ({
           return;
         }
         
-        // HALLUCINATION FILTER: Check for known Whisper hallucination phrases
-        // The server should catch most, but this is a client-side safety net
-        if (data.hallucination_filtered || isLikelyHallucination(data.transcript)) {
-          console.log('🎙️ AudioCapture: Filtered hallucination:', data.transcript, 
-            data.hallucination_reason ? `(server: ${data.hallucination_reason})` : '(client-side filter)');
+        // HALLUCINATION FILTER. The server (US-002) is the primary line of defence; this
+        // client-side string-match check (US-019) is a last-resort safety net that also logs
+        // a structured stt_client_safety_net_hit event so we can measure how often it catches
+        // things the server missed.
+        if (data.hallucination_filtered) {
+          console.log(
+            '🎙️ AudioCapture: Filtered hallucination (server):',
+            data.transcript,
+            `reason=${data.hallucination_reason ?? 'unknown'}`,
+          );
+          return;
+        }
+        if (isLikelyHallucination(data.transcript)) {
+          console.log('🎙️ AudioCapture: Filtered hallucination (client safety-net):', data.transcript);
+          console.log(JSON.stringify({
+            event: 'stt_client_safety_net_hit',
+            transcript_preview: (data.transcript || '').slice(0, 80),
+            matched_pattern: 'isLikelyHallucination',
+          }));
           return;
         }
         

@@ -253,8 +253,8 @@
         "Verify in browser using dev-browser skill: manually trigger textModeFallbackState='prompt' via the admin debug drawer and confirm the dialog appears with correct text"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "TreatmentSession adds `textModeFallbackState` machine (null|'prompt'|'active'|'retrying'). `prompt` renders modal dialog with exact PRD copy: 'We're temporarily unable to use audio. Would you like to continue by typing?' + 'Try again' / 'Continue in text' buttons. `retrying` shows a subtle 'Reconnecting…' status chip (fixed top-right). `active` suppresses TTS in speakServerMessage (subtitles still render) and is-speech-fallback-paused flag mutes mic orb. No vendor names/aria-labels reference Whisper/Kokoro/OpenAI/ElevenLabs/backup/fallback/provider."
     },
     {
       "id": "US-016",
@@ -270,8 +270,8 @@
         "Verify in browser using dev-browser skill: stub /api/tts to return 500 twice; confirm the text-mode dialog appears after the retry"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "onSpeechProviderError now drives textModeFallbackState instead of the legacy speechFallbackPrompt. First error within 10s: state→'retrying' for 15s, TTS playback retried once if pending. Second error within 10s OR retry failure: state→'prompt'. handleSpeechFallbackConfirm/Decline are retained as no-op deprecated handlers. sttProviderOverride/ttsProviderOverride state setters removed — values frozen to undefined; no v7 code path sets them. US-018 (next) ensures the server ignores them even if sent."
     },
     {
       "id": "US-017",
@@ -286,8 +286,8 @@
         "Verify in browser using dev-browser skill: spot-check 3 error states and confirm neutral wording"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "docs/v7-vendor-string-audit.md records the grep audit across components/treatment/v7/**, components/voice/**, app/api/tts/route.ts, app/api/transcribe/route.ts. All hits are category (a) server-side logs or (b) developer comments/variable names; zero category (c) user-visible strings remain. Old dialog copy 'backup system' rewritten to 'continue by typing?' (neutral). Verification command `rg '>[^<]*(Whisper|Kokoro|OpenAI|ElevenLabs|backup system|backup provider|fallback provider)[^<]*<' components/treatment/v7 components/voice` returns no hits. Labs admin demo (components/labs/OpenAIVoiceDemo.tsx) is out of scope."
     },
     {
       "id": "US-018",
@@ -301,8 +301,8 @@
         "Typecheck passes"
       ],
       "priority": 18,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "app/api/transcribe/route.ts: for treatmentVersion==='v7' the handler forces callOpenAIProvider regardless of STT_PROVIDER env or providerOverride; emits `v7_legacy_stt_override_ignored` log when providerOverride='existing' is received. app/api/tts/route.ts resolveProvider() short-circuits to 'openai' for v7 regardless of TTS_PROVIDER env or `provider` body field; emits `v7_legacy_tts_override_ignored` when kokoro/existing is requested. Non-v7 traffic unchanged."
     },
     {
       "id": "US-019",
@@ -316,8 +316,8 @@
         "Typecheck passes"
       ],
       "priority": 19,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "components/voice/useAudioCapture.ts: isLikelyHallucination(...) retained unchanged. Log branches now distinguish server vs client safety-net. When `data.hallucination_filtered === true` the server log emits with `reason=<hallucination_reason>`; when the server passes the transcript but isLikelyHallucination() catches it, the console logs '🎙️ AudioCapture: Filtered hallucination (client safety-net)' and additionally emits structured JSON `{event:'stt_client_safety_net_hit', transcript_preview, matched_pattern:'isLikelyHallucination'}`. No change to which transcripts are dropped. Typecheck passes."
     },
     {
       "id": "US-020",
