@@ -517,11 +517,17 @@ export async function POST(request: NextRequest) {
       `[Transcribe] Audio: ${audioSize} bytes, ert=${transcriptionRequest.expectedResponseType || '—'}, step=${transcriptionRequest.currentStep || '—'}, provider=${transcriptionRequest.providerOverride || STT_PROVIDER}, treatment=${transcriptionRequest.treatmentVersion || 'legacy'}`
     );
 
-    const useV7ProviderSelection = transcriptionRequest.treatmentVersion === 'v7';
-    const resolvedProvider = useV7ProviderSelection
-      ? (transcriptionRequest.providerOverride || STT_PROVIDER)
-      : 'existing';
+    // US-018: v7 runtime is fully outsourced to OpenAI. STT_PROVIDER and providerOverride are
+    // ignored for v7. The override is logged so operators can see if legacy clients are still
+    // trying to force 'existing' for v7 sessions.
+    if (transcriptionRequest.treatmentVersion === 'v7') {
+      if (transcriptionRequest.providerOverride === 'existing') {
+        console.log(JSON.stringify({ event: 'v7_legacy_stt_override_ignored' }));
+      }
+      return await callOpenAIProvider(transcriptionRequest, startTime);
+    }
 
+    const resolvedProvider = transcriptionRequest.providerOverride || STT_PROVIDER;
     if (resolvedProvider === 'openai') {
       return await callOpenAIProvider(transcriptionRequest, startTime);
     }

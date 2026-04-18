@@ -57,6 +57,11 @@ export default function TreatmentSession({
     status: 'prompt' | 'declined';
   } | null;
 
+  // US-015/US-016: text-mode fallback replaces the old Kokoro/Whisper "backup" prompt.
+  // The v7 path is fully outsourced (OpenAI or typing), so the only fallback when OpenAI
+  // fails is text-input mode. No vendor names are surfaced to the user.
+  type TextModeFallbackState = null | 'prompt' | 'active' | 'retrying';
+
   // Admin debug drawer
   const { profile, signOut } = useAuth();
   const isAdmin = profile?.role === 'super_admin' || profile?.role === 'tenant_admin';
@@ -626,8 +631,15 @@ export default function TreatmentSession({
   const [stepHistory, setStepHistory] = useState<StepHistoryEntry[]>([]);
   const [voiceError, setVoiceError] = useState<string>('');
   const [speechFallbackPrompt, setSpeechFallbackPrompt] = useState<SpeechFallbackPromptState>(null);
-  const [sttProviderOverride, setSttProviderOverride] = useState<'existing' | 'openai' | undefined>(undefined);
-  const [ttsProviderOverride, setTtsProviderOverride] = useState<'existing' | 'openai' | undefined>(undefined);
+  // US-015: text-mode fallback state machine.
+  const [textModeFallbackState, setTextModeFallbackState] = useState<TextModeFallbackState>(null);
+  const textModeErrorTimestampsRef = useRef<number[]>([]);
+  const textModeRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // US-016: sttProviderOverride / ttsProviderOverride are DEPRECATED in the v7 user path.
+  // They are kept as no-op state so other code paths that still read them don't break, but no
+  // v7 code branch sets them anymore. US-018 enforces that the server ignores them for v7.
+  const [sttProviderOverride] = useState<'existing' | 'openai' | undefined>(undefined);
+  const [ttsProviderOverride] = useState<'existing' | 'openai' | undefined>(undefined);
   const [selectedWorkType, setSelectedWorkType] = useState<string | null>(null);
   const [clickedButton, setClickedButton] = useState<string | null>(null);
   const [sessionMethod, setSessionMethod] = useState<string>('mind_shifting');
@@ -791,7 +803,14 @@ export default function TreatmentSession({
     }
   }, [isTestPlaying]);
 
-  const isSpeechFallbackPaused = speechFallbackPrompt !== null;
+  // US-015: when text-mode is prompting/active, speech I/O is suppressed. The old
+  // `speechFallbackPrompt` state is kept as a no-op fall-back for external callers that may
+  // still set it, but the v7 path no longer sets it on OpenAI errors.
+  const isSpeechFallbackPaused =
+    speechFallbackPrompt !== null
+    || textModeFallbackState === 'prompt'
+    || textModeFallbackState === 'active'
+    || textModeFallbackState === 'retrying';
 
   // Natural Voice Hook - Updated to use separate mic/speaker controls
   const naturalVoice = useNaturalVoice({
@@ -846,50 +865,93 @@ export default function TreatmentSession({
         return;
       }
 
-      console.error(`V7 ${kind.toUpperCase()} provider error:`, message);
+      console.error(`V7 ${kind.toUpperCase()} speech service error:`, message);
       setVoiceError(message);
-      setSpeechFallbackPrompt((current) => current ?? { kind, status: 'prompt' });
+
+      // US-016: the v7 fallback is text mode, not a provider switch. First hit → silent
+      // auto-retry; second hit within 10s OR retry failure → 'prompt' dialog.
+      const now = Date.now();
+      const timestamps = textModeErrorTimestampsRef.current.filter((t) => now - t < 10_000);
+      timestamps.push(now);
+      textModeErrorTimestampsRef.current = timestamps;
+
+      if (timestamps.length >= 2) {
+        setTextModeFallbackState('prompt');
+        return;
+      }
+
+      // Single-error auto-retry path — give the provider one chance to recover.
+      setTextModeFallbackState('retrying');
+      if (textModeRetryTimerRef.current) clearTimeout(textModeRetryTimerRef.current);
+      textModeRetryTimerRef.current = setTimeout(() => {
+        // If no second error came in, assume recovery.
+        setTextModeFallbackState((current) => (current === 'retrying' ? null : current));
+      }, 15_000);
+
+      if (kind === 'tts' && lastSpeechMessageRef.current && isSpeakerEnabled) {
+        // Retry the failed playback once after a short delay.
+        setTimeout(() => {
+          if (lastSpeechMessageRef.current) {
+            speakServerMessage(lastSpeechMessageRef.current);
+          }
+        }, 400);
+      }
     },
   });
 
   function speakServerMessage(message: string) {
     if (!message) return;
     lastSpeechMessageRef.current = message;
+    // US-015: when text mode is active, TTS is suppressed entirely. Subtitles still render
+    // so the user can read the scripted prompt.
+    if (textModeFallbackState === 'active') {
+      prepareSubtitlesForSpeech(message);
+      return;
+    }
     prepareSubtitlesForSpeech(message);
     naturalVoice.speak(message, { apiMessage: message });
   }
 
+  // DEPRECATED (US-016). The v7 fallback is text mode; these handlers are retained as no-ops
+  // so any legacy references don't crash, but they clear the prompt instead of switching
+  // providers.
   const handleSpeechFallbackConfirm = useCallback(() => {
-    if (!speechFallbackPrompt) return;
-
-    setVoiceError('');
-
-    if (speechFallbackPrompt.kind === 'stt') {
-      setSttProviderOverride('existing');
-      setSpeechFallbackPrompt(null);
-      return;
-    }
-
-    setTtsProviderOverride('existing');
     setSpeechFallbackPrompt(null);
+    setVoiceError('');
+  }, []);
 
+  const handleSpeechFallbackDecline = useCallback(() => {
+    setSpeechFallbackPrompt(null);
+  }, []);
+
+  // US-015: text-mode handlers. "Continue in text" pins the session to text input;
+  // "Try again" attempts one silent reconnect.
+  const handleTextModeContinue = useCallback(() => {
+    setTextModeFallbackState('active');
+    setVoiceError('');
+    textModeErrorTimestampsRef.current = [];
+    if (textModeRetryTimerRef.current) {
+      clearTimeout(textModeRetryTimerRef.current);
+      textModeRetryTimerRef.current = null;
+    }
+  }, []);
+
+  const handleTextModeRetry = useCallback(() => {
+    setTextModeFallbackState('retrying');
+    textModeErrorTimestampsRef.current = [];
+    if (textModeRetryTimerRef.current) clearTimeout(textModeRetryTimerRef.current);
+    textModeRetryTimerRef.current = setTimeout(() => {
+      setTextModeFallbackState((current) => (current === 'retrying' ? null : current));
+    }, 15_000);
+    // Retry playback if we have a pending message.
     if (lastSpeechMessageRef.current && isSpeakerEnabled) {
-      beginFirstSpeechLoading();
       setTimeout(() => {
         if (lastSpeechMessageRef.current) {
           speakServerMessage(lastSpeechMessageRef.current);
         }
-      }, 100);
+      }, 250);
     }
-  }, [speechFallbackPrompt, isSpeakerEnabled, beginFirstSpeechLoading, speakServerMessage]);
-
-  const handleSpeechFallbackDecline = useCallback(() => {
-    if (!speechFallbackPrompt) return;
-    setSpeechFallbackPrompt({
-      kind: speechFallbackPrompt.kind,
-      status: 'declined',
-    });
-  }, [speechFallbackPrompt]);
+  }, [isSpeakerEnabled, speakServerMessage]);
 
   useEffect(() => {
     if (!isFirstSpeechLoading) return;
@@ -2064,9 +2126,10 @@ export default function TreatmentSession({
     isFirstSpeechLoading &&
     !hasFirstSpeechStarted;
 
+  // US-015/US-017: neutral-wording copy with no vendor identifiers.
   const speechFallbackPromptText = speechFallbackPrompt?.kind === 'stt'
-    ? "We're having trouble with speech recognition. Would you like to continue with the backup system?"
-    : "We're having trouble with audio playback. Would you like to continue with the backup system?";
+    ? "We're having trouble with speech recognition. Would you like to continue by typing?"
+    : "We're having trouble with audio playback. Would you like to continue by typing?";
 
   const speechFallbackDeclinedText = speechFallbackPrompt?.kind === 'stt'
     ? 'Speech recognition is still paused. Please try again later.'
@@ -2074,6 +2137,57 @@ export default function TreatmentSession({
 
   return (
     <div className="max-w-4xl mx-auto px-2 sm:px-4 flex flex-col fixed inset-x-0 top-header-safe bottom-0 pb-safe">
+      {/* US-015: text-mode fallback dialog. Renders when OpenAI speech fails twice in 10s. */}
+      {textModeFallbackState === 'prompt' && (
+        <div
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="text-mode-fallback-title"
+        >
+          <div className="w-full max-w-md rounded-xl border border-border bg-background shadow-xl p-6 space-y-4">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="h-5 w-5 text-destructive mt-0.5" aria-hidden="true" />
+              <div className="space-y-2">
+                <h2 id="text-mode-fallback-title" className="text-lg font-semibold text-foreground">
+                  Audio unavailable
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  We&rsquo;re temporarily unable to use audio. Would you like to continue by typing?
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={handleTextModeRetry}
+                className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+              >
+                Try again
+              </button>
+              <button
+                type="button"
+                onClick={handleTextModeContinue}
+                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                Continue in text
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* US-015: subtle reconnecting chip while auto-retrying. */}
+      {textModeFallbackState === 'retrying' && (
+        <div
+          className="fixed top-4 right-4 z-40 rounded-full bg-secondary/90 border border-border px-3 py-1.5 text-xs text-secondary-foreground shadow-md"
+          role="status"
+          aria-live="polite"
+        >
+          Reconnecting&hellip;
+        </div>
+      )}
+
       {speechFallbackPrompt && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center px-4">
           <div className="w-full max-w-md rounded-xl border border-border bg-background shadow-xl p-6 space-y-4">

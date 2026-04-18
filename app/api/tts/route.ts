@@ -16,12 +16,12 @@ type TtsRequestBody = {
 };
 
 function resolveProvider(requestedProvider: string | undefined, treatmentVersion?: string): LegacyTtsProvider {
+  // US-018: v7 is fully outsourced to OpenAI. TTS_PROVIDER and `provider` are ignored for v7.
   if (treatmentVersion === 'v7') {
-    if (requestedProvider === 'openai' || requestedProvider === 'existing') {
-      return requestedProvider === 'existing' ? 'kokoro' : 'openai';
+    if (requestedProvider === 'kokoro' || requestedProvider === 'existing') {
+      console.log(JSON.stringify({ event: 'v7_legacy_tts_override_ignored', requested: requestedProvider }));
     }
-
-    return TTS_PROVIDER === 'openai' ? 'openai' : 'kokoro';
+    return 'openai';
   }
 
   if (requestedProvider === 'kokoro' || requestedProvider === 'elevenlabs' || requestedProvider === 'openai') {
