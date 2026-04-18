@@ -6,6 +6,7 @@ import { validateSpeechOutput } from '@/lib/voice/speech-compliance';
 import { globalAudioCache } from '@/services/voice/audioCache';
 import { V4_STATIC_AUDIO_TEXTS } from '@/lib/v4/static-audio-texts';
 import { V7_STATIC_AUDIO_TEXTS } from '@/lib/v7/static-audio-texts';
+import { getVoiceCacheName } from '@/lib/voice/voice-cache-name';
 import { useVAD } from './useVAD';
 import { useAudioCapture } from './useAudioCapture';
 
@@ -25,6 +26,12 @@ interface UseNaturalVoiceProps {
     voiceProvider?: 'openai' | 'elevenlabs' | 'kokoro';
     elevenLabsVoiceId?: string;
     kokoroVoiceId?: string;
+    /**
+     * US-007: unified voice id for v7. When `voiceProvider === 'openai'` this takes priority
+     * over the legacy kokoro/elevenlabs ids. Accepts OpenAI voice names (alloy/echo/fable/
+     * onyx/nova/shimmer) or short-form aliases (heart, michael).
+     */
+    voiceId?: string;
     onAudioEnded?: () => void;
     playbackRate?: number; // 0.5 to 2.0, default 1.0
     onRenderText?: (timing: { audioStartTime: number; textRenderTime: number }) => void; // NEW: Callback when text should render
@@ -53,6 +60,7 @@ export const useNaturalVoice = ({
     voiceProvider,
     elevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM', // Rachel
     kokoroVoiceId = 'af_heart', // Default to Heart (Rachel)
+    voiceId,
     onAudioEnded,
     playbackRate = 1.0,
     onRenderText, // NEW: Callback for text rendering timing
@@ -856,6 +864,11 @@ export const useNaturalVoice = ({
 
         try {
             console.log('🗣️ Natural Voice: Prefetching (global cache):', text);
+            const voiceToSend = voiceProvider === 'openai'
+                ? (voiceId || kokoroVoiceId)
+                : voiceProvider === 'elevenlabs'
+                    ? elevenLabsVoiceId
+                    : kokoroVoiceId;
             const response = await fetch('/api/tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -864,7 +877,7 @@ export const useNaturalVoice = ({
                     ...(ttsProviderOverride
                         ? { provider: ttsProviderOverride }
                         : (voiceProvider ? { provider: voiceProvider } : {})),
-                    voice: voiceProvider === 'elevenlabs' ? elevenLabsVoiceId : kokoroVoiceId,
+                    voice: voiceToSend,
                     apiMessage: text,
                     treatmentVersion,
                 }),
@@ -879,7 +892,7 @@ export const useNaturalVoice = ({
         } catch (err) {
             console.error('🗣️ Natural Voice: Prefetch error:', err);
         }
-    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, normalizeAudioBlobType, treatmentVersion]);
+    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId, normalizeAudioBlobType, treatmentVersion]);
 
     /**
      * Find if text starts with any cached static text for a specific voice
@@ -1091,6 +1104,11 @@ export const useNaturalVoice = ({
      * Fetch TTS audio for text and return the audio URL
      */
     const fetchTTSAudio = useCallback(async (text: string, voiceName: string): Promise<string> => {
+        const voiceToSend = voiceProvider === 'openai'
+            ? (voiceId || kokoroVoiceId)
+            : voiceProvider === 'elevenlabs'
+                ? elevenLabsVoiceId
+                : kokoroVoiceId;
         const response = await fetch('/api/tts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1099,7 +1117,7 @@ export const useNaturalVoice = ({
                 ...(ttsProviderOverride
                     ? { provider: ttsProviderOverride }
                     : (voiceProvider ? { provider: voiceProvider } : {})),
-                voice: voiceProvider === 'elevenlabs' ? elevenLabsVoiceId : kokoroVoiceId,
+                voice: voiceToSend,
                 apiMessage: text,
                 treatmentVersion,
             }),
@@ -1129,20 +1147,16 @@ export const useNaturalVoice = ({
         const cacheKey = `${voiceName}:${text}`;
         globalAudioCache.set(cacheKey, audioUrl);
         return audioUrl;
-    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, normalizeAudioBlobType, treatmentVersion, onSpeechProviderError]);
+    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId, normalizeAudioBlobType, treatmentVersion, onSpeechProviderError]);
 
-    // Get voice name from voice ID for cache key prefix
-    const getVoiceNameFromId = (voiceId: string): string => {
-        const voiceMap: Record<string, string> = {
-            // Kokoro voices
-            'af_heart': 'heart',
-            'am_michael': 'michael',
-            // Add more voices here as needed
-        };
-        return voiceMap[voiceId] || 'unknown';
-    };
-
-    const currentVoiceName = getVoiceNameFromId(voiceProvider === 'kokoro' ? kokoroVoiceId : elevenLabsVoiceId);
+    // US-006: single source of truth — return a stable unique string for every supported voice,
+    // never "unknown". The `voiceId` prop (US-007) takes priority on v7 OpenAI sessions.
+    const resolvedVoiceId = voiceProvider === 'openai'
+        ? (voiceId || kokoroVoiceId) // v7 OpenAI: prefer explicit voiceId prop, fallback to legacy id
+        : voiceProvider === 'elevenlabs'
+            ? elevenLabsVoiceId
+            : kokoroVoiceId;
+    const currentVoiceName = getVoiceCacheName(resolvedVoiceId);
 
     // Speak text with streaming support, voice-prefixed cache check, AND smart prefix matching
     // Only plays audio if speaker is enabled

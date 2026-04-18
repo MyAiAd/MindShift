@@ -198,11 +198,20 @@ export default function TreatmentSession({
     }
     return 1.0;
   });
+  // US-007: v7 selects from user pref (v7_voice_id) → tenant config (future) →
+  // NEXT_PUBLIC_V7_DEFAULT_VOICE env → 'shimmer'. The legacy 'v7_selected_voice' key is kept as
+  // a secondary source so existing users don't lose their selection.
   const [selectedVoice, setSelectedVoice] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('v7_selected_voice') || 'heart';
+      const explicit = localStorage.getItem('v7_voice_id');
+      if (explicit) return explicit;
+      const legacy = localStorage.getItem('v7_selected_voice');
+      if (legacy) return legacy;
+      const envDefault = process.env.NEXT_PUBLIC_V7_DEFAULT_VOICE;
+      if (envDefault) return envDefault;
+      return 'shimmer';
     }
-    return 'heart';
+    return 'shimmer';
   });
   const [isGuidedMode, setIsGuidedMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -818,6 +827,10 @@ export default function TreatmentSession({
       }, TRANSCRIPT_FLUSH_DELAY_MS);
     },
     kokoroVoiceId: getKokoroVoiceId(),
+    // US-007: Pass an explicit voiceProvider + voiceId for v7 so the OpenAI path uses the
+    // selected voice (shimmer/alloy/etc.) instead of falling through the Kokoro map.
+    voiceProvider: 'openai',
+    voiceId: selectedVoice,
     onAudioEnded: handleAudioEnded,
     playbackRate: playbackSpeed,
     onRenderText: handleRenderText, // NEW: Callback for text rendering timing

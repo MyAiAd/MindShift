@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { globalAudioCache } from '@/services/voice/audioCache';
 import { V7_STATIC_AUDIO_TEXTS } from '@/lib/v7/static-audio-texts';
+import { getVoiceCacheName } from '@/lib/voice/voice-cache-name';
 
 /**
  * V7 Audio Preloader - Static File Version (Multi-Voice Support)
@@ -135,8 +136,8 @@ export default function V7AudioPreloader({ voice = 'heart' }: V7AudioPreloaderPr
             continue;
           }
 
-          // Use voice-prefixed cache key to support multiple voices
-          const cacheKey = `${voice}:${text}`;
+          // US-006: use the shared helper so preloader keys align with runtime cache keys.
+          const cacheKey = `${getVoiceCacheName(voice)}:${text}`;
 
           // Skip if already in cache
           if (globalAudioCache.has(cacheKey)) {
