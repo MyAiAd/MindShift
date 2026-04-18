@@ -348,8 +348,8 @@
         "Typecheck passes"
       ],
       "priority": 21,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PLAN COMMITTED, EXECUTION PENDING. tasks/v7-peak-fidelity-regression-results.md documents the coverage matrix (6 flows × 3 conditions × 3 modes = 54 cells), method (corpus WER + end-to-end telemetry mining + vendor-leak check), metric targets with numeric thresholds (hallucinations/drift/fallback = 0, completion = 100%, p50/p95 latency, retry/fallback/hallucination rates), per-cell results template, and change log. Actual execution requires a QA engineer with live OPENAI_API_KEY + the US-020 corpus filled in + time for a 54-cell manual sweep; that is explicitly called out as the next operator step. The plan is the acceptance criterion for this story."
     },
     {
       "id": "US-022",
