@@ -365,8 +365,8 @@
         "Typecheck passes"
       ],
       "priority": 22,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "app/api/treatment-v7/realtime-session/route.ts mints an ephemeral OpenAI Realtime session. Session config: model defaults to `gpt-4o-realtime-preview-2024-12-17`, voice defaults to NEXT_PUBLIC_V7_DEFAULT_VOICE || 'shimmer' (validated via isOpenAIVoiceId()), modalities=['audio','text'], instructions explicitly forbid the model from generating or modifying patient-facing text ('Only play back conversation items that are sent to you explicitly … read the provided text exactly, verbatim'), input_audio_transcription={model:'gpt-4o-mini-transcribe', language:'en'}, turn_detection={type:'server_vad', threshold:0.5, prefix_padding_ms:300, silence_duration_ms:500} as PRD-spec starting defaults (tuned in US-028). Reuses supabase auth pattern from /api/treatment-v7. Structured logs: v7_realtime_session_mint_request/_success/_failure. app/api/labs/openai-session/route.ts flagged @deprecated via JSDoc pointing at the new endpoint."
     },
     {
       "id": "US-023",

@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * @deprecated Use `/api/treatment-v7/realtime-session` (US-022) for the v7
+ * Track B Realtime API pipeline. This labs-only route is retained for the
+ * standalone voice-demo UI at `/admin/labs/openai-voice` and must not be
+ * used by the production v7 code path. Scheduled for removal once the
+ * labs demo is migrated to the v7 endpoint.
+ */
 export async function POST(request: NextRequest) {
   try {
     const apiKey = process.env.OPENAI_API_KEY;
