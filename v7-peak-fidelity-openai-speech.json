@@ -502,8 +502,8 @@
         "Typecheck passes"
       ],
       "priority": 30,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "docs/v7-pipeline-decision.md contains the cost-projection section: training-snapshot rates for gpt-4o-mini-transcribe, gpt-4o-mini-tts, tts-1-hd, and gpt-realtime input/output audio, with an explicit 'verify before use' warning and re-snapshot instructions pointing at https://platform.openai.com/docs/pricing and https://platform.openai.com/docs/guides/realtime. Session-duration assumptions (median 12 min, p95 24 min), cache-hit scenarios (0% / 50% / 95%), and per-session cost tables for both tracks. Under the snapshotted numbers Track B is 16×–77× Track A's cost per session; the qualitative flag explicitly states 'materially more expensive at any cache-hit rate above 0%'. Pricing rows are flagged as training-snapshot and operator must refresh before the decision."
     },
     {
       "id": "US-031",
@@ -518,8 +518,8 @@
         "Typecheck passes"
       ],
       "priority": 31,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "docs/v7-pipeline-decision.md also contains the Track A vs Track B decision matrix. The comparison table covers hallucinations_reaching_engine, voice_drift_events, unintended_fallback_prompts, p50/p95 time-to-first-audio, retry/reconnect rate, fallback rate, and qualitative UX notes — each row cites its source (US-021 / US-029 / US-030) and is marked _pending_ until the regression suites run. The recommendation section explicitly states 'DEFAULT TO TRACK A' with four justifications: cost (~16×–77×), deterministic static-audio parity via tts-1-hd (US-011 Policy C), compliance-guard posture, and observability granularity. Rollback plan references §10 of the source PRD: flip V7_SPEECH_PIPELINE override to 'realtime' if Track A fails in production; text-mode fallback (US-015/US-016) remains the universal last resort; if Track B is instead selected, Track A stays available under V7_SPEECH_PIPELINE=request_response for at least 30 days post-cutover."
     }
   ]
 }
