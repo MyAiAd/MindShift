@@ -1,0 +1,525 @@
+{
+  "project": "MindShift-V7-PeakFidelity",
+  "branchName": "ralph/v7-peak-fidelity-openai-speech",
+  "description": "Bring V7 speech I/O to peak fidelity on a fully outsourced OpenAI stack. Track A fixes the silence-upload / ignored-metadata / voice-cache bugs, upgrades STT to gpt-4o-mini-transcribe and TTS to gpt-4o-mini-tts (with tts-1-hd fallback), regenerates the static-audio library at the chosen voice, and replaces the self-hosted fallback with a pure text-mode fallback. Track B scaffolds the OpenAI Realtime API pipeline behind a feature flag for evaluation. NVIDIA / personaplex / self-hosted GPU paths are explicitly out of scope and held as contingency only. Source PRD: docs/prd-v7-peak-fidelity-openai-speech.md.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Gate STT uploads on VAD-detected speech and remove auto-process timer",
+      "description": "As a developer, I want /api/transcribe to be called only after VAD detects actual speech, so silence, ambient noise, and HVAC rumble are never sent to OpenAI Whisper.",
+      "acceptanceCriteria": [
+        "components/voice/useAudioCapture.ts tracks a `hasSpeechSinceLastProcess` boolean flag",
+        "flag is set to true when VAD fires onSpeechStart (new prop `speechDetectedTrigger` or equivalent callback from useNaturalVoice)",
+        "flag is reset to false after each successful processAudioBuffer call and on clearBuffer()",
+        "processAudioBuffer returns early without calling fetch('/api/transcribe') when the flag is false, EXCEPT when called via processNow() (PTT / VAD-end triggers bypass the gate)",
+        "the setInterval with AUTO_PROCESS_INTERVAL_MS is removed entirely (not just commented out)",
+        "if VAD is unavailable (vadEnabled=false or vad.isInitialized=false), useAudioCapture falls back to the previous timer behavior and logs 'stt_vad_unavailable_fallback' once per mount",
+        "useNaturalVoice wires VAD onSpeechStart to signal useAudioCapture of detected speech",
+        "a 30-second silent-room capture produces zero POSTs to /api/transcribe (verify via console log counts)",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Implemented in components/voice/useAudioCapture.ts and components/voice/useNaturalVoice.tsx. Added speechDetectedTrigger / vadAvailable props, hasSpeechSinceLastProcessRef gate, and conditional fallback timer that logs stt_vad_unavailable_fallback once when VAD is unavailable. Browser verification (30s silent-room = zero /api/transcribe POSTs) is a manual QA step."
+    },
+    {
+      "id": "US-002",
+      "title": "Add server-side hallucination metadata gates to OpenAI STT path",
+      "description": "As a developer, I want the OpenAI transcribe path to use verbose_json metadata (no_speech_prob, avg_logprob, language) to reject hallucinated transcripts, so silent-semantic failures (HTTP 200 + garbage text) are treated as silence.",
+      "acceptanceCriteria": [
+        "app/api/transcribe/route.ts `detectOpenAIHallucination` applies all five gates in order: (1) language !== 'en' on v7 sessions, (2) avg(no_speech_prob) > 0.6, (3) avg(avg_logprob) < -1.0 AND duration < 3.0s, (4) duration < 1.5s AND word_count > 8, (5) exact or substring match against OPENAI_HALLUCINATION_PHRASES / OPENAI_HALLUCINATION_SUBSTRINGS",
+        "gate (1) is only applied when `treatmentRequest.treatmentVersion === 'v7'`",
+        "on any gate hit the response returns `transcript: ''`, `hallucination_filtered: true`, and `hallucination_reason` populated with the triggering gate name and inputs",
+        "a structured JSON log line is emitted for every filtered response: `{ event: 'stt_hallucination_filtered', reason, detected_language, avg_no_speech_prob, avg_logprob, duration, word_count, transcript_preview }`",
+        "hallucination filter runs only on the OpenAI path (callOpenAIProvider); self-hosted path keeps its existing filter unchanged",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Add unit tests for server-side STT hallucination gates",
+      "description": "As a developer, I want unit tests covering every hallucination gate condition so regressions in threshold tuning are caught before deploy.",
+      "acceptanceCriteria": [
+        "tests/api/transcribe-hallucination-gates.test.ts (or equivalent) covers all 5 gate conditions with at least one positive and one negative case each",
+        "tests also cover: clean English transcript passes unfiltered, Welsh 'Diolch yn fawr iawn am wylio'r fideo' is caught by language gate, high-no-speech-prob transcript is filtered even if text looks plausible, short-audio long-transcript duration mismatch is caught",
+        "tests mock the OpenAI client response shape (verbose_json with segments)",
+        "all tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Upgrade STT model to gpt-4o-mini-transcribe with env override",
+      "description": "As a developer, I want /api/transcribe to use OpenAI's current-generation STT model by default, selectable via env var, so we benefit from better silence handling without code changes.",
+      "acceptanceCriteria": [
+        "app/api/transcribe/route.ts `callOpenAIProvider` reads `process.env.OPENAI_STT_MODEL` with default 'gpt-4o-mini-transcribe'",
+        "the selected model is passed as the `model` parameter on every OpenAI transcription call",
+        "`language: 'en'` is always sent for v7 sessions (already added previously; verify still present)",
+        "domain-bias prompt is always sent when provided",
+        "if the response_format 'verbose_json' is unsupported for the selected model, the route catches the OpenAI error, retries once with response_format='json', and logs `{ event: 'stt_verbose_json_unsupported', model }` so the metadata-gate fallback is observable",
+        "OPENAI_STT_MODEL is documented in .env.production and .env.whisper.example with a comment listing supported values",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Add structured telemetry logging for STT and TTS responses",
+      "description": "As an operator, I want every STT and TTS call to emit a structured JSON log line with quality and performance metrics, so we can monitor hallucination rate, latency, retry rate, and fallback rate in production.",
+      "acceptanceCriteria": [
+        "app/api/transcribe/route.ts emits on every OpenAI call: `{ event: 'stt_call', treatment_version, detected_language, avg_no_speech_prob, avg_logprob, duration_sec, word_count, domain_bias_applied, hallucination_filtered, hallucination_reason, model, processing_time_ms }`",
+        "app/api/tts/route.ts emits on every OpenAI call: `{ event: 'tts_call', treatment_version, text_length, voice, model, retry_count, fallback_used, processing_time_ms }`",
+        "log lines are single-line JSON (no pretty-print)",
+        "docs/observability-v7-speech.md is created with documented rollup queries for: hallucination_rate = sum(hallucination_filtered)/count(stt_call), p95_stt_latency, p95_tts_latency, tts_fallback_rate, stt_retry_rate",
+        "existing unstructured console logs are kept (additive change)",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Fix 'unknown' voice cache-key bug in useNaturalVoice",
+      "description": "As a developer, I want cache keys in useNaturalVoice to always reflect the actual voice used for synthesis, so pre-generated static audio is found instead of silently missed.",
+      "acceptanceCriteria": [
+        "components/voice/useNaturalVoice.tsx `getVoiceNameFromId` returns a stable unique string for every OpenAI voice (alloy, echo, fable, onyx, nova, shimmer) and every existing Kokoro voice (af_heart, am_michael, plus any other voices currently in the map)",
+        "on an unrecognized voice id the function logs `{ event: 'voice_id_unrecognized', voice_id }` and returns the raw voice id (NOT 'unknown') so cache keys are still unique per-voice",
+        "the voice-name extraction logic is factored into a shared exported helper `getVoiceCacheName(voiceId: string): string` that both useNaturalVoice and V7AudioPreloader import",
+        "V7AudioPreloader cache key construction uses the same helper",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Pass voiceProvider and default voice from v7 TreatmentSession",
+      "description": "As a developer, I want v7 TreatmentSession to pass `voiceProvider: 'openai'` and a concrete default voice to useNaturalVoice, so the voice is consistent and cache keys resolve correctly.",
+      "acceptanceCriteria": [
+        "components/treatment/v7/TreatmentSession.tsx passes `voiceProvider: 'openai'` to useNaturalVoice",
+        "the voice id is selected in priority order: user preference (v7_voice_id localStorage) → tenant config (if available) → `process.env.NEXT_PUBLIC_V7_DEFAULT_VOICE` → 'shimmer'",
+        "TreatmentSession exposes a `voiceId` prop to useNaturalVoice so both kokoroVoiceId and the new openai voice are sourced from one variable",
+        "useNaturalVoice `currentVoiceName` resolves to 'shimmer' (not 'unknown') on default load",
+        "NEXT_PUBLIC_V7_DEFAULT_VOICE is documented in .env.production with a comment listing supported OpenAI voices",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: default v7 session uses shimmer voice and does NOT log 'No cache for unknown'"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Upgrade primary TTS model to gpt-4o-mini-tts with env configuration",
+      "description": "As a developer, I want /api/tts to use OpenAI's steerable current-generation TTS model by default, configurable via env vars, with a therapeutic tone instructions string.",
+      "acceptanceCriteria": [
+        "app/api/tts/route.ts `synthesizeWithOpenAI` reads `process.env.OPENAI_TTS_MODEL` with default 'gpt-4o-mini-tts'",
+        "when the selected model is gpt-4o-mini-tts OR any future model that supports the `instructions` parameter, the route sends `instructions: process.env.OPENAI_TTS_INSTRUCTIONS || 'Warm, calm, reassuring, unhurried — therapeutic but not clinical. Natural pacing, no accent.'`",
+        "the voice parameter is passed unchanged regardless of model",
+        "OPENAI_TTS_MODEL, OPENAI_TTS_INSTRUCTIONS, and OPENAI_TTS_DEFAULT_VOICE are documented in .env.production with comments",
+        "existing compliance guard (validateSpeechOutput) runs unchanged before synthesis",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Add tts-1-hd automatic fallback on primary TTS failure",
+      "description": "As a developer, I want /api/tts to retry once with tts-1-hd (same vendor, deterministic, proven) when the primary TTS model fails, so transient issues don't break session audio.",
+      "acceptanceCriteria": [
+        "app/api/tts/route.ts synthesizeWithOpenAI catches OpenAI errors (4xx/5xx/timeout/network) and, if `process.env.OPENAI_TTS_FALLBACK_MODEL || 'tts-1-hd'` differs from the primary model, retries once with the fallback model",
+        "the retry uses the same voice and text; `instructions` is NOT sent on the fallback call (tts-1-hd doesn't support it)",
+        "response metadata logged via US-005 telemetry sets `fallback_used: true` when the fallback succeeds",
+        "if both primary and fallback fail, the existing error response shape (`tts_provider_failure`) is returned",
+        "no user-visible behavior change on primary success",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Add retry-once policy for transient OpenAI STT failures",
+      "description": "As a developer, I want /api/transcribe to retry OpenAI once on transient failures (429/5xx/timeout/network) before surfacing an error, so momentary provider blips don't interrupt the session.",
+      "acceptanceCriteria": [
+        "app/api/transcribe/route.ts callOpenAIProvider retries the OpenAI call once on: AbortError (timeout), HTTP 429, 500, 502, 503, 504, and network/TypeError failures",
+        "retry uses 250ms jittered backoff (random between 200-300ms)",
+        "non-transient errors (400, 401, 403) are NOT retried",
+        "US-005 telemetry includes `retry_count` per call",
+        "on retry success the response is returned normally; on retry failure the existing stt_provider_failure response is returned",
+        "tests cover: 500 then 200 returns success; 500 then 500 returns error; 400 returns error immediately without retry",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Document TTS determinism policy for static-audio regeneration",
+      "description": "As a product owner, I need a documented policy for how non-deterministic gpt-4o-mini-tts output is handled when the static library needs a new prompt added, so voice consistency is never silently lost over time.",
+      "acceptanceCriteria": [
+        "docs/v7-tts-determinism-policy.md is created",
+        "document evaluates three policy options with pros/cons: (A) full library regeneration on every prompt addition, (B) per-prompt regeneration with tolerance for slight variance, (C) tts-1-hd (deterministic) for static library + gpt-4o-mini-tts for dynamic streamed content",
+        "empirical test is run and documented: generate the same 10-prompt subset 3 times under each policy option using the current default voice; subjective voice-consistency results are recorded",
+        "a policy is explicitly chosen and justified",
+        "if policy (C) is chosen, the document specifies introducing OPENAI_TTS_STATIC_MODEL env var (implementation happens in US-012 or is noted as follow-up)",
+        "chosen policy is referenced in the US-012 / US-013 / US-014 acceptance criteria context",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Build static-audio regeneration script",
+      "description": "As a developer, I want a script that regenerates every static v7 audio file from lib/v7/static-audio-texts.ts using the current OpenAI TTS model and voice, so the entire library can be refreshed deterministically.",
+      "acceptanceCriteria": [
+        "scripts/regenerate-v7-static-audio.ts is created",
+        "script reads every string from lib/v7/static-audio-texts.ts",
+        "for each string, script calls /api/tts (or the OpenAI client directly) with the configured v7 voice and model from env vars respecting US-011's determinism policy",
+        "script writes output audio files to public/audio/v7/static/<voice>/<hash>.mp3 where <hash> is a stable hash of the text",
+        "script writes public/audio/v7/static/<voice>/manifest.json with entries: `{ voice, model, generated_at, entries: [{ text, file, checksum }] }`",
+        "script is idempotent: skips files that already exist unless --force flag is passed",
+        "script accepts --dry-run flag that reports what would be generated without calling OpenAI",
+        "script logs per-file progress and total OpenAI cost estimate on completion",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Add manifest validation to V7AudioPreloader",
+      "description": "As a developer, I want V7AudioPreloader to refuse to load a static-audio manifest whose voice/model doesn't match the runtime v7 voice, so mixed-voice sessions are impossible.",
+      "acceptanceCriteria": [
+        "components/treatment/v7/V7AudioPreloader.tsx reads the manifest.json for the current runtime voice on mount",
+        "if the manifest's `voice` field differs from the runtime v7 voice, preloader skips preload, logs `{ event: 'v7_static_audio_voice_mismatch', manifest_voice, runtime_voice }`, and sets a state flag that TreatmentSession can read",
+        "if the manifest is missing, preloader logs `{ event: 'v7_static_audio_manifest_missing', runtime_voice }` and skips preload without crashing",
+        "on voice match, preloader behaves identically to before (loads each entry into globalAudioCache)",
+        "cache keys use the shared helper introduced in US-006",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: a session with a missing manifest shows no console errors and streams all prompts via /api/tts"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Regenerate and commit v7 static-audio library at the default voice",
+      "description": "As a developer, I want the full static-audio library regenerated with the OpenAI TTS model and default voice, committed to the repo so production deploys are deterministic.",
+      "acceptanceCriteria": [
+        "scripts/regenerate-v7-static-audio.ts is run with --force for the default voice (shimmer)",
+        "all generated files and the manifest.json are committed under public/audio/v7/static/shimmer/",
+        "old Kokoro static audio directories are NOT deleted in this story (US-018 handles cleanup); they remain in place for non-v7 usage",
+        "a README entry in public/audio/v7/static/README.md documents which voice is current and when it was generated",
+        "file sizes are reasonable (spot-check: no single file > 2MB, total library < 100MB)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: a v7 session uses cached shimmer audio for all static prompts (zero /api/tts calls for static prompts, visible in network tab)"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Build text-mode fallback dialog UI",
+      "description": "As a user, when OpenAI speech services fail I want to be offered a typed-response mode in neutral language that doesn't expose vendor names, so I can continue my session without audio.",
+      "acceptanceCriteria": [
+        "components/treatment/v7/TreatmentSession.tsx adds a `textModeFallbackState` with values: null | 'prompt' | 'active' | 'retrying'",
+        "when state is 'prompt', a modal dialog renders with text: \"We're temporarily unable to use audio. Would you like to continue by typing?\" and two buttons: \"Continue in text\" and \"Try again\"",
+        "when state is 'active', the mic orb is visually muted (reduced opacity, disabled), the text input is auto-focused, and TTS is suppressed (naturalVoice.speak calls become no-ops)",
+        "when state is 'retrying', a subtle status chip shows \"Reconnecting…\" for up to 15s",
+        "Continue in text sets state to 'active'; Try again sets state to 'retrying' then null on success",
+        "no UI string or aria-label references 'Whisper', 'Kokoro', 'OpenAI', 'backup', 'fallback', 'provider', or any vendor name",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: manually trigger textModeFallbackState='prompt' via the admin debug drawer and confirm the dialog appears with correct text"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Wire onSpeechProviderError to text-mode fallback flow",
+      "description": "As a developer, I want speech provider errors to trigger the text-mode fallback instead of the old Kokoro/Whisper backup prompt, so the v7 user path is fully outsourced to OpenAI or text.",
+      "acceptanceCriteria": [
+        "components/treatment/v7/TreatmentSession.tsx `onSpeechProviderError` no longer sets `speechFallbackPrompt` (the old Kokoro/Whisper prompt)",
+        "instead, it sets `textModeFallbackState` to 'retrying' and schedules one automatic retry of the failed operation via naturalVoice (for TTS, replay the last message; for STT, no-op since the user will speak again)",
+        "if retry fails OR a second error arrives within 10 seconds, state transitions to 'prompt'",
+        "handleSpeechFallbackConfirm and handleSpeechFallbackDecline are removed or repurposed for the text-mode flow (Try again and Continue in text handlers)",
+        "sttProviderOverride and ttsProviderOverride state and their setters are removed or commented as deprecated; no code path sets them in the v7 user flow",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: stub /api/tts to return 500 twice; confirm the text-mode dialog appears after the retry"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Purge vendor-identifying strings from v7 user-visible surfaces",
+      "description": "As a product owner, I want every v7 user-facing string audited so no vendor (OpenAI, Whisper, Kokoro, ElevenLabs) is ever exposed in a message, tooltip, aria-label, or error.",
+      "acceptanceCriteria": [
+        "a grep audit is run across components/treatment/v7/**, components/voice/**, app/api/tts/route.ts, and app/api/transcribe/route.ts for the strings: 'Whisper', 'Kokoro', 'OpenAI', 'ElevenLabs', 'backup system', 'backup provider', 'fallback provider'",
+        "every occurrence is classified as either: (a) server-side log only → kept as-is, (b) developer-facing code comment → kept as-is, (c) user-visible UI / aria / error message → replaced with neutral wording",
+        "all category (c) occurrences are rewritten to neutral language ('speech service', 'audio service', etc.) in the same PR",
+        "a grep of the same strings in ONLY user-visible surfaces (JSX text children, aria-label, title, alt, error-message constants) returns zero hits",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: spot-check 3 error states and confirm neutral wording"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Deprecate self-hosted Whisper and Kokoro from v7 runtime path",
+      "description": "As a developer, I want the v7 code path to no longer reach WHISPER_SERVICE_URL or the Kokoro TTS endpoint at runtime, so v7 is truly outsourced. Other versions (v4/v5/v6) continue to use them.",
+      "acceptanceCriteria": [
+        "app/api/transcribe/route.ts: when treatmentVersion === 'v7', the route always calls callOpenAIProvider and never callExistingProvider, regardless of STT_PROVIDER env var or providerOverride field. A log line `{ event: 'v7_legacy_stt_override_ignored' }` is emitted if providerOverride='existing' is received for v7.",
+        "app/api/tts/route.ts: when treatmentVersion === 'v7', resolveProvider returns 'openai' regardless of TTS_PROVIDER env var or provider field. A log line `{ event: 'v7_legacy_tts_override_ignored' }` is emitted if provider='kokoro' or 'existing' is received for v7.",
+        "non-v7 code paths continue to use the existing provider-resolution logic unchanged",
+        ".env.production and .env.whisper.example add a comment note: 'STT_PROVIDER and TTS_PROVIDER are ignored for v7 (always openai). They still apply to v4/v5/v6.'",
+        "Typecheck passes"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Downgrade client-side hallucination filter to safety-net role",
+      "description": "As a developer, now that US-002 ships server-side metadata gates, I want the client-side string-match filter kept as a last-resort safety net with distinct logging so we can measure how often it catches things the server missed.",
+      "acceptanceCriteria": [
+        "components/voice/useAudioCapture.ts `isLikelyHallucination` remains in place",
+        "the log line when the filter fires distinguishes server vs client: '🎙️ AudioCapture: Filtered hallucination (server)' when `data.hallucination_filtered === true`, '🎙️ AudioCapture: Filtered hallucination (client safety-net)' when only the client check caught it",
+        "a new structured log is emitted on client safety-net hits: `{ event: 'stt_client_safety_net_hit', transcript_preview, matched_pattern }`",
+        "no functional change to filtering behavior",
+        "Typecheck passes"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Capture v7 speech regression audio corpus",
+      "description": "As a QA engineer, I need a committed corpus of real v7 utterance recordings so the peak-fidelity regression suite and Realtime VAD tuning have reproducible inputs.",
+      "acceptanceCriteria": [
+        "tests/fixtures/v7-speech-corpus/ directory is created",
+        "minimum 50 utterance recordings are captured as 16kHz mono WAV covering: 1-word answers (yes/no/sure/maybe/okay) x 10, short phrases 3-10 words x 15, long reflections with mid-utterance pauses x 10, whispered responses x 5, utterances over background TV noise x 5, utterances over HVAC/fan noise x 3, silent-room control clips x 2",
+        "each .wav has a companion .json with: `{ transcript, expected_step_context, condition_tags: [...], speaker_notes, sample_rate, duration_sec }`",
+        "tests/fixtures/v7-speech-corpus/INDEX.md documents the corpus structure, capture methodology, and legal consent status of recordings",
+        "a CI check is added that fails if any .wav lacks a companion .json or if INDEX.md is missing",
+        "Typecheck passes"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Run Track A peak-fidelity regression suite and document results",
+      "description": "As a QA engineer, I need to run every v7 flow under the peak-fidelity OpenAI configuration against the committed corpus and real-session flows, confirming zero hallucinations, zero voice drift, and zero vendor leaks.",
+      "acceptanceCriteria": [
+        "regression plan is documented covering all v7 flows (introduction, work-type selection, problem path, goal path, trauma path, integration path) across all conditions (quiet room, background TV, HVAC noise) and all interaction modes (orb-PTT, listen-only, text-only)",
+        "the corpus from US-020 is used for automated STT WER checks; live sessions are used for end-to-end flow checks",
+        "per-flow results are recorded: hallucinations-reaching-engine count (must be 0), voice-drift events (must be 0), unintended-fallback-prompts (must be 0), session-completion rate (must be 100%), p50 and p95 time-to-first-audio",
+        "results are written to tasks/v7-peak-fidelity-regression-results.md with pass/fail per acceptance criterion and an overall verdict",
+        "if any metric fails targets (§2 of the PRD), issues are filed as follow-up stories and this story is re-run after fixes",
+        "Typecheck passes"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Scaffold v7 Realtime API session route",
+      "description": "As a developer, I want /api/treatment-v7/realtime-session to mint an ephemeral OpenAI Realtime API session configured for v7's strict-script constraints, so the client can establish a WebRTC connection.",
+      "acceptanceCriteria": [
+        "app/api/treatment-v7/realtime-session/route.ts is created",
+        "route accepts POST with optional body fields `voice`, `model`, returns `{ session_token, expires_at, ice_servers }` suitable for OpenAI's Realtime WebRTC handshake",
+        "session config sends: `input_audio_transcription: { model: 'gpt-4o-mini-transcribe', language: 'en' }`, `voice: <configured v7 voice>`, `modalities: ['audio', 'text']`, `turn_detection: { type: 'server_vad', threshold: 0.5, prefix_padding_ms: 300, silence_duration_ms: 500 }` as starting defaults (tuned in US-028)",
+        "session config's `instructions` field explicitly forbids model-generated patient-facing content: 'You must not generate or modify any patient-facing text. Only play back conversation items that are sent to you explicitly.'",
+        "route reuses the same auth/session validation pattern as /api/treatment-v7",
+        "app/api/labs/openai-session/route.ts is marked deprecated in a code comment",
+        "Typecheck passes"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Scaffold V7RealtimeSession component shell and WebRTC connection",
+      "description": "As a developer, I want a V7RealtimeSession React component that can establish and tear down a Realtime API WebRTC connection, without yet wiring the treatment state machine.",
+      "acceptanceCriteria": [
+        "components/treatment/v7/V7RealtimeSession.tsx is created, structured as a parallel alternative to TreatmentSession.tsx",
+        "component fetches a session token from /api/treatment-v7/realtime-session on mount",
+        "component creates an RTCPeerConnection, attaches the microphone stream, and connects to OpenAI's Realtime endpoint per the official SDK pattern",
+        "component tears down the peer connection cleanly on unmount",
+        "connection lifecycle events (connecting, connected, disconnected, failed) are logged with `{ event: 'v7_realtime_connection_state', state }`",
+        "component renders the same outer shell as TreatmentSession (header, orb placeholder, transcript panel) but the treatment-state machine interactions are stubbed (TODO comments mark the wire-up points for US-024 and US-025)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: component mounts, establishes connection, shows 'connected' state in console, then cleanly disconnects on unmount"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Wire Realtime transcription events to v7 treatment state machine",
+      "description": "As a developer, I want user-transcription events from the Realtime session to feed the existing v7 sendMessage flow, so the treatment state machine reacts identically to both pipelines.",
+      "acceptanceCriteria": [
+        "V7RealtimeSession.tsx listens for `conversation.item.input_audio_transcription.completed` events on the data channel",
+        "on each event, the transcript is passed to the same accumulator/flush logic used by TreatmentSession (extract shared helper if needed)",
+        "existing server-side sendMessage API call path is reused; no new backend route is introduced for Realtime transcripts",
+        "barge-in is handled automatically by the Realtime session's server-side VAD; client does NOT need to manage echo prevention",
+        "hallucination metadata gating (US-002) does NOT apply directly here since Realtime API doesn't return the same verbose_json shape; instead, filter any transcript where `language` metadata on the event is non-English (log `{ event: 'v7_realtime_non_english_transcript_filtered' }`)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: speak an utterance in the Realtime session and confirm the v7 engine processes it (console shows 'Sending V4 message')"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Wire scripted v7 responses to Realtime session playback with compliance guard",
+      "description": "As a developer, I want v7's scripted response text to be sent into the Realtime session as a conversation item and played back via the session's built-in audio, with the spoken-text compliance guard running before send.",
+      "acceptanceCriteria": [
+        "V7RealtimeSession.tsx exposes `speakServerMessage(message)` matching TreatmentSession's signature",
+        "speakServerMessage calls `validateSpeechOutput({ textToSpeak: message, apiMessage: message })` first; on violation the send is suppressed and a compliance-violation log is emitted",
+        "on success, speakServerMessage sends `conversation.item.create` with `{ type: 'message', role: 'assistant', content: [{ type: 'input_text', text: message }] }` (or the correct current API shape — verify against official docs at implementation time)",
+        "followed by `response.create` with `{ modalities: ['audio'], instructions: 'Read exactly this message verbatim. Do not add or modify any text.' }`",
+        "the audio is played through the WebRTC media track automatically; no manual HTMLAudioElement needed",
+        "ROUTING_TOKENS suppression runs before send (as in /api/tts route)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: trigger a scripted v7 response and hear it played with the v7 voice"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Add Realtime session reconnection and text-mode fallback integration",
+      "description": "As a user of the Realtime pipeline, when the connection drops I want one silent auto-reconnect attempt; if that fails, the same text-mode fallback from Track A triggers.",
+      "acceptanceCriteria": [
+        "V7RealtimeSession.tsx watches for RTCPeerConnection state transitions to 'disconnected' or 'failed'",
+        "on first failure: the component tears down the connection and immediately re-fetches a session token and reconnects, with state logged as `{ event: 'v7_realtime_reconnect_attempt' }`",
+        "if reconnect succeeds within 5 seconds, session resumes",
+        "if reconnect fails or a second disconnect happens within 30 seconds, the text-mode fallback UI from US-015 is triggered using the same `textModeFallbackState` machinery",
+        "TTS is suppressed and mic orb muted identically to Track A text-mode",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: force-close the WebRTC connection via dev-tools; confirm auto-reconnect happens once and text-mode dialog appears on second failure"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Add V7_SPEECH_PIPELINE feature flag",
+      "description": "As an operator, I want a single env flag to select the speech pipeline at the session boundary, so we can roll out Realtime behind a flag and flip the default after validation.",
+      "acceptanceCriteria": [
+        "`process.env.V7_SPEECH_PIPELINE` (default 'request_response') is read at the v7 session route/page level with values: 'request_response' | 'realtime'",
+        "the v7 session page conditionally renders either TreatmentSession (request_response) or V7RealtimeSession (realtime)",
+        "both components receive an identical props contract so the switch is a single-line ternary",
+        "admin debug drawer exposes a per-session override select that takes precedence over the env default for super_admin / tenant_admin",
+        "V7_SPEECH_PIPELINE is documented in .env.production",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill: toggle the admin override and confirm the page re-renders with the other pipeline"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Build VAD parameter grid-search tool for Realtime tuning",
+      "description": "As a QA engineer, I need a script that runs the US-020 corpus against the Realtime API with varying VAD parameters, so we can pick settings that handle short answers and long pauses correctly.",
+      "acceptanceCriteria": [
+        "scripts/tune-realtime-vad.ts is created",
+        "script iterates over a grid of `threshold` (0.3, 0.4, 0.5, 0.6, 0.7), `prefix_padding_ms` (200, 300, 400), `silence_duration_ms` (300, 500, 700, 1000)",
+        "for each combination, script plays each corpus utterance into a Realtime session (either via simulated audio input or by sending audio through an injected peer connection) and records: captured-full-utterance boolean, false-segmentation-of-pause boolean, trailing-silence-ms",
+        "results are written as CSV to tasks/v7-realtime-vad-tuning-results.csv with columns: utterance_id, condition_tag, threshold, prefix_padding_ms, silence_duration_ms, captured_full, false_segmented, trailing_silence_ms",
+        "a summary markdown tasks/v7-realtime-vad-tuning-summary.md identifies the winning parameter combination",
+        "winning parameters are updated in app/api/treatment-v7/realtime-session/route.ts",
+        "Typecheck passes"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Run Realtime pipeline regression suite with tuned VAD",
+      "description": "As a QA engineer, I need to run the same US-021 regression plan against the Realtime pipeline with tuned VAD, so we have apples-to-apples metrics for the Track A vs Track B decision.",
+      "acceptanceCriteria": [
+        "US-021's regression plan is repeated with V7_SPEECH_PIPELINE=realtime",
+        "all v7 flows and conditions are exercised",
+        "per-flow results are recorded using the same metrics as US-021",
+        "results written to tasks/v7-peak-fidelity-realtime-regression-results.md",
+        "any issues surface as follow-up stories",
+        "Typecheck passes"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Confirm current OpenAI Realtime API pricing and compute cost projections",
+      "description": "As a product owner, I need confirmed current Realtime API pricing and projected session-cost comparisons before the Track A vs Track B decision, so the cost column is grounded in reality.",
+      "acceptanceCriteria": [
+        "docs/v7-pipeline-decision.md is created (or updated if pre-existing)",
+        "current Realtime input and output audio per-minute pricing is fetched from platform.openai.com/docs/pricing or platform.openai.com/docs/guides/realtime and cited with a timestamped URL snapshot",
+        "current gpt-4o-mini-transcribe and gpt-4o-mini-tts and tts-1-hd pricing is also recorded for comparison",
+        "cost projections are calculated for: median v7 session length, p95 v7 session length, with cache hit rates of 0%, 50%, and 95% (the latter reflecting a well-seeded static library)",
+        "comparison table shows Track A vs Track B per-session cost at each scenario",
+        "a qualitative summary flags any cost scenario where Track B would be materially more expensive than Track A (e.g. more than 2x)",
+        "Typecheck passes"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-031",
+      "title": "Write Track A vs Track B decision document and recommendation",
+      "description": "As a product owner, I want a single document that compiles US-021, US-029, and US-030 into a clear recommendation on which pipeline becomes the v7 default.",
+      "acceptanceCriteria": [
+        "docs/v7-pipeline-decision.md is extended (or created if US-030 didn't) with a comparison table covering: hallucination rate, voice drift events, fallback rate, p50/p95 latency, per-session cost at median and p95 session length, qualitative UX notes",
+        "each row cites the source data (US-021 results, US-029 results, US-030 pricing)",
+        "a clear recommendation is stated: Track A default, Track B default, or hybrid (flag-gated rollout)",
+        "recommendation includes a rollback plan if chosen default fails in production (matches §10 of the PRD)",
+        "if the recommendation is Track B, Track A remains available under V7_SPEECH_PIPELINE=request_response for at least 30 days post-cutover and the document notes this explicitly",
+        "Typecheck passes"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

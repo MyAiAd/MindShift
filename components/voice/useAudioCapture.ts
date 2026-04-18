@@ -9,6 +9,9 @@ import type { TranscriptionDomainContext } from '@/lib/voice/transcription-domai
 // Whisper hallucinates these phrases when given silence/noise/short audio.
 // This is a well-known issue: https://github.com/openai/whisper/discussions/928
 // The server-side filter should catch most cases, but this is a safety net.
+//
+// Common patterns include English YouTube phrases AND non-English text
+// (especially Welsh, Chinese, Japanese) from silence.
 // ============================================================================
 const HALLUCINATION_PHRASES = new Set([
   "thanks for watching",
@@ -47,7 +50,23 @@ const HALLUCINATION_SUBSTRINGS = [
   "like and subscribe",
   "don't forget to subscribe",
   "welcome to my channel",
+  // Welsh hallucinations (extremely common from silence)
+  "diolch yn fawr",
+  "am wylio'r fideo",
+  "am wylior fideo",
+  // Other non-English substring markers
+  "subtitles by",
+  "captions by",
+  "amara.org",
 ];
+
+// Unicode ranges for scripts that should never appear in an English therapy session.
+// Whisper commonly hallucinates CJK, Hangul, Arabic, Devanagari etc. from silence.
+const NON_LATIN_SCRIPT_RE = /[\u3000-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF\u0600-\u06FF\u0900-\u097F\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF]/;
+
+// Welsh/Celtic diacritics + common hallucination word patterns.
+// These appear when Whisper guesses Welsh from background noise.
+const WELSH_HALLUCINATION_RE = /\b(diolch|fideo|wylio|gwylio|fawr|iawn|ffilm)\b/i;
 
 function isLikelyHallucination(transcript: string): boolean {
   const normalized = transcript.toLowerCase().replace(/[^\w\s']/g, '').replace(/\s+/g, ' ').trim();
@@ -60,6 +79,12 @@ function isLikelyHallucination(transcript: string): boolean {
     if (normalized.includes(pattern)) return true;
   }
   
+  // Non-Latin script detection (CJK, Hangul, Arabic, Devanagari, etc.)
+  if (NON_LATIN_SCRIPT_RE.test(transcript)) return true;
+  
+  // Welsh hallucination pattern (Whisper's most common non-English artifact)
+  if (WELSH_HALLUCINATION_RE.test(transcript)) return true;
+  
   return false;
 }
 
@@ -68,6 +93,18 @@ interface UseAudioCaptureProps {
   onTranscript: (transcript: string) => void;
   onProcessingChange?: (isProcessing: boolean) => void; // Notify parent of processing state changes
   vadTrigger?: boolean; // External VAD can trigger transcription
+  /**
+   * Monotonically-increasing counter that the parent (useNaturalVoice) bumps every time the VAD
+   * reports `onSpeechStart`. When vadAvailable=true, processAudioBuffer will refuse to upload
+   * unless this has advanced since the last successful upload. Prevents silence/ambient audio
+   * being uploaded to OpenAI STT.
+   */
+  speechDetectedTrigger?: number;
+  /**
+   * Whether the VAD is initialized and actually producing speech-start signals. If false, the
+   * hook falls back to the legacy auto-process timer (the pre-US-001 safety-net behaviour).
+   */
+  vadAvailable?: boolean;
   /** Latest session context for Whisper domain bias (expectedResponseType, step, hotwords). */
   getTranscriptionContext?: () => TranscriptionDomainContext | null;
   treatmentVersion?: string;
@@ -85,6 +122,8 @@ export const useAudioCapture = ({
   onTranscript,
   onProcessingChange,
   vadTrigger,
+  speechDetectedTrigger,
+  vadAvailable,
   getTranscriptionContext,
   treatmentVersion,
   transcriptionProviderOverride,
@@ -101,6 +140,18 @@ export const useAudioCapture = ({
   const audioBufferRef = useRef<Float32Array[]>([]);
   const lastProcessTimeRef = useRef<number>(0);
   const activeRequestsRef = useRef<number>(0); // Track concurrent API requests
+
+  // US-001: VAD-gated upload flag. When true, the VAD has reported speech since the last
+  // successful upload / buffer clear. processAudioBuffer refuses to POST when this is false
+  // and vadAvailable=true, so silent-room ambient audio never reaches OpenAI STT.
+  const hasSpeechSinceLastProcessRef = useRef(false);
+  // Ensure we log `stt_vad_unavailable_fallback` only once per hook mount.
+  const loggedVadUnavailableFallbackRef = useRef(false);
+  // Snapshot vadAvailable for async callbacks so we don't trip the gate with a stale closure.
+  const vadAvailableRef = useRef<boolean | undefined>(vadAvailable);
+  useEffect(() => {
+    vadAvailableRef.current = vadAvailable;
+  }, [vadAvailable]);
   
   // Echo prevention: Track when AI is speaking to avoid capturing its own voice
   const isAISpeakingRef = useRef(false);
@@ -125,7 +176,17 @@ export const useAudioCapture = ({
   const BUFFER_DURATION_MS = 8000;   // Keep last 8 seconds (safety margin for longer utterances)
   const SAMPLE_RATE = 16000;          // 16kHz (Whisper optimal)
   const MIN_PROCESS_INTERVAL_MS = 300; // Throttle: max once per 300ms (down from 1000ms)
-  const AUTO_PROCESS_INTERVAL_MS = 1500; // Auto-process every 1.5s (gives Whisper enough context per chunk)
+  // Legacy auto-process cadence. The unconditional timer was removed in US-001; it now only
+  // runs as a safety-net when the VAD is unavailable (see effect below).
+  const AUTO_PROCESS_INTERVAL_MS = 1500;
+
+  // US-001: raise the speech-detected flag whenever the parent bumps the trigger counter. The
+  // flag is lowered again after each successful processAudioBuffer call and on clearBuffer().
+  useEffect(() => {
+    if (speechDetectedTrigger === undefined) return;
+    if (speechDetectedTrigger <= 0) return;
+    hasSpeechSinceLastProcessRef.current = true;
+  }, [speechDetectedTrigger]);
   
   /**
    * Convert Float32Array audio buffers to WAV blob
@@ -206,7 +267,16 @@ export const useAudioCapture = ({
         return;
       }
     }
-    
+
+    // US-001 VAD UPLOAD GATE: only POST /api/transcribe when the VAD has detected real speech
+    // since the last successful upload. `bypassThrottle=true` is reserved for processNow() —
+    // PTT release and VAD speech-end — and those triggers skip the gate deliberately.
+    // When vadAvailable is false (or explicitly disabled) we keep the pre-US-001 behaviour so
+    // non-VAD environments still function as a safety-net.
+    if (!bypassThrottle && vadAvailableRef.current && !hasSpeechSinceLastProcessRef.current) {
+      return;
+    }
+
     // Check if we have audio to process
     if (audioBufferRef.current.length === 0) {
       return;
@@ -221,6 +291,10 @@ export const useAudioCapture = ({
     // while this batch is being sent to Whisper.
     const bufferSnapshot = audioBufferRef.current;
     audioBufferRef.current = [];
+    // US-001: lower the VAD-gate flag. A subsequent upload requires a new speech-start event.
+    // Reset here (not in the finally block) so any VAD onSpeechStart that fires while this
+    // fetch is in-flight is correctly captured as "new speech since last process".
+    hasSpeechSinceLastProcessRef.current = false;
     
     // Track concurrent requests for UI state
     activeRequestsRef.current++;
@@ -437,7 +511,7 @@ export const useAudioCapture = ({
       
       setIsCapturing(true);
       setError(null);
-      console.log('🎙️ AudioCapture: Initialized successfully (buffer: 8s, auto-process: 1.5s)');
+      console.log('🎙️ AudioCapture: Initialized successfully (buffer: 8s, uploads gated on VAD speech-start)');
       
     } catch (err) {
       console.error('🎙️ AudioCapture: Initialization error:', err);
@@ -495,21 +569,27 @@ export const useAudioCapture = ({
     }
   }, [vadTrigger, isCapturing, processNow]);
   
-  // Auto-process timer
-  // NOTE: No isProcessing gate! Concurrent API calls are safe because
-  // each call snapshots its own portion of the buffer. The throttle
-  // (MIN_PROCESS_INTERVAL_MS) prevents excessive API calls.
+  // US-001: The unconditional auto-process timer has been removed. Uploads are now driven by
+  // VAD speech-end (via processNow) and PTT release. The timer below only runs as a safety
+  // net when the VAD is unavailable (vadAvailable=false), restoring the pre-US-001 behaviour
+  // for environments where VAD couldn't initialize.
   useEffect(() => {
     if (!isCapturing) return;
-    
+    if (vadAvailable) return; // VAD-gated mode: no timer. processNow() flushes uploads.
+
+    if (!loggedVadUnavailableFallbackRef.current) {
+      console.warn('🎙️ AudioCapture: stt_vad_unavailable_fallback - VAD not available, using legacy auto-process timer');
+      loggedVadUnavailableFallbackRef.current = true;
+    }
+
     const interval = setInterval(() => {
       if (audioBufferRef.current.length > 0 && !isAISpeakingRef.current) {
         processAudioBuffer();
       }
     }, AUTO_PROCESS_INTERVAL_MS);
-    
+
     return () => clearInterval(interval);
-  }, [isCapturing, processAudioBuffer]);
+  }, [isCapturing, vadAvailable, processAudioBuffer]);
   
   /**
    * Notify audio capture that AI is speaking (echo prevention).
@@ -534,6 +614,9 @@ export const useAudioCapture = ({
    */
   const clearBuffer = useCallback(() => {
     audioBufferRef.current = [];
+    // US-001: buffer was discarded, so any previously-detected speech is no longer
+    // represented. Require a fresh VAD speech-start before the next upload.
+    hasSpeechSinceLastProcessRef.current = false;
     console.log('🎙️ AudioCapture: Buffer cleared');
   }, []);
   

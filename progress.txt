@@ -249,3 +249,41 @@ Key Achievements:
 
 Ready for production deployment!
 
+
+===========================================
+PROJECT: V7 Peak-Fidelity OpenAI Speech I/O
+Branch: ralph/v7-peak-fidelity-openai-speech
+Started: 2026-04-18
+===========================================
+
+## Codebase Patterns (V7 Speech)
+- VAD runs inside components/voice/useVAD.tsx and is wired up from components/voice/useNaturalVoice.tsx (not directly from useAudioCapture).
+- useAudioCapture is the Whisper/OpenAI STT pipe. It owns the audio buffer + upload timing. It should stay agnostic about VAD specifics — pass it signals (vadAvailable, speechDetectedTrigger, vadTrigger) via props, not a direct useVAD dependency.
+- Voice-cache keys use `${voiceName}:${text}`. See useNaturalVoice.getVoiceNameFromId (currently buggy — fixed in US-006) and V7AudioPreloader.
+- Treatment version gating lives on the server (app/api/transcribe/route.ts, app/api/tts/route.ts) via the `treatmentVersion` field on the request body.
+- Typecheck command: `npm run type-check`.
+- Compliance guard for scripted speech: lib/voice/speech-compliance.ts `validateSpeechOutput`.
+
+===========================================
+LEARNINGS LOG
+===========================================
+
+[2026-04-18] US-001: Gate STT uploads on VAD-detected speech
+- Added `speechDetectedTrigger: number` and `vadAvailable: boolean` props to useAudioCapture.
+- Introduced `hasSpeechSinceLastProcessRef` + `vadAvailableRef` inside useAudioCapture. The ref pattern (rather than state) avoids re-render churn on every audio worklet message.
+- `processAudioBuffer` now refuses to POST /api/transcribe when `vadAvailable && !hasSpeechSinceLastProcessRef.current`, unless `bypassThrottle=true` (processNow — PTT release and VAD speech-end).
+- Flag is reset immediately after the snapshot-and-clear, NOT in the finally block. That way any VAD onSpeechStart that fires while the fetch is in-flight is correctly captured as "new speech since last process".
+- `clearBuffer` also lowers the flag — if the buffer is discarded, whatever speech triggered the flag is gone too.
+- The unconditional auto-process setInterval was removed; the timer now only runs as a safety-net when `vadAvailable===false`, and logs `stt_vad_unavailable_fallback` once per mount.
+- useNaturalVoice wraps `vadSpeechHandler` in `handleVadSpeechStart`, which bumps `speechDetectedTrigger` and then delegates to the original handler (barge-in or test-mode).
+- useNaturalVoice exposes `vadAvailable = vadEnabled && vad.isInitialized` via state, so useAudioCapture can prop-watch it.
+- Typecheck passes.
+- Browser verification (30-second silent-room capture = zero /api/transcribe POSTs) is a manual step — requires a real microphone. Not runnable from agent env; document for human QA.
+
+**Learnings for future iterations:**
+- Communication between useNaturalVoice ↔ useAudioCapture is one-way via props. Don't try to set refs cross-hook.
+- Use an incrementing counter (not a boolean) as the "event" prop into a child hook — React effect deps need a changed value to re-fire.
+- `processAudioBuffer`'s `bypassThrottle` parameter doubles as "bypass all gates" — any urgent flush (PTT, VAD speech-end) already uses it, so the new VAD gate integrates cleanly without touching the callsites.
+- VAD onSpeechStart also fires during AI speech (barge-in). That's fine — when the user barges in we WANT the next user utterance gated as "speech detected".
+- Guided / PTT mode sets vadEnabled=false; there, VAD is unavailable, so the fallback timer kicks in. PTT-end still flushes via `processNow`, so the timer is effectively dormant there anyway.
+

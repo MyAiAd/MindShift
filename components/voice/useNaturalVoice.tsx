@@ -123,6 +123,14 @@ export const useNaturalVoice = ({
     const SILENCE_TIMEOUT_MS = 1500; // 1.5s of silence = done speaking (trigger deployment)
     const TEXT_RENDER_DELAY_MS = 420; // Keep text clearly behind voice to reduce perceived lag
     
+    // US-001: monotonic counter that is bumped every time the VAD reports onSpeechStart.
+    // useAudioCapture watches it to decide whether there is real speech queued for upload,
+    // so silence/ambient audio never reaches OpenAI STT.
+    const [speechDetectedTrigger, setSpeechDetectedTrigger] = useState(0);
+    // Track whether the VAD is actually usable so useAudioCapture knows whether to enforce
+    // the speech gate or fall back to the legacy auto-process timer.
+    const [vadAvailable, setVadAvailable] = useState(false);
+
     // Audio capture for Whisper transcription (only if enabled AND not in test mode)
     const audioCapture = useAudioCapture({
         enabled: isMicEnabled && useWhisper && !testMode, // ← Disable during test mode
@@ -132,6 +140,8 @@ export const useNaturalVoice = ({
         },
         onProcessingChange: (processing) => setWhisperProcessing(processing),
         vadTrigger: false, // We'll manually trigger via processNow()
+        speechDetectedTrigger,
+        vadAvailable,
         getTranscriptionContext: () => transcriptionContextRef?.current ?? null,
         treatmentVersion,
         transcriptionProviderOverride: sttProviderOverride,
@@ -266,7 +276,15 @@ export const useNaturalVoice = ({
     
     // Choose the correct handler based on test mode
     const vadSpeechHandler = testMode ? handleTestModeInterruption : handleVadBargeIn;
-    
+
+    // US-001: wrap the speech-start handler so every VAD trigger also bumps the counter that
+    // useAudioCapture watches. Without this, OpenAI STT would keep receiving ambient silence
+    // even when the user never speaks.
+    const handleVadSpeechStart = useCallback(() => {
+        setSpeechDetectedTrigger((prev) => prev + 1);
+        vadSpeechHandler();
+    }, [vadSpeechHandler]);
+
     console.log(`🎙️ VAD: Using ${testMode ? 'TEST MODE' : 'REAL MODE'} handler`);
     
     const vadTimingOverrides = testMode
@@ -279,11 +297,18 @@ export const useNaturalVoice = ({
     const vad = useVAD({
         enabled: vadEnabled,
         sensitivity: vadSensitivity,
-        onSpeechStart: vadSpeechHandler,
+        onSpeechStart: handleVadSpeechStart,
         onSpeechEnd: useWhisper ? handleVadSpeechEnd : undefined, // Trigger Whisper processing when speech ends
         onVadLevel: onVadLevel,
         ...(vadTimingOverrides ?? {})
     });
+
+    // US-001: expose VAD availability to useAudioCapture so it knows whether to enforce the
+    // speech gate (VAD present) or fall back to the legacy auto-process timer (VAD absent).
+    useEffect(() => {
+        const isAvailable = vadEnabled && vad.isInitialized;
+        setVadAvailable((prev) => (prev === isAvailable ? prev : isAvailable));
+    }, [vadEnabled, vad.isInitialized]);
     
     // Store VAD in ref for access in speech recognition callbacks
     useEffect(() => {
