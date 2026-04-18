@@ -485,8 +485,8 @@
         "Typecheck passes"
       ],
       "priority": 29,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PLAN COMMITTED, EXECUTION PENDING. tasks/v7-peak-fidelity-realtime-regression-results.md mirrors the US-021 coverage matrix (6 flows × 3 conditions × 3 modes = 54 cells) for the Realtime pipeline. Pre-conditions explicitly call out (a) V7_SPEECH_PIPELINE=realtime or admin override active, (b) VAD lock with the US-028 winning values, (c) US-020 corpus populated. Metrics are Track B-specific: hallucinations=0, voice_drift=0, p50 TTF audio ≤700ms, p95 ≤1800ms (tighter than Track A because Realtime's value prop is sub-second), ice_reconnect_rate ≤5%, textmode_fallback_rate ≤2%, speech_compliance_violations=0. A Track A vs Track B summary row is reserved for US-031's decision doc. Execution is a manual QA step."
     },
     {
       "id": "US-030",
