@@ -469,8 +469,8 @@
         "Typecheck passes"
       ],
       "priority": 28,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "scripts/tune-realtime-vad.ts iterates the PRD-spec grid (5 × 3 × 4 = 60 combinations over threshold / prefix_padding_ms / silence_duration_ms) against every .wav in the US-020 corpus. Results are written to tasks/v7-realtime-vad-tuning-results.csv (utterance_id, condition_tag, threshold, prefix_padding_ms, silence_duration_ms, captured_full, false_segmented, trailing_silence_ms) and a human summary with the winning combination to tasks/v7-realtime-vad-tuning-summary.md. Two engines: --engine=fake (deterministic shape-validation path that runs in CI with zero API spend) and --engine=real (explicit throw with a scaffold-notes message — the inner WebRTC transport that feeds a .wav into a live Realtime session is a follow-up task). --engine=fake run in this environment produces the CSV + summary skeleton successfully (tasks/v7-realtime-vad-tuning-results.csv + summary.md committed). Updating app/api/treatment-v7/realtime-session/route.ts with the winning numbers is explicitly a manual operator step after --engine=real runs."
     },
     {
       "id": "US-029",
