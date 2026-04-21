@@ -58,7 +58,66 @@ The Policy C drop from "static" to "streamed" is perceptible as a slight softeni
 
 ## Decision
 
-**Adopt Policy C.** Static library → `tts-1-hd`. Dynamic streaming → `gpt-4o-mini-tts`.
+**Adopt Policy C (original, 2025-Q4):** Static library → `tts-1-hd`. Dynamic streaming → `gpt-4o-mini-tts`.
+
+### 2026-04-21 revision — Policy A with a pinned snapshot (ACTIVE)
+
+Policy C was superseded after a listening audit revealed that the
+"clear-but-minor timbre shift between static and streamed" called out
+above is, in practice, audible enough to notice — especially on
+back-to-back scripted-then-dynamic turns (e.g. "…so the problem is"
+[static] → "…so when you think about &lt;user's problem&gt;" [dynamic]). The
+two-source mismatch is exactly the degradation the pre-render pipeline
+exists to prevent. Moving from `tts-1-hd`/`shimmer` to OpenAI's current
+top-tier voice `marin` on `gpt-4o-mini-tts` forces the issue because
+`marin` / `cedar` are **not supported** by `tts-1` / `tts-1-hd` — a
+mixed-model Policy-C setup would have to downgrade one of the two paths
+to an older voice.
+
+**New policy — Policy A with a pinned model snapshot:**
+
+- Both paths run on the **same** `gpt-4o-mini-tts` snapshot
+  (`OPENAI_TTS_MODEL` = `OPENAI_TTS_STATIC_MODEL` =
+  `gpt-4o-mini-tts-2025-03-20`).
+- Both paths send the **same** `OPENAI_TTS_INSTRUCTIONS` therapeutic-tone
+  prompt on every call.
+- Both paths use the **same** voice (default `marin`).
+- The streaming fallback (`OPENAI_TTS_FALLBACK_MODEL`) stays inside the
+  `gpt-4o-mini-tts` family — falling back to `tts-1-hd` would swap the
+  voice timbre mid-session, which is worse than failing and triggering
+  the US-013 user-facing "having trouble with audio" prompt.
+
+Trade-offs accepted:
+
+- The static library is no longer guaranteed to be byte-identical across
+  regenerations (gpt-4o-mini-tts is not deterministic). This was the
+  original reason for Policy C. We now accept that trade-off because:
+  (a) the checksums are re-written on every regen and the manifest
+  records the source inputs, so diff review remains possible; and
+  (b) the alternative (audible voice-timbre mismatch between the two
+  paths) is a worse product defect than "binary diffs on regen."
+- `gpt-4o-mini-tts` has been observed to silently degrade between
+  snapshots (see the OpenAI developer-community thread about the
+  `2025-12-15` snapshot producing darker, muddier audio than
+  `2025-03-20`). Mitigation: we pin the snapshot explicitly; we do NOT
+  use the floating `gpt-4o-mini-tts` alias for the primary model.
+  Moving the pin forward requires a same-commit regeneration of the
+  static library AND an A/B listen against the old snapshot.
+
+If this policy fails a future listening audit — e.g. a pinned snapshot
+is deprecated or drifts audibly — the next step is ElevenLabs with a
+Professional Voice Clone used for both paths. ElevenLabs was the
+pre-OpenAI incumbent in this project; its voice-clone offering produces
+the same voice model for both pre-render and live synthesis by
+construction, which is the strongest possible two-source alignment.
+
+### Original (superseded) text
+
+The environment-contract and monitoring sections below describe Policy
+C and are retained for historical context. `OPENAI_TTS_STATIC_MODEL` and
+`OPENAI_TTS_FALLBACK_MODEL` defaults have changed per the new policy —
+see `app/api/tts/route.ts` and `scripts/regenerate-v7-static-audio.ts`
+for current values.
 
 ### Environment contract
 

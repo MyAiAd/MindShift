@@ -23,12 +23,22 @@ const VOICE_CACHE_NAME_MAP: Record<string, string> = {
 
   // OpenAI voices (v7 peak-fidelity). The cache name intentionally matches the voice id so the
   // generated static-audio filenames and the runtime keys agree for these voices.
+  // `marin` and `cedar` are OpenAI's post-2025-03 top-tier voices (gpt-4o-mini-tts only);
+  // ash/ballad/coral/sage/verse rounded out the same release. Adding them here lets the
+  // preloader fetch `/audio/v7/static/<voice>/manifest.json` for any of them.
   alloy: 'alloy',
+  ash: 'ash',
+  ballad: 'ballad',
+  coral: 'coral',
   echo: 'echo',
   fable: 'fable',
-  onyx: 'onyx',
   nova: 'nova',
+  onyx: 'onyx',
+  sage: 'sage',
   shimmer: 'shimmer',
+  verse: 'verse',
+  marin: 'marin',
+  cedar: 'cedar',
 
   // Short-form aliases that the UI sometimes supplies.
   heart: 'heart',
@@ -38,7 +48,10 @@ const VOICE_CACHE_NAME_MAP: Record<string, string> = {
   sarah: 'sarah',
 };
 
-const OPENAI_VOICE_IDS = new Set(['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']);
+const OPENAI_VOICE_IDS = new Set([
+  'alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova',
+  'onyx', 'sage', 'shimmer', 'verse', 'marin', 'cedar',
+]);
 
 /**
  * Canonical cache name for a voice id. Always returns a non-empty, voice-specific string.

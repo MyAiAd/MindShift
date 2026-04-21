@@ -44,8 +44,24 @@ function getKokoroVoiceId(voice: string): string {
   return kokoroVoiceMap[voice] || (voice.startsWith('af_') || voice.startsWith('am_') ? voice : 'af_heart');
 }
 
-function getOpenAIVoice(voice: string): 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' {
-  const openAIVoiceMap: Record<string, 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'> = {
+// OpenAI voice ids supported by gpt-4o-mini-tts. The `marin` and `cedar` voices
+// are OpenAI's current best-quality recommendation (post-2025-03 release) and are
+// only available on gpt-4o-mini-tts — they are NOT supported by tts-1 / tts-1-hd.
+// Any fallback model must therefore also be in the gpt-4o-mini-tts family or the
+// voice will silently downgrade mid-session.
+type OpenAITtsVoice =
+  | 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'fable' | 'nova'
+  | 'onyx' | 'sage' | 'shimmer' | 'verse' | 'marin' | 'cedar';
+
+const OPENAI_TTS_VOICES: ReadonlySet<OpenAITtsVoice> = new Set<OpenAITtsVoice>([
+  'alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova',
+  'onyx', 'sage', 'shimmer', 'verse', 'marin', 'cedar',
+]);
+
+function getOpenAIVoice(voice: string): OpenAITtsVoice {
+  const openAIVoiceMap: Record<string, OpenAITtsVoice> = {
+    // Legacy Kokoro / short-form aliases — kept so a session migrated from the
+    // prior provider does not suddenly change voice when the default is read.
     af_heart: 'alloy',
     am_adam: 'echo',
     af_bella: 'fable',
@@ -56,7 +72,9 @@ function getOpenAIVoice(voice: string): 'alloy' | 'echo' | 'fable' | 'onyx' | 'n
     michael: 'onyx',
   };
 
-  return openAIVoiceMap[voice] || (['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'].includes(voice) ? voice as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' : 'alloy');
+  if (openAIVoiceMap[voice]) return openAIVoiceMap[voice];
+  if (OPENAI_TTS_VOICES.has(voice as OpenAITtsVoice)) return voice as OpenAITtsVoice;
+  return 'marin';
 }
 
 function isIOSClient(userAgent: string): boolean {
@@ -206,16 +224,25 @@ async function synthesizeWithElevenLabs(text: string, voice: string): Promise<Ne
   });
 }
 
-const OPENAI_TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';
-const OPENAI_TTS_FALLBACK_MODEL = process.env.OPENAI_TTS_FALLBACK_MODEL || 'tts-1-hd';
+// Pin the snapshot (not the floating alias) so voice characteristics do not drift
+// when OpenAI ships a new default behind the scenes. If this snapshot is ever
+// deprecated or visibly regresses against the static-library recordings, bump the
+// pin and re-run `scripts/regenerate-v7-static-audio.ts` in the same commit so the
+// static and dynamic paths stay on the identical model revision.
+const OPENAI_TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts-2025-03-20';
+// Fallback deliberately stays inside the same model family. Falling back to a
+// different TTS model (historically `tts-1-hd`) would swap the voice timbre
+// mid-session, which is exactly the two-source mismatch we pre-render to avoid.
+const OPENAI_TTS_FALLBACK_MODEL = process.env.OPENAI_TTS_FALLBACK_MODEL || 'gpt-4o-mini-tts';
 const DEFAULT_TTS_INSTRUCTIONS =
-  'Warm, calm, reassuring, unhurried — therapeutic but not clinical. Natural pacing, no accent.';
+  'Speak in a warm, calm, unhurried voice with a therapeutic presence. Pace slightly slower than conversational. Gentle vowel releases. Leave natural micro-pauses at commas and between clauses. Never sound rushed, bright, or upbeat. The speaker is a patient, caring clinician.';
 
 /** Models that support the `instructions` parameter on `audio.speech.create`. */
-const INSTRUCTION_CAPABLE_TTS_MODELS = new Set(['gpt-4o-mini-tts']);
-
 function modelSupportsInstructions(model: string): boolean {
-  return INSTRUCTION_CAPABLE_TTS_MODELS.has(model);
+  // Every snapshot and alias of gpt-4o-mini-tts accepts `instructions`. Older
+  // models (tts-1, tts-1-hd) do not. Matching by prefix keeps this guard
+  // correct as new snapshots (gpt-4o-mini-tts-YYYY-MM-DD) ship.
+  return model.startsWith('gpt-4o-mini-tts');
 }
 
 function isRetryableOpenAITtsError(err: unknown): boolean {

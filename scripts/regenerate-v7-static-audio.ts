@@ -38,18 +38,34 @@ type Args = {
   force: boolean;
 };
 
-const SUPPORTED_VOICES = new Set(['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']);
+// `marin` and `cedar` are the post-2025-03 top-tier OpenAI voices and are only
+// available on gpt-4o-mini-tts. The older voices stay supported so past manifests
+// remain regenerable from the script.
+const SUPPORTED_VOICES = new Set([
+  'alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova',
+  'onyx', 'sage', 'shimmer', 'verse', 'marin', 'cedar',
+]);
 
-// Approximate price-per-1M-chars for the static models. Used for dry-run cost estimation only.
+// Models that support the `instructions` parameter. The static-side default
+// model is a pinned gpt-4o-mini-tts snapshot so instructions ARE sent by default.
+function modelSupportsInstructions(model: string): boolean {
+  return model.startsWith('gpt-4o-mini-tts');
+}
+
+// Approximate price for dry-run cost estimation only. gpt-4o-mini-tts is billed
+// per token not per character, but this script counts characters for a quick
+// order-of-magnitude figure; the token count is roughly chars/4 for English.
 const MODEL_PRICE_PER_MILLION_CHARS: Record<string, number> = {
   'tts-1-hd': 30.0,
   'tts-1': 15.0,
-  'gpt-4o-mini-tts': 12.0,
+  'gpt-4o-mini-tts': 3.0,                 // ~$12/1M output tokens, ~4 chars/token
+  'gpt-4o-mini-tts-2025-03-20': 3.0,
+  'gpt-4o-mini-tts-2025-12-15': 3.0,
 };
 
 function parseArgs(argv: string[]): Args {
   const args: Args = {
-    voice: process.env.NEXT_PUBLIC_V7_DEFAULT_VOICE || 'shimmer',
+    voice: process.env.NEXT_PUBLIC_V7_DEFAULT_VOICE || 'marin',
     dryRun: false,
     force: false,
   };
@@ -96,17 +112,29 @@ type Manifest = {
   voice: string;
   model: string;
   generated_at: string;
+  instructions?: string | null;
   entries: ManifestEntry[];
 };
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const model = process.env.OPENAI_TTS_STATIC_MODEL || 'tts-1-hd';
+  // Keep in lockstep with OPENAI_TTS_MODEL in app/api/tts/route.ts. Both sides
+  // MUST synthesize on the same model snapshot + voice + instructions so that
+  // the pre-rendered clips and the live /api/tts clips sound identical.
+  const model = process.env.OPENAI_TTS_STATIC_MODEL || 'gpt-4o-mini-tts-2025-03-20';
+  const DEFAULT_INSTRUCTIONS =
+    'Speak in a warm, calm, unhurried voice with a therapeutic presence. Pace slightly slower than conversational. Gentle vowel releases. Leave natural micro-pauses at commas and between clauses. Never sound rushed, bright, or upbeat. The speaker is a patient, caring clinician.';
+  const instructions = modelSupportsInstructions(model)
+    ? (process.env.OPENAI_TTS_INSTRUCTIONS || DEFAULT_INSTRUCTIONS)
+    : null;
   const outDir = path.resolve(process.cwd(), 'public', 'audio', 'v7', 'static', args.voice);
   const manifestPath = path.join(outDir, 'manifest.json');
   const texts = V7_STATIC_AUDIO_TEXTS;
 
   console.log(`[v7-regen] voice=${args.voice} model=${model} dry-run=${args.dryRun} force=${args.force}`);
+  if (instructions) {
+    console.log(`[v7-regen] instructions="${instructions.slice(0, 80)}${instructions.length > 80 ? '…' : ''}"`);
+  }
   console.log(`[v7-regen] output=${outDir}`);
   console.log(`[v7-regen] prompts=${Object.keys(texts).length}`);
 
@@ -168,12 +196,16 @@ async function main() {
     }
 
     console.log(`[v7-regen]  gen   ${key}  (${text.length} chars → ${filename})`);
-    const response = await openai!.audio.speech.create({
+    const payload: Parameters<OpenAI['audio']['speech']['create']>[0] = {
       model,
       input: text,
-      voice: args.voice as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer',
+      voice: args.voice as any,
       response_format: 'mp3',
-    });
+    };
+    if (instructions) {
+      (payload as unknown as { instructions?: string }).instructions = instructions;
+    }
+    const response = await openai!.audio.speech.create(payload);
     const buf = Buffer.from(await response.arrayBuffer());
     fs.writeFileSync(filePath, buf);
 
@@ -207,6 +239,7 @@ async function main() {
     voice: args.voice,
     model,
     generated_at: new Date().toISOString(),
+    instructions: instructions ?? null,
     entries,
   };
 

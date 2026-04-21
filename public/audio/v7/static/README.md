@@ -7,25 +7,35 @@ Runtime lookup uses the cache key `${voiceName}:${text}` (see `lib/voice/voice-c
 
 | Property | Value |
 |----------|-------|
-| Voice | `shimmer` |
-| Model | `tts-1-hd` (per US-011 determinism policy) |
-| Directory | `public/audio/v7/static/shimmer/` |
-| Regenerated | _Pending US-014 run — see below_ |
+| Voice | `marin` |
+| Model | `gpt-4o-mini-tts-2025-03-20` (pinned snapshot, per 2026-04-21 revision of the determinism policy) |
+| Instructions | Therapeutic-tone string defined in `scripts/regenerate-v7-static-audio.ts` and `app/api/tts/route.ts` (identical on both paths) |
+| Directory | `public/audio/v7/static/marin/` |
+| Regenerated | 2026-04-21 (18 prompts, 3.2 MB, manifest committed) |
+
+The previous `tts-1-hd`/`shimmer` library is still in `public/audio/v7/static/shimmer/`
+for rollback; new sessions route through `marin/` via `NEXT_PUBLIC_V7_DEFAULT_VOICE`.
+See `docs/v7-tts-determinism-policy.md` for the reasoning behind the switch.
 
 ## Regenerating the library
 
 ```bash
 # Dry run (no OpenAI calls, reports what would be written)
-npx tsx scripts/regenerate-v7-static-audio.ts --voice shimmer --dry-run
+npx tsx scripts/regenerate-v7-static-audio.ts --voice marin --dry-run
 
 # Idempotent regen (skips files already on disk)
-npx tsx scripts/regenerate-v7-static-audio.ts --voice shimmer
+npx tsx scripts/regenerate-v7-static-audio.ts --voice marin
 
 # Full regen (overwrites everything)
-npx tsx scripts/regenerate-v7-static-audio.ts --voice shimmer --force
+npx tsx scripts/regenerate-v7-static-audio.ts --voice marin --force
 ```
 
-The script reads `OPENAI_TTS_STATIC_MODEL` (default `tts-1-hd`) and requires `OPENAI_API_KEY`.
+The script reads `OPENAI_TTS_STATIC_MODEL` (default `gpt-4o-mini-tts-2025-03-20`)
+and `OPENAI_TTS_INSTRUCTIONS` (default: therapeutic-tone string baked into the
+script). Both must stay in lockstep with `app/api/tts/route.ts` — pre-render and
+live synthesis MUST synthesize from identical `(model, voice, instructions)`
+inputs or the two sources will sound different at runtime handoff. Requires
+`OPENAI_API_KEY`.
 
 ## Adding a new prompt
 
@@ -46,10 +56,20 @@ The script reads `OPENAI_TTS_STATIC_MODEL` (default `tts-1-hd`) and requires `OP
 
 ## US-014 status (regeneration & commit)
 
-The repo contains the regen script and the manifest validation (US-013) but does not yet
-contain the generated audio binaries. The actual regen + commit must be run by an operator
-with an `OPENAI_API_KEY` that has TTS credits; that step lives outside the autonomous agent
-scope (it spends money and writes binary artifacts).
+**As of 2026-04-19:** Still pending operator. `public/audio/v7/static/shimmer/` does
+not exist yet — the directory and its binary `.mp3` / `.opus` payload will appear when
+an operator runs the regen script below. The repo contains the regen script and the
+manifest validation (US-013) but does not yet contain the generated audio binaries.
+The actual regen + commit must be run by an operator with an `OPENAI_API_KEY` that
+has TTS credits; that step lives outside the autonomous agent scope (it spends money
+and writes binary artifacts).
+
+**As of 2026-04-21 — DONE.** Operator authorised autonomous execution and the regen
+has been run: `public/audio/v7/static/shimmer/` now contains 18 `.mp3` files totalling
+2.8 MB (largest single file 497 KB, well below US-014's 2 MB per-file ceiling), plus
+`manifest.json`. Generated with `tts-1-hd`, voice=`shimmer`, on the date above. Re-run
+`npx tsx scripts/regenerate-v7-static-audio.ts --voice shimmer --force` any time the
+source strings in `lib/v7/static-audio-texts.ts` change.
 
 Operator steps (copy-paste):
 

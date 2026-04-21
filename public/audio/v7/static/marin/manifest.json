@@ -1,0 +1,170 @@
+{
+  "voice": "marin",
+  "model": "gpt-4o-mini-tts-2025-03-20",
+  "generated_at": "2026-04-21T16:03:29.029Z",
+  "instructions": "Speak in a warm, calm, unhurried voice with a therapeutic presence. Pace slightly slower than conversational. Gentle vowel releases. Leave natural micro-pauses at commas and between clauses. Never sound rushed, bright, or upbeat. The speaker is a patient, caring clinician.",
+  "entries": [
+    {
+      "key": "INITIAL_WELCOME",
+      "text": "Would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE",
+      "file": "initial_welcome-e5d35269188bf004.mp3",
+      "hash": "e5d35269188bf004",
+      "checksum": "84a09686ba30dd1ae220206210fe5768999b310bdccdfed13e0c995fca831cc7",
+      "path": "/audio/v7/static/marin/initial_welcome-e5d35269188bf004.mp3",
+      "size_bytes": 170496
+    },
+    {
+      "key": "PROBLEM_SHIFTING_INTRO",
+      "text": "Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.",
+      "file": "problem_shifting_intro-35c91a2770cda391.mp3",
+      "hash": "35c91a2770cda391",
+      "checksum": "cbf730a57a7a507aad04f3fb1d57a88f47acf09c14a9a5f1a8619633611812b6",
+      "path": "/audio/v7/static/marin/problem_shifting_intro-35c91a2770cda391.mp3",
+      "size_bytes": 541056
+    },
+    {
+      "key": "IDENTITY_SHIFTING_INTRO",
+      "text": "Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question.",
+      "file": "identity_shifting_intro-37cafcf9f7a1a1ba.mp3",
+      "hash": "37cafcf9f7a1a1ba",
+      "checksum": "a21f97cf6c70d6d426d8553ff0894e94069b6fece32f97630dd4d0ae775c203e",
+      "path": "/audio/v7/static/marin/identity_shifting_intro-37cafcf9f7a1a1ba.mp3",
+      "size_bytes": 180096
+    },
+    {
+      "key": "BELIEF_SHIFTING_INTRO",
+      "text": "Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.",
+      "file": "belief_shifting_intro-35c91a2770cda391.mp3",
+      "hash": "35c91a2770cda391",
+      "checksum": "02b4445e380d1c388ddeaa541e1f3b385e6544a3bd55cf048703811cae8e1027",
+      "path": "/audio/v7/static/marin/belief_shifting_intro-35c91a2770cda391.mp3",
+      "size_bytes": 585600
+    },
+    {
+      "key": "BLOCKAGE_SHIFTING_INTRO",
+      "text": "Please close your eyes and keep them closed throughout the process. Please give brief answers to my questions and allow the problem to keep changing...we're going to keep going until there is no problem left.",
+      "file": "blockage_shifting_intro-5f877cf9aa5ca1f7.mp3",
+      "hash": "5f877cf9aa5ca1f7",
+      "checksum": "7ff711531215408322d047da03652700b7933dc78aaee88a9adf3b8f0982e878",
+      "path": "/audio/v7/static/marin/blockage_shifting_intro-5f877cf9aa5ca1f7.mp3",
+      "size_bytes": 309120
+    },
+    {
+      "key": "REALITY_SHIFTING_INTRO",
+      "text": "Close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. If ever you feel your goal has changed just let me know.",
+      "file": "reality_shifting_intro-53e37dec3160e859.mp3",
+      "hash": "53e37dec3160e859",
+      "checksum": "3482abebe18eb4d760fedfab0179d313089ad8b97a5d7bb3a2dc0daf19df25a3",
+      "path": "/audio/v7/static/marin/reality_shifting_intro-53e37dec3160e859.mp3",
+      "size_bytes": 470400
+    },
+    {
+      "key": "TRAUMA_SHIFTING_INTRO",
+      "text": "Please close your eyes and keep them closed throughout the rest of the process.",
+      "file": "trauma_shifting_intro-15178b9fb3bcbda7.mp3",
+      "hash": "15178b9fb3bcbda7",
+      "checksum": "08e924ebd6994000a4a715d69c1ee1cc313b7fd9a2596bdcd09e1cd1a6a61507",
+      "path": "/audio/v7/static/marin/trauma_shifting_intro-15178b9fb3bcbda7.mp3",
+      "size_bytes": 101760
+    },
+    {
+      "key": "METHOD_SELECTION",
+      "text": "Choose which Mind Shifting method you would like to use to clear the problem:",
+      "file": "method_selection-c8227e5d22a893f3.mp3",
+      "hash": "c8227e5d22a893f3",
+      "checksum": "9f526b56b3bbb069de02cea8508bd32ee7c412f9f04de9ed7597200eb93b7104",
+      "path": "/audio/v7/static/marin/method_selection-c8227e5d22a893f3.mp3",
+      "size_bytes": 82560
+    },
+    {
+      "key": "METHOD_SELECTION_DIGGING",
+      "text": "We need to clear this problem. Which method would you like to use?",
+      "file": "method_selection_digging-e69ccf361260c009.mp3",
+      "hash": "e69ccf361260c009",
+      "checksum": "2ceb94ac28df60aac9a342975d4e5709a75778a36f138d35d71c52bc024af285",
+      "path": "/audio/v7/static/marin/method_selection_digging-e69ccf361260c009.mp3",
+      "size_bytes": 93696
+    },
+    {
+      "key": "WORK_TYPE_PROBLEM_DESC",
+      "text": "Tell me what the problem is in a few words.",
+      "file": "work_type_problem_desc-e80b78b47f689609.mp3",
+      "hash": "e80b78b47f689609",
+      "checksum": "9608241f350ae6c5ccfb7607dcce15c4ea637f86f51db09f10183db980ffe79c",
+      "path": "/audio/v7/static/marin/work_type_problem_desc-e80b78b47f689609.mp3",
+      "size_bytes": 58368
+    },
+    {
+      "key": "WORK_TYPE_GOAL_DESC",
+      "text": "Tell me what the goal is in a few words.",
+      "file": "work_type_goal_desc-8a0c19fb7962fff1.mp3",
+      "hash": "8a0c19fb7962fff1",
+      "checksum": "2a3a090e50f9fa12ea90e1d8d7b828d637af63d987ec7b9f2d604a405563ef92",
+      "path": "/audio/v7/static/marin/work_type_goal_desc-8a0c19fb7962fff1.mp3",
+      "size_bytes": 49920
+    },
+    {
+      "key": "WORK_TYPE_NEGATIVE_EXP_DESC",
+      "text": "Tell me what the negative experience was in a few words.",
+      "file": "work_type_negative_exp_desc-f9a50efba90603c5.mp3",
+      "hash": "f9a50efba90603c5",
+      "checksum": "c1949842648700294fbe5fc93213ec059562bfd6dee590ef4583107c394c11a5",
+      "path": "/audio/v7/static/marin/work_type_negative_exp_desc-f9a50efba90603c5.mp3",
+      "size_bytes": 82560
+    },
+    {
+      "key": "REALITY_GOAL_CAPTURE",
+      "text": "What do you want?",
+      "file": "reality_goal_capture-3e17dbf90bd4ae6b.mp3",
+      "hash": "3e17dbf90bd4ae6b",
+      "checksum": "e5be3e0a6aec4a96a0128983395fad0947eafeea3d77c8d2d83f3789ccc93a32",
+      "path": "/audio/v7/static/marin/reality_goal_capture-3e17dbf90bd4ae6b.mp3",
+      "size_bytes": 28032
+    },
+    {
+      "key": "REALITY_DEADLINE_CHECK",
+      "text": "Is there a deadline?",
+      "file": "reality_deadline_check-b6b95b3d6798d71f.mp3",
+      "hash": "b6b95b3d6798d71f",
+      "checksum": "1d28e729a7a159b261cbce5787f34f2bcacb2af3aca7632f123e224a670a29e0",
+      "path": "/audio/v7/static/marin/reality_deadline_check-b6b95b3d6798d71f.mp3",
+      "size_bytes": 26496
+    },
+    {
+      "key": "REALITY_DEADLINE_DATE",
+      "text": "When do you want to achieve this goal by?",
+      "file": "reality_deadline_date-6e5958bbf6ff2fcc.mp3",
+      "hash": "6e5958bbf6ff2fcc",
+      "checksum": "83f8820ce9ee340eabe3c4270808084efd3b3d97409769feebe51ed9231d0470",
+      "path": "/audio/v7/static/marin/reality_deadline_date-6e5958bbf6ff2fcc.mp3",
+      "size_bytes": 52992
+    },
+    {
+      "key": "REALITY_CERTAINTY",
+      "text": "How certain are you between 0% and 100% that you will achieve this goal?",
+      "file": "reality_certainty-53f5f9fc70c67b9c.mp3",
+      "hash": "53f5f9fc70c67b9c",
+      "checksum": "0cc003fa27d08053d06cbd914532245b555e968793371b4a450bc500e7301e21",
+      "path": "/audio/v7/static/marin/reality_certainty-53f5f9fc70c67b9c.mp3",
+      "size_bytes": 179328
+    },
+    {
+      "key": "RESTATE_PROBLEM",
+      "text": "OK so it is important we use your own words for the problem statement so please tell me what the problem is in a few words",
+      "file": "restate_problem-65c66a05aa43ab52.mp3",
+      "hash": "65c66a05aa43ab52",
+      "checksum": "df5c2fca4904fb82c6f3662a74c5e4698554672e765aefeb2ae07dd978d33788",
+      "path": "/audio/v7/static/marin/restate_problem-65c66a05aa43ab52.mp3",
+      "size_bytes": 208128
+    },
+    {
+      "key": "RESTATE_PROBLEM_SHORT",
+      "text": "How would you state the problem in a few words?",
+      "file": "restate_problem_short-ab6b1038efe6b21d.mp3",
+      "hash": "ab6b1038efe6b21d",
+      "checksum": "33a477b70bf0757fef57c3860424d81b9cfa839ab2533b46e3aa47cd73dd4f99",
+      "path": "/audio/v7/static/marin/restate_problem_short-ab6b1038efe6b21d.mp3",
+      "size_bytes": 56064
+    }
+  ]
+}

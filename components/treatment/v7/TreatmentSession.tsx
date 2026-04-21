@@ -204,8 +204,10 @@ export default function TreatmentSession({
     return 1.0;
   });
   // US-007: v7 selects from user pref (v7_voice_id) → tenant config (future) →
-  // NEXT_PUBLIC_V7_DEFAULT_VOICE env → 'shimmer'. The legacy 'v7_selected_voice' key is kept as
+  // NEXT_PUBLIC_V7_DEFAULT_VOICE env → 'marin'. The legacy 'v7_selected_voice' key is kept as
   // a secondary source so existing users don't lose their selection.
+  // Default moved from 'shimmer' to 'marin' on 2026-04-21: marin is OpenAI's current
+  // top-tier voice for gpt-4o-mini-tts and the static library is baked against it.
   const [selectedVoice, setSelectedVoice] = useState(() => {
     if (typeof window !== 'undefined') {
       const explicit = localStorage.getItem('v7_voice_id');
@@ -214,9 +216,9 @@ export default function TreatmentSession({
       if (legacy) return legacy;
       const envDefault = process.env.NEXT_PUBLIC_V7_DEFAULT_VOICE;
       if (envDefault) return envDefault;
-      return 'shimmer';
+      return 'marin';
     }
-    return 'shimmer';
+    return 'marin';
   });
   const [isGuidedMode, setIsGuidedMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -358,10 +360,16 @@ export default function TreatmentSession({
     }
   }, [clearSubtitleTimers, getSubtitleSegmentDurationMs, splitIntoSubtitleSegments]);
 
-  // Available voices - Kokoro TTS voices
+  // V7 OpenAI voices. Both are pinned to the `gpt-4o-mini-tts-2025-03-20`
+  // snapshot so the static-audio library and the live /api/tts stream stay
+  // sonically identical (see docs/v7-tts-determinism-policy.md).
+  // Note: the `kokoroId` field is retained only to satisfy the legacy
+  // `kokoroVoiceId` prop shape inherited by useNaturalVoice; V7 always uses
+  // voiceProvider='openai' + voiceId=selectedVoice, so the kokoro fallback is
+  // never exercised on this surface.
   const AVAILABLE_VOICES = [
-    { id: 'heart', name: 'Heart', kokoroId: 'af_heart', description: 'Warm, professional female voice' },
-    { id: 'michael', name: 'Michael', kokoroId: 'am_michael', description: 'Deep, mature male voice' },
+    { id: 'marin', name: 'Marin', kokoroId: 'af_heart', description: 'Warm, calm female clinician voice' },
+    { id: 'cedar', name: 'Cedar', kokoroId: 'am_michael', description: 'Grounded, measured male clinician voice' },
   ] as const;
 
   // Toggle handlers with Sticky Settings and Retroactive Play
@@ -466,10 +474,12 @@ export default function TreatmentSession({
     }
   };
 
-  // Get the Kokoro voice ID for the selected voice
+  // Retained for the legacy `kokoroVoiceId` prop on useNaturalVoice. V7 never
+  // hits the Kokoro path (voiceProvider='openai' + voiceId=selectedVoice), so
+  // this just keeps the prop shape happy without influencing playback.
   const getKokoroVoiceId = () => {
     const voice = AVAILABLE_VOICES.find(v => v.id === selectedVoice);
-    return voice?.kokoroId || 'af_heart'; // Default to Heart
+    return voice?.kokoroId || 'af_heart';
   };
 
   // Get speed label for display

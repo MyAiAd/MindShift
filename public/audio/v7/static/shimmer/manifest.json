@@ -1,0 +1,169 @@
+{
+  "voice": "shimmer",
+  "model": "tts-1-hd",
+  "generated_at": "2026-04-21T12:53:39.735Z",
+  "entries": [
+    {
+      "key": "INITIAL_WELCOME",
+      "text": "Would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE",
+      "file": "initial_welcome-e5d35269188bf004.mp3",
+      "hash": "e5d35269188bf004",
+      "checksum": "7bdeda2a1d386caca534112f8a2166e6dde641481c93baa4dda557f45f2fc629",
+      "path": "/audio/v7/static/shimmer/initial_welcome-e5d35269188bf004.mp3",
+      "size_bytes": 92640
+    },
+    {
+      "key": "PROBLEM_SHIFTING_INTRO",
+      "text": "Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.",
+      "file": "problem_shifting_intro-35c91a2770cda391.mp3",
+      "hash": "35c91a2770cda391",
+      "checksum": "f2a996b5064691b2066e69eea0d732622bf27e4f560eefd8d12a3fa786862951",
+      "path": "/audio/v7/static/shimmer/problem_shifting_intro-35c91a2770cda391.mp3",
+      "size_bytes": 507840
+    },
+    {
+      "key": "IDENTITY_SHIFTING_INTRO",
+      "text": "Please close your eyes and keep them closed throughout the rest of the process. Please tell me the first thing that comes up when I ask this question.",
+      "file": "identity_shifting_intro-37cafcf9f7a1a1ba.mp3",
+      "hash": "37cafcf9f7a1a1ba",
+      "checksum": "143d74af0cf471c94be16300219d70b1365274c35705ceb44a8b76a1fed14323",
+      "path": "/audio/v7/static/shimmer/identity_shifting_intro-37cafcf9f7a1a1ba.mp3",
+      "size_bytes": 189120
+    },
+    {
+      "key": "BELIEF_SHIFTING_INTRO",
+      "text": "Please close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. When I ask 'what needs to happen for the problem to not be a problem?' allow your answers to be different each time.",
+      "file": "belief_shifting_intro-35c91a2770cda391.mp3",
+      "hash": "35c91a2770cda391",
+      "checksum": "989fbfa87d08f7f0fbff27da71510faf05ecad1a0ada50e40957017f880091aa",
+      "path": "/audio/v7/static/shimmer/belief_shifting_intro-35c91a2770cda391.mp3",
+      "size_bytes": 508800
+    },
+    {
+      "key": "BLOCKAGE_SHIFTING_INTRO",
+      "text": "Please close your eyes and keep them closed throughout the process. Please give brief answers to my questions and allow the problem to keep changing...we're going to keep going until there is no problem left.",
+      "file": "blockage_shifting_intro-5f877cf9aa5ca1f7.mp3",
+      "hash": "5f877cf9aa5ca1f7",
+      "checksum": "3a623d07e87ec778d45dcf5921ca8f5267ad143b92a3204754fbafa6665a0701",
+      "path": "/audio/v7/static/shimmer/blockage_shifting_intro-5f877cf9aa5ca1f7.mp3",
+      "size_bytes": 264960
+    },
+    {
+      "key": "REALITY_SHIFTING_INTRO",
+      "text": "Close your eyes and keep them closed throughout the process. Please tell me the first thing that comes up when I ask each of the following questions and keep your answers brief. What could come up when I ask a question is an emotion, a body sensation, a thought or a mental image. If ever you feel your goal has changed just let me know.",
+      "file": "reality_shifting_intro-53e37dec3160e859.mp3",
+      "hash": "53e37dec3160e859",
+      "checksum": "62539cb8c6dd609718b95cb032a35c38ec94bfd1b72d0269b5d6f11da471d75d",
+      "path": "/audio/v7/static/shimmer/reality_shifting_intro-53e37dec3160e859.mp3",
+      "size_bytes": 421920
+    },
+    {
+      "key": "TRAUMA_SHIFTING_INTRO",
+      "text": "Please close your eyes and keep them closed throughout the rest of the process.",
+      "file": "trauma_shifting_intro-15178b9fb3bcbda7.mp3",
+      "hash": "15178b9fb3bcbda7",
+      "checksum": "c1418e8756c867ebc28802220cdca8cbd21029dc69b15cb33c2fb4ff284b7d19",
+      "path": "/audio/v7/static/shimmer/trauma_shifting_intro-15178b9fb3bcbda7.mp3",
+      "size_bytes": 100320
+    },
+    {
+      "key": "METHOD_SELECTION",
+      "text": "Choose which Mind Shifting method you would like to use to clear the problem:",
+      "file": "method_selection-c8227e5d22a893f3.mp3",
+      "hash": "c8227e5d22a893f3",
+      "checksum": "d2a81a8d2f73731a1adbb6c3e020ac84571a650b6b6c27c62079a90c9fec29e0",
+      "path": "/audio/v7/static/shimmer/method_selection-c8227e5d22a893f3.mp3",
+      "size_bytes": 98400
+    },
+    {
+      "key": "METHOD_SELECTION_DIGGING",
+      "text": "We need to clear this problem. Which method would you like to use?",
+      "file": "method_selection_digging-e69ccf361260c009.mp3",
+      "hash": "e69ccf361260c009",
+      "checksum": "532a032e0870fd5b0f1db3e7301208e33cf630a815485d1ff38d18e0031728cb",
+      "path": "/audio/v7/static/shimmer/method_selection_digging-e69ccf361260c009.mp3",
+      "size_bytes": 83040
+    },
+    {
+      "key": "WORK_TYPE_PROBLEM_DESC",
+      "text": "Tell me what the problem is in a few words.",
+      "file": "work_type_problem_desc-e80b78b47f689609.mp3",
+      "hash": "e80b78b47f689609",
+      "checksum": "5bb1e1001d5b9c4fbc5e28209bc7e569aeb67deac3491f1442de30b568c01e15",
+      "path": "/audio/v7/static/shimmer/work_type_problem_desc-e80b78b47f689609.mp3",
+      "size_bytes": 55200
+    },
+    {
+      "key": "WORK_TYPE_GOAL_DESC",
+      "text": "Tell me what the goal is in a few words.",
+      "file": "work_type_goal_desc-8a0c19fb7962fff1.mp3",
+      "hash": "8a0c19fb7962fff1",
+      "checksum": "e143d644df981dd07ad6589dc1a7a8a301695735e855b520d6a73da4cf31ff96",
+      "path": "/audio/v7/static/shimmer/work_type_goal_desc-8a0c19fb7962fff1.mp3",
+      "size_bytes": 51840
+    },
+    {
+      "key": "WORK_TYPE_NEGATIVE_EXP_DESC",
+      "text": "Tell me what the negative experience was in a few words.",
+      "file": "work_type_negative_exp_desc-f9a50efba90603c5.mp3",
+      "hash": "f9a50efba90603c5",
+      "checksum": "c8974ca14581852d4d489c25365aa631f33435e86035283d91702fdd2aeb8637",
+      "path": "/audio/v7/static/shimmer/work_type_negative_exp_desc-f9a50efba90603c5.mp3",
+      "size_bytes": 71040
+    },
+    {
+      "key": "REALITY_GOAL_CAPTURE",
+      "text": "What do you want?",
+      "file": "reality_goal_capture-3e17dbf90bd4ae6b.mp3",
+      "hash": "3e17dbf90bd4ae6b",
+      "checksum": "327f9a966a019f5724e03adbcfd75b188b5d290ba671655be2fa14d3cca4df1e",
+      "path": "/audio/v7/static/shimmer/reality_goal_capture-3e17dbf90bd4ae6b.mp3",
+      "size_bytes": 21120
+    },
+    {
+      "key": "REALITY_DEADLINE_CHECK",
+      "text": "Is there a deadline?",
+      "file": "reality_deadline_check-b6b95b3d6798d71f.mp3",
+      "hash": "b6b95b3d6798d71f",
+      "checksum": "5749714f49acfee89e73b9f1f943c9d4c3acdb9dfc34c76dc8df5b34c6ace7e4",
+      "path": "/audio/v7/static/shimmer/reality_deadline_check-b6b95b3d6798d71f.mp3",
+      "size_bytes": 25440
+    },
+    {
+      "key": "REALITY_DEADLINE_DATE",
+      "text": "When do you want to achieve this goal by?",
+      "file": "reality_deadline_date-6e5958bbf6ff2fcc.mp3",
+      "hash": "6e5958bbf6ff2fcc",
+      "checksum": "1dba82df6eb9f2c400acaebb467ed78421085230e8ecdcfbb94e3652c01e5d6b",
+      "path": "/audio/v7/static/shimmer/reality_deadline_date-6e5958bbf6ff2fcc.mp3",
+      "size_bytes": 51840
+    },
+    {
+      "key": "REALITY_CERTAINTY",
+      "text": "How certain are you between 0% and 100% that you will achieve this goal?",
+      "file": "reality_certainty-53f5f9fc70c67b9c.mp3",
+      "hash": "53f5f9fc70c67b9c",
+      "checksum": "c4ffa4adc652051bf76e86e40bbe2db96a591f2a0a043dac33b101eca3e92592",
+      "path": "/audio/v7/static/shimmer/reality_certainty-53f5f9fc70c67b9c.mp3",
+      "size_bytes": 106560
+    },
+    {
+      "key": "RESTATE_PROBLEM",
+      "text": "OK so it is important we use your own words for the problem statement so please tell me what the problem is in a few words",
+      "file": "restate_problem-65c66a05aa43ab52.mp3",
+      "hash": "65c66a05aa43ab52",
+      "checksum": "44b72f1519212580bf9eace5cfa6789f860f2ad6746320174214ddb2e86a746a",
+      "path": "/audio/v7/static/shimmer/restate_problem-65c66a05aa43ab52.mp3",
+      "size_bytes": 156960
+    },
+    {
+      "key": "RESTATE_PROBLEM_SHORT",
+      "text": "How would you state the problem in a few words?",
+      "file": "restate_problem_short-ab6b1038efe6b21d.mp3",
+      "hash": "ab6b1038efe6b21d",
+      "checksum": "b2e3ff1e9e6e078c0fcce87acb3b5aa52d085516e6c0ebe6630f07fe80239904",
+      "path": "/audio/v7/static/shimmer/restate_problem_short-ab6b1038efe6b21d.mp3",
+      "size_bytes": 60000
+    }
+  ]
+}
