@@ -1,0 +1,12 @@
+{
+  "transcript": "It started after the move, I think, because that is when I stopped seeing my old friends, and the house felt empty in a way I had not expected it to feel.",
+  "expected_step_context": "trauma",
+  "condition_tags": [
+    "long-utterance",
+    "mid-utterance-pause",
+    "quiet-room"
+  ],
+  "speaker_notes": "SYNTHETIC PLACEHOLDER (2026-04-21). Generated via OpenAI gpt-4o-mini-tts, voice='fable', 700ms mid-clip pause inserted. NOT human speech; WER / VAD metrics from this clip are not representative of production. Replace with a real human recording per INDEX.md capture methodology before the US-021 / US-029 decision.",
+  "sample_rate": 16000,
+  "duration_sec": 12.95
+}

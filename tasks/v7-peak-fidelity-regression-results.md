@@ -136,3 +136,67 @@ story is rerun after the fix.
 ## Change log
 
 - **<YYYY-MM-DD>:** Plan committed. Execution pending.
+- **2026-04-19:** Status review — execution still pending operator. The
+  three preconditions cited at the top of this doc are in the following
+  state:
+  - (a) Live `OPENAI_API_KEY` with paid TTS/STT credits — **operator-gated**,
+    no action available to the autonomous agent.
+  - (b) US-020 recorded corpus — **still empty** under
+    `tests/fixtures/v7-speech-corpus/` (only `INDEX.md` + `schema.json`
+    committed; capturing human speech with documented informed consent is
+    the project-documented out-of-scope item for the agent).
+  - (c) QA engineer to traverse the 54-cell matrix — operator-gated.
+  No synthetic / fabricated rows are written to the results template
+  below; filling the table with placeholder numbers would silently
+  invalidate the US-031 decision that reads from it.
+
+- **2026-04-21:** Operator authorised autonomous execution of the
+  scriptable portions. Status update:
+  - (a) Funded `OPENAI_API_KEY` now in scope.
+  - (b) US-020 corpus is populated with a **synthetic placeholder**
+    (50 clips, every companion `.json` flags it in `speaker_notes`).
+    Real human-speech recapture per INDEX.md is still required before
+    these WER numbers are treated as production-quality evidence.
+  - (c) 54-cell end-to-end matrix still pending — manual QA traversal
+    remains operator-gated.
+
+### Automated WER — step 2 of the Method (scripted)
+
+Ran `scripts/wer-check.ts` on 2026-04-21 against the synthetic corpus.
+Script calls OpenAI STT directly (`OPENAI_STT_MODEL`, default
+`gpt-4o-mini-transcribe`, language=`en`) and compares the returned
+transcript to each clip's ground-truth `.json` after word-level
+normalisation. Full per-clip results in
+`tasks/v7-speech-corpus-wer-results.csv`; aggregate in
+`tasks/v7-speech-corpus-wer-summary.md`.
+
+| Condition tag         | Clips | Avg WER | Max WER |
+| --------------------- | ----- | ------- | ------- |
+| `short-answer`        | 12    | 30.56 % | 100.00 % |
+| `short-phrase`        | 21    |  0.79 % |  16.67 % |
+| `long-utterance`      | 10    |  0.59 % |   5.88 % |
+| `mid-utterance-pause` | 10    |  0.59 % |   5.88 % |
+| `whispered`           |  5    |  0.00 % |   0.00 % |
+| `quiet-room`          | 40    |  8.06 % | 100.00 % |
+| `background-tv`       |  5    | 13.33 % |  66.67 % |
+| `hvac-noise`          |  3    |  0.00 % |   0.00 % |
+| `silent-control`      |  2    |  0.00 % |   0.00 % |
+
+- **Overall mean WER:** 7.78 %
+- `silent-control`: 0 % means STT returned an empty transcript for
+  both clips (the desired behaviour — no false-positive invented
+  speech). A value of 100 % on a silent-control row would mean STT
+  hallucinated words from silence.
+- The `short-answer` bucket is the dominant contributor to overall
+  WER: single-word utterances that hit the 100 % WER ceiling when
+  STT returns either nothing or the wrong single word. This is a
+  known weakness of general-purpose STT models on isolated tokens
+  and the reason US-002's server-side gates exist. Re-measure after
+  real-human-speech recapture; the synthetic TTS is biased toward
+  over-articulation which may or may not reflect real patient audio.
+
+### End-to-end flow metrics (steps 3 / 4 / 5 of the Method)
+
+Still **PENDING MANUAL QA** — 54-cell matrix traversal with live v7
+session + vendor-leak tailing + voice-drift check. No automation
+substitute for this portion.

@@ -1,0 +1,12 @@
+{
+  "transcript": "When I imagine telling my parents, my throat tightens, and my voice goes up a register, and I start talking very fast, even though nothing bad has actually happened.",
+  "expected_step_context": "problem",
+  "condition_tags": [
+    "long-utterance",
+    "mid-utterance-pause",
+    "quiet-room"
+  ],
+  "speaker_notes": "SYNTHETIC PLACEHOLDER (2026-04-21). Generated via OpenAI gpt-4o-mini-tts, voice='shimmer', 700ms mid-clip pause inserted. NOT human speech; WER / VAD metrics from this clip are not representative of production. Replace with a real human recording per INDEX.md capture methodology before the US-021 / US-029 decision.",
+  "sample_rate": 16000,
+  "duration_sec": 13.35
+}

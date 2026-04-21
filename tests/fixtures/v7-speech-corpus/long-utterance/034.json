@@ -1,0 +1,12 @@
+{
+  "transcript": "When I think about it from a distance, it is not that big a deal, but when I am in it, my body acts like something is about to go very wrong, and I cannot talk myself out.",
+  "expected_step_context": "problem",
+  "condition_tags": [
+    "long-utterance",
+    "mid-utterance-pause",
+    "quiet-room"
+  ],
+  "speaker_notes": "SYNTHETIC PLACEHOLDER (2026-04-21). Generated via OpenAI gpt-4o-mini-tts, voice='nova', 700ms mid-clip pause inserted. NOT human speech; WER / VAD metrics from this clip are not representative of production. Replace with a real human recording per INDEX.md capture methodology before the US-021 / US-029 decision.",
+  "sample_rate": 16000,
+  "duration_sec": 12.35
+}

@@ -1,0 +1,12 @@
+{
+  "transcript": "The goal is to be able to walk into a room and not scan it for exits, because right now I can feel myself checking where the door is before I have even said hello.",
+  "expected_step_context": "goal",
+  "condition_tags": [
+    "long-utterance",
+    "mid-utterance-pause",
+    "quiet-room"
+  ],
+  "speaker_notes": "SYNTHETIC PLACEHOLDER (2026-04-21). Generated via OpenAI gpt-4o-mini-tts, voice='alloy', 700ms mid-clip pause inserted. NOT human speech; WER / VAD metrics from this clip are not representative of production. Replace with a real human recording per INDEX.md capture methodology before the US-021 / US-029 decision.",
+  "sample_rate": 16000,
+  "duration_sec": 11.2
+}

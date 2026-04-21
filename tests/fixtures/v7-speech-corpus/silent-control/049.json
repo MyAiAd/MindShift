@@ -1,0 +1,10 @@
+{
+  "transcript": "",
+  "expected_step_context": "any",
+  "condition_tags": [
+    "silent-control"
+  ],
+  "speaker_notes": "SYNTHETIC PLACEHOLDER (2026-04-21). Pure silent buffer, no TTS call, no background noise. Included only to exercise the silent-control path. See INDEX.md status entry for 2026-04-19.",
+  "sample_rate": 16000,
+  "duration_sec": 2
+}
