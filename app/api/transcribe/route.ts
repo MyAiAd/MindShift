@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { STT_PROVIDER } from '@/lib/voice/speech-config';
+import {
+  detectOpenAIHallucination,
+  type OpenAISegment,
+} from '@/lib/voice/openai-hallucination';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30; // Vercel timeout handling
@@ -124,167 +128,9 @@ function averageSegmentConfidence(segments: Array<{ avg_logprob?: number }> | un
   return Math.max(0, Math.min(1, Math.exp(meanLogprob)));
 }
 
-// ============================================================================
-// SERVER-SIDE HALLUCINATION FILTER FOR OPENAI STT
-// ============================================================================
-// OpenAI's Whisper API produces hallucinations on silence/noise just like the
-// self-hosted model. The OpenAI path previously had ZERO filtering, allowing
-// phantom transcripts (often in non-English languages) to reach the client.
-// ============================================================================
-
-const OPENAI_HALLUCINATION_PHRASES = new Set([
-  'thanks for watching', 'thank you for watching',
-  'thanks for watching and ill see you in the next video',
-  'see you in the next video', 'see you in the next one', 'see you next time',
-  'thanks for listening', 'thank you for listening',
-  'thank you very much', 'thank you so much', 'thank you', 'thanks',
-  'bye bye', 'bye', 'goodbye',
-  'please subscribe', 'subscribe to my channel',
-  'like and subscribe', 'please like and subscribe',
-  'hey guys', 'hi everyone', 'hello everyone', 'welcome back',
-  'thats all for today', 'until next time',
-  'music', 'music playing', 'applause', 'laughter', 'silence',
-  // Non-English hallucinations that Whisper produces from silence
-  'diolch yn fawr iawn am wylior fideo',
-  'diolch yn fawr am wylior fideo',
-  'diolch yn fawr',
-  'ご視聴ありがとうございました', '字幕由', '谢谢观看', '감사합니다',
-]);
-
-const OPENAI_HALLUCINATION_SUBSTRINGS = [
-  'thanks for watching', 'thank you for watching',
-  'see you in the next video', 'subscribe to my channel',
-  'like and subscribe', 'welcome to my channel',
-  'subtitles by', 'captions by', 'transcribed by',
-  'amara.org', 'mozilla foundation',
-  'diolch yn fawr', 'am wylior fideo', 'am wylio\'r fideo',
-];
-
-type OpenAISegment = {
-  avg_logprob?: number;
-  no_speech_prob?: number;
-  compression_ratio?: number;
-  text?: string;
-};
-
-type HallucinationDiagnostics = {
-  filtered: boolean;
-  reason: string | null;
-  avgNoSpeechProb: number | null;
-  avgLogprob: number | null;
-  wordCount: number;
-};
-
-/**
- * Apply US-002 server-side hallucination metadata gates in the order specified by the PRD:
- *   (1) language !== 'en' on v7 sessions
- *   (2) avg(no_speech_prob) > 0.6
- *   (3) avg(avg_logprob) < -1.0 AND duration < 3.0s
- *   (4) duration < 1.5s AND word_count > 8
- *   (5) exact or substring match against OPENAI_HALLUCINATION_PHRASES / SUBSTRINGS
- *
- * Returns the filtered decision plus the numeric inputs so callers can emit structured logs.
- */
-function detectOpenAIHallucination(
-  transcript: string,
-  language: string,
-  segments: OpenAISegment[],
-  duration: number,
-  treatmentVersion: string | null,
-): HallucinationDiagnostics {
-  const trimmed = transcript?.trim() ?? '';
-  const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
-
-  const noSpeechProbs = (segments || [])
-    .map((s) => s.no_speech_prob)
-    .filter((v): v is number => typeof v === 'number');
-  const avgNoSpeechProb = noSpeechProbs.length > 0
-    ? noSpeechProbs.reduce((a, b) => a + b, 0) / noSpeechProbs.length
-    : null;
-
-  const logprobs = (segments || [])
-    .map((s) => s.avg_logprob)
-    .filter((v): v is number => typeof v === 'number');
-  const avgLogprob = logprobs.length > 0
-    ? logprobs.reduce((a, b) => a + b, 0) / logprobs.length
-    : null;
-
-  if (!trimmed) {
-    return { filtered: false, reason: null, avgNoSpeechProb, avgLogprob, wordCount };
-  }
-
-  // Gate 1: v7-only language gate — our v7 therapy sessions are English-only.
-  if (treatmentVersion === 'v7' && language && language !== 'en') {
-    return {
-      filtered: true,
-      reason: `non_english_language: ${language}`,
-      avgNoSpeechProb,
-      avgLogprob,
-      wordCount,
-    };
-  }
-
-  // Gate 2: high average no_speech_prob means Whisper itself is saying "probably silence".
-  if (avgNoSpeechProb !== null && avgNoSpeechProb > 0.6) {
-    return {
-      filtered: true,
-      reason: `high_no_speech_prob: ${avgNoSpeechProb.toFixed(3)}`,
-      avgNoSpeechProb,
-      avgLogprob,
-      wordCount,
-    };
-  }
-
-  // Gate 3: low-confidence short-audio — typical hallucination shape.
-  if (avgLogprob !== null && avgLogprob < -1.0 && duration < 3.0) {
-    return {
-      filtered: true,
-      reason: `low_confidence_short_audio: logprob=${avgLogprob.toFixed(3)}, duration=${duration.toFixed(2)}s`,
-      avgNoSpeechProb,
-      avgLogprob,
-      wordCount,
-    };
-  }
-
-  // Gate 4: duration/word-count mismatch — very short audio can't produce long transcripts.
-  if (duration < 1.5 && wordCount > 8) {
-    return {
-      filtered: true,
-      reason: `duration_mismatch: ${wordCount} words in ${duration.toFixed(2)}s`,
-      avgNoSpeechProb,
-      avgLogprob,
-      wordCount,
-    };
-  }
-
-  // Gate 5: exact-phrase / substring deny-list (YouTube boilerplate, non-English hallucinations).
-  const normalized = transcript.toLowerCase().replace(/[^\w\s']/g, '').replace(/\s+/g, ' ').trim();
-  if (OPENAI_HALLUCINATION_PHRASES.has(normalized)) {
-    return {
-      filtered: true,
-      reason: `exact_match: "${normalized}"`,
-      avgNoSpeechProb,
-      avgLogprob,
-      wordCount,
-    };
-  }
-  for (const pattern of OPENAI_HALLUCINATION_SUBSTRINGS) {
-    if (normalized.includes(pattern)) {
-      return {
-        filtered: true,
-        reason: `substring_match: "${pattern}"`,
-        avgNoSpeechProb,
-        avgLogprob,
-        wordCount,
-      };
-    }
-  }
-
-  return { filtered: false, reason: null, avgNoSpeechProb, avgLogprob, wordCount };
-}
-
-/** Export for unit tests (US-003). Not part of the public HTTP surface. */
-export const __test__ = { detectOpenAIHallucination };
+// Server-side OpenAI STT hallucination filter implementation lives in
+// `lib/voice/openai-hallucination.ts` so it can be unit-tested without
+// re-exporting a non-whitelisted field from this Next.js route file.
 
 /**
  * Whether the given OpenAI error represents a transient failure that is safe to retry once per

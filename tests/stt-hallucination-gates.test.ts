@@ -1,8 +1,11 @@
 /**
  * US-003: Unit tests for the OpenAI STT hallucination metadata gates.
  *
- * Runs via `npx tsx --test tests/stt-hallucination-gates.test.ts`. The gates under test come from
- * `app/api/transcribe/route.ts` via the internal `__test__` export (ESM-only, server-side).
+ * Runs via `npx tsx --test tests/stt-hallucination-gates.test.ts`. The gates
+ * under test come from `lib/voice/openai-hallucination.ts` (originally lived
+ * in `app/api/transcribe/route.ts`; extracted 2026-04-21 so the Next.js
+ * route file could drop its illegal `__test__` export and unblock the
+ * production build).
  *
  * Gate order (from US-002):
  *   (1) language !== 'en' on v7 sessions
@@ -13,9 +16,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { __test__ } from '../app/api/transcribe/route';
-
-const { detectOpenAIHallucination } = __test__;
+import { detectOpenAIHallucination } from '../lib/voice/openai-hallucination';
 
 test('gate 1: non-English language is filtered for v7 sessions only', () => {
   const v7 = detectOpenAIHallucination(
