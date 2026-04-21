@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * @deprecated Use `/api/treatment-v7/realtime-session` (US-022) for the v7
- * Track B Realtime API pipeline. This labs-only route is retained for the
- * standalone voice-demo UI at `/admin/labs/openai-voice` and must not be
- * used by the production v7 code path. Scheduled for removal once the
- * labs demo is migrated to the v7 endpoint.
+ * Labs-only OpenAI Realtime session mint for the `/admin/labs/openai-voice`
+ * demo UI. The v7 production path does NOT use Realtime — the Track B
+ * pipeline was evaluated and removed on 2026-04-21 (see
+ * `docs/v7-pipeline-decision.md`). This route exists purely for the
+ * standalone labs/demo surface and must not be reintroduced to v7.
  */
 export async function POST(request: NextRequest) {
   try {
