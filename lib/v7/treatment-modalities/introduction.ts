@@ -70,20 +70,33 @@ export class IntroductionPhase {
               }
             }
             
-            // Handle problem description after method selection
+            // Handle problem description after method selection.
+            // MATCH V2: set currentStep/currentPhase to the appropriate
+            // method intro and return SKIP_TO_TREATMENT_INTRO so the
+            // routing machine jumps straight there, rather than emitting
+            // an ad-hoc user-facing confirmation that v2 never spoke.
             if (context.metadata.workType === 'problem' && context.metadata.selectedMethod) {
               context.metadata.problemStatement = userInput;
               context.problemStatement = userInput;
               if (!context.metadata.originalProblemStatement) {
                 context.metadata.originalProblemStatement = userInput;
               }
-              
-              // Set routing flag for determineNextStep to handle
-              context.metadata.readyForTreatment = true;
-              
-              // Return user-friendly confirmation message
-              const methodName = context.metadata.selectedMethod.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-              return `Great! We'll work on "${userInput}" using ${methodName}. Let's begin the treatment.`;
+
+              if (context.metadata.selectedMethod === 'problem_shifting') {
+                context.currentStep = 'problem_shifting_intro';
+                context.currentPhase = 'problem_shifting';
+              } else if (context.metadata.selectedMethod === 'identity_shifting') {
+                context.currentStep = 'identity_shifting_intro';
+                context.currentPhase = 'identity_shifting';
+              } else if (context.metadata.selectedMethod === 'belief_shifting') {
+                context.currentStep = 'belief_shifting_intro';
+                context.currentPhase = 'belief_shifting';
+              } else if (context.metadata.selectedMethod === 'blockage_shifting') {
+                context.currentStep = 'blockage_shifting_intro';
+                context.currentPhase = 'blockage_shifting';
+              }
+
+              return 'SKIP_TO_TREATMENT_INTRO';
             }
             
             // Handle goal description after work type selection for goals

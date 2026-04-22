@@ -69,40 +69,54 @@ export class DiggingDeeperPhase {
             console.log('🔍 BELIEF_DEBUG digging_method_selection - userInput:', userInput);
             console.log('🔍 BELIEF_DEBUG digging_method_selection - context.metadata before:', JSON.stringify(context.metadata, null, 2));
             console.log('🔍 BELIEF_DEBUG digging_method_selection - context.problemStatement before:', context.problemStatement);
-            
-            // If this is the first time showing this step (coming from restate_problem_future), 
-            // store the problem and show the selection message
-            if (!context.metadata.currentDiggingProblem && input && input !== 'METHOD_SELECTION_NEEDED') {
-              // Use the new problem statement that was stored in restate_problem_future step
-              const newProblem = context.metadata.newDiggingProblem || input;
+
+            // The v4+ UX adds a numbered method list to the v2 prompt. This
+            // is flagged as an intentional improvement in
+            // tests/helpers/comparator.ts (`digging_method_list`), so we
+            // keep it for user-facing display while otherwise mirroring
+            // v2's control flow below.
+            const promptText = `We need to clear this problem. Which method would you like to use?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting`;
+
+            // MATCH V2: don't overwrite currentDiggingProblem or
+            // returnToDiggingStep if they were set by determineNextStep
+            // (e.g. coming from restate_anything_else_problem_1/2 which
+            // correctly set these values).
+            const alreadySetup = context.metadata.currentDiggingProblem &&
+                                 context.metadata.returnToDiggingStep &&
+                                 context.metadata.returnToDiggingStep !== 'future_problem_check';
+
+            // MATCH V2: first-visit pulls the new problem from the
+            // restate_problem_future response, not from the current input.
+            // This prevents the step from accidentally treating a numeric
+            // method selection as a problem statement.
+            const newProblemFromRestate = context.userResponses?.['restate_problem_future'];
+            if (newProblemFromRestate && newProblemFromRestate.trim() && !alreadySetup) {
+              const newProblem = newProblemFromRestate.trim();
               context.metadata.currentDiggingProblem = newProblem;
               context.metadata.diggingProblemNumber = (context.metadata.diggingProblemNumber || 1) + 1;
-              context.metadata.returnToDiggingStep = 'scenario_check_1'; // Where to return after clearing
+
+              if (!context.metadata.returnToDiggingStep ||
+                  context.metadata.returnToDiggingStep === 'future_problem_check') {
+                context.metadata.returnToDiggingStep = 'future_problem_check';
+              }
+
               context.problemStatement = newProblem;
-              
-              // CRITICAL: Set work type to 'problem' to ensure proper method selection
               context.metadata.workType = 'problem';
-              console.log(`🔍 DIGGING_METHOD_SELECTION: Stored new problem: "${newProblem}"`);
-              console.log(`🔍 DIGGING_METHOD_SELECTION: Using newDiggingProblem: "${context.metadata.newDiggingProblem}"`);
-              console.log(`🔍 DIGGING_METHOD_SELECTION: Set workType to 'problem' for method selection`);
-              console.log('🔍 BELIEF_DEBUG digging_method_selection - context.metadata after storing:', JSON.stringify(context.metadata, null, 2));
-              console.log('🔍 BELIEF_DEBUG digging_method_selection - context.problemStatement after storing:', context.problemStatement);
-              
-              return `We need to clear this problem. Which method would you like to use?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting`;
+
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Stored new problem from restate_problem_future: "${newProblem}"`);
+              console.log(`🔍 DIGGING_METHOD_SELECTION: Iteration #${context.metadata.diggingProblemNumber}`);
+
+              return promptText;
             }
-            
+
             // If we already have the problem stored and no new input, show the selection message
             if (!input || input === 'METHOD_SELECTION_NEEDED') {
-              return `We need to clear this problem. Which method would you like to use?\n\n1. Problem Shifting\n2. Identity Shifting\n3. Belief Shifting\n4. Blockage Shifting`;
+              return promptText;
             }
-            
-            // Validate input before proceeding
-            const validInputs = ['1', '2', '3', '4', 'problem shifting', 'identity shifting', 'belief shifting', 'blockage shifting'];
-            if (!validInputs.some(valid => input.toLowerCase().includes(valid.toLowerCase()))) {
-              return "Please choose Problem Shifting, Identity Shifting, Belief Shifting, or Blockage Shifting.";
-            }
-            
-            // Handle method selection - return routing signals instead of direct phase manipulation
+
+            // MATCH V2: handle method selection first, then fall through to
+            // the re-prompt. v2 has no explicit "validate then bail" block;
+            // invalid input lands on the final else below.
             if (input.toLowerCase().includes('problem shifting') || input === '1') {
               context.metadata.selectedMethod = 'problem_shifting';
               context.metadata.skipIntroInstructions = true; // Skip lengthy instructions for digging deeper
@@ -124,6 +138,7 @@ export class DiggingDeeperPhase {
               console.log(`🔍 DIGGING_METHOD_SELECTION: Selected Blockage Shifting for digging deeper`);
               return "BLOCKAGE_SHIFTING_SELECTED";
             } else {
+              // MATCH V2: validation re-prompt with no numbered list.
               return "Please choose Problem Shifting, Identity Shifting, Belief Shifting, or Blockage Shifting.";
             }
           },
@@ -320,15 +335,18 @@ export class DiggingDeeperPhase {
             context.metadata.returnToDiggingStep = 'anything_else_check_1';
             context.metadata.workType = 'problem'; // Set work type for method selection
             context.problemStatement = newProblem;
-            
-            // Return method selection signal
-            return "METHOD_SELECTION_NEEDED";
+
+            // MATCH V2: emit the doctor-authored method-selection prompt
+            // directly rather than leaking the METHOD_SELECTION_NEEDED
+            // routing token. v2's sibling steps _2 and _3 still return the
+            // token (and match v7 on that), so we only align _1 here.
+            return 'We need to clear this problem. Which method would you like to use?';
           },
-          expectedResponseType: 'open',
+          expectedResponseType: 'selection',
           validationRules: [
-            { type: 'minLength', value: 1, errorMessage: 'Please continue with the process.' }
+            { type: 'minLength', value: 1, errorMessage: 'Please choose a method.' }
           ],
-          nextStep: undefined, // Handled by routing logic
+          nextStep: 'digging_method_selection',
           aiTriggers: []
         },
         {
