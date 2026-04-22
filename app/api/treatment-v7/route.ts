@@ -392,19 +392,32 @@ async function handleContinueSession(sessionId: string, userInput: string, userI
       const responseTime = endTime - startTime;
 
       if (STRICT_SPEECH_MODE) {
+        const ctx = treatmentMachine.getContextForUndo(sessionId);
+        const currentStepId = ctx?.currentStep || 'mind_shifting_explanation';
+
         console.warn('Treatment V7 API: STRICT_SPEECH_MODE blocked AI assistance rewrite', {
           sessionId,
-          currentStep: treatmentMachine.getContextForUndo(sessionId)?.currentStep,
+          currentStep: currentStepId,
           trigger: result.needsAIAssistance.trigger?.condition,
         });
 
+        // In strict mode we never call AI and we must never emit a generic
+        // placeholder. Prefer the scriptedResponse the state machine already
+        // attached to the result, then fall back to the current step's own
+        // doctor-authored prompt, and only as a last resort use a minimal
+        // scripted re-prompt so the session never goes silent.
+        const strictFallback =
+          result.scriptedResponse ||
+          treatmentMachine.getCurrentStepScriptedResponse(sessionId) ||
+          'Please choose 1 for Problem, 2 for Goal, or 3 for Negative Experience.';
+
         finalResponse = {
           ...finalResponse,
-          message: result.scriptedResponse || 'Please continue with the current step of the process.',
-          currentStep: treatmentMachine.getContextForUndo(sessionId)?.currentStep || 'mind_shifting_explanation',
+          message: strictFallback,
+          currentStep: currentStepId,
           expectedResponseType: getExpectedResponseTypeForStep(
-            treatmentMachine.getContextForUndo(sessionId)?.currentStep || 'mind_shifting_explanation',
-            treatmentMachine.getContextForUndo(sessionId)?.currentPhase
+            currentStepId,
+            ctx?.currentPhase
           ),
           responseTime: Math.round(responseTime),
           usedAI: false,
@@ -647,9 +660,13 @@ async function handleAIAssistance(
     return aiResponse;
   } catch (error) {
     console.error('V7 AI assistance error:', error);
-    // Fallback to scripted response
+    // Fallback to the current step's doctor-authored prompt so we never
+    // leak a generic "Please continue..." placeholder. If the step prompt
+    // cannot be computed, return an empty string and let the caller handle
+    // it rather than forcing the patient to hear a non-script message.
+    const scripted = treatmentMachine.getCurrentStepScriptedResponse(sessionId);
     return {
-      message: "Please continue with the current step of the process.",
+      message: scripted,
       shouldReturnToScript: true,
       tokenCount: 0,
       cost: 0

@@ -121,6 +121,14 @@ export class BaseTreatmentStateMachine {
         // Check if we need AI assistance
         const aiTrigger = this.checkAITriggers(userInput, currentStep, treatmentContext);
         if (aiTrigger) {
+          // Always provide a scripted fallback so STRICT_SPEECH_MODE callers
+          // (which must not call AI) can re-prompt with doctor-authored wording
+          // instead of leaking a generic "Please continue..." placeholder.
+          const scriptedFallback = this.getScriptedFallbackForStep(
+            currentStep,
+            treatmentContext,
+            validationResult.error
+          );
           return {
             canContinue: false,
             triggeredAI: true,
@@ -128,7 +136,8 @@ export class BaseTreatmentStateMachine {
               trigger: aiTrigger,
               context: this.buildAIContext(treatmentContext, currentStep),
               userInput
-            }
+            },
+            scriptedResponse: scriptedFallback
           };
         }
         
@@ -817,6 +826,67 @@ export class BaseTreatmentStateMachine {
 
   private getValidationPrompt(step: TreatmentStep, error: string): string {
     return `${error} Please try again.`;
+  }
+
+  /**
+   * Build a doctor-authored scripted fallback for a step. Used when AI
+   * assistance is blocked (e.g., STRICT_SPEECH_MODE) but we still need to
+   * re-prompt the user with wording that belongs to the script, not a
+   * generic "Please continue..." placeholder.
+   *
+   * Strategy:
+   *   1. If the validation rule produced a human-readable errorMessage,
+   *      surface it via getValidationPrompt (that's what the non-AI path
+   *      already does).
+   *   2. Otherwise, re-emit the current step's own scripted prompt so the
+   *      user hears exactly what the step expects.
+   */
+  private getScriptedFallbackForStep(
+    step: TreatmentStep,
+    context: TreatmentContext,
+    validationError?: string,
+  ): string {
+    // If the validation produced a user-readable message (not an internal
+    // AI_VALIDATION_NEEDED:* signal), use the standard re-prompt path.
+    if (validationError && !validationError.startsWith('AI_VALIDATION_NEEDED:')) {
+      return this.getValidationPrompt(step, validationError);
+    }
+
+    // Otherwise re-play the step's own scripted prompt.
+    try {
+      return this.getScriptedResponse(step, context);
+    } catch (err) {
+      console.warn('getScriptedFallbackForStep: failed to compute step prompt', {
+        stepId: step.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      // Last-resort: use the minLength errorMessage if present, so we still
+      // emit doctor-authored wording rather than a hard-coded placeholder.
+      const minLengthRule = step.validationRules?.find(r => r.type === 'minLength');
+      if (minLengthRule?.errorMessage) {
+        return minLengthRule.errorMessage;
+      }
+      return '';
+    }
+  }
+
+  /**
+   * Public helper: return the current step's scripted prompt for the given
+   * session. Used by the route handler as a last-ditch fallback when a
+   * response object is missing a scriptedResponse in strict mode.
+   */
+  public getCurrentStepScriptedResponse(sessionId: string): string {
+    const context = this.contexts.get(sessionId);
+    if (!context) return '';
+    const phase = this.phases.get(context.currentPhase);
+    if (!phase) return '';
+    const step = phase.steps.find(s => s.id === context.currentStep);
+    if (!step) return '';
+    try {
+      return this.getScriptedResponse(step, context);
+    } catch {
+      return '';
+    }
   }
 
   private buildAIContext(context: TreatmentContext, step: TreatmentStep): string {

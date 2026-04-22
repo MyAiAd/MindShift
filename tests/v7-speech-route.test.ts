@@ -44,6 +44,18 @@ function assertNoRoutingTokenLeak(message: string | undefined) {
   }
 }
 
+const GENERIC_FALLBACK_PLACEHOLDER =
+  'Please continue with the current step of the process.';
+
+function assertNoGenericPlaceholder(message: string | undefined) {
+  assert.ok(message, 'Expected a patient-facing message');
+  assert.equal(
+    message.includes(GENERIC_FALLBACK_PLACEHOLDER),
+    false,
+    `Expected message not to include generic fallback placeholder "${GENERIC_FALLBACK_PLACEHOLDER}"`,
+  );
+}
+
 test('v7 start returns expected response metadata', async () => {
   const sessionId = makeSessionId('start');
   const response = await postTreatment({
@@ -127,4 +139,47 @@ test('v7 problem-path entry keeps routing tokens out of patient output', async (
   assert.ok(intro.currentStep);
   assert.ok(intro.expectedResponseType);
   assertNoRoutingTokenLeak(intro.message);
+});
+
+test('v7 work-type selection surfaces the scripted method-selection prompt, not the generic placeholder', async () => {
+  const sessionId = makeSessionId('work-type-script');
+  await postTreatment({ action: 'start', sessionId, userId: 'test-user' });
+
+  const chooseMethod = await postTreatment({
+    action: 'continue',
+    sessionId,
+    userId: 'test-user',
+    userInput: '1',
+  });
+
+  assert.equal(chooseMethod.currentStep, 'choose_method');
+  assertNoRoutingTokenLeak(chooseMethod.message);
+  assertNoGenericPlaceholder(chooseMethod.message);
+  assert.ok(
+    chooseMethod.message?.includes('Choose which Mind Shifting method'),
+    `Expected message to include the scripted choose_method prompt, got: ${chooseMethod.message}`,
+  );
+});
+
+test('v7 strict-mode re-prompts with doctor-authored wording when AI assistance is blocked', async () => {
+  // Input that fails validation on mind_shifting_explanation AND hits the
+  // needsClarification AI trigger ("what do you mean"). Before the fix this
+  // path would emit the generic "Please continue with the current step..."
+  // placeholder; now it must re-prompt with the doctor-authored script.
+  const sessionId = makeSessionId('strict-fallback');
+  await postTreatment({ action: 'start', sessionId, userId: 'test-user' });
+
+  const stuck = await postTreatment({
+    action: 'continue',
+    sessionId,
+    userId: 'test-user',
+    userInput: 'what do you mean by that?',
+  });
+
+  assertNoRoutingTokenLeak(stuck.message);
+  assertNoGenericPlaceholder(stuck.message);
+  assert.ok(
+    stuck.message && stuck.message.trim().length > 0,
+    'Expected a non-empty scripted re-prompt',
+  );
 });
