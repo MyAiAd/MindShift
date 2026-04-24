@@ -28,8 +28,13 @@ const navItems = [
     icon: Home,
   },
   {
+    // Route the primary "Shifting" entry to v9 (voice clone of v2,
+    // byte-parity enforced in CI). The v9 page auto-generates a fresh
+    // session id on mount when none is provided. v7 remains reachable
+    // via its labs demo section in /dashboard/settings for regression
+    // comparison, but it is no longer the default.
     label: 'Shifting',
-    href: '/dashboard/sessions/treatment-v7',
+    href: '/dashboard/sessions/treatment-v9',
     icon: Sparkles,
   },
   {

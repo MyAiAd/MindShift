@@ -18,6 +18,7 @@ export default function DashboardLayout({
 
   // Determine if we should hide the mobile nav (orb mode on mobile)
   const isTreatmentRoute =
+    pathname?.startsWith('/dashboard/sessions/treatment-v9') ||
     pathname?.startsWith('/dashboard/sessions/treatment-v7') ||
     pathname?.startsWith('/dashboard/sessions/treatment-v6') ||
     pathname?.startsWith('/dashboard/sessions/treatment-v5') ||

@@ -170,8 +170,13 @@ function DashboardContent() {
   };
 
   const handleStartShifting = () => {
-    const sessionId = `session-v7-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    router.push(`/dashboard/sessions/treatment-v7?sessionId=${sessionId}`);
+    // Production traffic is on v9 (voice clone of v2, byte-parity
+    // enforced in CI). Matches the session-hub flow in
+    // app/dashboard/sessions/page.tsx so new sessions share a single
+    // id-prefix convention (`session-v9-*`) that the resume logic
+    // keys on to route users back to the correct version.
+    const sessionId = `session-v9-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    router.push(`/dashboard/sessions/treatment-v9?sessionId=${sessionId}`);
   };
 
   const timePeriodLabels: Record<TimePeriod, string> = {
