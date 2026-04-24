@@ -126,14 +126,17 @@ export function listTtsCostSessions(): string[] {
  */
 export function evictStaleTtsCostSessions(maxAgeMs: number): number {
   const cutoff = Date.now() - maxAgeMs;
-  let evicted = 0;
-  for (const [id, record] of sessions.entries()) {
+  // Collect first, delete second. Avoids the ES5 iterator downlevel
+  // requirement triggered by `for (… of sessions.entries())` and
+  // sidesteps any concern about deleting while iterating.
+  const staleIds: string[] = [];
+  sessions.forEach((record, id) => {
     if (record.lastUpdated < cutoff) {
-      sessions.delete(id);
-      evicted += 1;
+      staleIds.push(id);
     }
-  }
-  return evicted;
+  });
+  staleIds.forEach((id) => sessions.delete(id));
+  return staleIds.length;
 }
 
 /** For tests only. */
