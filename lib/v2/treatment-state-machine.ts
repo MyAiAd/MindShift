@@ -5676,14 +5676,31 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
   /**
    * Clear context for fresh session start
    */
-  public async clearContext(sessionId: string): Promise<void> {
+  public async clearContext(sessionId: string, context?: Partial<TreatmentContext>): Promise<void> {
     console.log(`🗑️ CLEAR_CONTEXT: Clearing context for session ${sessionId}`);
     
     // Remove from memory
     this.contexts.delete(sessionId);
+    this.responseCache.cache.clear();
     
-    // Clear from database (optional - you might want to keep for analytics)
-    // For now, we'll just clear from memory to ensure fresh start
+    // Seed a fresh in-memory context so `processUserInput('start')` does
+    // not reload stale persisted state for a reused session id.
+    this.contexts.set(sessionId, {
+      userId: context?.userId || '',
+      sessionId,
+      currentPhase: 'introduction',
+      currentStep: 'mind_shifting_explanation',
+      userResponses: {},
+      startTime: new Date(),
+      lastActivity: new Date(),
+      metadata: {
+        cycleCount: 0,
+        problemStatement: '',
+        lastResponse: '',
+        workType: 'problem'
+      }
+    });
+
     console.log(`🗑️ CLEAR_CONTEXT: Context cleared for session ${sessionId}`);
   }
 

@@ -33,7 +33,7 @@ const TRANSITION_SIGNALS = new Set<string>([
 export async function v9HandleStartSession(sessionId: string, userId: string) {
   const startTime = performance.now();
   try {
-    await v9TreatmentMachine.clearContext(sessionId);
+    await v9TreatmentMachine.clearContext(sessionId, { userId });
     const result = await v9TreatmentMachine.processUserInput(
       sessionId,
       'start',

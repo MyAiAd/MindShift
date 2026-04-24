@@ -36,9 +36,14 @@ const SESSION_PATH = path.resolve(
   'v9',
   'TreatmentSession.tsx',
 );
+const CORE_PATH = path.resolve(__dirname, '..', '..', 'lib', 'v9', 'core.ts');
 
 function readSession(): string {
   return readFileSync(SESSION_PATH, 'utf-8');
+}
+
+function readCore(): string {
+  return readFileSync(CORE_PATH, 'utf-8');
 }
 
 // ---------- R11.5 ----------
@@ -83,6 +88,14 @@ test('R11.5: V9 captures voicePair from start response (R9)', () => {
   assert.ok(
     /setVoicePair\(data\.voicePair\)/.test(src),
     'V9 must capture the pinned voicePair from the start response',
+  );
+});
+
+test('R11.5: V9 start clears stale context with the current user id', () => {
+  const src = readCore();
+  assert.ok(
+    /clearContext\(sessionId,\s*\{\s*userId\s*\}\)/.test(src),
+    'V9 start must seed a fresh context and not reload stale persisted state',
   );
 });
 
