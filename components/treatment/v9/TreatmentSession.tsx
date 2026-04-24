@@ -802,10 +802,36 @@ export default function TreatmentSession({
     usedAI?: boolean;
     metadata?: any;
   } | null>(null);
+  const pendingMessageRef = useRef<typeof pendingMessage>(null);
   const pendingMessageTimingRef = useRef<{
     audioStartTime?: number;
     textRenderTime?: number;
   }>({});
+
+  useEffect(() => {
+    pendingMessageRef.current = pendingMessage;
+  }, [pendingMessage]);
+
+  const revealPendingMessageWithoutAudio = useCallback(() => {
+    const pending = pendingMessageRef.current;
+    if (!pending) return;
+
+    const fallbackMessage: TreatmentMessage = {
+      id: (Date.now() + 1).toString(),
+      content: pending.content,
+      isUser: false,
+      timestamp: new Date(),
+      responseTime: pending.responseTime,
+      usedAI: pending.usedAI,
+      metadata: pending.metadata,
+      version: 'v9',
+    };
+
+    setMessages(prev => [...prev, fallbackMessage]);
+    pendingMessageRef.current = null;
+    setPendingMessage(null);
+    setIsFirstSpeechLoading(false);
+  }, []);
 
   // Handler for when audio starts and text should be rendered (with 150ms delay)
   const handleRenderText = useCallback((timing: { audioStartTime: number; textRenderTime: number }) => {
@@ -831,6 +857,7 @@ export default function TreatmentSession({
       };
       
       setMessages(prev => [...prev, timedMessage]);
+      pendingMessageRef.current = null;
       setPendingMessage(null); // Clear pending message
     }
     
@@ -932,7 +959,13 @@ export default function TreatmentSession({
     ttsProviderOverride,
     onTtsUsage: handleTtsUsage,
     onSpeechProviderError: ({ kind, provider, message }) => {
+      if (kind === 'tts') {
+        revealPendingMessageWithoutAudio();
+      }
+
       if (provider !== 'openai') {
+        console.error(`V9 ${kind.toUpperCase()} speech provider error (${provider}):`, message);
+        setVoiceError(message);
         return;
       }
 

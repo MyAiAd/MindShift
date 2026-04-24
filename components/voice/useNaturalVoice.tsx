@@ -45,7 +45,11 @@ interface UseNaturalVoiceProps {
     treatmentVersion?: string;
     sttProviderOverride?: 'existing' | 'openai';
     ttsProviderOverride?: 'existing' | 'openai';
-    onSpeechProviderError?: (details: { kind: 'stt' | 'tts'; provider: 'openai' | 'existing'; message: string }) => void;
+    onSpeechProviderError?: (details: {
+        kind: 'stt' | 'tts';
+        provider: 'openai' | 'existing' | 'elevenlabs' | 'kokoro';
+        message: string;
+    }) => void;
     onTtsUsage?: (usage: NaturalVoiceTtsUsage) => void;
 }
 
