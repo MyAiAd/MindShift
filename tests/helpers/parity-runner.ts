@@ -3,6 +3,7 @@ import {
   createParityPair,
   createParityPairV2V5,
   createParityPairV2V6,
+  createParityPairV2V9,
   TreatmentApiClient,
   TreatmentResponse,
 } from './api-client';
@@ -55,6 +56,16 @@ export interface ParityStepResultV2V6 {
   v6: TreatmentResponse;
   v2StepNorm: string;
   v6StepNorm: string;
+}
+
+export interface ParityStepResultV2V9 {
+  index: number;
+  label: string;
+  input: string;
+  v2: TreatmentResponse;
+  v9: TreatmentResponse;
+  v2StepNorm: string;
+  v9StepNorm: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -1220,4 +1231,347 @@ export function assertMessageContainsProblem(
     `  Found refs: [${refs.join(', ')}]\n` +
     `  Message: "${response.message.substring(0, 200)}..."`
   ).toBe(true);
+}
+
+// ---------------------------------------------------------------------------
+// Parity runner (v2 + v9 side-by-side)
+//
+// V9 is a voice wrapper around V2's own state machine, so this comparison
+// should always produce byte-identical `message` text. No
+// `KNOWN_ACCEPTABLE_DIFFERENCES` allowlist is honoured for v9.
+// ---------------------------------------------------------------------------
+
+export async function runParityFlowV2V9(
+  request: APIRequestContext,
+  steps: FlowStep[],
+): Promise<{
+  results: ParityStepResultV2V9[];
+  v2: TreatmentApiClient;
+  v9: TreatmentApiClient;
+  v2Failed: boolean;
+  v2FailureStep?: number;
+  v2FailureError?: string;
+  v9Failed: boolean;
+  v9FailureStep?: number;
+  v9FailureError?: string;
+}> {
+  const { v2, v9 } = createParityPairV2V9(request);
+
+  const [v2Start, v9Start] = await Promise.all([v2.start(), v9.start()]);
+
+  const results: ParityStepResultV2V9[] = [
+    {
+      index: 0,
+      label: 'start',
+      input: 'start',
+      v2: v2Start,
+      v9: v9Start,
+      v2StepNorm: normalizeStep(v2Start.currentStep),
+      v9StepNorm: normalizeStep(v9Start.currentStep),
+    },
+  ];
+
+  let v2Failed = false;
+  let v2FailureStep: number | undefined;
+  let v2FailureError: string | undefined;
+  let v9Failed = false;
+  let v9FailureStep: number | undefined;
+  let v9FailureError: string | undefined;
+
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    let v2Resp: TreatmentResponse;
+    let v9Resp: TreatmentResponse;
+
+    const makeFailed = (
+      version: 'v2' | 'v9',
+      client: TreatmentApiClient,
+      msg: string,
+    ): TreatmentResponse => ({
+      success: false,
+      sessionId: client.sessionId,
+      message: `${version.toUpperCase()}_ERROR: ${msg}`,
+      currentStep: `${version}_error`,
+      responseTime: 0,
+      usedAI: false,
+    });
+
+    const makeSkipped = (
+      version: 'v2' | 'v9',
+      client: TreatmentApiClient,
+    ): TreatmentResponse => ({
+      success: false,
+      sessionId: client.sessionId,
+      message: `${version.toUpperCase()}_SKIPPED: previous step failed`,
+      currentStep: `${version}_skipped`,
+      responseTime: 0,
+      usedAI: false,
+    });
+
+    if (!v9Failed) {
+      try {
+        v9Resp = await v9.continue(step.input);
+      } catch (e) {
+        const errMsg = (e as Error).message.substring(0, 200);
+        console.warn(`  [parity v2v9] v9 failed at step ${i + 1} ("${step.label}"): ${errMsg}`);
+        v9Failed = true;
+        v9FailureStep = i + 1;
+        v9FailureError = errMsg;
+        v9Resp = makeFailed('v9', v9, errMsg);
+      }
+    } else {
+      v9Resp = makeSkipped('v9', v9);
+    }
+
+    if (!v2Failed) {
+      try {
+        v2Resp = await v2.continue(step.input);
+      } catch (e) {
+        const errMsg = (e as Error).message.substring(0, 200);
+        console.warn(`  [parity v2v9] v2 failed at step ${i + 1} ("${step.label}"): ${errMsg}`);
+        v2Failed = true;
+        v2FailureStep = i + 1;
+        v2FailureError = errMsg;
+        v2Resp = makeFailed('v2', v2, errMsg);
+      }
+    } else {
+      v2Resp = makeSkipped('v2', v2);
+    }
+
+    if (v2Failed && v9Failed) {
+      results.push({
+        index: i + 1,
+        label: step.label || `step ${i + 1}`,
+        input: step.input,
+        v2: v2Resp,
+        v9: v9Resp,
+        v2StepNorm: normalizeStep(v2Resp.currentStep),
+        v9StepNorm: normalizeStep(v9Resp.currentStep),
+      });
+      break;
+    }
+
+    results.push({
+      index: i + 1,
+      label: step.label || `step ${i + 1}`,
+      input: step.input,
+      v2: v2Resp,
+      v9: v9Resp,
+      v2StepNorm: normalizeStep(v2Resp.currentStep),
+      v9StepNorm: normalizeStep(v9Resp.currentStep),
+    });
+  }
+
+  return {
+    results, v2, v9,
+    v2Failed, v2FailureStep, v2FailureError,
+    v9Failed, v9FailureStep, v9FailureError,
+  };
+}
+
+/**
+ * Build a FlowReport from v2/v9 parity run results.
+ *
+ * NOTE: v9 treats every known-acceptable-difference as a bug. The
+ * `isKnownDiff` flag is therefore always forced to `false` here so the CI
+ * gate blocks on any divergence, no allowlist.
+ */
+export function buildFlowReportV2V9(
+  flowName: string,
+  results: ParityStepResultV2V9[],
+  steps: FlowStep[],
+  v2Failed: boolean,
+  v2FailureStep?: number,
+  v2FailureError?: string,
+  v9Failed?: boolean,
+  v9FailureStep?: number,
+  v9FailureError?: string,
+): FlowReport {
+  const divergences: Divergence[] = [];
+  const stepDetails: StepDetail[] = [];
+
+  for (const r of results) {
+    const label = r.label;
+    const v2Ok = r.v2.success !== false && r.v2.currentStep !== 'v2_error' && r.v2.currentStep !== 'v2_skipped';
+    const v9Ok = r.v9.success !== false && r.v9.currentStep !== 'v9_error' && r.v9.currentStep !== 'v9_skipped';
+
+    if (!v9Ok && v9FailureStep !== undefined && r.index >= v9FailureStep) {
+      stepDetails.push({
+        index: r.index,
+        label,
+        input: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v9.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v9.message,
+        v2Success: v2Ok,
+        v4Success: false,
+        match: r.index === v9FailureStep ? 'V2_ERROR' : 'V2_SKIPPED',
+      });
+      if (r.index === v9FailureStep) {
+        divergences.push({
+          type: 'v2_error',
+          stepIndex: r.index,
+          inputLabel: label,
+          userInput: r.input,
+          v2Step: r.v2.currentStep,
+          v4Step: r.v9.currentStep,
+          v2Message: r.v2.message,
+          v4Message: r.v9.message,
+          isKnownDiff: false,
+          knownReason: null,
+          detail: `V9 API crashed: ${v9FailureError ?? 'unknown'}`,
+        });
+      }
+      continue;
+    }
+
+    if (!v2Ok && v2FailureStep !== undefined && r.index >= v2FailureStep) {
+      stepDetails.push({
+        index: r.index,
+        label,
+        input: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v9.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v9.message,
+        v2Success: false,
+        v4Success: v9Ok,
+        match: r.index === v2FailureStep ? 'V2_ERROR' : 'V2_SKIPPED',
+      });
+      if (r.index === v2FailureStep) {
+        divergences.push({
+          type: 'v2_error',
+          stepIndex: r.index,
+          inputLabel: label,
+          userInput: r.input,
+          v2Step: r.v2.currentStep,
+          v4Step: r.v9.currentStep,
+          v2Message: r.v2.message,
+          v4Message: r.v9.message,
+          isKnownDiff: false,
+          knownReason: null,
+          detail: `V2 API crashed: ${v2FailureError ?? 'unknown'}`,
+        });
+      }
+      continue;
+    }
+
+    // v9 does NOT honour the `isKnownDifference` allowlist. Every text
+    // divergence between v2 and v9 is treated as a blocking defect.
+    const stepsMatch = r.v2StepNorm === r.v9StepNorm;
+    const v2Msg = normalizeMessage(r.v2.message);
+    const v9Msg = normalizeMessage(r.v9.message);
+    const messagesMatch = v2Msg === v9Msg;
+
+    const v2Refs = extractProblemRefs(r.v2.message);
+    const v9Refs = extractProblemRefs(r.v9.message);
+    const refsMatch =
+      v2Refs.length === v9Refs.length &&
+      v2Refs.every((ref, idx) => ref === v9Refs[idx]);
+
+    const v9Leaked = isRoutingSignal(r.v9.message);
+
+    let match: StepDetail['match'] = 'MATCH';
+    if (!stepsMatch || !messagesMatch || !refsMatch || v9Leaked) {
+      match = 'DIVERGENCE';
+    }
+
+    stepDetails.push({
+      index: r.index,
+      label,
+      input: r.input,
+      v2Step: r.v2.currentStep,
+      v4Step: r.v9.currentStep,
+      v2Message: r.v2.message,
+      v4Message: r.v9.message,
+      v2Success: v2Ok,
+      v4Success: v9Ok,
+      match,
+    });
+
+    if (v9Leaked) {
+      divergences.push({
+        type: 'routing_signal_leaked',
+        stepIndex: r.index,
+        inputLabel: label,
+        userInput: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v9.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v9.message,
+        isKnownDiff: false,
+        knownReason: null,
+        detail: `V9 leaked internal routing signal "${r.v9.message}" to user`,
+      });
+    }
+
+    if (!stepsMatch) {
+      divergences.push({
+        type: 'step_mismatch',
+        stepIndex: r.index,
+        inputLabel: label,
+        userInput: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v9.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v9.message,
+        isKnownDiff: false,
+        knownReason: null,
+        detail: `Step name differs: v2="${r.v2.currentStep}" vs v9="${r.v9.currentStep}"`,
+      });
+    }
+
+    if (!messagesMatch && stepsMatch) {
+      divergences.push({
+        type: 'message_mismatch',
+        stepIndex: r.index,
+        inputLabel: label,
+        userInput: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v9.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v9.message,
+        isKnownDiff: false,
+        knownReason: null,
+        detail: 'V9 message text does not match V2 (V2 is the gold standard; no allowlist for V9)',
+      });
+    }
+
+    if (!refsMatch && stepsMatch && messagesMatch) {
+      divergences.push({
+        type: 'problem_ref_mismatch',
+        stepIndex: r.index,
+        inputLabel: label,
+        userInput: r.input,
+        v2Step: r.v2.currentStep,
+        v4Step: r.v9.currentStep,
+        v2Message: r.v2.message,
+        v4Message: r.v9.message,
+        isKnownDiff: false,
+        knownReason: null,
+        detail: `Problem refs differ: v2=[${v2Refs.join(', ')}] vs v9=[${v9Refs.join(', ')}]`,
+      });
+    }
+  }
+
+  const v2Completed = results.filter(
+    r => r.v2.success !== false && r.v2.currentStep !== 'v2_error' && r.v2.currentStep !== 'v2_skipped'
+  ).length;
+
+  return {
+    flowName,
+    totalSteps: results.length,
+    v2StepsCompleted: v2Completed,
+    v4StepsCompleted: results.filter(r => r.v9.success !== false).length,
+    v2Failed,
+    v2FailureStep,
+    v2FailureError,
+    v4Failed: v9Failed,
+    v4FailureStep: v9FailureStep,
+    v4FailureError: v9FailureError,
+    candidateLabel: 'v9',
+    divergences,
+    stepDetails,
+  };
 }

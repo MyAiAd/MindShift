@@ -1,0 +1,42 @@
+name: V2 vs V9 Parity Gate
+
+# V9 is a voice adapter around V2's state machine. Every push MUST prove
+# V9 has not drifted from V2. This gate runs the standalone (no-server)
+# direct-parity check, so it works in forks, PRs, and in CI without needing
+# auth credentials or a live server.
+#
+# See /.cursor/plans/v9_voice_clone_plan_b3f48b14.plan.md for rationale.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  v2-v9-direct-parity:
+    name: V2 vs V9 direct parity (no allowlist)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci --ignore-scripts
+
+      - name: Run V2 vs V9 direct parity gate
+        run: npm run ci:v9-gate
+
+      - name: Upload parity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v2-v9-parity-report
+          path: tests/reports/V2_V9_PARITY_REPORT.md
+          if-no-files-found: warn

@@ -1,3 +1,21 @@
+// =============================================================================
+// CANONICAL DOCTOR-SCRIPT SOURCE OF TRUTH
+// =============================================================================
+// This file is the single source of truth for the doctor-provided treatment
+// script. Production (v9) imports this module directly; v9's parity CI gate
+// fails if v9's output ever disagrees with v2's output.
+//
+// TO CHANGE WHAT THE APP SAYS TO A USER, EDIT THIS FILE.
+// Do not fork it. Do not copy-paste it into a v{N+1}. Archived tracks
+// (v3..v7) will not pick up changes made here - they are frozen.
+//
+// See:
+//   - /home/sage/.cursor/plans/v9_voice_clone_plan_b3f48b14.plan.md
+//   - docs/v9-voice-clone.md
+//   - tests/api/v2-v9-parity.spec.ts (route-level parity gate)
+//   - tests/api/v2-v9-direct-parity.spec.ts (in-memory parity gate)
+// =============================================================================
+
 import { createServerClient } from '../database-server';
 
 export interface TreatmentPhase {

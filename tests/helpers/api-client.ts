@@ -83,7 +83,13 @@ export class TreatmentApiClient {
 
   constructor(
     request: APIRequestContext,
-    endpoint: '/api/treatment-v2' | '/api/treatment-v4' | '/api/treatment-v5' | '/api/treatment-v6' | '/api/treatment-v7',
+    endpoint:
+      | '/api/treatment-v2'
+      | '/api/treatment-v4'
+      | '/api/treatment-v5'
+      | '/api/treatment-v6'
+      | '/api/treatment-v7'
+      | '/api/treatment-v9',
     options?: { sessionId?: string; userId?: string }
   ) {
     this.request = request;
@@ -94,6 +100,7 @@ export class TreatmentApiClient {
   }
 
   get version(): string {
+    if (this.endpoint.includes('v9')) return 'v9';
     if (this.endpoint.includes('v7')) return 'v7';
     if (this.endpoint.includes('v6')) return 'v6';
     if (this.endpoint.includes('v5')) return 'v5';
@@ -228,4 +235,18 @@ export function createParityPairV2V7(request: APIRequestContext) {
   const v2 = new TreatmentApiClient(request, '/api/treatment-v2', { userId });
   const v7 = new TreatmentApiClient(request, '/api/treatment-v7', { userId });
   return { v2, v7, userId };
+}
+
+/**
+ * Create a matched pair of v2 + v9 clients for parity testing.
+ *
+ * V9 is a voice wrapper around V2's state machine. The two routes MUST emit
+ * byte-identical `message` text for every turn. Any divergence is a bug in
+ * the V9 route adapter, not in V2.
+ */
+export function createParityPairV2V9(request: APIRequestContext) {
+  const userId = getAuthUserId() || `test-parity-${randomUUID()}`;
+  const v2 = new TreatmentApiClient(request, '/api/treatment-v2', { userId });
+  const v9 = new TreatmentApiClient(request, '/api/treatment-v9', { userId });
+  return { v2, v9, userId };
 }

@@ -358,8 +358,11 @@ export default function SessionsPage() {
           <p className="text-muted-foreground mt-2 max-w-lg">Follow the guided process to clear your problems and subconscious blockages in minutes.</p>
           <button 
             onClick={() => {
-              const sessionId = `session-v7-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              router.push(`/dashboard/sessions/treatment-v7?sessionId=${sessionId}`);
+              // Production traffic is on v9 (voice clone of v2, byte-parity
+              // enforced in CI). v7 remains accessible at its own URL for
+              // regression comparison but is no longer the default entry.
+              const sessionId = `session-v9-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              router.push(`/dashboard/sessions/treatment-v9?sessionId=${sessionId}`);
             }}
             className="mt-6 bg-primary text-primary-foreground px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold"
           >
@@ -640,7 +643,15 @@ export default function SessionsPage() {
                       {session.status === 'active' && (
                         <div className="flex items-center space-x-2">
                           <button 
-                            onClick={() => router.push(`/dashboard/sessions/treatment-v7?sessionId=${session.session_id}&resume=true`)}
+                            onClick={() => {
+                              // Resume on whichever version started this session.
+                              // v9 sessions carry v2's state-machine schema;
+                              // v7 sessions carry v7's. Mixing them corrupts state.
+                              const targetVersion = session.session_id.startsWith('session-v9-')
+                                ? 'treatment-v9'
+                                : 'treatment-v7';
+                              router.push(`/dashboard/sessions/${targetVersion}?sessionId=${session.session_id}&resume=true`);
+                            }}
                             className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm inline-flex items-center"
                           >
                             Continue
@@ -721,7 +732,12 @@ export default function SessionsPage() {
                     {session.status === 'active' && (
                       <div className="flex flex-col space-y-2 pl-14">
                         <button 
-                          onClick={() => router.push(`/dashboard/sessions/treatment-v7?sessionId=${session.session_id}&resume=true`)}
+                          onClick={() => {
+                            const targetVersion = session.session_id.startsWith('session-v9-')
+                              ? 'treatment-v9'
+                              : 'treatment-v7';
+                            router.push(`/dashboard/sessions/${targetVersion}?sessionId=${session.session_id}&resume=true`);
+                          }}
                           className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm inline-flex items-center justify-center"
                         >
                           Continue

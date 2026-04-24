@@ -14,6 +14,11 @@ import Link from 'next/link';
 // feature-flag plumbing, the V7RealtimeSession shell, the
 // /api/treatment-v7/realtime-session route, and the VAD tuner were all
 // deleted in the same commit.
+//
+// ARCHIVED: v3..v7 are frozen. Production traffic has been cut to v9
+// (voice clone of v2, see docs/v9-voice-clone.md). This page remains for
+// (1) completing in-flight v7 sessions and (2) regression comparison
+// against v9. Do not build new features on v7.
 
 const V7AudioPreloader = dynamic(
   () => import('@/components/treatment/v7/V7AudioPreloader'),
