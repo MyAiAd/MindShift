@@ -34,6 +34,14 @@ export interface AdminDebugDrawerVoicePair {
   tts: string;
 }
 
+export interface AdminDebugDrawerTtsEstimate {
+  provider: string | null;
+  fetches: number;
+  cachedFetches: number;
+  characters: number;
+  estimatedUsd: number;
+}
+
 interface AdminDebugDrawerProps {
   messages: TreatmentMessage[];
   isProcessing: boolean;
@@ -41,6 +49,8 @@ interface AdminDebugDrawerProps {
   onToggle: () => void;
   /** R9: pinned voice pair for this session (from startJson.voicePair). */
   voicePair?: AdminDebugDrawerVoicePair | null;
+  /** Running browser-side TTS variable-cost estimate for this V9 session. */
+  ttsEstimate?: AdminDebugDrawerTtsEstimate | null;
   /**
    * R13.4: opt-in telemetry surface. When true, the drawer reads the
    * resolver's in-memory counters via `getResolverTelemetry()` and
@@ -57,6 +67,7 @@ export default function AdminDebugDrawer({
   isOpen,
   onToggle,
   voicePair = null,
+  ttsEstimate = null,
   showAudioTelemetry = false,
 }: AdminDebugDrawerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -100,6 +111,9 @@ export default function AdminDebugDrawer({
   const telemetryHitRate = telemetry && telemetryTotal > 0
     ? Math.round(((telemetry.hitsV9 + telemetry.hitsV7) / telemetryTotal) * 100)
     : 0;
+  const estimatedTtsUsd = ttsEstimate
+    ? `$${ttsEstimate.estimatedUsd.toFixed(4)}`
+    : '$0.0000';
 
   return (
     <>
@@ -152,6 +166,24 @@ export default function AdminDebugDrawer({
                 {voicePair.stt} <span className="opacity-60">→</span>{' '}
                 {voicePair.tts}
               </span>
+            </div>
+          ) : null}
+
+          {ttsEstimate ? (
+            <div
+              className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground font-mono"
+              data-testid="v9-admin-tts-estimate"
+            >
+              <span className="opacity-60">TTS spend:</span>
+              <span className="text-foreground">{estimatedTtsUsd}</span>
+              {ttsEstimate.provider ? <span>{ttsEstimate.provider}</span> : null}
+              <span>{ttsEstimate.characters} chars</span>
+              <span>
+                {ttsEstimate.fetches} fetch{ttsEstimate.fetches === 1 ? '' : 'es'}
+              </span>
+              {ttsEstimate.cachedFetches > 0 ? (
+                <span className="opacity-60">{ttsEstimate.cachedFetches} cached</span>
+              ) : null}
             </div>
           ) : null}
 

@@ -83,7 +83,7 @@ function estimateTtsCost(provider: TtsProviderId, characters: number): number {
   return 0;
 }
 
-function describeMeterBasis(stt: SttProviderId, tts: TtsProviderId): string {
+function describeProjectedCostBasis(stt: SttProviderId, tts: TtsProviderId): string {
   const input =
     stt === 'openai'
       ? '$0.003/min input audio'
@@ -928,13 +928,13 @@ export default function AdminSettingsPage() {
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                            Estimated variable cost
+                            Projected sample cost
                           </div>
                           <div className="mt-1 text-2xl font-semibold text-foreground">
                             {formatUsd(estimatedSessionCost)}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            Sample session: {SAMPLE_INPUT_MINUTES} min speech input +{' '}
+                            Assumption: {SAMPLE_INPUT_MINUTES} min speech input +{' '}
                             {SAMPLE_OUTPUT_CHARACTERS.toLocaleString()} spoken output chars
                           </div>
                         </div>
@@ -951,11 +951,11 @@ export default function AdminSettingsPage() {
                         value={Math.min(estimatedSessionCost, 5.5)}
                         max={5.5}
                         className="mt-3 h-2 w-full overflow-hidden rounded-full accent-primary"
-                        aria-label="Estimated variable cost meter"
+                        aria-label="Projected sample cost scale"
                       />
                       <div className="mt-2 text-xs text-muted-foreground">
-                        {describeMeterBasis(selectedStt, selectedTts)}. Fixed server or
-                        subscription costs are not included.
+                        Variable API estimate only: {describeProjectedCostBasis(selectedStt, selectedTts)}.
+                        Fixed server or subscription costs are not included.
                       </div>
                     </div>
 

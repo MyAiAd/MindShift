@@ -69,6 +69,14 @@ export default function TreatmentSession({
   // The v7 path is fully outsourced (OpenAI or typing), so the only fallback when OpenAI
   // fails is text-input mode. No vendor names are surfaced to the user.
   type TextModeFallbackState = null | 'prompt' | 'active' | 'retrying';
+  type V9TtsProvider = 'openai' | 'elevenlabs' | 'kokoro';
+  type SessionTtsEstimate = {
+    provider: V9TtsProvider | null;
+    fetches: number;
+    cachedFetches: number;
+    characters: number;
+    estimatedUsd: number;
+  };
 
   // Admin debug drawer
   const { profile, signOut } = useAuth();
@@ -673,6 +681,23 @@ export default function TreatmentSession({
   // returns it on `action: 'start'` inside `data.voicePair = { stt, tts }`.
   // Only surfaced in the admin debug drawer; never touches user-facing UI.
   const [voicePair, setVoicePair] = useState<{ stt: string; tts: string } | null>(null);
+  const [sessionTtsEstimate, setSessionTtsEstimate] = useState<SessionTtsEstimate>({
+    provider: null,
+    fetches: 0,
+    cachedFetches: 0,
+    characters: 0,
+    estimatedUsd: 0,
+  });
+
+  useEffect(() => {
+    setSessionTtsEstimate({
+      provider: null,
+      fetches: 0,
+      cachedFetches: 0,
+      characters: 0,
+      estimatedUsd: 0,
+    });
+  }, [sessionId]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -839,6 +864,25 @@ export default function TreatmentSession({
     || textModeFallbackState === 'retrying';
 
   // Natural Voice Hook - Updated to use separate mic/speaker controls
+  const activeTtsProvider: V9TtsProvider =
+    voicePair?.tts === 'elevenlabs' || voicePair?.tts === 'kokoro' || voicePair?.tts === 'openai'
+      ? voicePair.tts
+      : 'openai';
+  const handleTtsUsage = useCallback((usage: {
+    provider: V9TtsProvider;
+    characters: number;
+    estimatedUsd: number;
+    cached: boolean;
+  }) => {
+    setSessionTtsEstimate((prev) => ({
+      provider: usage.provider,
+      fetches: prev.fetches + 1,
+      cachedFetches: prev.cachedFetches + (usage.cached ? 1 : 0),
+      characters: prev.characters + (usage.cached ? 0 : usage.characters),
+      estimatedUsd: prev.estimatedUsd + usage.estimatedUsd,
+    }));
+  }, []);
+
   const naturalVoice = useNaturalVoice({
     enabled: isNaturalVoiceEnabled, // DEPRECATED: backward compatibility
     micEnabled: isMicEnabled && !isSpeechFallbackPaused, // NEW: Controls microphone input
@@ -874,7 +918,7 @@ export default function TreatmentSession({
     kokoroVoiceId: getKokoroVoiceId(),
     // US-007: Pass an explicit voiceProvider + voiceId for v7 so the OpenAI path uses the
     // selected voice (shimmer/alloy/etc.) instead of falling through the Kokoro map.
-    voiceProvider: 'openai',
+    voiceProvider: activeTtsProvider,
     voiceId: selectedVoice,
     onAudioEnded: handleAudioEnded,
     playbackRate: playbackSpeed,
@@ -886,6 +930,7 @@ export default function TreatmentSession({
     treatmentVersion: 'v9',
     sttProviderOverride,
     ttsProviderOverride,
+    onTtsUsage: handleTtsUsage,
     onSpeechProviderError: ({ kind, provider, message }) => {
       if (provider !== 'openai') {
         return;
@@ -2771,6 +2816,7 @@ export default function TreatmentSession({
           isOpen={isDebugDrawerOpen}
           onToggle={toggleDebugDrawer}
           voicePair={voicePair}
+          ttsEstimate={sessionTtsEstimate}
           showAudioTelemetry
         />
       )}

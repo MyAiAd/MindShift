@@ -46,10 +46,45 @@ interface UseNaturalVoiceProps {
     sttProviderOverride?: 'existing' | 'openai';
     ttsProviderOverride?: 'existing' | 'openai';
     onSpeechProviderError?: (details: { kind: 'stt' | 'tts'; provider: 'openai' | 'existing'; message: string }) => void;
+    onTtsUsage?: (usage: NaturalVoiceTtsUsage) => void;
 }
 
 interface SpeechRequestOptions {
     apiMessage?: string;
+}
+
+type NaturalVoiceTtsProvider = 'openai' | 'elevenlabs' | 'kokoro';
+
+interface NaturalVoiceTtsUsage {
+    provider: NaturalVoiceTtsProvider;
+    characters: number;
+    estimatedUsd: number;
+    cached: boolean;
+    source: 'prefetch' | 'playback';
+}
+
+const TTS_USAGE_USD_PER_CHARACTER: Record<NaturalVoiceTtsProvider, number> = {
+    openai: 0.000015,
+    elevenlabs: 0.00044,
+    kokoro: 0,
+};
+
+function resolveTtsUsageProvider(
+    voiceProvider?: NaturalVoiceTtsProvider,
+    ttsProviderOverride?: 'existing' | 'openai',
+): NaturalVoiceTtsProvider {
+    if (ttsProviderOverride === 'openai') return 'openai';
+    if (ttsProviderOverride === 'existing') return 'kokoro';
+    return voiceProvider ?? 'kokoro';
+}
+
+function estimateTtsUsageUsd(
+    provider: NaturalVoiceTtsProvider,
+    characters: number,
+    cached: boolean,
+): number {
+    if (cached) return 0;
+    return characters * TTS_USAGE_USD_PER_CHARACTER[provider];
 }
 
 export const useNaturalVoice = ({
@@ -74,6 +109,7 @@ export const useNaturalVoice = ({
     sttProviderOverride,
     ttsProviderOverride,
     onSpeechProviderError,
+    onTtsUsage,
 }: UseNaturalVoiceProps) => {
     // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
@@ -888,6 +924,16 @@ export const useNaturalVoice = ({
 
             if (!response.ok) throw new Error('Prefetch failed');
 
+            const provider = resolveTtsUsageProvider(voiceProvider, ttsProviderOverride);
+            const cached = response.headers.get('X-TTS-Cache')?.toUpperCase() === 'HIT';
+            onTtsUsage?.({
+                provider,
+                characters: text.length,
+                estimatedUsd: estimateTtsUsageUsd(provider, text.length, cached),
+                cached,
+                source: 'prefetch',
+            });
+
             const audioBlob = normalizeAudioBlobType(await response.blob());
             const audioUrl = URL.createObjectURL(audioBlob);
             globalAudioCache.set(text, audioUrl);
@@ -895,7 +941,7 @@ export const useNaturalVoice = ({
         } catch (err) {
             console.error('🗣️ Natural Voice: Prefetch error:', err);
         }
-    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId, normalizeAudioBlobType, treatmentVersion]);
+    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId, normalizeAudioBlobType, treatmentVersion, onTtsUsage]);
 
     /**
      * Find if text starts with any cached static text for a specific voice
@@ -1144,13 +1190,23 @@ export const useNaturalVoice = ({
             throw new Error(errorMessage);
         }
 
+        const provider = resolveTtsUsageProvider(voiceProvider, ttsProviderOverride);
+        const cached = response.headers.get('X-TTS-Cache')?.toUpperCase() === 'HIT';
+        onTtsUsage?.({
+            provider,
+            characters: text.length,
+            estimatedUsd: estimateTtsUsageUsd(provider, text.length, cached),
+            cached,
+            source: 'playback',
+        });
+
         const audioBlob = normalizeAudioBlobType(await response.blob());
         const audioUrl = URL.createObjectURL(audioBlob);
         // Use voice-prefixed cache key
         const cacheKey = `${voiceName}:${text}`;
         globalAudioCache.set(cacheKey, audioUrl);
         return audioUrl;
-    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId, normalizeAudioBlobType, treatmentVersion, onSpeechProviderError]);
+    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId, normalizeAudioBlobType, treatmentVersion, onSpeechProviderError, onTtsUsage]);
 
     // US-006: single source of truth — return a stable unique string for every supported voice,
     // never "unknown". The `voiceId` prop (US-007) takes priority on v7 OpenAI sessions.
