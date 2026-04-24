@@ -62,6 +62,41 @@ interface VoiceTestResult {
   error?: string;
 }
 
+const OPENAI_STT_USD_PER_MINUTE = 0.003;
+const OPENAI_TTS_USD_PER_CHARACTER = 0.000015;
+const ELEVENLABS_TTS_USD_PER_CHARACTER = 0.00044;
+const SAMPLE_INPUT_MINUTES = 10;
+const SAMPLE_OUTPUT_CHARACTERS = 12000;
+
+function formatUsd(value: number): string {
+  if (value === 0) return '$0.0000';
+  return `$${value.toFixed(4)}`;
+}
+
+function estimateSttCost(provider: SttProviderId, minutes: number): number {
+  return provider === 'openai' ? minutes * OPENAI_STT_USD_PER_MINUTE : 0;
+}
+
+function estimateTtsCost(provider: TtsProviderId, characters: number): number {
+  if (provider === 'openai') return characters * OPENAI_TTS_USD_PER_CHARACTER;
+  if (provider === 'elevenlabs') return characters * ELEVENLABS_TTS_USD_PER_CHARACTER;
+  return 0;
+}
+
+function describeMeterBasis(stt: SttProviderId, tts: TtsProviderId): string {
+  const input =
+    stt === 'openai'
+      ? '$0.003/min input audio'
+      : 'self-hosted input, no per-call API cost';
+  const output =
+    tts === 'openai'
+      ? '$0.000015/output char'
+      : tts === 'elevenlabs'
+        ? '$0.00044/output char'
+        : 'self-hosted output, no per-call API cost';
+  return `${input} · ${output}`;
+}
+
 export default function AdminSettingsPage() {
   const router = useRouter();
   const { profile, tenant } = useAuth();
@@ -104,6 +139,9 @@ export default function AdminSettingsPage() {
   const [sttTestLoading, setSttTestLoading] = useState(false);
   const [ttsTestResult, setTtsTestResult] = useState<VoiceTestResult | null>(null);
   const [sttTestResult, setSttTestResult] = useState<VoiceTestResult | null>(null);
+  const estimatedInputCost = estimateSttCost(selectedStt, SAMPLE_INPUT_MINUTES);
+  const estimatedOutputCost = estimateTtsCost(selectedTts, SAMPLE_OUTPUT_CHARACTERS);
+  const estimatedSessionCost = estimatedInputCost + estimatedOutputCost;
 
   // Check if user is admin
   useEffect(() => {
@@ -883,6 +921,41 @@ export default function AdminSettingsPage() {
                         {voiceData.current.updatedAt
                           ? `  ·  last saved ${new Date(voiceData.current.updatedAt).toLocaleString()}`
                           : ''}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                            Estimated variable cost
+                          </div>
+                          <div className="mt-1 text-2xl font-semibold text-foreground">
+                            {formatUsd(estimatedSessionCost)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Sample session: {SAMPLE_INPUT_MINUTES} min speech input +{' '}
+                            {SAMPLE_OUTPUT_CHARACTERS.toLocaleString()} spoken output chars
+                          </div>
+                        </div>
+                        <div className="text-right text-xs text-muted-foreground">
+                          <div>
+                            Input: <span className="font-mono text-foreground">{formatUsd(estimatedInputCost)}</span>
+                          </div>
+                          <div>
+                            Output: <span className="font-mono text-foreground">{formatUsd(estimatedOutputCost)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <progress
+                        value={Math.min(estimatedSessionCost, 5.5)}
+                        max={5.5}
+                        className="mt-3 h-2 w-full overflow-hidden rounded-full accent-primary"
+                        aria-label="Estimated variable cost meter"
+                      />
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        {describeMeterBasis(selectedStt, selectedTts)}. Fixed server or
+                        subscription costs are not included.
                       </div>
                     </div>
 
