@@ -680,7 +680,7 @@ export default function TreatmentSession({
   // V4: Enhanced voice integration (Accessibility)
   const voice = useGlobalVoice({
     onError: (error: string) => {
-      console.error('V4 Voice error:', error);
+      console.error('V9 Voice error:', error);
       setVoiceError(error);
     },
     currentStep: currentStep
@@ -784,7 +784,7 @@ export default function TreatmentSession({
 
   // Handler for when audio starts and text should be rendered (with 150ms delay)
   const handleRenderText = useCallback((timing: { audioStartTime: number; textRenderTime: number }) => {
-    console.log(`⏱️ V4: Audio started at ${timing.audioStartTime.toFixed(2)}ms, rendering text at ${timing.textRenderTime.toFixed(2)}ms`);
+    console.log(`⏱️ V9: Audio started at ${timing.audioStartTime.toFixed(2)}ms, rendering text at ${timing.textRenderTime.toFixed(2)}ms`);
     if (!hasFirstSpeechStarted) {
       setHasFirstSpeechStarted(true);
     }
@@ -1450,7 +1450,7 @@ export default function TreatmentSession({
     setHasError(false);
 
     try {
-      console.log('Resuming V4 treatment session:', { sessionId, userId });
+      console.log('Resuming V9 treatment session:', { sessionId, userId });
 
       const response = await fetch('/api/treatment-v9', {
         method: 'POST',
@@ -1465,11 +1465,11 @@ export default function TreatmentSession({
       });
 
       if (!response.ok) {
-        throw new Error(`V4 HTTP error! status: ${response.status}`);
+        throw new Error(`V9 HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('V4 Resume session response:', data);
+      console.log('V9 Resume session response:', data);
 
       if (data.success) {
         // Restore conversation history
@@ -1495,13 +1495,13 @@ export default function TreatmentSession({
         }, 100);
       } else {
         // If resume fails, start a new session
-        console.log('V4 Resume failed, starting new session');
+        console.log('V9 Resume failed, starting new session');
         await startSession();
       }
     } catch (error) {
-      console.error('V4 Resume session error:', error);
+      console.error('V9 Resume session error:', error);
       // Fallback to starting new session
-      console.log('V4 Resume failed, falling back to new session');
+      console.log('V9 Resume failed, falling back to new session');
       await startSession();
     } finally {
       setIsLoading(false);
@@ -1549,7 +1549,7 @@ export default function TreatmentSession({
     setClickedButton(null);
 
     try {
-      console.log('Sending V4 message:', { content, currentStep });
+      console.log('Sending V9 message:', { content, currentStep });
 
       const response = await fetch('/api/treatment-v9', {
         method: 'POST',
@@ -1565,11 +1565,11 @@ export default function TreatmentSession({
       });
 
       if (!response.ok) {
-        throw new Error(`V4 HTTP error! status: ${response.status}`);
+        throw new Error(`V9 HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('V4 Continue session response:', data);
+      console.log('V9 Continue session response:', data);
 
       if (data.success) {
         // Always provide audio/visual feedback in PTT guided mode
@@ -1577,7 +1577,7 @@ export default function TreatmentSession({
         if (data.message) {
           // NEW: If speaker is enabled, set up pending message for audio-then-text timing
           if (isSpeakerEnabled) {
-            console.log('⏱️ V4: Setting up pending message for audio-first rendering');
+            console.log('⏱️ V9: Setting up pending message for audio-first rendering');
             setPendingMessage({
               content: data.message,
               responseTime: data.responseTime,
@@ -1690,7 +1690,7 @@ export default function TreatmentSession({
     setIsLoading(true);
 
     try {
-      console.log('V4 Undo to step:', lastEntry.currentStep);
+      console.log('V9 Undo to step:', lastEntry.currentStep);
 
       const response = await fetch('/api/treatment-v9', {
         method: 'POST',
@@ -1706,11 +1706,11 @@ export default function TreatmentSession({
       });
 
       if (!response.ok) {
-        throw new Error(`V4 Undo HTTP error! status: ${response.status}`);
+        throw new Error(`V9 Undo HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('V4 Undo response:', data);
+      console.log('V9 Undo response:', data);
 
       if (data.success) {
         // Prevent delayed text/audio from a pending message leaking into restored state
@@ -1749,14 +1749,14 @@ export default function TreatmentSession({
           }
         }
 
-        console.log('V4 Undo successful');
+        console.log('V9 Undo successful');
       } else {
-        throw new Error(data.error || 'V4 Undo failed');
+        throw new Error(data.error || 'V9 Undo failed');
       }
     } catch (error) {
-      console.error('V4 Undo error:', error);
+      console.error('V9 Undo error:', error);
       setHasError(true);
-      setErrorMessage(error instanceof Error ? error.message : 'V4 Undo failed');
+      setErrorMessage(error instanceof Error ? error.message : 'V9 Undo failed');
     } finally {
       setIsLoading(false);
     }
@@ -1786,7 +1786,10 @@ export default function TreatmentSession({
   // This ensures we see consistent state, not partial updates during rapid re-renders
   useEffect(() => {
     // Check if we're in the initial explanation step
-    const isInitialStep = currentStep === 'mind_shifting_explanation_dynamic' || currentStep === 'mind_shifting_explanation_static';
+    const isInitialStep =
+      currentStep === 'mind_shifting_explanation' ||
+      currentStep === 'mind_shifting_explanation_dynamic' ||
+      currentStep === 'mind_shifting_explanation_static';
 
     console.log('🔍 BUTTON CHECK (useEffect):', {
       currentStep,
@@ -1921,7 +1924,7 @@ export default function TreatmentSession({
           if (!shouldSkipMessage) {
             // NEW: If speaker is enabled, set up pending message for audio-then-text timing
             if (isSpeakerEnabled && data.message) {
-              console.log('⏱️ V4: Setting up pending message for audio-first rendering (work type)');
+              console.log('⏱️ V9: Setting up pending message for audio-first rendering (work type)');
               setPendingMessage({
                 content: data.message,
                 responseTime: data.responseTime,
@@ -2116,12 +2119,18 @@ export default function TreatmentSession({
         userInput: methodNumber
       }),
     })
-      .then(response => response.json())
+      .then(async response => {
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`V9 HTTP error! status: ${response.status}${errorText ? ` - ${errorText}` : ''}`);
+        }
+        return response.json();
+      })
       .then(data => {
         if (data.success) {
           // NEW: If speaker is enabled, set up pending message for audio-then-text timing
           if (isSpeakerEnabled && data.message) {
-            console.log('⏱️ V4: Setting up pending message for audio-first rendering (method selection)');
+            console.log('⏱️ V9: Setting up pending message for audio-first rendering (method selection)');
             setPendingMessage({
               content: data.message,
               responseTime: data.responseTime,
@@ -2169,7 +2178,7 @@ export default function TreatmentSession({
       .catch(error => {
         console.error('Method selection error:', error);
         setHasError(true);
-        setErrorMessage('Failed to process method selection');
+        setErrorMessage(`Failed to process method selection: ${error instanceof Error ? error.message : 'Unknown error'}`);
         setIsLoading(false);
       });
   };
@@ -2438,10 +2447,12 @@ export default function TreatmentSession({
           <button
             onClick={toggleMic}
             disabled={micPermission === 'denied'}
-            className={`flex items-center justify-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isMicEnabled
-              ? 'bg-primary/20 text-primary ring-2 ring-primary'
-              : 'bg-secondary text-muted-foreground  '
-              } ${micPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''}`}
+            data-state={isMicEnabled ? 'on' : 'off'}
+            className={`flex items-center justify-between gap-2 px-3 py-2 rounded-full text-sm font-semibold transition-all shadow-sm text-[#ffffff] ${
+              isMicEnabled ? 'bg-[#16a34a]' : 'bg-[#6b7280]'
+            } ${
+              micPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
             title={
               !isMicEnabled ? 'Enable Microphone' :
               naturalVoice.listeningState === 'listening' ? 'Listening...' :
@@ -2454,51 +2465,52 @@ export default function TreatmentSession({
               'Ready'
             }
           >
-            {isMicEnabled ? (
-              <>
-                {naturalVoice.isListening ? (
-                  <Mic className="h-4 w-4 animate-pulse text-destructive" />
-                ) : naturalVoice.listeningState === 'restarting' ? (
-                  <Mic className="h-4 w-4 animate-spin text-warning" />
-                ) : naturalVoice.listeningState === 'blockedByAudio' ? (
-                  <Mic className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Mic className="h-4 w-4" />
-                )}
-                <span>🎤</span>
-              </>
-            ) : (
-              <>
+            <span className="flex items-center gap-1.5">
+              {naturalVoice.isListening ? (
+                <Mic className="h-4 w-4 animate-pulse" />
+              ) : naturalVoice.listeningState === 'restarting' ? (
+                <Mic className="h-4 w-4 animate-spin" />
+              ) : (
                 <Mic className="h-4 w-4" />
-                <span>🎤</span>
-              </>
-            )}
+              )}
+              <span>Mic</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-xs tracking-wide">{isMicEnabled ? 'ON' : 'OFF'}</span>
+              <span
+                className={`h-4 w-4 rounded-full bg-card transition-transform ${
+                  isMicEnabled ? 'translate-x-0' : ''
+                }`}
+                aria-hidden="true"
+              />
+            </span>
           </button>
           
           {/* Speaker Toggle */}
           <button
             onClick={toggleSpeaker}
-            className={`flex items-center justify-center space-x-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${isSpeakerEnabled
-              ? 'bg-primary/20 text-primary ring-2 ring-primary'
-              : 'bg-secondary text-muted-foreground  '
-              }`}
-            title="Toggle Speaker"
+            data-state={isSpeakerEnabled ? 'on' : 'off'}
+            className={`flex items-center justify-between gap-2 px-3 py-2 rounded-full text-sm font-semibold transition-all shadow-sm text-[#ffffff] ${
+              isSpeakerEnabled ? 'bg-[#16a34a]' : 'bg-[#6b7280]'
+            }`}
+            title={isSpeakerEnabled ? 'Disable Speaker' : 'Enable Speaker'}
           >
-            {isSpeakerEnabled ? (
-              <>
-                {naturalVoice.isSpeaking ? (
+            <span className="flex items-center gap-1.5">
+              {isSpeakerEnabled ? (
+                naturalVoice.isSpeaking ? (
                   <Volume2 className="h-4 w-4 animate-pulse" />
                 ) : (
                   <Volume2 className="h-4 w-4" />
-                )}
-                <span>🔊</span>
-              </>
-            ) : (
-              <>
+                )
+              ) : (
                 <VolumeX className="h-4 w-4" />
-                <span>🔊</span>
-              </>
-            )}
+              )}
+              <span>Speaker</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-xs tracking-wide">{isSpeakerEnabled ? 'ON' : 'OFF'}</span>
+              <span className="h-4 w-4 rounded-full bg-card" aria-hidden="true" />
+            </span>
           </button>
 
           {/* Pause/Play Button - ALWAYS visible, disabled when no audio */}

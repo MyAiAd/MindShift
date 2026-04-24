@@ -1743,7 +1743,7 @@ export class TreatmentStateMachine {
             
             // If no user input, show the initial explanation and options
             if (!userInput) {
-              return "Mind Shifting is not like counselling, therapy or life coaching. The Mind Shifting methods are verbal guided processes that we apply to problems, goals, or negative experiences in order to clear them. The way Mind Shifting works is we won't just be talking about what you want to work on, we will be applying Mind Shifting methods in order to clear them, and to do that we will need to define what you want to work on into a clear statement by you telling me what it is in a few words. So I'll be asking you to do that when needed.\n\nWhen you are ready to begin, would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
+              return "Would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE";
             }
             
             const input = userInput.toLowerCase();
@@ -1978,9 +1978,12 @@ export class TreatmentStateMachine {
               userInput.toLowerCase().includes('reality shifting') ||
               userInput.toLowerCase().includes('trauma shifting')
             );
+            const isMethodNumber = workType === 'problem' &&
+              !!context.metadata.selectedMethod &&
+              ['1', '2', '3', '4'].includes((userInput || '').trim());
             
-            // If no user input OR if user input is a method name OR skipUserInput flag is set, ask for description
-            if (!userInput || isMethodName || skipUserInput) {
+            // If no user input OR if user input is a method selection OR skipUserInput flag is set, ask for description
+            if (!userInput || isMethodName || isMethodNumber || skipUserInput) {
               if (workType === 'problem') {
                 return "Tell me what the problem is in a few words.";
               } else if (workType === 'goal') {
@@ -2004,26 +2007,25 @@ export class TreatmentStateMachine {
                 const selectedMethod = context.metadata.selectedMethod;
                 if (selectedMethod === 'identity_shifting') {
                   context.currentPhase = 'identity_shifting';
-                  // Set step for next transition but return simple acknowledgment
-                  return `Great! Let's begin Identity Shifting.`;
+                  return "SKIP_TO_TREATMENT_INTRO";
                 } else if (selectedMethod === 'problem_shifting') {
                   context.currentPhase = 'problem_shifting';
-                  return `Great! Let's begin Problem Shifting.`;
+                  return "SKIP_TO_TREATMENT_INTRO";
                 } else if (selectedMethod === 'belief_shifting') {
                   context.currentPhase = 'belief_shifting';
-                  return `Great! Let's begin Belief Shifting.`;
+                  return "SKIP_TO_TREATMENT_INTRO";
                 } else if (selectedMethod === 'blockage_shifting') {
                   context.currentPhase = 'blockage_shifting';
-                  return `Great! Let's begin Blockage Shifting.`;
+                  return "SKIP_TO_TREATMENT_INTRO";
                 }
               } else if (workType === 'goal') {
                 context.currentPhase = 'reality_shifting';
                 context.metadata.selectedMethod = 'reality_shifting';
-                return `Great! Let's begin Reality Shifting.`;
+                return "SKIP_TO_TREATMENT_INTRO";
               } else if (workType === 'negative_experience') {
                 context.currentPhase = 'trauma_shifting';
                 context.metadata.selectedMethod = 'trauma_shifting';
-                return `Great! Let's begin Trauma Shifting.`;
+                return "SKIP_TO_TREATMENT_INTRO";
               }
               
               // Fallback to confirmation if no method set
@@ -5794,7 +5796,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
         const hasProblemStatement = !!(context.metadata.problemStatement || context.problemStatement);
         console.log(`🔍 CHOOSE_METHOD_DETERMINE: hasProblemStatement="${hasProblemStatement}", problemStatement="${context.metadata.problemStatement}"`);
         
-        if (chosenMethod.includes('problem shifting')) {
+        if (chosenMethod.includes('problem shifting') || chosenMethod === '1') {
           context.metadata.selectedMethod = 'problem_shifting';
           if (hasProblemStatement) {
             // Problem already stated, go directly to treatment
@@ -5807,7 +5809,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             console.log(`🔍 CHOOSE_METHOD_DETERMINE: Selected Problem Shifting, returning work_type_description`);
             return 'work_type_description';
           }
-        } else if (chosenMethod.includes('blockage shifting')) {
+        } else if (chosenMethod.includes('blockage shifting') || chosenMethod === '4') {
           context.metadata.selectedMethod = 'blockage_shifting';
           if (hasProblemStatement) {
             context.currentPhase = 'blockage_shifting';
@@ -5818,7 +5820,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             console.log(`🔍 CHOOSE_METHOD_DETERMINE: Selected Blockage Shifting, returning work_type_description`);
             return 'work_type_description';
           }
-        } else if (chosenMethod.includes('identity shifting')) {
+        } else if (chosenMethod.includes('identity shifting') || chosenMethod === '2') {
           context.metadata.selectedMethod = 'identity_shifting';
           if (hasProblemStatement) {
             context.currentPhase = 'identity_shifting';
@@ -5829,7 +5831,7 @@ Feel the problem '${problemStatement}'... what do you believe about yourself tha
             console.log(`🔍 CHOOSE_METHOD_DETERMINE: Selected Identity Shifting, returning work_type_description`);
             return 'work_type_description';
           }
-        } else if (chosenMethod.includes('belief shifting')) {
+        } else if (chosenMethod.includes('belief shifting') || chosenMethod === '3') {
           context.metadata.selectedMethod = 'belief_shifting';
           if (hasProblemStatement) {
             context.currentPhase = 'belief_shifting';
