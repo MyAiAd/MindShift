@@ -17,6 +17,26 @@ const STORAGE_STATE = path.join(__dirname, '.auth/storage-state.json');
  *   SUPABASE_ANON_KEY  - override NEXT_PUBLIC_SUPABASE_ANON_KEY
  */
 async function globalSetup(config: FullConfig) {
+  // Hermetic projects (like `v9-visual`, R14) don't need a real
+  // Supabase session — they mock `/api/treatment-v9` and the
+  // profiles endpoint directly inside the spec. Opt them out so CI
+  // doesn't fail on missing TEST_USER_EMAIL / TEST_USER_PASSWORD.
+  if (process.env.SKIP_AUTH_SETUP === '1') {
+    console.log('  SKIP_AUTH_SETUP=1 — skipping Supabase auth for this run.');
+    // Still ensure the storage-state file exists so Playwright's
+    // `use.storageState` can load it. An empty state is fine because
+    // the per-project `use` block in playwright.config.ts overrides
+    // it with `{ cookies: [], origins: [] }` for v9-visual.
+    if (!fs.existsSync(STORAGE_STATE)) {
+      fs.mkdirSync(path.dirname(STORAGE_STATE), { recursive: true });
+      fs.writeFileSync(
+        STORAGE_STATE,
+        JSON.stringify({ cookies: [], origins: [] }),
+      );
+    }
+    return;
+  }
+
   // Reuse existing session if it's still fresh (< 50 min old)
   if (fs.existsSync(STORAGE_STATE)) {
     const stats = fs.statSync(STORAGE_STATE);
