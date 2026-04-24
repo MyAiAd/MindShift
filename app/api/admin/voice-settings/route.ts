@@ -64,10 +64,9 @@ function reportStt(): AvailabilityReport[] {
 function reportTts(): AvailabilityReport[] {
   return listTtsProviders().map((provider) => {
     const available = provider.isAvailable();
-    const reasonMap: Record<TtsProviderId, string> = {
+    const reasonMap: Partial<Record<TtsProviderId, string>> = {
       openai: 'OPENAI_API_KEY not set',
       elevenlabs: 'ELEVENLABS_API_KEY not set',
-      kokoro: 'KOKORO_SERVICE_URL not set',
     };
     return {
       id: provider.id,

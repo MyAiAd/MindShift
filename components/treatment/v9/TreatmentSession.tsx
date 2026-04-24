@@ -2748,11 +2748,11 @@ export default function TreatmentSession({
       {/* In guided/orb mode: spacer to push input to bottom when messages hidden */}
       {isGuidedMode && <div className="flex-1 min-h-0" />}
 
-      {/* Admin Debug Drawer — right-edge slide-out, orb mode only.
+      {/* Admin Debug Drawer — right-edge slide-out, admin-only in every mode.
           R9: `voicePair` surfaces the pinned STT/TTS pair.
           R13.4: `showAudioTelemetry` wires in the static-audio
           resolver's hit/miss counters for this session. */}
-      {isGuidedMode && isAdmin && (
+      {isAdmin && (
         <AdminDebugDrawer
           messages={messages}
           isProcessing={naturalVoice.isProcessing}

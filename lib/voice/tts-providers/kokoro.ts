@@ -8,7 +8,7 @@ import type {
  * Kokoro TTS provider. Talks to a self-hosted Kokoro service over HTTP.
  *
  * Env:
- *   KOKORO_SERVICE_URL   e.g. http://kokoro:8880
+ *   KOKORO_API_URL       optional override; defaults to our Hetzner Kokoro URL
  *   KOKORO_API_KEY       optional X-API-Key header
  *   KOKORO_VOICE_ID      default af_heart
  *   KOKORO_USD_PER_CHAR  default 0 (self-hosted is free per-call; you pay
@@ -23,25 +23,47 @@ import type {
 
 const DEFAULT_USD_PER_CHAR = Number(process.env.KOKORO_USD_PER_CHAR ?? '0');
 const DEFAULT_VOICE = process.env.KOKORO_VOICE_ID ?? 'af_heart';
+export const KOKORO_BASE_URL = 'https://api.mind-shift.click/tts';
+
+export function getKokoroBaseUrl(): string {
+  return process.env.KOKORO_API_URL ?? KOKORO_BASE_URL;
+}
+
+export function resolveKokoroVoiceId(voice: string): string {
+  const kokoroVoiceMap: Record<string, string> = {
+    alloy: 'af_heart',
+    echo: 'am_adam',
+    fable: 'af_bella',
+    onyx: 'am_michael',
+    nova: 'af_nova',
+    shimmer: 'af_sarah',
+    heart: 'af_heart',
+    michael: 'am_michael',
+  };
+
+  if (kokoroVoiceMap[voice]) return kokoroVoiceMap[voice];
+  if (voice.startsWith('af_') || voice.startsWith('am_')) return voice;
+  return DEFAULT_VOICE;
+}
+
+function mimeTypeForFormat(format: string): string {
+  if (format === 'mp3') return 'audio/mpeg';
+  if (format === 'wav') return 'audio/wav';
+  if (format === 'opus') return 'audio/ogg; codecs=opus';
+  return `audio/${format}`;
+}
 
 export class KokoroTtsProvider implements TtsProvider {
   readonly id = 'kokoro' as const;
   readonly displayName = 'Kokoro TTS';
 
   isAvailable(): boolean {
-    return Boolean(process.env.KOKORO_SERVICE_URL);
+    return true;
   }
 
   async synthesize(request: TtsSynthesisRequest): Promise<TtsSynthesisResult> {
-    if (!this.isAvailable()) {
-      throw new Error(
-        'KOKORO_SERVICE_URL not configured; Kokoro TTS unavailable.',
-      );
-    }
-
-    const baseUrl = process.env.KOKORO_SERVICE_URL as string;
-    const url = baseUrl.replace(/\/$/, '') + '/v1/audio/speech';
-    const voice = request.voice || DEFAULT_VOICE;
+    const url = getKokoroBaseUrl();
+    const voice = resolveKokoroVoiceId(request.voice || DEFAULT_VOICE);
     const format = request.format ?? 'mp3';
 
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
@@ -55,10 +77,9 @@ export class KokoroTtsProvider implements TtsProvider {
       signal: request.signal,
       headers,
       body: JSON.stringify({
-        model: 'kokoro',
-        input: request.text,
+        text: request.text,
         voice,
-        response_format: format === 'pcm16' ? 'pcm' : format,
+        format,
       }),
     });
 
@@ -76,7 +97,7 @@ export class KokoroTtsProvider implements TtsProvider {
 
     return {
       audio,
-      mimeType: format === 'mp3' ? 'audio/mpeg' : `audio/${format}`,
+      mimeType: mimeTypeForFormat(format),
       provider: 'kokoro',
       voice,
       format,

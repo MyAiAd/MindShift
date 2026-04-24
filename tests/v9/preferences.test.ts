@@ -1,8 +1,7 @@
 /**
  * R11.1 / R11.2 / R11.3 unit tests for `lib/v9/v9-preferences.ts`.
  *
- *   R11.1 — interaction-mode defaulting: mobile → orb_ptt,
- *           desktop → text_first.
+ *   R11.1 — interaction-mode defaulting: mobile + desktop → orb_ptt.
  *   R11.2 — voice-on defaults per mode:
  *             orb_ptt     → mic ON, speaker ON
  *             listen_only → mic OFF, speaker ON
@@ -113,11 +112,18 @@ test('R11.1: mobile device defaults to orb_ptt', async () => {
   assert.equal(prefs.getInteractionMode(), 'orb_ptt');
 });
 
-test('R11.1: desktop defaults to text_first', async () => {
+test('R11.1: desktop defaults to orb_ptt', async () => {
   mountWindow({ isMobile: false });
   const prefs = await reimport();
   assert.equal(prefs.isMobileDevice(), false);
-  assert.equal(prefs.getInteractionMode(), 'text_first');
+  assert.equal(prefs.getInteractionMode(), 'orb_ptt');
+});
+
+test('R11.1: desktop orb mode shows orb', async () => {
+  const { storage } = mountWindow({ isMobile: false });
+  storage.setItem('v9_interaction_mode', 'orb_ptt');
+  const prefs = await reimport();
+  assert.equal(prefs.shouldShowOrb(), true);
 });
 
 test('R11.1: stored interaction mode overrides the device default', async () => {

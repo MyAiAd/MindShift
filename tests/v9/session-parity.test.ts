@@ -91,10 +91,10 @@ test('R11.5: V9 captures voicePair from start response (R9)', () => {
 test('R11.8: AdminDebugDrawer is gated on isAdmin', () => {
   const src = readSession();
   // The admin check should wrap the drawer render block.
-  const block = src.match(/isGuidedMode && isAdmin && \([\s\S]{0,900}AdminDebugDrawer[\s\S]{0,600}?\)\s*\}/);
+  const block = src.match(/\{isAdmin && \([\s\S]{0,900}AdminDebugDrawer[\s\S]{0,600}?\)\}/);
   assert.ok(
     block,
-    'AdminDebugDrawer must be rendered inside a block guarded by `isAdmin`',
+    'AdminDebugDrawer must be rendered inside a block guarded by `isAdmin` only',
   );
 });
 

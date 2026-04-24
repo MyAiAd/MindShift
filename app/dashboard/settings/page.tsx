@@ -11,11 +11,20 @@ import TwoFactorAuth from '@/components/auth/TwoFactorAuth';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Settings, User, Bell, Shield, CreditCard, Globe, Moon, Sun, Check, X, AlertCircle, Eye, Type, Contrast, MousePointer, Download, Trash2, Lock, Cookie, Beaker, Brain, Mic, Volume2, Gauge, Key } from 'lucide-react';
 import { InteractionMode, getInteractionMode, setInteractionMode, getVoicePreferences, setVoicePreferences, V4_EVENTS } from '@/lib/v4/v4-preferences';
+import {
+  InteractionMode as V9InteractionMode,
+  getInteractionMode as getV9InteractionMode,
+  setInteractionMode as setV9InteractionMode,
+  getVoicePreferences as getV9VoicePreferences,
+  setVoicePreferences as setV9VoicePreferences,
+  V9_EVENTS,
+} from '@/lib/v9/v9-preferences';
 import RealityShiftingDemo from '@/components/labs/RealityShiftingDemo';
 import BeliefShiftingDemo from '@/components/labs/BeliefShiftingDemo';
 import IdentityShiftingDemo from '@/components/labs/IdentityShiftingDemo';
@@ -143,6 +152,14 @@ export default function SettingsPage() {
     selectedVoice: 'heart',
     playbackSpeed: 1.0,
     vadSensitivity: 0.5,
+    loading: true
+  });
+  const [v9Settings, setV9Settings] = useState({
+    interactionMode: 'orb_ptt' as V9InteractionMode,
+    selectedVoice: 'marin',
+    playbackSpeed: 1.0,
+    micEnabled: true,
+    speakerEnabled: true,
     loading: true
   });
   const [openRouterKey, setOpenRouterKey] = useState('');
@@ -355,6 +372,50 @@ export default function SettingsPage() {
     return () => {
       window.removeEventListener(V4_EVENTS.INTERACTION_MODE_CHANGED, handleModeChange);
       window.removeEventListener(V4_EVENTS.VOICE_SETTINGS_CHANGED, handleVoiceChange);
+    };
+  }, [user]);
+
+  // Load V9 Voice & Interaction settings. V9 is the production session UX;
+  // this state is intentionally separate from the archived V4 controls above.
+  useEffect(() => {
+    const loadV9Settings = () => {
+      try {
+        const mode = getV9InteractionMode();
+        const voicePrefs = getV9VoicePreferences();
+        setV9Settings({
+          interactionMode: mode,
+          selectedVoice: voicePrefs.selectedVoice,
+          playbackSpeed: voicePrefs.playbackSpeed,
+          micEnabled: voicePrefs.micEnabled,
+          speakerEnabled: voicePrefs.speakerEnabled,
+          loading: false
+        });
+      } catch (error) {
+        console.error('Failed to load V9 settings:', error);
+        setV9Settings(prev => ({ ...prev, loading: false }));
+      }
+    };
+
+    if (user) {
+      loadV9Settings();
+    }
+
+    const handleModeChange = (e: Event) => {
+      const customEvent = e as CustomEvent<V9InteractionMode>;
+      setV9Settings(prev => ({ ...prev, interactionMode: customEvent.detail }));
+    };
+
+    const handleVoiceChange = (e: Event) => {
+      const customEvent = e as CustomEvent<Partial<typeof v9Settings>>;
+      setV9Settings(prev => ({ ...prev, ...customEvent.detail }));
+    };
+
+    window.addEventListener(V9_EVENTS.INTERACTION_MODE_CHANGED, handleModeChange);
+    window.addEventListener(V9_EVENTS.VOICE_SETTINGS_CHANGED, handleVoiceChange);
+
+    return () => {
+      window.removeEventListener(V9_EVENTS.INTERACTION_MODE_CHANGED, handleModeChange);
+      window.removeEventListener(V9_EVENTS.VOICE_SETTINGS_CHANGED, handleVoiceChange);
     };
   }, [user]);
 
@@ -582,6 +643,29 @@ export default function SettingsPage() {
       console.log(`V4 ${setting} changed to:`, value);
     } catch (error) {
       console.error(`Failed to update ${setting}:`, error);
+    }
+  };
+
+  const handleV9InteractionModeChange = (mode: V9InteractionMode) => {
+    try {
+      setV9Settings(prev => ({ ...prev, interactionMode: mode }));
+      setV9InteractionMode(mode);
+      console.log('V9 interaction mode changed to:', mode);
+    } catch (error) {
+      console.error('Failed to update V9 interaction mode:', error);
+    }
+  };
+
+  const handleV9VoiceChange = (
+    setting: 'selectedVoice' | 'playbackSpeed' | 'micEnabled' | 'speakerEnabled',
+    value: string | number | boolean,
+  ) => {
+    try {
+      setV9Settings(prev => ({ ...prev, [setting]: value }));
+      setV9VoicePreferences({ [setting]: value });
+      console.log(`V9 ${setting} changed to:`, value);
+    } catch (error) {
+      console.error(`Failed to update V9 ${setting}:`, error);
     }
   };
 
@@ -1054,6 +1138,176 @@ export default function SettingsPage() {
                   <div className="pt-4 border-t border-border">
                     <p className="text-xs text-muted-foreground">
                       <strong className="text-foreground">Note:</strong> Changes take effect immediately and sync across all your sessions.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* V9 Production Session Settings */}
+          <Card id="v9-session" className="bg-card border-border scroll-mt-20">
+            <CardHeader>
+              <CardTitle className="text-foreground flex items-center">
+                <Mic className="h-5 w-5 text-primary mr-2" />
+                Mind Shifting Session (V9)
+              </CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Configure the production V9 session experience. Orb mode is the default on every device.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {v9Settings.loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-foreground">Interaction Mode</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      V9 is voice-first. Voice Orb is recommended on desktop and mobile.
+                    </p>
+                    <div className="grid gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleV9InteractionModeChange('orb_ptt')}
+                        className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                          v9Settings.interactionMode === 'orb_ptt'
+                            ? 'bg-primary/10 text-primary border-primary ring-2 ring-primary'
+                            : 'bg-secondary text-muted-foreground border-border hover:bg-secondary/80'
+                        }`}
+                      >
+                        <div className="font-medium mb-1">Voice Orb</div>
+                        <div className="text-xs opacity-75">Push-to-talk orb interface, now the V9 default on every device</div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleV9InteractionModeChange('listen_only')}
+                        className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                          v9Settings.interactionMode === 'listen_only'
+                            ? 'bg-primary/10 text-primary border-primary ring-2 ring-primary'
+                            : 'bg-secondary text-muted-foreground border-border hover:bg-secondary/80'
+                        }`}
+                      >
+                        <div className="font-medium mb-1">Listen Only</div>
+                        <div className="text-xs opacity-75">Hear responses and type your replies</div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleV9InteractionModeChange('text_first')}
+                        className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                          v9Settings.interactionMode === 'text_first'
+                            ? 'bg-primary/10 text-primary border-primary ring-2 ring-primary'
+                            : 'bg-secondary text-muted-foreground border-border hover:bg-secondary/80'
+                        }`}
+                      >
+                        <div className="font-medium mb-1">Text First</div>
+                        <div className="text-xs opacity-75">Traditional chat interface with optional playback</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <div className="flex items-center space-x-2">
+                      <Volume2 className="h-4 w-4 text-primary" />
+                      <h4 className="font-medium text-foreground">Voice Actor</h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'heart', label: 'Heart' },
+                        { id: 'michael', label: 'Michael' },
+                        { id: 'marin', label: 'Marin' },
+                        { id: 'shimmer', label: 'Shimmer' },
+                      ].map((voice) => (
+                        <button
+                          key={voice.id}
+                          type="button"
+                          onClick={() => handleV9VoiceChange('selectedVoice', voice.id)}
+                          className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                            v9Settings.selectedVoice === voice.id
+                              ? 'bg-primary/10 text-primary ring-2 ring-primary'
+                              : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
+                          }`}
+                        >
+                          {voice.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <div className="flex items-center space-x-2">
+                      <Gauge className="h-4 w-4 text-primary" />
+                      <h4 className="font-medium text-foreground">Playback Speed</h4>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Speed: {v9Settings.playbackSpeed.toFixed(2)}x</span>
+                      <span className="font-medium text-primary">
+                        {getSpeedLabel(v9Settings.playbackSpeed)}
+                      </span>
+                    </div>
+
+                    <input
+                      type="range"
+                      min="0.75"
+                      max="1.5"
+                      step="0.05"
+                      value={v9Settings.playbackSpeed}
+                      onChange={(e) => handleV9VoiceChange('playbackSpeed', parseFloat(e.target.value))}
+                      className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                      aria-label="V9 playback speed slider"
+                    />
+
+                    <div className="grid grid-cols-5 gap-2">
+                      {[0.75, 0.9, 1.0, 1.15, 1.5].map((speed) => (
+                        <button
+                          key={speed}
+                          type="button"
+                          onClick={() => handleV9VoiceChange('playbackSpeed', speed)}
+                          className={`px-2 py-1.5 text-xs rounded-lg transition-colors ${
+                            Math.abs(v9Settings.playbackSpeed - speed) < 0.01
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
+                          }`}
+                        >
+                          {speed === 1.0 ? '1x' : `${speed}x`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h4 className="font-medium text-foreground">Mic Default</h4>
+                        <p className="text-xs text-muted-foreground">Start V9 sessions with microphone enabled</p>
+                      </div>
+                      <Switch
+                        checked={v9Settings.micEnabled}
+                        onCheckedChange={(checked) => handleV9VoiceChange('micEnabled', checked)}
+                        aria-label="V9 microphone default"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h4 className="font-medium text-foreground">Speaker Default</h4>
+                        <p className="text-xs text-muted-foreground">Start V9 sessions with spoken responses enabled</p>
+                      </div>
+                      <Switch
+                        checked={v9Settings.speakerEnabled}
+                        onCheckedChange={(checked) => handleV9VoiceChange('speakerEnabled', checked)}
+                        aria-label="V9 speaker default"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-xs text-muted-foreground">
+                      <strong className="text-foreground">Note:</strong> V9 settings are stored under v9_* keys and apply immediately to production sessions.
                     </p>
                   </div>
                 </div>

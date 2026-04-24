@@ -53,11 +53,11 @@ export function isMobileDevice(): boolean {
 }
 
 /**
- * Get the default interaction mode based on device type.
- * R5: mobile → `orb_ptt`, desktop → `text_first`.
+ * Get the default interaction mode.
+ * V9 is voice-first on every device, matching V5's production behavior.
  */
 export function getDefaultInteractionMode(): InteractionMode {
-  return isMobileDevice() ? 'orb_ptt' : 'text_first';
+  return 'orb_ptt';
 }
 
 /**
@@ -201,11 +201,10 @@ export function getVoiceDefaultsForMode(mode: InteractionMode): {
 
 /**
  * Check if we should show the orb UI.
- * Identical logic to V7's `shouldShowOrb()` (R1).
+ * V9 deliberately allows orb mode on desktop and mobile.
  */
 export function shouldShowOrb(): boolean {
-  const mode = getInteractionMode();
-  return mode === 'orb_ptt' && isMobileDevice();
+  return getInteractionMode() === 'orb_ptt';
 }
 
 /**

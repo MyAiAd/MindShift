@@ -43,11 +43,21 @@ Text-to-speech (TTS):
 | --- | --- | --- |
 | `openai` (default) | OpenAI API usage | `OPENAI_API_KEY` |
 | `elevenlabs` | ElevenLabs monthly credit plan | `ELEVENLABS_API_KEY`, optional `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL_ID` (default `eleven_flash_v2_5`) |
-| `kokoro` | Self-hosted compute | `KOKORO_SERVICE_URL`, optional `KOKORO_API_KEY`, `KOKORO_VOICE_ID` |
+| `kokoro` | Self-hosted compute | Endpoint hardcoded to `https://api.mind-shift.click/tts`. Optional env overrides: `KOKORO_API_URL`, `KOKORO_API_KEY`, `KOKORO_VOICE_ID` |
 
 STT and TTS are selected **independently** — any valid STT can be paired
 with any valid TTS (e.g. self-hosted Whisper for input + ElevenLabs for
 output, if you want cheap input and premium output).
+
+### Why is Kokoro hardcoded?
+
+The Kokoro service is operator-owned infrastructure, not a tenant setting.
+V5 and the static-audio generator already call the Hetzner endpoint at
+`https://api.mind-shift.click/tts`; requiring a V9-only
+`KOKORO_SERVICE_URL` env var made Kokoro appear unavailable in deploys
+where the service was actually live. V9 therefore uses the production URL
+as its default and keeps `KOKORO_API_URL` only as an infrastructure
+override for environments that need to bypass public DNS.
 
 ### Resolution precedence
 
@@ -159,6 +169,10 @@ full requirements document. The short version:
   `lib/v9/v9-preferences.ts`. Keys are never shared with v7 — moving
   from v7 to v9 always gives the user fresh, mode-appropriate
   defaults (R5/R6).
+- **Default interaction mode is `orb_ptt` on every device.** Desktop and
+  mobile both land in the guided Orb UI; the old mobile-only orb default
+  is removed for V9. See
+  [`prd-v9-ux-completeness.md`](./prd-v9-ux-completeness.md).
 - **Static audio resolution is hash-based.** Canonical text →
   md5 → manifest lookup. The resolver checks v9's manifest first,
   falls back to v7's manifest (Phase 1 reuses v7 assets), and emits
