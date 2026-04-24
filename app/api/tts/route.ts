@@ -15,6 +15,9 @@ type TtsRequestBody = {
   treatmentVersion?: string;
 };
 
+const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID ?? 'eleven_flash_v2_5';
+const ELEVENLABS_API_BASE = process.env.ELEVENLABS_API_BASE ?? 'https://api.elevenlabs.io';
+
 function resolveProvider(requestedProvider: string | undefined, treatmentVersion?: string): LegacyTtsProvider {
   // US-018: v7 is fully outsourced to OpenAI. TTS_PROVIDER and `provider` are ignored for v7.
   if (treatmentVersion === 'v7') {
@@ -159,7 +162,10 @@ async function synthesizeWithElevenLabs(text: string, voice: string): Promise<Ne
   const path = require('path');
   const os = require('os');
 
-  const hash = crypto.createHash('md5').update(`${text}-${voiceId}`).digest('hex');
+  const hash = crypto
+    .createHash('md5')
+    .update(`${ELEVENLABS_MODEL_ID}-${text}-${voiceId}`)
+    .digest('hex');
   const cacheDir = path.join(os.tmpdir(), 'mindshifting-tts-cache');
   const cacheFile = path.join(cacheDir, `${hash}.mp3`);
 
@@ -178,7 +184,7 @@ async function synthesizeWithElevenLabs(text: string, voice: string): Promise<Ne
     });
   }
 
-  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+  const response = await fetch(`${ELEVENLABS_API_BASE}/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream`, {
     method: 'POST',
     headers: {
       'xi-api-key': ELEVENLABS_API_KEY,
@@ -186,21 +192,35 @@ async function synthesizeWithElevenLabs(text: string, voice: string): Promise<Ne
     },
     body: JSON.stringify({
       text,
-      model_id: 'eleven_monolingual_v1',
+      model_id: ELEVENLABS_MODEL_ID,
       voice_settings: {
         stability: 0.5,
         similarity_boost: 0.75,
+        style: 0,
+        use_speaker_boost: true,
       },
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
+    let details = errorText;
+    try {
+      const parsed = JSON.parse(errorText) as {
+        detail?: { message?: string } | string;
+      };
+      details = typeof parsed.detail === 'string'
+        ? parsed.detail
+        : parsed.detail?.message ?? errorText;
+    } catch {
+      // Keep the raw provider body if it is not JSON.
+    }
     return NextResponse.json({
       error: 'ElevenLabs TTS synthesis failed',
       code: 'tts_provider_failure',
       provider: 'elevenlabs',
-      details: errorText,
+      details,
+      model: ELEVENLABS_MODEL_ID,
       status: response.status,
     }, { status: 500 });
   }
@@ -375,7 +395,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
-    if (treatmentVersion === 'v7') {
+    if (treatmentVersion === 'v7' || treatmentVersion === 'v9') {
       const complianceResult = validateSpeechOutput({
         textToSpeak: text,
         apiMessage: apiMessage ?? text,
