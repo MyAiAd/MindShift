@@ -10,6 +10,16 @@ export type TextToSpeechProvider = 'existing' | 'openai';
  */
 export type V9TtsProvider = 'openai' | 'elevenlabs' | 'kokoro';
 
+/**
+ * V9-only: which STT provider the voice adapter should use. `openai` is
+ * OpenAI's hosted transcription; `whisper-local` routes audio to the
+ * self-hosted `whisper-service/` at `WHISPER_SERVICE_URL`.
+ *
+ * Read by `lib/voice/stt-providers/index.ts` (`resolveSttProviderId`)
+ * and by `lib/v9/voice-settings.ts` when the DB singleton is missing.
+ */
+export type V9SttProvider = 'openai' | 'whisper-local';
+
 function parseBooleanFlag(value: string | undefined, defaultValue: boolean): boolean {
   if (value === undefined) {
     return defaultValue;
@@ -74,6 +84,22 @@ export const V9_TTS_PROVIDER: V9TtsProvider = parseProvider<V9TtsProvider>(
   'openai'
 );
 
+/**
+ * V9_STT_PROVIDER — env fallback for the V9 STT choice, used by
+ * `lib/v9/voice-settings.ts` when the DB singleton hasn't been
+ * configured yet. When the admin UI writes to `system_voice_settings`
+ * that DB value wins; this env var only matters on fresh installs or
+ * in CI where no super_admin has flipped the radio yet.
+ *
+ *   V9_STT_PROVIDER=openai         — default; requires OPENAI_API_KEY
+ *   V9_STT_PROVIDER=whisper-local  — requires WHISPER_SERVICE_URL
+ */
+export const V9_STT_PROVIDER: V9SttProvider = parseProvider<V9SttProvider>(
+  process.env.V9_STT_PROVIDER,
+  ['openai', 'whisper-local'],
+  'openai'
+);
+
 export function getStrictSpeechMode(): StrictSpeechMode {
   return STRICT_SPEECH_MODE;
 }
@@ -96,4 +122,8 @@ export function getFallbackTtsProvider(): TextToSpeechProvider {
 
 export function getV9TtsProvider(): V9TtsProvider {
   return V9_TTS_PROVIDER;
+}
+
+export function getV9SttProvider(): V9SttProvider {
+  return V9_STT_PROVIDER;
 }

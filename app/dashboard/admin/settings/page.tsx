@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings as SettingsIcon, Save, Loader2, Shield, Zap, Mail, Send, CheckCircle, XCircle, AlertCircle, Beaker } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Loader2, Shield, Zap, Mail, Send, CheckCircle, XCircle, AlertCircle, Beaker, Mic, Volume2, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface EmailStatus {
@@ -20,6 +20,46 @@ interface EmailStatus {
   status: string;
   domain: string;
   senderEmail: string;
+}
+
+type SttProviderId = 'openai' | 'whisper-local';
+type TtsProviderId = 'openai' | 'elevenlabs' | 'kokoro';
+
+interface VoiceProviderReport {
+  id: string;
+  displayName: string;
+  available: boolean;
+  reason?: string;
+}
+
+interface VoiceSettingsResponse {
+  current: {
+    stt: SttProviderId;
+    tts: TtsProviderId;
+    source: 'database' | 'environment';
+    updatedAt: string | null;
+    updatedBy: string | null;
+  };
+  providers: {
+    stt: VoiceProviderReport[];
+    tts: VoiceProviderReport[];
+  };
+}
+
+interface VoiceTestResult {
+  kind: 'stt' | 'tts';
+  provider: string;
+  roundTripMs?: number;
+  cost?: {
+    estimatedUsd?: number;
+    characters?: number;
+    audioSeconds?: number;
+    latencyMs?: number;
+  };
+  text?: string;
+  audioBase64?: string;
+  mimeType?: string;
+  error?: string;
 }
 
 export default function AdminSettingsPage() {
@@ -50,6 +90,20 @@ export default function AdminSettingsPage() {
     message: string;
     timestamp?: string;
   } | null>(null);
+
+  // Voice pipeline settings (V9). Super-admin only; tenant_admin can
+  // view but not edit. The selection applies only to NEW sessions —
+  // in-flight patient sessions are pinned at start.
+  const isSuperAdmin = profile?.role === 'super_admin';
+  const [voiceLoading, setVoiceLoading] = useState(false);
+  const [voiceData, setVoiceData] = useState<VoiceSettingsResponse | null>(null);
+  const [selectedStt, setSelectedStt] = useState<SttProviderId>('openai');
+  const [selectedTts, setSelectedTts] = useState<TtsProviderId>('openai');
+  const [voiceSaving, setVoiceSaving] = useState(false);
+  const [ttsTestLoading, setTtsTestLoading] = useState(false);
+  const [sttTestLoading, setSttTestLoading] = useState(false);
+  const [ttsTestResult, setTtsTestResult] = useState<VoiceTestResult | null>(null);
+  const [sttTestResult, setSttTestResult] = useState<VoiceTestResult | null>(null);
 
   // Check if user is admin
   useEffect(() => {
@@ -87,6 +141,171 @@ export default function AdminSettingsPage() {
       fetchEmailStatus();
     }
   }, [profile]);
+
+  // Fetch current voice pipeline settings + provider availability.
+  useEffect(() => {
+    const fetchVoiceSettings = async () => {
+      try {
+        setVoiceLoading(true);
+        const response = await fetch('/api/admin/voice-settings');
+        if (response.ok) {
+          const data = (await response.json()) as VoiceSettingsResponse;
+          setVoiceData(data);
+          setSelectedStt(data.current.stt);
+          setSelectedTts(data.current.tts);
+        }
+      } catch (error) {
+        console.error('Error fetching voice settings:', error);
+      } finally {
+        setVoiceLoading(false);
+      }
+    };
+
+    if (profile && ['tenant_admin', 'super_admin'].includes(profile.role)) {
+      fetchVoiceSettings();
+    }
+  }, [profile]);
+
+  const handleSaveVoiceSettings = async () => {
+    if (!isSuperAdmin) return;
+    try {
+      setVoiceSaving(true);
+      const response = await fetch('/api/admin/voice-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stt: selectedStt, tts: selectedTts }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        toast({
+          title: 'Could not save voice settings',
+          description: payload?.error || 'Unknown error',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setVoiceData((prev) =>
+        prev
+          ? {
+              ...prev,
+              current: payload.current,
+            }
+          : prev,
+      );
+      toast({
+        title: 'Voice pipeline updated',
+        description:
+          'Applies to new sessions only. Existing sessions keep their current voice.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Voice settings save failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setVoiceSaving(false);
+    }
+  };
+
+  const handleTestTts = async () => {
+    try {
+      setTtsTestLoading(true);
+      setTtsTestResult(null);
+      const response = await fetch('/api/admin/voice-settings/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'tts', provider: selectedTts }),
+      });
+      const payload = (await response.json()) as VoiceTestResult;
+      setTtsTestResult(payload);
+      if (payload.audioBase64 && payload.mimeType) {
+        try {
+          const audio = new Audio(
+            `data:${payload.mimeType};base64,${payload.audioBase64}`,
+          );
+          await audio.play();
+        } catch (playErr) {
+          console.warn('TTS test playback failed:', playErr);
+        }
+      }
+    } catch (err) {
+      setTtsTestResult({
+        kind: 'tts',
+        provider: selectedTts,
+        error: err instanceof Error ? err.message : 'TTS test failed',
+      });
+    } finally {
+      setTtsTestLoading(false);
+    }
+  };
+
+  const handleTestStt = async () => {
+    try {
+      setSttTestLoading(true);
+      setSttTestResult(null);
+
+      // Record a short audio clip via MediaRecorder so we can send a
+      // real sample through the selected STT provider. We ask for 3s
+      // of speech from the admin; if no recording API is available
+      // (e.g. non-HTTPS), fall through to a helpful error.
+      if (
+        typeof navigator === 'undefined' ||
+        !navigator.mediaDevices?.getUserMedia ||
+        typeof MediaRecorder === 'undefined'
+      ) {
+        setSttTestResult({
+          kind: 'stt',
+          provider: selectedStt,
+          error:
+            'Browser does not support microphone recording in this context (needs HTTPS).',
+        });
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : '';
+      const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+      const stopped = new Promise<void>((resolve) => {
+        recorder.onstop = () => resolve();
+      });
+      recorder.start();
+      toast({
+        title: 'Recording… speak for up to 4 seconds',
+        description: 'Say a short sentence to test transcription.',
+      });
+      await new Promise((r) => setTimeout(r, 4000));
+      recorder.stop();
+      stream.getTracks().forEach((t) => t.stop());
+      await stopped;
+
+      const blob = new Blob(chunks, { type: mime || 'audio/webm' });
+      const form = new FormData();
+      form.append('kind', 'stt');
+      form.append('provider', selectedStt);
+      form.append('audio', blob, 'test.webm');
+      const response = await fetch('/api/admin/voice-settings/test', {
+        method: 'POST',
+        body: form,
+      });
+      const payload = (await response.json()) as VoiceTestResult;
+      setSttTestResult(payload);
+    } catch (err) {
+      setSttTestResult({
+        kind: 'stt',
+        provider: selectedStt,
+        error: err instanceof Error ? err.message : 'STT test failed',
+      });
+    } finally {
+      setSttTestLoading(false);
+    }
+  };
 
   // Send test email
   const handleSendTestEmail = async () => {
@@ -195,7 +414,13 @@ export default function AdminSettingsPage() {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:w-[640px] lg:grid-cols-5">
+        <TabsList
+          className={
+            isSuperAdmin
+              ? 'grid w-full grid-cols-2 sm:grid-cols-3 lg:w-[760px] lg:grid-cols-6'
+              : 'grid w-full grid-cols-2 sm:grid-cols-3 lg:w-[640px] lg:grid-cols-5'
+          }
+        >
           <TabsTrigger value="general" className="text-xs sm:text-sm">
             <SettingsIcon className="h-4 w-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">General</span>
@@ -216,6 +441,13 @@ export default function AdminSettingsPage() {
             <span className="hidden sm:inline">Security</span>
             <span className="sm:hidden">Security</span>
           </TabsTrigger>
+          {isSuperAdmin && (
+            <TabsTrigger value="voice" className="text-xs sm:text-sm">
+              <Mic className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Voice</span>
+              <span className="sm:hidden">Voice</span>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="labs" className="text-xs sm:text-sm">
             <Beaker className="h-4 w-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Labs</span>
@@ -594,6 +826,305 @@ export default function AdminSettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isSuperAdmin && (
+          <TabsContent value="voice" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mic className="h-5 w-5" /> Voice Pipeline (V9)
+                </CardTitle>
+                <CardDescription>
+                  Choose which provider handles speech-to-text (what the patient
+                  says) and text-to-speech (what the app speaks back) for V9
+                  sessions. Each side can be configured independently.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-200">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-semibold">
+                        Changes apply to new sessions only
+                      </div>
+                      <div className="mt-1">
+                        In-flight patient sessions keep whatever STT + TTS pair
+                        they started with. The setting here writes the default
+                        for every session that begins after you save.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {voiceLoading || !voiceData ? (
+                  <div className="flex items-center gap-2 py-8 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading voice settings…</span>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Currently active
+                      </div>
+                      <div className="mt-1 font-medium text-foreground">
+                        STT:{' '}
+                        <span className="font-mono text-sm">
+                          {voiceData.current.stt}
+                        </span>
+                        {'  ·  '}TTS:{' '}
+                        <span className="font-mono text-sm">
+                          {voiceData.current.tts}
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Source: {voiceData.current.source}
+                        {voiceData.current.updatedAt
+                          ? `  ·  last saved ${new Date(voiceData.current.updatedAt).toLocaleString()}`
+                          : ''}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 border-t pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="flex items-center gap-2 text-base">
+                            <Mic className="h-4 w-4" /> Speech-to-Text
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            How the app transcribes what the patient says.
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleTestStt}
+                          disabled={sttTestLoading}
+                        >
+                          {sttTestLoading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Recording…
+                            </>
+                          ) : (
+                            <>
+                              <Play className="h-4 w-4 mr-2" /> Test with my mic
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {voiceData.providers.stt.map((p) => (
+                          <label
+                            key={p.id}
+                            className={`flex items-start gap-3 rounded-md border px-3 py-3 ${
+                              !p.available
+                                ? 'border-muted bg-muted/40 opacity-60'
+                                : selectedStt === p.id
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:bg-muted/40'
+                            } cursor-pointer`}
+                          >
+                            <input
+                              type="radio"
+                              name="stt-provider"
+                              value={p.id}
+                              checked={selectedStt === p.id}
+                              disabled={!p.available}
+                              onChange={() =>
+                                setSelectedStt(p.id as SttProviderId)
+                              }
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <div className="font-medium text-foreground">
+                                {p.displayName}
+                                <span className="ml-2 font-mono text-xs text-muted-foreground">
+                                  {p.id}
+                                </span>
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {p.id === 'openai'
+                                  ? 'OpenAI hosted transcription (~$0.003/min). Best accuracy on short utterances.'
+                                  : 'Self-hosted Whisper service. No per-call API cost; compute is billed hourly regardless of volume.'}
+                              </div>
+                              {!p.available && p.reason ? (
+                                <div className="text-xs text-destructive mt-1">
+                                  Unavailable: {p.reason}
+                                </div>
+                              ) : null}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+
+                      {sttTestResult ? (
+                        <div className="rounded-md border px-3 py-2 text-sm">
+                          <div className="font-mono text-xs text-muted-foreground">
+                            STT test · {sttTestResult.provider}
+                          </div>
+                          {sttTestResult.error ? (
+                            <div className="text-destructive mt-1">
+                              {sttTestResult.error}
+                            </div>
+                          ) : (
+                            <>
+                              <div className="mt-1">
+                                <span className="text-muted-foreground">Heard: </span>
+                                <span className="font-medium">
+                                  “{sttTestResult.text || '(empty)'}”
+                                </span>
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {sttTestResult.cost?.audioSeconds != null
+                                  ? `${sttTestResult.cost.audioSeconds.toFixed(2)}s audio · `
+                                  : ''}
+                                {sttTestResult.roundTripMs != null
+                                  ? `${sttTestResult.roundTripMs}ms round-trip`
+                                  : ''}
+                                {sttTestResult.cost?.estimatedUsd != null
+                                  ? ` · $${sttTestResult.cost.estimatedUsd.toFixed(4)} est.`
+                                  : ''}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-3 border-t pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="flex items-center gap-2 text-base">
+                            <Volume2 className="h-4 w-4" /> Text-to-Speech
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            The voice the app uses when speaking scripted
+                            responses.
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleTestTts}
+                          disabled={ttsTestLoading}
+                        >
+                          {ttsTestLoading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Synthesising…
+                            </>
+                          ) : (
+                            <>
+                              <Play className="h-4 w-4 mr-2" /> Play sample
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {voiceData.providers.tts.map((p) => (
+                          <label
+                            key={p.id}
+                            className={`flex items-start gap-3 rounded-md border px-3 py-3 ${
+                              !p.available
+                                ? 'border-muted bg-muted/40 opacity-60'
+                                : selectedTts === p.id
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:bg-muted/40'
+                            } cursor-pointer`}
+                          >
+                            <input
+                              type="radio"
+                              name="tts-provider"
+                              value={p.id}
+                              checked={selectedTts === p.id}
+                              disabled={!p.available}
+                              onChange={() =>
+                                setSelectedTts(p.id as TtsProviderId)
+                              }
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <div className="font-medium text-foreground">
+                                {p.displayName}
+                                <span className="ml-2 font-mono text-xs text-muted-foreground">
+                                  {p.id}
+                                </span>
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {p.id === 'openai'
+                                  ? 'OpenAI TTS — the V9 default. Predictable cost, good quality.'
+                                  : p.id === 'elevenlabs'
+                                    ? 'ElevenLabs — premium voice quality; higher per-character cost.'
+                                    : 'Kokoro — self-hosted TTS. No per-call API cost; hourly compute.'}
+                              </div>
+                              {!p.available && p.reason ? (
+                                <div className="text-xs text-destructive mt-1">
+                                  Unavailable: {p.reason}
+                                </div>
+                              ) : null}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+
+                      {ttsTestResult ? (
+                        <div className="rounded-md border px-3 py-2 text-sm">
+                          <div className="font-mono text-xs text-muted-foreground">
+                            TTS test · {ttsTestResult.provider}
+                          </div>
+                          {ttsTestResult.error ? (
+                            <div className="text-destructive mt-1">
+                              {ttsTestResult.error}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {ttsTestResult.cost?.characters != null
+                                ? `${ttsTestResult.cost.characters} chars · `
+                                : ''}
+                              {ttsTestResult.roundTripMs != null
+                                ? `${ttsTestResult.roundTripMs}ms round-trip`
+                                : ''}
+                              {ttsTestResult.cost?.estimatedUsd != null
+                                ? ` · $${ttsTestResult.cost.estimatedUsd.toFixed(4)} est.`
+                                : ''}
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <Button
+                        onClick={handleSaveVoiceSettings}
+                        disabled={
+                          voiceSaving ||
+                          (selectedStt === voiceData.current.stt &&
+                            selectedTts === voiceData.current.tts)
+                        }
+                      >
+                        {voiceSaving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Saving…
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Save Voice Pipeline
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="labs" className="space-y-4">
           <Card>

@@ -21,10 +21,23 @@ There is **no `KNOWN_ACCEPTABLE_DIFFERENCES` allowlist for v9**. Any
 byte-level drift is treated as a bug — either in v9's route (fix v9) or
 in v2's state machine (fix v2, which propagates to v9 automatically).
 
-## TTS provider selection (`V9_TTS_PROVIDER`)
+## Voice pipeline selection (admin UI + env)
 
-V9 supports three pluggable TTS backends. Pick one per deploy with the
-`V9_TTS_PROVIDER` environment variable:
+V9 now ships with a super-admin-only UI for switching STT and TTS
+providers at runtime, no redeploy. The UI lives at
+`/dashboard/admin/settings` → the **Voice** tab (visible to
+`super_admin` only).
+
+### Providers
+
+Speech-to-text (STT):
+
+| Value | Cost center | Required env |
+| --- | --- | --- |
+| `openai` (default) | OpenAI API usage (~$0.003/min) | `OPENAI_API_KEY` |
+| `whisper-local` | Self-hosted compute (hourly, not per-call) | `WHISPER_SERVICE_URL`, optional `WHISPER_API_KEY` |
+
+Text-to-speech (TTS):
 
 | Value | Cost center | Required env |
 | --- | --- | --- |
@@ -32,16 +45,56 @@ V9 supports three pluggable TTS backends. Pick one per deploy with the
 | `elevenlabs` | ElevenLabs monthly credit plan | `ELEVENLABS_API_KEY`, optional `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL_ID` (default `eleven_flash_v2_5`) |
 | `kokoro` | Self-hosted compute | `KOKORO_SERVICE_URL`, optional `KOKORO_API_KEY`, `KOKORO_VOICE_ID` |
 
-Precedence order (highest wins):
+STT and TTS are selected **independently** — any valid STT can be paired
+with any valid TTS (e.g. self-hosted Whisper for input + ElevenLabs for
+output, if you want cheap input and premium output).
 
-1. `?provider=` query / `tts.provider` field on the API request.
-2. `V9_TTS_PROVIDER` environment variable.
-3. Legacy `TTS_PROVIDER` (kept for compatibility with v7).
-4. Hard-coded `openai` default.
+### Resolution precedence
+
+For **TTS** (per-call, via `resolveTtsProviderId`):
+
+1. `tts.provider` field / `?provider=` on the API request (used by the
+   parity gate to force a known provider).
+2. The pair pinned to the session at start
+   (`context.metadata.voicePair.tts`).
+3. `V9_TTS_PROVIDER` env var, then legacy `TTS_PROVIDER`.
+4. Hard-coded `openai`.
+
+For **STT** (per-call, via `resolveSttProviderId`):
+
+1. Per-session pin (`context.metadata.voicePair.stt`), passed to
+   `transcribeToUserInput` by the `/turn` endpoint.
+2. `V9_STT_PROVIDER` env var.
+3. Hard-coded `openai`.
+
+The authoritative runtime source for the pin is the singleton row in
+`system_voice_settings` (see
+[migration 062](../supabase/migrations/062_voice_pipeline_settings.sql)).
+The admin UI writes that row; the state machine's session start reads
+it and pins the resolved pair into `context.metadata.voicePair`.
+
+### Why pin at session start?
+
+Flipping the admin radios while a patient is mid-conversation would
+change the voice they hear on the very next turn — jarring at best,
+a consent issue at worst. Instead, each session's pair is frozen at
+start (`lib/v9/core.ts#v9HandleStartSession`), so the admin setting
+only takes effect for **sessions that start after the flip**. In-flight
+sessions finish on the pair they began with.
 
 If the selected provider is not available in the current environment,
-the request fails loud — v9 **never** silently switches voices mid
-session.
+the request fails loud — v9 **never** silently switches voices.
+
+### API surface
+
+- `GET /api/admin/voice-settings` — current pair + per-provider
+  availability (for UI greying). `tenant_admin | super_admin`.
+- `PUT /api/admin/voice-settings` — persist a new pair. `super_admin`
+  only, enforced both at the route and by RLS on
+  `system_voice_settings`.
+- `POST /api/admin/voice-settings/test` — dry-run TTS synth (JSON body)
+  or STT round-trip (multipart with audio). Returns cost/latency so
+  the admin UI can show a sanity check before saving.
 
 ## Cost telemetry
 

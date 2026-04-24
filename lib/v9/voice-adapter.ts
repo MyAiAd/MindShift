@@ -1,15 +1,18 @@
 import {
   detectOpenAIHallucination,
-  type OpenAISegment,
   type HallucinationDiagnostics,
 } from '@/lib/voice/openai-hallucination';
-import OpenAI from 'openai';
 import {
   getTtsProvider,
   resolveTtsProviderId,
   type TtsProviderId,
   type TtsSynthesisResult,
 } from '@/lib/voice/tts-providers';
+import {
+  getSttProvider,
+  resolveSttProviderId,
+  type SttProviderId,
+} from '@/lib/voice/stt-providers';
 import { recordTtsCost } from '@/lib/v9/tts-cost-metrics';
 
 /**
@@ -23,16 +26,13 @@ import { recordTtsCost } from '@/lib/v9/tts-cost-metrics';
  * else in the v9 stack (state machine, route, frontend) sees plain
  * strings, identical to v2. That is what keeps the v2-v9 parity gate
  * in CI meaningful.
+ *
+ * Provider choice (both STT and TTS) is pinned to a session at start
+ * time and passed in via `providerId`. See
+ * `lib/v9/core.ts#v9HandleStartSession` and
+ * `lib/v9/voice-settings.ts#getVoicePair` for how the pair is
+ * resolved and stored.
  */
-
-const DEFAULT_STT_MODEL = process.env.OPENAI_STT_MODEL || 'gpt-4o-mini-transcribe';
-
-type OpenAITranscriptionRecord = {
-  text?: string;
-  language?: string;
-  duration?: number;
-  segments?: OpenAISegment[];
-};
 
 export interface TranscribeOptions {
   /** Current v2 step id — used as part of the prompt bias. */
@@ -41,8 +41,10 @@ export interface TranscribeOptions {
   expectedResponseType?: string | null;
   /** Comma-separated hot-words for transcription. */
   hotwords?: string | null;
-  /** Forwards to OpenAI's AbortSignal. */
+  /** Abort signal for client disconnects. */
   signal?: AbortSignal;
+  /** Per-session STT provider (from `context.metadata.voicePair.stt`). */
+  providerId?: SttProviderId | null;
 }
 
 export interface TranscribeResult {
@@ -59,12 +61,16 @@ export interface TranscribeResult {
   durationSeconds: number;
   /** STT call latency in ms. */
   latencyMs: number;
-  /** STT model actually used. */
+  /** STT provider id that actually ran. */
+  provider: SttProviderId;
+  /** Provider-specific model identifier. */
   model: string;
+  /** Estimated USD cost for this STT call. */
+  estimatedUsd: number;
 }
 
 export interface SpeakScriptedOptions {
-  /** Override the env-default TTS provider. */
+  /** Override the env/admin default TTS provider. */
   providerId?: TtsProviderId | null;
   /** Provider-specific voice id. */
   voice?: string | null;
@@ -79,92 +85,41 @@ export interface SpeakScriptedOptions {
 
 export type SpeakScriptedResult = TtsSynthesisResult;
 
-function buildSttPrompt(
-  currentStep?: string | null,
-  expectedResponseType?: string | null,
-  hotwords?: string | null,
-): string | undefined {
-  const parts = [
-    expectedResponseType ? `Expected response type: ${expectedResponseType}` : null,
-    currentStep ? `Current step: ${currentStep}` : null,
-    hotwords ? `Relevant terms: ${hotwords}` : null,
-  ].filter(Boolean);
-  return parts.length > 0 ? parts.join('\n') : undefined;
-}
-
 /**
  * Turn an audio blob into the `userInput` string V2's state machine
- * expects. Runs STT through OpenAI (configurable via OPENAI_STT_MODEL)
- * and applies the existing hallucination gate — v9's answer to the v5/v7
- * "Welsh text on silence" regression.
+ * expects. Dispatches through the STT provider registry and applies
+ * the existing hallucination gate regardless of which provider ran —
+ * V9's answer to the v5/v7 "Welsh text on silence" regression.
  */
 export async function transcribeToUserInput(
   audio: Blob,
   options: TranscribeOptions = {},
 ): Promise<TranscribeResult> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY not configured; v9 STT unavailable.');
+  const providerId = resolveSttProviderId(options.providerId);
+  const provider = getSttProvider(providerId);
+  if (!provider.isAvailable()) {
+    throw new Error(
+      `STT provider "${providerId}" is not available in this environment.`,
+    );
   }
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const model = DEFAULT_STT_MODEL;
-  const prompt = buildSttPrompt(
-    options.currentStep,
-    options.expectedResponseType,
-    options.hotwords,
-  );
-
-  const file = new File([audio], 'audio.wav', {
-    type: audio.type || 'audio/wav',
+  const result = await provider.transcribe({
+    audio,
+    currentStep: options.currentStep,
+    expectedResponseType: options.expectedResponseType,
+    hotwords: options.hotwords,
+    signal: options.signal,
   });
 
-  const start = performance.now();
-  let transcription: OpenAITranscriptionRecord;
-  try {
-    transcription = (await openai.audio.transcriptions.create(
-      {
-        file,
-        model,
-        response_format: 'verbose_json',
-        language: 'en',
-        ...(prompt ? { prompt } : {}),
-      } as Parameters<OpenAI['audio']['transcriptions']['create']>[0],
-      { signal: options.signal },
-    )) as unknown as OpenAITranscriptionRecord;
-  } catch (err) {
-    // verbose_json might not be supported on some future model — fall
-    // back to plain json, at the cost of the metadata gates (2/3/4).
-    const message = err instanceof Error ? err.message : String(err);
-    if (!/verbose_json/i.test(message)) throw err;
-    transcription = (await openai.audio.transcriptions.create(
-      {
-        file,
-        model,
-        response_format: 'json',
-        language: 'en',
-        ...(prompt ? { prompt } : {}),
-      } as Parameters<OpenAI['audio']['transcriptions']['create']>[0],
-      { signal: options.signal },
-    )) as unknown as OpenAITranscriptionRecord;
-  }
-  const latencyMs = performance.now() - start;
-
-  const rawTranscript = transcription.text ?? '';
-  const language = transcription.language ?? 'en';
-  const durationSeconds = typeof transcription.duration === 'number'
-    ? transcription.duration
-    : 0;
-  const segments: OpenAISegment[] = Array.isArray(transcription.segments)
-    ? transcription.segments
-    : [];
-
-  // Tag v9 explicitly so the existing gate applies the same "non-English
-  // rejection" policy v7 uses for silent audio.
+  // Both providers normalise into the same segment shape so the
+  // hallucination gate can be applied uniformly. The `'v7'` tag
+  // activates the English-only rule the patient-facing treatment
+  // flows require.
   const hallucination = detectOpenAIHallucination(
-    rawTranscript,
-    language,
-    segments,
-    durationSeconds,
+    result.text,
+    result.language,
+    result.segments,
+    result.durationSeconds,
     'v7',
   );
 
@@ -173,23 +128,26 @@ export async function transcribeToUserInput(
       JSON.stringify({
         event: 'v9_stt_hallucination_filtered',
         reason: hallucination.reason,
-        language,
-        duration: durationSeconds,
+        provider: result.provider,
+        language: result.language,
+        duration: result.durationSeconds,
         word_count: hallucination.wordCount,
-        transcript_preview: rawTranscript.slice(0, 80),
-        model,
+        transcript_preview: result.text.slice(0, 80),
+        model: result.model,
       }),
     );
   }
 
   return {
-    userInput: hallucination.filtered ? '' : rawTranscript,
-    rawTranscript,
+    userInput: hallucination.filtered ? '' : result.text,
+    rawTranscript: result.text,
     hallucination,
-    language,
-    durationSeconds,
-    latencyMs: Math.round(latencyMs),
-    model,
+    language: result.language,
+    durationSeconds: result.durationSeconds,
+    latencyMs: result.cost.latencyMs,
+    provider: result.provider,
+    model: result.model,
+    estimatedUsd: result.cost.estimatedUsd,
   };
 }
 

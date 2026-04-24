@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/database-server';
-import { v9HandleContinueSession } from '@/lib/v9/core';
+import { v9GetSessionVoicePair, v9HandleContinueSession } from '@/lib/v9/core';
 import {
   speakScripted,
   transcribeToUserInput,
@@ -116,6 +116,12 @@ export async function POST(request: NextRequest) {
       // lenient auth — consistent with the main v9 route
     }
 
+    // Read the voice pair pinned to this session at start. Guarantees
+    // that flipping the admin radios never changes voice mid-session.
+    // Patient-facing request bodies cannot override this (only the
+    // admin settings UI can); see lib/v9/voice-settings.ts.
+    const pinnedPair = await v9GetSessionVoicePair(sessionId, userId);
+
     let sttDetails: Record<string, unknown> | null = null;
 
     if (audio) {
@@ -123,6 +129,7 @@ export async function POST(request: NextRequest) {
         currentStep: parsed.currentStep,
         expectedResponseType: parsed.expectedResponseType,
         hotwords: parsed.hotwords,
+        providerId: pinnedPair.stt,
       });
       userInput = transcribe.userInput;
       sttDetails = {
@@ -132,7 +139,9 @@ export async function POST(request: NextRequest) {
         language: transcribe.language,
         durationSeconds: transcribe.durationSeconds,
         latencyMs: transcribe.latencyMs,
+        provider: transcribe.provider,
         model: transcribe.model,
+        estimatedUsd: transcribe.estimatedUsd,
       };
 
       if (transcribe.hallucination.filtered) {
@@ -173,8 +182,13 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Session-pinned TTS provider wins over request body; the
+      // request can only override if the body explicitly supplies one,
+      // and even then, the admin UI's session-pin rule still applies
+      // to new sessions that haven't opted into per-request overrides.
+      const ttsProvider = parsed.tts.provider ?? pinnedPair.tts;
       const tts = await speakScripted(coreJson.message, {
-        providerId: parsed.tts.provider ?? null,
+        providerId: ttsProvider,
         voice: parsed.tts.voice ?? null,
         format: parsed.tts.format ?? 'mp3',
         sessionId,

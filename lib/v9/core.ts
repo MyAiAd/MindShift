@@ -5,6 +5,7 @@ import {
 } from '@/lib/v2/treatment-state-machine';
 import { createServerClient } from '@/lib/database-server';
 import { STRICT_SPEECH_MODE } from '@/lib/voice/speech-config';
+import { getVoicePair, type VoicePair } from '@/lib/v9/voice-settings';
 
 /**
  * V9 is a voice clone of V2. It uses V2's TreatmentStateMachine directly
@@ -41,7 +42,29 @@ export async function v9HandleStartSession(sessionId: string, userId: string) {
     const responseTime = performance.now() - startTime;
 
     await v9SaveSessionToDatabase(sessionId, userId, result, responseTime);
-    await v9TreatmentMachine.getOrCreateContextAsync(sessionId, { userId });
+    const context = await v9TreatmentMachine.getOrCreateContextAsync(
+      sessionId,
+      { userId },
+    );
+
+    // Pin the admin-selected voice pair to the session at start time.
+    // All subsequent turns read from `context.metadata.voicePair`, so
+    // flipping the admin radios mid-session will not change the voice
+    // a patient hears inside an in-flight conversation.
+    const pair = await getVoicePair();
+    context.metadata = context.metadata ?? {};
+    (context.metadata as Record<string, unknown>).voicePair = {
+      stt: pair.stt,
+      tts: pair.tts,
+    };
+    try {
+      await v9TreatmentMachine.saveContextToDatabase(context);
+    } catch (persistError) {
+      console.warn(
+        'V9 start: failed to persist pinned voice pair, continuing in-memory:',
+        persistError instanceof Error ? persistError.message : persistError,
+      );
+    }
 
     const finalResponse = {
       success: true,
@@ -51,6 +74,7 @@ export async function v9HandleStartSession(sessionId: string, userId: string) {
       responseTime: Math.round(responseTime),
       usedAI: false,
       metadata: { phase: 'intro', step: 'welcome' },
+      voicePair: { stt: pair.stt, tts: pair.tts },
     };
 
     await v9SaveInteractionToDatabase(sessionId, 'start', finalResponse);
@@ -64,6 +88,56 @@ export async function v9HandleStartSession(sessionId: string, userId: string) {
       },
       { status: 500 },
     );
+  }
+}
+
+/**
+ * Read the pinned voice pair for an existing session. Used by the
+ * /turn endpoint so STT/TTS providers are stable across turns even
+ * when the admin flips radios mid-session.
+ *
+ * Falls back to the current admin setting if the session has no pin
+ * yet (e.g. a session created before this feature shipped). The
+ * fallback is then persisted so the session becomes stable from the
+ * next turn onward.
+ */
+export async function v9GetSessionVoicePair(
+  sessionId: string,
+  userId: string,
+): Promise<VoicePair> {
+  try {
+    const context = await v9TreatmentMachine.getOrCreateContextAsync(
+      sessionId,
+      { userId },
+    );
+    const pinned = (context.metadata as Record<string, unknown> | undefined)
+      ?.voicePair as VoicePair | undefined;
+    if (
+      pinned &&
+      (pinned.stt === 'openai' || pinned.stt === 'whisper-local') &&
+      (pinned.tts === 'openai' ||
+        pinned.tts === 'elevenlabs' ||
+        pinned.tts === 'kokoro')
+    ) {
+      return pinned;
+    }
+
+    const fallback = await getVoicePair();
+    const pair: VoicePair = { stt: fallback.stt, tts: fallback.tts };
+    context.metadata = context.metadata ?? {};
+    (context.metadata as Record<string, unknown>).voicePair = pair;
+    try {
+      await v9TreatmentMachine.saveContextToDatabase(context);
+    } catch {
+      // Non-fatal: if persistence fails we'll just re-pin next turn.
+    }
+    return pair;
+  } catch (err) {
+    console.warn(
+      'V9 voice pair lookup failed, defaulting to openai/openai:',
+      err instanceof Error ? err.message : err,
+    );
+    return { stt: 'openai', tts: 'openai' };
   }
 }
 

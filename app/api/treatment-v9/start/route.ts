@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
     const startJson = (await startResponse.clone().json()) as {
       message?: string;
       currentStep?: string;
+      voicePair?: { stt?: string; tts?: string };
     };
 
     if (!body.tts?.enabled || !startJson.message) {
@@ -99,8 +100,12 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Use the pair that v9HandleStartSession just pinned to the
+      // session. This guarantees the initial welcome audio speaks in
+      // the same voice every subsequent turn will use.
+      const pinnedTts = (startJson.voicePair?.tts ?? null) as TtsProviderId | null;
       const tts = await speakScripted(startJson.message, {
-        providerId: body.tts.provider ?? null,
+        providerId: body.tts.provider ?? pinnedTts ?? null,
         voice: body.tts.voice ?? null,
         format: body.tts.format ?? 'mp3',
         sessionId,
