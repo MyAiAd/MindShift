@@ -69,8 +69,8 @@ const SAMPLE_INPUT_MINUTES = 10;
 const SAMPLE_OUTPUT_CHARACTERS = 12000;
 
 function formatUsd(value: number): string {
-  if (value === 0) return '$0.0000';
-  return `$${value.toFixed(4)}`;
+  if (value === 0) return '$0.00';
+  return `$${value.toFixed(4).replace(/(\.\d{2})0+$/, '$1')}`;
 }
 
 function estimateSttCost(provider: SttProviderId, minutes: number): number {
