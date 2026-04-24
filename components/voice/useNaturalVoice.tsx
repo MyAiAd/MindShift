@@ -82,11 +82,14 @@ export const useNaturalVoice = ({
     // Feature flag: Use Whisper or Web Speech API.
     // If provider is not explicitly forced to webspeech, prefer Whisper on browsers
     // that do not implement SpeechRecognition (notably iOS Safari/PWA).
+    // R8: V9 behaves identically to V7 here — the v9 client shell is a direct
+    // port of v7's, and v9 uses the same Whisper STT path by default.
     const hasWebSpeechSupport = typeof window !== 'undefined' &&
         !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
     const configuredTranscriptionProvider = process.env.NEXT_PUBLIC_TRANSCRIPTION_PROVIDER;
     const useWhisper = typeof window !== 'undefined' && (
         treatmentVersion === 'v7' ||
+        treatmentVersion === 'v9' ||
         configuredTranscriptionProvider === 'whisper' ||
         (configuredTranscriptionProvider !== 'webspeech' && !hasWebSpeechSupport)
     );
@@ -1163,7 +1166,10 @@ export const useNaturalVoice = ({
     const speak = useCallback(async (text: string, options?: SpeechRequestOptions) => {
         if (!text) return;
 
-        if (treatmentVersion === 'v7') {
+        // R8: V9 shares V7's speech-compliance guard. Since V9 renders exactly
+        // what the backend returned (R7), the `apiMessage` and `text` should
+        // always match — the guard catches any client-side divergence.
+        if (treatmentVersion === 'v7' || treatmentVersion === 'v9') {
             const complianceResult = validateSpeechOutput({
                 textToSpeak: text,
                 apiMessage: options?.apiMessage ?? text,
@@ -1296,8 +1302,10 @@ export const useNaturalVoice = ({
             console.error('🗣️ Natural Voice: TTS error:', err);
 
             // Last-resort fallback for legacy mobile/PWA codec issues.
-            // V7 uses an explicit backup-provider prompt instead of silently switching voices.
-            if (speakerEnabledRef.current && treatmentVersion !== 'v7') {
+            // V7/V9 use an explicit backup-provider / text-fallback prompt at
+            // the session-component layer instead of silently switching
+            // voices via the browser's SpeechSynthesis engine.
+            if (speakerEnabledRef.current && treatmentVersion !== 'v7' && treatmentVersion !== 'v9') {
                 const fallbackWorked = await speakWithSystemVoiceFallback(text);
                 if (fallbackWorked) {
                     console.log('🗣️ Natural Voice: Recovered with SpeechSynthesis fallback');

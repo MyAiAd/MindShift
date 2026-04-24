@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 import path from 'path';
 
 const STORAGE_STATE = path.join(__dirname, 'tests/.auth/storage-state.json');
@@ -34,6 +34,21 @@ export default defineConfig({
     {
       name: 'e2e',
       testMatch: /tests\/e2e\/.*.spec\.ts/,
+    },
+    /**
+     * R14 visual-regression project. Runs only
+     * `tests/v9/visual-regression.spec.ts` and swaps the default
+     * auth storage state for an unauthenticated one — the v9 shell
+     * screenshots don't require a real session, they render the
+     * "ready overlay" UI at a deterministic viewport.
+     */
+    {
+      name: 'v9-visual',
+      testMatch: /tests\/v9\/visual-regression\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: { cookies: [], origins: [] },
+      },
     },
   ],
 });

@@ -142,3 +142,53 @@ V9 inherits v2's quirks on purpose. See
 doctor review before any v2 edit (triple-nesting return stack,
 `clear_anything_else_problem_*` inconsistency, and any further drift
 surfaced by the parity gate).
+
+## V9 UX restoration (client shell)
+
+See [`prd-v9-ux-restoration.md`](./prd-v9-ux-restoration.md) for the
+full requirements document. The short version:
+
+- **Client shell is a direct port of v7's `TreatmentSession.tsx`.**
+  Same orb, same interaction-mode switcher (orb_ptt / listen_only /
+  text_first), same admin debug drawer. The only hard line is R7:
+  v9 renders **exactly** the string the backend returned for the
+  first assistant message. No `INITIAL_WELCOME` substitution, no
+  trimming, no prefix injection. The v2-v9 parity gate guards the
+  byte-for-byte contract.
+- **Preferences live under `v9_*` localStorage keys.** See
+  `lib/v9/v9-preferences.ts`. Keys are never shared with v7 — moving
+  from v7 to v9 always gives the user fresh, mode-appropriate
+  defaults (R5/R6).
+- **Static audio resolution is hash-based.** Canonical text →
+  md5 → manifest lookup. The resolver checks v9's manifest first,
+  falls back to v7's manifest (Phase 1 reuses v7 assets), and emits
+  telemetry that surfaces in the admin drawer. See
+  `lib/v9/static-audio-resolver.ts`. The shared hash function lives
+  in `scripts/hash-audio-text.js` and must stay byte-identical with
+  v7's `scripts/generate-static-audio.js`.
+- **Admin debug drawer (`components/treatment/v9/AdminDebugDrawer.tsx`)
+  surfaces two v9-only panels:** the pinned `voicePair`
+  (`{ stt, tts }` from `action: 'start'`'s response — R9) and the
+  resolver's hit/miss counters (R13.4). Both are gated behind the
+  admin role check in the parent component.
+- **CI:** three gates run per PR:
+  1. `npm run ci:v9-gate` — v2/v9 byte-parity check (unchanged).
+  2. `npm run ci:v9-theme-gate` — blocks raw Tailwind color
+     classes in `components/treatment/v9/**` and `lib/v9/**`.
+  3. `npm run ci:v9-unit` — node:test suite covering the
+     resolver, preferences module, session-parity guards, and
+     theme-gate regex.
+  4. `npm run test:v9-visual` — Playwright screenshot matrix
+     covering every interaction mode × viewport × theme combo.
+
+### Adding a new voice to v9
+
+1. Create `/public/audio/v9/static/<voice>/manifest.json` using the
+   v9 generator script (R13.5 — follow-up PR) OR
+2. Point `v9_voice_id` at a voice that already has a v7 manifest and
+   rely on the resolver's v7 fallback. Phase 1 takes option 2.
+
+Either way, the runtime `useNaturalVoice` hook caches static clips
+into `globalAudioCache` under the same `${voiceName}:${text}` key
+format v7 uses — so once the resolver returns a hit the playback
+path is identical to v7's.

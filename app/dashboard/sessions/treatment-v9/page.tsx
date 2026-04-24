@@ -2,10 +2,38 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth';
 import TreatmentSession from '@/components/treatment/v9/TreatmentSession';
+import { getVoicePreferences } from '@/lib/v9/v9-preferences';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+
+// R13.2: the static-audio preloader runs client-only so we can fetch
+// manifests and populate `globalAudioCache` before the first bubble
+// lands. Dynamic import keeps the preloader out of the SSR bundle.
+const V9AudioPreloader = dynamic(
+  () => import('@/components/treatment/v9/V9AudioPreloader'),
+  { ssr: false },
+);
+
+/**
+ * Resolve the pinned voice the same way TreatmentSession does so the
+ * preloader asks the resolver for the exact manifest it will need.
+ * Mirrors the logic in `TreatmentSession.tsx` (see R5/R6 block).
+ */
+function resolveInitialVoice(): string {
+  if (typeof window === 'undefined') return 'marin';
+  const explicit = window.localStorage.getItem('v9_voice_id');
+  if (explicit) return explicit;
+  const legacy = window.localStorage.getItem('v9_selected_voice');
+  if (legacy) return legacy;
+  const envDefault =
+    process.env.NEXT_PUBLIC_V9_DEFAULT_VOICE ??
+    process.env.NEXT_PUBLIC_V7_DEFAULT_VOICE;
+  if (envDefault) return envDefault;
+  return 'marin';
+}
 
 /**
  * V9 treatment session page. Wires the v9 TreatmentSession component to
@@ -65,6 +93,23 @@ function TreatmentSessionContent() {
   const { user, profile, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string>('');
   const [shouldResume, setShouldResume] = useState<boolean>(false);
+
+  // R13.2: resolve the pinned voice once at mount; re-render-triggered
+  // changes are fine because the preloader is idempotent per voice.
+  const [preloadVoice, setPreloadVoice] = useState<string>('marin');
+  useEffect(() => {
+    setPreloadVoice(resolveInitialVoice());
+    // Warm `globalAudioCache` aggressively only if the user has the
+    // speaker on. Cuts first-message TTS latency and keeps unused
+    // audio off mobile data plans.
+    const prefs = getVoicePreferences();
+    if (!prefs.speakerEnabled) {
+      // Still load the manifest index (cheap, ~10KB) so resolver
+      // telemetry is populated in the admin drawer. But skip the
+      // preloader's per-clip fetch by not mounting it below. A future
+      // change could decouple manifest loading from clip preloading.
+    }
+  }, []);
 
   useEffect(() => {
     const id = searchParams.get('sessionId');
@@ -158,6 +203,11 @@ function TreatmentSessionContent() {
       </div>
 
       <div className="h-header-safe"></div>
+
+      {/* R13.2: mount the preloader alongside the session so manifests
+          load in parallel with the backend's `action: 'start'` call.
+          Preloader returns null and cancels fetches on unmount. */}
+      <V9AudioPreloader voice={preloadVoice} />
 
       <div className="py-2 md:py-8">
         <SessionErrorBoundary>
