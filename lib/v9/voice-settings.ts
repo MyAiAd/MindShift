@@ -45,6 +45,16 @@ export interface VoicePairWithAudit extends VoicePair {
 
 const DB_TABLE = 'system_voice_settings';
 const DB_ROW_ID = 1;
+const FORCE_V9_OPENAI_SPEECH =
+  (process.env.V9_FORCE_OPENAI_SPEECH ?? 'true').trim().toLowerCase() !== 'false';
+
+function openAiPair(fromDatabase = false): VoicePairWithAudit {
+  return {
+    stt: 'openai',
+    tts: 'openai',
+    fromDatabase,
+  };
+}
 
 function envFallback(): VoicePair {
   return {
@@ -69,6 +79,10 @@ function sanitizeTts(value: unknown): V9TtsProvider {
  * it on every new session start.
  */
 export async function getVoicePair(): Promise<VoicePairWithAudit> {
+  if (FORCE_V9_OPENAI_SPEECH) {
+    return openAiPair(false);
+  }
+
   try {
     const supabase = createServerClient();
     const { data, error } = await supabase

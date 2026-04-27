@@ -6,6 +6,8 @@ import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Spar
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
 // Natural voice integration (ElevenLabs + Web Speech)
 import { useNaturalVoice } from '@/components/voice/useNaturalVoice';
+import { getVoiceCacheName } from '@/lib/voice/voice-cache-name';
+import V9AudioPreloader from './V9AudioPreloader';
 // V9 preferences for interaction modes (parallel to V7, see R1/R5/R6 of
 // `docs/prd-v9-ux-restoration.md`). V9 MUST NOT import V7 preferences —
 // interaction mode, mic, speaker, voice, and playback speed are all
@@ -664,11 +666,11 @@ export default function TreatmentSession({
   const [textModeFallbackState, setTextModeFallbackState] = useState<TextModeFallbackState>(null);
   const textModeErrorTimestampsRef = useRef<number[]>([]);
   const textModeRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // US-016: sttProviderOverride / ttsProviderOverride are DEPRECATED in the v7 user path.
-  // They are kept as no-op state so other code paths that still read them don't break, but no
-  // v7 code branch sets them anymore. US-018 enforces that the server ignores them for v7.
-  const [sttProviderOverride] = useState<'existing' | 'openai' | undefined>(undefined);
-  const [ttsProviderOverride] = useState<'existing' | 'openai' | undefined>(undefined);
+  // V9 trial path: force hosted OpenAI speech so STT accuracy and TTS voice matching are not
+  // affected by legacy Whisper/Kokoro deployment settings. Text fidelity still comes solely from
+  // the v2-backed v9 API responses.
+  const sttProviderOverride: 'openai' = 'openai';
+  const ttsProviderOverride: 'openai' = 'openai';
   const [selectedWorkType, setSelectedWorkType] = useState<string | null>(null);
   const [clickedButton, setClickedButton] = useState<string | null>(null);
   const [sessionMethod, setSessionMethod] = useState<string>('mind_shifting');
@@ -895,6 +897,12 @@ export default function TreatmentSession({
     voicePair?.tts === 'elevenlabs' || voicePair?.tts === 'kokoro' || voicePair?.tts === 'openai'
       ? voicePair.tts
       : 'openai';
+  const runtimeStaticAudioVoice =
+    activeTtsProvider === 'kokoro'
+      ? getVoiceCacheName(getKokoroVoiceId())
+      : activeTtsProvider === 'openai'
+        ? getVoiceCacheName(selectedVoice)
+        : null;
   const handleTtsUsage = useCallback((usage: {
     provider: V9TtsProvider;
     characters: number;
@@ -2277,6 +2285,8 @@ export default function TreatmentSession({
 
   return (
     <div className="max-w-4xl mx-auto px-2 sm:px-4 flex flex-col fixed inset-x-0 top-header-safe bottom-0 pb-safe">
+      {runtimeStaticAudioVoice && <V9AudioPreloader voice={runtimeStaticAudioVoice} />}
+
       {/* US-015: text-mode fallback dialog. Renders when OpenAI speech fails twice in 10s. */}
       {textModeFallbackState === 'prompt' && (
         <div

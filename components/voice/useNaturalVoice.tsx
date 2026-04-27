@@ -322,8 +322,12 @@ export const useNaturalVoice = ({
         }
     }, [useWhisper, audioCapture]);
     
-    // Initialize VAD - only when both mic AND speaker are enabled, and NOT in guided mode (PTT)
-    const vadEnabled = isMicEnabled && isSpeakerEnabled && !guidedMode;
+    // V9 keeps VAD active whenever the mic is on so Whisper/OpenAI uploads remain speech-gated
+    // even when speaker playback is disabled. Older versions retain the existing mic+speaker gate.
+    const vadEnabled =
+        treatmentVersion === 'v9'
+            ? isMicEnabled && !guidedMode
+            : isMicEnabled && isSpeakerEnabled && !guidedMode;
     
     // Choose the correct handler based on test mode
     const vadSpeechHandler = testMode ? handleTestModeInterruption : handleVadBargeIn;

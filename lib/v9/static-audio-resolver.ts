@@ -242,7 +242,11 @@ async function loadVoiceManifests(voice: string): Promise<LoadedVoiceManifest> {
     );
 
     const v9Index = v9Raw && isV9Manifest(v9Raw) ? buildV9Index(v9Raw) : null;
-    const v7Index = v7Raw ? await buildV7Index(v7Raw) : null;
+    const v7Index = v7Raw
+      ? isV9Manifest(v7Raw)
+        ? buildV9Index(v7Raw)
+        : await buildV7Index(v7Raw)
+      : null;
 
     const loaded: LoadedVoiceManifest = { v9: v9Index, v7: v7Index };
     voiceManifestCache.set(voice, loaded);

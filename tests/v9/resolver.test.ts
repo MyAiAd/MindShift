@@ -135,6 +135,40 @@ test('R11.6: V7 manifest hit for known canonical text increments hitsV7', async 
   assert.equal(t.misses, 0);
 });
 
+test('R11.6: V7 fallback accepts generated entries-array manifest shape', async () => {
+  const text = 'Choose which Mind Shifting method you would like to use to clear the problem:';
+  const v7Manifest = {
+    ...buildV9Manifest('marin', { METHOD_SELECTION: text }),
+    entries: [
+      {
+        key: 'METHOD_SELECTION',
+        text,
+        hash: hashAudioText(text),
+        file: 'method_selection.mp3',
+        path: '/audio/v7/static/marin/method_selection.mp3',
+      },
+    ],
+  };
+
+  unmountFetch = mountFetch({
+    '/audio/v9/static/marin/manifest.json': null,
+    '/audio/v7/static/marin/manifest.json': v7Manifest,
+  });
+
+  const result = await resolveStaticAudio(text, 'marin');
+
+  assert.equal(result.kind, 'hit');
+  if (result.kind === 'hit') {
+    assert.equal(result.scope, 'v7');
+    assert.equal(result.assetPath, '/audio/v7/static/marin/method_selection.mp3');
+  }
+
+  const t = getResolverTelemetry();
+  assert.equal(t.hitsV7, 1);
+  assert.equal(t.hitsV9, 0);
+  assert.equal(t.misses, 0);
+});
+
 // ---------- R11.7 ----------
 
 test('R11.7: unknown canonical text returns miss and increments misses', async () => {
