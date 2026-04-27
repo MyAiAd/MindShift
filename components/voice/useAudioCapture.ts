@@ -140,6 +140,10 @@ export const useAudioCapture = ({
   const audioBufferRef = useRef<Float32Array[]>([]);
   const lastProcessTimeRef = useRef<number>(0);
   const activeRequestsRef = useRef<number>(0); // Track concurrent API requests
+  const requestSequenceRef = useRef(0);
+  const nextTranscriptSequenceRef = useRef(0);
+  const pendingTranscriptResultsRef = useRef<Map<number, string | null>>(new Map());
+  const captureGenerationRef = useRef(0);
 
   // US-001: VAD-gated upload flag. When true, the VAD has reported speech since the last
   // successful upload / buffer clear. processAudioBuffer refuses to POST when this is false
@@ -171,6 +175,20 @@ export const useAudioCapture = ({
     onProcessingChangeRef.current = onProcessingChange;
     getTranscriptionContextRef.current = getTranscriptionContext;
   }, [onTranscript, onProcessingChange, getTranscriptionContext]);
+
+  const flushCompletedTranscripts = useCallback(() => {
+    const pendingResults = pendingTranscriptResultsRef.current;
+
+    while (pendingResults.has(nextTranscriptSequenceRef.current)) {
+      const transcript = pendingResults.get(nextTranscriptSequenceRef.current);
+      pendingResults.delete(nextTranscriptSequenceRef.current);
+      nextTranscriptSequenceRef.current += 1;
+
+      if (transcript) {
+        onTranscriptRef.current(transcript);
+      }
+    }
+  }, []);
   
   // Configuration - TUNED for responsive speech capture
   const BUFFER_DURATION_MS = 8000;   // Keep last 8 seconds (safety margin for longer utterances)
@@ -248,6 +266,7 @@ export const useAudioCapture = ({
    * 2. New audio accumulates in the fresh buffer immediately
    * 3. Send snapshot to Whisper API
    * 4. Multiple calls can be in-flight concurrently (no blocking)
+   * 5. Transcripts are emitted in snapshot order, not network completion order
    * 
    * @param bypassThrottle - If true, skip the MIN_PROCESS_INTERVAL_MS throttle
    *                         (used for barge-in and VAD speech-end triggers)
@@ -298,6 +317,9 @@ export const useAudioCapture = ({
     
     // Track concurrent requests for UI state
     activeRequestsRef.current++;
+    const requestSequence = requestSequenceRef.current++;
+    const captureGeneration = captureGenerationRef.current;
+    let transcriptToEmit: string | null = null;
     setIsProcessing(true);
     onProcessingChangeRef.current?.(true);
     
@@ -357,33 +379,27 @@ export const useAudioCapture = ({
         // from completing API calls after mic disable or during AI speech.
         if (!enabledRef.current || isAISpeakingRef.current) {
           console.log('🎙️ AudioCapture: Discarding transcript (disabled or AI speaking):', data.transcript);
-          return;
-        }
-        
-        // HALLUCINATION FILTER. The server (US-002) is the primary line of defence; this
-        // client-side string-match check (US-019) is a last-resort safety net that also logs
-        // a structured stt_client_safety_net_hit event so we can measure how often it catches
-        // things the server missed.
-        if (data.hallucination_filtered) {
+        } else if (data.hallucination_filtered) {
+          // HALLUCINATION FILTER. The server (US-002) is the primary line of defence; this
+          // client-side string-match check (US-019) is a last-resort safety net that also logs
+          // a structured stt_client_safety_net_hit event so we can measure how often it catches
+          // things the server missed.
           console.log(
             '🎙️ AudioCapture: Filtered hallucination (server):',
             data.transcript,
             `reason=${data.hallucination_reason ?? 'unknown'}`,
           );
-          return;
-        }
-        if (isLikelyHallucination(data.transcript)) {
+        } else if (isLikelyHallucination(data.transcript)) {
           console.log('🎙️ AudioCapture: Filtered hallucination (client safety-net):', data.transcript);
           console.log(JSON.stringify({
             event: 'stt_client_safety_net_hit',
             transcript_preview: (data.transcript || '').slice(0, 80),
             matched_pattern: 'isLikelyHallucination',
           }));
-          return;
+        } else {
+          console.log('🎙️ AudioCapture: Transcript:', data.transcript);
+          transcriptToEmit = data.transcript.trim();
         }
-        
-        console.log('🎙️ AudioCapture: Transcript:', data.transcript);
-        onTranscriptRef.current(data.transcript.trim());
       } else {
         console.log('🎙️ AudioCapture: Empty transcript (likely silence)');
       }
@@ -392,6 +408,11 @@ export const useAudioCapture = ({
       console.error('🎙️ AudioCapture: Processing error:', err);
       setError(err instanceof Error ? err.message : 'Transcription failed');
     } finally {
+      if (captureGeneration === captureGenerationRef.current) {
+        pendingTranscriptResultsRef.current.set(requestSequence, transcriptToEmit);
+        flushCompletedTranscripts();
+      }
+
       // Decrement active request counter
       activeRequestsRef.current = Math.max(0, activeRequestsRef.current - 1);
       if (activeRequestsRef.current === 0) {
@@ -399,7 +420,7 @@ export const useAudioCapture = ({
         onProcessingChangeRef.current?.(false);
       }
     }
-  }, [createWavBlob, onProviderError, transcriptionProviderOverride, treatmentVersion]);
+  }, [createWavBlob, flushCompletedTranscripts, onProviderError, transcriptionProviderOverride, treatmentVersion]);
   
   /**
    * Process audio immediately, bypassing the throttle.
@@ -557,6 +578,10 @@ export const useAudioCapture = ({
     
     // Clear buffer
     audioBufferRef.current = [];
+    pendingTranscriptResultsRef.current.clear();
+    requestSequenceRef.current = 0;
+    nextTranscriptSequenceRef.current = 0;
+    captureGenerationRef.current += 1;
     
     setIsCapturing(false);
     console.log('🎙️ AudioCapture: Cleanup complete');
