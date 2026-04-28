@@ -257,6 +257,28 @@ export const useAudioCapture = ({
     
     return new Blob([wavBuffer], { type: 'audio/wav' });
   }, []);
+
+  const hasSpeechEnergy = useCallback((audioBuffers: Float32Array[]): boolean => {
+    let sumSquares = 0;
+    let peak = 0;
+    let sampleCount = 0;
+
+    for (const buffer of audioBuffers) {
+      // Sample every few frames to keep the fallback timer cheap.
+      const stride = Math.max(1, Math.floor(buffer.length / 512));
+      for (let i = 0; i < buffer.length; i += stride) {
+        const abs = Math.abs(buffer[i]);
+        peak = Math.max(peak, abs);
+        sumSquares += abs * abs;
+        sampleCount += 1;
+      }
+    }
+
+    if (sampleCount === 0) return false;
+
+    const rms = Math.sqrt(sumSquares / sampleCount);
+    return peak >= 0.035 || rms >= 0.012;
+  }, []);
   
   /**
    * Send audio buffer to Whisper for transcription.
@@ -616,27 +638,26 @@ export const useAudioCapture = ({
     if (!isCapturing) return;
     if (vadAvailable) return; // VAD-gated mode: no timer. processNow() flushes uploads.
 
-    if (treatmentVersion === 'v9') {
-      if (!loggedVadUnavailableFallbackRef.current) {
-        console.warn('🎙️ AudioCapture: v9 VAD unavailable - disabling fallback timer to avoid silence uploads');
-        loggedVadUnavailableFallbackRef.current = true;
-      }
-      return;
-    }
-
     if (!loggedVadUnavailableFallbackRef.current) {
-      console.warn('🎙️ AudioCapture: stt_vad_unavailable_fallback - VAD not available, using legacy auto-process timer');
+      console.warn(
+        treatmentVersion === 'v9'
+          ? '🎙️ AudioCapture: v9 VAD unavailable - using speech-energy fallback timer'
+          : '🎙️ AudioCapture: stt_vad_unavailable_fallback - VAD not available, using legacy auto-process timer',
+      );
       loggedVadUnavailableFallbackRef.current = true;
     }
 
     const interval = setInterval(() => {
       if (audioBufferRef.current.length > 0 && !isAISpeakingRef.current) {
+        if (treatmentVersion === 'v9' && !hasSpeechEnergy(audioBufferRef.current)) {
+          return;
+        }
         processAudioBuffer();
       }
     }, AUTO_PROCESS_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [isCapturing, vadAvailable, processAudioBuffer, treatmentVersion]);
+  }, [hasSpeechEnergy, isCapturing, vadAvailable, processAudioBuffer, treatmentVersion]);
   
   /**
    * Notify audio capture that AI is speaking (echo prevention).
