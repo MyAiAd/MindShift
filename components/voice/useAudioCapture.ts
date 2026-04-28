@@ -144,6 +144,8 @@ export const useAudioCapture = ({
   const nextTranscriptSequenceRef = useRef(0);
   const pendingTranscriptResultsRef = useRef<Map<number, string | null>>(new Map());
   const captureGenerationRef = useRef(0);
+  const postAudioFastFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [postAudioFastFallbackActive, setPostAudioFastFallbackActive] = useState(false);
 
   // US-001: VAD-gated upload flag. When true, the VAD has reported speech since the last
   // successful upload / buffer clear. processAudioBuffer refuses to POST when this is false
@@ -279,6 +281,23 @@ export const useAudioCapture = ({
     const rms = Math.sqrt(sumSquares / sampleCount);
     return peak >= 0.035 || rms >= 0.012;
   }, []);
+
+  const startPostAudioFastFallbackWindow = useCallback(() => {
+    if (treatmentVersion !== 'v9') return;
+
+    if (postAudioFastFallbackTimerRef.current) {
+      clearTimeout(postAudioFastFallbackTimerRef.current);
+    }
+
+    setPostAudioFastFallbackActive(true);
+    console.log(`🎙️ AudioCapture: v9 post-audio fast fallback window started at ${performance.now().toFixed(2)}ms`);
+
+    postAudioFastFallbackTimerRef.current = setTimeout(() => {
+      postAudioFastFallbackTimerRef.current = null;
+      setPostAudioFastFallbackActive(false);
+      console.log(`🎙️ AudioCapture: v9 post-audio fast fallback window ended at ${performance.now().toFixed(2)}ms`);
+    }, 2000);
+  }, [treatmentVersion]);
   
   /**
    * Send audio buffer to Whisper for transcription.
@@ -348,6 +367,9 @@ export const useAudioCapture = ({
     try {
       const wavBlob = createWavBlob(bufferSnapshot);
       console.log(`🎙️ AudioCapture: Processing ${(wavBlob.size / 1024).toFixed(1)}KB of audio (${activeRequestsRef.current} in-flight)`);
+      if (treatmentVersion === 'v9') {
+        console.log(`🎙️ AudioCapture: v9 STT processing started at ${performance.now().toFixed(2)}ms`);
+      }
 
       const ctx = getTranscriptionContextRef.current?.() ?? null;
       const formData = new FormData();
@@ -600,6 +622,11 @@ export const useAudioCapture = ({
     
     // Clear buffer
     audioBufferRef.current = [];
+    if (postAudioFastFallbackTimerRef.current) {
+      clearTimeout(postAudioFastFallbackTimerRef.current);
+      postAudioFastFallbackTimerRef.current = null;
+    }
+    setPostAudioFastFallbackActive(false);
     pendingTranscriptResultsRef.current.clear();
     requestSequenceRef.current = 0;
     nextTranscriptSequenceRef.current = 0;
@@ -654,10 +681,10 @@ export const useAudioCapture = ({
         }
         processAudioBuffer();
       }
-    }, AUTO_PROCESS_INTERVAL_MS);
+    }, treatmentVersion === 'v9' && postAudioFastFallbackActive ? 300 : AUTO_PROCESS_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [hasSpeechEnergy, isCapturing, vadAvailable, processAudioBuffer, treatmentVersion]);
+  }, [hasSpeechEnergy, isCapturing, postAudioFastFallbackActive, vadAvailable, processAudioBuffer, treatmentVersion]);
   
   /**
    * Notify audio capture that AI is speaking (echo prevention).
@@ -672,7 +699,7 @@ export const useAudioCapture = ({
       audioBufferRef.current = [];
       console.log('🎙️ AudioCapture: AI speaking - buffer cleared, capture paused');
     } else if (!speaking && wasAISpeaking) {
-      console.log('🎙️ AudioCapture: AI stopped speaking - capture resumed');
+      console.log(`🎙️ AudioCapture: AI stopped speaking - capture resumed at ${performance.now().toFixed(2)}ms`);
     }
   }, []);
   
@@ -695,5 +722,6 @@ export const useAudioCapture = ({
     processNow, // Manual trigger (bypasses throttle)
     setAISpeaking, // Echo prevention: pause capture during AI speech
     clearBuffer, // Discard buffered audio
+    startPostAudioFastFallbackWindow,
   };
 };

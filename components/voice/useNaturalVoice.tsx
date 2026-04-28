@@ -1078,17 +1078,22 @@ export const useNaturalVoice = ({
 
             audio.onended = () => {
                 const audioCompleteTime = performance.now() - speakStartTimeRef.current;
-                console.log(`🗣️ Natural Voice: Audio segment ended at ${audioCompleteTime.toFixed(2)}ms`);
+                const absoluteEndTime = performance.now();
+                console.log(`🗣️ Natural Voice: Audio segment ended at ${audioCompleteTime.toFixed(2)}ms (absolute=${absoluteEndTime.toFixed(2)}ms)`);
                 if (isLast) {
+                    // Resume capture before parent callbacks so immediate user speech is not dropped.
+                    audioCapture.setAISpeaking(false); // Resume mic capture after AI finishes
+                    audioCapture.startPostAudioFastFallbackWindow?.();
+                    console.log(`🎙️ Natural Voice: Capture resume requested before audio-ended callback at ${performance.now().toFixed(2)}ms`);
+
                     setIsSpeaking(false);
                     isSpeakingRef.current = false;
                     isAudioPlayingRef.current = false;
-                    audioCapture.setAISpeaking(false); // Resume mic capture after AI finishes
                     
                     // Resume VAD after AI finishes speaking
                     if (vadRef.current?.isInitialized && vadEnabled) {
                         vadRef.current.startVAD();
-                        console.log('🎙️ VAD: Resumed after AI finished speaking');
+                        console.log(`🎙️ VAD: Resumed after AI finished speaking at ${performance.now().toFixed(2)}ms`);
                     }
                     
                     // Only restart listening if mic is enabled AND not in guided/PTT mode.
@@ -1096,6 +1101,7 @@ export const useNaturalVoice = ({
                     if (isMicEnabled && isMountedRef.current && !guidedModeRef.current) {
                         startListening();
                     }
+                    console.log(`🔊 Natural Voice: Running audio-ended callback at ${performance.now().toFixed(2)}ms`);
                     onAudioEndedRef.current?.();
                 }
                 resolveOnce();
