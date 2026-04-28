@@ -830,6 +830,60 @@ export default function TreatmentSession({
     return normalized === 'solution state' || normalized === 'feel solution state';
   }, [currentStep]);
 
+  const normalizeVoiceCommandText = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const isWorkTypeSelectionStep = () =>
+    currentStep === 'mind_shifting_explanation' ||
+    currentStep === 'mind_shifting_explanation_dynamic' ||
+    currentStep === 'mind_shifting_explanation_static';
+
+  const normalizeV9SpokenCommand = (rawContent: string): {
+    backendContent: string;
+    displayContent: string;
+  } => {
+    const normalized = normalizeVoiceCommandText(rawContent);
+
+    if (isWorkTypeSelectionStep()) {
+      if (normalized === '1' || normalized.includes('problem')) {
+        return { backendContent: '1', displayContent: 'PROBLEM' };
+      }
+      if (normalized === '2' || normalized.includes('goal')) {
+        return { backendContent: '2', displayContent: 'GOAL' };
+      }
+      if (
+        normalized === '3' ||
+        normalized.includes('negative experience') ||
+        normalized.includes('negative')
+      ) {
+        return { backendContent: '3', displayContent: 'NEGATIVE EXPERIENCE' };
+      }
+    }
+
+    if (currentStep === 'choose_method' || currentStep === 'digging_method_selection') {
+      if (normalized === '1' || normalized.includes('problem')) {
+        return { backendContent: '1', displayContent: 'Problem Shifting' };
+      }
+      if (normalized === '2' || normalized.includes('identity')) {
+        return { backendContent: '2', displayContent: 'Identity Shifting' };
+      }
+      if (normalized === '3' || normalized.includes('belief')) {
+        return { backendContent: '3', displayContent: 'Belief Shifting' };
+      }
+      if (normalized === '4' || normalized.includes('blockage')) {
+        return { backendContent: '4', displayContent: 'Blockage Shifting' };
+      }
+    }
+
+    return { backendContent: rawContent, displayContent: rawContent };
+  };
+
   useEffect(() => {
     transcriptionContextRef.current = {
       expectedResponseType: null,
@@ -963,6 +1017,25 @@ export default function TreatmentSession({
       if (isInternalTranscriptLeak(transcript)) {
         console.warn('🗣️ V9: Dropping internal transcript leak:', transcript);
         clearTranscriptBuffers();
+        return;
+      }
+
+      const command = normalizeV9SpokenCommand(transcript.trim());
+      const isMenuCommand =
+        command.backendContent !== transcript.trim() ||
+        command.displayContent !== transcript.trim();
+      if (isMenuCommand) {
+        console.log('🗣️ V9: Immediate spoken menu command:', {
+          transcript,
+          backendContent: command.backendContent,
+          displayContent: command.displayContent,
+        });
+        clearTranscriptBuffers();
+        if (!isLoadingRef.current) {
+          sendMessageRef.current(transcript);
+        } else {
+          pendingTranscriptRef.current = transcript;
+        }
         return;
       }
 
@@ -1650,60 +1723,6 @@ export default function TreatmentSession({
     version: 'v9',
     expectedResponseType,
   });
-
-  const normalizeVoiceCommandText = (value: string) =>
-    value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-  const isWorkTypeSelectionStep = () =>
-    currentStep === 'mind_shifting_explanation' ||
-    currentStep === 'mind_shifting_explanation_dynamic' ||
-    currentStep === 'mind_shifting_explanation_static';
-
-  const normalizeV9SpokenCommand = (rawContent: string): {
-    backendContent: string;
-    displayContent: string;
-  } => {
-    const normalized = normalizeVoiceCommandText(rawContent);
-
-    if (isWorkTypeSelectionStep()) {
-      if (normalized === '1' || normalized.includes('problem')) {
-        return { backendContent: '1', displayContent: 'PROBLEM' };
-      }
-      if (normalized === '2' || normalized.includes('goal')) {
-        return { backendContent: '2', displayContent: 'GOAL' };
-      }
-      if (
-        normalized === '3' ||
-        normalized.includes('negative experience') ||
-        normalized.includes('negative')
-      ) {
-        return { backendContent: '3', displayContent: 'NEGATIVE EXPERIENCE' };
-      }
-    }
-
-    if (currentStep === 'choose_method' || currentStep === 'digging_method_selection') {
-      if (normalized === '1' || normalized.includes('problem')) {
-        return { backendContent: '1', displayContent: 'Problem Shifting' };
-      }
-      if (normalized === '2' || normalized.includes('identity')) {
-        return { backendContent: '2', displayContent: 'Identity Shifting' };
-      }
-      if (normalized === '3' || normalized.includes('belief')) {
-        return { backendContent: '3', displayContent: 'Belief Shifting' };
-      }
-      if (normalized === '4' || normalized.includes('blockage')) {
-        return { backendContent: '4', displayContent: 'Blockage Shifting' };
-      }
-    }
-
-    return { backendContent: rawContent, displayContent: rawContent };
-  };
 
   // V3: Enhanced message sending
   const sendMessage = async (content: string, isAutoAdvance = false) => {

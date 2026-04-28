@@ -616,6 +616,14 @@ export const useAudioCapture = ({
     if (!isCapturing) return;
     if (vadAvailable) return; // VAD-gated mode: no timer. processNow() flushes uploads.
 
+    if (treatmentVersion === 'v9') {
+      if (!loggedVadUnavailableFallbackRef.current) {
+        console.warn('🎙️ AudioCapture: v9 VAD unavailable - disabling fallback timer to avoid silence uploads');
+        loggedVadUnavailableFallbackRef.current = true;
+      }
+      return;
+    }
+
     if (!loggedVadUnavailableFallbackRef.current) {
       console.warn('🎙️ AudioCapture: stt_vad_unavailable_fallback - VAD not available, using legacy auto-process timer');
       loggedVadUnavailableFallbackRef.current = true;
@@ -628,7 +636,7 @@ export const useAudioCapture = ({
     }, AUTO_PROCESS_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [isCapturing, vadAvailable, processAudioBuffer]);
+  }, [isCapturing, vadAvailable, processAudioBuffer, treatmentVersion]);
   
   /**
    * Notify audio capture that AI is speaking (echo prevention).
