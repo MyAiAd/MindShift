@@ -1651,10 +1651,68 @@ export default function TreatmentSession({
     expectedResponseType,
   });
 
+  const normalizeVoiceCommandText = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const isWorkTypeSelectionStep = () =>
+    currentStep === 'mind_shifting_explanation' ||
+    currentStep === 'mind_shifting_explanation_dynamic' ||
+    currentStep === 'mind_shifting_explanation_static';
+
+  const normalizeV9SpokenCommand = (rawContent: string): {
+    backendContent: string;
+    displayContent: string;
+  } => {
+    const normalized = normalizeVoiceCommandText(rawContent);
+
+    if (isWorkTypeSelectionStep()) {
+      if (normalized === '1' || normalized.includes('problem')) {
+        return { backendContent: '1', displayContent: 'PROBLEM' };
+      }
+      if (normalized === '2' || normalized.includes('goal')) {
+        return { backendContent: '2', displayContent: 'GOAL' };
+      }
+      if (
+        normalized === '3' ||
+        normalized.includes('negative experience') ||
+        normalized.includes('negative')
+      ) {
+        return { backendContent: '3', displayContent: 'NEGATIVE EXPERIENCE' };
+      }
+    }
+
+    if (currentStep === 'choose_method' || currentStep === 'digging_method_selection') {
+      if (normalized === '1' || normalized.includes('problem')) {
+        return { backendContent: '1', displayContent: 'Problem Shifting' };
+      }
+      if (normalized === '2' || normalized.includes('identity')) {
+        return { backendContent: '2', displayContent: 'Identity Shifting' };
+      }
+      if (normalized === '3' || normalized.includes('belief')) {
+        return { backendContent: '3', displayContent: 'Belief Shifting' };
+      }
+      if (normalized === '4' || normalized.includes('blockage')) {
+        return { backendContent: '4', displayContent: 'Blockage Shifting' };
+      }
+    }
+
+    return { backendContent: rawContent, displayContent: rawContent };
+  };
+
   // V3: Enhanced message sending
   const sendMessage = async (content: string, isAutoAdvance = false) => {
     if ((!content.trim() && !isAutoAdvance) || isLoading) return;
     clearTranscriptBuffers();
+    const trimmedContent = content.trim();
+    const normalizedCommand = isAutoAdvance
+      ? { backendContent: trimmedContent, displayContent: trimmedContent }
+      : normalizeV9SpokenCommand(trimmedContent);
 
     // Stop current audio if user is advancing to next step (only if speaker was enabled)
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
@@ -1668,7 +1726,7 @@ export default function TreatmentSession({
 
     const userMessage: TreatmentMessage = {
       id: `user-${Date.now()}`,
-      content: content.trim(),
+      content: normalizedCommand.displayContent,
       isUser: true,
       timestamp: new Date(),
       version: 'v9'
@@ -1681,7 +1739,11 @@ export default function TreatmentSession({
     setClickedButton(null);
 
     try {
-      console.log('Sending V9 message:', { content, currentStep });
+      console.log('Sending V9 message:', {
+        content: normalizedCommand.backendContent,
+        displayContent: normalizedCommand.displayContent,
+        currentStep,
+      });
 
       const response = await fetch('/api/treatment-v9', {
         method: 'POST',
@@ -1692,7 +1754,7 @@ export default function TreatmentSession({
           action: 'continue',
           sessionId,
           userId,
-          userInput: content.trim()
+          userInput: normalizedCommand.backendContent
         }),
       });
 
