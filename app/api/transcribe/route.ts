@@ -27,6 +27,10 @@ function createOpenAIClient(): OpenAI {
 }
 
 function buildOpenAITranscriptionPrompt(request: SanitizedTranscriptionRequest): string | undefined {
+  if (request.treatmentVersion === 'v9') {
+    return undefined;
+  }
+
   const promptParts = [
     request.expectedResponseType ? `Expected response type: ${request.expectedResponseType}` : null,
     request.currentStep ? `Current step: ${request.currentStep}` : null,

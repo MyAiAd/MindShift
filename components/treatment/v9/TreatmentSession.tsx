@@ -36,10 +36,7 @@ import {
 // telemetry (R13.4) panels can be rendered without touching V7.
 import AdminDebugDrawer from './AdminDebugDrawer';
 import { useAuth } from '@/lib/auth';
-import {
-  buildHotwordsFromRecentUserMessages,
-  type TranscriptionDomainContext,
-} from '@/lib/voice/transcription-domain-context';
+import type { TranscriptionDomainContext } from '@/lib/voice/transcription-domain-context';
 
 // R3: Reuse V7 modality components verbatim. V7 is frozen — its
 // modalities are pure presentational components that accept a
@@ -666,11 +663,6 @@ export default function TreatmentSession({
   const [textModeFallbackState, setTextModeFallbackState] = useState<TextModeFallbackState>(null);
   const textModeErrorTimestampsRef = useRef<number[]>([]);
   const textModeRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // V9 trial path: force hosted OpenAI speech so STT accuracy and TTS voice matching are not
-  // affected by legacy Whisper/Kokoro deployment settings. Text fidelity still comes solely from
-  // the v2-backed v9 API responses.
-  const sttProviderOverride: 'openai' = 'openai';
-  const ttsProviderOverride: 'openai' = 'openai';
   const [selectedWorkType, setSelectedWorkType] = useState<string | null>(null);
   const [clickedButton, setClickedButton] = useState<string | null>(null);
   const [sessionMethod, setSessionMethod] = useState<string>('mind_shifting');
@@ -782,14 +774,6 @@ export default function TreatmentSession({
     }
   }, [expectedResponseType, isSpeakerEnabled, messages]);
 
-  useEffect(() => {
-    transcriptionContextRef.current = {
-      expectedResponseType,
-      currentStep: currentStep || null,
-      hotwords: buildHotwordsFromRecentUserMessages(messages),
-    };
-  }, [expectedResponseType, currentStep, messages]);
-
   // Keep subtitles in sync with audio controls.
   useEffect(() => {
     if (!isSpeakerEnabled) {
@@ -813,6 +797,46 @@ export default function TreatmentSession({
   useEffect(() => {
     pendingMessageRef.current = pendingMessage;
   }, [pendingMessage]);
+
+  const clearTranscriptBuffers = useCallback(() => {
+    transcriptAccumulatorRef.current = '';
+    pendingTranscriptRef.current = null;
+    if (transcriptFlushTimerRef.current) {
+      clearTimeout(transcriptFlushTimerRef.current);
+      transcriptFlushTimerRef.current = null;
+    }
+  }, []);
+
+  const isInternalTranscriptLeak = useCallback((transcript: string): boolean => {
+    const rawNormalized = transcript.toLowerCase().replace(/\s+/g, ' ').trim();
+    const normalized = rawNormalized.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+    if (!normalized) return false;
+
+    if (/\b[a-z]+(?:_[a-z0-9]+)+\b/.test(rawNormalized)) {
+      return true;
+    }
+
+    const methodLabels = new Set([
+      'problem shifting',
+      'identity shifting',
+      'belief shifting',
+      'blockage shifting',
+    ]);
+
+    if (methodLabels.has(normalized)) {
+      return currentStep !== 'choose_method' && currentStep !== 'digging_method_selection';
+    }
+
+    return normalized === 'solution state' || normalized === 'feel solution state';
+  }, [currentStep]);
+
+  useEffect(() => {
+    transcriptionContextRef.current = {
+      expectedResponseType: null,
+      currentStep: null,
+      hotwords: null,
+    };
+  }, []);
 
   const revealPendingMessageWithoutAudio = useCallback(() => {
     const pending = pendingMessageRef.current;
@@ -897,6 +921,16 @@ export default function TreatmentSession({
     voicePair?.tts === 'elevenlabs' || voicePair?.tts === 'kokoro' || voicePair?.tts === 'openai'
       ? voicePair.tts
       : 'openai';
+  const activeSttProvider =
+    voicePair?.stt === 'whisper-local' || voicePair?.stt === 'openai'
+      ? voicePair.stt
+      : null;
+  const sttProviderOverride: 'existing' | 'openai' | undefined =
+    activeSttProvider === 'openai'
+      ? 'openai'
+      : activeSttProvider === 'whisper-local'
+        ? 'existing'
+        : undefined;
   const runtimeStaticAudioVoice =
     activeTtsProvider === 'kokoro'
       ? getVoiceCacheName(getKokoroVoiceId())
@@ -926,6 +960,12 @@ export default function TreatmentSession({
     testMode: isTestPlaying, // NEW: Test mode prevents VAD from triggering speech recognition
     onTranscript: (transcript) => {
       console.log('🗣️ Natural Voice Transcript:', transcript);
+      if (isInternalTranscriptLeak(transcript)) {
+        console.warn('🗣️ V9: Dropping internal transcript leak:', transcript);
+        clearTranscriptBuffers();
+        return;
+      }
+
       transcriptAccumulatorRef.current = transcriptAccumulatorRef.current
         ? transcriptAccumulatorRef.current + ' ' + transcript
         : transcript;
@@ -939,6 +979,10 @@ export default function TreatmentSession({
         const accumulated = transcriptAccumulatorRef.current.trim();
         transcriptAccumulatorRef.current = '';
         if (!accumulated) return;
+        if (isInternalTranscriptLeak(accumulated)) {
+          console.warn('🗣️ V9: Dropping accumulated internal transcript leak:', accumulated);
+          return;
+        }
 
         console.log('🗣️ Flushing accumulated transcript:', accumulated);
         if (!isLoadingRef.current) {
@@ -964,7 +1008,6 @@ export default function TreatmentSession({
     transcriptionContextRef,
     treatmentVersion: 'v9',
     sttProviderOverride,
-    ttsProviderOverride,
     onTtsUsage: handleTtsUsage,
     onSpeechProviderError: ({ kind, provider, message }) => {
       if (kind === 'tts') {
@@ -1013,6 +1056,7 @@ export default function TreatmentSession({
 
   function speakServerMessage(message: string) {
     if (!message) return;
+    clearTranscriptBuffers();
     lastSpeechMessageRef.current = message;
     // US-015: when text mode is active, TTS is suppressed entirely. Subtitles still render
     // so the user can read the scripted prompt.
@@ -1244,6 +1288,7 @@ export default function TreatmentSession({
     if (!isGuidedMode) return;
     
     console.log('🎙️ PTT: Starting recording');
+    clearTranscriptBuffers();
     
     // FIX #1: Check mic permission first
     if (micPermission !== 'granted') {
@@ -1284,7 +1329,7 @@ export default function TreatmentSession({
     
     setIsPTTActive(true);
     isPTTActiveRef.current = true;
-  }, [isGuidedMode, naturalVoice, micPermission, requestMicPermission, resetSubtitles]);
+  }, [isGuidedMode, naturalVoice, micPermission, requestMicPermission, resetSubtitles, clearTranscriptBuffers]);
 
   const handlePTTEnd = useCallback(() => {
     if (!isGuidedMode) return;
@@ -1609,6 +1654,7 @@ export default function TreatmentSession({
   // V3: Enhanced message sending
   const sendMessage = async (content: string, isAutoAdvance = false) => {
     if ((!content.trim() && !isAutoAdvance) || isLoading) return;
+    clearTranscriptBuffers();
 
     // Stop current audio if user is advancing to next step (only if speaker was enabled)
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
@@ -1858,6 +1904,7 @@ export default function TreatmentSession({
 
   // Handle button clicks for emotion confirmation
   const handleButtonClick = (buttonText: string) => {
+    clearTranscriptBuffers();
     // Stop current audio if user is advancing to next step
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user clicked button');
@@ -1937,6 +1984,7 @@ export default function TreatmentSession({
 
   // V3: Handle work type selection button clicks
   const handleWorkTypeSelection = (workType: string) => {
+    clearTranscriptBuffers();
     // Stop current audio if user is advancing to next step
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user selected work type');
@@ -2145,6 +2193,7 @@ export default function TreatmentSession({
 
   // V3: Handle Yes/No button clicks for trauma intro and confirm statement
   const handleYesNoClick = (response: string) => {
+    clearTranscriptBuffers();
     // Stop current audio if user is advancing to next step
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user clicked yes/no');
@@ -2157,6 +2206,7 @@ export default function TreatmentSession({
 
   // V3: Handle method selection button clicks
   const handleMethodSelection = (method: string) => {
+    clearTranscriptBuffers();
     // Stop current audio if user is advancing to next step
     if ((isMicEnabled || isSpeakerEnabled) && naturalVoice.isSpeaking) {
       console.log('🛑 Stopping current audio - user selected method');

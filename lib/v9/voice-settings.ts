@@ -46,7 +46,7 @@ export interface VoicePairWithAudit extends VoicePair {
 const DB_TABLE = 'system_voice_settings';
 const DB_ROW_ID = 1;
 const FORCE_V9_OPENAI_SPEECH =
-  (process.env.V9_FORCE_OPENAI_SPEECH ?? 'true').trim().toLowerCase() !== 'false';
+  (process.env.V9_FORCE_OPENAI_SPEECH ?? 'false').trim().toLowerCase() === 'true';
 
 function openAiPair(fromDatabase = false): VoicePairWithAudit {
   return {
@@ -80,6 +80,7 @@ function sanitizeTts(value: unknown): V9TtsProvider {
  */
 export async function getVoicePair(): Promise<VoicePairWithAudit> {
   if (FORCE_V9_OPENAI_SPEECH) {
+    console.warn('[voice-settings] V9_FORCE_OPENAI_SPEECH=true; overriding configured v9 speech providers');
     return openAiPair(false);
   }
 
