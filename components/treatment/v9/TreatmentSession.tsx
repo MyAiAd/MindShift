@@ -976,15 +976,17 @@ export default function TreatmentSession({
       ? voicePair.tts
       : 'openai';
   const activeSttProvider =
-    voicePair?.stt === 'whisper-local' || voicePair?.stt === 'openai'
+    voicePair?.stt === 'whisper-local' || voicePair?.stt === 'openai' || voicePair?.stt === 'elevenlabs'
       ? voicePair.stt
       : null;
-  const sttProviderOverride: 'existing' | 'openai' | undefined =
+  const sttProviderOverride: 'existing' | 'openai' | 'elevenlabs' | undefined =
     activeSttProvider === 'openai'
       ? 'openai'
       : activeSttProvider === 'whisper-local'
         ? 'existing'
-        : undefined;
+        : activeSttProvider === 'elevenlabs'
+          ? 'elevenlabs'
+          : undefined;
   const runtimeStaticAudioVoice =
     activeTtsProvider === 'kokoro'
       ? getVoiceCacheName(getKokoroVoiceId())
@@ -1390,15 +1392,21 @@ export default function TreatmentSession({
       naturalVoice.stopSpeaking();
       resetSubtitles();
     }
-    
-    // FIX #3: Clear audio state flags to prevent false positives
-    console.log('🎙️ PTT: Clearing audio state flags');
-    naturalVoice.clearAudioFlags();
-    
-    // Force-restart to guarantee a clean recognition session even if one is
-    // already running (e.g. from a previous auto-start that slipped through).
-    console.log('🎙️ PTT: Force starting listening (clean session)');
-    naturalVoice.forceRestartListening();
+
+    if (naturalVoice.isUsingScribeRealtime) {
+      // Scribe realtime PTT: resume audio streaming to the WebSocket.
+      console.log('🎙️ PTT (Scribe): Resuming audio capture');
+      naturalVoice.scribeResumeCapture?.();
+    } else {
+      // Standard Whisper/WebSpeech PTT path.
+      // FIX #3: Clear audio state flags to prevent false positives
+      console.log('🎙️ PTT: Clearing audio state flags');
+      naturalVoice.clearAudioFlags();
+      
+      // Force-restart to guarantee a clean recognition session.
+      console.log('🎙️ PTT: Force starting listening (clean session)');
+      naturalVoice.forceRestartListening();
+    }
     
     setIsPTTActive(true);
     isPTTActiveRef.current = true;
@@ -1408,13 +1416,21 @@ export default function TreatmentSession({
     if (!isGuidedMode) return;
     
     console.log('🎙️ PTT: Ending recording');
-    
-    // Stop user's mic
-    naturalVoice.stopListening();
 
-    // Immediately flush Whisper buffer so short utterances aren't left waiting
-    // for the next auto-process timer tick (up to 1.5s away).
-    naturalVoice.processNow?.();
+    if (naturalVoice.isUsingScribeRealtime) {
+      // Scribe PTT: commit the buffered audio and pause streaming.
+      console.log('🎙️ PTT (Scribe): Committing and pausing capture');
+      naturalVoice.scribeCommitNow?.();
+      naturalVoice.scribePauseCapture?.();
+    } else {
+      // Standard Whisper/WebSpeech PTT path.
+      // Stop user's mic
+      naturalVoice.stopListening();
+
+      // Immediately flush Whisper buffer so short utterances aren't left waiting
+      // for the next auto-process timer tick (up to 1.5s away).
+      naturalVoice.processNow?.();
+    }
 
     // Flush any already-accumulated transcript immediately on PTT release
     // instead of waiting for the debounce timer. The final Whisper chunk

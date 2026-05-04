@@ -18,7 +18,7 @@ export type V9TtsProvider = 'openai' | 'elevenlabs' | 'kokoro';
  * Read by `lib/voice/stt-providers/index.ts` (`resolveSttProviderId`)
  * and by `lib/v9/voice-settings.ts` when the DB singleton is missing.
  */
-export type V9SttProvider = 'openai' | 'whisper-local';
+export type V9SttProvider = 'openai' | 'whisper-local' | 'elevenlabs';
 
 function parseBooleanFlag(value: string | undefined, defaultValue: boolean): boolean {
   if (value === undefined) {
@@ -96,7 +96,7 @@ export const V9_TTS_PROVIDER: V9TtsProvider = parseProvider<V9TtsProvider>(
  */
 export const V9_STT_PROVIDER: V9SttProvider = parseProvider<V9SttProvider>(
   process.env.V9_STT_PROVIDER,
-  ['openai', 'whisper-local'],
+  ['openai', 'whisper-local', 'elevenlabs'],
   'openai'
 );
 

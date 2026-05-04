@@ -22,7 +22,7 @@ interface EmailStatus {
   senderEmail: string;
 }
 
-type SttProviderId = 'openai' | 'whisper-local';
+type SttProviderId = 'openai' | 'whisper-local' | 'elevenlabs';
 type TtsProviderId = 'openai' | 'elevenlabs' | 'kokoro';
 
 interface VoiceProviderReport {
@@ -65,6 +65,10 @@ interface VoiceTestResult {
 const OPENAI_STT_USD_PER_MINUTE = 0.003;
 const OPENAI_TTS_USD_PER_CHARACTER = 0.000015;
 const ELEVENLABS_TTS_USD_PER_CHARACTER = 0.00044;
+// Scribe pricing: ~$0.40/hr continuous audio ≈ $0.00667/min.
+// Override via NEXT_PUBLIC_ELEVENLABS_SCRIBE_USD_PER_MINUTE if plan changes.
+const ELEVENLABS_SCRIBE_USD_PER_MINUTE =
+  Number(process.env.NEXT_PUBLIC_ELEVENLABS_SCRIBE_USD_PER_MINUTE ?? '0.00667');
 const SAMPLE_INPUT_MINUTES = 10;
 const SAMPLE_OUTPUT_CHARACTERS = 12000;
 
@@ -74,7 +78,9 @@ function formatUsd(value: number): string {
 }
 
 function estimateSttCost(provider: SttProviderId, minutes: number): number {
-  return provider === 'openai' ? minutes * OPENAI_STT_USD_PER_MINUTE : 0;
+  if (provider === 'openai') return minutes * OPENAI_STT_USD_PER_MINUTE;
+  if (provider === 'elevenlabs') return minutes * ELEVENLABS_SCRIBE_USD_PER_MINUTE;
+  return 0; // whisper-local: fixed compute cost, no per-call charge
 }
 
 function estimateTtsCost(provider: TtsProviderId, characters: number): number {
@@ -87,7 +93,9 @@ function describeProjectedCostBasis(stt: SttProviderId, tts: TtsProviderId): str
   const input =
     stt === 'openai'
       ? '$0.003/min input audio'
-      : 'self-hosted input, no per-call API cost';
+      : stt === 'elevenlabs'
+        ? `$${ELEVENLABS_SCRIBE_USD_PER_MINUTE.toFixed(5)}/min input audio (ElevenLabs Scribe)`
+        : 'self-hosted input, no per-call API cost';
   const output =
     tts === 'openai'
       ? '$0.000015/output char'
@@ -1021,7 +1029,9 @@ export default function AdminSettingsPage() {
                               <div className="text-xs text-muted-foreground">
                                 {p.id === 'openai'
                                   ? 'OpenAI hosted transcription (~$0.003/min). Best accuracy on short utterances.'
-                                  : 'Self-hosted Whisper service. No per-call API cost; compute is billed hourly regardless of volume.'}
+                                  : p.id === 'elevenlabs'
+                                    ? 'ElevenLabs Scribe v2 Realtime — streams audio over WebSocket, VAD handled server-side (~$0.40/hr continuous). Requires ELEVENLABS_API_KEY.'
+                                    : 'Self-hosted Whisper service. No per-call API cost; compute is billed hourly regardless of volume.'}
                               </div>
                               {!p.available && p.reason ? (
                                 <div className="text-xs text-destructive mt-1">

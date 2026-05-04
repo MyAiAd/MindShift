@@ -64,7 +64,9 @@ function envFallback(): VoicePair {
 }
 
 function sanitizeStt(value: unknown): V9SttProvider {
-  return value === 'whisper-local' || value === 'openai' ? value : 'openai';
+  return value === 'whisper-local' || value === 'openai' || value === 'elevenlabs'
+    ? value
+    : 'openai';
 }
 
 function sanitizeTts(value: unknown): V9TtsProvider {

@@ -374,6 +374,9 @@ export async function POST(request: NextRequest) {
       if (transcriptionRequest.providerOverride === 'existing') {
         console.log(JSON.stringify({ event: 'v7_legacy_stt_override_ignored' }));
       }
+      if ((transcriptionRequest.providerOverride as string) === 'elevenlabs') {
+        console.log(JSON.stringify({ event: 'v7_elevenlabs_stt_override_ignored' }));
+      }
       return await callOpenAIProvider(transcriptionRequest, startTime);
     }
 

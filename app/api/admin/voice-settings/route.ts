@@ -45,18 +45,18 @@ type AvailabilityReport = {
 };
 
 function reportStt(): AvailabilityReport[] {
+  const reasonMap: Partial<Record<SttProviderId, string>> = {
+    openai: 'OPENAI_API_KEY not set',
+    'whisper-local': 'WHISPER_SERVICE_URL not set',
+    elevenlabs: 'ELEVENLABS_API_KEY not set',
+  };
   return listSttProviders().map((provider) => {
     const available = provider.isAvailable();
-    const reason = available
-      ? undefined
-      : provider.id === 'openai'
-        ? 'OPENAI_API_KEY not set'
-        : 'WHISPER_SERVICE_URL not set';
     return {
       id: provider.id,
       displayName: provider.displayName,
       available,
-      reason,
+      reason: available ? undefined : reasonMap[provider.id],
     };
   });
 }
@@ -133,7 +133,7 @@ export async function GET() {
 }
 
 function validateStt(value: unknown): value is SttProviderId {
-  return value === 'openai' || value === 'whisper-local';
+  return value === 'openai' || value === 'whisper-local' || value === 'elevenlabs';
 }
 
 function validateTts(value: unknown): value is TtsProviderId {
@@ -156,7 +156,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          'Body must be { stt: "openai" | "whisper-local", tts: "openai" | "elevenlabs" | "kokoro" }',
+          'Body must be { stt: "openai" | "whisper-local" | "elevenlabs", tts: "openai" | "elevenlabs" | "kokoro" }',
       },
       { status: 400 },
     );

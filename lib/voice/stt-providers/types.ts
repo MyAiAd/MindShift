@@ -23,7 +23,7 @@
 
 import type { OpenAISegment } from '@/lib/voice/openai-hallucination';
 
-export type SttProviderId = 'openai' | 'whisper-local';
+export type SttProviderId = 'openai' | 'whisper-local' | 'elevenlabs';
 
 export interface SttTranscribeRequest {
   /** Raw audio blob uploaded by the client. */

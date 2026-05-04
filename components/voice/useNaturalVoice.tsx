@@ -9,6 +9,7 @@ import { V7_STATIC_AUDIO_TEXTS } from '@/lib/v7/static-audio-texts';
 import { getVoiceCacheName } from '@/lib/voice/voice-cache-name';
 import { useVAD } from './useVAD';
 import { useAudioCapture } from './useAudioCapture';
+import { useElevenLabsScribeRealtime } from './useElevenLabsScribeRealtime';
 
 // Get all static texts for prefix matching
 const STATIC_TEXTS = Array.from(
@@ -43,7 +44,7 @@ interface UseNaturalVoiceProps {
     /** Ref to latest Whisper domain context (expectedResponseType, step, hotwords). */
     transcriptionContextRef?: MutableRefObject<TranscriptionDomainContext | null>;
     treatmentVersion?: string;
-    sttProviderOverride?: 'existing' | 'openai';
+    sttProviderOverride?: 'existing' | 'openai' | 'elevenlabs';
     ttsProviderOverride?: 'existing' | 'openai';
     onSpeechProviderError?: (details: {
         kind: 'stt' | 'tts';
@@ -182,9 +183,28 @@ export const useNaturalVoice = ({
     // the speech gate or fall back to the legacy auto-process timer.
     const [vadAvailable, setVadAvailable] = useState(false);
 
-    // Audio capture for Whisper transcription (only if enabled AND not in test mode)
+    // ElevenLabs Scribe realtime path — active only for v9 + elevenlabs provider.
+    // When active, AudioCapture and VAD are disabled (Scribe handles both server-side).
+    const useScribeRealtime =
+        sttProviderOverride === 'elevenlabs' && treatmentVersion === 'v9';
+
+    const scribe = useElevenLabsScribeRealtime({
+        enabled: useScribeRealtime && isMicEnabled && !testMode,
+        guidedMode,
+        onTranscript: (transcript) => {
+            console.log('🎤 Scribe transcript:', transcript);
+            onTranscriptRef.current(transcript);
+        },
+        onPartialTranscript: (partial) => setInterimTranscript(partial),
+        onError: (message) => {
+            onSpeechProviderError?.({ kind: 'stt', provider: 'elevenlabs', message });
+        },
+        onProcessingChange: (processing) => setWhisperProcessing(processing),
+    });
+
+    // Audio capture for Whisper transcription (disabled when Scribe is active or in test mode)
     const audioCapture = useAudioCapture({
-        enabled: isMicEnabled && useWhisper && !testMode, // ← Disable during test mode
+        enabled: !useScribeRealtime && isMicEnabled && useWhisper && !testMode,
         onTranscript: (transcript) => {
             console.log('🎤 Whisper transcript:', transcript);
             onTranscriptRef.current(transcript);
@@ -195,7 +215,7 @@ export const useNaturalVoice = ({
         vadAvailable,
         getTranscriptionContext: () => transcriptionContextRef?.current ?? null,
         treatmentVersion,
-        transcriptionProviderOverride: sttProviderOverride,
+        transcriptionProviderOverride: sttProviderOverride === 'elevenlabs' ? undefined : sttProviderOverride,
         onProviderError: onSpeechProviderError,
     });
     
@@ -324,10 +344,13 @@ export const useNaturalVoice = ({
     
     // V9 keeps VAD active whenever the mic is on so Whisper/OpenAI uploads remain speech-gated
     // even when speaker playback is disabled. Older versions retain the existing mic+speaker gate.
+    // VAD is disabled entirely when Scribe realtime is active (it handles VAD server-side).
     const vadEnabled =
-        treatmentVersion === 'v9'
-            ? isMicEnabled && !guidedMode
-            : isMicEnabled && isSpeakerEnabled && !guidedMode;
+        !useScribeRealtime && (
+            treatmentVersion === 'v9'
+                ? isMicEnabled && !guidedMode
+                : isMicEnabled && isSpeakerEnabled && !guidedMode
+        );
     
     // Choose the correct handler based on test mode
     const vadSpeechHandler = testMode ? handleTestModeInterruption : handleVadBargeIn;
@@ -1427,12 +1450,14 @@ export const useNaturalVoice = ({
     }, [isMicEnabled, isSpeaking, startListening, stopListening, guidedMode]);
 
     return {
-        isListening: useWhisper ? audioCapture.isCapturing : isListening,
+        isListening: useScribeRealtime
+            ? scribe.isCapturing
+            : useWhisper ? audioCapture.isCapturing : isListening,
         isSpeaking,
         isPaused,
         speak,
         prefetch,
-        error: error || (useWhisper ? audioCapture.error : null),
+        error: error || (useWhisper && !useScribeRealtime ? audioCapture.error : null),
         vadError, // VAD-specific error
         startListening,
         stopListening,
@@ -1442,14 +1467,25 @@ export const useNaturalVoice = ({
         resumeSpeaking,
         hasPausedAudio,
         clearAudioFlags,
-        processNow: audioCapture.processNow, // Flush Whisper buffer immediately (for PTT end)
-        interimTranscript: useWhisper 
-            ? (whisperProcessing ? '...' : '') // Show processing indicator while Whisper transcribes
-            : interimTranscript,
-        listeningState: useWhisper 
-            ? (audioCapture.isCapturing ? 'listening' : 'idle')
-            : listeningState,
+        processNow: useScribeRealtime ? scribe.commitNow : audioCapture.processNow,
+        // PTT controls for Scribe (no-ops on other providers)
+        scribePauseCapture: scribe.pauseCapture,
+        scribeResumeCapture: scribe.resumeCapture,
+        scribeCommitNow: scribe.commitNow,
+        isUsingScribeRealtime: useScribeRealtime,
+        interimTranscript: useScribeRealtime
+            ? interimTranscript  // populated by scribe.onPartialTranscript
+            : useWhisper
+                ? (whisperProcessing ? '...' : '')
+                : interimTranscript,
+        listeningState: useScribeRealtime
+            ? (scribe.isCapturing ? 'listening' : 'idle')
+            : useWhisper
+                ? (audioCapture.isCapturing ? 'listening' : 'idle')
+                : listeningState,
         // Expose for debugging
-        isProcessing: useWhisper ? audioCapture.isProcessing : false,
+        isProcessing: useScribeRealtime
+            ? scribe.isProcessing
+            : useWhisper ? audioCapture.isProcessing : false,
     };
 };
