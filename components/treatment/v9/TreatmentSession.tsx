@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Brain, Clock, Zap, AlertCircle, CheckCircle, MessageSquare, Undo2, Sparkles, Mic, Volume2, VolumeX, Send, Play, Settings, Gauge, User, SkipForward, ArrowLeft, LogOut } from 'lucide-react';
 // Global voice system integration (accessibility-driven)
 import { useGlobalVoice } from '@/components/voice/useGlobalVoice';
@@ -981,6 +981,42 @@ export default function TreatmentSession({
     currentStep === 'mind_shifting_explanation_dynamic' ||
     currentStep === 'mind_shifting_explanation_static';
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Button-only step gate (silent intro)
+  //
+  // The first two prompts in a v9 session — "Would you like to work on …"
+  // (work type) and "Choose a method …" (method selection) — are answered
+  // exclusively by on-screen buttons. While `currentStep` is one of these,
+  // we suppress *both* directions of the voice pipeline:
+  //
+  //   • micEnabled / speakerEnabled go false in the useNaturalVoice config
+  //     below, so Whisper/Scribe never even open a mic stream and so TTS
+  //     can't fire.
+  //   • The four "speaker-enabled audio-first rendering" branches that call
+  //     speakServerMessage all get an extra `!isButtonOnlyStep(...)` guard,
+  //     and fall back to the existing "render the bubble immediately" path.
+  //
+  // The empty string '' is included on purpose — that's the value of
+  // `currentStep` between mount and the first API response, which is exactly
+  // when the previous Whisper-during-bootstrap leak was happening.
+  // ─────────────────────────────────────────────────────────────────────────
+  const BUTTON_ONLY_STEPS = useMemo(
+    () => new Set<string>([
+      '',
+      'mind_shifting_explanation',
+      'mind_shifting_explanation_dynamic',
+      'mind_shifting_explanation_static',
+      'choose_method',
+      'digging_method_selection',
+    ]),
+    [],
+  );
+  const isButtonOnlyStep = useCallback(
+    (step: string | null | undefined): boolean => BUTTON_ONLY_STEPS.has(step ?? ''),
+    [BUTTON_ONLY_STEPS],
+  );
+  const voiceSuppressedForButtons = isButtonOnlyStep(currentStep);
+
   const normalizeV9SpokenCommand = (rawContent: string): {
     backendContent: string;
     displayContent: string;
@@ -1147,8 +1183,14 @@ export default function TreatmentSession({
 
   const naturalVoice = useNaturalVoice({
     enabled: isNaturalVoiceEnabled, // DEPRECATED: backward compatibility
-    micEnabled: isMicEnabled && !isSpeechFallbackPaused, // NEW: Controls microphone input
-    speakerEnabled: isSpeakerEnabled && !isSpeechFallbackPaused, // NEW: Controls audio output
+    // NEW: Controls microphone input. Suppressed during button-only intro steps
+    // so Whisper/Scribe never fire during the work-type / method-selection
+    // prompts (and never during the pre-session-start `currentStep === ''`
+    // window — that was the cause of the bootstrap "It uh..." leak).
+    micEnabled: isMicEnabled && !isSpeechFallbackPaused && !voiceSuppressedForButtons,
+    // NEW: Controls audio output. Same gate as micEnabled — the button-only
+    // prompts are read by their visible buttons; reading them aloud is noise.
+    speakerEnabled: isSpeakerEnabled && !isSpeechFallbackPaused && !voiceSuppressedForButtons,
     guidedMode: isGuidedMode, // NEW: Guided mode disables auto-restart for PTT
     testMode: isTestPlaying, // NEW: Test mode prevents VAD from triggering speech recognition
     onTranscript: (transcript) => {
@@ -1840,7 +1882,14 @@ export default function TreatmentSession({
 
       setTimeout(() => {
         inputRef.current?.focus();
-        if (isSpeakerEnabled && welcomeText) {
+        // Skip TTS for the welcome message when the freshly-set step is a
+        // button-only intro — the welcome bubble is already in `messages`,
+        // so the user sees the prompt + buttons silently.
+        if (
+          isSpeakerEnabled &&
+          welcomeText &&
+          !isButtonOnlyStep(data.currentStep)
+        ) {
           setTimeout(() => {
             beginFirstSpeechLoading();
             // R7: speak the exact server-returned text. The speech
@@ -1999,8 +2048,11 @@ export default function TreatmentSession({
         // Always provide audio/visual feedback in PTT guided mode
         // PTT users need to hear confirmation that their input was processed
         if (data.message) {
-          // NEW: If speaker is enabled, set up pending message for audio-then-text timing
-          if (isSpeakerEnabled) {
+          // NEW: If speaker is enabled AND the new step is voice-bearing, set
+          // up pending message for audio-then-text timing. Button-only intro
+          // steps fall through to the immediate-render branch below — the
+          // bubble appears, but no TTS / mic capture is engaged.
+          if (isSpeakerEnabled && !isButtonOnlyStep(data.currentStep)) {
             console.log('⏱️ V9: Setting up pending message for audio-first rendering');
             setPendingMessage({
               content: data.message,
@@ -2013,7 +2065,7 @@ export default function TreatmentSession({
             beginFirstSpeechLoading();
             speakServerMessage(data.message);
           } else {
-            // Speaker disabled: add message immediately (no timing data)
+            // Speaker disabled OR button-only step: add message immediately.
             const systemMessage: TreatmentMessage = {
               id: `system-${Date.now()}`,
               content: data.message,
@@ -2348,8 +2400,16 @@ export default function TreatmentSession({
               data.message.includes('Choose a method'));
 
           if (!shouldSkipMessage) {
-            // NEW: If speaker is enabled, set up pending message for audio-then-text timing
-            if (isSpeakerEnabled && data.message) {
+            // NEW: If speaker is enabled AND the new step isn't button-only,
+            // set up pending message for audio-then-text timing. The follow-up
+            // step after work-type selection is `choose_method` which IS
+            // button-only — so this branch is normally skipped during the
+            // intro flow and the message renders silently below.
+            if (
+              isSpeakerEnabled &&
+              data.message &&
+              !isButtonOnlyStep(data.currentStep)
+            ) {
               console.log('⏱️ V9: Setting up pending message for audio-first rendering (work type)');
               setPendingMessage({
                 content: data.message,
@@ -2556,8 +2616,15 @@ export default function TreatmentSession({
       })
       .then(data => {
         if (data.success) {
-          // NEW: If speaker is enabled, set up pending message for audio-then-text timing
-          if (isSpeakerEnabled && data.message) {
+          // NEW: If speaker is enabled AND the new step isn't button-only,
+          // set up pending message for audio-then-text timing. The first
+          // post-method step is voice-bearing, so this is the moment voice
+          // turns on for the rest of the session.
+          if (
+            isSpeakerEnabled &&
+            data.message &&
+            !isButtonOnlyStep(data.currentStep)
+          ) {
             console.log('⏱️ V9: Setting up pending message for audio-first rendering (method selection)');
             setPendingMessage({
               content: data.message,
@@ -2571,7 +2638,8 @@ export default function TreatmentSession({
             beginFirstSpeechLoading();
             speakServerMessage(data.message);
           } else {
-            // Speaker disabled: add message immediately
+            // Speaker disabled OR still in a button-only step: add message
+            // immediately.
             const systemMessage: TreatmentMessage = {
               id: `system-${Date.now()}`,
               content: data.message,
