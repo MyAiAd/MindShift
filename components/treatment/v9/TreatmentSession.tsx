@@ -769,8 +769,8 @@ export default function TreatmentSession({
   //
   //   • timing gate  — transcript arrived while the AI was speaking, or
   //                    within ECHO_TAIL_MS of the AI finishing
-  //   • content gate — normalized transcript is a substring of, or has high
-  //                    token overlap with, any of the last few AI texts
+  //   • content gate — normalized transcript is a direct substring of any of
+  //                    the last few AI texts
   // ─────────────────────────────────────────────────────────────────────────
   const RECENT_AI_UTTERANCES_KEPT = 4;
   const ECHO_TAIL_MS = 600; // grace window after AI stops speaking
@@ -798,6 +798,27 @@ export default function TreatmentSession({
     ].slice(0, RECENT_AI_UTTERANCES_KEPT);
   }, [normalizeForEchoMatch]);
 
+  const isLikelyScribeHallucination = useCallback((transcript: string): boolean => {
+    const normalized = normalizeForEchoMatch(transcript);
+    if (!normalized) return false;
+
+    // Observed Scribe fragments when the actual user utterance was
+    // "it does not feel good/great". These phrases are not part of the
+    // treatment script and read like ASR hallucinations, so drop them without
+    // clearing any legitimate transcript already waiting in the accumulator.
+    const exactHallucinations = new Set([
+      'i can feel you',
+      'i can hear that voice',
+      'i can feel you i can hear that voice',
+    ]);
+    if (exactHallucinations.has(normalized)) return true;
+
+    return (
+      normalized.startsWith('i can feel you ') ||
+      normalized.startsWith('i can hear that voice ')
+    );
+  }, [normalizeForEchoMatch]);
+
   const isAiEchoTranscript = useCallback((transcript: string): {
     isEcho: boolean;
     reason?: string;
@@ -823,22 +844,6 @@ export default function TreatmentSession({
       // Direct substring containment is the strongest signal.
       if (aiText.includes(normalized)) {
         return { isEcho: true, reason: 'substring-match' };
-      }
-
-      // Token overlap — picks up paraphrased / partial echoes.
-      const aiTokenSet = new Set(aiText.split(' ').filter(Boolean));
-      const overlap = transcriptTokens.filter((t) => aiTokenSet.has(t)).length;
-      const ratio = overlap / transcriptTokens.length;
-      // Short transcripts (<= 3 tokens) need 100% overlap to count as echo,
-      // so we don't false-positive on common single words like "yes" / "ok".
-      // Longer transcripts only need 70% overlap — enough to catch partial
-      // echoes while still allowing the user to repeat phrases verbatim.
-      const threshold = transcriptTokens.length <= 3 ? 1.0 : 0.7;
-      if (ratio >= threshold) {
-        return {
-          isEcho: true,
-          reason: `token-overlap-${(ratio * 100).toFixed(0)}%`,
-        };
       }
     }
 
@@ -1148,7 +1153,15 @@ export default function TreatmentSession({
           `🗣️ V9: Dropping AI echo transcript (${echoCheck.reason}):`,
           transcript,
         );
-        clearTranscriptBuffers();
+        // Do not clear the accumulator here: a real user transcript may already
+        // be waiting to flush, followed by an AI echo fragment.
+        return;
+      }
+
+      if (isLikelyScribeHallucination(transcript)) {
+        console.warn('🗣️ V9: Dropping likely Scribe hallucination:', transcript);
+        // Also do not clear the accumulator: these often arrive immediately
+        // after a valid user phrase and should not erase it.
         return;
       }
 
@@ -1196,6 +1209,10 @@ export default function TreatmentSession({
             `🗣️ V9: Dropping accumulated AI echo transcript (${accumulatedEchoCheck.reason}):`,
             accumulated,
           );
+          return;
+        }
+        if (isLikelyScribeHallucination(accumulated)) {
+          console.warn('🗣️ V9: Dropping accumulated likely Scribe hallucination:', accumulated);
           return;
         }
         if (isInternalTranscriptLeak(accumulated)) {
