@@ -761,7 +761,7 @@ export default function TreatmentSession({
   // is intentionally ≥ vad_silence_threshold_secs * 1000 + a small margin
   // so a follow-on commit can land before we flush.
   const TRANSCRIPT_FLUSH_DELAY_MS_DEFAULT = 2000;
-  const TRANSCRIPT_FLUSH_DELAY_MS_SCRIBE = 800;
+  const TRANSCRIPT_FLUSH_DELAY_MS_SCRIBE = 600;
   const isPTTActiveRef = useRef(false);
   const lastSpeechMessageRef = useRef<string | null>(null);
 
