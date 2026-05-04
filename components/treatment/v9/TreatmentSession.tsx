@@ -752,7 +752,16 @@ export default function TreatmentSession({
   const pendingTranscriptRef = useRef<string | null>(null);
   const transcriptAccumulatorRef = useRef<string>('');
   const transcriptFlushTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const TRANSCRIPT_FLUSH_DELAY_MS = 2000;
+  // Accumulator window between committed-transcript chunks. Whisper emits
+  // ~1.5s audio chunks that we have to glue back together, so it needs the
+  // long 2000ms buffer. Scribe v2 realtime already does its own VAD-driven
+  // commits server-side (see `vad_silence_threshold_secs` in
+  // useElevenLabsScribeRealtime.ts), so we only need a short window to catch
+  // the occasional second commit before firing sendMessage. The Scribe value
+  // is intentionally ≥ vad_silence_threshold_secs * 1000 + a small margin
+  // so a follow-on commit can land before we flush.
+  const TRANSCRIPT_FLUSH_DELAY_MS_DEFAULT = 2000;
+  const TRANSCRIPT_FLUSH_DELAY_MS_SCRIBE = 800;
   const isPTTActiveRef = useRef(false);
   const lastSpeechMessageRef = useRef<string | null>(null);
 
@@ -1198,6 +1207,12 @@ export default function TreatmentSession({
         clearTimeout(transcriptFlushTimerRef.current);
       }
 
+      // Pick the per-provider accumulator window. Scribe already pre-buffers
+      // server-side via VAD, so we don't need the long Whisper-chunk window.
+      const flushDelayMs = naturalVoice.isUsingScribeRealtime
+        ? TRANSCRIPT_FLUSH_DELAY_MS_SCRIBE
+        : TRANSCRIPT_FLUSH_DELAY_MS_DEFAULT;
+
       transcriptFlushTimerRef.current = setTimeout(() => {
         transcriptFlushTimerRef.current = null;
         const accumulated = transcriptAccumulatorRef.current.trim();
@@ -1228,7 +1243,7 @@ export default function TreatmentSession({
             ? pendingTranscriptRef.current + ' ' + accumulated
             : accumulated;
         }
-      }, TRANSCRIPT_FLUSH_DELAY_MS);
+      }, flushDelayMs);
     },
     kokoroVoiceId: getKokoroVoiceId(),
     // US-007: Pass an explicit voiceProvider + voiceId for v7 so the OpenAI path uses the

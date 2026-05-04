@@ -280,6 +280,15 @@ export function useElevenLabsScribeRealtime({
     url.searchParams.set('audio_format', 'pcm_16000');
     url.searchParams.set('language_code', languageCode);
     url.searchParams.set('include_timestamps', 'false');
+    // VAD-mode tuning: shrink the silence window from the 1.5s default to 0.7s
+    // so Scribe emits `committed_transcript` ~800ms sooner once the patient
+    // stops talking. `min_silence_duration_ms=200` makes sure normal in-word
+    // breaths don't trigger a premature commit. Only meaningful when
+    // commit_strategy=vad — the params are ignored in manual mode.
+    if (commitStrategy === 'vad') {
+      url.searchParams.set('vad_silence_threshold_secs', '0.7');
+      url.searchParams.set('min_silence_duration_ms', '200');
+    }
 
     const ws = new WebSocket(url.toString());
     ws.binaryType = 'arraybuffer';
