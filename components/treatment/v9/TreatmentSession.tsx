@@ -1188,9 +1188,19 @@ export default function TreatmentSession({
     // prompts (and never during the pre-session-start `currentStep === ''`
     // window — that was the cause of the bootstrap "It uh..." leak).
     micEnabled: isMicEnabled && !isSpeechFallbackPaused && !voiceSuppressedForButtons,
-    // NEW: Controls audio output. Same gate as micEnabled — the button-only
-    // prompts are read by their visible buttons; reading them aloud is noise.
-    speakerEnabled: isSpeakerEnabled && !isSpeechFallbackPaused && !voiceSuppressedForButtons,
+    // NEW: Controls audio output. We deliberately do NOT gate this on
+    // `voiceSuppressedForButtons`: doing so introduced a race where, on the
+    // tick the method-selection response arrives, `setCurrentStep(...)` is
+    // queued and `speakServerMessage(data.message)` is called synchronously
+    // — but `voiceSuppressedForButtons` is still computed from the previous
+    // render's `currentStep`, so `speakerEnabled` reads false, and
+    // `useNaturalVoice` aborts playback with
+    // `🔇 Natural Voice: Speaker disabled, skipping audio playback`.
+    // TTS suppression for button-only steps is enforced at the call sites
+    // instead (see the `!isButtonOnlyStep(data.currentStep)` guards on
+    // every `speakServerMessage(...)` invocation below), which is race-free
+    // because they read the *new* step from the API response, not React state.
+    speakerEnabled: isSpeakerEnabled && !isSpeechFallbackPaused,
     guidedMode: isGuidedMode, // NEW: Guided mode disables auto-restart for PTT
     testMode: isTestPlaying, // NEW: Test mode prevents VAD from triggering speech recognition
     onTranscript: (transcript) => {
