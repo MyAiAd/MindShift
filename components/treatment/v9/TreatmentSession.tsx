@@ -2694,6 +2694,37 @@ export default function TreatmentSession({
     isFirstSpeechLoading &&
     !hasFirstSpeechStarted;
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Setup splash (interim full-screen overlay between "Ready to Begin?" and
+  // the conversational chat). Hosts the work-type and method-selection
+  // buttons in a single, focused UI so the patient picks both before any
+  // voice begins. Voice is already gated off via `voiceSuppressedForButtons`
+  // on the mic side; the call-site `!isButtonOnlyStep(...)` guards on
+  // `speakServerMessage` keep TTS quiet for these steps. As soon as
+  // `currentStep` advances past `choose_method`/`digging_method_selection`,
+  // `isButtonOnlyStep(currentStep)` flips false, the splash dismisses, and
+  // the chat takes over with voice.
+  // ─────────────────────────────────────────────────────────────────────────
+  const showSetupSplash =
+    hasUserStartedSession &&
+    !showReadyOverlay &&
+    isSessionActive &&
+    voiceSuppressedForButtons; // === isButtonOnlyStep(currentStep)
+  const isMethodSelectionStep =
+    currentStep === 'choose_method' || currentStep === 'digging_method_selection';
+  const setupSplashStepLabel = isMethodSelectionStep ? 'Step 2 of 2' : 'Step 1 of 2';
+  const setupSplashStepTitle = isMethodSelectionStep
+    ? 'Choose a method'
+    : 'What would you like to work on?';
+  const setupSplashPromptText = useMemo(() => {
+    const lastAi = [...messages].reverse().find((m) => !m.isUser);
+    if (lastAi?.content) return lastAi.content;
+    if (isMethodSelectionStep) {
+      return 'Choose which Mind Shifting method you would like to use to clear the problem.';
+    }
+    return 'Would you like to work on:\n\n1. PROBLEM\n2. GOAL\n3. NEGATIVE EXPERIENCE';
+  }, [messages, isMethodSelectionStep]);
+
   // US-015/US-017: neutral-wording copy with no vendor identifiers.
   const speechFallbackPromptText = speechFallbackPrompt?.kind === 'stt'
     ? "We're having trouble with speech recognition. Would you like to continue by typing?"
@@ -2943,6 +2974,120 @@ export default function TreatmentSession({
             <p className="mt-6 text-xs text-muted-foreground">
               Make sure you're in a quiet space where you can focus
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Setup Splash - interim button-only overlay between Ready and Chat. */}
+      {showSetupSplash && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="setup-splash-title"
+        >
+          <div className="w-full max-w-2xl px-4 sm:px-6 py-8 text-center">
+            <div className="mb-6">
+              <Brain
+                className="h-12 w-12 sm:h-16 sm:w-16 text-primary mx-auto mb-3 animate-pulse"
+                aria-hidden="true"
+              />
+              <p className="text-xs sm:text-sm font-medium tracking-wide text-muted-foreground uppercase">
+                {setupSplashStepLabel}
+              </p>
+              <h2
+                id="setup-splash-title"
+                className="text-2xl sm:text-3xl font-bold text-foreground mt-1"
+              >
+                {setupSplashStepTitle}
+              </h2>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card/60 backdrop-blur-sm px-4 sm:px-6 py-4 sm:py-5 mb-6 text-left">
+              <p className="text-sm sm:text-base text-foreground whitespace-pre-line">
+                {setupSplashPromptText}
+              </p>
+            </div>
+
+            {!isMethodSelectionStep && (
+              <div className="flex flex-wrap gap-3 sm:gap-4 justify-center">
+                <button
+                  type="button"
+                  onClick={() => handleWorkTypeSelection('1')}
+                  disabled={isLoading}
+                  className={`px-4 py-3 sm:px-6 sm:py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold text-sm sm:text-base shadow-md hover:shadow-lg ${isLoading ? 'opacity-50' : ''} ${clickedButton === '1' ? 'scale-105 bg-primary/80 shadow-lg' : ''}`}
+                >
+                  <span className="bg-primary/80 px-2 py-0.5 rounded text-xs sm:text-sm font-bold">1</span>
+                  <span>PROBLEM</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleWorkTypeSelection('2')}
+                  disabled={isLoading}
+                  className={`px-4 py-3 sm:px-6 sm:py-4 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold text-sm sm:text-base shadow-md hover:shadow-lg ${isLoading ? 'opacity-50' : ''} ${clickedButton === '2' ? 'scale-105 bg-accent/80 shadow-lg' : ''}`}
+                >
+                  <span className="bg-accent/80 px-2 py-0.5 rounded text-xs sm:text-sm font-bold">2</span>
+                  <span>GOAL</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleWorkTypeSelection('3')}
+                  disabled={isLoading}
+                  className={`px-4 py-3 sm:px-6 sm:py-4 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold text-sm sm:text-base shadow-md hover:shadow-lg ${isLoading ? 'opacity-50' : ''} ${clickedButton === '3' ? 'scale-105 bg-secondary/80 shadow-lg' : ''}`}
+                >
+                  <span className="bg-secondary/80 px-2 py-0.5 rounded text-xs sm:text-sm font-bold">3</span>
+                  <span className="hidden sm:inline">NEGATIVE EXPERIENCE</span>
+                  <span className="sm:hidden">NEG. EXP.</span>
+                </button>
+              </div>
+            )}
+
+            {isMethodSelectionStep && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-xl mx-auto">
+                <button
+                  type="button"
+                  onClick={() => handleMethodSelection('Problem Shifting')}
+                  disabled={isLoading}
+                  className={`px-4 py-4 sm:px-6 sm:py-5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2 font-semibold text-sm sm:text-base shadow-md hover:shadow-lg ${isLoading ? 'opacity-50' : ''} ${clickedButton === 'Problem Shifting' ? 'scale-105 bg-primary/80 shadow-lg' : ''}`}
+                >
+                  <span className="bg-primary/80 px-2 py-0.5 rounded text-xs sm:text-sm font-bold">1</span>
+                  <span>Problem Shifting</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMethodSelection('Identity Shifting')}
+                  disabled={isLoading}
+                  className={`px-4 py-4 sm:px-6 sm:py-5 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2 font-semibold text-sm sm:text-base shadow-md hover:shadow-lg ${isLoading ? 'opacity-50' : ''} ${clickedButton === 'Identity Shifting' ? 'scale-105 bg-accent/80 shadow-lg' : ''}`}
+                >
+                  <span className="bg-accent/80 px-2 py-0.5 rounded text-xs sm:text-sm font-bold">2</span>
+                  <span>Identity Shifting</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMethodSelection('Belief Shifting')}
+                  disabled={isLoading}
+                  className={`px-4 py-4 sm:px-6 sm:py-5 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2 font-semibold text-sm sm:text-base shadow-md hover:shadow-lg ${isLoading ? 'opacity-50' : ''} ${clickedButton === 'Belief Shifting' ? 'scale-105 bg-secondary/80 shadow-lg' : ''}`}
+                >
+                  <span className="bg-secondary/80 px-2 py-0.5 rounded text-xs sm:text-sm font-bold">3</span>
+                  <span>Belief Shifting</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMethodSelection('Blockage Shifting')}
+                  disabled={isLoading}
+                  className={`px-4 py-4 sm:px-6 sm:py-5 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 disabled:bg-secondary disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2 font-semibold text-sm sm:text-base shadow-md hover:shadow-lg ${isLoading ? 'opacity-50' : ''} ${clickedButton === 'Blockage Shifting' ? 'scale-105 bg-destructive/80 shadow-lg' : ''}`}
+                >
+                  <span className="bg-destructive/80 px-2 py-0.5 rounded text-xs sm:text-sm font-bold">4</span>
+                  <span>Blockage Shifting</span>
+                </button>
+              </div>
+            )}
+
+            {isLoading && (
+              <p className="mt-6 text-xs text-muted-foreground" aria-live="polite">
+                Working on it&hellip;
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -3324,7 +3469,8 @@ export default function TreatmentSession({
         )}
 
         {/* V3: Work Type Selection Buttons */}
-        {showWorkTypeButtons && (
+        {/* Hidden while the setup splash is showing — splash hosts its own copy. */}
+        {showWorkTypeButtons && !showSetupSplash && (
           <div className="mb-4">
             <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
               <button
@@ -3446,7 +3592,8 @@ export default function TreatmentSession({
         )}
 
         {/* V3: Method Selection Buttons - 2x2 Grid */}
-        {shouldShowMethodSelection() && (
+        {/* Hidden while the setup splash is showing — splash hosts its own copy. */}
+        {shouldShowMethodSelection() && !showSetupSplash && (
           <div className="mb-4">
             <div className="text-center mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3">
