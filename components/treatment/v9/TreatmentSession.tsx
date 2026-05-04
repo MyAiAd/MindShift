@@ -756,11 +756,104 @@ export default function TreatmentSession({
   const isPTTActiveRef = useRef(false);
   const lastSpeechMessageRef = useRef<string | null>(null);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // AI-echo gate
+  //
+  // Even with `echoCancellation: true` on the Scribe getUserMedia stream, the
+  // mic still picks up the AI's own playback through the speakers and Scribe
+  // dutifully transcribes it. We don't want to start fiddling with audio
+  // pipeline timing (VAD thresholds, capture pauses, etc.) — instead we keep
+  // a small rolling buffer of recent AI utterances and a "AI is speaking
+  // right now (or just stopped)" signal, and drop any incoming transcript
+  // that matches either.
+  //
+  //   • timing gate  — transcript arrived while the AI was speaking, or
+  //                    within ECHO_TAIL_MS of the AI finishing
+  //   • content gate — normalized transcript is a substring of, or has high
+  //                    token overlap with, any of the last few AI texts
+  // ─────────────────────────────────────────────────────────────────────────
+  const RECENT_AI_UTTERANCES_KEPT = 4;
+  const ECHO_TAIL_MS = 600; // grace window after AI stops speaking
+  const recentAiUtterancesRef = useRef<string[]>([]);
+  const isAiSpeakingRef = useRef(false);
+  const lastAiAudioEndedAtRef = useRef<number>(0);
+
+  const normalizeForEchoMatch = useCallback((value: string): string => {
+    return value
+      .toLowerCase()
+      // strip punctuation / quotes / non-word chars; keep word chars + whitespace
+      // (matches the convention already used by isInternalTranscriptLeak above —
+      // avoids the `u` flag so we stay compatible with ES5 build targets)
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }, []);
+
+  const rememberAiUtterance = useCallback((text: string) => {
+    const normalized = normalizeForEchoMatch(text);
+    if (!normalized) return;
+    recentAiUtterancesRef.current = [
+      normalized,
+      ...recentAiUtterancesRef.current.filter((t) => t !== normalized),
+    ].slice(0, RECENT_AI_UTTERANCES_KEPT);
+  }, [normalizeForEchoMatch]);
+
+  const isAiEchoTranscript = useCallback((transcript: string): {
+    isEcho: boolean;
+    reason?: string;
+  } => {
+    // Timing gate — transcript arrived during AI speech or in the tail window.
+    if (isAiSpeakingRef.current) {
+      return { isEcho: true, reason: 'ai-currently-speaking' };
+    }
+    const sinceAiEnd = Date.now() - lastAiAudioEndedAtRef.current;
+    if (lastAiAudioEndedAtRef.current > 0 && sinceAiEnd < ECHO_TAIL_MS) {
+      return { isEcho: true, reason: `ai-tail-${sinceAiEnd}ms` };
+    }
+
+    // Content gate — fuzzy match against recent AI utterances.
+    const normalized = normalizeForEchoMatch(transcript);
+    if (!normalized) return { isEcho: false };
+    const transcriptTokens = normalized.split(' ').filter(Boolean);
+    if (transcriptTokens.length === 0) return { isEcho: false };
+
+    for (const aiText of recentAiUtterancesRef.current) {
+      if (!aiText) continue;
+
+      // Direct substring containment is the strongest signal.
+      if (aiText.includes(normalized)) {
+        return { isEcho: true, reason: 'substring-match' };
+      }
+
+      // Token overlap — picks up paraphrased / partial echoes.
+      const aiTokenSet = new Set(aiText.split(' ').filter(Boolean));
+      const overlap = transcriptTokens.filter((t) => aiTokenSet.has(t)).length;
+      const ratio = overlap / transcriptTokens.length;
+      // Short transcripts (<= 3 tokens) need 100% overlap to count as echo,
+      // so we don't false-positive on common single words like "yes" / "ok".
+      // Longer transcripts only need 70% overlap — enough to catch partial
+      // echoes while still allowing the user to repeat phrases verbatim.
+      const threshold = transcriptTokens.length <= 3 ? 1.0 : 0.7;
+      if (ratio >= threshold) {
+        return {
+          isEcho: true,
+          reason: `token-overlap-${(ratio * 100).toFixed(0)}%`,
+        };
+      }
+    }
+
+    return { isEcho: false };
+  }, [normalizeForEchoMatch]);
+
   /** Whisper domain bias: expectedResponseType, step id, and recent user wording for hotwords. */
   const transcriptionContextRef = useRef<TranscriptionDomainContext | null>(null);
 
   // Handle audio ended event for auto-advance steps
   const handleAudioEnded = useCallback(() => {
+    // AI-echo gate: stamp the moment AI playback finished so the tail window
+    // can drop transcripts that arrive in the immediate echo aftermath.
+    lastAiAudioEndedAtRef.current = Date.now();
+    isAiSpeakingRef.current = false;
     resetSubtitles();
     console.log('🔊 Audio ended. Step type:', currentStepTypeRef.current);
     if (currentStepTypeRef.current === 'auto') {
@@ -1046,6 +1139,19 @@ export default function TreatmentSession({
     testMode: isTestPlaying, // NEW: Test mode prevents VAD from triggering speech recognition
     onTranscript: (transcript) => {
       console.log('🗣️ Natural Voice Transcript:', transcript);
+
+      // AI-echo gate runs first — if Scribe transcribed our own AI playback,
+      // drop it before any menu/command/accumulator logic touches it.
+      const echoCheck = isAiEchoTranscript(transcript);
+      if (echoCheck.isEcho) {
+        console.warn(
+          `🗣️ V9: Dropping AI echo transcript (${echoCheck.reason}):`,
+          transcript,
+        );
+        clearTranscriptBuffers();
+        return;
+      }
+
       if (isInternalTranscriptLeak(transcript)) {
         console.warn('🗣️ V9: Dropping internal transcript leak:', transcript);
         clearTranscriptBuffers();
@@ -1084,6 +1190,14 @@ export default function TreatmentSession({
         const accumulated = transcriptAccumulatorRef.current.trim();
         transcriptAccumulatorRef.current = '';
         if (!accumulated) return;
+        const accumulatedEchoCheck = isAiEchoTranscript(accumulated);
+        if (accumulatedEchoCheck.isEcho) {
+          console.warn(
+            `🗣️ V9: Dropping accumulated AI echo transcript (${accumulatedEchoCheck.reason}):`,
+            accumulated,
+          );
+          return;
+        }
         if (isInternalTranscriptLeak(accumulated)) {
           console.warn('🗣️ V9: Dropping accumulated internal transcript leak:', accumulated);
           return;
@@ -1159,10 +1273,29 @@ export default function TreatmentSession({
     },
   });
 
+  // AI-echo gate: keep the speaking-now ref in lockstep with the hook's state.
+  // `speakServerMessage` and `handleAudioEnded` already update the ref directly
+  // for sub-render-cycle accuracy; this effect catches any transitions started
+  // outside those code paths (e.g. stopSpeaking() from a barge-in).
+  useEffect(() => {
+    if (naturalVoice.isSpeaking) {
+      isAiSpeakingRef.current = true;
+    } else if (isAiSpeakingRef.current) {
+      isAiSpeakingRef.current = false;
+      lastAiAudioEndedAtRef.current = Date.now();
+    }
+  }, [naturalVoice.isSpeaking]);
+
   function speakServerMessage(message: string) {
     if (!message) return;
     clearTranscriptBuffers();
     lastSpeechMessageRef.current = message;
+    // AI-echo gate: remember this utterance + flip the speaking flag now,
+    // before TTS playback actually starts, so any transcript that arrives in
+    // the gap between speak() being called and audio.onplay firing is still
+    // recognised as echo.
+    rememberAiUtterance(message);
+    isAiSpeakingRef.current = true;
     // US-015: when text mode is active, TTS is suppressed entirely. Subtitles still render
     // so the user can read the scripted prompt.
     if (textModeFallbackState === 'active') {
