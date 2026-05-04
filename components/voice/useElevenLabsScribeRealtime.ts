@@ -21,8 +21,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  *   - Reconnect: up to 3 attempts with 500 / 1 500 / 3 000 ms backoff.
  *     A fresh token is fetched for every WebSocket open (tokens are single-use).
  *
- * Audio format: 16-bit signed PCM at 16 000 Hz, mono, sent as binary
- * WebSocket frames in ~100 ms chunks (1 600 samples per send).
+ * Wire protocol: Scribe v2 realtime expects JSON `input_audio_chunk` events
+ * with base64-encoded 16-bit signed little-endian PCM at 16 000 Hz, mono,
+ * sent in ~100 ms chunks (1 600 samples per send). Server replies use the
+ * `message_type` field (not `type`).
  */
 
 const WS_BASE = 'wss://api.elevenlabs.io/v1/speech-to-text/realtime';
@@ -102,7 +104,7 @@ export function useElevenLabsScribeRealtime({
     onErrorRef.current?.(msg);
   }, []);
 
-  /** Convert a Float32 PCM array to Int16 and return as ArrayBuffer. */
+  /** Convert a Float32 PCM array to little-endian Int16 PCM bytes. */
   function float32ToInt16(input: Float32Array): ArrayBuffer {
     const buf = new ArrayBuffer(input.length * 2);
     const view = new DataView(buf);
@@ -113,20 +115,54 @@ export function useElevenLabsScribeRealtime({
     return buf;
   }
 
-  /** Flush the PCM accumulator to the WebSocket as a single binary frame. */
-  function flushPcmBuffer() {
+  /** Base64-encode an ArrayBuffer using a chunked binary string (avoids stack overflow on large buffers). */
+  function arrayBufferToBase64(buf: ArrayBuffer): string {
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode.apply(
+        null,
+        Array.from(bytes.subarray(i, i + CHUNK)),
+      );
+    }
+    return btoa(binary);
+  }
+
+  /**
+   * Send a single audio chunk (and/or a commit signal) using the Scribe v2
+   * realtime JSON protocol:
+   *   { message_type: 'input_audio_chunk',
+   *     audio_base_64: '<base64 PCM>',
+   *     commit: <bool>,
+   *     sample_rate: 16000 }
+   */
+  function sendAudioChunk(int16Buf: ArrayBuffer | null, commit: boolean) {
     const ws = wsRef.current;
-    if (!ws || ws.readyState !== WebSocket.OPEN || pausedRef.current) return;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+    const payload = {
+      message_type: 'input_audio_chunk',
+      audio_base_64: int16Buf ? arrayBufferToBase64(int16Buf) : '',
+      commit,
+      sample_rate: SAMPLE_RATE,
+    };
+
+    try {
+      ws.send(JSON.stringify(payload));
+    } catch (e) {
+      console.warn('[ScribeRealtime] WebSocket send error:', e);
+    }
+  }
+
+  /** Flush the PCM accumulator (any sub-CHUNK_SAMPLES leftovers) to Scribe. */
+  function flushPcmBuffer() {
+    if (pausedRef.current) return;
     if (pcmBufferRef.current.length === 0) return;
 
     const float32 = new Float32Array(pcmBufferRef.current);
     pcmBufferRef.current = [];
-    const int16 = float32ToInt16(float32);
-    try {
-      ws.send(int16);
-    } catch (e) {
-      console.warn('[ScribeRealtime] WebSocket send error:', e);
-    }
+    sendAudioChunk(float32ToInt16(float32), false);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -179,13 +215,8 @@ export function useElevenLabsScribeRealtime({
       while (pcmBufferRef.current.length >= CHUNK_SAMPLES) {
         const chunk = pcmBufferRef.current.splice(0, CHUNK_SAMPLES);
         const float32 = new Float32Array(chunk);
-        const ws = wsRef.current;
-        if (ws && ws.readyState === WebSocket.OPEN && !pausedRef.current) {
-          try {
-            ws.send(float32ToInt16(float32));
-          } catch (err) {
-            console.warn('[ScribeRealtime] send error:', err);
-          }
+        if (!pausedRef.current) {
+          sendAudioChunk(float32ToInt16(float32), false);
         }
       }
     };
@@ -275,12 +306,19 @@ export function useElevenLabsScribeRealtime({
         return;
       }
 
-      const type = msg.type as string | undefined;
+      // Scribe v2 realtime uses `message_type`, not `type`. We accept either
+      // for forward-compatibility, but `message_type` is the documented field.
+      const type =
+        (msg.message_type as string | undefined) ??
+        (msg.type as string | undefined);
 
       if (type === 'partial_transcript') {
         const text = (msg.text as string | undefined) ?? '';
         if (text) onPartialRef.current?.(text);
-      } else if (type === 'committed_transcript') {
+      } else if (
+        type === 'committed_transcript' ||
+        type === 'committed_transcript_with_timestamps'
+      ) {
         const text = (msg.text as string | undefined) ?? '';
         setIsProcessing(false);
         onProcessingRef.current?.(false);
@@ -290,8 +328,24 @@ export function useElevenLabsScribeRealtime({
         }
       } else if (type === 'session_started') {
         console.log('[ScribeRealtime] Session started:', msg);
-      } else if (type === 'error') {
-        console.error('[ScribeRealtime] Server error event:', msg);
+      } else if (
+        type === 'error' ||
+        type === 'input_error' ||
+        type === 'auth_error' ||
+        type === 'transcriber_error' ||
+        type === 'quota_exceeded' ||
+        type === 'rate_limited' ||
+        type === 'unaccepted_terms' ||
+        type === 'session_time_limit_exceeded' ||
+        type === 'chunk_size_exceeded' ||
+        type === 'insufficient_audio_activity'
+      ) {
+        const detail =
+          (msg.message as string | undefined) ??
+          (msg.error as string | undefined) ??
+          JSON.stringify(msg);
+        console.error(`[ScribeRealtime] Server ${type}:`, msg);
+        reportError(`ElevenLabs Scribe ${type}: ${detail}`);
       }
     };
 
@@ -392,16 +446,14 @@ export function useElevenLabsScribeRealtime({
   const commitNow = useCallback(() => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    // Flush any buffered PCM before committing.
+    // Scribe has no separate commit event — committing is just an
+    // input_audio_chunk with `commit: true`. Flush any pending sub-chunk PCM
+    // first, then send an empty-audio chunk with the commit flag.
     flushPcmBuffer();
-    try {
-      ws.send(JSON.stringify({ type: 'input_audio_buffer.commit' }));
-      setIsProcessing(true);
-      onProcessingRef.current?.(true);
-      console.log('[ScribeRealtime] Manual commit sent');
-    } catch (err) {
-      console.warn('[ScribeRealtime] Failed to send commit:', err);
-    }
+    sendAudioChunk(null, true);
+    setIsProcessing(true);
+    onProcessingRef.current?.(true);
+    console.log('[ScribeRealtime] Manual commit sent');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
