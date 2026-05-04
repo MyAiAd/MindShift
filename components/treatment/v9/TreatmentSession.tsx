@@ -238,15 +238,45 @@ export default function TreatmentSession({
     }
     return 'marin';
   });
-  const [isGuidedMode, setIsGuidedMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('v9_guided_mode');
-      return saved === 'true';
-    }
-    return false;
-  });
+  // ─────────────────────────────────────────────────────────────────────────
+  // PTT / Guided Mode — SIDELINED (not deleted).
+  //
+  // V9 no longer exposes Push-to-Talk / orb hold-to-speak in the UI: the orb
+  // overlay below (`{isGuidedMode && ...}`) and the matching subtitle/skip
+  // controls all gate on `isGuidedMode`, and the Scribe realtime hook reads
+  // the same flag to choose between `commit_strategy=vad` (continuous) and
+  // `commit_strategy=manual` (PTT). Forcing `isGuidedMode = false` is the
+  // single switch that disables ALL of that without removing any code:
+  //
+  //   • orb UI never renders
+  //   • Scribe always opens in continuous VAD mode
+  //   • handlePTTStart / handlePTTEnd / orb component / scribe.pauseCapture
+  //     / resumeCapture / commitNow all stay compiled and reachable
+  //
+  // To bring PTT back, restore the original useState + localStorage init:
+  //   const [isGuidedMode, setIsGuidedMode] = useState(() =>
+  //     typeof window !== 'undefined' &&
+  //     localStorage.getItem('v9_guided_mode') === 'true'
+  //   );
+  const isGuidedMode = false;
+  // No-op setter — kept so existing setIsGuidedMode(...) call sites still
+  // type-check without conditional edits scattered across the file.
+  const setIsGuidedMode = useCallback((_value: boolean | ((prev: boolean) => boolean)) => {
+    // intentionally empty — see comment above
+  }, []);
   const [isPTTActive, setIsPTTActive] = useState(false);
   const voiceSettingsRef = useRef<HTMLDivElement>(null);
+
+  // PTT sideline cleanup: drop any stale `v9_guided_mode=true` from prior
+  // sessions so the flag stays consistent with the in-memory `isGuidedMode`
+  // constant above. Safe to run on every mount — it's just a localStorage
+  // setItem of 'false'.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (localStorage.getItem('v9_guided_mode') !== 'false') {
+      localStorage.setItem('v9_guided_mode', 'false');
+    }
+  }, []);
 
   // Interaction Mode State (new - for orb/listen-only/text-first)
   const [interactionMode, setInteractionMode] = useState<InteractionMode>(() => {
