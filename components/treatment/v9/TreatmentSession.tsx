@@ -862,6 +862,35 @@ export default function TreatmentSession({
     );
   }, [normalizeForEchoMatch]);
 
+  /**
+   * Longest common contiguous word sequence between two token arrays.
+   * O(m*n) DP, but m and n are tiny (≤ ~80 words for typical AI prompts,
+   * ≤ ~15 for typical user utterances) so this stays in microseconds.
+   */
+  const longestCommonContiguousWords = useCallback(
+    (a: string[], b: string[]): number => {
+      const m = a.length;
+      const n = b.length;
+      if (m === 0 || n === 0) return 0;
+      let max = 0;
+      const prev = new Array<number>(n + 1).fill(0);
+      const curr = new Array<number>(n + 1).fill(0);
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          if (a[i - 1] === b[j - 1]) {
+            curr[j] = prev[j - 1] + 1;
+            if (curr[j] > max) max = curr[j];
+          } else {
+            curr[j] = 0;
+          }
+        }
+        for (let j = 0; j <= n; j++) prev[j] = curr[j];
+      }
+      return max;
+    },
+    [],
+  );
+
   const isAiEchoTranscript = useCallback((transcript: string): {
     isEcho: boolean;
     reason?: string;
@@ -875,7 +904,23 @@ export default function TreatmentSession({
       return { isEcho: true, reason: `ai-tail-${sinceAiEnd}ms` };
     }
 
-    // Content gate — fuzzy match against recent AI utterances.
+    // Content gate — exploit the fact that the AI side is fully scripted.
+    // We pass the exact text to `naturalVoice.speak()` so we know byte-for-
+    // byte what was just played. Two checks against each of the last
+    // RECENT_AI_UTTERANCES_KEPT prompts:
+    //   1. Substring containment — strongest signal, catches verbatim
+    //      fragments like "Please close" or "throughout the process".
+    //   2. Longest common contiguous word sequence — catches the case
+    //      we hit with `... said a few words.` echoing the prompt
+    //      "Tell me what the problem is in a few words." Substring fails
+    //      ("said" isn't in the AI text), but "a few words" is in both
+    //      contiguously, covers 75% of the transcript, and "said" is
+    //      Scribe drift on the leading "is in".
+    //
+    // Threshold for the LCCWS check: the matched phrase must be ≥ 3
+    // words AND cover ≥ 50% of the transcript. Three-word minimum keeps
+    // common short answers ("yes I do", "I think so") from being flagged
+    // when those tokens happen to appear in the AI text.
     const normalized = normalizeForEchoMatch(transcript);
     if (!normalized) return { isEcho: false };
     const transcriptTokens = normalized.split(' ').filter(Boolean);
@@ -884,14 +929,29 @@ export default function TreatmentSession({
     for (const aiText of recentAiUtterancesRef.current) {
       if (!aiText) continue;
 
-      // Direct substring containment is the strongest signal.
+      // 1. Direct substring containment.
       if (aiText.includes(normalized)) {
         return { isEcho: true, reason: 'substring-match' };
+      }
+
+      // 2. Longest common contiguous phrase against the script.
+      if (transcriptTokens.length >= 3) {
+        const aiTokens = aiText.split(' ').filter(Boolean);
+        const lccws = longestCommonContiguousWords(transcriptTokens, aiTokens);
+        if (
+          lccws >= 3 &&
+          lccws / transcriptTokens.length >= 0.5
+        ) {
+          return {
+            isEcho: true,
+            reason: `phrase-match-${lccws}w/${transcriptTokens.length}w`,
+          };
+        }
       }
     }
 
     return { isEcho: false };
-  }, [normalizeForEchoMatch]);
+  }, [normalizeForEchoMatch, longestCommonContiguousWords]);
 
   /** Whisper domain bias: expectedResponseType, step id, and recent user wording for hotwords. */
   const transcriptionContextRef = useRef<TranscriptionDomainContext | null>(null);
