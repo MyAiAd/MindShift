@@ -956,6 +956,44 @@ export default function TreatmentSession({
   /** Whisper domain bias: expectedResponseType, step id, and recent user wording for hotwords. */
   const transcriptionContextRef = useRef<TranscriptionDomainContext | null>(null);
 
+  // User-initiated skip of the current AI audio.
+  //
+  // Two flavors depending on the active step:
+  //   • auto-advance step ('auto')         → stop audio AND immediately fire
+  //                                          sendMessage('', true) to advance.
+  //                                          Skips the 800ms post-audio
+  //                                          settle delay used by
+  //                                          handleAudioEnded.
+  //   • everything else                    → stop audio only; the user is
+  //                                          expected to respond next, so we
+  //                                          just hand the floor back to
+  //                                          them. The mic / Scribe gate
+  //                                          re-opens via the existing
+  //                                          stopSpeaking → setIsSpeaking(false)
+  //                                          → echo-guard effect path.
+  //
+  // We deliberately read currentStepTypeRef (not React state) so the click
+  // handler sees the latest expectedResponseType even if the ref was
+  // updated mid-render between the button's last paint and this click.
+  const handleSkipAudio = useCallback(() => {
+    if (!naturalVoice.isSpeaking && !naturalVoice.isPaused) return;
+
+    const stepType = currentStepTypeRef.current;
+
+    if (stepType === 'auto') {
+      console.log('⏭️ Skip: auto step — stopping audio and advancing');
+      // sendMessage('', true) already stops audio when isSpeaking is true,
+      // so we don't double-call stopSpeaking here. resetSubtitles likewise
+      // happens inside sendMessage's audio-stop branch.
+      sendMessageRef.current('', true);
+      return;
+    }
+
+    console.log('⏭️ Skip: non-auto step — stopping audio, returning floor to user');
+    naturalVoice.stopSpeaking();
+    resetSubtitles();
+  }, [naturalVoice, resetSubtitles]);
+
   // Handle audio ended event for auto-advance steps
   const handleAudioEnded = useCallback(() => {
     // AI-echo gate: stamp the moment AI playback finished so the tail window
@@ -3360,6 +3398,38 @@ export default function TreatmentSession({
             </button>
           </div>
         </div>
+
+        {/*
+          Skip Audio button — full-width row, only mounted while the AI is
+          actively speaking (or paused mid-utterance). Returning users have
+          asked for a way to bypass long combined messages without waiting
+          for full TTS playback. Mounting only when there's something to
+          skip keeps the header uncluttered for first-time users while
+          giving veterans a thumb-friendly target right above the input
+          row. Behaviour is delegated to handleSkipAudio:
+            • auto-advance step → stop audio + fire sendMessage('', true)
+            • any other step    → stop audio + hand floor back to user
+          We hide it during test playback to avoid users skipping the
+          voice-test sample (which has its own controls in the settings
+          sheet).
+        */}
+        {(naturalVoice.isSpeaking || naturalVoice.isPaused) && !isTestPlaying && (
+          <button
+            onClick={handleSkipAudio}
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-primary/15 hover:bg-primary/25 text-primary text-sm font-semibold transition-colors ring-1 ring-primary/30"
+            title={
+              expectedResponseType === 'auto'
+                ? 'Skip current audio and continue to the next step'
+                : 'Skip current audio'
+            }
+            aria-label="Skip current audio"
+          >
+            <SkipForward className="h-4 w-4" />
+            <span>
+              {expectedResponseType === 'auto' ? 'Skip & Continue' : 'Skip Audio'}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Voice Settings Modal - bottom sheet on all devices */}
