@@ -95,6 +95,18 @@ export function useElevenLabsScribeRealtime({
     onProcessingRef.current = onProcessingChange;
   }, [onTranscript, onPartialTranscript, onError, onProcessingChange]);
 
+  // Mirror `enabled` into a ref so async callbacks (notably `ws.onclose`'s
+  // reconnect path) always read the current value instead of the stale one
+  // captured in `connectWebSocket`'s useCallback closure. Without this, when
+  // the parent first mounts with `enabled=false` (e.g. before voicePair has
+  // loaded and `useScribeRealtime` flips to true) and then turns Scribe on,
+  // every later WebSocket close would silently skip reconnecting because the
+  // closure still saw `enabled=false`.
+  const enabledRef = useRef(enabled);
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
+
   // ─────────────────────────────────────────────────────────────────────────
   // Helpers
   // ─────────────────────────────────────────────────────────────────────────
@@ -374,7 +386,9 @@ export function useElevenLabsScribeRealtime({
 
       // Don't reconnect if we closed intentionally or component is unmounted.
       if (intentionalCloseRef.current || !mountedRef.current) return;
-      if (!enabled) return;
+      // Read the *current* enabled value via ref — the closure-captured
+      // `enabled` here may be stale (see enabledRef definition above).
+      if (!enabledRef.current) return;
 
       // Track reconnect window.
       const now = Date.now();

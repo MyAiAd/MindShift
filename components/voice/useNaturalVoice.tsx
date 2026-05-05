@@ -414,6 +414,16 @@ export const useNaturalVoice = ({
             return;
         }
         
+        // SCRIBE PATH: handleVadSpeechStart already called scribe.resumeCapture(),
+        // and Scribe handles transcript commit server-side via its own VAD. We must
+        // NOT fall through to the Web Speech fallback below — pausing our local VAD
+        // would prevent the SCRIBE_POST_SPEECH_DRAIN_MS timer from scheduling AND
+        // stop us from detecting the user's next utterance, which is exactly what
+        // produced the "v9 stops listening after AI message" dead-zone.
+        if (useScribeRealtime) {
+            return;
+        }
+
         // OLD: Web Speech API path - Pause VAD and use fast-start retry loop
         if (vadRef.current?.isInitialized) {
             vadRef.current.pauseVAD();
@@ -461,7 +471,7 @@ export const useNaturalVoice = ({
         
         // Start immediately (attempt 0)
         attemptStart(0);
-    }, [testMode, handleTestModeInterruption, useWhisper, audioCapture]);
+    }, [testMode, handleTestModeInterruption, useWhisper, audioCapture, useScribeRealtime]);
     
     // VAD speech-end handler — drives both the Whisper "process now" trigger
     // AND the Scribe pause-after-silence behaviour. For Scribe we keep
