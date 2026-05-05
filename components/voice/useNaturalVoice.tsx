@@ -191,17 +191,31 @@ export const useNaturalVoice = ({
     // blob path. Reset on hook remount; never reset within a session.
     const streamingDisabledRef = useRef<boolean>(false);
 
-    // Scribe echo suppression: when AI is speaking we proactively pause the
-    // Scribe WebSocket's outgoing audio frames so the mic-captured echo of
-    // our own playback never reaches the server's transcriber. Mirrors the
-    // existing `audioCapture.setAISpeaking(true/false)` pattern on the
-    // Whisper path. The post-AI tail delay covers speaker reverb / decoder
-    // latency that would otherwise leak a fragment into the next commit.
-    // The Scribe hook's pauseCapture/resumeCapture both clear the PCM
-    // accumulator on transition, so audio captured during the pause window
-    // is discarded — never streamed to ElevenLabs.
-    const SCRIBE_ECHO_TAIL_MS = 800;
-    const scribeEchoTailTimerRef = useRef<NodeJS.Timeout | null>(null);
+    // Scribe echo suppression — VAD-gated edition.
+    //
+    // We don't time-pause Scribe after AI ends any more (the 800ms tail
+    // dropped the start of fast user replies like "I am having a bad day"
+    // → "That day."). Instead, Scribe stays paused after AI speech and
+    // only resumes when our local Silero VAD detects actual human voice
+    // on the mic stream. Echo audio is acoustically distorted /
+    // attenuated and rarely passes Silero's classifier, so this gives
+    // us full user speech capture without echo bleed.
+    //
+    // Two short timers handle the edge cases:
+    //   • SCRIBE_ECHO_GUARD_MS — for this long after AI playback ends, any
+    //     VAD speech-start event is ignored as likely speaker reverb.
+    //     Tuned short (~150-300ms) so it doesn't eat real user speech;
+    //     real user replies almost always need at least Silero's own
+    //     warmup (~50-100ms) before speech-start fires anyway.
+    //   • SCRIBE_POST_SPEECH_DRAIN_MS — when VAD reports silence we wait
+    //     this long before pausing Scribe, so the last few frames of the
+    //     user's utterance reach the server and Scribe's own VAD can
+    //     emit a clean committed_transcript.
+    const SCRIBE_ECHO_GUARD_MS = 250;
+    const SCRIBE_POST_SPEECH_DRAIN_MS = 300;
+    const scribeEchoGuardActiveRef = useRef<boolean>(false);
+    const scribeEchoGuardTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const scribePauseAfterSilenceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Restart scheduler state - for backoff/loop prevention
     const restartAttemptCountRef = useRef(0); // Track consecutive restart attempts without success
@@ -258,49 +272,62 @@ export const useNaturalVoice = ({
         onProviderError: onSpeechProviderError,
     });
 
-    // Scribe echo suppression — pause/resume the WebSocket's outgoing audio
-    // frames in lockstep with `isSpeaking`. This is the in-flight equivalent
-    // of the transcript-level echo gate in TreatmentSession: instead of
-    // letting echo audio reach Scribe's transcriber and then dropping the
-    // resulting committed transcript after the fact (which fails when the
-    // commit lands more than ECHO_TAIL_MS after AI ends, as we saw with
-    // `... said a few words.`), we never send the echo at all. The post-AI
-    // tail timer covers speaker reverb / mic decoder lag.
+    // Scribe forwarding state machine (VAD-gated edition).
     //
-    // Only active when Scribe is the realtime STT provider — Whisper has
-    // its own equivalent via `audioCapture.setAISpeaking(true/false)`.
+    // We keep Scribe's outgoing audio frames paused by default and only
+    // open the gate when our local Silero VAD positively identifies human
+    // voice on the mic stream. This replaces the prior 800ms time-based
+    // tail, which cut off the start of fast user replies right after AI
+    // ended. VAD events are wired into Scribe in handleVadSpeechStart and
+    // handleVadSpeechEnd (defined below). This effect just handles the
+    // AI-speaking transitions:
+    //   • AI starts speaking → pauseCapture (echo suppression) + cancel
+    //     any pending VAD-driven resume/pause timers.
+    //   • AI ends → leave Scribe paused. Open a brief echo-guard window
+    //     during which VAD speech-start events are ignored as likely
+    //     speaker reverb. Once the guard expires, the next legit VAD
+    //     speech-start will resume Scribe.
+    //
+    // Initial state: Scribe is paused at hook init (see the dedicated
+    // `useScribeRealtime && isMicEnabled` effect right below) so the
+    // very first user utterance also goes through the VAD gate.
     useEffect(() => {
         if (!useScribeRealtime) return;
 
         if (isSpeaking) {
-            // Cancel any pending resume from a previous stop — we're still
-            // speaking, so keep the mic suppressed.
-            if (scribeEchoTailTimerRef.current) {
-                clearTimeout(scribeEchoTailTimerRef.current);
-                scribeEchoTailTimerRef.current = null;
+            if (scribeEchoGuardTimerRef.current) {
+                clearTimeout(scribeEchoGuardTimerRef.current);
+                scribeEchoGuardTimerRef.current = null;
             }
+            if (scribePauseAfterSilenceTimerRef.current) {
+                clearTimeout(scribePauseAfterSilenceTimerRef.current);
+                scribePauseAfterSilenceTimerRef.current = null;
+            }
+            scribeEchoGuardActiveRef.current = false;
             scribe.pauseCapture();
             console.log('🎙️ Scribe: Paused for AI speech (echo suppression)');
             return;
         }
 
-        // AI just stopped (or never started). Schedule a resume after the
-        // tail window so any speaker-reverb / decoder-tail audio is also
-        // discarded. resumeCapture() clears the PCM buffer on resume so any
-        // audio captured during the wait is dropped.
-        if (scribeEchoTailTimerRef.current) {
-            clearTimeout(scribeEchoTailTimerRef.current);
+        // AI ended — keep Scribe paused, open the echo-guard window.
+        // VAD speech-start handler reads scribeEchoGuardActiveRef and
+        // ignores triggers while it's true.
+        scribeEchoGuardActiveRef.current = true;
+        if (scribeEchoGuardTimerRef.current) {
+            clearTimeout(scribeEchoGuardTimerRef.current);
         }
-        scribeEchoTailTimerRef.current = setTimeout(() => {
-            scribe.resumeCapture();
-            scribeEchoTailTimerRef.current = null;
-            console.log(`🎙️ Scribe: Resumed after ${SCRIBE_ECHO_TAIL_MS}ms echo tail`);
-        }, SCRIBE_ECHO_TAIL_MS);
+        scribeEchoGuardTimerRef.current = setTimeout(() => {
+            scribeEchoGuardActiveRef.current = false;
+            scribeEchoGuardTimerRef.current = null;
+            console.log(
+                `🎙️ Scribe: Echo guard expired (${SCRIBE_ECHO_GUARD_MS}ms) — VAD now drives forwarding`,
+            );
+        }, SCRIBE_ECHO_GUARD_MS);
 
         return () => {
-            if (scribeEchoTailTimerRef.current) {
-                clearTimeout(scribeEchoTailTimerRef.current);
-                scribeEchoTailTimerRef.current = null;
+            if (scribeEchoGuardTimerRef.current) {
+                clearTimeout(scribeEchoGuardTimerRef.current);
+                scribeEchoGuardTimerRef.current = null;
             }
         };
     // scribe object is stable enough — useElevenLabsScribeRealtime's
@@ -308,6 +335,19 @@ export const useNaturalVoice = ({
     // `scribe` here would re-fire the effect on every render of the parent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isSpeaking, useScribeRealtime]);
+
+    // Default Scribe to paused as soon as the realtime path is enabled.
+    // Without this, the very first user utterance after voicePair loads
+    // would race the AI-speaking effect — Scribe defaults `pausedRef` to
+    // false when the WS opens, so frames could flow before VAD has a
+    // chance to gate them. Pausing here is idempotent and safe even if
+    // PTT mode (sidelined) ever comes back.
+    useEffect(() => {
+        if (!useScribeRealtime || !isMicEnabled) return;
+        scribe.pauseCapture();
+        console.log('🎙️ Scribe: Initial pause — waiting for VAD speech-start');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useScribeRealtime, isMicEnabled]);
 
     // Test mode handler - called when user speaks during test mode
     const handleTestModeInterruption = useCallback(() => {
@@ -423,24 +463,41 @@ export const useNaturalVoice = ({
         attemptStart(0);
     }, [testMode, handleTestModeInterruption, useWhisper, audioCapture]);
     
-    // VAD speech-end handler - when user stops speaking, immediately process buffered audio
-    // This gives Whisper a clean end-of-utterance signal instead of relying solely on the timer
+    // VAD speech-end handler — drives both the Whisper "process now" trigger
+    // AND the Scribe pause-after-silence behaviour. For Scribe we keep
+    // streaming for SCRIBE_POST_SPEECH_DRAIN_MS after our local VAD reports
+    // silence, so the last frames of the user's utterance reach the server
+    // and Scribe's own VAD can fire a clean committed_transcript.
     const handleVadSpeechEnd = useCallback((_audio: Float32Array) => {
         if (useWhisper && audioCapture.isCapturing) {
             console.log('🎙️ VAD: Speech ended - triggering immediate Whisper processing');
             audioCapture.processNow();
         }
-    }, [useWhisper, audioCapture]);
-    
-    // V9 keeps VAD active whenever the mic is on so Whisper/OpenAI uploads remain speech-gated
-    // even when speaker playback is disabled. Older versions retain the existing mic+speaker gate.
-    // VAD is disabled entirely when Scribe realtime is active (it handles VAD server-side).
+
+        if (useScribeRealtime && !isSpeakingRef.current) {
+            if (scribePauseAfterSilenceTimerRef.current) {
+                clearTimeout(scribePauseAfterSilenceTimerRef.current);
+            }
+            scribePauseAfterSilenceTimerRef.current = setTimeout(() => {
+                scribe.pauseCapture();
+                scribePauseAfterSilenceTimerRef.current = null;
+                console.log(
+                    `🎙️ Scribe: VAD silence — paused forwarding after ${SCRIBE_POST_SPEECH_DRAIN_MS}ms drain`,
+                );
+            }, SCRIBE_POST_SPEECH_DRAIN_MS);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useWhisper, audioCapture, useScribeRealtime]);
+
+    // V9 keeps VAD active whenever the mic is on so STT uploads remain
+    // speech-gated even when speaker playback is disabled. With the dual-VAD
+    // edition (option 1 of the streaming TTS work), VAD is ALSO active when
+    // Scribe is the realtime provider — its events drive the Scribe
+    // pause/resume gate above instead of a fixed time tail.
     const vadEnabled =
-        !useScribeRealtime && (
-            treatmentVersion === 'v9'
-                ? isMicEnabled && !guidedMode
-                : isMicEnabled && isSpeakerEnabled && !guidedMode
-        );
+        treatmentVersion === 'v9'
+            ? isMicEnabled && !guidedMode
+            : isMicEnabled && isSpeakerEnabled && !guidedMode;
     
     // Choose the correct handler based on test mode
     const vadSpeechHandler = testMode ? handleTestModeInterruption : handleVadBargeIn;
@@ -448,10 +505,34 @@ export const useNaturalVoice = ({
     // US-001: wrap the speech-start handler so every VAD trigger also bumps the counter that
     // useAudioCapture watches. Without this, OpenAI STT would keep receiving ambient silence
     // even when the user never speaks.
+    //
+    // Scribe path: this is also the gate that resumes outgoing audio frames
+    // when the user starts talking. Three reasons we might ignore the event:
+    //   • AI is still speaking — likely echo, never barge-in via VAD.
+    //   • Echo guard window is active (just after AI ended) — likely
+    //     speaker reverb, not real user voice.
+    //   • Scribe isn't the active provider — no-op.
     const handleVadSpeechStart = useCallback(() => {
         setSpeechDetectedTrigger((prev) => prev + 1);
+
+        if (useScribeRealtime) {
+            if (isSpeakingRef.current) {
+                console.log('🎙️ Scribe: VAD speech-start while AI speaking — IGNORED');
+            } else if (scribeEchoGuardActiveRef.current) {
+                console.log('🎙️ Scribe: VAD speech-start during echo guard — IGNORED (likely reverb)');
+            } else {
+                if (scribePauseAfterSilenceTimerRef.current) {
+                    clearTimeout(scribePauseAfterSilenceTimerRef.current);
+                    scribePauseAfterSilenceTimerRef.current = null;
+                }
+                scribe.resumeCapture();
+                console.log('🎙️ Scribe: VAD detected user speech — resumed forwarding');
+            }
+        }
+
         vadSpeechHandler();
-    }, [vadSpeechHandler]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [vadSpeechHandler, useScribeRealtime]);
 
     console.log(`🎙️ VAD: Using ${testMode ? 'TEST MODE' : 'REAL MODE'} handler`);
     
@@ -466,7 +547,10 @@ export const useNaturalVoice = ({
         enabled: vadEnabled,
         sensitivity: vadSensitivity,
         onSpeechStart: handleVadSpeechStart,
-        onSpeechEnd: useWhisper ? handleVadSpeechEnd : undefined, // Trigger Whisper processing when speech ends
+        // Whisper needs onSpeechEnd to flush its accumulator. Scribe needs
+        // it to schedule the post-silence drain → pause. Either consumer
+        // gets the same signal.
+        onSpeechEnd: useWhisper || useScribeRealtime ? handleVadSpeechEnd : undefined,
         onVadLevel: onVadLevel,
         ...(vadTimingOverrides ?? {})
     });
