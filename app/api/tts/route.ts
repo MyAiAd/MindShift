@@ -320,9 +320,17 @@ async function synthesizeWithOpenAI(
   // than "first byte" — we'll revisit when we move to true streaming.
   const ttsRouteMs = Date.now() - routeStartedAt;
 
-  type TtsAttempt = { buffer: ArrayBuffer; modelUsed: string; fallbackUsed: boolean; retryCount: number };
+  type TtsAttempt = { response: Response; modelUsed: string; fallbackUsed: boolean; retryCount: number };
 
-  const callOnce = async (modelToUse: string, allowInstructions: boolean): Promise<ArrayBuffer> => {
+  // Streaming change: instead of buffering the full MP3 with `await
+  // response.arrayBuffer()` before forwarding (which adds the entire synth
+  // duration to user-perceived latency), we now hold onto the upstream
+  // `Response` and forward `response.body` straight to the client. The
+  // OpenAI SDK returns a fetch-spec `Response` whose `.body` is a
+  // `ReadableStream<Uint8Array>` — NextResponse accepts it as-is. Retries
+  // only fire if `audio.speech.create()` itself throws (i.e. before any
+  // body is committed); once we have a Response, the stream is in flight.
+  const callOnce = async (modelToUse: string, allowInstructions: boolean): Promise<Response> => {
     const payload: Parameters<OpenAI['audio']['speech']['create']>[0] = {
       model: modelToUse,
       input: text,
@@ -333,14 +341,13 @@ async function synthesizeWithOpenAI(
     if (allowInstructions && modelSupportsInstructions(modelToUse)) {
       (payload as unknown as { instructions?: string }).instructions = instructions;
     }
-    const response = await openai.audio.speech.create(payload);
-    return await response.arrayBuffer();
+    return await openai.audio.speech.create(payload);
   };
 
   const attempt = async (): Promise<TtsAttempt> => {
     try {
-      const buffer = await callOnce(model, true);
-      return { buffer, modelUsed: model, fallbackUsed: false, retryCount: 0 };
+      const response = await callOnce(model, true);
+      return { response, modelUsed: model, fallbackUsed: false, retryCount: 0 };
     } catch (primaryError) {
       if (OPENAI_TTS_FALLBACK_MODEL === model || !isRetryableOpenAITtsError(primaryError)) {
         // Either the fallback isn't distinct, or the error is non-retryable (4xx auth/validation).
@@ -354,16 +361,18 @@ async function synthesizeWithOpenAI(
         fallback_model: OPENAI_TTS_FALLBACK_MODEL,
         reason: primaryError instanceof Error ? primaryError.message : 'unknown',
       }));
-      const buffer = await callOnce(OPENAI_TTS_FALLBACK_MODEL, false);
-      return { buffer, modelUsed: OPENAI_TTS_FALLBACK_MODEL, fallbackUsed: true, retryCount: 1 };
+      const response = await callOnce(OPENAI_TTS_FALLBACK_MODEL, false);
+      return { response, modelUsed: OPENAI_TTS_FALLBACK_MODEL, fallbackUsed: true, retryCount: 1 };
     }
   };
 
   try {
-    const { buffer, modelUsed, fallbackUsed, retryCount } = await attempt();
+    const { response, modelUsed, fallbackUsed, retryCount } = await attempt();
     const processingTime = Date.now() - startTime;
 
-    // US-005 TTS telemetry — single-line JSON, one per response.
+    // US-005 TTS telemetry — single-line JSON, one per response. With the
+    // streaming change, `processing_time_ms` measures route-to-headers
+    // (i.e. time-to-first-byte from OpenAI), not full synth duration.
     console.log(JSON.stringify({
       event: 'tts_call',
       treatment_version: telemetry.treatmentVersion ?? 'legacy',
@@ -375,7 +384,7 @@ async function synthesizeWithOpenAI(
       processing_time_ms: processingTime,
     }));
 
-    return new NextResponse(buffer, {
+    return new NextResponse(response.body, {
       headers: {
         'Content-Type': 'audio/mpeg',
         'Cache-Control': 'public, max-age=3600',

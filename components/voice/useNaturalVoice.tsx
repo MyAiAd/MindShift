@@ -185,6 +185,11 @@ export const useNaturalVoice = ({
     const vadRef = useRef<any>(null); // Track VAD instance for resuming after speech
     const guidedModeRef = useRef(guidedMode); // Ref for async access in audio callbacks
     const playGenerationRef = useRef(0); // Monotonic counter for AbortError supersession detection
+    // Per-session toggle for the MSE streaming TTS path. Flipped to `true`
+    // on any MSE error (codec mismatch, SourceBuffer abort, decoder fail) so
+    // subsequent utterances in the same session fall back to the buffered
+    // blob path. Reset on hook remount; never reset within a session.
+    const streamingDisabledRef = useRef<boolean>(false);
     
     // Restart scheduler state - for backoff/loop prevention
     const restartAttemptCountRef = useRef(0); // Track consecutive restart attempts without success
@@ -1210,6 +1215,245 @@ export const useNaturalVoice = ({
         });
     }, [isMicEnabled, startListening, playbackRate, audioCapture, vadEnabled, onAudioPlaybackStarted]);
 
+    // ─────────────────────────────────────────────────────────────────────
+    // MSE streaming TTS
+    //
+    // Browser-side MediaSource Extensions consumer for /api/tts. Pipes the
+    // upstream provider's audio (MP3 from OpenAI/EL, OGG/Opus from Kokoro)
+    // straight into an Audio element via SourceBuffer chunks, so playback
+    // can start before synthesis completes — a meaningful win for OpenAI
+    // and Kokoro turns where the existing buffered path adds the full
+    // synth duration to user-perceived latency.
+    //
+    // Three guards keep this safe:
+    //   • Pre-flight codec probe — Safari MSE does not support MP3 or
+    //     Opus, so we never attempt streaming there. iOS PWAs continue
+    //     using the buffered blob path with no change.
+    //   • Per-session fallback — any MSE error (codec mismatch, source
+    //     buffer abort, decoder failure) sets `streamingDisabledRef.current
+    //     = true` and the next utterance silently uses fetchTTSAudio.
+    //   • Dual-pipe cache — chunks are accumulated into a `Uint8Array[]`
+    //     in parallel with appending to the SourceBuffer; on stream end
+    //     the array becomes a Blob, the URL goes into globalAudioCache.
+    //     Future plays of the same `${voice}:${text}` replay from cache
+    //     for $0 the same way the buffered path always has.
+    // ─────────────────────────────────────────────────────────────────────
+
+    /** Map a TTS Content-Type header to the MIME string MSE expects. */
+    const mapContentTypeToMSEMime = (contentType: string): string | null => {
+        const ct = contentType.toLowerCase();
+        if (ct.includes('audio/mpeg')) return 'audio/mpeg';
+        if (ct.includes('audio/ogg')) return 'audio/ogg; codecs="opus"';
+        if (ct.includes('audio/webm')) return 'audio/webm; codecs="opus"';
+        // WAV cannot be streamed via MSE — needs the full RIFF header up
+        // front before the decoder produces a sample.
+        return null;
+    };
+
+    /** True if we should even attempt MSE streaming in this browser. */
+    const isMSEAvailable = (): boolean => {
+        return typeof window !== 'undefined' && typeof MediaSource !== 'undefined';
+    };
+
+    /**
+     * Fetch + stream TTS audio via MediaSource Extensions. Returns a
+     * MediaSource object URL ready to be assigned to `audio.src`; data
+     * streams in asynchronously so the Audio element starts playing as
+     * soon as enough buffer is decoded.
+     *
+     * Returns `null` if streaming is disabled (Safari, prior failure, MSE
+     * unavailable, codec mismatch from upstream Content-Type) — caller
+     * MUST then fall back to `fetchTTSAudio`.
+     */
+    const streamTTSAudioViaMSE = useCallback(
+        async (text: string, voiceName: string): Promise<string | null> => {
+            if (streamingDisabledRef.current || !isMSEAvailable()) return null;
+
+            const voiceToSend = voiceProvider === 'openai'
+                ? (voiceId || kokoroVoiceId)
+                : voiceProvider === 'elevenlabs'
+                    ? elevenLabsVoiceId
+                    : kokoroVoiceId;
+
+            // Latency-trace stamp #3 (TTS request dispatched). Mirrors the
+            // buffered path so the chip's `→TTS req` segment is consistent
+            // across both code paths.
+            onTtsRequested?.();
+
+            let response: Response;
+            try {
+                response = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text,
+                        ...(ttsProviderOverride
+                            ? { provider: ttsProviderOverride }
+                            : (voiceProvider ? { provider: voiceProvider } : {})),
+                        voice: voiceToSend,
+                        apiMessage: text,
+                        treatmentVersion,
+                    }),
+                });
+            } catch (err) {
+                // Network error — let the caller fall back. Don't disable
+                // streaming for this since a buffered fetch would have
+                // failed too.
+                throw err;
+            }
+
+            if (!response.ok || !response.body) {
+                // Non-2xx or no body to stream — let caller's existing
+                // error handling kick in (which uses fetchTTSAudio's
+                // structured tts_provider_failure parsing).
+                return null;
+            }
+
+            const routeMsHeader = response.headers.get('X-Tts-Route-Ms');
+            if (routeMsHeader !== null) {
+                const routeMs = Number(routeMsHeader);
+                if (Number.isFinite(routeMs)) onTtsRouteMs?.(routeMs);
+            }
+
+            const provider = resolveTtsUsageProvider(voiceProvider, ttsProviderOverride);
+            const cached = response.headers.get('X-TTS-Cache')?.toUpperCase() === 'HIT';
+            onTtsUsage?.({
+                provider,
+                characters: text.length,
+                estimatedUsd: estimateTtsUsageUsd(provider, text.length, cached),
+                cached,
+                source: 'playback',
+            });
+
+            const contentType = response.headers.get('Content-Type') ?? '';
+            const mseMime = mapContentTypeToMSEMime(contentType);
+            if (!mseMime || !MediaSource.isTypeSupported(mseMime)) {
+                // Codec the route returned isn't MSE-streamable in this
+                // browser (e.g. Kokoro WAV on iOS, MP3 on Safari).
+                // Drain the response into a blob and write to cache so
+                // the caller can still play it via the buffered path —
+                // we don't want to waste the network round-trip we just
+                // did. We hand the blob URL back via the cache; caller
+                // checks the cache before re-fetching.
+                const blob = normalizeAudioBlobType(await response.blob());
+                onTtsFirstChunk?.();
+                const blobUrl = URL.createObjectURL(blob);
+                globalAudioCache.set(`${voiceName}:${text}`, blobUrl);
+                return null;
+            }
+
+            const ms = new MediaSource();
+            const msUrl = URL.createObjectURL(ms);
+            const accumChunks: Uint8Array[] = [];
+            let firstChunkSeen = false;
+
+            const cleanupOnFailure = (err: unknown) => {
+                console.warn(
+                    '[NaturalVoice] MSE streaming error — disabling streaming for this session:',
+                    err,
+                );
+                streamingDisabledRef.current = true;
+                try { URL.revokeObjectURL(msUrl); } catch { /* ignore */ }
+            };
+
+            // Once `sourceopen` fires we can attach a SourceBuffer and start
+            // pumping chunks. The function returns the MS URL synchronously
+            // (via the outer Promise), so the caller can `audio.src = url`
+            // and play() while data continues to arrive.
+            ms.addEventListener('sourceopen', () => {
+                let sb: SourceBuffer;
+                try {
+                    sb = ms.addSourceBuffer(mseMime);
+                } catch (err) {
+                    cleanupOnFailure(err);
+                    return;
+                }
+
+                const reader = response.body!.getReader();
+                let endOfStreamCalled = false;
+
+                const waitForUpdateEnd = (target: SourceBuffer): Promise<void> =>
+                    new Promise((resolve) => {
+                        if (!target.updating) { resolve(); return; }
+                        const onEnd = () => {
+                            target.removeEventListener('updateend', onEnd);
+                            resolve();
+                        };
+                        target.addEventListener('updateend', onEnd);
+                    });
+
+                const pump = async () => {
+                    try {
+                        // eslint-disable-next-line no-constant-condition
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) break;
+                            if (!value) continue;
+
+                            if (!firstChunkSeen) {
+                                firstChunkSeen = true;
+                                onTtsFirstChunk?.();
+                            }
+                            accumChunks.push(value);
+
+                            await waitForUpdateEnd(sb);
+                            // ms.readyState may have flipped to 'ended' if the
+                            // user navigated away mid-stream — guard the append.
+                            if (ms.readyState !== 'open') break;
+                            try {
+                                sb.appendBuffer(value);
+                            } catch (appendErr) {
+                                cleanupOnFailure(appendErr);
+                                return;
+                            }
+                        }
+
+                        await waitForUpdateEnd(sb);
+                        if (ms.readyState === 'open' && !endOfStreamCalled) {
+                            try {
+                                ms.endOfStream();
+                                endOfStreamCalled = true;
+                            } catch (eosErr) {
+                                cleanupOnFailure(eosErr);
+                                return;
+                            }
+                        }
+
+                        // Dual-pipe cache write. The MS URL itself is
+                        // single-use (a MediaSource can't replay from
+                        // start once endOfStream is called and the audio
+                        // element disposes it), so we cache a fresh blob
+                        // URL built from the accumulated chunks. Future
+                        // plays of the same text replay from this for $0.
+                        const totalBytes = accumChunks.reduce((acc, c) => acc + c.length, 0);
+                        const merged = new Uint8Array(totalBytes);
+                        let offset = 0;
+                        for (const c of accumChunks) {
+                            merged.set(c, offset);
+                            offset += c.length;
+                        }
+                        const cachedBlob = normalizeAudioBlobType(
+                            new Blob([merged], { type: contentType }),
+                        );
+                        const cacheUrl = URL.createObjectURL(cachedBlob);
+                        globalAudioCache.set(`${voiceName}:${text}`, cacheUrl);
+                    } catch (err) {
+                        cleanupOnFailure(err);
+                    }
+                };
+
+                pump();
+            });
+
+            return msUrl;
+        },
+        [
+            voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId,
+            normalizeAudioBlobType, treatmentVersion, onTtsUsage, onTtsRequested,
+            onTtsFirstChunk, onTtsRouteMs,
+        ],
+    );
+
     /**
      * Fetch TTS audio for text and return the audio URL
      */
@@ -1386,10 +1630,16 @@ export const useNaturalVoice = ({
                     return;
                 }
 
-                // Now fetch and play the suffix (only part that costs $)
+                // Now fetch and play the suffix (only part that costs $).
+                // Try MSE streaming first; fall back to the buffered blob
+                // path when streaming isn't available (Safari, prior MSE
+                // failure, codec mismatch from upstream).
                 console.log('🗣️ Natural Voice: Streaming suffix only:', prefixMatch.suffix.substring(0, 50) + '...');
-                const suffixUrl = await fetchTTSAudio(prefixMatch.suffix, currentVoiceName);
-                
+                const suffixStreamUrl = await streamTTSAudioViaMSE(prefixMatch.suffix, currentVoiceName);
+                const suffixUrl = suffixStreamUrl
+                    ?? globalAudioCache.get(`${currentVoiceName}:${prefixMatch.suffix}`)
+                    ?? await fetchTTSAudio(prefixMatch.suffix, currentVoiceName);
+
                 // Check again after async TTS fetch
                 if (!speakerEnabledRef.current || !isMountedRef.current) {
                     console.log('🗣️ Natural Voice: Speaker disabled during TTS fetch, aborting');
@@ -1408,10 +1658,22 @@ export const useNaturalVoice = ({
                 return;
             }
 
-            // 3. No cache match - stream the whole thing
+            // 3. No cache match - try MSE streaming, then fall back to
+            //    buffered fetch. Streaming starts playback before the full
+            //    blob is in hand, so total user-perceived turn latency
+            //    drops by roughly the synth duration on supported browsers.
             console.log(`🗣️ Natural Voice: No cache for ${currentVoiceName} - streaming full text`);
             console.log('   Text:', text.substring(0, 80) + '...');
-            const audioUrl = await fetchTTSAudio(text, currentVoiceName);
+            const streamUrl = await streamTTSAudioViaMSE(text, currentVoiceName);
+            // streamTTSAudioViaMSE returns null for: streaming-disabled,
+            // unsupported codec, non-2xx response. In the codec-mismatch
+            // case it has already populated globalAudioCache with a blob
+            // URL from the drained response, so we use that to avoid a
+            // second network round-trip; otherwise we fall through to the
+            // legacy buffered path.
+            const audioUrl = streamUrl
+                ?? globalAudioCache.get(`${currentVoiceName}:${text}`)
+                ?? await fetchTTSAudio(text, currentVoiceName);
             
             // SPEAKER OFF FIX: Check again after async TTS fetch
             if (!speakerEnabledRef.current || !isMountedRef.current) {
@@ -1470,7 +1732,7 @@ export const useNaturalVoice = ({
                 startListening();
             }
         }
-    }, [isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, startListening, currentVoiceName, findCachedPrefixForVoice, audioCapture, vadEnabled, speakWithSystemVoiceFallback, treatmentVersion]);
+    }, [isMicEnabled, stopListening, playAudioSegment, fetchTTSAudio, streamTTSAudioViaMSE, startListening, currentVoiceName, findCachedPrefixForVoice, audioCapture, vadEnabled, speakWithSystemVoiceFallback, treatmentVersion]);
 
     // Handle mic/speaker state changes - start/stop listening based on mic state (but not in guided mode)
     useEffect(() => {
