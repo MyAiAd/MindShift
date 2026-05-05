@@ -190,7 +190,19 @@ export const useNaturalVoice = ({
     // subsequent utterances in the same session fall back to the buffered
     // blob path. Reset on hook remount; never reset within a session.
     const streamingDisabledRef = useRef<boolean>(false);
-    
+
+    // Scribe echo suppression: when AI is speaking we proactively pause the
+    // Scribe WebSocket's outgoing audio frames so the mic-captured echo of
+    // our own playback never reaches the server's transcriber. Mirrors the
+    // existing `audioCapture.setAISpeaking(true/false)` pattern on the
+    // Whisper path. The post-AI tail delay covers speaker reverb / decoder
+    // latency that would otherwise leak a fragment into the next commit.
+    // The Scribe hook's pauseCapture/resumeCapture both clear the PCM
+    // accumulator on transition, so audio captured during the pause window
+    // is discarded — never streamed to ElevenLabs.
+    const SCRIBE_ECHO_TAIL_MS = 800;
+    const scribeEchoTailTimerRef = useRef<NodeJS.Timeout | null>(null);
+
     // Restart scheduler state - for backoff/loop prevention
     const restartAttemptCountRef = useRef(0); // Track consecutive restart attempts without success
     const lastRestartTimeRef = useRef(0); // Track when last restart was scheduled
@@ -245,7 +257,58 @@ export const useNaturalVoice = ({
         transcriptionProviderOverride: sttProviderOverride === 'elevenlabs' ? undefined : sttProviderOverride,
         onProviderError: onSpeechProviderError,
     });
-    
+
+    // Scribe echo suppression — pause/resume the WebSocket's outgoing audio
+    // frames in lockstep with `isSpeaking`. This is the in-flight equivalent
+    // of the transcript-level echo gate in TreatmentSession: instead of
+    // letting echo audio reach Scribe's transcriber and then dropping the
+    // resulting committed transcript after the fact (which fails when the
+    // commit lands more than ECHO_TAIL_MS after AI ends, as we saw with
+    // `... said a few words.`), we never send the echo at all. The post-AI
+    // tail timer covers speaker reverb / mic decoder lag.
+    //
+    // Only active when Scribe is the realtime STT provider — Whisper has
+    // its own equivalent via `audioCapture.setAISpeaking(true/false)`.
+    useEffect(() => {
+        if (!useScribeRealtime) return;
+
+        if (isSpeaking) {
+            // Cancel any pending resume from a previous stop — we're still
+            // speaking, so keep the mic suppressed.
+            if (scribeEchoTailTimerRef.current) {
+                clearTimeout(scribeEchoTailTimerRef.current);
+                scribeEchoTailTimerRef.current = null;
+            }
+            scribe.pauseCapture();
+            console.log('🎙️ Scribe: Paused for AI speech (echo suppression)');
+            return;
+        }
+
+        // AI just stopped (or never started). Schedule a resume after the
+        // tail window so any speaker-reverb / decoder-tail audio is also
+        // discarded. resumeCapture() clears the PCM buffer on resume so any
+        // audio captured during the wait is dropped.
+        if (scribeEchoTailTimerRef.current) {
+            clearTimeout(scribeEchoTailTimerRef.current);
+        }
+        scribeEchoTailTimerRef.current = setTimeout(() => {
+            scribe.resumeCapture();
+            scribeEchoTailTimerRef.current = null;
+            console.log(`🎙️ Scribe: Resumed after ${SCRIBE_ECHO_TAIL_MS}ms echo tail`);
+        }, SCRIBE_ECHO_TAIL_MS);
+
+        return () => {
+            if (scribeEchoTailTimerRef.current) {
+                clearTimeout(scribeEchoTailTimerRef.current);
+                scribeEchoTailTimerRef.current = null;
+            }
+        };
+    // scribe object is stable enough — useElevenLabsScribeRealtime's
+    // pauseCapture/resumeCapture are useCallback'd with [] deps. Including
+    // `scribe` here would re-fire the effect on every render of the parent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isSpeaking, useScribeRealtime]);
+
     // Test mode handler - called when user speaks during test mode
     const handleTestModeInterruption = useCallback(() => {
         console.log('🧪 VAD: Test mode interruption detected (TEST MODE ACTIVE)');
