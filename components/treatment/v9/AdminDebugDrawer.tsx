@@ -271,6 +271,93 @@ export default function AdminDebugDrawer({
                       )}
                     </div>
                   )}
+
+                {/* Per-turn voice pipeline breakdown
+                    (Scribe → backend → TTS req → first chunk → playback).
+                    Each segment is rendered iff both endpoints were stamped,
+                    so cached audio / button-only turns / partial captures
+                    just show the segments that actually happened. */}
+                {!message.isUser && message.voiceTimings && (() => {
+                  const t = message.voiceTimings;
+                  const segments: { label: string; ms: number }[] = [];
+                  if (
+                    t.transcriptReceivedAt !== undefined &&
+                    t.apiResponseReceivedAt !== undefined
+                  ) {
+                    segments.push({
+                      label: 'Scribe→API',
+                      ms: t.apiResponseReceivedAt - t.transcriptReceivedAt,
+                    });
+                  }
+                  if (
+                    t.apiResponseReceivedAt !== undefined &&
+                    t.ttsRequestedAt !== undefined
+                  ) {
+                    segments.push({
+                      label: '→TTS req',
+                      ms: t.ttsRequestedAt - t.apiResponseReceivedAt,
+                    });
+                  }
+                  if (
+                    t.ttsRequestedAt !== undefined &&
+                    t.ttsFirstChunkAt !== undefined
+                  ) {
+                    segments.push({
+                      label: '→TTS chunk',
+                      ms: t.ttsFirstChunkAt - t.ttsRequestedAt,
+                    });
+                  }
+                  if (
+                    t.audioPlaybackStartedAt !== undefined &&
+                    (t.ttsFirstChunkAt !== undefined ||
+                      t.apiResponseReceivedAt !== undefined)
+                  ) {
+                    const prev =
+                      t.ttsFirstChunkAt ?? t.apiResponseReceivedAt!;
+                    segments.push({
+                      label: '→Play',
+                      ms: t.audioPlaybackStartedAt - prev,
+                    });
+                  }
+                  if (segments.length === 0) return null;
+                  const totalAnchor =
+                    t.transcriptReceivedAt ??
+                    t.apiResponseReceivedAt ??
+                    t.ttsRequestedAt;
+                  const totalEnd =
+                    t.audioPlaybackStartedAt ??
+                    t.ttsFirstChunkAt ??
+                    t.apiResponseReceivedAt;
+                  const total =
+                    totalAnchor !== undefined && totalEnd !== undefined
+                      ? totalEnd - totalAnchor
+                      : null;
+                  return (
+                    <div
+                      className="mt-1 text-[10px] text-muted-foreground font-mono leading-tight"
+                      aria-hidden="true"
+                    >
+                      🎙️
+                      {segments.map((seg, i) => (
+                        <span key={i} className="ml-1">
+                          {i > 0 && '| '}
+                          {seg.label}:{' '}
+                          <span className="font-semibold">
+                            {Math.max(0, Math.round(seg.ms))}ms
+                          </span>
+                        </span>
+                      ))}
+                      {total !== null && (
+                        <span className="ml-1">
+                          | total:{' '}
+                          <span className="font-semibold">
+                            {Math.max(0, Math.round(total))}ms
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           ))}

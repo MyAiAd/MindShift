@@ -28,7 +28,8 @@ import {
   TreatmentSessionProps,
   SessionStats,
   PerformanceMetrics,
-  StepHistoryEntry
+  StepHistoryEntry,
+  VoiceTurnTimings,
 } from './shared/types';
 
 // Admin debug drawer (slides out from right for admin testing)
@@ -765,6 +766,39 @@ export default function TreatmentSession({
   const isPTTActiveRef = useRef(false);
   const lastSpeechMessageRef = useRef<string | null>(null);
 
+  // Per-turn voice latency capture. Anchored at the first Scribe commit and
+  // populated as the pipeline progresses (backend response → /api/tts request
+  // → first audio bytes → audio.onplay). The snapshot is attached to the
+  // outgoing assistant message in handleRenderText, then the ref is reset.
+  // Stays null between turns and during button-only steps (no voice path).
+  const currentTurnTimingsRef = useRef<VoiceTurnTimings | null>(null);
+  const beginVoiceTurnIfNew = useCallback(() => {
+    if (currentTurnTimingsRef.current === null) {
+      currentTurnTimingsRef.current = { transcriptReceivedAt: Date.now() };
+    }
+  }, []);
+  const stampVoiceTurnTiming = useCallback(
+    (key: keyof VoiceTurnTimings) => {
+      if (!currentTurnTimingsRef.current) {
+        // Edge case: TTS callbacks can fire from non-voice paths (welcome
+        // message, button click → speakServerMessage). In that case we still
+        // want a partial chip, so anchor lazily.
+        currentTurnTimingsRef.current = {};
+      }
+      currentTurnTimingsRef.current[key] = Date.now();
+    },
+    [],
+  );
+  const consumeVoiceTurnTimings = useCallback((): VoiceTurnTimings | undefined => {
+    const snapshot = currentTurnTimingsRef.current;
+    currentTurnTimingsRef.current = null;
+    if (!snapshot) return undefined;
+    // Only attach if at least one phase was stamped — avoids polluting button
+    // selections (work-type/method) with empty timing objects.
+    const hasAnyStamp = Object.values(snapshot).some((v) => v !== undefined);
+    return hasAnyStamp ? snapshot : undefined;
+  }, []);
+
   // ─────────────────────────────────────────────────────────────────────────
   // AI-echo gate
   //
@@ -1078,13 +1112,16 @@ export default function TreatmentSession({
       usedAI: pending.usedAI,
       metadata: pending.metadata,
       version: 'v9',
+      // Even on TTS failure we still surface whatever stamps we collected
+      // (transcript + backend, at minimum) so the chip stays useful.
+      voiceTimings: consumeVoiceTurnTimings(),
     };
 
     setMessages(prev => [...prev, fallbackMessage]);
     pendingMessageRef.current = null;
     setPendingMessage(null);
     setIsFirstSpeechLoading(false);
-  }, []);
+  }, [consumeVoiceTurnTimings]);
 
   // Handler for when audio starts and text should be rendered (with 150ms delay)
   const handleRenderText = useCallback((timing: { audioStartTime: number; textRenderTime: number }) => {
@@ -1107,6 +1144,11 @@ export default function TreatmentSession({
         version: 'v9',
         audioStartTime: timing.audioStartTime,
         textRenderTime: timing.textRenderTime,
+        // Drain the per-turn pipeline timings (Scribe → backend → TTS req →
+        // chunk → playback). The audio-first render path is the most common
+        // place all five stamps will be present, so this is where the chip
+        // for the AdminDebugDrawer gets its data.
+        voiceTimings: consumeVoiceTurnTimings(),
       };
       
       setMessages(prev => [...prev, timedMessage]);
@@ -1119,7 +1161,7 @@ export default function TreatmentSession({
       subtitleStartedRef.current = true;
       startSubtitleSequence(subtitleSpeechTextRef.current);
     }
-  }, [hasFirstSpeechStarted, pendingMessage, startSubtitleSequence]);
+  }, [hasFirstSpeechStarted, pendingMessage, startSubtitleSequence, consumeVoiceTurnTimings]);
 
   // Handle test audio interruption via VAD (defined before naturalVoice hook)
   const handleTestInterruption = useCallback(() => {
@@ -1205,6 +1247,11 @@ export default function TreatmentSession({
     testMode: isTestPlaying, // NEW: Test mode prevents VAD from triggering speech recognition
     onTranscript: (transcript) => {
       console.log('🗣️ Natural Voice Transcript:', transcript);
+
+      // Latency-trace stamp #1: first Scribe commit of this turn anchors t0.
+      // Subsequent commits in the same accumulator window do NOT overwrite,
+      // so the chip measures from when the user actually finished speaking.
+      beginVoiceTurnIfNew();
 
       // AI-echo gate runs first — if Scribe transcribed our own AI playback,
       // drop it before any menu/command/accumulator logic touches it.
@@ -1312,6 +1359,11 @@ export default function TreatmentSession({
     treatmentVersion: 'v9',
     sttProviderOverride,
     onTtsUsage: handleTtsUsage,
+    // Latency-trace stamps #3, #4, #5 for the per-turn timing chip. See
+    // `currentTurnTimingsRef` and `consumeVoiceTurnTimings` above.
+    onTtsRequested: () => stampVoiceTurnTiming('ttsRequestedAt'),
+    onTtsFirstChunk: () => stampVoiceTurnTiming('ttsFirstChunkAt'),
+    onAudioPlaybackStarted: () => stampVoiceTurnTiming('audioPlaybackStartedAt'),
     onSpeechProviderError: ({ kind, provider, message }) => {
       if (kind === 'tts') {
         revealPendingMessageWithoutAudio();
@@ -2053,6 +2105,8 @@ export default function TreatmentSession({
 
       const data = await response.json();
       console.log('V9 Continue session response:', data);
+      // Latency-trace stamp #2: backend has decided the next step.
+      stampVoiceTurnTiming('apiResponseReceivedAt');
 
       if (data.success) {
         // Always provide audio/visual feedback in PTT guided mode
@@ -2076,6 +2130,8 @@ export default function TreatmentSession({
             speakServerMessage(data.message);
           } else {
             // Speaker disabled OR button-only step: add message immediately.
+            // consumeVoiceTurnTimings() returns undefined for button-only
+            // turns (no stamps were made), so no chip clutter there.
             const systemMessage: TreatmentMessage = {
               id: `system-${Date.now()}`,
               content: data.message,
@@ -2083,7 +2139,8 @@ export default function TreatmentSession({
               timestamp: new Date(),
               responseTime: data.responseTime,
               usedAI: data.usedAI,
-              version: 'v9'
+              version: 'v9',
+              voiceTimings: consumeVoiceTurnTimings(),
             };
 
             setMessages(prev => [...prev, systemMessage]);
@@ -2396,6 +2453,11 @@ export default function TreatmentSession({
       })
       .then(data => {
         console.log('Work type selection response data:', data);
+        // Latency-trace stamp #2 for the work-type click path. (Almost
+        // always paired with no transcript stamp because button-only
+        // steps don't capture mic, so the chip will be empty here unless
+        // someone hand-stamped earlier — that's fine.)
+        stampVoiceTurnTiming('apiResponseReceivedAt');
         
         // Check if response indicates an error
         if (data.error || !data.success) {
@@ -2441,7 +2503,8 @@ export default function TreatmentSession({
                 timestamp: new Date(),
                 responseTime: data.responseTime,
                 usedAI: data.usedAI,
-                version: 'v9'
+                version: 'v9',
+                voiceTimings: consumeVoiceTurnTimings(),
               };
               setMessages(prev => [...prev, systemMessage]);
             }
@@ -2625,6 +2688,10 @@ export default function TreatmentSession({
         return response.json();
       })
       .then(data => {
+        // Latency-trace stamp #2 for the method click path. This is the
+        // turn that finally unmutes voice — the chip on this message will
+        // start being meaningful from here on.
+        stampVoiceTurnTiming('apiResponseReceivedAt');
         if (data.success) {
           // NEW: If speaker is enabled AND the new step isn't button-only,
           // set up pending message for audio-then-text timing. The first
@@ -2657,7 +2724,8 @@ export default function TreatmentSession({
               timestamp: new Date(),
               responseTime: data.responseTime,
               usedAI: data.usedAI,
-              version: 'v9'
+              version: 'v9',
+              voiceTimings: consumeVoiceTurnTimings(),
             };
             setMessages(prev => [...prev, systemMessage]);
           }

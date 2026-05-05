@@ -13,6 +13,25 @@
 
 export type V9TreatmentVersion = 'v9';
 
+// Per-turn voice latency breakdown. Populated by TreatmentSession from a
+// shared ref that gets stamped at five known points in the pipeline:
+// Scribe commit → backend response → /api/tts request → /api/tts blob →
+// audio.onplay. All values are `Date.now()` epochs in ms; consumers
+// (e.g. AdminDebugDrawer) compute deltas at render time so the underlying
+// numbers stay debuggable.
+export interface VoiceTurnTimings {
+  /** Date.now() when the first Scribe `committed_transcript` of the turn arrived. */
+  transcriptReceivedAt?: number;
+  /** Date.now() when the V9 backend's API response was parsed into JSON. */
+  apiResponseReceivedAt?: number;
+  /** Date.now() when the /api/tts request was dispatched (Kokoro/OpenAI/EL). */
+  ttsRequestedAt?: number;
+  /** Date.now() when /api/tts resolved the audio blob (first audio bytes ready). */
+  ttsFirstChunkAt?: number;
+  /** Date.now() when `audio.onplay` fired and playback actually began. */
+  audioPlaybackStartedAt?: number;
+}
+
 // Compatibility alias: the ported V7 component imports `TreatmentMessage`
 // from `./shared/types`. Structure matches V7's so the port is mechanical.
 export interface TreatmentMessage {
@@ -27,6 +46,7 @@ export interface TreatmentMessage {
   textRenderTime?: number;
   audioStartTime?: number;
   audioCompleteTime?: number;
+  voiceTimings?: VoiceTurnTimings;
 }
 
 export interface TreatmentSessionProps {

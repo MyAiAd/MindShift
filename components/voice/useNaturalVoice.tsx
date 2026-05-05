@@ -52,6 +52,17 @@ interface UseNaturalVoiceProps {
         message: string;
     }) => void;
     onTtsUsage?: (usage: NaturalVoiceTtsUsage) => void;
+    /**
+     * Optional latency-tracing callbacks. Each fires once per turn at a
+     * known point in the TTS pipeline so the host can build a per-message
+     * timing breakdown (Scribe → backend → TTS req → first audio chunk →
+     * playback). All three may NOT fire when audio is served from the
+     * cache (no network request happens) — consumers should treat them
+     * as optional snapshots, not a strict sequence.
+     */
+    onTtsRequested?: () => void;
+    onTtsFirstChunk?: () => void;
+    onAudioPlaybackStarted?: () => void;
 }
 
 interface SpeechRequestOptions {
@@ -115,6 +126,9 @@ export const useNaturalVoice = ({
     ttsProviderOverride,
     onSpeechProviderError,
     onTtsUsage,
+    onTtsRequested,
+    onTtsFirstChunk,
+    onAudioPlaybackStarted,
 }: UseNaturalVoiceProps) => {
     // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
@@ -1081,6 +1095,8 @@ export const useNaturalVoice = ({
             audio.onplay = () => {
                 playbackStarted = true;
                 isAudioPlayingRef.current = true;
+                // Latency-trace stamp #5: audio.onplay fired (real playback start).
+                onAudioPlaybackStarted?.();
                 const audioStartTime = performance.now() - speakStartTimeRef.current;
                 console.log(`🔊 Natural Voice: Audio segment started at ${audioStartTime.toFixed(2)}ms from speak() call`);
                 
@@ -1184,7 +1200,7 @@ export const useNaturalVoice = ({
                 }
             });
         });
-    }, [isMicEnabled, startListening, playbackRate, audioCapture, vadEnabled]);
+    }, [isMicEnabled, startListening, playbackRate, audioCapture, vadEnabled, onAudioPlaybackStarted]);
 
     /**
      * Fetch TTS audio for text and return the audio URL
@@ -1195,6 +1211,8 @@ export const useNaturalVoice = ({
             : voiceProvider === 'elevenlabs'
                 ? elevenLabsVoiceId
                 : kokoroVoiceId;
+        // Latency-trace stamp #3: TTS request dispatched.
+        onTtsRequested?.();
         const response = await fetch('/api/tts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1238,12 +1256,15 @@ export const useNaturalVoice = ({
         });
 
         const audioBlob = normalizeAudioBlobType(await response.blob());
+        // Latency-trace stamp #4: first audio chunk (the full blob, in
+        // practice — /api/tts returns once the buffer is ready) is in hand.
+        onTtsFirstChunk?.();
         const audioUrl = URL.createObjectURL(audioBlob);
         // Use voice-prefixed cache key
         const cacheKey = `${voiceName}:${text}`;
         globalAudioCache.set(cacheKey, audioUrl);
         return audioUrl;
-    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId, normalizeAudioBlobType, treatmentVersion, onSpeechProviderError, onTtsUsage]);
+    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId, normalizeAudioBlobType, treatmentVersion, onSpeechProviderError, onTtsUsage, onTtsRequested, onTtsFirstChunk]);
 
     // US-006: single source of truth — return a stable unique string for every supported voice,
     // never "unknown". The `voiceId` prop (US-007) takes priority on v7 OpenAI sessions.
