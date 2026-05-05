@@ -956,44 +956,6 @@ export default function TreatmentSession({
   /** Whisper domain bias: expectedResponseType, step id, and recent user wording for hotwords. */
   const transcriptionContextRef = useRef<TranscriptionDomainContext | null>(null);
 
-  // User-initiated skip of the current AI audio.
-  //
-  // Two flavors depending on the active step:
-  //   • auto-advance step ('auto')         → stop audio AND immediately fire
-  //                                          sendMessage('', true) to advance.
-  //                                          Skips the 800ms post-audio
-  //                                          settle delay used by
-  //                                          handleAudioEnded.
-  //   • everything else                    → stop audio only; the user is
-  //                                          expected to respond next, so we
-  //                                          just hand the floor back to
-  //                                          them. The mic / Scribe gate
-  //                                          re-opens via the existing
-  //                                          stopSpeaking → setIsSpeaking(false)
-  //                                          → echo-guard effect path.
-  //
-  // We deliberately read currentStepTypeRef (not React state) so the click
-  // handler sees the latest expectedResponseType even if the ref was
-  // updated mid-render between the button's last paint and this click.
-  const handleSkipAudio = useCallback(() => {
-    if (!naturalVoice.isSpeaking && !naturalVoice.isPaused) return;
-
-    const stepType = currentStepTypeRef.current;
-
-    if (stepType === 'auto') {
-      console.log('⏭️ Skip: auto step — stopping audio and advancing');
-      // sendMessage('', true) already stops audio when isSpeaking is true,
-      // so we don't double-call stopSpeaking here. resetSubtitles likewise
-      // happens inside sendMessage's audio-stop branch.
-      sendMessageRef.current('', true);
-      return;
-    }
-
-    console.log('⏭️ Skip: non-auto step — stopping audio, returning floor to user');
-    naturalVoice.stopSpeaking();
-    resetSubtitles();
-  }, [naturalVoice, resetSubtitles]);
-
   // Handle audio ended event for auto-advance steps
   const handleAudioEnded = useCallback(() => {
     // AI-echo gate: stamp the moment AI playback finished so the tail window
@@ -1529,6 +1491,41 @@ export default function TreatmentSession({
       lastAiAudioEndedAtRef.current = Date.now();
     }
   }, [naturalVoice.isSpeaking]);
+
+  // User-initiated skip of the current AI audio.
+  //
+  // Two flavors depending on the active step:
+  //   • auto-advance step ('auto') → stop audio AND immediately fire
+  //     sendMessage('', true) to advance. Skips the 800ms post-audio settle
+  //     delay used by handleAudioEnded.
+  //   • everything else            → stop audio only; the user is expected
+  //     to respond next, so we just hand the floor back to them. The mic /
+  //     Scribe gate re-opens via the existing stopSpeaking →
+  //     setIsSpeaking(false) → echo-guard effect path.
+  //
+  // We deliberately read currentStepTypeRef (not React state) so the click
+  // handler sees the latest expectedResponseType even if the ref was updated
+  // mid-render between the button's last paint and this click. Defined here
+  // (after `naturalVoice` is declared) so the binding is in scope; declaring
+  // it earlier triggers a TS2448 use-before-declaration error.
+  const handleSkipAudio = useCallback(() => {
+    if (!naturalVoice.isSpeaking && !naturalVoice.isPaused) return;
+
+    const stepType = currentStepTypeRef.current;
+
+    if (stepType === 'auto') {
+      console.log('⏭️ Skip: auto step — stopping audio and advancing');
+      // sendMessage('', true) already stops audio when isSpeaking is true,
+      // so we don't double-call stopSpeaking here. resetSubtitles likewise
+      // happens inside sendMessage's audio-stop branch.
+      sendMessageRef.current('', true);
+      return;
+    }
+
+    console.log('⏭️ Skip: non-auto step — stopping audio, returning floor to user');
+    naturalVoice.stopSpeaking();
+    resetSubtitles();
+  }, [naturalVoice, resetSubtitles]);
 
   function speakServerMessage(message: string) {
     if (!message) return;
@@ -2881,17 +2878,31 @@ export default function TreatmentSession({
   // `isButtonOnlyStep(currentStep)` flips false, the splash dismisses, and
   // the chat takes over with voice.
   // ─────────────────────────────────────────────────────────────────────────
+  // Bridge the gap between the Ready overlay closing and the backend
+  // returning the first step. Without this, `setShowReadyOverlay(false)`
+  // fires immediately while `isSessionActive`/`currentStep` only flip after
+  // the `start`/`resume` round-trip, leaving the underlying chat UI briefly
+  // visible. We extend the splash to cover that loading window and render
+  // a neutral "preparing" state instead of the work-type buttons (which
+  // wouldn't be safe to click before the session is active anyway).
+  const isSessionStartLoading =
+    hasUserStartedSession && !showReadyOverlay && !isSessionActive;
   const showSetupSplash =
     hasUserStartedSession &&
     !showReadyOverlay &&
-    isSessionActive &&
-    voiceSuppressedForButtons; // === isButtonOnlyStep(currentStep)
+    (isSessionStartLoading || voiceSuppressedForButtons); // voiceSuppressedForButtons === isButtonOnlyStep(currentStep)
   const isMethodSelectionStep =
     currentStep === 'choose_method' || currentStep === 'digging_method_selection';
-  const setupSplashStepLabel = isMethodSelectionStep ? 'Step 2 of 2' : 'Step 1 of 2';
-  const setupSplashStepTitle = isMethodSelectionStep
-    ? 'Choose a method'
-    : 'What would you like to work on?';
+  const setupSplashStepLabel = isSessionStartLoading
+    ? 'Preparing'
+    : isMethodSelectionStep
+      ? 'Step 2 of 2'
+      : 'Step 1 of 2';
+  const setupSplashStepTitle = isSessionStartLoading
+    ? 'Setting up your session…'
+    : isMethodSelectionStep
+      ? 'Choose a method'
+      : 'What would you like to work on?';
   const setupSplashPromptText = useMemo(() => {
     const lastAi = [...messages].reverse().find((m) => !m.isUser);
     if (lastAi?.content) return lastAi.content;
@@ -3179,13 +3190,15 @@ export default function TreatmentSession({
               </h2>
             </div>
 
-            <div className="rounded-xl border border-border bg-card/60 backdrop-blur-sm px-4 sm:px-6 py-4 sm:py-5 mb-6 text-left">
-              <p className="text-sm sm:text-base text-foreground whitespace-pre-line">
-                {setupSplashPromptText}
-              </p>
-            </div>
+            {!isSessionStartLoading && (
+              <div className="rounded-xl border border-border bg-card/60 backdrop-blur-sm px-4 sm:px-6 py-4 sm:py-5 mb-6 text-left">
+                <p className="text-sm sm:text-base text-foreground whitespace-pre-line">
+                  {setupSplashPromptText}
+                </p>
+              </div>
+            )}
 
-            {!isMethodSelectionStep && (
+            {!isSessionStartLoading && !isMethodSelectionStep && (
               <div className="flex flex-wrap gap-3 sm:gap-4 justify-center">
                 <button
                   type="button"
@@ -3218,7 +3231,7 @@ export default function TreatmentSession({
               </div>
             )}
 
-            {isMethodSelectionStep && (
+            {!isSessionStartLoading && isMethodSelectionStep && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-xl mx-auto">
                 <button
                   type="button"
@@ -3259,9 +3272,9 @@ export default function TreatmentSession({
               </div>
             )}
 
-            {isLoading && (
+            {(isLoading || isSessionStartLoading) && (
               <p className="mt-6 text-xs text-muted-foreground" aria-live="polite">
-                Working on it&hellip;
+                {isSessionStartLoading ? 'Preparing your session\u2026' : 'Working on it\u2026'}
               </p>
             )}
           </div>
