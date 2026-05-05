@@ -63,6 +63,13 @@ interface UseNaturalVoiceProps {
     onTtsRequested?: () => void;
     onTtsFirstChunk?: () => void;
     onAudioPlaybackStarted?: () => void;
+    /**
+     * Server-reported time (ms) /api/tts spent before dispatching to the
+     * upstream provider. Read from the `X-Tts-Route-Ms` response header so
+     * the chip can split `→TTS chunk` into "route" + "upstream synth".
+     * Fires once per /api/tts response. Not fired for cached audio (no fetch).
+     */
+    onTtsRouteMs?: (routeMs: number) => void;
 }
 
 interface SpeechRequestOptions {
@@ -129,6 +136,7 @@ export const useNaturalVoice = ({
     onTtsRequested,
     onTtsFirstChunk,
     onAudioPlaybackStarted,
+    onTtsRouteMs,
 }: UseNaturalVoiceProps) => {
     // Backward compatibility: if micEnabled/speakerEnabled not provided, use 'enabled'
     const isMicEnabled = micEnabled !== undefined ? micEnabled : enabled;
@@ -1247,6 +1255,15 @@ export const useNaturalVoice = ({
 
         const provider = resolveTtsUsageProvider(voiceProvider, ttsProviderOverride);
         const cached = response.headers.get('X-TTS-Cache')?.toUpperCase() === 'HIT';
+        // Latency-trace: server-reported route processing time (parsing,
+        // validation, voice mapping, cache lookup) before the upstream
+        // provider was actually called. Same-origin response, no CORS
+        // expose-headers needed.
+        const routeMsHeader = response.headers.get('X-Tts-Route-Ms');
+        if (routeMsHeader !== null) {
+            const routeMs = Number(routeMsHeader);
+            if (Number.isFinite(routeMs)) onTtsRouteMs?.(routeMs);
+        }
         onTtsUsage?.({
             provider,
             characters: text.length,
@@ -1264,7 +1281,7 @@ export const useNaturalVoice = ({
         const cacheKey = `${voiceName}:${text}`;
         globalAudioCache.set(cacheKey, audioUrl);
         return audioUrl;
-    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId, normalizeAudioBlobType, treatmentVersion, onSpeechProviderError, onTtsUsage, onTtsRequested, onTtsFirstChunk]);
+    }, [voiceProvider, ttsProviderOverride, elevenLabsVoiceId, kokoroVoiceId, voiceId, normalizeAudioBlobType, treatmentVersion, onSpeechProviderError, onTtsUsage, onTtsRequested, onTtsFirstChunk, onTtsRouteMs]);
 
     // US-006: single source of truth — return a stable unique string for every supported voice,
     // never "unknown". The `voiceId` prop (US-007) takes priority on v7 OpenAI sessions.

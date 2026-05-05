@@ -96,7 +96,12 @@ function createOpenAIClient(): OpenAI {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
-async function synthesizeWithKokoro(text: string, voice: string, userAgent: string): Promise<NextResponse> {
+async function synthesizeWithKokoro(
+  text: string,
+  voice: string,
+  userAgent: string,
+  routeStartedAt: number,
+): Promise<NextResponse> {
   const KOKORO_API_URL = process.env.KOKORO_INTERNAL_URL || 'http://localhost:8080/tts';
   const voiceId = getKokoroVoiceId(voice);
   const iosClient = isIOSClient(userAgent);
@@ -106,6 +111,10 @@ async function synthesizeWithKokoro(text: string, voice: string, userAgent: stri
   console.log(
     `TTS: Calling Kokoro at ${KOKORO_API_URL} with voice=${voiceId}, format=${kokoroFormat}, text="${text.substring(0, 50)}..."`
   );
+
+  // Stamp the moment we hand off to the upstream so the client can split
+  // the chip's `→TTS chunk` segment into route-vs-upstream costs.
+  const ttsRouteMs = Date.now() - routeStartedAt;
 
   let response: Response;
   try {
@@ -146,11 +155,13 @@ async function synthesizeWithKokoro(text: string, voice: string, userAgent: stri
     headers: {
       'Content-Type': kokoroContentType,
       'Cache-Control': 'public, max-age=31536000',
+      'X-Tts-Route-Ms': String(ttsRouteMs),
+      'X-Tts-Provider': 'kokoro',
     },
   });
 }
 
-async function synthesizeWithElevenLabs(text: string, voice: string): Promise<NextResponse> {
+async function synthesizeWithElevenLabs(text: string, voice: string, routeStartedAt: number): Promise<NextResponse> {
   const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
   if (!ELEVENLABS_API_KEY) {
     return NextResponse.json({ error: 'ElevenLabs API key is not configured' }, { status: 500 });
@@ -175,15 +186,21 @@ async function synthesizeWithElevenLabs(text: string, voice: string): Promise<Ne
 
   if (fs.existsSync(cacheFile)) {
     const fileBuffer = fs.readFileSync(cacheFile);
+    const ttsRouteMsCached = Date.now() - routeStartedAt;
     return new NextResponse(fileBuffer, {
       headers: {
         'Content-Type': 'audio/mpeg',
         'Cache-Control': 'public, max-age=31536000',
         'X-TTS-Cache': 'HIT',
+        'X-Tts-Route-Ms': String(ttsRouteMsCached),
+        'X-Tts-Provider': 'elevenlabs',
       },
     });
   }
 
+  // Stamp the moment we hand off to the upstream so the client can split
+  // the chip's `→TTS chunk` segment into route-vs-upstream costs.
+  const ttsRouteMs = Date.now() - routeStartedAt;
   const response = await fetch(`${ELEVENLABS_API_BASE}/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream`, {
     method: 'POST',
     headers: {
@@ -240,6 +257,8 @@ async function synthesizeWithElevenLabs(text: string, voice: string): Promise<Ne
       'Content-Type': 'audio/mpeg',
       'Cache-Control': 'public, max-age=31536000',
       'X-TTS-Cache': 'MISS',
+      'X-Tts-Route-Ms': String(ttsRouteMs),
+      'X-Tts-Provider': 'elevenlabs',
     },
   });
 }
@@ -289,11 +308,17 @@ async function synthesizeWithOpenAI(
   voice: string,
   model: string,
   telemetry: TtsTelemetry,
+  routeStartedAt: number,
 ): Promise<NextResponse> {
   const startTime = Date.now();
   const openai = createOpenAIClient();
   const openaiVoice = getOpenAIVoice(voice);
   const instructions = process.env.OPENAI_TTS_INSTRUCTIONS || DEFAULT_TTS_INSTRUCTIONS;
+  // Stamp route-process time as soon as we're about to hand off to OpenAI.
+  // For OpenAI we currently buffer the full response before forwarding, so
+  // the upstream portion measured by the client is "synth + buffer" rather
+  // than "first byte" — we'll revisit when we move to true streaming.
+  const ttsRouteMs = Date.now() - routeStartedAt;
 
   type TtsAttempt = { buffer: ArrayBuffer; modelUsed: string; fallbackUsed: boolean; retryCount: number };
 
@@ -354,6 +379,8 @@ async function synthesizeWithOpenAI(
       headers: {
         'Content-Type': 'audio/mpeg',
         'Cache-Control': 'public, max-age=3600',
+        'X-Tts-Route-Ms': String(ttsRouteMs),
+        'X-Tts-Provider': 'openai',
       },
     });
   } catch (error) {
@@ -380,6 +407,11 @@ async function synthesizeWithOpenAI(
 }
 
 export async function POST(request: NextRequest) {
+  // Anchor for the X-Tts-Route-Ms response header. The synthesizer functions
+  // each compute their own delta from this just before they dispatch the
+  // upstream request, so the header reflects "time spent in this route
+  // before the upstream provider was actually called".
+  const routeStartedAt = Date.now();
   try {
     const {
       text,
@@ -429,18 +461,18 @@ export async function POST(request: NextRequest) {
     }
 
     if (resolvedProvider === 'kokoro') {
-      return await synthesizeWithKokoro(text, voice, userAgent);
+      return await synthesizeWithKokoro(text, voice, userAgent, routeStartedAt);
     }
 
     if (resolvedProvider === 'elevenlabs') {
-      return await synthesizeWithElevenLabs(text, voice);
+      return await synthesizeWithElevenLabs(text, voice, routeStartedAt);
     }
 
     return await synthesizeWithOpenAI(text, voice, model, {
       treatmentVersion: treatmentVersion ?? null,
       textLength: text.length,
       voice,
-    });
+    }, routeStartedAt);
   } catch (error) {
     console.error('TTS API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -273,22 +273,49 @@ export default function AdminDebugDrawer({
                   )}
 
                 {/* Per-turn voice pipeline breakdown
-                    (Scribe → backend → TTS req → first chunk → playback).
-                    Each segment is rendered iff both endpoints were stamped,
+                    (Scribe → V9 server → network → TTS req → route → upstream → playback).
+                    Each segment is rendered iff its endpoints were stamped,
                     so cached audio / button-only turns / partial captures
-                    just show the segments that actually happened. */}
+                    just show the segments that actually happened.
+                    Two splits worth noting:
+                      • Scribe→API splits into "V9 server" + "network" using
+                        `message.responseTime` (the server-reported decision
+                        time), so we can see whether the bottleneck is the
+                        backend or the wire.
+                      • →TTS chunk splits into "route" + "upstream" using
+                        the `X-Tts-Route-Ms` header, so we can see whether
+                        the bottleneck is the Next.js TTS route or the
+                        upstream provider (Kokoro/OpenAI/EL). */}
                 {!message.isUser && message.voiceTimings && (() => {
                   const t = message.voiceTimings;
                   const segments: { label: string; ms: number }[] = [];
+
+                  // Scribe → API, optionally split into V9 server + network.
                   if (
                     t.transcriptReceivedAt !== undefined &&
                     t.apiResponseReceivedAt !== undefined
                   ) {
-                    segments.push({
-                      label: 'Scribe→API',
-                      ms: t.apiResponseReceivedAt - t.transcriptReceivedAt,
-                    });
+                    const totalScribeToApi =
+                      t.apiResponseReceivedAt - t.transcriptReceivedAt;
+                    if (
+                      typeof message.responseTime === 'number' &&
+                      message.responseTime >= 0 &&
+                      message.responseTime <= totalScribeToApi
+                    ) {
+                      segments.push({
+                        label: 'V9 server',
+                        ms: message.responseTime,
+                      });
+                      segments.push({
+                        label: 'network',
+                        ms: totalScribeToApi - message.responseTime,
+                      });
+                    } else {
+                      segments.push({ label: 'Scribe→API', ms: totalScribeToApi });
+                    }
                   }
+
+                  // API → TTS dispatch from the client.
                   if (
                     t.apiResponseReceivedAt !== undefined &&
                     t.ttsRequestedAt !== undefined
@@ -298,15 +325,30 @@ export default function AdminDebugDrawer({
                       ms: t.ttsRequestedAt - t.apiResponseReceivedAt,
                     });
                   }
+
+                  // TTS req → first chunk, optionally split into route +
+                  // upstream + (inferred) network using X-Tts-Route-Ms.
                   if (
                     t.ttsRequestedAt !== undefined &&
                     t.ttsFirstChunkAt !== undefined
                   ) {
-                    segments.push({
-                      label: '→TTS chunk',
-                      ms: t.ttsFirstChunkAt - t.ttsRequestedAt,
-                    });
+                    const totalReqToChunk = t.ttsFirstChunkAt - t.ttsRequestedAt;
+                    if (
+                      typeof t.ttsRouteMs === 'number' &&
+                      t.ttsRouteMs >= 0 &&
+                      t.ttsRouteMs <= totalReqToChunk
+                    ) {
+                      segments.push({ label: 'route', ms: t.ttsRouteMs });
+                      segments.push({
+                        label: 'upstream',
+                        ms: totalReqToChunk - t.ttsRouteMs,
+                      });
+                    } else {
+                      segments.push({ label: '→TTS chunk', ms: totalReqToChunk });
+                    }
                   }
+
+                  // First chunk → playback start.
                   if (
                     t.audioPlaybackStartedAt !== undefined &&
                     (t.ttsFirstChunkAt !== undefined ||
@@ -319,6 +361,7 @@ export default function AdminDebugDrawer({
                       ms: t.audioPlaybackStartedAt - prev,
                     });
                   }
+
                   if (segments.length === 0) return null;
                   const totalAnchor =
                     t.transcriptReceivedAt ??

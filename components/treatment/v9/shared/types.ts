@@ -26,6 +26,14 @@ export interface VoiceTurnTimings {
   apiResponseReceivedAt?: number;
   /** Date.now() when the /api/tts request was dispatched (Kokoro/OpenAI/EL). */
   ttsRequestedAt?: number;
+  /**
+   * Server-reported milliseconds spent in /api/tts before the upstream
+   * provider fetch was dispatched (parsing, validation, voice mapping,
+   * cache lookup). Read from the `X-Tts-Route-Ms` response header. When
+   * present, the chip can split `→TTS chunk` into "route process time"
+   * and "upstream synthesis + network".
+   */
+  ttsRouteMs?: number;
   /** Date.now() when /api/tts resolved the audio blob (first audio bytes ready). */
   ttsFirstChunkAt?: number;
   /** Date.now() when `audio.onplay` fired and playback actually began. */

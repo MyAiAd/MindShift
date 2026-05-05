@@ -1364,6 +1364,16 @@ export default function TreatmentSession({
     onTtsRequested: () => stampVoiceTurnTiming('ttsRequestedAt'),
     onTtsFirstChunk: () => stampVoiceTurnTiming('ttsFirstChunkAt'),
     onAudioPlaybackStarted: () => stampVoiceTurnTiming('audioPlaybackStartedAt'),
+    // Server-side route processing time (X-Tts-Route-Ms header).
+    // Stored as a number, not a Date.now() epoch — `consumeVoiceTurnTimings`
+    // returns it via the same VoiceTurnTimings shape so the chip can split
+    // the upstream phase.
+    onTtsRouteMs: (routeMs: number) => {
+      if (!currentTurnTimingsRef.current) {
+        currentTurnTimingsRef.current = {};
+      }
+      currentTurnTimingsRef.current.ttsRouteMs = routeMs;
+    },
     onSpeechProviderError: ({ kind, provider, message }) => {
       if (kind === 'tts') {
         revealPendingMessageWithoutAudio();
