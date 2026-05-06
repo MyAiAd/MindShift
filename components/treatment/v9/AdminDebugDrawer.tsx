@@ -272,132 +272,67 @@ export default function AdminDebugDrawer({
                     </div>
                   )}
 
-                {/* Per-turn voice pipeline breakdown
-                    (Scribe → V9 server → network → TTS req → route → upstream → playback).
-                    Each segment is rendered iff its endpoints were stamped,
-                    so cached audio / button-only turns / partial captures
-                    just show the segments that actually happened.
-                    Two splits worth noting:
-                      • Scribe→API splits into "V9 server" + "network" using
-                        `message.responseTime` (the server-reported decision
-                        time), so we can see whether the bottleneck is the
-                        backend or the wire.
-                      • →TTS chunk splits into "route" + "upstream" using
-                        the `X-Tts-Route-Ms` header, so we can see whether
-                        the bottleneck is the Next.js TTS route or the
-                        upstream provider (Kokoro/OpenAI/EL). */}
+                {/* Per-turn voice pipeline timeline.
+
+                    Five-event timeline expressed in the wording the
+                    clinical team uses to talk about the pipeline. Each
+                    row shows cumulative milliseconds from the "End of
+                    user speaking" anchor, so the column reads like a
+                    stopwatch lap-time view: the bigger the jump between
+                    two adjacent rows, the longer that stage took.
+
+                    Anchor approximation: in VAD mode (the only enabled
+                    capture mode in V9 today) Scribe commits the final
+                    transcript ~500ms after the user stops talking
+                    (`vad_silence_threshold_secs=0.5` in
+                    useElevenLabsScribeRealtime.ts). We back-date from
+                    `transcriptReceivedAt` by that amount to approximate
+                    the moment the user actually stopped speaking. If
+                    the transcript stamp is missing (e.g. a button-only
+                    turn that triggered TTS via speakServerMessage) the
+                    "End of user speaking" and "Scribe…" rows are
+                    skipped and the first present event becomes the
+                    implicit anchor. */}
                 {!message.isUser && message.voiceTimings && (() => {
                   const t = message.voiceTimings;
-                  const segments: { label: string; ms: number }[] = [];
+                  const VAD_SILENCE_THRESHOLD_MS = 500;
+                  const userStoppedSpeakingAt =
+                    t.transcriptReceivedAt !== undefined
+                      ? t.transcriptReceivedAt - VAD_SILENCE_THRESHOLD_MS
+                      : undefined;
 
-                  // Scribe → API, optionally split into V9 server + network.
-                  if (
-                    t.transcriptReceivedAt !== undefined &&
-                    t.apiResponseReceivedAt !== undefined
-                  ) {
-                    const totalScribeToApi =
-                      t.apiResponseReceivedAt - t.transcriptReceivedAt;
-                    if (
-                      typeof message.responseTime === 'number' &&
-                      message.responseTime >= 0 &&
-                      message.responseTime <= totalScribeToApi
-                    ) {
-                      segments.push({
-                        label: 'V9 server',
-                        ms: message.responseTime,
-                      });
-                      segments.push({
-                        label: 'network',
-                        ms: totalScribeToApi - message.responseTime,
-                      });
-                    } else {
-                      segments.push({ label: 'Scribe→API', ms: totalScribeToApi });
-                    }
-                  }
+                  const events: { label: string; at: number | undefined }[] = [
+                    { label: 'End of user speaking', at: userStoppedSpeakingAt },
+                    { label: 'Scribe final transcript received', at: t.transcriptReceivedAt },
+                    { label: 'State machine decision made', at: t.apiResponseReceivedAt },
+                    { label: 'Text sent to Kokoro', at: t.ttsRequestedAt },
+                    { label: 'Audio playback started', at: t.audioPlaybackStartedAt },
+                  ];
+                  const present = events.filter(
+                    (e): e is { label: string; at: number } => e.at !== undefined,
+                  );
+                  if (present.length === 0) return null;
 
-                  // API → TTS dispatch from the client.
-                  if (
-                    t.apiResponseReceivedAt !== undefined &&
-                    t.ttsRequestedAt !== undefined
-                  ) {
-                    segments.push({
-                      label: '→TTS req',
-                      ms: t.ttsRequestedAt - t.apiResponseReceivedAt,
-                    });
-                  }
-
-                  // TTS req → first chunk, optionally split into route +
-                  // upstream + (inferred) network using X-Tts-Route-Ms.
-                  if (
-                    t.ttsRequestedAt !== undefined &&
-                    t.ttsFirstChunkAt !== undefined
-                  ) {
-                    const totalReqToChunk = t.ttsFirstChunkAt - t.ttsRequestedAt;
-                    if (
-                      typeof t.ttsRouteMs === 'number' &&
-                      t.ttsRouteMs >= 0 &&
-                      t.ttsRouteMs <= totalReqToChunk
-                    ) {
-                      segments.push({ label: 'route', ms: t.ttsRouteMs });
-                      segments.push({
-                        label: 'upstream',
-                        ms: totalReqToChunk - t.ttsRouteMs,
-                      });
-                    } else {
-                      segments.push({ label: '→TTS chunk', ms: totalReqToChunk });
-                    }
-                  }
-
-                  // First chunk → playback start.
-                  if (
-                    t.audioPlaybackStartedAt !== undefined &&
-                    (t.ttsFirstChunkAt !== undefined ||
-                      t.apiResponseReceivedAt !== undefined)
-                  ) {
-                    const prev =
-                      t.ttsFirstChunkAt ?? t.apiResponseReceivedAt!;
-                    segments.push({
-                      label: '→Play',
-                      ms: t.audioPlaybackStartedAt - prev,
-                    });
-                  }
-
-                  if (segments.length === 0) return null;
-                  const totalAnchor =
-                    t.transcriptReceivedAt ??
-                    t.apiResponseReceivedAt ??
-                    t.ttsRequestedAt;
-                  const totalEnd =
-                    t.audioPlaybackStartedAt ??
-                    t.ttsFirstChunkAt ??
-                    t.apiResponseReceivedAt;
-                  const total =
-                    totalAnchor !== undefined && totalEnd !== undefined
-                      ? totalEnd - totalAnchor
-                      : null;
+                  const anchor = present[0].at;
                   return (
                     <div
                       className="mt-1 text-[10px] text-muted-foreground font-mono leading-tight"
                       aria-hidden="true"
                     >
-                      🎙️
-                      {segments.map((seg, i) => (
-                        <span key={i} className="ml-1">
-                          {i > 0 && '| '}
-                          {seg.label}:{' '}
-                          <span className="font-semibold">
-                            {Math.max(0, Math.round(seg.ms))}ms
-                          </span>
-                        </span>
-                      ))}
-                      {total !== null && (
-                        <span className="ml-1">
-                          | total:{' '}
-                          <span className="font-semibold">
-                            {Math.max(0, Math.round(total))}ms
-                          </span>
-                        </span>
-                      )}
+                      <div className="opacity-60">🎙️ Pipeline</div>
+                      {present.map((evt) => {
+                        const offset = Math.max(0, Math.round(evt.at - anchor));
+                        return (
+                          <div
+                            key={evt.label}
+                            className="ml-3 flex items-baseline gap-2"
+                          >
+                            <span className="opacity-60">·</span>
+                            <span className="flex-1">{evt.label}</span>
+                            <span className="font-semibold">+{offset}ms</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   );
                 })()}
