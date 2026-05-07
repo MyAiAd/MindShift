@@ -56,6 +56,7 @@ export async function v9HandleStartSession(sessionId: string, userId: string) {
     (context.metadata as Record<string, unknown>).voicePair = {
       stt: pair.stt,
       tts: pair.tts,
+      inworldVoiceId: pair.inworldVoiceId ?? 'Ashley',
     };
     try {
       await v9TreatmentMachine.saveContextToDatabase(context);

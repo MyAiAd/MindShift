@@ -68,7 +68,7 @@ function reportTts(): AvailabilityReport[] {
     const reasonMap: Partial<Record<TtsProviderId, string>> = {
       openai: 'OPENAI_API_KEY not set',
       elevenlabs: 'ELEVENLABS_API_KEY not set',
-      inworld: 'INWORLD_API_KEY or INWORLD_VOICE_ID not set',
+      inworld: 'INWORLD_API_KEY not set',
     };
     return {
       id: provider.id,
@@ -123,6 +123,7 @@ export async function GET() {
     current: {
       stt: current.stt,
       tts: current.tts,
+      inworldVoiceId: current.inworldVoiceId ?? 'Ashley',
       source: current.fromDatabase ? 'database' : 'environment',
       updatedAt: current.updatedAt ?? null,
       updatedBy: current.updatedBy ?? null,
@@ -163,7 +164,14 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const incoming = body as { stt?: unknown; tts?: unknown };
+  const INWORLD_VOICES = ['Ashley', 'Blake', 'Clive', 'Eleanor'] as const;
+  const incoming = body as { stt?: unknown; tts?: unknown; inworldVoiceId?: unknown };
+  const inworldVoiceId =
+    typeof incoming.inworldVoiceId === 'string' &&
+    (INWORLD_VOICES as readonly string[]).includes(incoming.inworldVoiceId)
+      ? incoming.inworldVoiceId
+      : 'Ashley';
+
   if (!validateStt(incoming.stt) || !validateTts(incoming.tts)) {
     return NextResponse.json(
       {
@@ -196,7 +204,7 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  const pair: VoicePair = { stt: incoming.stt, tts: incoming.tts };
+  const pair: VoicePair = { stt: incoming.stt, tts: incoming.tts, inworldVoiceId };
   try {
     const persisted = await setVoicePair(pair, auth.userId);
     return NextResponse.json({
@@ -204,6 +212,7 @@ export async function PUT(request: NextRequest) {
       current: {
         stt: persisted.stt,
         tts: persisted.tts,
+        inworldVoiceId: persisted.inworldVoiceId ?? 'Ashley',
         source: 'database',
         updatedAt: persisted.updatedAt ?? null,
         updatedBy: persisted.updatedBy ?? null,

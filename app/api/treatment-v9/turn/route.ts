@@ -189,7 +189,9 @@ export async function POST(request: NextRequest) {
       const ttsProvider = parsed.tts.provider ?? pinnedPair.tts;
       const tts = await speakScripted(coreJson.message, {
         providerId: ttsProvider,
-        voice: parsed.tts.voice ?? null,
+        voice:
+          parsed.tts.voice ??
+          (ttsProvider === 'inworld' ? (pinnedPair.inworldVoiceId ?? null) : null),
         format: parsed.tts.format ?? 'mp3',
         sessionId,
         stepId: coreJson.currentStep,

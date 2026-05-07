@@ -31,6 +31,8 @@ import {
 export interface VoicePair {
   stt: V9SttProvider;
   tts: V9TtsProvider;
+  /** Inworld TTS voice name (e.g. 'Ashley'). Used when tts === 'inworld'. */
+  inworldVoiceId?: string;
 }
 
 export interface VoicePairWithAudit extends VoicePair {
@@ -96,7 +98,7 @@ export async function getVoicePair(): Promise<VoicePairWithAudit> {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from(DB_TABLE)
-      .select('stt_provider, tts_provider, updated_at, updated_by')
+      .select('stt_provider, tts_provider, inworld_voice_id, updated_at, updated_by')
       .eq('id', DB_ROW_ID)
       .maybeSingle();
 
@@ -115,6 +117,7 @@ export async function getVoicePair(): Promise<VoicePairWithAudit> {
     return {
       stt: sanitizeStt(data.stt_provider),
       tts: sanitizeTts(data.tts_provider),
+      inworldVoiceId: (data.inworld_voice_id as string | null) ?? 'Ashley',
       fromDatabase: true,
       updatedAt: data.updated_at ?? undefined,
       updatedBy: (data.updated_by as string | null) ?? null,
@@ -144,10 +147,11 @@ export async function setVoicePair(
     .update({
       stt_provider: pair.stt,
       tts_provider: pair.tts,
+      inworld_voice_id: pair.inworldVoiceId ?? 'Ashley',
       updated_by: updatedBy,
     })
     .eq('id', DB_ROW_ID)
-    .select('stt_provider, tts_provider, updated_at, updated_by')
+    .select('stt_provider, tts_provider, inworld_voice_id, updated_at, updated_by')
     .single();
 
   if (error || !data) {
@@ -159,6 +163,7 @@ export async function setVoicePair(
   return {
     stt: sanitizeStt(data.stt_provider),
     tts: sanitizeTts(data.tts_provider),
+    inworldVoiceId: (data.inworld_voice_id as string | null) ?? 'Ashley',
     fromDatabase: true,
     updatedAt: data.updated_at ?? undefined,
     updatedBy: (data.updated_by as string | null) ?? null,

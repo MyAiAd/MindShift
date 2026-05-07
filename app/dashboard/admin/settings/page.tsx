@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings as SettingsIcon, Save, Loader2, Shield, Zap, Mail, Send, CheckCircle, XCircle, AlertCircle, Beaker, Mic, Volume2, Play } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
 interface EmailStatus {
@@ -32,10 +33,14 @@ interface VoiceProviderReport {
   reason?: string;
 }
 
+const INWORLD_VOICES = ['Ashley', 'Blake', 'Clive', 'Eleanor'] as const;
+type InworldVoiceId = typeof INWORLD_VOICES[number];
+
 interface VoiceSettingsResponse {
   current: {
     stt: SttProviderId;
     tts: TtsProviderId;
+    inworldVoiceId: InworldVoiceId;
     source: 'database' | 'environment';
     updatedAt: string | null;
     updatedBy: string | null;
@@ -146,6 +151,7 @@ export default function AdminSettingsPage() {
   const [voiceData, setVoiceData] = useState<VoiceSettingsResponse | null>(null);
   const [selectedStt, setSelectedStt] = useState<SttProviderId>('openai');
   const [selectedTts, setSelectedTts] = useState<TtsProviderId>('openai');
+  const [selectedInworldVoice, setSelectedInworldVoice] = useState<InworldVoiceId>('Ashley');
   const [voiceSaving, setVoiceSaving] = useState(false);
   const [ttsTestLoading, setTtsTestLoading] = useState(false);
   const [sttTestLoading, setSttTestLoading] = useState(false);
@@ -203,6 +209,7 @@ export default function AdminSettingsPage() {
           setVoiceData(data);
           setSelectedStt(data.current.stt);
           setSelectedTts(data.current.tts);
+          setSelectedInworldVoice(data.current.inworldVoiceId ?? 'Ashley');
         }
       } catch (error) {
         console.error('Error fetching voice settings:', error);
@@ -223,7 +230,7 @@ export default function AdminSettingsPage() {
       const response = await fetch('/api/admin/voice-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stt: selectedStt, tts: selectedTts }),
+        body: JSON.stringify({ stt: selectedStt, tts: selectedTts, inworldVoiceId: selectedInworldVoice }),
       });
       const payload = await response.json();
       if (!response.ok) {
@@ -1162,6 +1169,29 @@ export default function AdminSettingsPage() {
                         ))}
                       </div>
 
+                      {selectedTts === 'inworld' && (
+                        <div className="rounded-md border px-3 py-3 space-y-1">
+                          <label className="text-sm font-medium">Inworld voice</label>
+                          <Select
+                            value={selectedInworldVoice}
+                            onValueChange={(v) => setSelectedInworldVoice(v as InworldVoiceId)}
+                            disabled={!isSuperAdmin}
+                          >
+                            <SelectTrigger className="w-48">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {INWORLD_VOICES.map((v) => (
+                                <SelectItem key={v} value={v}>{v}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            Voice applies to all new sessions. Ashley · Blake · Clive · Eleanor.
+                          </p>
+                        </div>
+                      )}
+
                       {ttsTestResult ? (
                         <div className="rounded-md border px-3 py-2 text-sm">
                           <div className="font-mono text-xs text-muted-foreground">
@@ -1194,7 +1224,8 @@ export default function AdminSettingsPage() {
                         disabled={
                           voiceSaving ||
                           (selectedStt === voiceData.current.stt &&
-                            selectedTts === voiceData.current.tts)
+                            selectedTts === voiceData.current.tts &&
+                            selectedInworldVoice === (voiceData.current.inworldVoiceId ?? 'Ashley'))
                         }
                       >
                         {voiceSaving ? (

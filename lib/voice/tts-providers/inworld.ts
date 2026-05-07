@@ -30,17 +30,21 @@ export class InworldTtsProvider implements TtsProvider {
   readonly displayName = 'Inworld TTS';
 
   isAvailable(): boolean {
-    return Boolean(process.env.INWORLD_API_KEY) && Boolean(process.env.INWORLD_VOICE_ID);
+    return Boolean(process.env.INWORLD_API_KEY);
   }
 
   async synthesize(request: TtsSynthesisRequest): Promise<TtsSynthesisResult> {
-    if (!this.isAvailable()) {
-      throw new Error(
-        'INWORLD_API_KEY or INWORLD_VOICE_ID not configured; Inworld TTS unavailable.',
-      );
+    if (!process.env.INWORLD_API_KEY) {
+      throw new Error('INWORLD_API_KEY not configured; Inworld TTS unavailable.');
     }
 
-    const voice = request.voice ?? process.env.INWORLD_VOICE_ID!;
+    // Voice precedence: request → env fallback → error
+    const voice = request.voice ?? process.env.INWORLD_VOICE_ID ?? '';
+    if (!voice) {
+      throw new Error(
+        'No Inworld voice configured. Set INWORLD_VOICE_ID or select a voice in admin settings.',
+      );
+    }
     const format = 'mp3';
     const start = performance.now();
 
