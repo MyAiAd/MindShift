@@ -112,8 +112,8 @@ function TreatmentSessionContent() {
   }, []);
 
   useEffect(() => {
-    const id = searchParams.get('sessionId');
-    const resumeFlag = searchParams.get('resume') === 'true';
+    const id = searchParams?.get('sessionId');
+    const resumeFlag = searchParams?.get('resume') === 'true';
 
     if (!id) {
       const newSessionId = `session-v9-${Date.now()}-${Math.random()

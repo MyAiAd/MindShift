@@ -44,7 +44,7 @@ export default function UserDetailsPage() {
   const [formData, setFormData] = useState({ full_name: '' });
   const [showRoleSelector, setShowRoleSelector] = useState(false);
 
-  const userId = params.id as string;
+  const userId = (params?.id ?? "") as string;
 
   // Check if user is admin
   useEffect(() => {

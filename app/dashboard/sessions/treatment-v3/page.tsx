@@ -22,8 +22,8 @@ function TreatmentSessionContent() {
   const [shouldResume, setShouldResume] = useState<boolean>(false);
 
   useEffect(() => {
-    const id = searchParams.get('sessionId');
-    const resumeFlag = searchParams.get('resume') === 'true';
+    const id = searchParams?.get('sessionId');
+    const resumeFlag = searchParams?.get('resume') === 'true';
     
     if (!id) {
       // Generate a new session ID if none provided

@@ -52,7 +52,7 @@ function CoachSignupContent() {
   });
 
   useEffect(() => {
-    const token = searchParams.get('token');
+    const token = searchParams?.get('token');
     if (token) {
       setInvitationToken(token);
       validateInvitation(token);

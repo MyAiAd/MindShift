@@ -27,8 +27,8 @@ function AuthPageContent() {
 
   // Check for error or message from URL (e.g., from email confirmation callback)
   useEffect(() => {
-    const urlError = searchParams.get('error');
-    const urlMessage = searchParams.get('message');
+    const urlError = searchParams?.get('error');
+    const urlMessage = searchParams?.get('message');
     
     if (urlError) {
       setError(decodeURIComponent(urlError));

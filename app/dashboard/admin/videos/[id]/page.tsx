@@ -37,7 +37,7 @@ export default function EditVideoPage() {
   const [video, setVideo] = useState<Video | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const videoId = params.id as string;
+  const videoId = (params?.id ?? "") as string;
 
   // Check if user is admin
   useEffect(() => {

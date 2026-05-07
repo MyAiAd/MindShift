@@ -61,7 +61,7 @@ function DashboardContent() {
 
   // Check for email confirmation success
   useEffect(() => {
-    const confirmedParam = searchParams.get('confirmed');
+    const confirmedParam = searchParams?.get('confirmed');
     if (confirmedParam === 'true') {
       setShowConfirmationBanner(true);
       const timer = setTimeout(() => {
