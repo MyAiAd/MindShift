@@ -64,13 +64,19 @@ function envFallback(): VoicePair {
 }
 
 function sanitizeStt(value: unknown): V9SttProvider {
-  return value === 'whisper-local' || value === 'openai' || value === 'elevenlabs'
+  return value === 'whisper-local' ||
+    value === 'openai' ||
+    value === 'elevenlabs' ||
+    value === 'inworld'
     ? value
     : 'openai';
 }
 
 function sanitizeTts(value: unknown): V9TtsProvider {
-  return value === 'elevenlabs' || value === 'kokoro' || value === 'openai'
+  return value === 'elevenlabs' ||
+    value === 'kokoro' ||
+    value === 'openai' ||
+    value === 'inworld'
     ? value
     : 'openai';
 }

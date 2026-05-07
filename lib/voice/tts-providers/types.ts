@@ -53,7 +53,7 @@ export interface TtsSynthesisResult {
   cost: TtsCostMetrics;
 }
 
-export type TtsProviderId = 'openai' | 'elevenlabs' | 'kokoro';
+export type TtsProviderId = 'openai' | 'elevenlabs' | 'kokoro' | 'inworld';
 
 export interface TtsProvider {
   readonly id: TtsProviderId;

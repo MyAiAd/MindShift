@@ -8,7 +8,7 @@ export type TextToSpeechProvider = 'existing' | 'openai';
  * Distinct from `TTS_PROVIDER`, which controls the legacy v4..v7 code
  * paths and their limited ('existing' | 'openai') enumeration.
  */
-export type V9TtsProvider = 'openai' | 'elevenlabs' | 'kokoro';
+export type V9TtsProvider = 'openai' | 'elevenlabs' | 'kokoro' | 'inworld';
 
 /**
  * V9-only: which STT provider the voice adapter should use. `openai` is
@@ -18,7 +18,7 @@ export type V9TtsProvider = 'openai' | 'elevenlabs' | 'kokoro';
  * Read by `lib/voice/stt-providers/index.ts` (`resolveSttProviderId`)
  * and by `lib/v9/voice-settings.ts` when the DB singleton is missing.
  */
-export type V9SttProvider = 'openai' | 'whisper-local' | 'elevenlabs';
+export type V9SttProvider = 'openai' | 'whisper-local' | 'elevenlabs' | 'inworld';
 
 function parseBooleanFlag(value: string | undefined, defaultValue: boolean): boolean {
   if (value === undefined) {
@@ -80,7 +80,7 @@ export const TTS_PROVIDER: TextToSpeechProvider = parseProvider<TextToSpeechProv
  */
 export const V9_TTS_PROVIDER: V9TtsProvider = parseProvider<V9TtsProvider>(
   process.env.V9_TTS_PROVIDER,
-  ['openai', 'elevenlabs', 'kokoro'],
+  ['openai', 'elevenlabs', 'kokoro', 'inworld'],
   'openai'
 );
 
@@ -96,7 +96,7 @@ export const V9_TTS_PROVIDER: V9TtsProvider = parseProvider<V9TtsProvider>(
  */
 export const V9_STT_PROVIDER: V9SttProvider = parseProvider<V9SttProvider>(
   process.env.V9_STT_PROVIDER,
-  ['openai', 'whisper-local', 'elevenlabs'],
+  ['openai', 'whisper-local', 'elevenlabs', 'inworld'],
   'openai'
 );
 

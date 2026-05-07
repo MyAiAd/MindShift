@@ -3,6 +3,7 @@ import type { SttProvider, SttProviderId } from './types';
 import { OpenAiSttProvider } from './openai';
 import { WhisperLocalSttProvider } from './whisper';
 import { ElevenLabsScribeSttProvider } from './elevenlabs-scribe';
+import { InworldSttProvider } from './inworld';
 
 export type { SttProvider, SttProviderId } from './types';
 export type {
@@ -15,6 +16,7 @@ const registry: Record<SttProviderId, SttProvider> = {
   openai: new OpenAiSttProvider(),
   'whisper-local': new WhisperLocalSttProvider(),
   elevenlabs: new ElevenLabsScribeSttProvider(),
+  inworld: new InworldSttProvider(),
 };
 
 /**
@@ -36,7 +38,7 @@ export function resolveSttProviderId(
   requested?: string | null,
 ): SttProviderId {
   const valid = (v: string | null | undefined): v is SttProviderId =>
-    v === 'openai' || v === 'whisper-local' || v === 'elevenlabs';
+    v === 'openai' || v === 'whisper-local' || v === 'elevenlabs' || v === 'inworld';
 
   if (valid(requested)) return requested;
   if (valid(V9_STT_PROVIDER)) return V9_STT_PROVIDER;

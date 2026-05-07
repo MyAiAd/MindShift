@@ -22,8 +22,8 @@ interface EmailStatus {
   senderEmail: string;
 }
 
-type SttProviderId = 'openai' | 'whisper-local' | 'elevenlabs';
-type TtsProviderId = 'openai' | 'elevenlabs' | 'kokoro';
+type SttProviderId = 'openai' | 'whisper-local' | 'elevenlabs' | 'inworld';
+type TtsProviderId = 'openai' | 'elevenlabs' | 'kokoro' | 'inworld';
 
 interface VoiceProviderReport {
   id: string;
@@ -80,13 +80,13 @@ function formatUsd(value: number): string {
 function estimateSttCost(provider: SttProviderId, minutes: number): number {
   if (provider === 'openai') return minutes * OPENAI_STT_USD_PER_MINUTE;
   if (provider === 'elevenlabs') return minutes * ELEVENLABS_SCRIBE_USD_PER_MINUTE;
-  return 0; // whisper-local: fixed compute cost, no per-call charge
+  return 0; // whisper-local / inworld: TBD or fixed compute cost
 }
 
 function estimateTtsCost(provider: TtsProviderId, characters: number): number {
   if (provider === 'openai') return characters * OPENAI_TTS_USD_PER_CHARACTER;
   if (provider === 'elevenlabs') return characters * ELEVENLABS_TTS_USD_PER_CHARACTER;
-  return 0;
+  return 0; // kokoro / inworld: TBD or self-hosted
 }
 
 function describeProjectedCostBasis(stt: SttProviderId, tts: TtsProviderId): string {
@@ -95,13 +95,17 @@ function describeProjectedCostBasis(stt: SttProviderId, tts: TtsProviderId): str
       ? '$0.003/min input audio'
       : stt === 'elevenlabs'
         ? `$${ELEVENLABS_SCRIBE_USD_PER_MINUTE.toFixed(5)}/min input audio (ElevenLabs Scribe)`
-        : 'self-hosted input, no per-call API cost';
+        : stt === 'inworld'
+          ? 'Inworld STT pricing TBD (set INWORLD_USD_PER_CHAR)'
+          : 'self-hosted input, no per-call API cost';
   const output =
     tts === 'openai'
       ? '$0.000015/output char'
       : tts === 'elevenlabs'
         ? '$0.00044/output char'
-        : 'self-hosted output, no per-call API cost';
+        : tts === 'inworld'
+          ? 'Inworld TTS pricing TBD (set INWORLD_USD_PER_CHAR)'
+          : 'self-hosted output, no per-call API cost';
   return `${input} · ${output}`;
 }
 
@@ -1031,7 +1035,9 @@ export default function AdminSettingsPage() {
                                   ? 'OpenAI hosted transcription (~$0.003/min). Best accuracy on short utterances.'
                                   : p.id === 'elevenlabs'
                                     ? 'ElevenLabs Scribe v2 Realtime — streams audio over WebSocket, VAD handled server-side (~$0.40/hr continuous). Requires ELEVENLABS_API_KEY.'
-                                    : 'Self-hosted Whisper service. No per-call API cost; compute is billed hourly regardless of volume.'}
+                                    : p.id === 'inworld'
+                                      ? 'Inworld STT-1 · Real-time WebSocket · Auto-detect language. Requires INWORLD_API_KEY.'
+                                      : 'Self-hosted Whisper service. No per-call API cost; compute is billed hourly regardless of volume.'}
                               </div>
                               {!p.available && p.reason ? (
                                 <div className="text-xs text-destructive mt-1">
@@ -1142,7 +1148,9 @@ export default function AdminSettingsPage() {
                                   ? 'OpenAI TTS — the V9 default. Predictable cost, good quality.'
                                   : p.id === 'elevenlabs'
                                     ? 'ElevenLabs — premium voice quality; higher per-character cost.'
-                                    : 'Kokoro — self-hosted TTS. No per-call API cost; hourly compute.'}
+                                    : p.id === 'inworld'
+                                      ? 'Inworld TTS-1.5 Mini · ~120ms P50 · MP3. Requires INWORLD_API_KEY and INWORLD_VOICE_ID.'
+                                      : 'Kokoro — self-hosted TTS. No per-call API cost; hourly compute.'}
                               </div>
                               {!p.available && p.reason ? (
                                 <div className="text-xs text-destructive mt-1">

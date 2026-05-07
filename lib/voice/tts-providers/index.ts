@@ -2,6 +2,7 @@ import type { TtsProvider, TtsProviderId } from './types';
 import { OpenAiTtsProvider } from './openai';
 import { ElevenLabsTtsProvider } from './elevenlabs';
 import { KokoroTtsProvider } from './kokoro';
+import { InworldTtsProvider } from './inworld';
 
 export type { TtsProvider, TtsProviderId } from './types';
 export type {
@@ -21,6 +22,7 @@ const registry: Record<TtsProviderId, TtsProvider> = {
   openai: new OpenAiTtsProvider(),
   elevenlabs: new ElevenLabsTtsProvider(),
   kokoro: new KokoroTtsProvider(),
+  inworld: new InworldTtsProvider(),
 };
 
 /**
@@ -40,7 +42,7 @@ export function resolveTtsProviderId(
   requested?: string | null,
 ): TtsProviderId {
   const valid = (v: string | null | undefined): v is TtsProviderId =>
-    v === 'openai' || v === 'elevenlabs' || v === 'kokoro';
+    v === 'openai' || v === 'elevenlabs' || v === 'kokoro' || v === 'inworld';
 
   if (valid(requested)) return requested;
 

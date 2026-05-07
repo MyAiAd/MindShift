@@ -49,6 +49,7 @@ function reportStt(): AvailabilityReport[] {
     openai: 'OPENAI_API_KEY not set',
     'whisper-local': 'WHISPER_SERVICE_URL not set',
     elevenlabs: 'ELEVENLABS_API_KEY not set',
+    inworld: 'INWORLD_API_KEY not set',
   };
   return listSttProviders().map((provider) => {
     const available = provider.isAvailable();
@@ -67,6 +68,7 @@ function reportTts(): AvailabilityReport[] {
     const reasonMap: Partial<Record<TtsProviderId, string>> = {
       openai: 'OPENAI_API_KEY not set',
       elevenlabs: 'ELEVENLABS_API_KEY not set',
+      inworld: 'INWORLD_API_KEY or INWORLD_VOICE_ID not set',
     };
     return {
       id: provider.id,
@@ -133,11 +135,21 @@ export async function GET() {
 }
 
 function validateStt(value: unknown): value is SttProviderId {
-  return value === 'openai' || value === 'whisper-local' || value === 'elevenlabs';
+  return (
+    value === 'openai' ||
+    value === 'whisper-local' ||
+    value === 'elevenlabs' ||
+    value === 'inworld'
+  );
 }
 
 function validateTts(value: unknown): value is TtsProviderId {
-  return value === 'openai' || value === 'elevenlabs' || value === 'kokoro';
+  return (
+    value === 'openai' ||
+    value === 'elevenlabs' ||
+    value === 'kokoro' ||
+    value === 'inworld'
+  );
 }
 
 export async function PUT(request: NextRequest) {
@@ -156,7 +168,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          'Body must be { stt: "openai" | "whisper-local" | "elevenlabs", tts: "openai" | "elevenlabs" | "kokoro" }',
+          'Body must be { stt: "openai" | "whisper-local" | "elevenlabs" | "inworld", tts: "openai" | "elevenlabs" | "kokoro" | "inworld" }',
       },
       { status: 400 },
     );

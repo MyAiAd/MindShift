@@ -114,10 +114,14 @@ export async function v9GetSessionVoicePair(
       ?.voicePair as VoicePair | undefined;
     if (
       pinned &&
-      (pinned.stt === 'openai' || pinned.stt === 'whisper-local') &&
+      (pinned.stt === 'openai' ||
+        pinned.stt === 'whisper-local' ||
+        pinned.stt === 'elevenlabs' ||
+        pinned.stt === 'inworld') &&
       (pinned.tts === 'openai' ||
         pinned.tts === 'elevenlabs' ||
-        pinned.tts === 'kokoro')
+        pinned.tts === 'kokoro' ||
+        pinned.tts === 'inworld')
     ) {
       return pinned;
     }
