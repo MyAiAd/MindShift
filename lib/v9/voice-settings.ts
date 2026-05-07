@@ -169,3 +169,44 @@ export async function setVoicePair(
     updatedBy: (data.updated_by as string | null) ?? null,
   };
 }
+
+/**
+ * Resolve the Inworld API key.
+ *
+ * Precedence: DB column → INWORLD_API_KEY env var.
+ * Returns null when neither is set (provider unavailable).
+ * The key is NEVER returned to the browser — callers must be
+ * server-side only.
+ */
+export async function getInworldApiKey(): Promise<string | null> {
+  try {
+    const supabase = createServerClient();
+    const { data } = await supabase
+      .from(DB_TABLE)
+      .select('inworld_api_key')
+      .eq('id', DB_ROW_ID)
+      .maybeSingle();
+    const dbKey = (data?.inworld_api_key as string | null | undefined) ?? null;
+    if (dbKey) return dbKey;
+  } catch {
+    // fall through to env var
+  }
+  return process.env.INWORLD_API_KEY ?? null;
+}
+
+/**
+ * Persist a new Inworld API key to the DB singleton.
+ * Pass null to clear the DB value (falls back to env var).
+ */
+export async function setInworldApiKey(
+  apiKey: string | null,
+): Promise<void> {
+  const supabase = createServerClient();
+  const { error } = await supabase
+    .from(DB_TABLE)
+    .update({ inworld_api_key: apiKey })
+    .eq('id', DB_ROW_ID);
+  if (error) {
+    throw new Error(`Failed to persist Inworld API key: ${error.message}`);
+  }
+}

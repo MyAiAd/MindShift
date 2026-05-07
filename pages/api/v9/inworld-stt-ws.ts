@@ -28,6 +28,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import crypto from 'crypto';
 import tls from 'tls';
+import { getInworldApiKey } from '@/lib/v9/voice-settings';
 
 export const config = { api: { bodyParser: false } };
 
@@ -68,17 +69,17 @@ function verifyProxyToken(token: string, secret: string): string | null {
   }
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.headers.upgrade?.toLowerCase() !== 'websocket') {
     res.status(426).json({ error: 'WebSocket upgrade required' });
     return;
   }
 
   const token = typeof req.query.token === 'string' ? req.query.token : '';
-  const apiKey = process.env.INWORLD_API_KEY;
+  const apiKey = await getInworldApiKey();
 
   if (!apiKey) {
-    console.error('[InworldSttWs] INWORLD_API_KEY not configured');
+    console.error('[InworldSttWs] Inworld API key not configured');
     req.socket?.destroy();
     return;
   }

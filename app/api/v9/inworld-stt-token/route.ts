@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/database-server';
+import { getInworldApiKey } from '@/lib/v9/voice-settings';
 import crypto from 'crypto';
 
 export const runtime = 'nodejs';
@@ -51,10 +52,10 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const apiKey = process.env.INWORLD_API_KEY;
+  const apiKey = await getInworldApiKey();
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'Inworld STT is not configured on this server (missing INWORLD_API_KEY).' },
+      { error: 'Inworld API key not configured. Set it in Admin → Voice settings.' },
       { status: 500 },
     );
   }
@@ -86,7 +87,7 @@ export async function GET(): Promise<NextResponse> {
   // Path B: issue a server-signed HMAC proxy token.
   // The hook connects to /api/v9/inworld-stt-ws?token=<token> which
   // validates this token before proxying to Inworld with Basic auth.
-  const secret = process.env.INWORLD_JWT_SECRET ?? apiKey;
+  const secret = process.env.INWORLD_JWT_SECRET ?? apiKey ?? 'fallback';
   const token = generateProxyToken(user.id, secret);
   const expiresAt = new Date(Date.now() + TOKEN_TTL_MS).toISOString();
 

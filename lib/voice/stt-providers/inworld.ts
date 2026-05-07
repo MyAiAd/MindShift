@@ -1,3 +1,4 @@
+import { getInworldApiKey } from '@/lib/v9/voice-settings';
 import type {
   SttProvider,
   SttTranscribeRequest,
@@ -7,20 +8,10 @@ import type {
 /**
  * Inworld STT batch provider (inworld/inworld-stt-1).
  *
- * Used by:
- *   - The admin "Test with my mic" round-trip (/api/admin/voice-settings/test)
- *   - The isAvailable() check that drives the radio availability indicator
+ * Used for the admin test round-trip and isAvailable() check.
+ * Live sessions use useInworldSttRealtime (WebSocket), not this class.
  *
- * Live in-session transcription uses the realtime WebSocket endpoint via
- * useInworldSttRealtime on the client — NOT this class.
- *
- * Auth:    INWORLD_API_KEY  — pre-encoded base64 `key:secret` string.
- * Model:   inworld/inworld-stt-1
- * Pricing: TBD — estimatedUsd is reported as 0 until a rate is confirmed.
- *
- * Response shape: expects { text: string } or { transcript: string }.
- * The hallucination filter falls back gracefully to the full transcript
- * string when segments: [] is returned here.
+ * Auth:  DB inworld_api_key column → INWORLD_API_KEY env var fallback.
  */
 
 const ENDPOINT = 'https://api.inworld.ai/v1/stt/transcribe';
@@ -41,9 +32,9 @@ export class InworldSttProvider implements SttProvider {
   }
 
   async transcribe(request: SttTranscribeRequest): Promise<SttTranscribeResult> {
-    const key = process.env.INWORLD_API_KEY;
+    const key = await getInworldApiKey();
     if (!key) {
-      throw new Error('INWORLD_API_KEY not configured; Inworld STT unavailable.');
+      throw new Error('Inworld API key not configured. Set it in Admin → Voice settings or via INWORLD_API_KEY env var.');
     }
 
     const form = new FormData();

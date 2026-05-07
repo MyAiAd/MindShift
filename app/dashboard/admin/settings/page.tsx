@@ -41,6 +41,7 @@ interface VoiceSettingsResponse {
     stt: SttProviderId;
     tts: TtsProviderId;
     inworldVoiceId: InworldVoiceId;
+    inworldApiKeyConfigured: boolean;
     source: 'database' | 'environment';
     updatedAt: string | null;
     updatedBy: string | null;
@@ -152,6 +153,7 @@ export default function AdminSettingsPage() {
   const [selectedStt, setSelectedStt] = useState<SttProviderId>('openai');
   const [selectedTts, setSelectedTts] = useState<TtsProviderId>('openai');
   const [selectedInworldVoice, setSelectedInworldVoice] = useState<InworldVoiceId>('Ashley');
+  const [inworldApiKey, setInworldApiKey] = useState('');
   const [voiceSaving, setVoiceSaving] = useState(false);
   const [ttsTestLoading, setTtsTestLoading] = useState(false);
   const [sttTestLoading, setSttTestLoading] = useState(false);
@@ -227,12 +229,18 @@ export default function AdminSettingsPage() {
     if (!isSuperAdmin) return;
     try {
       setVoiceSaving(true);
+      const body: Record<string, unknown> = {
+        stt: selectedStt,
+        tts: selectedTts,
+        inworldVoiceId: selectedInworldVoice,
+      };
+      if (inworldApiKey !== '') body.inworldApiKey = inworldApiKey;
       const response = await fetch('/api/admin/voice-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stt: selectedStt, tts: selectedTts, inworldVoiceId: selectedInworldVoice }),
+        body: JSON.stringify(body),
       });
-      const payload = await response.json();
+      const payload = await response.json() as { error?: string; current?: VoiceSettingsResponse['current'] };
       if (!response.ok) {
         toast({
           title: 'Could not save voice settings',
@@ -242,13 +250,14 @@ export default function AdminSettingsPage() {
         return;
       }
       setVoiceData((prev) =>
-        prev
+        prev && payload.current
           ? {
               ...prev,
               current: payload.current,
             }
           : prev,
       );
+      setInworldApiKey('');
       toast({
         title: 'Voice pipeline updated',
         description:
@@ -1192,6 +1201,41 @@ export default function AdminSettingsPage() {
                         </div>
                       )}
 
+                      {(selectedStt === 'inworld' || selectedTts === 'inworld') && (
+                        <div className="rounded-md border px-3 py-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium">Inworld API key</label>
+                            {voiceData.current.inworldApiKeyConfigured ? (
+                              <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                                <CheckCircle className="h-3.5 w-3.5" /> Configured
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1 text-xs text-destructive">
+                                <XCircle className="h-3.5 w-3.5" /> Not configured
+                              </span>
+                            )}
+                          </div>
+                          <Input
+                            type="password"
+                            value={inworldApiKey}
+                            onChange={(e) => setInworldApiKey(e.target.value)}
+                            disabled={!isSuperAdmin}
+                            placeholder={
+                              voiceData.current.inworldApiKeyConfigured
+                                ? 'Enter new key to replace'
+                                : 'Paste base64 key:secret from platform.inworld.ai'
+                            }
+                            autoComplete="new-password"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Pre-encoded base64 key:secret from{' '}
+                            <span className="font-mono">platform.inworld.ai</span>. Stored in
+                            the database — never sent to the browser. Leave blank to keep
+                            the current key.
+                          </p>
+                        </div>
+                      )}
+
                       {ttsTestResult ? (
                         <div className="rounded-md border px-3 py-2 text-sm">
                           <div className="font-mono text-xs text-muted-foreground">
@@ -1225,7 +1269,8 @@ export default function AdminSettingsPage() {
                           voiceSaving ||
                           (selectedStt === voiceData.current.stt &&
                             selectedTts === voiceData.current.tts &&
-                            selectedInworldVoice === (voiceData.current.inworldVoiceId ?? 'Ashley'))
+                            selectedInworldVoice === (voiceData.current.inworldVoiceId ?? 'Ashley') &&
+                            inworldApiKey === '')
                         }
                       >
                         {voiceSaving ? (
