@@ -1017,15 +1017,21 @@ export default function AdminSettingsPage() {
                       </div>
 
                       <div className="space-y-2">
-                        {voiceData.providers.stt.map((p) => (
+                        {voiceData.providers.stt.map((p) => {
+                          const needsKey = p.id === 'inworld' && !p.available;
+                          return (
                           <label
                             key={p.id}
                             className={`flex items-start gap-3 rounded-md border px-3 py-3 ${
-                              !p.available
+                              !p.available && !needsKey
                                 ? 'border-muted bg-muted/40 opacity-60'
-                                : selectedStt === p.id
-                                  ? 'border-primary bg-primary/5'
-                                  : 'border-border hover:bg-muted/40'
+                                : needsKey
+                                  ? selectedStt === p.id
+                                    ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30'
+                                    : 'border-amber-200 hover:bg-amber-50/50 dark:border-amber-900/40'
+                                  : selectedStt === p.id
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:bg-muted/40'
                             } cursor-pointer`}
                           >
                             <input
@@ -1033,7 +1039,7 @@ export default function AdminSettingsPage() {
                               name="stt-provider"
                               value={p.id}
                               checked={selectedStt === p.id}
-                              disabled={!p.available}
+                              disabled={!p.available && !needsKey}
                               onChange={() =>
                                 setSelectedStt(p.id as SttProviderId)
                               }
@@ -1052,17 +1058,22 @@ export default function AdminSettingsPage() {
                                   : p.id === 'elevenlabs'
                                     ? 'ElevenLabs Scribe v2 Realtime — streams audio over WebSocket, VAD handled server-side (~$0.40/hr continuous). Requires ELEVENLABS_API_KEY.'
                                     : p.id === 'inworld'
-                                      ? 'Inworld STT-1 · Real-time WebSocket · Auto-detect language. Requires INWORLD_API_KEY.'
+                                      ? 'Inworld STT-1 · Real-time WebSocket · Auto-detect language.'
                                       : 'Self-hosted Whisper service. No per-call API cost; compute is billed hourly regardless of volume.'}
                               </div>
-                              {!p.available && p.reason ? (
+                              {needsKey ? (
+                                <div className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                                  Select to configure API key below
+                                </div>
+                              ) : !p.available && p.reason ? (
                                 <div className="text-xs text-destructive mt-1">
                                   Unavailable: {p.reason}
                                 </div>
                               ) : null}
                             </div>
                           </label>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {sttTestResult ? (
@@ -1130,15 +1141,21 @@ export default function AdminSettingsPage() {
                       </div>
 
                       <div className="space-y-2">
-                        {voiceData.providers.tts.map((p) => (
+                        {voiceData.providers.tts.map((p) => {
+                          const needsKey = p.id === 'inworld' && !p.available;
+                          return (
                           <label
                             key={p.id}
                             className={`flex items-start gap-3 rounded-md border px-3 py-3 ${
-                              !p.available
+                              !p.available && !needsKey
                                 ? 'border-muted bg-muted/40 opacity-60'
-                                : selectedTts === p.id
-                                  ? 'border-primary bg-primary/5'
-                                  : 'border-border hover:bg-muted/40'
+                                : needsKey
+                                  ? selectedTts === p.id
+                                    ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30'
+                                    : 'border-amber-200 hover:bg-amber-50/50 dark:border-amber-900/40'
+                                  : selectedTts === p.id
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:bg-muted/40'
                             } cursor-pointer`}
                           >
                             <input
@@ -1146,7 +1163,7 @@ export default function AdminSettingsPage() {
                               name="tts-provider"
                               value={p.id}
                               checked={selectedTts === p.id}
-                              disabled={!p.available}
+                              disabled={!p.available && !needsKey}
                               onChange={() =>
                                 setSelectedTts(p.id as TtsProviderId)
                               }
@@ -1165,17 +1182,22 @@ export default function AdminSettingsPage() {
                                   : p.id === 'elevenlabs'
                                     ? 'ElevenLabs — premium voice quality; higher per-character cost.'
                                     : p.id === 'inworld'
-                                      ? 'Inworld TTS-1.5 Mini · ~120ms P50 · MP3. Requires INWORLD_API_KEY and INWORLD_VOICE_ID.'
+                                      ? 'Inworld TTS-1.5 Mini · ~120ms P50 · MP3.'
                                       : 'Kokoro — self-hosted TTS. No per-call API cost; hourly compute.'}
                               </div>
-                              {!p.available && p.reason ? (
+                              {needsKey ? (
+                                <div className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                                  Select to configure API key below
+                                </div>
+                              ) : !p.available && p.reason ? (
                                 <div className="text-xs text-destructive mt-1">
                                   Unavailable: {p.reason}
                                 </div>
                               ) : null}
                             </div>
                           </label>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {selectedTts === 'inworld' && (
