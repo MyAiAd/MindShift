@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/lib/theme'
 import SkipNavigation from '@/components/layout/SkipNavigation'
 import CookieConsent from '@/components/gdpr/CookieConsent'
 import { InstallPrompt } from '@/components/mobile/InstallPrompt'
+import { PwaRuntimeRecovery } from '@/components/pwa/PwaRuntimeRecovery'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -98,6 +99,7 @@ export default function RootLayout({
         {/* Version: 2025-12-31 - Community Tags Fix (Migration 048) */}
         <ThemeProvider>
           <AuthProvider>
+            <PwaRuntimeRecovery />
             <SkipNavigation />
             <main id="main-content" className="min-h-screen bg-background text-foreground">
               {children}
