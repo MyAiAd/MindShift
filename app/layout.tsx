@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/lib/theme'
 import SkipNavigation from '@/components/layout/SkipNavigation'
 import CookieConsent from '@/components/gdpr/CookieConsent'
 import { InstallPrompt } from '@/components/mobile/InstallPrompt'
+import AppRuntimeGuard from '@/components/layout/AppRuntimeGuard'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -95,17 +96,19 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        {/* Version: 2025-12-31 - Community Tags Fix (Migration 048) */}
-        <ThemeProvider>
-          <AuthProvider>
-            <SkipNavigation />
-            <main id="main-content" className="min-h-screen bg-background text-foreground">
-              {children}
-            </main>
-            <CookieConsent />
-            <InstallPrompt />
-          </AuthProvider>
-        </ThemeProvider>
+        <AppRuntimeGuard>
+          {/* Version: 2025-12-31 - Community Tags Fix (Migration 048) */}
+          <ThemeProvider>
+            <AuthProvider>
+              <SkipNavigation />
+              <main id="main-content" className="min-h-screen bg-background text-foreground">
+                {children}
+              </main>
+              <CookieConsent />
+              <InstallPrompt />
+            </AuthProvider>
+          </ThemeProvider>
+        </AppRuntimeGuard>
       </body>
     </html>
   )
