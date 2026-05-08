@@ -1,7 +1,14 @@
 import { Resend } from 'resend';
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+let _resend: Resend | null = null;
+
+function getResendClient(): Resend | null {
+  if (!process.env.RESEND_API_KEY) return null;
+  if (!_resend) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
 
 // Configuration
 const EMAIL_CONFIG = {
@@ -41,18 +48,16 @@ export class EmailService {
    */
   async send(options: SendEmailOptions): Promise<EmailResult> {
     try {
-      // Check if API key is configured
-      if (!process.env.RESEND_API_KEY) {
+      const resend = getResendClient();
+      if (!resend) {
         console.error('RESEND_API_KEY is not configured');
         return { success: false, error: 'Email service not configured' };
       }
 
-      // Ensure we have at least one content type
       if (!options.html && !options.text) {
         return { success: false, error: 'Email must have html or text content' };
       }
 
-      // Use type assertion for Resend SDK compatibility
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await resend.emails.send({
         from: EMAIL_CONFIG.from,

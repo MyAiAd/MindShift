@@ -15,13 +15,11 @@ jobs:
           host: 77.42.72.2
           username: deploy
           key: ${{ secrets.HETZNER_SSH_KEY }}
+          command_timeout: 10m
+          script_stop: true
           script: |
             cd /opt/mind-shift/app
             git fetch origin main
             git reset --hard origin/main
             git clean -fd
-            npm install
-            npm run build
-            pm2 restart mindshift-app
-            pm2 list
-
+            bash scripts/deploy-hetzner.sh
